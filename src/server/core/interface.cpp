@@ -1273,7 +1273,8 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 	int32_t paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
 	bool modified = false;
 
-	node->getDriver()->get8021xPortState(transport, node, node->getDriverData(), m_index, &paeState, &backendState);
+	NodeDeviceContext context(node->self(), transport);
+	node->getDriver()->get8021xPortState(&context, node, node->getDriverData(), m_index, &paeState, &backendState);
 
 	if (m_dot1xPaeAuthState != static_cast<int16_t>(paeState))
 	{

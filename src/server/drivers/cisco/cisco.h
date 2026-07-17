@@ -62,15 +62,15 @@ class CiscoDeviceDriver : public NetworkDeviceDriver
 {
 public:
    virtual const TCHAR *getVersion() override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
-	virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
+	virtual VlanList *getVlans(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
    virtual bool isConfigBackupSupported() override;
-   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
-   virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+   virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
+   virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output) override;
    virtual bool isConfigRestoreSupported() override;
-   virtual bool restoreConfig(DeviceBackupContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+   virtual bool restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
          const std::function<void (int, int)>& progressCallback) override;
 };
 
@@ -83,8 +83,8 @@ public:
    virtual const TCHAR *getName() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
 /**
@@ -96,8 +96,8 @@ public:
    virtual const TCHAR *getName() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
 /**
@@ -109,8 +109,8 @@ public:
    virtual const TCHAR *getName() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
 /**
@@ -123,8 +123,8 @@ public:
    virtual const TCHAR *getVersion() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
 };
 
 /**
@@ -136,8 +136,8 @@ public:
    virtual const TCHAR *getName() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
 /**
@@ -175,9 +175,9 @@ public:
    virtual const TCHAR *getName() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
-   virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual void getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
 };
 
 /**
@@ -189,13 +189,13 @@ public:
    virtual const TCHAR *getName() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
-   virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual VlanList *getVlans(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
    virtual bool isConfigBackupSupported() override;
-   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
-   virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+   virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
+   virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output) override;
 };
 
 /**
@@ -208,14 +208,14 @@ public:
    virtual const TCHAR *getVersion() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
-   virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype) override;
-   virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getVirtualizationType(DeviceContext *context, NObject *node, DriverData *driverData, VirtualizationType *vtype) override;
+   virtual int getClusterMode(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual bool isWirelessController(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual AccessPointState getAccessPointState(DeviceContext *context, NObject *node, DriverData *driverData,
          uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces) override;
 };
 

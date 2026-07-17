@@ -53,10 +53,10 @@ int RuggedComDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool RuggedComDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool RuggedComDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -64,14 +64,15 @@ bool RuggedComDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectI
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool RuggedComDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool RuggedComDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 15004, 4, 2, 3, 3, 0 }));  // rcDeviceInfoMainSwVersion
    request.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 15004, 4, 2, 3, 1, 0 }));  // rcDeviceInfoSerialNumber
@@ -120,15 +121,15 @@ bool RuggedComDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *RuggedComDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *RuggedComDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
    if (ifList == nullptr)
       return nullptr;
 

@@ -14,7 +14,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			columnfilter.cpp condition.cpp config.cpp conn_history.cpp console.cpp container.cpp correlate.cpp \
 			dashboard.cpp datacoll.cpp dbwrite.cpp dc_nxsl.cpp dcagg.cpp dci_data_query.cpp dci_recalc.cpp dcitem.cpp \
 			dcithreshold.cpp dcivalue.cpp dcobject.cpp dcowner.cpp dcst.cpp \
-			dctable.cpp dctarget.cpp dctcolumn.cpp dctthreshold.cpp debug.cpp devbackup.cpp \
+			dctable.cpp dctarget.cpp dctcolumn.cpp dctthreshold.cpp debug.cpp devbackup.cpp devicecontext.cpp \
 			devdb.cpp dfile_info.cpp discovery.cpp discovery_nxsl.cpp \
 			download_task.cpp downtime.cpp ef.cpp ef_snmptrap.cpp eip.cpp entirenet.cpp epp.cpp \
 			event_forwarder.cpp events.cpp \

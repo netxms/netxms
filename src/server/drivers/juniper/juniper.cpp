@@ -52,10 +52,10 @@ int JuniperDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool JuniperDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool JuniperDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -63,14 +63,15 @@ bool JuniperDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId&
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool JuniperDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool JuniperDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("Juniper Networks"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -114,13 +115,14 @@ bool JuniperDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, 
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *JuniperDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 	{
 	   nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getInterfaces: call to NetworkDeviceDriver::getInterfaces failed"));
@@ -203,20 +205,21 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 /**
  * Get VLANs
  */
-VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *JuniperDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    BYTE buffer[256];
    if (SnmpGetEx(snmp, { 1, 3, 6, 1, 4, 1, 2636, 3, 48, 1, 3, 1, 1, 2 }, buffer, 256, SG_GET_NEXT_REQUEST | SG_RAW_RESULT, nullptr) == SNMP_ERR_SUCCESS)
    {
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: device supports jnxL2aldVlanTable"));
-      return getVlansDot1q(snmp, node, driverData);
+      return getVlansDot1q(context, node, driverData);
    }
 
    SNMP_Snapshot *vlanTable = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 5, 1 });
    if (vlanTable == nullptr)
    {
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: cannot create snapshot of VLAN table, fallback to NetworkDeviceDriver::getVlans"));
-      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
+      return NetworkDeviceDriver::getVlans(context, node, driverData);
    }
 
    SNMP_Snapshot *portTable = SNMP_Snapshot::create(snmp, { 1, 3, 6, 1, 4, 1, 2636, 3, 40, 1, 5, 1, 7, 1 });
@@ -224,7 +227,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
    {
       delete vlanTable;
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: cannot create snapshot of port table, fallback to NetworkDeviceDriver::getVlans"));
-      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
+      return NetworkDeviceDriver::getVlans(context, node, driverData);
    }
 
    VlanList *vlans = new VlanList();
@@ -291,8 +294,9 @@ static void ProcessVlanPortRecord(SNMP_Variable *var, VlanList *vlanList, bool t
  * Example:
  *    1.3.6.1.2.1.17.7.1.4.3.1.2.104 [STRING] = 490,506,516,526
  */
-VlanList *JuniperDriver::getVlansDot1q(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *JuniperDriver::getVlansDot1q(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    // Check if non-standard format of VLAN membership entries is used
    bool standardFormat = false;
    SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 4, 3, 1, 2 },
@@ -315,7 +319,7 @@ VlanList *JuniperDriver::getVlansDot1q(SNMP_Transport *snmp, NObject *node, Driv
    if (standardFormat)
    {
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlansDot1q: dot1qVlanStaticTable seems to contain binary data, fallback to NetworkDeviceDriver::getVlans"));
-      return NetworkDeviceDriver::getVlans(snmp, node, driverData);
+      return NetworkDeviceDriver::getVlans(context, node, driverData);
    }
 
    VlanList *vlanList = new VlanList();
@@ -372,25 +376,25 @@ failure:
 /**
  * Get orientation of the modules in the device
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int JuniperDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int JuniperDriver::getModulesOrientation(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return NDD_ORIENTATION_HORIZONTAL;
 }
 
 /**
  * Get port layout of given module
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void JuniperDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void JuniperDriver::getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_UD_LR;
    layout->rows = 2;
@@ -460,7 +464,7 @@ bool JuniperDriver::isConfigBackupSupported()
 /**
  * Get running configuration from device
  */
-bool JuniperDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool JuniperDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)

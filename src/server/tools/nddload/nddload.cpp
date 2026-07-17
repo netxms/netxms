@@ -69,7 +69,8 @@ static const TCHAR *ApStateToText(AccessPointState state)
  */
 static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
-   ObjectArray<AccessPointInfo> *apInfo = driver->getAccessPoints(transport, &s_object, s_driverData);
+   SnmpDeviceContext context(transport);
+   ObjectArray<AccessPointInfo> *apInfo = driver->getAccessPoints(&context, &s_object, s_driverData);
    if (apInfo == nullptr)
    {
       _tprintf(_T("\nAccess point list is not available\n"));
@@ -118,7 +119,8 @@ static void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *trans
  */
 static void PrintRadioInterfaces(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
-   StructArray<RadioInterfaceInfo> *radios = driver->getRadioInterfaces(transport, &s_object, s_driverData);
+   SnmpDeviceContext context(transport);
+   StructArray<RadioInterfaceInfo> *radios = driver->getRadioInterfaces(&context, &s_object, s_driverData);
    if (radios == nullptr)
    {
       _tprintf(_T("\nRadio interface list is not available\n"));
@@ -149,7 +151,8 @@ static void PrintRadioInterfaces(NetworkDeviceDriver *driver, SNMP_Transport *tr
  */
 static void PrintWirelessStations(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
-   ObjectArray<WirelessStationInfo> *wsInfo = driver->getWirelessStations(transport, &s_object, s_driverData);
+   SnmpDeviceContext context(transport);
+   ObjectArray<WirelessStationInfo> *wsInfo = driver->getWirelessStations(&context, &s_object, s_driverData);
    if (wsInfo == nullptr)
    {
       _tprintf(_T("\nWireless station list is not available\n"));
@@ -179,7 +182,8 @@ static void PrintWirelessStations(NetworkDeviceDriver *driver, SNMP_Transport *t
  */
 static void PrintInterfaces(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
-   InterfaceList *ifList = driver->getInterfaces(transport, &s_object, s_driverData, true);
+   SnmpDeviceContext context(transport);
+   InterfaceList *ifList = driver->getInterfaces(&context, &s_object, s_driverData, true);
    if (ifList != nullptr)
    {
       if (ifList->size() > 0)
@@ -233,7 +237,8 @@ static void PrintInterfaces(NetworkDeviceDriver *driver, SNMP_Transport *transpo
  */
 static void PrintVLANs(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
-   VlanList *vlanList = driver->getVlans(transport, &s_object, s_driverData);
+   SnmpDeviceContext context(transport);
+   VlanList *vlanList = driver->getVlans(&context, &s_object, s_driverData);
    if (vlanList != nullptr)
    {
       if (vlanList->size() > 0)
@@ -291,6 +296,7 @@ static EnumerationCallbackResult PrintAttributeCallback(const TCHAR *key, const 
  */
 static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
+   SnmpDeviceContext context(transport);
    SNMP_ObjectId oid;
    uint32_t snmpErr = SnmpGet(transport->getSnmpVersion(), transport, { 1, 3, 6, 1, 2, 1, 1, 2, 0 }, &oid, 0, SG_OBJECT_ID_RESULT);
    if (snmpErr != SNMP_ERR_SUCCESS)
@@ -311,7 +317,7 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
 
    _tprintf(_T("Potential driver, priority %d\n"), pri);
 
-   if (!driver->isDeviceSupported(transport, oid))
+   if (!driver->isDeviceSupported(&context, oid))
    {
       _tprintf(_T("Device is not supported by driver\n"));
       return false;
@@ -319,7 +325,7 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
 
    _tprintf(_T("Device is supported by driver\n"));
 
-   driver->analyzeDevice(transport, oid, &s_object, &s_driverData);
+   driver->analyzeDevice(&context, oid, &s_object, &s_driverData);
    _tprintf(_T("Custom attributes after device analyze:\n"));
    auto attributes = s_object.getCustomAttributes();
    attributes->forEach(PrintAttributeCallback, nullptr);
@@ -332,14 +338,15 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
  */
 static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
+   SnmpDeviceContext context(transport);
    bool isWLC = false, isWAP = false;
-   if (driver->isWirelessController(transport, &s_object, s_driverData))
+   if (driver->isWirelessController(&context, &s_object, s_driverData))
    {
       _tprintf(_T("Device is a wireless controller\n"));
-      _tprintf(_T("Cluster mode: %d\n"), driver->getClusterMode(transport, &s_object, s_driverData));
+      _tprintf(_T("Cluster mode: %d\n"), driver->getClusterMode(&context, &s_object, s_driverData));
       isWLC = true;
    }
-   else if (driver->isWirelessAccessPoint(transport, &s_object, s_driverData))
+   else if (driver->isWirelessAccessPoint(&context, &s_object, s_driverData))
    {
       _tprintf(_T("Device is a wireless access point\n"));
       isWAP = true;
@@ -351,7 +358,7 @@ static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *
 
    DeviceHardwareInfo hwInfo;
    memset(&hwInfo, 0, sizeof(hwInfo));
-   if (driver->getHardwareInformation(transport, &s_object, s_driverData, &hwInfo))
+   if (driver->getHardwareInformation(&context, &s_object, s_driverData, &hwInfo))
    {
       _tprintf(_T("\nDevice hardware information:\n")
                _T("   Vendor ...........: %s\n")

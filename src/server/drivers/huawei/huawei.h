@@ -37,12 +37,12 @@ public:
    virtual const TCHAR *getVersion() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
-   virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual void getInterfaceState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
          uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed) override;
-   virtual shared_ptr<ArpCache> getArpCache(SNMP_Transport *snmp, DriverData *driverData) override;
+   virtual shared_ptr<ArpCache> getArpCache(DeviceContext *context, DriverData *driverData) override;
 };
 
 /**
@@ -55,12 +55,12 @@ public:
    virtual const TCHAR *getVersion() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
-   virtual bool is8021xSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual void get8021xPortState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, int32_t *paeState, int32_t *backendState) override;
-   virtual MacAddress getStpBridgeId(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual bool is8021xSupported(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual void get8021xPortState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, int32_t *paeState, int32_t *backendState) override;
+   virtual MacAddress getStpBridgeId(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
 };
 

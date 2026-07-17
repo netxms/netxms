@@ -29,7 +29,14 @@
 /**
  * API version
  */
-#define NDDRV_API_VERSION           13
+#define NDDRV_API_VERSION           14
+
+/**
+ * Device transport types (bit masks for NetworkDeviceDriver::getSupportedTransports() and getRequiredTransports())
+ */
+#define NDD_TRANSPORT_SNMP             0x0001
+#define NDD_TRANSPORT_SSH_COMMAND      0x0002
+#define NDD_TRANSPORT_SSH_INTERACTIVE  0x0004
 
 /**
  * Begin driver list
@@ -504,14 +511,24 @@ class Component;
 class ComponentTree;
 
 /**
- * Abstract interface for device configuration backup context.
- * Provides connection methods that drivers use to retrieve device configuration.
- * Concrete implementation is provided by the backup module.
+ * Abstract device access context passed to all driver methods. Concrete implementation
+ * is provided by the server core.
+ *
+ * Availability checks report that a transport is configured and plausible (credentials
+ * present, proxy resolvable), not that a connection is currently established - channels
+ * are opened lazily, so connection failures surface as call failures.
+ *
+ * For regular driver methods the server guarantees that every transport declared via
+ * NetworkDeviceDriver::getRequiredTransports() is available, so drivers do not need
+ * availability or null checks for those (an SNMP-only driver can unconditionally call
+ * getSNMPTransport()). Configuration backup/restore methods are called with whatever
+ * transports are available regardless of the required set, and drivers choosing a
+ * protocol there should use the availability checks.
  */
-class LIBNXSRV_EXPORTABLE DeviceBackupContext
+class LIBNXSRV_EXPORTABLE DeviceContext
 {
 public:
-   virtual ~DeviceBackupContext() {}
+   virtual ~DeviceContext() {}
 
    virtual bool isSSHCommandChannelAvailable() = 0;
    virtual bool isSSHInteractiveChannelAvailable() = 0;
@@ -520,6 +537,28 @@ public:
    virtual SSHInteractiveChannel *getInteractiveSSH() = 0;
    virtual bool executeSSHCommand(const char *command, ByteStream *output) = 0;
    virtual SNMP_Transport *getSNMPTransport() = 0;
+};
+
+/**
+ * Device context implementation that provides only an externally supplied SNMP transport
+ * (not owned by the context). Used where a device is accessed before a node object exists
+ * (discovery, driver selection) and by standalone tools.
+ */
+class SnmpDeviceContext : public DeviceContext
+{
+private:
+   SNMP_Transport *m_transport;
+
+public:
+   SnmpDeviceContext(SNMP_Transport *transport) : m_transport(transport) {}
+
+   virtual bool isSSHCommandChannelAvailable() override { return false; }
+   virtual bool isSSHInteractiveChannelAvailable() override { return false; }
+   virtual bool isSNMPAvailable() override { return m_transport != nullptr; }
+
+   virtual SSHInteractiveChannel *getInteractiveSSH() override { return nullptr; }
+   virtual bool executeSSHCommand(const char *command, ByteStream *output) override { return false; }
+   virtual SNMP_Transport *getSNMPTransport() override { return m_transport; }
 };
 
 /**
@@ -539,52 +578,55 @@ public:
    virtual const wchar_t *getName();
    virtual const wchar_t *getVersion();
 
+   virtual uint32_t getSupportedTransports() const;
+   virtual uint32_t getRequiredTransports() const;
+
    virtual const wchar_t *getCustomTestOID();
    virtual int isPotentialDevice(const SNMP_ObjectId& oid);
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData);
-   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo);
-   virtual bool isEntityMibEmulationSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual shared_ptr<ComponentTree> buildComponentTree(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual shared_ptr<DeviceView> buildDeviceView(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const Component *rootComponent);
-   virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
-   virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype);
-   virtual GeoLocation getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable);
-   virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const wchar_t *ifName,
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid);
+   virtual void analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData);
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo);
+   virtual bool isEntityMibEmulationSupported(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual shared_ptr<ComponentTree> buildComponentTree(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual shared_ptr<DeviceView> buildDeviceView(DeviceContext *context, NObject *node, DriverData *driverData, const Component *rootComponent);
+   virtual int getModulesOrientation(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual void getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
+   virtual bool getVirtualizationType(DeviceContext *context, NObject *node, DriverData *driverData, VirtualizationType *vtype);
+   virtual GeoLocation getGeoLocation(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable);
+   virtual void getInterfaceState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, const wchar_t *ifName,
             uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed);
-   virtual bool is8021xSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual void get8021xPortState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, int32_t *paeState, int32_t *backendState);
-   virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const wchar_t *lldpName, InterfaceId *id);
+   virtual bool is8021xSupported(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual void get8021xPortState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, int32_t *paeState, int32_t *backendState);
+   virtual bool lldpNameToInterfaceId(DeviceContext *context, NObject *node, DriverData *driverData, const wchar_t *lldpName, InterfaceId *id);
    virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData);
    virtual bool isValidLldpRemLocalPortNum(const NObject *node, DriverData *driverData);
-   virtual StructArray<BridgePort> *getBridgePorts(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual MacAddress getStpBridgeId(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+   virtual StructArray<BridgePort> *getBridgePorts(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual MacAddress getStpBridgeId(DeviceContext *context, NObject *node, DriverData *driverData);
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData);
-   virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual bool isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
+   virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual VlanList *getVlans(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual int getClusterMode(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual bool isWirelessAccessPoint(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual bool isWirelessController(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual AccessPointState getAccessPointState(DeviceContext *context, NObject *node, DriverData *driverData,
          uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces);
    virtual bool hasMetrics();
-   virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size);
-   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
-   virtual shared_ptr<ArpCache> getArpCache(SNMP_Transport *snmp, DriverData *driverData);
-   virtual ObjectArray<LinkLayerNeighborInfo> *getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData, bool *ignoreStandardMibs);
+   virtual DataCollectionError getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size);
+   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData);
+   virtual shared_ptr<ArpCache> getArpCache(DeviceContext *context, DriverData *driverData);
+   virtual ObjectArray<LinkLayerNeighborInfo> *getLinkLayerNeighbors(DeviceContext *context, DriverData *driverData, bool *ignoreStandardMibs);
    virtual void getSSHDriverHints(SSHDriverHints *hints) const;
 
    virtual bool isConfigBackupSupported();
-   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output);
-   virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output);
+   virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output);
+   virtual bool getStartupConfig(DeviceContext *ctx, ByteStream *output);
 
    virtual bool isConfigRestoreSupported();
-   virtual bool restoreConfig(DeviceBackupContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+   virtual bool restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
          const std::function<void (int, int)>& progressCallback);
 };
 

@@ -38,12 +38,12 @@ public:
    virtual const TCHAR *getVersion() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
-   virtual GeoLocation getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual bool isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual GeoLocation getGeoLocation(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual bool isWirelessAccessPoint(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData) override;
 };
 
 #endif

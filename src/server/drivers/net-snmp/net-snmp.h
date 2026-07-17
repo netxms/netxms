@@ -46,10 +46,10 @@ public:
 class NetSnmpBaseDriver : public NetworkDeviceDriver
 {
 public:
-   virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
+   virtual void analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
    virtual bool hasMetrics() override;
-   virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
-   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual DataCollectionError getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
+   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData) override;
 };
 
 /**
@@ -62,7 +62,7 @@ public:
    virtual const TCHAR *getVersion() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
 };
 
 /**
@@ -75,8 +75,8 @@ public:
    virtual const TCHAR *getVersion() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
 };
 
 #endif

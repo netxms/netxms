@@ -38,21 +38,21 @@ public:
    virtual const wchar_t *getVersion() override;
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
-   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
-   virtual void analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
-   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
-   virtual InterfaceList* getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
-   virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const wchar_t *lldpName, InterfaceId *id) override;
+   virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual void analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual InterfaceList* getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual bool lldpNameToInterfaceId(DeviceContext *context, NObject *node, DriverData *driverData, const wchar_t *lldpName, InterfaceId *id) override;
    virtual bool isFdbUsingIfIndex(const NObject *node, DriverData *driverData) override;
-   virtual bool isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual bool isWirelessAccessPoint(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual StructArray<RadioInterfaceInfo> *getRadioInterfaces(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual bool hasMetrics() override;
-   virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
-   virtual ObjectArray<AgentParameterDefinition>* getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual DataCollectionError getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
+   virtual ObjectArray<AgentParameterDefinition>* getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
    virtual bool isConfigBackupSupported() override;
-   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+   virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
 };
 
 /**

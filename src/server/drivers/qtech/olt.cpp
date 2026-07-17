@@ -61,10 +61,10 @@ int QtechOLTDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool QtechOLTDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool QtechOLTDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -86,12 +86,13 @@ static uint32_t HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, In
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *QtechOLTDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, false);
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, false);
    if (ifList == nullptr)
       return nullptr;
 
@@ -131,7 +132,7 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 /**
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
@@ -143,9 +144,10 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
  * @param operState OUT: interface operational state
  * @param speed OUT: updated interface speed
  */
-void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,const TCHAR *ifName,
+void QtechOLTDriver::getInterfaceState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex,const TCHAR *ifName,
       uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    *adminState = IF_ADMIN_STATE_UP;
    if (ifIndex > 1000)
    {
@@ -170,6 +172,6 @@ void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, Driv
    }
    else
    {
-      NetworkDeviceDriver::getInterfaceState(snmp, node, driverData, ifIndex, ifName, ifType, ifTableSuffixLen, ifTableSuffix, adminState, operState, speed);
+      NetworkDeviceDriver::getInterfaceState(context, node, driverData, ifIndex, ifName, ifType, ifTableSuffixLen, ifTableSuffix, adminState, operState, speed);
    }
 }

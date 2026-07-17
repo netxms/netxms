@@ -62,11 +62,12 @@ int AlliedTelesisDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool AlliedTelesisDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool AlliedTelesisDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    BYTE buffer[256];
    return (SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 207, 8, 33, 1, 1, 0 }, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
           (SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 207, 1, 4, 167, 81, 1, 3, 0 }, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS);
@@ -77,12 +78,13 @@ bool AlliedTelesisDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Obj
  * Driver can set device's custom attributes and driver's data from within this method.
  * Driver is responsible for destroying previously created data object.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void AlliedTelesisDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    BYTE buffer[256];
    if (SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 207, 1, 4, 167, 81, 1, 3, 0 }, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
    {
@@ -93,12 +95,13 @@ void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectI
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *AlliedTelesisDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
    if (ifList != nullptr)
    {
       bool isGS950 = node->getCustomAttributeAsBoolean(_T(".alliedTelesis.isGS950"), false);
@@ -212,9 +215,10 @@ static void ParsePortList(TCHAR *ports, VlanInfo *vlan, UINT32 module)
 /**
  * Get VLANs 
  */
-VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *AlliedTelesisDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
-   VlanList *list = NetworkDeviceDriver::getVlans(snmp, node, driverData);
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   VlanList *list = NetworkDeviceDriver::getVlans(context, node, driverData);
    if ((list != nullptr) && (list->size() > 0))
       return list;   // retrieved from standard MIBs
 

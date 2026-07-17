@@ -54,11 +54,12 @@ int TeltonikaDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool TeltonikaDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool TeltonikaDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    char buffer[256];
 	return SnmpGetEx(snmp, _T(".1.3.6.1.4.1.48690.1.1.0"), nullptr, 0, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;
 }
@@ -66,14 +67,15 @@ bool TeltonikaDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectI
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool TeltonikaDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool TeltonikaDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("Teltonika"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());

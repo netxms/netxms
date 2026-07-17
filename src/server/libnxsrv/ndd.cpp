@@ -290,6 +290,32 @@ const TCHAR *NetworkDeviceDriver::getVersion()
 }
 
 /**
+ * Get transports that this driver can use. Default implementation
+ * declares SNMP only.
+ *
+ * @return bit mask of NDD_TRANSPORT_* constants
+ */
+uint32_t NetworkDeviceDriver::getSupportedTransports() const
+{
+   return NDD_TRANSPORT_SNMP;
+}
+
+/**
+ * Get transports that must be available for regular driver methods to be called.
+ * The server guarantees that every declared transport is available in the device
+ * context passed to driver methods (backup/restore methods excluded - those are
+ * called with whatever transports are available). Return 0 for a driver that
+ * works with any transport set and does its own availability checks. Must be a
+ * subset of getSupportedTransports(). Default implementation requires SNMP.
+ *
+ * @return bit mask of NDD_TRANSPORT_* constants
+ */
+uint32_t NetworkDeviceDriver::getRequiredTransports() const
+{
+   return NDD_TRANSPORT_SNMP;
+}
+
+/**
  * Get custom OID that should be used to test SNMP connectivity. Default
  * implementation always returns NULL.
  *
@@ -313,11 +339,11 @@ int NetworkDeviceDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  * @return true if device is supported
  */
-bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool NetworkDeviceDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -329,25 +355,25 @@ bool NetworkDeviceDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Obj
  * It is driver's responsibility to destroy existing object if it is to be replaced . One data
  * object should not be used for multiple nodes. Data object may be destroyed by framework when no longer needed.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void NetworkDeviceDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
 }
 
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool NetworkDeviceDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool NetworkDeviceDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
    return false;
 }
@@ -355,12 +381,12 @@ bool NetworkDeviceDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *
 /**
  * Check if this driver supports ENTITY MIB emulation for given device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @return true if this driver supports ENTITY MIB emulation for given device
  */
-bool NetworkDeviceDriver::isEntityMibEmulationSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool NetworkDeviceDriver::isEntityMibEmulationSupported(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return false;
 }
@@ -368,12 +394,12 @@ bool NetworkDeviceDriver::isEntityMibEmulationSupported(SNMP_Transport *snmp, NO
 /**
  * Build hardware component tree (simulate ENTITY MIB for devices that does not support it).
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @return hardware component tree or NULL
  */
-shared_ptr<ComponentTree> NetworkDeviceDriver::buildComponentTree(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+shared_ptr<ComponentTree> NetworkDeviceDriver::buildComponentTree(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return shared_ptr<ComponentTree>();
 }
@@ -382,13 +408,13 @@ shared_ptr<ComponentTree> NetworkDeviceDriver::buildComponentTree(SNMP_Transport
  * Build device view. On success driver should return device view witl elements in drawing order.
  * First element should define a rectangle that encompasses all subsequent elements, therefore defining picture size.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param rootComponent root element of component tree (can be NULL)
  * @return device view elements in drawing order or NULL
  */
-shared_ptr<DeviceView> NetworkDeviceDriver::buildDeviceView(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const Component *rootComponent)
+shared_ptr<DeviceView> NetworkDeviceDriver::buildDeviceView(DeviceContext *context, NObject *node, DriverData *driverData, const Component *rootComponent)
 {
    return shared_ptr<DeviceView>();
 }
@@ -396,13 +422,13 @@ shared_ptr<DeviceView> NetworkDeviceDriver::buildDeviceView(SNMP_Transport *snmp
 /**
  * Get device virtualization type.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param vtype pointer to virtualization type enum to fill
  * @return true if virtualization type is known
  */
-bool NetworkDeviceDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype)
+bool NetworkDeviceDriver::getVirtualizationType(DeviceContext *context, NObject *node, DriverData *driverData, VirtualizationType *vtype)
 {
    return false;
 }
@@ -410,12 +436,12 @@ bool NetworkDeviceDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *n
 /**
  * Get device geographical location.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @return device geographical location or "UNSET" type location object
  */
-GeoLocation NetworkDeviceDriver::getGeoLocation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+GeoLocation NetworkDeviceDriver::getGeoLocation(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return GeoLocation();
 }
@@ -740,13 +766,14 @@ bool NetworkDeviceDriver::getInterfaceSpeed(SNMP_Transport *snmp, uint32_t ifInd
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *NetworkDeviceDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    bool success = false;
 
    wchar_t debugId[128];
@@ -966,7 +993,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device. This method should not change value pointed by
  * "speed" if interface speed cannot be retrieved.
  * 
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
@@ -978,9 +1005,10 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
  * @param operState OUT: interface operational state
  * @param speed OUT: updated interface speed
  */
-void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
+void NetworkDeviceDriver::getInterfaceState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
          uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    uint32_t oid[128] = { 1, 3, 6, 1, 2, 1, 2, 2, 1, 7 };
    size_t oidLen;
    if (ifTableSuffixLen > 0)
@@ -1060,13 +1088,14 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
  * the standard IEEE8021-PAE-MIB by reading dot1xPaeSystemAuthControl (.1.0.8802.1.1.1.1.1.1.0) and
  * returns true if it equals 1 (enabled).
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @return true if device supports 802.1x and capability flag should be set on the node
  */
-bool NetworkDeviceDriver::is8021xSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool NetworkDeviceDriver::is8021xSupported(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    return CheckSNMPIntegerValue(snmp, { 1, 0, 8802, 1, 1, 1, 1, 1, 1, 0 }, 1);
 }
 
@@ -1076,15 +1105,16 @@ bool NetworkDeviceDriver::is8021xSupported(SNMP_Transport *snmp, NObject *node, 
  * (.1.0.8802.1.1.1.1.2.1.1.2.<ifIndex>) from the standard IEEE8021-PAE-MIB. State values that cannot
  * be retrieved are left as PAE_STATE_UNKNOWN / BACKEND_STATE_UNKNOWN.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
  * @param paeState OUT: PAE state machine state (PAE_STATE_* constant)
  * @param backendState OUT: backend authentication state machine state (BACKEND_STATE_* constant)
  */
-void NetworkDeviceDriver::get8021xPortState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, int32_t *paeState, int32_t *backendState)
+void NetworkDeviceDriver::get8021xPortState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, int32_t *paeState, int32_t *backendState)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    *paeState = PAE_STATE_UNKNOWN;
    *backendState = BACKEND_STATE_UNKNOWN;
 
@@ -1099,14 +1129,14 @@ void NetworkDeviceDriver::get8021xPortState(SNMP_Transport *snmp, NObject *node,
 /**
  * Translate LLDP port name (port ID subtype 5) to local interface id. Default implementation always returns false.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param lldpName port name received from LLDP MIB
  * @param id interface ID structure to be filled at success
  * @return true if interface identification provided
  */
-bool NetworkDeviceDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
+bool NetworkDeviceDriver::lldpNameToInterfaceId(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
 {
    return false;
 }
@@ -1181,13 +1211,14 @@ static void ProcessVlanPortRecord(SNMP_Variable *var, VlanList *vlanList, bool t
 /**
  * Get list of VLANs on given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  */
-VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *NetworkDeviceDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
 	VlanList *vlanList = new VlanList();
 
    // dot1qVlanStaticName
@@ -1243,12 +1274,12 @@ failure:
 /**
  * Get orientation of the modules in the device. Default implementation always returns NDD_ORIENTATION_HORIZONTAL.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int NetworkDeviceDriver::getModulesOrientation(DeviceContext *context, NObject *node, DriverData *driverData)
 {
 	return NDD_ORIENTATION_HORIZONTAL;
 }
@@ -1256,13 +1287,13 @@ int NetworkDeviceDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *no
 /**
  * Get port layout of given module. Default implementation always set NDD_PN_UNKNOWN as layout.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void NetworkDeviceDriver::getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
 	layout->numberingScheme = NDD_PN_UNKNOWN;
 	layout->rows = 2;
@@ -1271,13 +1302,14 @@ void NetworkDeviceDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, D
 /**
  * Get mapping between bridge ports and interfaces.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return bridge port to interface mapping or NULL on failure
  */
-StructArray<BridgePort> *NetworkDeviceDriver::getBridgePorts(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<BridgePort> *NetworkDeviceDriver::getBridgePorts(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto bports = new StructArray<BridgePort>(0, 64);
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 1, 4, 1, 2 },
       [bports] (SNMP_Variable *var) -> uint32_t
@@ -1302,12 +1334,12 @@ StructArray<BridgePort> *NetworkDeviceDriver::getBridgePorts(SNMP_Transport *snm
  * Default implementation returns an invalid (empty) address, meaning the device uses only its
  * dot1dBaseBridgeAddress as STP bridge identifier.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return additional STP bridge ID or invalid MacAddress if none
  */
-MacAddress NetworkDeviceDriver::getStpBridgeId(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+MacAddress NetworkDeviceDriver::getStpBridgeId(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return MacAddress();
 }
@@ -1410,13 +1442,14 @@ static uint32_t Dot1qTpFdbHandler(SNMP_Variable *var, SNMP_Transport *snmp, Stru
 /**
  * Get switch forwarding database.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return switch forwarding database or NULL on failure
  */
-StructArray<ForwardingDatabaseEntry> *NetworkDeviceDriver::getForwardingDatabase(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<ForwardingDatabaseEntry> *NetworkDeviceDriver::getForwardingDatabase(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto fdb = new StructArray<ForwardingDatabaseEntry>(64, 64);
 
    if (SnmpWalk(snmp, { 1, 3, 6, 1, 2, 1, 17, 7, 1, 2, 2, 1, 2 },
@@ -1458,12 +1491,12 @@ StructArray<ForwardingDatabaseEntry> *NetworkDeviceDriver::getForwardingDatabase
 /**
  * Get device cluster mode. Default implementation always return CLUSTER_MODE_STANDALONE.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return cluster mode (one of CLUSTER_MODE_STANDALONE, CLUSTER_MODE_ACTIVE, CLUSTER_MODE_STANDBY)
  */
-int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int NetworkDeviceDriver::getClusterMode(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return CLUSTER_MODE_STANDALONE;
 }
@@ -1471,12 +1504,12 @@ int NetworkDeviceDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, Dri
 /**
  * Returns true if device is a standalone wireless access point (not managed by a controller). Default implementation always return false.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return true if device is a standalone wireless access point
  */
-bool NetworkDeviceDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool NetworkDeviceDriver::isWirelessAccessPoint(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return false;
 }
@@ -1484,12 +1517,12 @@ bool NetworkDeviceDriver::isWirelessAccessPoint(SNMP_Transport *snmp, NObject *n
 /**
  * Get list of radio interfaces for standalone access point. Default implementation always return NULL.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of radio interfaces for standalone access point
  */
-StructArray<RadioInterfaceInfo> *NetworkDeviceDriver::getRadioInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+StructArray<RadioInterfaceInfo> *NetworkDeviceDriver::getRadioInterfaces(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return nullptr;
 }
@@ -1497,12 +1530,12 @@ StructArray<RadioInterfaceInfo> *NetworkDeviceDriver::getRadioInterfaces(SNMP_Tr
 /**
  * Returns true if device is a wireless controller. Default implementation always return false.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return true if device is a wireless controller
  */
-bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool NetworkDeviceDriver::isWirelessController(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return false;
 }
@@ -1510,12 +1543,12 @@ bool NetworkDeviceDriver::isWirelessController(SNMP_Transport *snmp, NObject *no
 /**
  * Get list of wireless access points managed by this controller. Default implementation always return NULL.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of access points
  */
-ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return nullptr;
 }
@@ -1523,12 +1556,12 @@ ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transpor
 /**
  * Get list of associated wireless stations. Default implementation always return NULL.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of associated wireless stations
  */
-ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return nullptr;
 }
@@ -1536,7 +1569,7 @@ ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_
 /**
  * Get access point state
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param apIndex access point index
@@ -1545,7 +1578,7 @@ ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_
  * @param radioInterfaces list of radio interfaces for this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState NetworkDeviceDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
+AccessPointState NetworkDeviceDriver::getAccessPointState(DeviceContext *context, NObject *node, DriverData *driverData,
       uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
    return AP_UNKNOWN;
@@ -1562,7 +1595,7 @@ bool NetworkDeviceDriver::hasMetrics()
 /**
  * Get value of given metric
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param name metric name
@@ -1570,7 +1603,7 @@ bool NetworkDeviceDriver::hasMetrics()
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError NetworkDeviceDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size)
+DataCollectionError NetworkDeviceDriver::getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size)
 {
    return DCE_NOT_SUPPORTED;
 }
@@ -1578,12 +1611,12 @@ DataCollectionError NetworkDeviceDriver::getMetric(SNMP_Transport *snmp, NObject
 /**
  * Get list of metrics supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of metrics supported by driver or NULL on error
  */
-ObjectArray<AgentParameterDefinition> *NetworkDeviceDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AgentParameterDefinition> *NetworkDeviceDriver::getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return NULL;
 }
@@ -1605,7 +1638,7 @@ void NetworkDeviceDriver::registerHostMibMetrics(ObjectArray<AgentParameterDefin
 /**
  * Get value of standard host MIB metric
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param driverData driver-specific data previously created in analyzeDevice (must be derived from HostMibDriverData)
  * @param name metric name
  * @param value buffer for metric value (size at least MAX_RESULT_LENGTH)
@@ -1687,12 +1720,13 @@ static uint32_t HandlerArpIpNetToPhysical(SNMP_Variable *var, SNMP_Transport *tr
 /**
  * Get ARP cache
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param driverData driver-specific data previously created in analyzeDevice (must be derived from HostMibDriverData)
  * @return ARP cache or NULL on failure
  */
-shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, DriverData *driverData)
+shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(DeviceContext *context, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    shared_ptr<ArpCache> arpCache = make_shared<ArpCache>();
 
    // Try ipNetToPhysicalTable (RFC 4293) first - supports both IPv4 and IPv6
@@ -1710,12 +1744,12 @@ shared_ptr<ArpCache> NetworkDeviceDriver::getArpCache(SNMP_Transport *snmp, Driv
 /**
  * Get link layer neighbors.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param ignoreStandardMibs driver can set referenced variable to true to indicate that server should not attempt to read data from standard MIBs (LLDP, CDP, NDP, STP)
  * @return known link layer neighbors or NULL if none known or functionality is not supported
  */
-ObjectArray<LinkLayerNeighborInfo> *NetworkDeviceDriver::getLinkLayerNeighbors(SNMP_Transport *snmp, DriverData *driverData, bool *ignoreStandardMibs)
+ObjectArray<LinkLayerNeighborInfo> *NetworkDeviceDriver::getLinkLayerNeighbors(DeviceContext *context, DriverData *driverData, bool *ignoreStandardMibs)
 {
    return nullptr;
 }
@@ -1749,7 +1783,7 @@ bool NetworkDeviceDriver::isConfigBackupSupported()
  * @param output byte stream to receive configuration data
  * @return true on success
  */
-bool NetworkDeviceDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool NetworkDeviceDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    return false;
 }
@@ -1761,7 +1795,7 @@ bool NetworkDeviceDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream 
  * @param output byte stream to receive configuration data
  * @return true on success
  */
-bool NetworkDeviceDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool NetworkDeviceDriver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
 {
    return false;
 }
@@ -1786,7 +1820,7 @@ bool NetworkDeviceDriver::isConfigRestoreSupported()
  * @param progressCallback called after each successfully applied command unit as (done, total)
  * @return true on success
  */
-bool NetworkDeviceDriver::restoreConfig(DeviceBackupContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+bool NetworkDeviceDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
       const std::function<void (int, int)>& progressCallback)
 {
    errorLog->append(L"Configuration restore is not supported by device driver");

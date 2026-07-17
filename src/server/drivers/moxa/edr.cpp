@@ -53,10 +53,10 @@ int MoxaEDRDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool MoxaEDRDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool MoxaEDRDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -64,14 +64,15 @@ bool MoxaEDRDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId&
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool MoxaEDRDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool MoxaEDRDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    TCHAR objectId[128];
    if (SnmpGetEx(snmp, _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, objectId, sizeof(objectId), 0, nullptr) != SNMP_ERR_SUCCESS)
       return false;
@@ -113,12 +114,12 @@ bool MoxaEDRDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, 
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *MoxaEDRDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *MoxaEDRDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 	   return nullptr;
 
@@ -152,14 +153,14 @@ InterfaceList *MoxaEDRDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 /**
  * Translate LLDP port name (port ID subtype 5) to local interface id.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param lldpName port name received from LLDP MIB
  * @param id interface ID structure to be filled at success
  * @return true if interface identification provided
  */
-bool MoxaEDRDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
+bool MoxaEDRDriver::lldpNameToInterfaceId(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
 {
    // Device could present string like "PORTn" or just "n" where n is port number (same as interface index)
    TCHAR *eptr;
@@ -222,13 +223,14 @@ static UINT32 HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, vo
 /**
  * Get list of VLANs on given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  */
-VlanList *MoxaEDRDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *MoxaEDRDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    VlanList *list = new VlanList();
    if ((SnmpWalk(snmp, _T(".1.3.6.1.4.1.8691.6.13.1.21.2.1.2"), HandlerVlanPorts, list) != SNMP_ERR_SUCCESS) &&
        (SnmpWalk(snmp, _T(".1.3.6.1.4.1.8691.6.13.1.21.2.1.3"), HandlerVlanPorts, list) != SNMP_ERR_SUCCESS) &&

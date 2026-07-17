@@ -44,27 +44,28 @@ int GenericCiscoDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool GenericCiscoDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool GenericCiscoDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    return SnmpWalkCount(snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4")) > 0;
 }
 
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *GenericCiscoDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *GenericCiscoDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
    // Get interface list from standard MIB
-   InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
    if (ifList == nullptr)
       return nullptr;
 

@@ -67,7 +67,7 @@ bool ComwareDeviceDriver::isConfigBackupSupported()
 /**
  * Get running configuration via interactive SSH
  */
-bool ComwareDeviceDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool ComwareDeviceDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
@@ -78,7 +78,7 @@ bool ComwareDeviceDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream 
 /**
  * Get startup configuration via interactive SSH
  */
-bool ComwareDeviceDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool ComwareDeviceDriver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)

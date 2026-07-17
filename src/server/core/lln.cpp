@@ -68,7 +68,8 @@ static bool AddDriverNeighbors(Node *node, LinkLayerNeighbors *nbs)
 
    nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("Collecting topology information from driver %s for node %s [%u]"), node->getDriver()->getName(), node->getName(), node->getId());
    bool ignoreStandardMibs = false;
-   ObjectArray<LinkLayerNeighborInfo> *neighbors = node->getDriver()->getLinkLayerNeighbors(snmp, node->getDriverData(), &ignoreStandardMibs);
+   NodeDeviceContext context(node->self(), snmp);
+   ObjectArray<LinkLayerNeighborInfo> *neighbors = node->getDriver()->getLinkLayerNeighbors(&context, node->getDriverData(), &ignoreStandardMibs);
    if (neighbors != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_TOPO_DRIVER, 5, _T("%d link layer neighbors reported by driver for node %s [%u]"), neighbors->size(), node->getName(), node->getId());

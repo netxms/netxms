@@ -54,11 +54,12 @@ int CiscoFirepowerDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool CiscoFirepowerDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool CiscoFirepowerDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    wchar_t buffer[1024];
    if (SnmpGetEx(snmp, L".1.3.6.1.2.1.1.1.0", nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)
       return false;
@@ -70,14 +71,15 @@ bool CiscoFirepowerDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Ob
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool CiscoFirepowerDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool CiscoFirepowerDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    wcscpy(hwInfo->vendor, L"Cisco");
 
    wchar_t sysDescr[1024];

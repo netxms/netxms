@@ -54,10 +54,10 @@ int HuaweiSWDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool HuaweiSWDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool HuaweiSWDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -65,13 +65,13 @@ bool HuaweiSWDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool HuaweiSWDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool HuaweiSWDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
    // Only set vendor here, rest will be retrieved from ENTITY MIB
    _tcscpy(hwInfo->vendor, _T("Huawei"));
@@ -81,14 +81,14 @@ bool HuaweiSWDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *HuaweiSWDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *HuaweiSWDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, true);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, true);
    if (ifList == nullptr)
       return nullptr;
    
@@ -113,8 +113,9 @@ InterfaceList *HuaweiSWDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
  * Check if device supports IEEE 802.1x. Probes hwDot1xGlobal (.1.3.6.1.4.1.2011.5.25.40.4.1.2.0) from
  * HUAWEI-BRAS-SRVCFG-EAP-MIB and returns true if it equals enabled(1).
  */
-bool HuaweiSWDriver::is8021xSupported(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool HuaweiSWDriver::is8021xSupported(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    return CheckSNMPIntegerValue(snmp, { 1, 3, 6, 1, 4, 1, 2011, 5, 25, 40, 4, 1, 2, 0 }, 1);
 }
 
@@ -127,9 +128,10 @@ bool HuaweiSWDriver::is8021xSupported(SNMP_Transport *snmp, NObject *node, Drive
  *
  * PAE state is synthesized from these. Backend state has no per-port analog in this MIB and is left UNKNOWN.
  */
-void HuaweiSWDriver::get8021xPortState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
+void HuaweiSWDriver::get8021xPortState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex,
          int32_t *paeState, int32_t *backendState)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    uint32_t oid[16] = { 1, 3, 6, 1, 4, 1, 2011, 5, 25, 40, 4, 1, 14, 1, 2, ifIndex };
 
    int32_t portSwitch = 0;
@@ -168,8 +170,9 @@ void HuaweiSWDriver::get8021xPortState(SNMP_Transport *snmp, NObject *node, Driv
  * bridge MAC) as the segment's designated bridge. Reporting it here lets the STP topology code recognize
  * these as the node's own designated ports and avoid creating false inter-switch links toward the M-LAG peer.
  */
-MacAddress HuaweiSWDriver::getStpBridgeId(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+MacAddress HuaweiSWDriver::getStpBridgeId(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    // hwMstpiBridgeID (1.3.6.1.4.1.2011.5.25.42.4.1.19.1.2.0) - bridge identifier for the spanning tree
    // instance, encoded as 8 octets: 2-byte priority followed by the 6-byte bridge MAC address.
    BYTE bridgeId[16];

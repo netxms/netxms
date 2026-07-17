@@ -308,7 +308,8 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idSubType,
 			   {
 			      SNMP_Transport *snmp = node->createSnmpTransport();
 			      InterfaceId iid;
-			      if ((snmp != nullptr) && driver->lldpNameToInterfaceId(snmp, node, node->getDriverData(), ifName, &iid))
+			      NodeDeviceContext context(node->self(), snmp);
+			      if ((snmp != nullptr) && driver->lldpNameToInterfaceId(&context, node, node->getDriverData(), ifName, &iid))
 			      {
 			         switch(iid.type)
 			         {

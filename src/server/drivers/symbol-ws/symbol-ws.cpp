@@ -62,11 +62,12 @@ int SymbolDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool SymbolDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    BYTE buffer[256];
    return SnmpGet(snmp->getSnmpVersion(), snmp, { 1, 3, 6, 1, 4, 1, 388, 14, 1, 6, 1, 10, 0 }, buffer, sizeof(buffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS;
 }
@@ -74,12 +75,13 @@ bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& 
 /**
  * Get cluster mode for device (standalone / active / standby)
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int SymbolDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int SymbolDriver::getClusterMode(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    int ret = CLUSTER_MODE_UNKNOWN;
 
 #define _GET(oid) \
@@ -117,11 +119,11 @@ int SymbolDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData
 /*
  * Check switch for wireless capabilities
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool SymbolDriver::isWirelessController(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -315,12 +317,13 @@ static uint32_t HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport
 /**
  * Get access points
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
 
    // Adopted
@@ -364,7 +367,7 @@ static uint32_t HandlerAccessPointFindUnadopted(SNMP_Variable *var, SNMP_Transpo
 /**
  * Get access point state
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param apIndex access point index
@@ -372,9 +375,10 @@ static uint32_t HandlerAccessPointFindUnadopted(SNMP_Variable *var, SNMP_Transpo
  * @param ipAddr access point IP address
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
+AccessPointState SymbolDriver::getAccessPointState(DeviceContext *context, NObject *node, DriverData *driverData,
       uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    TCHAR oid[256];
 
    // Check that AP still in adopted list
@@ -466,12 +470,13 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *t
 /**
  * Get registered wireless stations (clients)
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.12.3.1.1"), // wsCcRfMuMac

@@ -66,10 +66,10 @@ int QtechSWDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool QtechSWDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool QtechSWDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -77,12 +77,12 @@ bool QtechSWDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId&
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList* QtechSWDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList* QtechSWDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, true);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, true);
    if (ifList == nullptr)
       return nullptr;
 
@@ -161,14 +161,15 @@ InterfaceList* QtechSWDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool QtechSWDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool QtechSWDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("Qtech"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());

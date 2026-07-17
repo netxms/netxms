@@ -208,9 +208,10 @@ NetworkDeviceDriver *FindDriverForNode(const TCHAR *name, const SNMP_ObjectId& s
 	if (selected > 0)
 	{
 		qsort(selection, selected, sizeof(struct __selected_driver), CompareDrivers);
+		SnmpDeviceContext context(snmpTransport);
 		for(int i = 0 ; i < selected; i++)
 		{
-			if (selection[i].driver->isDeviceSupported(snmpTransport, snmpObjectId))
+			if (selection[i].driver->isDeviceSupported(&context, snmpObjectId))
 				return selection[i].driver;
 		}
 	}

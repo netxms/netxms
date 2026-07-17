@@ -51,10 +51,10 @@ int ILODriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool ILODriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool ILODriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -62,14 +62,15 @@ bool ILODriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool ILODriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool ILODriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    _tcscpy(hwInfo->vendor, _T("Hewlett Packard Enterprise"));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -191,11 +192,12 @@ static uint32_t HandlerInterfaceList(SNMP_Variable *var, SNMP_Transport *snmp, I
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *ILODriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *ILODriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    InterfaceList *ifList = new InterfaceList(8);
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.232.9.2.5.1.1.2"), HandlerInterfaceList, ifList) != SNMP_ERR_SUCCESS)
       delete_and_null(ifList);
@@ -210,7 +212,7 @@ static SNMP_ObjectId s_cpqSm2NicEnabledStatus(SNMP_ObjectId::parse(_T(".1.3.6.1.
 /**
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
@@ -222,9 +224,10 @@ static SNMP_ObjectId s_cpqSm2NicEnabledStatus(SNMP_ObjectId::parse(_T(".1.3.6.1.
  * @param operState OUT: interface operational state
  * @param speed OUT: updated interface speed
  */
-void ILODriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
+void ILODriver::getInterfaceState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
          uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_ObjectId oid(s_cpqSm2NicEnabledStatus, ifIndex);
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());

@@ -52,10 +52,10 @@ int ZyxelESSwitchDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool ZyxelESSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool ZyxelESSwitchDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -63,13 +63,13 @@ bool ZyxelESSwitchDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Obj
 /**
  * Get port layout of given module. Default implementation always set NDD_PN_UNKNOWN as layout.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void ZyxelESSwitchDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void ZyxelESSwitchDriver::getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_DU_LR;
    layout->rows = 2;
@@ -78,14 +78,14 @@ void ZyxelESSwitchDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, D
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *ZyxelESSwitchDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *ZyxelESSwitchDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
    if (ifList == nullptr)
       return nullptr;
 

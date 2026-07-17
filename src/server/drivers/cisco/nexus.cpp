@@ -64,10 +64,10 @@ int CiscoNexusDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool CiscoNexusDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool CiscoNexusDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -108,16 +108,17 @@ static UINT32 HandlerIPAddressList(SNMP_Variable *var, SNMP_Transport *transport
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *CiscoNexusDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *CiscoNexusDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    // Get interface list from standard MIB
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
    if (ifList == nullptr)
       return nullptr;
 
@@ -279,15 +280,16 @@ static uint32_t HandlerVlanTrunkPorts(SNMP_Variable *var, SNMP_Transport *transp
 /**
  * Get list of VLANs on given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return VLAN list or NULL
  */
-VlanList *CiscoNexusDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+VlanList *CiscoNexusDriver::getVlans(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    VlanList *list = new VlanList();
-   std::pair<VlanList*, int> context(list, 0);  // Context for vlanTrunkPortVlansEnabled*
+   std::pair<VlanList*, int> walkContext(list, 0);  // Context for vlanTrunkPortVlansEnabled*
 
    // vtpVlanName
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
@@ -298,22 +300,22 @@ VlanList *CiscoNexusDriver::getVlans(SNMP_Transport *snmp, NObject *node, Driver
       goto failure;
 
    // vlanTrunkPortVlansEnabled
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.4"), HandlerVlanTrunkPorts, &context) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.4"), HandlerVlanTrunkPorts, &walkContext) != SNMP_ERR_SUCCESS)
       goto failure;
 
    // vlanTrunkPortVlansEnabled2k
-   context.second = 1024;
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.17"), HandlerVlanTrunkPorts, &context) != SNMP_ERR_SUCCESS)
+   walkContext.second = 1024;
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.17"), HandlerVlanTrunkPorts, &walkContext) != SNMP_ERR_SUCCESS)
       goto failure;
 
    // vlanTrunkPortVlansEnabled3k
-   context.second = 2048;
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.18"), HandlerVlanTrunkPorts, &context) != SNMP_ERR_SUCCESS)
+   walkContext.second = 2048;
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.18"), HandlerVlanTrunkPorts, &walkContext) != SNMP_ERR_SUCCESS)
       goto failure;
 
    // vlanTrunkPortVlansEnabled4k
-   context.second = 3072;
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.19"), HandlerVlanTrunkPorts, &context) != SNMP_ERR_SUCCESS)
+   walkContext.second = 3072;
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.19"), HandlerVlanTrunkPorts, &walkContext) != SNMP_ERR_SUCCESS)
       goto failure;
 
    return list;
@@ -368,7 +370,7 @@ bool CiscoNexusDriver::isConfigBackupSupported()
 /**
  * Get running configuration via interactive SSH
  */
-bool CiscoNexusDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool CiscoNexusDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
@@ -382,7 +384,7 @@ bool CiscoNexusDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *ou
 /**
  * Get startup configuration via interactive SSH
  */
-bool CiscoNexusDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
+bool CiscoNexusDriver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
 {
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)

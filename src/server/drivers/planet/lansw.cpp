@@ -55,10 +55,10 @@ int PlanetLanSwDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool PlanetLanSwDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool PlanetLanSwDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -70,12 +70,12 @@ bool PlanetLanSwDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Objec
  * It is driver's responsibility to destroy existing object if it is to be replaced . One data
  * object should not be used for multiple nodes. Data object may be destroyed by framework when no longer needed.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void PlanetLanSwDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void PlanetLanSwDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
    if (*driverData == nullptr)
    {
@@ -87,14 +87,15 @@ void PlanetLanSwDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId&
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool PlanetLanSwDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool PlanetLanSwDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    wcscpy(hwInfo->vendor, L"Planet Technology Corp.");
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -133,14 +134,15 @@ bool PlanetLanSwDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *no
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *PlanetLanSwDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *PlanetLanSwDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, true);
+   SNMP_Transport *snmp = context->getSNMPTransport();
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, true);
    if (ifList == nullptr)
       return nullptr;
 
@@ -255,13 +257,13 @@ bool PlanetLanSwDriver::hasMetrics()
 /**
  * Get list of metrics supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of metrics supported by driver or NULL on error
  */
 
-ObjectArray<AgentParameterDefinition> *PlanetLanSwDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AgentParameterDefinition> *PlanetLanSwDriver::getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, Ownership::True);
    metrics->add(new AgentParameterDefinition(L"Card.CPUUsage(*)", L"Card {instance}: CPU usage", DCI_DT_UINT));
@@ -276,7 +278,7 @@ ObjectArray<AgentParameterDefinition> *PlanetLanSwDriver::getAvailableMetrics(SN
 /**
  * Get value of given metric
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param name metric name
@@ -284,8 +286,9 @@ ObjectArray<AgentParameterDefinition> *PlanetLanSwDriver::getAvailableMetrics(SN
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError PlanetLanSwDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size)
+DataCollectionError PlanetLanSwDriver::getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const wchar_t *name, wchar_t *value, size_t size)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    if (driverData == nullptr)
       return DCE_COLLECTION_ERROR;
 

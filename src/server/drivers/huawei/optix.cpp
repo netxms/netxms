@@ -53,10 +53,10 @@ int OptixDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool OptixDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool OptixDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -64,13 +64,13 @@ bool OptixDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& o
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool OptixDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool OptixDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
    _tcscpy(hwInfo->vendor, _T("Huawei"));
    return true;
@@ -192,11 +192,12 @@ static uint32_t HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, Int
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *OptixDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    InterfaceList *ifList = new InterfaceList();
 
 	// Walk ethernet ports
@@ -219,7 +220,7 @@ InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
 /**
  * Get interface state. Both states must be set to UNKNOWN if cannot be read from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param ifIndex interface index
@@ -231,9 +232,10 @@ InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
  * @param operState OUT: interface operational state
  * @param speed OUT: updated interface speed
  */
-void OptixDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
+void OptixDriver::getInterfaceState(DeviceContext *context, NObject *node, DriverData *driverData, uint32_t ifIndex, const TCHAR *ifName,
          uint32_t ifType, int ifTableSuffixLen, const uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState, uint64_t *speed)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    *adminState = IF_ADMIN_STATE_UNKNOWN;
    *operState = IF_OPER_STATE_UNKNOWN;
 
@@ -291,12 +293,13 @@ static uint32_t HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, void *
 /**
  * Get ARP cache
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param driverData driver-specific data previously created in analyzeDevice (must be derived from HostMibDriverData)
  * @return ARP cache or NULL on failure
  */
-shared_ptr<ArpCache> OptixDriver::getArpCache(SNMP_Transport *snmp, DriverData *driverData)
+shared_ptr<ArpCache> OptixDriver::getArpCache(DeviceContext *context, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    shared_ptr<ArpCache> arpCache = make_shared<ArpCache>();
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2011.2.25.4.50.23.1.1.1.3"), HandlerArp, arpCache.get()) != SNMP_ERR_SUCCESS)
       arpCache.reset();

@@ -54,11 +54,12 @@ int CiscoWirelessControllerDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool CiscoWirelessControllerDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool CiscoWirelessControllerDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    // read agentInventoryMachineModel
    TCHAR buffer[1024];
    if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)
@@ -73,14 +74,15 @@ bool CiscoWirelessControllerDriver::isDeviceSupported(SNMP_Transport *snmp, cons
 /**
  * Get hardware information from device.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param hwInfo pointer to hardware information structure to fill
  * @return true if hardware information is available
  */
-bool CiscoWirelessControllerDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+bool CiscoWirelessControllerDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.3.0")));  // agentInventoryMachineModel (product code)
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.13.0"))); // agentInventoryProductName (product name)
@@ -140,14 +142,15 @@ bool CiscoWirelessControllerDriver::getHardwareInformation(SNMP_Transport *snmp,
 /**
  * Get device virtualization type.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver data
  * @param vtype pointer to virtualization type enum to fill
  * @return true if virtualization type is known
  */
-bool CiscoWirelessControllerDriver::getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype)
+bool CiscoWirelessControllerDriver::getVirtualizationType(DeviceContext *context, NObject *node, DriverData *driverData, VirtualizationType *vtype)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    TCHAR buffer[1024];
    if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr) != SNMP_ERR_SUCCESS)
       return false;
@@ -161,12 +164,13 @@ bool CiscoWirelessControllerDriver::getVirtualizationType(SNMP_Transport *snmp, 
 /**
  * Get cluster mode for device (standalone / active / standby)
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int CiscoWirelessControllerDriver::getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int CiscoWirelessControllerDriver::getClusterMode(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    uint32_t ssoConfig;
    // cLHaApSsoConfig: enable(1), disable(2)
    if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.9.9.615.1.2.1.0"), nullptr, 0, &ssoConfig, sizeof(uint32_t), 0, nullptr) != SNMP_ERR_SUCCESS)
@@ -186,11 +190,11 @@ int CiscoWirelessControllerDriver::getClusterMode(SNMP_Transport *snmp, NObject 
 /*
  * Check switch for wireless capabilities
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool CiscoWirelessControllerDriver::isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+bool CiscoWirelessControllerDriver::isWirelessController(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return true;
 }
@@ -309,12 +313,13 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
 /**
  * Get access points
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *CiscoWirelessControllerDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AccessPointInfo> *CiscoWirelessControllerDriver::getAccessPoints(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14179.2.2.1.1.33"),  // bsnAPEthernetMacAddress
@@ -383,12 +388,13 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
 /**
  * Get registered wireless stations (clients)
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStations(DeviceContext *context, NObject *node, DriverData *driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    auto wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14179.2.1.4.1.1"), // bsnMobileStationMacAddress
@@ -404,7 +410,7 @@ ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStat
 /**
  * Get access point state
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param apIndex access point index
@@ -413,9 +419,10 @@ ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStat
  * @param radioInterfaces list of radio interfaces for this AP
  * @return state of access point or AP_UNKNOWN if it cannot be determined
  */
-AccessPointState CiscoWirelessControllerDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
+AccessPointState CiscoWirelessControllerDriver::getAccessPointState(DeviceContext *context, NObject *node, DriverData *driverData,
       uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    if (radioInterfaces.isEmpty())
       return AP_UNKNOWN;
 

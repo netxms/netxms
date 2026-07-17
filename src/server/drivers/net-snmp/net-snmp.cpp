@@ -32,13 +32,14 @@
  * It is driver's responsibility to destroy existing object if it is to be replaced . One data
  * object should not be used for multiple nodes. Data object may be destroyed by framework when no longer needed.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void NetSnmpBaseDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
+void NetSnmpBaseDriver::analyzeDevice(DeviceContext *context, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    if (*driverData == nullptr)
       *driverData = new NetSnmpDriverData();
    static_cast<NetSnmpDriverData*>(*driverData)->updateStorageCache(snmp);
@@ -55,7 +56,7 @@ bool NetSnmpBaseDriver::hasMetrics()
 /**
  * Get value of given metric
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param name metric name
@@ -63,8 +64,9 @@ bool NetSnmpBaseDriver::hasMetrics()
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError NetSnmpBaseDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
+DataCollectionError NetSnmpBaseDriver::getMetric(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
+   SNMP_Transport *snmp = context->getSNMPTransport();
    if (driverData == NULL)
       return DCE_COLLECTION_ERROR;
 
@@ -103,12 +105,12 @@ DataCollectionError NetSnmpBaseDriver::getMetric(SNMP_Transport *snmp, NObject *
 /**
  * Get list of metrics supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of metrics supported by driver or NULL on error
  */
-ObjectArray<AgentParameterDefinition> *NetSnmpBaseDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AgentParameterDefinition> *NetSnmpBaseDriver::getAvailableMetrics(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, Ownership::True);
    registerHostMibMetrics(metrics);

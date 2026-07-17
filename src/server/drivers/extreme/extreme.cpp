@@ -62,10 +62,10 @@ int ExtremeDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool ExtremeDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool ExtremeDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
 	return true;
 }
@@ -73,13 +73,13 @@ bool ExtremeDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId&
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  */
-InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *ExtremeDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 		return nullptr;
 
@@ -117,14 +117,14 @@ InterfaceList *ExtremeDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 /**
  * Translate LLDP port name (port ID subtype 5) to local interface id.
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver's data
  * @param lldpName port name received from LLDP MIB
  * @param id interface ID structure to be filled at success
  * @return true if interface identification provided
  */
-bool ExtremeDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
+bool ExtremeDriver::lldpNameToInterfaceId(DeviceContext *context, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
 {
    // Actual interface names could be in form 1:name
    id->type = InterfaceIdType::NAME;
@@ -137,25 +137,25 @@ bool ExtremeDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, D
 /**
  * Get orientation of the modules in the device
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int ExtremeDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int ExtremeDriver::getModulesOrientation(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return NDD_ORIENTATION_HORIZONTAL;
 }
 
 /**
  * Get port layout of given module
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void ExtremeDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void ExtremeDriver::getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_UD_LR;
    layout->rows = 2;

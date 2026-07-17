@@ -52,10 +52,10 @@ int LenovoRackDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool LenovoRackDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool LenovoRackDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -63,14 +63,14 @@ bool LenovoRackDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Object
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *LenovoRackDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *LenovoRackDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, true);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, true);
    if (ifList == nullptr)
       return nullptr;
 

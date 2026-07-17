@@ -63,10 +63,10 @@ int LenovoFlexDriver::isPotentialDevice(const SNMP_ObjectId& oid)
 /**
  * Check if given device is supported by driver
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param oid Device OID
  */
-bool LenovoFlexDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid)
+bool LenovoFlexDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
    return true;
 }
@@ -74,14 +74,14 @@ bool LenovoFlexDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Object
 /**
  * Get list of interfaces for given node
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *LenovoFlexDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
+InterfaceList *LenovoFlexDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, true);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(context, node, driverData, true);
    if (ifList == nullptr)
       return nullptr;
 
@@ -121,12 +121,12 @@ InterfaceList *LenovoFlexDriver::getInterfaces(SNMP_Transport *snmp, NObject *no
 /**
  * Get orientation of the modules in the device
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return module orientation
  */
-int LenovoFlexDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+int LenovoFlexDriver::getModulesOrientation(DeviceContext *context, NObject *node, DriverData *driverData)
 {
    return NDD_ORIENTATION_HORIZONTAL;
 }
@@ -134,13 +134,13 @@ int LenovoFlexDriver::getModulesOrientation(SNMP_Transport *snmp, NObject *node,
 /**
  * Get port layout of given module
  *
- * @param snmp SNMP transport
+ * @param context device context
  * @param node Node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @param module Module number (starting from 1)
  * @param layout Layout structure to fill
  */
-void LenovoFlexDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
+void LenovoFlexDriver::getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout)
 {
    layout->numberingScheme = NDD_PN_LR_UD;
    layout->rows = 1;
