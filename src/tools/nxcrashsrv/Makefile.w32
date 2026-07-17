@@ -10,7 +10,8 @@
 TOOL = nxcrashsrv
 SOURCES = deflate.cpp nxcrashsrv.cpp
 TOOL_LIBS = $(ZLIB_LIBS) -ldbghelp
-# Entry point is _tmain (-> wmain under UNICODE), so the CRT needs the wide entry
-TOOL_LDFLAGS = -municode
+# -mwindows selects the GUI subsystem (WinMain entry) so no console window is
+# allocated when the crash server is launched by a service with no console
+TOOL_LDFLAGS = -mwindows
 
 include $(TOPDIR)/build/tool-common.mk

@@ -12,6 +12,7 @@
 #include <psapi.h>
 #include <dbghelp.h>
 #include <tlhelp32.h>
+#include <shellapi.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
@@ -613,15 +614,17 @@ static void GenerateDump(DWORD pid, HANDLE hProcess, const CrashDumpRequest *req
 }
 
 /**
- * Entry point
+ * Entry point. Built as a GUI subsystem application (WinMain entry) so that no
+ * console window is ever allocated when launched by a service that has no console
+ * of its own. The crash server communicates only through its log file and the
+ * shared memory section, so it never needs a console.
  */
-int _tmain(int argc, TCHAR *argv[])
+int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int cmdShow)
 {
-   if (argc < 3)
-   {
-      _tprintf(_T("*** Crash Server *** Required arguments missing\n"));
+   int argc;
+   WCHAR **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+   if ((argv == nullptr) || (argc < 3))
       return 1;
-   }
 
    s_pid = GetCurrentProcessId();
    DWORD targetPid = _tcstoul(argv[1], nullptr, 10);
