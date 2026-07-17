@@ -5418,7 +5418,7 @@ Condition LIBNETXMS_EXPORTABLE *GetShutdownConditionObject();
 
 #ifdef _WIN32
 void LIBNETXMS_EXPORTABLE EnableFatalExitOnCRTError(bool enable);
-bool LIBNETXMS_EXPORTABLE StartCrashHandler(const TCHAR *processName, const TCHAR *dumpDir, bool fullDump);
+bool LIBNETXMS_EXPORTABLE StartCrashHandler(const TCHAR *processName, const TCHAR *dumpDir, bool fullDump, uint64_t dumpDirSizeLimit = 0);
 void LIBNETXMS_EXPORTABLE StopCrashHandler();
 #endif
 
