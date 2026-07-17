@@ -382,9 +382,47 @@ static void DumpThreadStack(FILE *fp, HANDLE hProcess, DWORD faultingThreadId, c
 }
 
 /**
- * Write crash info file
+ * Check if given file name is a crash dump file (either raw or compressed)
  */
-static void WriteInfoFile(const TCHAR *fileName, HANDLE hProcess, uint64_t exceptionPointers, DWORD faultingThreadId, const TCHAR *processName, time_t now)
+static bool IsDumpFile(const TCHAR *fileName)
+{
+   size_t len = _tcslen(fileName);
+   if ((len > 5) && !_tcsicmp(&fileName[len - 5], _T(".mdmp")))
+      return true;
+   if ((len > 8) && !_tcsicmp(&fileName[len - 8], _T(".mdmp.gz")))
+      return true;
+   return false;
+}
+
+/**
+ * Calculate total size of all crash dump files in the dump directory
+ */
+static uint64_t GetDumpDirectorySize(const TCHAR *dumpDir)
+{
+   TCHAR pattern[MAX_PATH];
+   _sntprintf(pattern, MAX_PATH, _T("%s\\*"), dumpDir);
+
+   WIN32_FIND_DATA fd;
+   HANDLE handle = FindFirstFile(pattern, &fd);
+   if (handle == INVALID_HANDLE_VALUE)
+      return 0;
+
+   uint64_t size = 0;
+   do
+   {
+      if (((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) && IsDumpFile(fd.cFileName))
+         size += (static_cast<uint64_t>(fd.nFileSizeHigh) << 32) | fd.nFileSizeLow;
+   } while (FindNextFile(handle, &fd));
+   FindClose(handle);
+
+   return size;
+}
+
+/**
+ * Write crash info file. If dump file generation was skipped, dumpStatus contains
+ * the explanation to be included into the file, otherwise it is null.
+ */
+static void WriteInfoFile(const TCHAR *fileName, HANDLE hProcess, uint64_t exceptionPointers, DWORD faultingThreadId, const TCHAR *processName, time_t now, const TCHAR *dumpStatus)
 {
    WriteLog(_T("Writing info file %s"), fileName);
 
@@ -405,10 +443,14 @@ static void WriteInfoFile(const TCHAR *fileName, HANDLE hProcess, uint64_t excep
       moduleCount = 0;
    }
 
-   TCHAR timeText[32];
+   // Buffer must be large enough to hold date, time, and time zone name (up to 31 characters)
+   TCHAR timeText[128];
    struct tm* ltm = localtime(&now);
-   _tcsftime(timeText, 32, _T("%Y-%m-%d %H:%M:%S %Z"), ltm);
+   if (_tcsftime(timeText, 128, _T("%Y-%m-%d %H:%M:%S %Z"), ltm) == 0)
+      timeText[0] = 0;   // buffer content is undefined if formatted text does not fit
    _ftprintf(fp, _T("%s CRASH DUMP\n%s\n"), processName, timeText);
+   if (dumpStatus != nullptr)
+      _ftprintf(fp, _T("\n*** %s ***\n\n"), dumpStatus);
    if (exceptionPointers != 0)
    {
       SIZE_T bytesRead;
@@ -535,9 +577,11 @@ static void SuspendOtherThreads(DWORD pid, DWORD faultingThreadId)
 }
 
 /**
- * Generate minidump and info file for crashed process
+ * Generate minidump and info file for crashed process. Minidump generation is skipped
+ * if total size of dump files already in the dump directory reached given limit (zero
+ * limit means unlimited); info file is always written.
  */
-static void GenerateDump(DWORD pid, HANDLE hProcess, const CrashDumpRequest *request, const TCHAR *dumpDir)
+static void GenerateDump(DWORD pid, HANDLE hProcess, const CrashDumpRequest *request, const TCHAR *dumpDir, uint64_t dumpDirSizeLimit)
 {
    WCHAR processName[64];
    wcsncpy(processName, (request->processName[0] != 0) ? request->processName : L"netxms-process", 64);
@@ -556,42 +600,61 @@ static void GenerateDump(DWORD pid, HANDLE hProcess, const CrashDumpRequest *req
    // Keep process memory stable while the dump is written
    SuspendOtherThreads(pid, request->faultingThreadId);
 
-   HANDLE hFile = CreateFile(dumpFile, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-   if (hFile != INVALID_HANDLE_VALUE)
+   // Check dump directory size limit before creating the dump file. The info file is
+   // written in any case, so a crash is always recorded even if the limit is reached.
+   TCHAR dumpStatus[256];
+   dumpStatus[0] = 0;
+   if (dumpDirSizeLimit != 0)
    {
-      MINIDUMP_EXCEPTION_INFORMATION mei;
-      mei.ThreadId = request->faultingThreadId;
-      mei.ExceptionPointers = reinterpret_cast<PEXCEPTION_POINTERS>(static_cast<uintptr_t>(request->exceptionPointers));
-      mei.ClientPointers = TRUE;
-
-      static const char *comments = "Version=" NETXMS_VERSION_STRING_A "; BuildTag=" NETXMS_BUILD_TAG_A;
-      MINIDUMP_USER_STREAM us;
-      us.Type = CommentStreamA;
-      us.Buffer = (void*)comments;
-      us.BufferSize = static_cast<ULONG>(strlen(comments) + 1);
-
-      MINIDUMP_USER_STREAM_INFORMATION usi;
-      usi.UserStreamCount = 1;
-      usi.UserStreamArray = &us;
-
-      MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(
-         ((request->fullDump != 0) ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData);
-
-      if (MiniDumpWriteDump(hProcess, pid, hFile, dumpType, &mei, &usi, nullptr))
+      uint64_t dumpDirSize = GetDumpDirectorySize(dumpDir);
+      if (dumpDirSize >= dumpDirSizeLimit)
       {
-         CloseHandle(hFile);
-         WriteLog(_T("Minidump written to %s"), dumpFile);
+         _sntprintf(dumpStatus, 256,
+            _T("Minidump file not created: total size of dump files in dump directory (%I64u bytes) reached configured limit of %I64u bytes"),
+            dumpDirSize, dumpDirSizeLimit);
+         WriteLog(_T("%s"), dumpStatus);
+      }
+   }
+
+   if (dumpStatus[0] == 0)
+   {
+      HANDLE hFile = CreateFile(dumpFile, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+      if (hFile != INVALID_HANDLE_VALUE)
+      {
+         MINIDUMP_EXCEPTION_INFORMATION mei;
+         mei.ThreadId = request->faultingThreadId;
+         mei.ExceptionPointers = reinterpret_cast<PEXCEPTION_POINTERS>(static_cast<uintptr_t>(request->exceptionPointers));
+         mei.ClientPointers = TRUE;
+
+         static const char *comments = "Version=" NETXMS_VERSION_STRING_A "; BuildTag=" NETXMS_BUILD_TAG_A;
+         MINIDUMP_USER_STREAM us;
+         us.Type = CommentStreamA;
+         us.Buffer = (void*)comments;
+         us.BufferSize = static_cast<ULONG>(strlen(comments) + 1);
+
+         MINIDUMP_USER_STREAM_INFORMATION usi;
+         usi.UserStreamCount = 1;
+         usi.UserStreamArray = &us;
+
+         MINIDUMP_TYPE dumpType = static_cast<MINIDUMP_TYPE>(
+            ((request->fullDump != 0) ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData);
+
+         if (MiniDumpWriteDump(hProcess, pid, hFile, dumpType, &mei, &usi, nullptr))
+         {
+            CloseHandle(hFile);
+            WriteLog(_T("Minidump written to %s"), dumpFile);
+         }
+         else
+         {
+            CloseHandle(hFile);
+            _wremove(dumpFile);
+            WriteLog(_T("MiniDumpWriteDump failed (error %u)"), GetLastError());
+         }
       }
       else
       {
-         CloseHandle(hFile);
-         _wremove(dumpFile);
-         WriteLog(_T("MiniDumpWriteDump failed (error %u)"), GetLastError());
+         WriteLog(_T("Cannot create dump file %s (error %u)"), dumpFile, GetLastError());
       }
-   }
-   else
-   {
-      WriteLog(_T("Cannot create dump file %s (error %u)"), dumpFile, GetLastError());
    }
 
    // Write accompanying info file (process name in upper case for the title)
@@ -601,7 +664,7 @@ static void GenerateDump(DWORD pid, HANDLE hProcess, const CrashDumpRequest *req
    wcsncpy(titleName, processName, 64);
    titleName[63] = 0;
    CharUpperW(titleName);
-   WriteInfoFile(infoFile, hProcess, request->exceptionPointers, request->faultingThreadId, titleName, now);
+   WriteInfoFile(infoFile, hProcess, request->exceptionPointers, request->faultingThreadId, titleName, now, (dumpStatus[0] != 0) ? dumpStatus : nullptr);
 
    // Compress dump file
    if (_waccess(dumpFile, 0) == 0)
@@ -629,8 +692,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
    s_pid = GetCurrentProcessId();
    DWORD targetPid = _tcstoul(argv[1], nullptr, 10);
    const TCHAR *dumpDir = argv[2];
+   uint64_t dumpDirSizeLimit = (argc > 3) ? _tcstoui64(argv[3], nullptr, 10) : 0;
    _sntprintf(s_logFile, MAX_PATH, _T("%s\\nxcrashsrv.log"), dumpDir);
-   WriteLog(_T("Crash server starting (target PID %u)"), targetPid);
+   WriteLog(_T("Crash server starting (target PID %u, dump directory size limit %I64u)"), targetPid, dumpDirSizeLimit);
 
    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, targetPid);
    if (hProcess == nullptr)
@@ -683,7 +747,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
    if (rc == WAIT_OBJECT_0)
    {
       WriteLog(_T("Crash dump request received"));
-      GenerateDump(targetPid, hProcess, request, dumpDir);
+      GenerateDump(targetPid, hProcess, request, dumpDir, dumpDirSizeLimit);
       SetEvent(eventDone);
       WriteLog(_T("Crash dump processing completed"));
    }

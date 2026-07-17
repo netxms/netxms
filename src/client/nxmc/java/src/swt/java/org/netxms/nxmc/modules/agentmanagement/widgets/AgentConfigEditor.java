@@ -68,6 +68,7 @@ public class AgentConfigEditor extends Composite
       "DisableIPv6",
       "DisableLocalDatabase",
       "DumpDirectory",
+      "DumpDirectorySizeLimit",
       "EnableActions",
       "EnableArbitraryCommandExecution",
       "EnabledCiphers",

@@ -300,6 +300,7 @@ static ThreadPool *s_timerThreadPool = nullptr;
 
 #ifdef _WIN32
 static TCHAR s_dumpDirectory[MAX_PATH] = _T("{default}");
+static uint64_t s_dumpDirectorySizeLimit = _ULL(8) * 1024 * 1024 * 1024;
 static Condition s_shutdownCondition(true);
 #else
 static char s_umask[32] = "";
@@ -339,6 +340,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DisableLocalDatabase"), CT_BOOLEAN_FLAG_32, 0, 0, AF_DISABLE_LOCAL_DATABASE, 0, &g_dwFlags, nullptr },
 #ifdef _WIN32
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDirectory, nullptr },
+   { _T("DumpDirectorySizeLimit"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_dumpDirectorySizeLimit, nullptr },
 #endif
    { _T("EnableActions"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, nullptr },
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &s_enabledCiphers, nullptr },
@@ -1135,7 +1137,8 @@ BOOL Initialize()
 #ifdef _WIN32
    if (s_startupFlags & SF_CATCH_EXCEPTIONS)
    {
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Crash dump generation is enabled (dump directory is %s)"), s_dumpDirectory);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Crash dump generation is enabled (dump directory is %s, size limit is ") UINT64_FMT _T(" bytes)"),
+         s_dumpDirectory, s_dumpDirectorySizeLimit);
       CreateDirectoryTree(s_dumpDirectory);
       if (g_failFlags & FAIL_CRASH_SERVER_START)
          nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Failed to start crash dump collector process"));
@@ -2514,7 +2517,7 @@ int main(int argc, char *argv[])
          }
          if (s_startupFlags & SF_CATCH_EXCEPTIONS)
          {
-            if (!StartCrashHandler(_T("nxagentd"), s_dumpDirectory, (s_startupFlags & SF_WRITE_FULL_DUMP) != 0))
+            if (!StartCrashHandler(_T("nxagentd"), s_dumpDirectory, (s_startupFlags & SF_WRITE_FULL_DUMP) != 0, s_dumpDirectorySizeLimit))
                g_failFlags |= FAIL_CRASH_SERVER_START;
          }
 #endif

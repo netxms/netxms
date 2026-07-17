@@ -129,8 +129,11 @@ static void CleanupCrashHandler()
 /**
  * Start out-of-process crash handler. On success installs an unhandled exception
  * filter; on failure leaves the process without a handler and returns false.
+ * Dump directory size limit is the maximum total size of dump files in the dump
+ * directory - once it is reached, the generator writes crash info files only.
+ * Zero means unlimited.
  */
-bool LIBNETXMS_EXPORTABLE StartCrashHandler(const TCHAR *processName, const TCHAR *dumpDir, bool fullDump)
+bool LIBNETXMS_EXPORTABLE StartCrashHandler(const TCHAR *processName, const TCHAR *dumpDir, bool fullDump, uint64_t dumpDirSizeLimit)
 {
    uint32_t pid = GetCurrentProcessId();
 
@@ -177,8 +180,8 @@ bool LIBNETXMS_EXPORTABLE StartCrashHandler(const TCHAR *processName, const TCHA
    }
 
    // Launch crash dump generator process
-   TCHAR cmdLine[MAX_PATH + 64];
-   _sntprintf(cmdLine, MAX_PATH + 64, _T("nxcrashsrv.exe %u \"%s\""), pid, dumpDir);
+   TCHAR cmdLine[MAX_PATH + 128];
+   _sntprintf(cmdLine, MAX_PATH + 128, _T("nxcrashsrv.exe %u \"%s\" ") UINT64_FMT, pid, dumpDir, dumpDirSizeLimit);
    s_crashServer = new ProcessExecutor(cmdLine, false);
    bool ready = false;
    if (s_crashServer->execute())
