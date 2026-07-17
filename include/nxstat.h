@@ -40,9 +40,10 @@
 #if defined(_WIN32)
 
 int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st);
+int LIBNETXMS_EXPORTABLE _fstatw32(int fd, struct _stati64 *st);
 
 #define NX_STAT _statw32
-#define NX_FSTAT _fstati64
+#define NX_FSTAT _fstatw32
 #define NX_STAT_FOLLOW_SYMLINK _statw32
 #define NX_STAT_STRUCT struct _stati64
 

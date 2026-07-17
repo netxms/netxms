@@ -4493,6 +4493,64 @@ int LIBNETXMS_EXPORTABLE _statw32(const WCHAR *file, struct _stati64 *st)
    return 0;
 }
 
+/**
+ * fstat() implementation for Windows
+ *
+ * Used instead of CRT's _fstati64 so that file times are directly comparable with those
+ * returned by _statw32. Pre-UCRT runtimes (msvcrt.dll, linked by the Windows XP agent
+ * build) convert file time to time_t via FileTimeToLocalFileTime, which applies the DST
+ * state in effect at the moment of the call rather than the one in effect at the file's
+ * timestamp, making those time_t values one hour off for half of the year.
+ */
+int LIBNETXMS_EXPORTABLE _fstatw32(int fd, struct _stati64 *st)
+{
+   // Callers may ignore return value and read the structure unconditionally, so it is
+   // zeroed before any operation that can fail
+   memset(st, 0, sizeof(struct _stati64));
+
+   HANDLE h = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
+   if (h == INVALID_HANDLE_VALUE)
+   {
+      _set_errno(EBADF);
+      return -1;
+   }
+
+   BY_HANDLE_FILE_INFORMATION fi;
+   if (!GetFileInformationByHandle(h, &fi))
+   {
+      switch (GetLastError())
+      {
+         case ERROR_INVALID_HANDLE:
+            _set_errno(EBADF);
+            break;
+         case ERROR_ACCESS_DENIED:
+            _set_errno(EACCES);
+            break;
+         default:
+            _set_errno(EIO);
+            break;
+      }
+      return -1;
+   }
+
+   st->st_mode = _S_IREAD;
+   if (!(fi.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+      st->st_mode |= _S_IWRITE;
+   if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+      st->st_mode |= _S_IFDIR;
+   else if (fi.dwFileAttributes & FILE_ATTRIBUTE_DEVICE)
+      st->st_mode |= _S_IFCHR;
+   else
+      st->st_mode |= _S_IFREG;
+
+   st->st_size = (static_cast<INT64>(fi.nFileSizeHigh) << 32) + fi.nFileSizeLow;
+   st->st_atime = FileTimeToUnixTime(fi.ftLastAccessTime);
+   st->st_ctime = FileTimeToUnixTime(fi.ftCreationTime);
+   st->st_mtime = FileTimeToUnixTime(fi.ftLastWriteTime);
+
+   return 0;
+}
+
 #endif   /* _WIN32 */
 
 #ifndef _WIN32
