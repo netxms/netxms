@@ -148,7 +148,7 @@
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\build;..\..\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>dbghelp.lib;zlib.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -161,7 +161,7 @@
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\build;..\..\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>dbghelp.lib;zlib.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -174,7 +174,7 @@
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\build;..\..\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>dbghelp.lib;zlib.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -189,7 +189,7 @@
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\build;..\..\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>dbghelp.lib;zlib.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -206,7 +206,7 @@
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\build;..\..\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>dbghelp.lib;zlib.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -223,7 +223,7 @@
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\build;..\..\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>dbghelp.lib;zlib.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -240,7 +240,7 @@
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\build;..\..\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>dbghelp.lib;zlib.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -257,7 +257,7 @@
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\build;..\..\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>dbghelp.lib;zlib.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -274,7 +274,7 @@
       <AdditionalIncludeDirectories>..\..\..\include;..\..\..\build;..\..\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>dbghelp.lib;zlib.lib;psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
