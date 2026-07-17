@@ -89,7 +89,7 @@ public class SelectSummaryTableDialog extends Dialog
 			@Override
 			public String getText(Object element)
 			{
-				return ((DciSummaryTableDescriptor)element).getTitle();
+				return ((DciSummaryTableDescriptor)element).getDisplayName();
 			}
       });
       viewer.setComparator(new ViewerComparator() {
@@ -98,7 +98,7 @@ public class SelectSummaryTableDialog extends Dialog
       	{
       		DciSummaryTableDescriptor s1 = (DciSummaryTableDescriptor)e1;
       		DciSummaryTableDescriptor s2 = (DciSummaryTableDescriptor)e2;
-				return s1.getTitle().compareToIgnoreCase(s2.getTitle());
+				return s1.getDisplayName().compareToIgnoreCase(s2.getDisplayName());
       	}
       });
       viewer.addDoubleClickListener(new IDoubleClickListener() {

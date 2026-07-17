@@ -98,6 +98,19 @@ public class DciSummaryTableDescriptor
 	}
 
 	/**
+	 * Get display name in the form "title (menu path)". The menu path is always shown so that
+	 * tables with an empty title remain identifiable. Accelerator markers are stripped from the menu path.
+	 *
+	 * @return display name
+	 */
+	public String getDisplayName()
+	{
+		String t = (title != null) ? title : "";
+		String p = (menuPath != null) ? menuPath.replace("&", "") : "";
+		return t + " (" + p + ")";
+	}
+
+	/**
 	 * @return the flags
 	 */
 	public int getFlags()
