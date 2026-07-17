@@ -35,11 +35,14 @@ import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
 import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
+import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.ICellModifier;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
@@ -184,6 +187,20 @@ public class AgentFileManager extends ObjectView
             {
                actionDelete.setEnabled(selection.size() > 0);
                actionCalculateFolderSize.setEnabled(selection.size() > 0);
+            }
+         }
+      });
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            Object element = viewer.getStructuredSelection().getFirstElement();
+            if ((element instanceof AgentFile) && ((AgentFile)element).isDirectory())
+            {
+               if (viewer.getExpandedState(element))
+                  viewer.collapseToLevel(element, TreeViewer.ALL_LEVELS);
+               else
+                  viewer.expandToLevel(element, 1);
             }
          }
       });
