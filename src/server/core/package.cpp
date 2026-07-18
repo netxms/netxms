@@ -516,9 +516,9 @@ void PackageDeploymentJob::notifyClients() const
 /**
  * Upgrade agent
  */
-static bool UpgradeAgent(PackageDeploymentJob *job, Node *node, AgentConnectionEx *upgradeConnection, uint32_t transferId, const wchar_t **errorMessage)
+static bool UpgradeAgent(PackageDeploymentJob *job, Node *node, AgentConnectionEx *upgradeConnection, uint32_t transferId, const wchar_t *localPackageFile, const wchar_t **errorMessage)
 {
-   uint32_t rcc = upgradeConnection->startUpgrade(job->getPackageFile(), transferId);
+   uint32_t rcc = upgradeConnection->startUpgrade(job->getPackageFile(), transferId, localPackageFile);
    if (rcc != ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"UpgradeAgent(): cannot start agent upgrade on node %s [%u] in job [%u] (%u: %s)",
@@ -533,6 +533,9 @@ static bool UpgradeAgent(PackageDeploymentJob *job, Node *node, AgentConnectionE
             break;
          case ERR_UNTRUSTED_PACKAGE:
             *errorMessage = L"Installer package rejected as untrusted";
+            break;
+         case ERR_FILE_HASH_MISMATCH:
+            *errorMessage = L"Installer package integrity check failed";
             break;
          case ERR_DOWNGRADE_NOT_ALLOWED:
             *errorMessage = L"Agent downgrade not allowed";
@@ -766,7 +769,7 @@ void PackageDeploymentJob::execute()
    if (isAgentUpgrade)
    {
       const wchar_t *errorMessage;
-      success = UpgradeAgent(this, node.get(), agentConn.get(), upgradeTransferId, &errorMessage);
+      success = UpgradeAgent(this, node.get(), agentConn.get(), upgradeTransferId, packageFile, &errorMessage);
       if (!success)
          markAsFailed(errorMessage, false);
    }

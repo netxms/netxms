@@ -2292,8 +2292,10 @@ uint32_t AgentConnection::uploadAgentUpgradePackage(const TCHAR *localFile, uint
  * Send upgrade command. If transferId is non-zero, references a session-private
  * staging file uploaded via uploadAgentUpgradePackage(); otherwise pkgName must
  * name a file previously uploaded into the agent's file store via uploadFile().
+ * If localPackageFile is not NULL, its SHA256 hash is calculated and sent along
+ * with the command so the agent can verify package integrity before launching it.
  */
-uint32_t AgentConnection::startUpgrade(const TCHAR *pkgName, uint32_t transferId)
+uint32_t AgentConnection::startUpgrade(const TCHAR *pkgName, uint32_t transferId, const TCHAR *localPackageFile)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -2309,6 +2311,18 @@ uint32_t AgentConnection::startUpgrade(const TCHAR *pkgName, uint32_t transferId
       for(i = (int)_tcslen(pkgName) - 1;
           (i >= 0) && (pkgName[i] != '\\') && (pkgName[i] != '/'); i--);
       request.setField(VID_FILE_NAME, &pkgName[i + 1]);
+   }
+
+   // Provide SHA256 hash of the package so the agent can verify its integrity before launching
+   if (localPackageFile != nullptr)
+   {
+      BYTE hash[SHA256_DIGEST_SIZE];
+      if (!CalculateFileSHA256Hash(localPackageFile, hash))
+      {
+         debugPrintf(3, _T("startUpgrade: cannot calculate SHA256 hash of package file \"%s\""), localPackageFile);
+         return ERR_IO_FAILURE;
+      }
+      request.setField(VID_HASH_SHA256, hash, SHA256_DIGEST_SIZE);
    }
 
    uint32_t rcc;
