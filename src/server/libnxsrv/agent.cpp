@@ -2314,7 +2314,8 @@ uint32_t AgentConnection::startUpgrade(const TCHAR *pkgName, uint32_t transferId
    uint32_t rcc;
    if (sendMessage(&request))
    {
-      rcc = waitForRCC(request.getId(), m_commandTimeout);
+      // If agent does certificate chain revocation check it may take about a minute due to network timeouts
+      rcc = waitForRCC(request.getId(), std::max(m_commandTimeout, static_cast<uint32_t>(90000)));
    }
    else
    {
