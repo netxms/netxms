@@ -45,7 +45,7 @@ static NXCPStreamCompressionMethod s_compression = NXCP_STREAM_COMPRESSION_NONE;
 static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA_KEY serverKey)
 {
    bool connected = false;
-   uint32_t rcc = conn->startUpgrade(pszPkgName);
+   uint32_t rcc = conn->startUpgrade(pszPkgName, 0, pszPkgName);
    if (rcc == ERR_SUCCESS)
    {
       conn->disconnect();

@@ -1258,6 +1258,27 @@ uint32_t CommSession::setupAgentUpgrade(NXCPMessage *request)
 }
 
 /**
+ * Verify SHA256 hash of upgrade package against the hash provided by the server.
+ * Returns true if the server did not provide a hash (older server - no check) or
+ * if the calculated hash matches. Returns false only on a genuine mismatch or if
+ * the package file cannot be read.
+ */
+static bool VerifyUpgradePackageHash(const NXCPMessage& request, const TCHAR *packageFile)
+{
+   if (!request.isFieldExist(VID_HASH_SHA256))
+      return true;   // Older server does not send package hash
+
+   BYTE expectedHash[SHA256_DIGEST_SIZE];
+   request.getFieldAsBinary(VID_HASH_SHA256, expectedHash, SHA256_DIGEST_SIZE);
+
+   BYTE actualHash[SHA256_DIGEST_SIZE];
+   if (!CalculateFileSHA256Hash(packageFile, actualHash))
+      return false;
+
+   return memcmp(expectedHash, actualHash, SHA256_DIGEST_SIZE) == 0;
+}
+
+/**
  * Upgrade agent from a previously staged package.
  *
  * Two flows are supported:
@@ -1265,6 +1286,10 @@ uint32_t CommSession::setupAgentUpgrade(NXCPMessage *request)
  *    prepared by setupAgentUpgrade(). Available to upgrade-only servers.
  *  - Legacy flow: VID_FILE_NAME names a file in the agent file store
  *    (uploaded via CMD_TRANSFER_FILE). Master access required as before.
+ *
+ * If the server provided a SHA256 hash of the package (VID_HASH_SHA256), it is
+ * verified against the staged file before the installer is launched. Requests
+ * without a hash (older servers) proceed without verification.
  */
 uint32_t CommSession::upgrade(NXCPMessage *request)
 {
@@ -1285,6 +1310,12 @@ uint32_t CommSession::upgrade(NXCPMessage *request)
       TCHAR fullPath[MAX_PATH];
       _tcslcpy(fullPath, m_pendingUpgradeFile, MAX_PATH);
 
+      if (!VerifyUpgradePackageHash(*request, fullPath))
+      {
+         writeLog(NXLOG_WARNING, _T("Agent upgrade rejected: package %s failed integrity check"), fullPath);
+         return ERR_FILE_HASH_MISMATCH;
+      }
+
       // Hand ownership of the staging file to the post-restart cleanup path.
       WriteRegistry(_T("upgrade.file"), fullPath);
       writeLog(NXLOG_INFO, _T("Starting agent upgrade using staged package %s"), fullPath);
@@ -1303,12 +1334,19 @@ uint32_t CommSession::upgrade(NXCPMessage *request)
    TCHAR packageName[MAX_PATH] = _T("");
    request->getFieldAsString(VID_FILE_NAME, packageName, MAX_PATH);
 
+   TCHAR fullPath[MAX_PATH];
+   BuildFullPath(packageName, fullPath);
+
+   if (!VerifyUpgradePackageHash(*request, fullPath))
+   {
+      writeLog(NXLOG_WARNING, _T("Agent upgrade rejected: package %s failed integrity check"), packageName);
+      return ERR_FILE_HASH_MISMATCH;
+   }
+
    // Store upgrade file name to delete it after system start
    WriteRegistry(_T("upgrade.file"), packageName);
    writeLog(NXLOG_INFO, _T("Starting agent upgrade using package %s"), packageName);
 
-   TCHAR fullPath[MAX_PATH];
-   BuildFullPath(packageName, fullPath);
    return UpgradeAgent(fullPath, true);   // Master server access already verified for this flow
 }
 
