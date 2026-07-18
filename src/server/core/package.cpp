@@ -781,8 +781,7 @@ void PackageDeploymentJob::execute()
       rcc = agentConn->uploadAgentUpgradePackage(packageFile, &upgradeTransferId, nullptr, bandwidthLimit);
       if ((rcc == ERR_NOT_IMPLEMENTED) || (rcc == ERR_UNKNOWN_COMMAND))
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, L"PackageDeploymentJob::execute(): agent on node %s [%u] does not support isolated upgrade flow, falling back to legacy upload",
-            node->getName(), m_nodeId);
+         nxlog_debug_tag(DEBUG_TAG, 5, L"PackageDeploymentJob::execute(): agent on node %s [%u] does not support isolated upgrade flow, falling back to legacy upload", node->getName(), m_nodeId);
          upgradeTransferId = 0;
          rcc = agentConn->uploadFile(packageFile, nullptr, false, nullptr, NXCP_STREAM_COMPRESSION_NONE, bandwidthLimit);
       }
