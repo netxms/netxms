@@ -306,7 +306,7 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    }
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, 0);
+	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, vm->getUserId());
 	return 0;
 }
 

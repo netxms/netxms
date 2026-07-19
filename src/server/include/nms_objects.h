@@ -4229,6 +4229,7 @@ protected:
    time_t m_downSince;
    time_t m_savedDownSince;
    time_t m_bootTime;
+   time_t m_sysUpTime;
    time_t m_agentUpTime;
    time_t m_lastAgentCommTime;
    time_t m_lastAgentConnectAttempt;
