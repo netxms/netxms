@@ -57,7 +57,7 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), vm->getUserId());
    *result = (dci != nullptr) ? dci->createNXSLObject(vm) : vm->createValue();
 	return 0;
 }
@@ -78,7 +78,7 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), vm->getUserId());
    *result = (dci != nullptr) ? DCObjectValueToNXSL(vm, dci.get(), rawValue) : vm->createValue();
 	return 0;
 }
@@ -390,7 +390,7 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), vm->getUserId());
    *ppResult = (dci != nullptr)
       ? DCItemAggregateValueToNXSL(vm, dci.get(), func, argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32())
       : vm->createValue();
@@ -633,7 +633,7 @@ static int GetDCIValuesImpl(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), vm->getUserId());
    if (dci == nullptr)
    {
       *ppResult = vm->createValue();   // DCI not found
@@ -786,7 +786,7 @@ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
 
    bool success = false;
-	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
+	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), vm->getUserId());
    if ((dci != nullptr) && ((dci->getDataSource() == DS_PUSH_AGENT) || (dci->getDataSource() == DS_OTLP)) && (dci->getType() == DCO_TYPE_ITEM))
    {
       Timestamp t = (argc == 3) ? Timestamp::now() : Timestamp::fromMilliseconds(argv[3]->getValueAsInt64());
