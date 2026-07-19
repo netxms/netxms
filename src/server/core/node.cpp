@@ -133,6 +133,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_downSince = 0;
    m_savedDownSince = 0;
    m_bootTime = 0;
+   m_sysUpTime = 0;
    m_agentUpTime = 0;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_pendingDataConfigurationSync = 0;
@@ -271,6 +272,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_downSince = 0;
    m_savedDownSince = 0;
    m_bootTime = 0;
+   m_sysUpTime = 0;
    m_agentUpTime = 0;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_pendingDataConfigurationSync = 0;
@@ -3558,33 +3560,47 @@ restart_status_poll:
    // Get uptime and update boot time
    if (!(m_state & DCSF_UNREACHABLE))
    {
-      time_t prevBootTime = m_bootTime;
+      time_t prevSysUpTime = m_sysUpTime;
       wchar_t buffer[MAX_RESULT_LENGTH];
       if (getMetricFromAgent(L"System.Uptime", buffer, MAX_RESULT_LENGTH) == DCE_SUCCESS)
       {
-         m_bootTime = time(nullptr) - wcstol(buffer, nullptr, 0);
+         m_sysUpTime = wcstol(buffer, nullptr, 0);
+         m_bootTime = time(nullptr) - m_sysUpTime;
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_name, m_id, (UINT32)m_bootTime);
       }
       else if (getMetricFromSNMP(m_snmpPort, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.3.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
-         m_bootTime = time(nullptr) - wcstol(buffer, nullptr, 0) / 100;   // sysUpTime is in hundredths of a second
+         m_sysUpTime = wcstol(buffer, nullptr, 0) / 100;   // sysUpTime is in hundredths of a second
+         m_bootTime = time(nullptr) - m_sysUpTime;
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_name, m_id, (UINT32)m_bootTime);
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get system uptime"), m_name, m_id);
       }
-      if (m_bootTime > prevBootTime)
+      // Detect restart by comparing reported uptime with previous value. Using the counter directly avoids
+      // false positives from the boot time (time(nullptr) - uptime) jittering by a second between polls due to
+      // whole-second rounding and network latency. prevSysUpTime == 0 means first poll or recovery from unreachable.
+      if ((prevSysUpTime != 0) && (m_sysUpTime < prevSysUpTime))
       {
-         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"StatusPoll(%s [%d]): system restart detected (previous boot time = " INT64_FMT ", new boot time = " INT64_FMT ")",
-            m_name, m_id, static_cast<int64_t>(prevBootTime), static_cast<int64_t>(m_bootTime));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"StatusPoll(%s [%d]): system restart detected (previous uptime = " INT64_FMT ", new uptime = " INT64_FMT ")",
+            m_name, m_id, static_cast<int64_t>(prevSysUpTime), static_cast<int64_t>(m_sysUpTime));
          sendPollerMsg(L"System was restarted since last status poll\r\n");
-         updateInterfaceConfiguration(rqId);
+         if (!(m_flags & DCF_DISABLE_CONF_POLL))
+         {
+            updateInterfaceConfiguration(rqId);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, L"StatusPoll(%s [%d]): interface resync after restart skipped (configuration poll disabled)", m_name, m_id);
+            sendPollerMsg(L"Interface resync skipped (configuration poll disabled)\r\n");
+         }
       }
    }
    else
    {
       m_bootTime = 0;
+      m_sysUpTime = 0;
    }
 
    // Get agent uptime to check if it was restarted
