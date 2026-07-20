@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,7 +43,8 @@ static Mutex s_userAgentNotificationsLock;
  */
 static void RegisterSessionAgent(const shared_ptr<SessionAgentConnector>& newConnector)
 {
-   s_lock.writeLock();
+   WriteLockGuard lockGuard(s_lock);
+
    bool idFound = false;
    for (int i = 0; i < s_agents.size(); i++)
    {
@@ -92,7 +93,6 @@ static void RegisterSessionAgent(const shared_ptr<SessionAgentConnector>& newCon
          }
       }
    }
-   s_lock.unlock();
 }
 
 /**
@@ -569,20 +569,13 @@ void StartSessionAgentConnector()
  */
 shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(const TCHAR *sessionName)
 {
-   shared_ptr<SessionAgentConnector> c;
-
-   s_lock.readLock();
+   ReadLockGuard lockGuard(s_lock);
    for(int i = 0; i < s_agents.size(); i++)
    {
       if (!_tcsicmp(s_agents.get(i)->getSessionName(), sessionName))
-      {
-         c = s_agents.getShared(i);
-         break;
-      }
+         return s_agents.getShared(i);
    }
-   s_lock.unlock();
-
-   return c;
+   return shared_ptr<SessionAgentConnector>();
 }
 
 /**
@@ -590,20 +583,13 @@ shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(const TCHAR *sess
  */
 shared_ptr<SessionAgentConnector> AcquireSessionAgentConnector(uint32_t sessionId)
 {
-   shared_ptr<SessionAgentConnector> c;
-
-   s_lock.readLock();
+   ReadLockGuard lockGuard(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
    {
       if (s_agents.get(i)->getSessionId() == sessionId)
-      {
-         c = s_agents.getShared(i);
-         break;
-      }
+         return s_agents.getShared(i);
    }
-   s_lock.unlock();
-
-   return c;
+   return shared_ptr<SessionAgentConnector>();
 }
 
 /**
@@ -662,14 +648,13 @@ LONG H_SessionAgentCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
  */
 void UpdateUserAgentsConfiguration()
 {
-   s_lock.readLock();
+   ReadLockGuard lockGuard(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
          c->updateUserAgentConfig();
    }
-   s_lock.unlock();
 }
 
 /**
@@ -677,14 +662,13 @@ void UpdateUserAgentsConfiguration()
  */
 void UpdateUserAgentsEnvironment()
 {
-   s_lock.readLock();
+   ReadLockGuard lockGuard(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
    {
       SessionAgentConnector *c = s_agents.get(i);
       if (c->isUserAgent())
          c->updateUserAgentEnvironment();
    }
-   s_lock.unlock();
 }
 
 /**
@@ -692,12 +676,9 @@ void UpdateUserAgentsEnvironment()
  */
 void ShutdownSessionAgents(bool restart)
 {
-   s_lock.readLock();
+   ReadLockGuard lockGuard(s_lock);
    for (int i = 0; i < s_agents.size(); i++)
-   {
       s_agents.get(i)->shutdown(restart);
-   }
-   s_lock.unlock();
 }
 
 /**
