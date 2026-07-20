@@ -3861,6 +3861,13 @@ restart_status_poll:
  */
 NetworkPathCheckResult Node::checkNetworkPathElement(uint32_t nodeId, const TCHAR *nodeType, bool isProxy, bool isSwitch, uint32_t requestId, bool secondPass)
 {
+   if (nodeId == m_id)
+   {
+      // Node cannot be its own network path element (can happen when interface peer resolves to the node itself)
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, L"Node::checkNetworkPathElement(%s [%d]): %s is the node itself, skipping", m_name, m_id, nodeType);
+      return NetworkPathCheckResult();
+   }
+
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
    if (node == nullptr)
       return NetworkPathCheckResult();
