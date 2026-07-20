@@ -143,15 +143,9 @@ static uint64_t GetEffectiveSystemRights(User *user)
  */
 uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId)
 {
-   uint64_t systemRights = 0;
-   s_userDatabaseLock.readLock();
+   ReadLockGuard lockGuard(s_userDatabaseLock);
    UserDatabaseObject *user = s_userDatabase.get(userId);
-   if ((user != nullptr) && !user->isGroup())
-   {
-      systemRights = GetEffectiveSystemRights(static_cast<User*>(user));
-   }
-   s_userDatabaseLock.unlock();
-   return systemRights;
+   return ((user != nullptr) && !user->isGroup()) ? GetEffectiveSystemRights(static_cast<User*>(user)) : 0;
 }
 
 /**
@@ -238,7 +232,7 @@ static void AccountStatusUpdater()
 		time_t blockInactiveAccounts = (time_t)ConfigReadInt(_T("BlockInactiveUserAccounts"), 0) * 86400;
 
 		s_userDatabaseLock.writeLock();
-		time_t now = time(NULL);
+		time_t now = time(nullptr);
 		Iterator<UserDatabaseObject> it = s_userDatabase.begin();
 		while(it.hasNext())
 		{
@@ -393,8 +387,8 @@ bool LoadUsers()
  */
 void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
 {
-   // Save users
-   s_userDatabaseLock.writeLock();
+   WriteLockGuard lockGuard(s_userDatabaseLock);
+
    Iterator<UserDatabaseObject> it = s_userDatabase.begin();
    while(it.hasNext())
    {
@@ -411,7 +405,6 @@ void SaveUsers(DB_HANDLE hdb, uint32_t watchdogId)
 			object->saveToDatabase(hdb);
       }
    }
-   s_userDatabaseLock.unlock();
 }
 
 /**

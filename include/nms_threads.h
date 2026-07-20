@@ -23,8 +23,6 @@
 #ifndef _nms_threads_h_
 #define _nms_threads_h_
 
-#ifdef __cplusplus
-
 #include <functional>
 
 #define NMS_THREADS_H_INCLUDED
@@ -1930,12 +1928,12 @@ public:
    /**
     * Lock for writing (exclusive lock)
     */
-   void writeLock()
+   void writeLock() const
    {
 #ifdef _WIN32
-      WriteLockRWLock(&m_rwlock);
+      WriteLockRWLock(const_cast<win_rwlock_t*>(&m_rwlock));
 #else
-      pthread_rwlock_wrlock(&m_rwlock);
+      pthread_rwlock_wrlock(const_cast<pthread_rwlock_t*>(&m_rwlock));
 #endif
    }
 
@@ -1952,6 +1950,48 @@ public:
    }
 };
 
-#endif   /* __cplusplus */
+/**
+ * Helper class that locks r/w lock on read on creation and unlocks on destruction
+ */
+class ReadLockGuard
+{
+   ReadLockGuard(const ReadLockGuard& src) = delete;
+   ReadLockGuard& operator =(const ReadLockGuard& src) = delete;
+
+private:
+   const RWLock& m_lock;
+
+public:
+   explicit ReadLockGuard(const RWLock& lock) : m_lock(lock)
+   {
+      lock.readLock();
+   }
+   ~ReadLockGuard()
+   {
+      m_lock.unlock();
+   }
+};
+
+/**
+ * Helper class that locks r/w lock on write on creation and unlocks on destruction
+ */
+class WriteLockGuard
+{
+   WriteLockGuard(const WriteLockGuard& src) = delete;
+   WriteLockGuard& operator =(const WriteLockGuard& src) = delete;
+
+private:
+   const RWLock& m_lock;
+
+public:
+   explicit WriteLockGuard(const RWLock& lock) : m_lock(lock)
+   {
+      lock.writeLock();
+   }
+   ~WriteLockGuard()
+   {
+      m_lock.unlock();
+   }
+};
 
 #endif   /* _nms_threads_h_ */

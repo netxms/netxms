@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
- ** Copyright (C) 2003-2022 Raden Solutions
+ ** Copyright (C) 2003-2026 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -70,7 +70,7 @@ void LIBNETXMS_EXPORTABLE RegisterCallHandler(const char *name, CallHandler hand
  */
 void LIBNETXMS_EXPORTABLE UnregisterCallHandler(const char *name)
 {
-   s_callTableLock.writeLock();
+   WriteLockGuard lockGuard(s_callTableLock);
    CallTableEntry *entry;
    HASH_FIND(hh, s_callTable, name, static_cast<unsigned int>(strlen(name)), entry);
    if (entry != nullptr)
@@ -78,7 +78,6 @@ void LIBNETXMS_EXPORTABLE UnregisterCallHandler(const char *name)
       HASH_DEL(s_callTable, entry);
       MemFree(entry);
    }
-   s_callTableLock.unlock();
 }
 
 /**
@@ -86,20 +85,10 @@ void LIBNETXMS_EXPORTABLE UnregisterCallHandler(const char *name)
  */
 int LIBNETXMS_EXPORTABLE CallNamedFunction(const char *name, const void *input, void *output)
 {
-   int rc;
-   s_callTableLock.readLock();
+   ReadLockGuard lockGuard(s_callTableLock);
    CallTableEntry *entry;
    HASH_FIND(hh, s_callTable, name, static_cast<unsigned int>(strlen(name)), entry);
-   if (entry != nullptr)
-   {
-      rc = entry->handler(input, output);
-   }
-   else
-   {
-      rc = -1;
-   }
-   s_callTableLock.unlock();
-   return rc;
+   return (entry != nullptr) ? entry->handler(input, output): -1;
 }
 
 /**
@@ -153,7 +142,8 @@ uint32_t LIBNETXMS_EXPORTABLE RegisterHook(const char *name, std::function<void 
  */
 void LIBNETXMS_EXPORTABLE UnregisterHook(uint32_t hookId)
 {
-   s_hookTableLock.writeLock();
+   WriteLockGuard lockGuard(s_hookTableLock);
+
    bool found = false;
    HookTableEntry *entry, *tmp;
    HASH_ITER(hh, s_hookTable, entry, tmp)
@@ -177,7 +167,6 @@ void LIBNETXMS_EXPORTABLE UnregisterHook(uint32_t hookId)
          break;
       }
    }
-   s_hookTableLock.unlock();
 }
 
 /**
