@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -812,7 +812,7 @@ static void ProcessLLDPConnectionEntry(Node *node, const StringObjectMap<SNMP_Va
 		}
 		else
 		{
-		   shared_ptr<AccessPoint> remoteAP = FindRemoteAccessPoint(node, lldpRemChassisIdSubtype, lldpRemChassisIdSubtype, lldpRemSysName);
+		   shared_ptr<AccessPoint> remoteAP = FindRemoteAccessPoint(node, lldpRemChassisId, lldpRemChassisIdSubtype, lldpRemSysName);
 		   if (remoteAP != nullptr)
 		   {
 	         LL_NEIGHBOR_INFO info;
