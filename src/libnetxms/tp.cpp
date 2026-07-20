@@ -40,6 +40,16 @@ static uint32_t s_waitTimeLowWatermark = 50;
 static int s_maintThreadResponsiveness = 12;
 
 /**
+ * Number of consecutive maintenance cycles with a standing backlog and no task
+ * dequeued after which the pool is considered stalled and grown. Each cycle is
+ * ~5 seconds, so 2 cycles ~ 10 seconds of zero progress with work waiting. This
+ * covers the case where all worker threads are blocked inside long-running or
+ * hung tasks, so the wait-time based growth trigger can never fire (nothing is
+ * dequeued to sample wait time from).
+ */
+static int s_stalledCyclesThreshold = 2;
+
+/**
  * Indicator for stop with deregistration
  */
 static char s_stopAndUnregister[] = "UNREGISTER";
@@ -117,6 +127,7 @@ struct ThreadPool
    int64_t loadAverage[3];
    int64_t waitTimeEMA;
    WelfordVariance waitTimeVariance;
+   int64_t lastDequeueTime;
    int64_t queueSizeEMA;
    WelfordVariance queueSizeVariance;
    uint64_t threadStartCount;
@@ -137,6 +148,7 @@ struct ThreadPool
       shutdownMode = false;
       memset(loadAverage, 0, sizeof(loadAverage));
       waitTimeEMA = 0;
+      lastDequeueTime = GetCurrentTimeMs();
       queueSizeEMA = 0;
       threadStartCount = 0;
       threadStopCount = 0;
@@ -205,8 +217,10 @@ static void WorkerThread(WorkerThreadInfo *threadInfo)
          break;
       }
 
-      int64_t waitTime = GetCurrentTimeMs() - rq.queueTime;
+      int64_t now = GetCurrentTimeMs();
+      int64_t waitTime = now - rq.queueTime;
       p->mutex.lock();
+      p->lastDequeueTime = now;
       UpdateExpMovingAverage(p->waitTimeEMA, EMA_EXP(1, 1000), waitTime); // Use last 1000 executions
       p->waitTimeVariance.update(waitTime);
       p->mutex.unlock();
@@ -216,6 +230,35 @@ static void WorkerThread(WorkerThreadInfo *threadInfo)
    }
 
    nxlog_debug_tag(DEBUG_TAG, 8, _T("Worker thread in thread pool %s stopped"), p->name);
+}
+
+/**
+ * Start given number of worker threads. Caller must hold pool mutex.
+ * Returns number of threads actually started. Sets *failure to true if a thread
+ * could not be created.
+ */
+static int StartWorkerThreads(ThreadPool *p, int count, bool *failure)
+{
+   int started = 0;
+   for(int i = 0; i < count; i++)
+   {
+      WorkerThreadInfo *wt = new WorkerThreadInfo;
+      wt->pool = p;
+      wt->handle = ThreadCreateEx(WorkerThread, wt, p->stackSize);
+      if (wt->handle != INVALID_THREAD_HANDLE)
+      {
+         p->threads.set(CAST_FROM_POINTER(wt, uint64_t), wt);
+         p->threadStartCount++;
+         started++;
+      }
+      else
+      {
+         delete wt;
+         *failure = true;
+         break;
+      }
+   }
+   return started;
 }
 
 /**
@@ -237,6 +280,8 @@ static void MaintenanceThread(ThreadPool *p)
    int count = 0;
    uint32_t sleepTime = 5000;
    uint32_t cycleTime = 0;
+   int64_t prevDequeueTime = 0;   // lastDequeueTime observed on previous cycle
+   int stalledCycles = 0;
    while(!p->shutdownMode)
    {
       int64_t startTime = GetCurrentTimeMs();
@@ -257,6 +302,39 @@ static void MaintenanceThread(ThreadPool *p)
          UpdateExpMovingAverage(p->queueSizeEMA, EMA_EXP_180, queueSize);
          p->queueSizeVariance.update(queueSize);
 
+         // Stall detector: grow the pool if a backlog persists across several cycles
+         // with no task dequeued at all. This catches the case where every worker is
+         // blocked inside a long-running or hung task, so the wait-time based growth
+         // trigger never fires (nothing is dequeued to sample wait time from). A pool
+         // that is merely slow but progressing keeps advancing lastDequeueTime on every
+         // dequeue, so a transient burst never accumulates stalled cycles.
+         p->mutex.lock();
+         int stallThreadCount = p->threads.size();
+         int64_t dequeueTime = p->lastDequeueTime;
+         p->mutex.unlock();
+
+         if ((queueSize > 0) && (dequeueTime == prevDequeueTime))
+            stalledCycles++;
+         else
+            stalledCycles = 0;
+         prevDequeueTime = dequeueTime;
+
+         if ((stalledCycles >= s_stalledCyclesThreshold) && (stallThreadCount < p->maxThreads))
+         {
+            bool failure = false;
+            int delta = std::min(p->maxThreads - stallThreadCount, std::max(static_cast<int>(queueSize) / 2, 1));
+            p->mutex.lock();
+            int started = StartWorkerThreads(p, delta, &failure);
+            p->mutex.unlock();
+            stalledCycles = 0;   // give new threads a chance before re-triggering
+
+            if (started > 0)
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("%d thread(s) started in thread pool %s due to stalled backlog (queue size = %d)"),
+                  started, p->name, static_cast<int>(queueSize));
+            if (failure)
+               nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot create worker thread in pool %s"), p->name);
+         }
+
          count++;
          if (count == s_maintThreadResponsiveness)
          {
@@ -274,24 +352,7 @@ static void MaintenanceThread(ThreadPool *p)
                 ((threadCount == 0) && (p->activeRequests > 0)))
             {
                int delta = std::min(p->maxThreads - threadCount, std::max(std::min(queueSizeSMA, queueSizeEMA) / 2, 1));
-               for(int i = 0; i < delta; i++)
-               {
-                  WorkerThreadInfo *wt = new WorkerThreadInfo;
-                  wt->pool = p;
-                  wt->handle = ThreadCreateEx(WorkerThread, wt, p->stackSize);
-                  if (wt->handle != INVALID_THREAD_HANDLE)
-                  {
-                     p->threads.set(CAST_FROM_POINTER(wt, uint64_t), wt);
-                     p->threadStartCount++;
-                     started++;
-                  }
-                  else
-                  {
-                     delete wt;
-                     failure = true;
-                     break;
-                  }
-               }
+               started = StartWorkerThreads(p, delta, &failure);
             }
             else if ((waitTimeEMA < s_waitTimeLowWatermark) && (waitTimeSMA < s_waitTimeLowWatermark) && (threadCount > p->minThreads))
             {
