@@ -1,6 +1,6 @@
 t = new DateTime(1689937200, true);
 assert(t.year == 2023);
-assert(typeof(t.year) == "int32");	// representable years stay int32, like sibling fields
+assert(typeof(t.year) == "int32");
 assert(t.month == 6);	// 6 = July
 assert(t.day == 21);
 assert(t.hour == 11);
@@ -39,8 +39,7 @@ assert(t.second == 0);
 assert(new DateTime(1689937200, true).timestamp == new DateTime(1689937200, false).timestamp);
 
 // Lazy normalization of broken-down time (issue #3388).
-// All cases below use UTC objects so rollover is timezone-independent and works
-// with the fallback timegm() (day/hour rollover is linear there; month is pre-folded).
+// All cases below use UTC objects so rollover is timezone-independent.
 
 // Day overflow: 2023-07-21 11:00:00 UTC, day = 50 -> 2023-08-19 (July has 31 days)
 d = new DateTime(1689937200, true);
@@ -91,15 +90,14 @@ assert(d.dayOfYear == 230);	// 0-based, Jan 1 = 0
 
 // Extreme value must not crash or produce garbage. timegm() may reject it and
 // return -1; normalization then yields a defined 1969-12-31 result. Either way
-// string() is non-empty (native-timegm platforms only, per plan).
+// string() is non-empty.
 d = new DateTime(1689937200, true);
 d.year = 0xfffffff;
 assert(string(d) != '');
 
-// Combined near-INT_MAX year and huge month must not overflow the signed
-// tm_year/tm_mon fields during the month fold, nor the getter's tm_year + 1900.
-// Defined output, no crash; year stays positive (native timegm round-trips the
-// clamped year, fallback timegm rejects it and yields a 1969 result).
+// Combined near-INT_MAX year and huge month: the normalized year does not fit
+// tm_year, so timegm() rejects it and returns -1, yielding a defined 1969-12-31
+// result. Defined output, no crash.
 d = new DateTime(1689937200, true);
 d.year = 2147483647;
 d.month = 22812;

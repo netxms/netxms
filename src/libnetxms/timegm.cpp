@@ -1,139 +1,116 @@
-/*	$NetBSD: timegm.c,v 1.3 2007/08/07 02:07:01 lukem Exp $	*/
-/*	from	?	*/
+/*
+** NetXMS - Network Management System
+** Utility Library
+** Copyright (C) 2003-2026 Victor Kirhenshtein
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU Lesser General Public License as published
+** by the Free Software Foundation; either version 3 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU Lesser General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+**
+** File: timegm.cpp
+**
+**/
 
 #include "libnetxms.h"
 
 #if !HAVE_TIMEGM
 
-#ifndef TM_YEAR_BASE
-#define TM_YEAR_BASE 1900
-#endif
-
-#ifndef EPOCH_YEAR
-#define EPOCH_YEAR   1970
-#endif
-
-/*
- * UTC version of mktime(3)
+/**
+ * Floor division (quotient rounded toward negative infinity)
  */
-
-/*
- * This code is not portable, but works on most Unix-like systems.
- * If the local timezone has no summer time, using mktime(3) function
- * and adjusting offset would be usable (adjusting leap seconds
- * is still required, though), but the assumption is not always true.
- *
- * Anyway, no portable and correct implementation of UTC to time_t
- * conversion exists....
- */
-
-static time_t sub_mkgmt(struct tm *_tm)
+static inline int64_t FloorDiv(int64_t a, int64_t b)
 {
-	int y, nleapdays;
-	time_t t;
-	/* days before the month */
-	static const unsigned short moff[12] = {
-		0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
-	};
-
-	/*
-	 * XXX: This code assumes the given time to be normalized.
-	 * Normalizing here is impossible in case the given time is a leap
-	 * second but the local time library is ignorant of leap seconds.
-	 */
-
-	/* minimal sanity checking not to access outside of the array */
-	if ((unsigned) _tm->tm_mon >= 12)
-		return (time_t) -1;
-	if (_tm->tm_year < EPOCH_YEAR - TM_YEAR_BASE)
-		return (time_t) -1;
-	/* reject years that would overflow signed int when adding TM_YEAR_BASE below */
-	if (_tm->tm_year > INT_MAX - TM_YEAR_BASE)
-		return (time_t) -1;
-
-	y = _tm->tm_year + TM_YEAR_BASE - (_tm->tm_mon < 2);
-	nleapdays = y / 4 - y / 100 + y / 400 -
-	    ((EPOCH_YEAR-1) / 4 - (EPOCH_YEAR-1) / 100 + (EPOCH_YEAR-1) / 400);
-	t = ((((time_t) (_tm->tm_year - (EPOCH_YEAR - TM_YEAR_BASE)) * 365 +
-			moff[_tm->tm_mon] + _tm->tm_mday - 1 + nleapdays) * 24 +
-		_tm->tm_hour) * 60 + _tm->tm_min) * 60 + _tm->tm_sec;
-
-	return (t < 0 ? (time_t) -1 : t);
+   int64_t q = a / b;
+   return ((a % b != 0) && ((a < 0) != (b < 0))) ? q - 1 : q;
 }
 
+/**
+ * Days from civil date (proleptic Gregorian calendar) to days since the epoch
+ * (1970-01-01). Month is 1-based, day is 1-based. Based on Howard Hinnant's
+ * public domain calendar algorithms (https://howardhinnant.github.io/date_algorithms.html).
+ */
+static int64_t DaysFromCivil(int64_t y, int m, int d)
+{
+   y -= (m <= 2);
+   int64_t era = FloorDiv(y, 400);
+   int yoe = static_cast<int>(y - era * 400);                        // [0, 399]
+   int doy = (153 * (m + ((m > 2) ? -3 : 9)) + 2) / 5 + d - 1;      // [0, 365]
+   int64_t doe = static_cast<int64_t>(yoe) * 365 + yoe / 4 - yoe / 100 + doy;   // [0, 146096]
+   return era * 146097 + doe - 719468;
+}
+
+/**
+ * Civil date from days since the epoch (inverse of DaysFromCivil)
+ */
+static void CivilFromDays(int64_t z, int64_t *year, int *month, int *day)
+{
+   z += 719468;
+   int64_t era = FloorDiv(z, 146097);
+   int doe = static_cast<int>(z - era * 146097);                    // [0, 146096]
+   int yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365; // [0, 399]
+   int doy = doe - (365 * yoe + yoe / 4 - yoe / 100);               // [0, 365]
+   int mp = (5 * doy + 2) / 153;                                    // [0, 11]
+   *day = doy - (153 * mp + 2) / 5 + 1;                             // [1, 31]
+   *month = mp + ((mp < 10) ? 3 : -9);                              // [1, 12]
+   *year = yoe + era * 400 + ((*month <= 2) ? 1 : 0);
+}
+
+/**
+ * UTC version of mktime(). Conformant with POSIX.1-2024 / glibc semantics:
+ * out-of-range fields are folded into the higher-order ones, and on success
+ * the structure is updated to the normalized broken-down time (tm_wday and
+ * tm_yday are recomputed, tm_isdst is set to 0). Returns -1 if the result is
+ * not representable in time_t or the normalized year does not fit tm_year.
+ *
+ * Assumes POSIX time_t (86400 seconds per day, no leap seconds), which holds
+ * on all supported platforms. All intermediate values fit int64_t for any
+ * combination of int inputs, so the arithmetic itself cannot overflow.
+ */
 time_t LIBNETXMS_EXPORTABLE timegm(struct tm *_tm)
 {
-	time_t t, t2;
-	struct tm *tm2;
-	int sec;
+   // Fold seconds/minutes/hours into whole days plus time of day
+   int64_t t = static_cast<int64_t>(_tm->tm_sec) + static_cast<int64_t>(_tm->tm_min) * 60 + static_cast<int64_t>(_tm->tm_hour) * 3600;
+   int64_t days = FloorDiv(t, 86400);
+   int tod = static_cast<int>(t - days * 86400);   // [0, 86399]
 
-	/* Do the first guess. */
-	if ((t = sub_mkgmt(_tm)) == (time_t) -1)
-		return (time_t) -1;
+   // Fold month into year
+   int64_t ym = FloorDiv(_tm->tm_mon, 12);
+   int64_t year = static_cast<int64_t>(_tm->tm_year) + 1900 + ym;
+   int month = static_cast<int>(_tm->tm_mon - ym * 12);   // [0, 11]
 
-	/* save value in case *_tm is overwritten by gmtime() */
-	sec = _tm->tm_sec;
+   days += DaysFromCivil(year, month + 1, 1) + static_cast<int64_t>(_tm->tm_mday) - 1;
 
-	/* gmtime() returns NULL for time_t values outside its supported range
-	   (notably on Windows for far-future years); bail out defensively */
-	tm2 = gmtime(&t);
-	if (tm2 == nullptr)
-		return (time_t) -1;
-	if ((t2 = sub_mkgmt(tm2)) == (time_t) -1)
-		return (time_t) -1;
+   int64_t timestamp = days * 86400 + tod;
+   time_t result = static_cast<time_t>(timestamp);
+   if (static_cast<int64_t>(result) != timestamp)
+      return (time_t)-1;   // does not fit time_t on this platform
 
-	if (t2 < t || tm2->tm_sec != sec) {
-		/*
-		 * Adjust for leap seconds.
-		 *
-		 *     real time_t time
-		 *           |
-		 *          tm
-		 *         /	... (a) first sub_mkgmt() conversion
-		 *       t
-		 *       |
-		 *      tm2
-		 *     /	... (b) second sub_mkgmt() conversion
-		 *   t2
-		 *			--->time
-		 */
-		/*
-		 * Do the second guess, assuming (a) and (b) are almost equal.
-		 */
-		t += t - t2;
+   int64_t ny;
+   int nm, nd;
+   CivilFromDays(days, &ny, &nm, &nd);
+   if ((ny < static_cast<int64_t>(INT_MIN) + 1900) || (ny > static_cast<int64_t>(INT_MAX) + 1900))
+      return (time_t)-1;   // normalized year not representable in tm_year
 
-		/*
-		 * Either (a) or (b), may include one or two extra
-		 * leap seconds.  Try t, t + 2, t - 2, t + 1, and t - 1.
-		 * gmtime() may return NULL for time_t values outside its
-		 * supported range (notably near the maximum on Windows);
-		 * treat a NULL result as "not found".
-		 */
-		if (((tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec)
-		    || (t += 2, (tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec)
-		    || (t -= 4, (tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec)
-		    || (t += 3, (tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec)
-		    || (t -= 2, (tm2 = gmtime(&t)) != nullptr && tm2->tm_sec == sec))
-			;	/* found */
-		else {
-			/*
-			 * Not found.
-			 */
-			if (sec >= 60)
-				/*
-				 * The given time is a leap second
-				 * (sec 60 or 61), but the time library
-				 * is ignorant of the leap second.
-				 */
-				;	/* treat sec 60 as 59,
-					   sec 61 as 0 of the next minute */
-			else
-				/* The given time may not be normalized. */
-				t++;	/* restore t */
-		}
-	}
-
-	return (t < 0 ? (time_t) -1 : t);
+   _tm->tm_year = static_cast<int>(ny - 1900);
+   _tm->tm_mon = nm - 1;
+   _tm->tm_mday = nd;
+   _tm->tm_hour = tod / 3600;
+   _tm->tm_min = (tod / 60) % 60;
+   _tm->tm_sec = tod % 60;
+   _tm->tm_wday = static_cast<int>(((days + 4) % 7 + 7) % 7);   // day 0 (1970-01-01) was a Thursday
+   _tm->tm_yday = static_cast<int>(days - DaysFromCivil(ny, 1, 1));
+   _tm->tm_isdst = 0;
+   return result;
 }
 
 #endif

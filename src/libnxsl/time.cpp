@@ -75,6 +75,12 @@ struct DateTime
             memset(&data, 0, sizeof(struct tm));
 #endif
       }
+
+      // 64-bit gmtime() can produce tm_year within 1900 of INT_MAX for far-future
+      // timestamps; reject such values so that tm_year + 1900 in the year getter
+      // cannot overflow
+      if (data.tm_year > INT_MAX - 1900)
+         memset(&data, 0, sizeof(struct tm));
    }
 
    /**
@@ -86,31 +92,6 @@ struct DateTime
    {
       if (valid)
          return;
-
-      // Fold out-of-range month into year: the fallback timegm() used where the
-      // platform lacks a native one rejects tm_mon outside [0..11]. Compute the
-      // year adjustment in 64-bit and clamp so script-controlled tm_year/tm_mon
-      // cannot overflow the signed int fields. The upper bound leaves room for the
-      // getter's tm_year + 1900, which would otherwise overflow to a garbage year
-      // when a native timegm() lets a huge tm_year round-trip intact. Out-of-range
-      // years are rejected by timegm()/mktime() and yield a defined fallback result.
-      if ((data.tm_mon < 0) || (data.tm_mon > 11))
-      {
-         int64_t year = static_cast<int64_t>(data.tm_year) + data.tm_mon / 12;
-         int month = data.tm_mon % 12;
-         if (month < 0)
-         {
-            month += 12;
-            year--;
-         }
-         if (year > INT_MAX - 1900)
-            year = INT_MAX - 1900;
-         else if (year < INT_MIN)
-            year = INT_MIN;
-         data.tm_year = static_cast<int>(year);
-         data.tm_mon = month;
-      }
-
       timestamp = utc ? timegm(&data) : mktime(&data);
       valid = true;
       updateFromTimestamp();
@@ -210,10 +191,7 @@ NXSL_Value *NXSL_DateTimeClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    }
    else if (compareAttributeName(attr, "year") || compareAttributeName(attr, "tm_year"))
    {
-      // Keep the common int32 type; widen to int64 only when tm_year + 1900 would
-      // overflow a signed 32-bit int (reachable when gmtime yields tm_year near INT_MAX).
-      int64_t year = static_cast<int64_t>(st->tm_year) + 1900;
-      value = ((year >= INT_MIN) && (year <= INT_MAX)) ? vm->createValue(static_cast<int32_t>(year)) : vm->createValue(year);
+      value = vm->createValue(st->tm_year + 1900);
    }
    else if (compareAttributeName(attr, "dayOfYear") || compareAttributeName(attr, "yday") || compareAttributeName(attr, "tm_yday"))
    {
@@ -345,33 +323,7 @@ int F_DateTime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    dt->valid = true;
    dt->utc = (argc > 1) ? argv[1]->isTrue() : false;
    dt->timestamp = (argc > 0) ? static_cast<time_t>(argv[0]->getValueAsInt64()) : time(nullptr);
-
-   if (dt->utc)
-   {
-#if HAVE_GMTIME_R
-      if (gmtime_r(&dt->timestamp, &dt->data) == nullptr)
-         memset(&dt->data, 0, sizeof(struct tm));
-#else
-      struct tm *p = gmtime(&dt->timestamp);
-      if (p != nullptr)
-         memcpy(&dt->data, p, sizeof(struct tm));
-      else
-         memset(&dt->data, 0, sizeof(struct tm));
-#endif
-   }
-   else
-   {
-#if HAVE_LOCALTIME_R
-      if (localtime_r(&dt->timestamp, &dt->data) == nullptr)
-         memset(&dt->data, 0, sizeof(struct tm));
-#else
-      struct tm *p = localtime(&dt->timestamp);
-      if (p != nullptr)
-         memcpy(&dt->data, p, sizeof(struct tm));
-      else
-         memset(&dt->data, 0, sizeof(struct tm));
-#endif
-   }
+   dt->updateFromTimestamp();
 
    *result = vm->createValue(vm->createObject(&g_nxslDateTimeClass, dt));
    return NXSL_ERR_SUCCESS;
@@ -430,16 +382,7 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    auto dt = MemAllocStruct<DateTime>();
    dt->timestamp = t;
    dt->valid = true;
-#if HAVE_LOCALTIME_R
-   if (localtime_r(&t, &dt->data) == nullptr)
-      memset(&dt->data, 0, sizeof(struct tm));
-#else
-   struct tm *p = localtime(&t);
-   if (p != nullptr)
-      memcpy(&dt->data, p, sizeof(struct tm));
-   else
-      memset(&dt->data, 0, sizeof(struct tm));
-#endif
+   dt->updateFromTimestamp();
    *result = vm->createValue(vm->createObject(&g_nxslDateTimeClass, dt));
    return NXSL_ERR_SUCCESS;
 }
@@ -471,16 +414,7 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    dt->timestamp = t;
    dt->valid = true;
    dt->utc = true;
-#if HAVE_GMTIME_R
-   if (gmtime_r(&t, &dt->data) == nullptr)
-      memset(&dt->data, 0, sizeof(struct tm));
-#else
-   struct tm *p = gmtime(&t);
-   if (p != nullptr)
-      memcpy(&dt->data, p, sizeof(struct tm));
-   else
-      memset(&dt->data, 0, sizeof(struct tm));
-#endif
+   dt->updateFromTimestamp();
    *result = vm->createValue(vm->createObject(&g_nxslDateTimeClass, dt));
    return NXSL_ERR_SUCCESS;
 }
