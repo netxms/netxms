@@ -434,7 +434,7 @@ public class AbstractSelector extends Composite
 	 * Get text control
 	 * @return text control
 	 */
-	public Control getTextControl()
+   public CText getTextControl()
 	{
 		return text;
 	}

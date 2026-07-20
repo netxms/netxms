@@ -26,8 +26,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -69,6 +67,7 @@ import org.netxms.nxmc.modules.datacollection.dialogs.SelectOtlpMetricDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSmclpDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSnmpParamDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectTrafficMetricDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectWebServiceDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.WinPerfCounterSelectionDialog;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
@@ -208,13 +207,7 @@ public class General extends AbstractDCIPropertyPage
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dco.getSourceNode());
       sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH && dco.getOrigin() != DataOrigin.OTLP);
-      sourceNode.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            editor.setSourceNode(sourceNode.getObjectId());
-         }
-      });
+      sourceNode.addModifyListener((e) -> editor.setSourceNode(sourceNode.getObjectId()));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -530,6 +523,8 @@ public class General extends AbstractDCIPropertyPage
 		      (dataOrigin == DataOrigin.SCRIPT) ||
             (dataOrigin == DataOrigin.OTLP) ||
 		      (dataOrigin == DataOrigin.SMCLP));
+
+      editor.setOrigin(dataOrigin);
 	}
 
    /**
@@ -739,6 +734,7 @@ public class General extends AbstractDCIPropertyPage
       public MetricSelector(Composite parent)
       {
          super(parent, SWT.NONE, new SelectorConfigurator().setEditableText(true));
+         getTextControl().addModifyListener((e) -> editor.setMetricName(getText()));
       }
 
       /**
@@ -814,11 +810,12 @@ public class General extends AbstractDCIPropertyPage
          {
             IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
             description.setText(pd.getParameterDescription());
-            metricSelector.setText(pd.getParameterName());
+            setText(pd.getParameterName());
             if (dco instanceof DataCollectionItem)
             {
                dataType.select(getDataTypePosition(pd.getParameterDataType()));
             }
+            editor.setMetricName(pd.getParameterName());
             editor.fireOnSelectItemListeners(DataOrigin.getByValue(origin.getSelectionIndex()), pd.getParameterName(), pd.getParameterDescription(), pd.getParameterDataType());
          }
       }
@@ -830,7 +827,7 @@ public class General extends AbstractDCIPropertyPage
        */
       public void setMetricName(String name)
       {
-         setText(name);      
+         setText(name);
       }
    
       /**

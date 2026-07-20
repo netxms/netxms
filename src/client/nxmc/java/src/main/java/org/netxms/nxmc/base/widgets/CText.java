@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.nxmc.base.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -178,5 +179,25 @@ public class CText extends Composite
       super.setBackground(color);
       imageControl.setBackground(color);
       textControl.setBackground(color);
+   }
+
+   /**
+    * Add text modification listener
+    *
+    * @param listener text modification listener
+    */
+   public void addModifyListener(ModifyListener listener)
+   {
+      textControl.addModifyListener(listener);
+   }
+
+   /**
+    * Remove text modification listener
+    *
+    * @param listener text modification listener
+    */
+   public void removeModifyListener(ModifyListener listener)
+   {
+      textControl.removeModifyListener(listener);
    }
 }

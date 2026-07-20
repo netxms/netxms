@@ -591,15 +591,16 @@ public class TableColumns extends AbstractDCIPropertyPage
 	      object = dlg.getSelectedObjects().get(0);
 	   }
 
-	   switch(dci.getOrigin())
+      DataOrigin origin = editor.getOrigin();
+      switch(origin)
 	   {
 	      case AGENT:
          case INTERNAL:
          case SCRIPT:
-            updateColumnsFromDataSource(dci.getName(), true, object, dci.getOrigin());
+            updateColumnsFromDataSource(editor.getMetricName(), true, object, origin);
 	         break;
 	      case SNMP:
-	         updateColumnsFromSnmp(dci.getName(), true, object);
+            updateColumnsFromSnmp(editor.getMetricName(), true, object);
 	         break;
          default:
             break;
@@ -621,11 +622,14 @@ public class TableColumns extends AbstractDCIPropertyPage
 				   final org.netxms.client.Table table;
 				   if (editor.getSourceNode() != 0)
 				   {
+                  logger.debug("Table metadata query: sourceObjectId={}, origin={}, name={}", editor.getSourceNode(), origin, name);
                   table = session.queryTable(editor.getSourceNode(), origin, name);
 				   }
 				   else
 				   {
-                  table = session.queryTable((queryObject != null) ? queryObject.getObjectId() : dci.getNodeId(), origin, name);
+                  long sourceObjectId = (queryObject != null) ? queryObject.getObjectId() : dci.getNodeId();
+                  logger.debug("Table metadata query: sourceObjectId={}, origin={}, name={}", sourceObjectId, origin, name);
+                  table = session.queryTable(sourceObjectId, origin, name);
 				   }				      
                runInUIThread(() -> {
                   columns.clear();
