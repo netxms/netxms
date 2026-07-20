@@ -1261,6 +1261,54 @@ static bool VerifyUpgradePackageHash(const NXCPMessage& request, const TCHAR *pa
 }
 
 /**
+ * Estimated free space required to unpack and install an upgrade package is the
+ * package size multiplied by this factor. Extracted installer content is several
+ * times larger than the compressed package (measured ~3x on Windows), so a factor
+ * of 4 leaves a safety margin.
+ */
+#define UPGRADE_SPACE_FACTOR 4
+
+/**
+ * Check that the file system where the agent is installed has enough free space
+ * to unpack and install the upgrade package. That file system is the relevant one
+ * because the installer unpacks and copies files into the installation location -
+ * derived from the agent binary path on Windows and from the install prefix on
+ * other systems (GetNetXMSDirectory()). The agent queries its own FileSystem.Free
+ * metric (provided by the platform subagent) for that location.
+ *
+ * Returns true if there is enough free space, if the package size cannot be
+ * determined, or if the free space metric is unavailable (e.g. platform subagent
+ * not loaded). The check only blocks an upgrade on a positive "not enough space"
+ * result - never on missing information.
+ */
+static bool CheckUpgradeDiskSpace(const TCHAR *packageFile)
+{
+   uint64_t packageSize = FileSize(packageFile);
+   if (packageSize == 0)
+      return true;   // Cannot determine package size - do not block upgrade
+
+   TCHAR installDir[MAX_PATH];
+   GetNetXMSDirectory(nxDirBin, installDir);
+
+   TCHAR metric[MAX_PATH + 32];
+   _sntprintf(metric, MAX_PATH + 32, _T("FileSystem.Free(%s)"), installDir);
+
+   TCHAR value[MAX_RESULT_LENGTH];
+   VirtualSession session(0);
+   if (GetMetricValue(metric, value, &session) != ERR_SUCCESS)
+   {
+      nxlog_debug_tag(_T("session"), 4, _T("CheckUpgradeDiskSpace: cannot read free space for \"%s\", skipping check"), installDir);
+      return true;   // Free space metric not available - do not block upgrade
+   }
+
+   uint64_t freeSpace = _tcstoull(value, nullptr, 10);
+   uint64_t requiredSpace = packageSize * UPGRADE_SPACE_FACTOR;
+   nxlog_debug_tag(_T("session"), 4, _T("CheckUpgradeDiskSpace: install file system \"%s\" free=") UINT64_FMT _T(" required=") UINT64_FMT _T(" (package size=") UINT64_FMT _T(")"),
+      installDir, freeSpace, requiredSpace, packageSize);
+   return freeSpace >= requiredSpace;
+}
+
+/**
  * Upgrade agent from a previously staged package.
  *
  * Two flows are supported:
@@ -1298,6 +1346,12 @@ uint32_t CommSession::upgrade(NXCPMessage *request)
          return ERR_FILE_HASH_MISMATCH;
       }
 
+      if (!CheckUpgradeDiskSpace(fullPath))
+      {
+         writeLog(NXLOG_WARNING, _T("Agent upgrade rejected: not enough free disk space to install package %s"), fullPath);
+         return ERR_OUT_OF_RESOURCES;
+      }
+
       // Hand ownership of the staging file to the post-restart cleanup path.
       WriteRegistry(_T("upgrade.file"), fullPath);
       writeLog(NXLOG_INFO, _T("Starting agent upgrade using staged package %s"), fullPath);
@@ -1323,6 +1377,12 @@ uint32_t CommSession::upgrade(NXCPMessage *request)
    {
       writeLog(NXLOG_WARNING, _T("Agent upgrade rejected: package %s failed integrity check"), packageName);
       return ERR_FILE_HASH_MISMATCH;
+   }
+
+   if (!CheckUpgradeDiskSpace(fullPath))
+   {
+      writeLog(NXLOG_WARNING, _T("Agent upgrade rejected: not enough free disk space to install package %s"), packageName);
+      return ERR_OUT_OF_RESOURCES;
    }
 
    // Store upgrade file name to delete it after system start
