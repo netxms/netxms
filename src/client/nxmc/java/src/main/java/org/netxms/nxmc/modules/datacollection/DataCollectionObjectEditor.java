@@ -45,6 +45,8 @@ public class DataCollectionObjectEditor
 
 	private DataCollectionObject object;
    private View view;
+   private DataOrigin origin;
+   private String metricName;
 	private long sourceNode;
 	private Runnable timer;
 	private Set<DataCollectionObjectListener> listeners = new HashSet<DataCollectionObjectListener>(); 
@@ -58,6 +60,8 @@ public class DataCollectionObjectEditor
 	{
 		this.object = object;
       this.view = view;
+      this.origin = object.getOrigin();
+      this.metricName = object.getName();
       this.sourceNode = object.getSourceNode();
 		timer = new Runnable() {
 			@Override
@@ -207,6 +211,38 @@ public class DataCollectionObjectEditor
    }
 
    /**
+    * @return the origin
+    */
+   public DataOrigin getOrigin()
+   {
+      return origin;
+   }
+
+   /**
+    * @param origin the origin to set
+    */
+   public void setOrigin(DataOrigin origin)
+   {
+      this.origin = origin;
+   }
+
+   /**
+    * @return the metricName
+    */
+   public String getMetricName()
+   {
+      return metricName;
+   }
+
+   /**
+    * @param metricName the metricName to set
+    */
+   public void setMetricName(String metricName)
+   {
+      this.metricName = metricName;
+   }
+
+   /**
     * Sets temporary source node ID
     */
    public void setSourceNode(long nodeId)
@@ -221,7 +257,7 @@ public class DataCollectionObjectEditor
    {
       return sourceNode;
    }
-   
+
    /**
     * Create DCI modification warning message. Returns message ready to display or null if message is not needed.
     * 
