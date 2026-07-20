@@ -27,6 +27,7 @@ Source: "..\..\..\ARM64\release\bind9.nsm"; DestDir: "{app}\bin"; Flags: ignorev
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\ARM64\release\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\ARM64\release\entsoe.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\ARM64\Release\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\Release\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
@@ -35,6 +36,7 @@ Source: "..\..\..\ARM64\release\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreve
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\ARM64\Release\mssql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\ARM64\release\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\ARM64\release\openmeteo.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\ARM64\Release\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\ARM64\release\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\ARM64\release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
