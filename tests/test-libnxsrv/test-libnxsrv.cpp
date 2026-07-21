@@ -835,6 +835,666 @@ static void TestAgentErrorMappings()
 }
 
 /**
+ * Mock SNMP transport serving canned responses from an in-memory sorted MIB.
+ * Supports GET and GETNEXT requests, which is sufficient for SnmpGet/SnmpWalk
+ * based code paths in libnxsrv.
+ */
+class MockSnmpTransport : public SNMP_Transport
+{
+private:
+   ObjectArray<SNMP_Variable> m_mib;
+   SNMP_PDU *m_response;
+
+   SNMP_Variable *find(const SNMP_ObjectId& oid) const
+   {
+      for(int i = 0; i < m_mib.size(); i++)
+         if (m_mib.get(i)->getName().compare(oid) == OID_EQUAL)
+            return m_mib.get(i);
+      return nullptr;
+   }
+
+   SNMP_Variable *findNext(const SNMP_ObjectId& oid) const
+   {
+      for(int i = 0; i < m_mib.size(); i++)
+      {
+         int rc = m_mib.get(i)->getName().compare(oid);
+         if ((rc == OID_FOLLOWING) || (rc == OID_LONGER))
+            return m_mib.get(i);
+      }
+      return nullptr;
+   }
+
+public:
+   MockSnmpTransport() : m_mib(64, 64, Ownership::True)
+   {
+      m_response = nullptr;
+   }
+
+   virtual ~MockSnmpTransport()
+   {
+      delete m_response;
+   }
+
+   /**
+    * Add variable to simulated MIB (keeps MIB sorted, replaces existing value for the same OID)
+    */
+   void add(SNMP_Variable *v)
+   {
+      for(int i = 0; i < m_mib.size(); i++)
+      {
+         int rc = m_mib.get(i)->getName().compare(v->getName());
+         if (rc == OID_EQUAL)
+         {
+            m_mib.set(i, v);
+            return;
+         }
+         if ((rc == OID_FOLLOWING) || (rc == OID_LONGER))
+         {
+            m_mib.insert(i, v);
+            return;
+         }
+      }
+      m_mib.add(v);
+   }
+
+   void setInteger(const TCHAR *oid, int32_t value)
+   {
+      auto v = new SNMP_Variable(oid);
+      v->setValueFromUInt32(ASN_INTEGER, static_cast<uint32_t>(value));
+      add(v);
+   }
+
+   void setGauge(const TCHAR *oid, uint32_t value)
+   {
+      auto v = new SNMP_Variable(oid);
+      v->setValueFromUInt32(ASN_GAUGE32, value);
+      add(v);
+   }
+
+   void setString(const TCHAR *oid, const TCHAR *value)
+   {
+      auto v = new SNMP_Variable(oid);
+      v->setValueFromString(ASN_OCTET_STRING, value);
+      add(v);
+   }
+
+   void setIpAddress(const TCHAR *oid, const TCHAR *value)
+   {
+      auto v = new SNMP_Variable(oid);
+      v->setValueFromString(ASN_IP_ADDR, value);
+      add(v);
+   }
+
+   void setObjectId(const TCHAR *oid, const TCHAR *value)
+   {
+      auto v = new SNMP_Variable(oid);
+      v->setValueFromString(ASN_OBJECT_ID, value);
+      add(v);
+   }
+
+   void setBytes(const TCHAR *oid, const BYTE *value, size_t size)
+   {
+      auto v = new SNMP_Variable(oid);
+      v->setValueFromByteArray(ASN_OCTET_STRING, value, size);
+      add(v);
+   }
+
+   virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout = INFINITE, struct sockaddr *sender = nullptr,
+            socklen_t *addrSize = nullptr, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) override
+   {
+      if (m_response == nullptr)
+         return 0;
+      *pdu = m_response;
+      m_response = nullptr;
+      return 1;
+   }
+
+   virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override
+   {
+      if ((pdu->getCommand() != SNMP_GET_REQUEST) && (pdu->getCommand() != SNMP_GET_NEXT_REQUEST))
+         return 0;
+
+      delete m_response;
+      m_response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
+      for(int i = 0; i < pdu->getNumVariables(); i++)
+      {
+         SNMP_Variable *requested = pdu->getVariable(i);
+         SNMP_Variable *v = (pdu->getCommand() == SNMP_GET_REQUEST) ? find(requested->getName()) : findNext(requested->getName());
+         if (v != nullptr)
+            m_response->bindVariable(new SNMP_Variable(*v));
+         else if (pdu->getCommand() == SNMP_GET_REQUEST)
+            m_response->bindVariable(new SNMP_Variable(requested->getName(), ASN_NO_SUCH_INSTANCE));
+         else
+            m_response->bindVariable(new SNMP_Variable(requested->getName(), ASN_END_OF_MIBVIEW));
+      }
+      return 1;
+   }
+
+   virtual InetAddress getPeerIpAddress() override
+   {
+      return InetAddress::LOOPBACK;
+   }
+
+   virtual uint16_t getPort() override
+   {
+      return 161;
+   }
+
+   virtual bool isProxyTransport() override
+   {
+      return false;
+   }
+};
+
+/**
+ * Test mock SNMP transport itself (GET, GETNEXT, walk)
+ */
+static void TestMockSnmpTransport()
+{
+   StartTest(_T("Mock SNMP transport - GET"));
+   MockSnmpTransport transport;
+   transport.setString(_T(".1.3.6.1.2.1.1.1.0"), _T("Test system"));
+   transport.setInteger(_T(".1.3.6.1.2.1.1.7.0"), 72);
+
+   TCHAR buffer[256];
+   AssertEquals(SnmpGetEx(&transport, _T(".1.3.6.1.2.1.1.1.0"), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr, nullptr), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(buffer, _T("Test system"));
+
+   int32_t services;
+   AssertEquals(SnmpGetEx(&transport, _T(".1.3.6.1.2.1.1.7.0"), nullptr, 0, &services, sizeof(services), 0, nullptr, nullptr), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(services, 72);
+
+   AssertEquals(SnmpGetEx(&transport, _T(".1.3.6.1.2.1.1.5.0"), nullptr, 0, buffer, sizeof(buffer), SG_STRING_RESULT, nullptr, nullptr), static_cast<uint32_t>(SNMP_ERR_NO_OBJECT));
+   EndTest();
+
+   StartTest(_T("Mock SNMP transport - walk"));
+   transport.setString(_T(".1.3.6.1.2.1.2.2.1.2.1"), _T("eth0"));
+   transport.setString(_T(".1.3.6.1.2.1.2.2.1.2.2"), _T("eth1"));
+   transport.setString(_T(".1.3.6.1.2.1.2.2.1.2.10"), _T("eth10"));
+
+   StringList names;
+   AssertEquals(SnmpWalk(&transport, _T(".1.3.6.1.2.1.2.2.1.2"),
+      [&names] (SNMP_Variable *var) -> uint32_t
+      {
+         TCHAR buffer[256];
+         names.add(var->getValueAsString(buffer, 256));
+         return SNMP_ERR_SUCCESS;
+      }), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(names.size(), 3);
+   AssertEquals(names.get(0), _T("eth0"));
+   AssertEquals(names.get(1), _T("eth1"));
+   AssertEquals(names.get(2), _T("eth10"));
+
+   AssertEquals(SnmpWalkCount(&transport, _T(".1.3.6.1.2.1.2.2.1.2")), 3);
+   AssertEquals(SnmpWalkCount(&transport, _T(".1.3.6.1.2.1.99")), 0);   // empty subtree
+   EndTest();
+}
+
+/**
+ * Add ENTITY-MIB component to mock transport
+ */
+static void AddMockComponent(MockSnmpTransport *transport, uint32_t index, uint32_t componentClass, uint32_t parentIndex,
+      int32_t position, const TCHAR *name, const TCHAR *description, const TCHAR *model, const TCHAR *serial)
+{
+   TCHAR oid[128];
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.47.1.1.1.1.7.%u"), index);
+   transport->setString(oid, name);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.47.1.1.1.1.5.%u"), index);
+   transport->setInteger(oid, componentClass);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.47.1.1.1.1.4.%u"), index);
+   transport->setInteger(oid, parentIndex);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.47.1.1.1.1.6.%u"), index);
+   transport->setInteger(oid, position);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.47.1.1.1.1.2.%u"), index);
+   transport->setString(oid, description);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.47.1.1.1.1.13.%u"), index);
+   transport->setString(oid, model);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.47.1.1.1.1.11.%u"), index);
+   transport->setString(oid, serial);
+}
+
+/**
+ * Test BuildComponentTree with mock SNMP transport
+ */
+static void TestBuildComponentTree()
+{
+   StartTest(_T("BuildComponentTree - tree construction from SNMP"));
+   MockSnmpTransport transport;
+   AddMockComponent(&transport, 1, COMPONENT_CLASS_CHASSIS, 0, -1, _T("chassis"), _T("Test Chassis"), _T("CH-1000"), _T("SN12345"));
+   AddMockComponent(&transport, 2, COMPONENT_CLASS_MODULE, 1, 1, _T("module1"), _T("Module 1"), _T("M-100"), _T("SN0001"));
+   AddMockComponent(&transport, 3, COMPONENT_CLASS_PORT, 2, 2, _T("port2"), _T("Port 2"), _T(""), _T(""));
+   AddMockComponent(&transport, 4, COMPONENT_CLASS_PORT, 2, 1, _T("port1"), _T("Port 1"), _T(""), _T(""));
+   // entAliasMappingIdentifier maps ports to interface indexes
+   transport.setObjectId(_T(".1.3.6.1.2.1.47.1.3.2.1.2.3.0"), _T(".1.3.6.1.2.1.2.2.1.1.102"));
+   transport.setObjectId(_T(".1.3.6.1.2.1.47.1.3.2.1.2.4.0"), _T(".1.3.6.1.2.1.2.2.1.1.101"));
+
+   shared_ptr<ComponentTree> tree = BuildComponentTree(&transport, _T("test"));
+   AssertNotNull(tree.get());
+   AssertFalse(tree->isEmpty());
+
+   const Component *root = tree->getRoot();
+   AssertEquals(root->getIndex(), 1u);
+   AssertEquals(root->getClass(), static_cast<uint32_t>(COMPONENT_CLASS_CHASSIS));
+   AssertEquals(root->getName(), _T("chassis"));
+   AssertEquals(root->getDescription(), _T("Test Chassis"));
+   AssertEquals(root->getModel(), _T("CH-1000"));
+   AssertEquals(root->getSerial(), _T("SN12345"));
+   AssertEquals(root->getChildren().size(), 1);
+
+   const Component *module = root->getChildren().get(0);
+   AssertEquals(module->getIndex(), 2u);
+   AssertEquals(module->getClass(), static_cast<uint32_t>(COMPONENT_CLASS_MODULE));
+   AssertEquals(module->getChildren().size(), 2);
+
+   // Children must be ordered by relative position
+   const Component *port1 = module->getChildren().get(0);
+   AssertEquals(port1->getIndex(), 4u);
+   AssertEquals(port1->getName(), _T("port1"));
+   AssertEquals(port1->getIfIndex(), 101u);
+   const Component *port2 = module->getChildren().get(1);
+   AssertEquals(port2->getIndex(), 3u);
+   AssertEquals(port2->getIfIndex(), 102u);
+   EndTest();
+
+   StartTest(_T("BuildComponentTree - equality of two builds"));
+   shared_ptr<ComponentTree> tree2 = BuildComponentTree(&transport, _T("test"));
+   AssertNotNull(tree2.get());
+   AssertTrue(tree->equals(tree2.get()));
+   EndTest();
+
+   StartTest(_T("BuildComponentTree - device without ENTITY MIB"));
+   MockSnmpTransport emptyTransport;
+   shared_ptr<ComponentTree> emptyTree = BuildComponentTree(&emptyTransport, _T("test"));
+   AssertNull(emptyTree.get());
+   EndTest();
+
+   StartTest(_T("BuildComponentTree - missing root element"));
+   MockSnmpTransport orphanTransport;
+   AddMockComponent(&orphanTransport, 2, COMPONENT_CLASS_MODULE, 99, 1, _T("module1"), _T("Module 1"), _T(""), _T(""));
+   shared_ptr<ComponentTree> orphanTree = BuildComponentTree(&orphanTransport, _T("test"));
+   AssertNull(orphanTree.get());
+   EndTest();
+}
+
+/**
+ * Add HOST-RESOURCES-MIB storage entry to mock transport
+ */
+static void AddMockStorageEntry(MockSnmpTransport *transport, uint32_t index, const TCHAR *name, const TCHAR *type,
+      uint32_t unitSize, uint32_t size, uint32_t used)
+{
+   TCHAR oid[128];
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.25.2.3.1.3.%u"), index);
+   transport->setString(oid, name);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.25.2.3.1.2.%u"), index);
+   transport->setObjectId(oid, type);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.25.2.3.1.4.%u"), index);
+   transport->setInteger(oid, unitSize);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.25.2.3.1.5.%u"), index);
+   transport->setInteger(oid, size);
+   _sntprintf(oid, 128, _T(".1.3.6.1.2.1.25.2.3.1.6.%u"), index);
+   transport->setInteger(oid, used);
+}
+
+/**
+ * Test HostMibDriverData with mock SNMP transport
+ */
+static void TestHostMibDriverData()
+{
+   StartTest(_T("HostMibDriverData - storage cache update"));
+   MockSnmpTransport transport;
+   AddMockStorageEntry(&transport, 1, _T("Physical memory"), _T(".1.3.6.1.2.1.25.2.1.2"), 1024, 16384, 8192);
+   AddMockStorageEntry(&transport, 2, _T("/var"), _T(".1.3.6.1.2.1.25.2.1.4"), 4096, 1000000, 250000);
+   AddMockStorageEntry(&transport, 3, _T("Swap"), _T(".1.3.6.1.2.1.25.2.1.3"), 4096, 524288, 1024);
+   AddMockStorageEntry(&transport, 4, _T("Proprietary"), _T(".1.3.6.1.4.1.9999.1.1"), 512, 100, 50);
+
+   HostMibDriverData data;
+   const HostMibStorageEntry *entry = data.getStorageEntry(&transport, _T("/var"), hrStorageFixedDisk);
+   AssertNotNull(entry);
+   AssertEquals(entry->name, _T("/var"));
+   AssertEquals(entry->unitSize, 4096u);
+   AssertEquals(entry->size, 1000000u);
+   AssertEquals(entry->used, 250000u);
+   AssertEquals(static_cast<int32_t>(entry->type), static_cast<int32_t>(hrStorageFixedDisk));
+
+   TCHAR buffer[64];
+   entry->getTotal(buffer, 64);
+   AssertEquals(buffer, _T("4096000000"));
+   EndTest();
+
+   StartTest(_T("HostMibDriverData - getPhysicalMemory"));
+   entry = data.getPhysicalMemory(&transport);
+   AssertNotNull(entry);
+   AssertEquals(entry->name, _T("Physical memory"));
+   AssertEquals(static_cast<int32_t>(entry->type), static_cast<int32_t>(hrStorageRam));
+   AssertEquals(entry->used, 8192u);
+   EndTest();
+
+   StartTest(_T("HostMibDriverData - lookup misses"));
+   AssertNull(data.getStorageEntry(&transport, _T("/nonexistent"), hrStorageFixedDisk));
+   AssertNull(data.getStorageEntry(&transport, _T("/var"), hrStorageRamDisk));   // name matches but type does not
+   EndTest();
+
+   StartTest(_T("HostMibDriverData - unknown storage type mapped to hrStorageOther"));
+   entry = data.getStorageEntry(&transport, _T("Proprietary"), hrStorageOther);
+   AssertNotNull(entry);
+   AssertEquals(static_cast<int32_t>(entry->type), static_cast<int32_t>(hrStorageOther));
+   EndTest();
+
+   StartTest(_T("HostMibDriverData - stale entry refresh"));
+   entry = data.getPhysicalMemory(&transport);
+   AssertNotNull(entry);
+   transport.setInteger(_T(".1.3.6.1.2.1.25.2.3.1.6.1"), 12288);   // device reports new usage
+   const_cast<HostMibStorageEntry*>(entry)->lastUpdate = time(nullptr) - 10;   // force refresh on next request
+   entry = data.getPhysicalMemory(&transport);
+   AssertNotNull(entry);
+   AssertEquals(entry->used, 12288u);
+   EndTest();
+}
+
+/**
+ * Create mock transport with simulated interface tables
+ */
+static void SetupMockInterfaceMib(MockSnmpTransport *transport)
+{
+   transport->setInteger(_T(".1.3.6.1.2.1.2.1.0"), 3);   // ifNumber
+
+   // ifTable: interfaces 1 and 2
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.1.1"), 1);
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.1.2"), 2);
+   transport->setString(_T(".1.3.6.1.2.1.2.2.1.2.1"), _T("eth0"));
+   transport->setString(_T(".1.3.6.1.2.1.2.2.1.2.2"), _T("eth1"));
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.3.1"), 6);    // ethernetCsmacd
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.3.2"), 6);
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.3.3"), 24);   // softwareLoopback
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.4.1"), 1500);
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.4.2"), 1500);
+   transport->setGauge(_T(".1.3.6.1.2.1.2.2.1.5.2"), 100000000);   // ifSpeed for interface 2
+
+   static const BYTE mac1[6] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55 };
+   transport->setBytes(_T(".1.3.6.1.2.1.2.2.1.6.1"), mac1, 6);
+
+   // interface states
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.7.1"), 1);   // admin up
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.8.1"), 1);   // oper up
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.7.2"), 2);   // admin down
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.8.2"), 2);
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.7.3"), 3);   // admin testing
+   transport->setInteger(_T(".1.3.6.1.2.1.2.2.1.8.3"), 2);   // oper down
+
+   // ifXTable: interface 3 present only here
+   transport->setString(_T(".1.3.6.1.2.1.31.1.1.1.1.1"), _T("Gi0/1"));
+   transport->setString(_T(".1.3.6.1.2.1.31.1.1.1.1.2"), _T("Gi0/2"));
+   transport->setString(_T(".1.3.6.1.2.1.31.1.1.1.1.3"), _T("lo0"));
+   transport->setGauge(_T(".1.3.6.1.2.1.31.1.1.1.15.1"), 10000);   // ifHighSpeed 10 Gbps
+   transport->setGauge(_T(".1.3.6.1.2.1.31.1.1.1.15.2"), 100);     // below 2000, ifSpeed must be used
+   transport->setString(_T(".1.3.6.1.2.1.31.1.1.1.18.1"), _T("  uplink  "));
+
+   // ipAddrTable
+   transport->setIpAddress(_T(".1.3.6.1.2.1.4.20.1.1.192.168.1.1"), _T("192.168.1.1"));
+   transport->setInteger(_T(".1.3.6.1.2.1.4.20.1.2.192.168.1.1"), 1);
+   transport->setIpAddress(_T(".1.3.6.1.2.1.4.20.1.3.192.168.1.1"), _T("255.255.255.0"));
+   transport->setIpAddress(_T(".1.3.6.1.2.1.4.20.1.1.10.0.0.1"), _T("10.0.0.1"));
+   transport->setInteger(_T(".1.3.6.1.2.1.4.20.1.2.10.0.0.1"), 2);
+   transport->setIpAddress(_T(".1.3.6.1.2.1.4.20.1.3.10.0.0.1"), _T("255.0.0.0"));
+}
+
+/**
+ * Test default NetworkDeviceDriver interface retrieval
+ */
+static void TestDriverInterfaces()
+{
+   StartTest(_T("NetworkDeviceDriver - getInterfaces"));
+   MockSnmpTransport transport;
+   SetupMockInterfaceMib(&transport);
+
+   NetworkDeviceDriver driver;
+   SnmpDeviceContext context(&transport);
+   auto node = make_shared<TestObject>(500, _T("node"));
+
+   InterfaceList *ifList = driver.getInterfaces(&context, node.get(), nullptr, true);
+   AssertNotNull(ifList);
+   AssertEquals(ifList->size(), 3);
+
+   InterfaceInfo *iface = ifList->findByIfIndex(1);
+   AssertNotNull(iface);
+   AssertEquals(iface->name, _T("Gi0/1"));   // from ifXTable
+   AssertEquals(iface->description, _T("eth0"));
+   AssertEquals(iface->alias, _T("uplink"));   // trimmed
+   AssertEquals(iface->type, 6u);
+   AssertEquals(iface->mtu, 1500u);
+   AssertEquals(iface->speed, static_cast<uint64_t>(10000000000LL));   // from ifHighSpeed
+   static const BYTE mac1[6] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55 };
+   AssertTrue(memcmp(iface->macAddr, mac1, 6) == 0);
+
+   iface = ifList->findByIfIndex(2);
+   AssertNotNull(iface);
+   AssertEquals(iface->name, _T("Gi0/2"));
+   AssertEquals(iface->speed, static_cast<uint64_t>(100000000));   // ifHighSpeed too low, taken from ifSpeed
+   AssertEquals(iface->alias, _T(""));
+
+   iface = ifList->findByIfIndex(3);   // discovered via ifXTable only
+   AssertNotNull(iface);
+   AssertEquals(iface->name, _T("lo0"));
+   AssertEquals(iface->description, _T("lo0"));   // ifDescr fallback to ifName
+   AssertEquals(iface->type, 24u);
+   AssertEquals(iface->speed, static_cast<uint64_t>(0));
+   EndTest();
+
+   StartTest(_T("NetworkDeviceDriver - getInterfaces IP addresses"));
+   iface = ifList->findByIfIndex(1);
+   AssertEquals(iface->ipAddrList.size(), 1);
+   AssertTrue(iface->hasAddress(InetAddress::parse(_T("192.168.1.1"))));
+   AssertEquals(iface->ipAddrList.get(0).getMaskBits(), 24);
+
+   iface = ifList->findByIfIndex(2);
+   AssertEquals(iface->ipAddrList.size(), 1);
+   AssertTrue(iface->hasAddress(InetAddress::parse(_T("10.0.0.1"))));
+   AssertEquals(iface->ipAddrList.get(0).getMaskBits(), 8);
+   delete ifList;
+   EndTest();
+
+   StartTest(_T("NetworkDeviceDriver - getInterfaces without ifXTable names"));
+   ifList = driver.getInterfaces(&context, node.get(), nullptr, false);
+   AssertNotNull(ifList);
+   iface = ifList->findByIfIndex(1);
+   AssertNotNull(iface);
+   AssertEquals(iface->name, _T("eth0"));   // ifName ignored
+   AssertEquals(iface->description, _T("eth0"));
+   delete ifList;
+   EndTest();
+}
+
+/**
+ * Test default NetworkDeviceDriver interface state retrieval
+ */
+static void TestDriverInterfaceState()
+{
+   StartTest(_T("NetworkDeviceDriver - getInterfaceState"));
+   MockSnmpTransport transport;
+   SetupMockInterfaceMib(&transport);
+
+   NetworkDeviceDriver driver;
+   SnmpDeviceContext context(&transport);
+   auto node = make_shared<TestObject>(501, _T("node"));
+
+   InterfaceAdminState adminState;
+   InterfaceOperState operState;
+   uint64_t speed = 0;
+
+   driver.getInterfaceState(&context, node.get(), nullptr, 1, _T("Gi0/1"), 6, 0, nullptr, &adminState, &operState, &speed);
+   AssertEquals(adminState, IF_ADMIN_STATE_UP);
+   AssertEquals(operState, IF_OPER_STATE_UP);
+   AssertEquals(speed, static_cast<uint64_t>(10000000000LL));   // updated for operational interface
+
+   speed = 0;
+   driver.getInterfaceState(&context, node.get(), nullptr, 2, _T("Gi0/2"), 6, 0, nullptr, &adminState, &operState, &speed);
+   AssertEquals(adminState, IF_ADMIN_STATE_DOWN);
+   AssertEquals(operState, IF_OPER_STATE_DOWN);
+   AssertEquals(speed, static_cast<uint64_t>(0));   // not updated for non-operational interface
+
+   driver.getInterfaceState(&context, node.get(), nullptr, 3, _T("lo0"), 24, 0, nullptr, &adminState, &operState, &speed);
+   AssertEquals(adminState, IF_ADMIN_STATE_TESTING);
+   AssertEquals(operState, IF_OPER_STATE_DOWN);
+
+   driver.getInterfaceState(&context, node.get(), nullptr, 99, _T("none"), 6, 0, nullptr, &adminState, &operState, &speed);
+   AssertEquals(adminState, IF_ADMIN_STATE_UNKNOWN);
+   AssertEquals(operState, IF_OPER_STATE_UNKNOWN);
+   EndTest();
+}
+
+/**
+ * Test default NetworkDeviceDriver VLAN retrieval (Q-BRIDGE-MIB)
+ */
+static void TestDriverVlans()
+{
+   StartTest(_T("NetworkDeviceDriver - getVlans"));
+   MockSnmpTransport transport;
+   // dot1qVlanStaticName
+   transport.setString(_T(".1.3.6.1.2.1.17.7.1.4.3.1.1.1"), _T("default"));
+   transport.setString(_T(".1.3.6.1.2.1.17.7.1.4.3.1.1.100"), _T("mgmt"));
+   // dot1qVlanCurrentUntaggedPorts (indexed by time mark + VLAN ID): port 1 in VLAN 1
+   static const BYTE untagged1[1] = { 0x80 };
+   transport.setBytes(_T(".1.3.6.1.2.1.17.7.1.4.2.1.5.0.1"), untagged1, 1);
+   // dot1qVlanCurrentEgressPorts: ports 1-2 in VLAN 1, port 3 in VLAN 100
+   static const BYTE egress1[1] = { 0xC0 };
+   transport.setBytes(_T(".1.3.6.1.2.1.17.7.1.4.2.1.4.0.1"), egress1, 1);
+   static const BYTE egress100[1] = { 0x20 };
+   transport.setBytes(_T(".1.3.6.1.2.1.17.7.1.4.2.1.4.0.100"), egress100, 1);
+
+   NetworkDeviceDriver driver;
+   SnmpDeviceContext context(&transport);
+   auto node = make_shared<TestObject>(502, _T("node"));
+
+   VlanList *vlans = driver.getVlans(&context, node.get(), nullptr);
+   AssertNotNull(vlans);
+   AssertEquals(vlans->size(), 2);
+
+   VlanInfo *vlan = vlans->findById(1);
+   AssertNotNull(vlan);
+   AssertEquals(vlan->getName(), _T("default"));
+   AssertEquals(vlan->getPortReferenceMode(), VLAN_PRM_BPORT);
+   AssertEquals(vlan->getNumPorts(), 2);
+   AssertEquals(vlan->getPort(0)->portId, 1u);
+   AssertEquals(vlan->getPort(1)->portId, 2u);
+
+   vlan = vlans->findById(100);
+   AssertNotNull(vlan);
+   AssertEquals(vlan->getName(), _T("mgmt"));
+   AssertEquals(vlan->getNumPorts(), 1);
+   AssertEquals(vlan->getPort(0)->portId, 3u);
+   delete vlans;
+   EndTest();
+
+   StartTest(_T("NetworkDeviceDriver - getVlans fallback to static egress ports"));
+   MockSnmpTransport fallbackTransport;
+   fallbackTransport.setString(_T(".1.3.6.1.2.1.17.7.1.4.3.1.1.5"), _T("fallback"));
+   static const BYTE staticEgress[1] = { 0x88 };   // ports 1 and 5
+   fallbackTransport.setBytes(_T(".1.3.6.1.2.1.17.7.1.4.3.1.2.5"), staticEgress, 1);
+
+   SnmpDeviceContext fallbackContext(&fallbackTransport);
+   vlans = driver.getVlans(&fallbackContext, node.get(), nullptr);
+   AssertNotNull(vlans);
+   AssertEquals(vlans->size(), 1);
+   vlan = vlans->findById(5);
+   AssertNotNull(vlan);
+   AssertEquals(vlan->getNumPorts(), 2);
+   AssertEquals(vlan->getPort(0)->portId, 1u);
+   AssertEquals(vlan->getPort(1)->portId, 5u);
+   AssertFalse(vlan->getPort(0)->tagged);
+   delete vlans;
+   EndTest();
+}
+
+/**
+ * Test default NetworkDeviceDriver ARP cache retrieval
+ */
+static void TestDriverArpCache()
+{
+   StartTest(_T("NetworkDeviceDriver - getArpCache from ipNetToPhysicalTable"));
+   MockSnmpTransport transport;
+   static const BYTE mac1[6] = { 0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0x01 };
+   transport.setBytes(_T(".1.3.6.1.2.1.4.35.1.4.7.1.4.192.168.1.10"), mac1, 6);
+
+   NetworkDeviceDriver driver;
+   SnmpDeviceContext context(&transport);
+
+   shared_ptr<ArpCache> arpCache = driver.getArpCache(&context, nullptr);
+   AssertNotNull(arpCache.get());
+   AssertEquals(arpCache->size(), 1);
+   const ArpEntry *entry = arpCache->findByIP(InetAddress::parse(_T("192.168.1.10")));
+   AssertNotNull(entry);
+   AssertEquals(entry->ifIndex, 7u);
+   AssertTrue(entry->macAddr.equals(MacAddress(mac1, 6)));
+   EndTest();
+
+   StartTest(_T("NetworkDeviceDriver - getArpCache fallback to ipNetToMediaTable"));
+   MockSnmpTransport legacyTransport;
+   static const BYTE mac2[6] = { 0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0x02 };
+   legacyTransport.setBytes(_T(".1.3.6.1.2.1.4.22.1.2.3.10.0.0.99"), mac2, 6);
+
+   SnmpDeviceContext legacyContext(&legacyTransport);
+   arpCache = driver.getArpCache(&legacyContext, nullptr);
+   AssertNotNull(arpCache.get());
+   AssertEquals(arpCache->size(), 1);
+   entry = arpCache->findByIP(InetAddress::parse(_T("10.0.0.99")));
+   AssertNotNull(entry);
+   AssertEquals(entry->ifIndex, 3u);
+   AssertTrue(entry->macAddr.equals(MacAddress(mac2, 6)));
+   EndTest();
+
+   StartTest(_T("NetworkDeviceDriver - getArpCache with no ARP data"));
+   MockSnmpTransport emptyTransport;
+   SnmpDeviceContext emptyContext(&emptyTransport);
+   arpCache = driver.getArpCache(&emptyContext, nullptr);
+   AssertNull(arpCache.get());
+   EndTest();
+}
+
+/**
+ * Test default NetworkDeviceDriver capabilities and simple SNMP probes
+ */
+static void TestDriverDefaults()
+{
+   StartTest(_T("NetworkDeviceDriver - capability defaults"));
+   NetworkDeviceDriver driver;
+   auto node = make_shared<TestObject>(503, _T("node"));
+
+   AssertEquals(driver.getName(), _T("GENERIC"));
+   AssertEquals(driver.getVersion(), NETXMS_VERSION_STRING);
+   AssertNull(driver.getCustomTestOID());
+   AssertEquals(driver.getSupportedTransports(), static_cast<uint32_t>(NDD_TRANSPORT_SNMP));
+   AssertEquals(driver.getRequiredTransports(), static_cast<uint32_t>(NDD_TRANSPORT_SNMP));
+   AssertEquals(driver.isPotentialDevice(SNMP_ObjectId({ 1, 3, 6, 1, 4, 1, 9999 })), 1);
+   AssertTrue(driver.isDeviceSupported(nullptr, SNMP_ObjectId({ 1, 3, 6, 1, 4, 1, 9999 })));
+   AssertFalse(driver.hasMetrics());
+   AssertEquals(driver.getModulesOrientation(nullptr, node.get(), nullptr), NDD_ORIENTATION_HORIZONTAL);
+   AssertEquals(driver.getClusterMode(nullptr, node.get(), nullptr), CLUSTER_MODE_STANDALONE);
+   AssertFalse(driver.isLldpRemTableUsingIfIndex(node.get(), nullptr));
+   AssertTrue(driver.isValidLldpRemLocalPortNum(node.get(), nullptr));
+   AssertFalse(driver.isFdbUsingIfIndex(node.get(), nullptr));
+   AssertFalse(driver.isWirelessAccessPoint(nullptr, node.get(), nullptr));
+   AssertFalse(driver.isEntityMibEmulationSupported(nullptr, node.get(), nullptr));
+   AssertNull(driver.buildComponentTree(nullptr, node.get(), nullptr).get());
+   EndTest();
+
+   StartTest(_T("NetworkDeviceDriver - is8021xSupported"));
+   MockSnmpTransport transport;
+   transport.setInteger(_T(".1.0.8802.1.1.1.1.1.1.0"), 1);
+   SnmpDeviceContext context(&transport);
+   AssertTrue(driver.is8021xSupported(&context, node.get(), nullptr));
+
+   MockSnmpTransport disabledTransport;
+   disabledTransport.setInteger(_T(".1.0.8802.1.1.1.1.1.1.0"), 2);
+   SnmpDeviceContext disabledContext(&disabledTransport);
+   AssertFalse(driver.is8021xSupported(&disabledContext, node.get(), nullptr));
+
+   MockSnmpTransport emptyTransport;
+   SnmpDeviceContext emptyContext(&emptyTransport);
+   AssertFalse(driver.is8021xSupported(&emptyContext, node.get(), nullptr));
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -853,5 +1513,13 @@ int main(int argc, char *argv[])
    TestInterfaceList();
    TestArpCache();
    TestAgentErrorMappings();
+   TestMockSnmpTransport();
+   TestBuildComponentTree();
+   TestHostMibDriverData();
+   TestDriverInterfaces();
+   TestDriverInterfaceState();
+   TestDriverVlans();
+   TestDriverArpCache();
+   TestDriverDefaults();
    return 0;
 }
