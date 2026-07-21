@@ -17,8 +17,17 @@ echo *** test-libnxsnmp ***
 echo *** test-libnxsl ***
 .\x64\%BuildType%\test-libnxsl.exe .\tests\test-libnxsl
 ) && (
+echo *** test-libnxsrv ***
+.\x64\%BuildType%\test-libnxsrv.exe
+) && (
 echo *** test-ncd-webhook ***
 .\x64\%BuildType%\test-ncd-webhook.exe
+) && (
+echo *** test-unit-entsoe ***
+.\x64\%BuildType%\test-unit-entsoe.exe
+) && (
+echo *** test-unit-openmeteo ***
+.\x64\%BuildType%\test-unit-openmeteo.exe
 ) && (
 echo *** SUCCESS ***
 ) || (
