@@ -94,6 +94,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final long NC_REGISTERED_FOR_BACKUP  = 0x0200000000L;
    public static final long NC_HAS_SERVICE_MANAGER    = 0x0400000000L;
    public static final long NC_HAS_AGENT_LLDP         = 0x2000000000L;
+   public static final long NC_IS_NETCONF             = 0x4000000000L;
 
 	// Node flags
    public static final int NF_DISABLE_SMCLP_PROPERTIES  = 0x00004000;
@@ -126,6 +127,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	public static final int NSF_MODBUS_UNREACHABLE       = 0x00800000;
 	public static final int NSF_DECOMMISSIONED           = 0x01000000;
 	public static final int NSF_AGENT_RESTART_PENDING    = 0x02000000;
+	public static final int NSF_NETCONF_UNREACHABLE      = 0x04000000;
 
 	public static final int IFXTABLE_DEFAULT = 0;
 	public static final int IFXTABLE_ENABLED = 1;
@@ -205,6 +207,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected String vncPassword;
    protected int vncPort;
    protected long vncProxyId;
+   protected int netconfPort;
+   protected long netconfProxyId;
    protected int portRowCount;
    protected int portNumberingScheme;
    protected IcmpStatCollectionMode icmpStatCollectionMode;
@@ -345,6 +349,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       vncPassword = msg.getFieldAsString(NXCPCodes.VID_VNC_PASSWORD);
       vncPort = msg.getFieldAsInt32(NXCPCodes.VID_VNC_PORT);
       vncProxyId = msg.getFieldAsInt64(NXCPCodes.VID_VNC_PROXY);
+      netconfPort = msg.getFieldAsInt32(NXCPCodes.VID_NETCONF_PORT);
+      netconfProxyId = msg.getFieldAsInt64(NXCPCodes.VID_NETCONF_PROXY);
       portRowCount = msg.getFieldAsInt16(NXCPCodes.VID_PORT_ROW_COUNT);
       portNumberingScheme = msg.getFieldAsInt16(NXCPCodes.VID_PORT_NUMBERING_SCHEME);
       rackOrientation = RackOrientation.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_RACK_ORIENTATION));
@@ -1248,6 +1254,26 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public long getSshProxyId()
    {
       return sshProxyId;
+   }
+
+   /**
+    * Get NETCONF port number.
+    *
+    * @return NETCONF port number
+    */
+   public int getNetconfPort()
+   {
+      return netconfPort;
+   }
+
+   /**
+    * Get NETCONF proxy ID (0 to use default).
+    *
+    * @return NETCONF proxy ID
+    */
+   public long getNetconfProxyId()
+   {
+      return netconfProxyId;
    }
 
    /**

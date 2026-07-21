@@ -26,6 +26,12 @@ if [ -x $BINDIR/test-libethernetip ]; then
 	$BINDIR/test-libethernetip || exit 1
 fi
 
+if [ -x $BINDIR/test-libnxnetconf ]; then
+	echo ""
+	echo "********** test-libnxnetconf **********"
+	$BINDIR/test-libnxnetconf || exit 1
+fi
+
 if [ -x $BINDIR/test-libnxsnmp ]; then
 	echo ""
 	echo "********** test-libnxsnmp **********"

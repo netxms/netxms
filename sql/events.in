@@ -1676,6 +1676,26 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
+		EVENT_NETCONF_OK, 'SYS_NETCONF_OK', '1cddc65e-4e92-4e9c-a785-fb2d94357e42',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Node responds to NETCONF',
+      'Generated when node becomes reachable by NETCONF.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   No event-specific parameters'
+	);
+	
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_NETCONF_UNREACHABLE, 'SYS_NETCONF_UNREACHABLE', '3183eb51-d148-4c86-bde6-621fa5c1837e',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Node does not respond to NETCONF',
+      'Generated when node becomes unreachable by NETCONF.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   No event-specific parameters'
+	);
+	
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
 		EVENT_ASSET_AUTO_UPDATE_FAILED, 'SYS_ASSET_AUTO_UPDATE_FAILED', 'f4ae5e79-9d39-41d0-b74c-b6c591930d08',
 		EVENT_SEVERITY_MAJOR, 1,
 		'Automatic update of asset management attribute "%<name>" with value "%<newValue>" failed (%<reason>)',

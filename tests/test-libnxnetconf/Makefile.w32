@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - test-libnxnetconf (NETCONF library unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = test-libnxnetconf
+SOURCES = test-libnxnetconf.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
+TOOL_LIBS = -lnxnetconf -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

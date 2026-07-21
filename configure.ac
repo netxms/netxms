@@ -272,7 +272,7 @@ AC_ARG_WITH(clang,
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	COMPONENTS="$COMPONENTS sqlite ethernetip snmp server agent sqlite_drv"
+	COMPONENTS="$COMPONENTS sqlite ethernetip netconf snmp server agent sqlite_drv"
 ])
 
 AC_ARG_WITH(snmp,
@@ -304,7 +304,7 @@ AC_ARG_WITH(client-proxy,
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite ethernetip snmp agent sqlite_drv"
+	COMPONENTS="$COMPONENTS sqlite ethernetip netconf snmp agent sqlite_drv"
 ])
 
 AC_ARG_WITH(otel,
@@ -1042,11 +1042,11 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp db client server agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="agent ha test-libethernetip test-libnxsl test-libnxsnmp test-libnxsrv test-ncd-webhook"
+	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxnetconf db client server agent nxscript nxcproxy mobile-agent"
+	TEST_MODULES="agent ha test-libethernetip test-libnxsl test-libnxnetconf test-libnxsnmp test-libnxsrv test-ncd-webhook"
 	AGENT_UNIT_TESTS="entsoe openmeteo linux-cpu-usage-collector"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk redis lldpd"
+	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb netconf ssh vmgr xen asterisk redis lldpd"
 	AGENT_DIRS="libnxtux nxsagent"
 	NCDRV_MODULES="anysms googlechat kannel matrix mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio webhook websms xmpp"
 	PDSDRV_DIRS="clickhouse influxdb"
@@ -1113,6 +1113,12 @@ check_substr "$COMPONENTS" "ethernetip"
 if test $? = 0; then
 	MODULES="$MODULES ethernetip"
 	TEST_MODULES="$TEST_MODULES test-libethernetip"
+fi
+
+check_substr "$COMPONENTS" "netconf"
+if test $? = 0; then
+	MODULES="$MODULES libnxnetconf"
+	TEST_MODULES="$TEST_MODULES test-libnxnetconf"
 fi
 
 check_substr "$COMPONENTS" "java"
@@ -2290,6 +2296,10 @@ if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 
 	if test "x$HAVE_LIBSSH" = "xyes"; then
 		SUBAGENT_DIRS="$SUBAGENT_DIRS ssh"
+		check_substr "$COMPONENTS" "netconf"
+		if test $? = 0; then
+			SUBAGENT_DIRS="$SUBAGENT_DIRS netconf"
+		fi
 		AC_DEFINE(HAVE_LIBSSH, 1, Define to 1 if libssh is available)
 	else
 		if test "x$REQUIRE_SSH" = "xyes"; then
@@ -4593,6 +4603,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/mssql/Makefile
 	src/agent/subagents/mysql/Makefile
 	src/agent/subagents/netbsd/Makefile
+	src/agent/subagents/netconf/Makefile
 	src/agent/subagents/netsvc/Makefile
 	src/agent/subagents/opcua/Makefile
 	src/agent/subagents/openbsd/Makefile
@@ -4662,6 +4673,7 @@ AC_CONFIG_FILES([
 	src/libnxjava/java/Makefile
 	src/libnxlp/Makefile
 	src/libnxmb/Makefile
+	src/libnxnetconf/Makefile
 	src/libnxsl/Makefile
 	src/mobile-agent/Makefile
 	src/mobile-agent/java/Makefile
@@ -4801,6 +4813,7 @@ AC_CONFIG_FILES([
 	tests/test-libnetxms/Makefile
 	tests/test-libnxdb/Makefile
 	tests/test-libnxsl/Makefile
+	tests/test-libnxnetconf/Makefile
 	tests/test-libnxsnmp/Makefile
 	tests/test-libnxsrv/Makefile
 	tests/test-ncd-webhook/Makefile

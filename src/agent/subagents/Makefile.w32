@@ -29,6 +29,7 @@ SUBAGENTS = \
 	logwatch \
 	mqtt \
 	mssql \
+	netconf \
 	netsvc \
 	ping \
 	sms \
@@ -53,6 +54,7 @@ SUBAGENTS = \
 	mqtt \
 	mssql \
 	mysql \
+	netconf \
 	netsvc \
 	openmeteo \
 	oracle \

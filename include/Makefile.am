@@ -45,6 +45,7 @@ include_HEADERS = \
 	nxlpapi.h \
 	nxmbapi.h \
 	nxnet.h \
+	nxnetconf.h \
 	nxproc.h \
 	nxqueue.h \
 	nxsde.h \

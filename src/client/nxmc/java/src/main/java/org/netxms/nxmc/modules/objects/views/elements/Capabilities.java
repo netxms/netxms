@@ -72,6 +72,7 @@ public class Capabilities extends TableElement
       addFlag("LLDP", (node.getCapabilities() & (AbstractNode.NC_IS_LLDP | AbstractNode.NC_HAS_AGENT_LLDP)) != 0);
       addFlag("Modbus TCP", (node.getCapabilities() & AbstractNode.NC_IS_MODBUS_TCP) != 0);
       addFlag("NDP", (node.getCapabilities() & AbstractNode.NC_IS_NDP) != 0);
+      addFlag("NETCONF", (node.getCapabilities() & AbstractNode.NC_IS_NETCONF) != 0);
       addFlag("OSPF", (node.getCapabilities() & AbstractNode.NC_IS_OSPF) != 0);
       addFlag(i18n.tr("Printer"), (node.getCapabilities() & AbstractNode.NC_IS_PRINTER) != 0);
       addFlag(i18n.tr("Router"), (node.getCapabilities() & AbstractNode.NC_IS_ROUTER) != 0);

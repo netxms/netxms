@@ -36,6 +36,7 @@ echo *** Running NetXMS test suite from %BinDir% ***
 
 call :RunTest test-libnetxms || goto failure
 call :RunTest test-libethernetip || goto failure
+call :RunTest test-libnxnetconf || goto failure
 call :RunTest test-libnxsnmp || goto failure
 call :RunTest test-libnxsl .\tests\test-libnxsl || goto failure
 call :RunTest test-libnxsrv || goto failure

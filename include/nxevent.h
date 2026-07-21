@@ -213,6 +213,8 @@
 #define EVENT_STARTUP_CONFIG_CHANGED                159
 #define EVENT_DEVICE_REPLACED                       160
 #define EVENT_NODE_DELETED                          161
+#define EVENT_NETCONF_UNREACHABLE                   182
+#define EVENT_NETCONF_OK                            183
 #define EVENT_CLUSTER_DELETED                        162
 #define EVENT_SENSOR_DELETED                         163
 #define EVENT_ACCESSPOINT_DELETED                    164

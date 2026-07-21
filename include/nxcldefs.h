@@ -255,6 +255,7 @@
 #define NC_SSH_INTERACTIVE_CHANNEL _ULL(0x0800000000)  /* Set if interactive (shell) SSH channel can be established */
 #define NC_SSH_COMMAND_CHANNEL     _ULL(0x1000000000)  /* Set if SSH command channel can be established */
 #define NC_HAS_AGENT_LLDP          _ULL(0x2000000000)  /* Agent exposes LLDP.Neighbors table (lldpd) */
+#define NC_IS_NETCONF              _ULL(0x4000000000)  /* Node supports NETCONF protocol */
 
 /**
  * Node flags
@@ -345,6 +346,7 @@
 #define NSF_MODBUS_UNREACHABLE         0x00800000
 #define NSF_DECOMMISSIONED             0x01000000
 #define NSF_AGENT_RESTART_PENDING      0x02000000
+#define NSF_NETCONF_UNREACHABLE        0x04000000
 
 /**
  * Sensor capabilities
@@ -1145,6 +1147,7 @@ enum HistoricalDataType
 #define DS_CLOUD_CONNECTOR    13
 #define DS_OTLP               14
 #define DS_TRAFFIC_OBSERVER   15
+#define DS_NETCONF            16
 
 /**
  * Resource state

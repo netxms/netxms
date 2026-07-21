@@ -27,6 +27,7 @@
 #include <nxstat.h>
 #include <entity_mib.h>
 #include <nxcore_websvc.h>
+#include <nxcore_netconf.h>
 #include <nxcore_logs.h>
 #include <nxcore_syslog.h>
 #include <nxcore_ps.h>
@@ -1979,6 +1980,15 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_WEB_SERVICE_CUSTOM_REQUEST:
          queryWebService(*request);
+         break;
+      case CMD_GET_NETCONF_QUERIES:
+         getNetconfQueries(*request);
+         break;
+      case CMD_MODIFY_NETCONF_QUERY:
+         modifyNetconfQuery(*request);
+         break;
+      case CMD_DELETE_NETCONF_QUERY:
+         deleteNetconfQuery(*request);
          break;
       case CMD_GET_OBJECT_CATEGORIES:
          getObjectCategories(*request);
@@ -17898,6 +17908,101 @@ void ClientSession::deleteWebService(const NXCPMessage& request)
 }
 
 /**
+ * Get NETCONF query definitions
+ */
+void ClientSession::getNetconfQueries(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
+   {
+      SharedObjectArray<NetconfQueryDefinition> *definitions = GetNetconfQueryDefinitions();
+
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_NUM_ELEMENTS, definitions->size());
+      sendMessage(&response);
+
+      response.setCode(CMD_NETCONF_QUERY_DEFINITION);
+      for(int i = 0; i < definitions->size(); i++)
+      {
+         response.deleteAllFields();
+         definitions->get(i)->fillMessage(&response);
+         sendMessage(&response);
+      }
+
+      delete definitions;
+   }
+   else
+   {
+      WriteAuditLog(AUDIT_SYSCFG, false, m_userId, m_workstation, m_id, 0, L"Access denied on reading configured NETCONF query definitions");
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(&response);
+   }
+}
+
+/**
+ * Modify NETCONF query definition
+ */
+void ClientSession::modifyNetconfQuery(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
+   {
+      SharedString name = request.getFieldAsSharedString(VID_NAME);
+      uint32_t rcc;
+      auto existing = FindNetconfQueryDefinition(name);
+      if ((existing != nullptr) && (request.getFieldAsUInt32(VID_QUERY_ID) != existing->getId()))   // Prevent creation of query definition with duplicate name
+      {
+         rcc = RCC_NAME_ALEARDY_EXISTS;
+      }
+      else
+      {
+         auto definition = make_shared<NetconfQueryDefinition>(request);
+         rcc = ModifyNetconfQueryDefinition(definition);
+         if (rcc == RCC_SUCCESS)
+         {
+            response.setField(VID_QUERY_ID, definition->getId());
+            WriteAuditLog(AUDIT_SYSCFG, true, m_userId, m_workstation, m_id, 0, L"NETCONF query definition \"%s\" [%u] modified",
+                     definition->getName(), definition->getId());
+         }
+      }
+      response.setField(VID_RCC, rcc);
+   }
+   else
+   {
+      WriteAuditLog(AUDIT_SYSCFG, false, m_userId, m_workstation, m_id, 0, L"Access denied on changing NETCONF query definition");
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(&response);
+}
+
+/**
+ * Delete NETCONF query definition
+ */
+void ClientSession::deleteNetconfQuery(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS)
+   {
+      uint32_t id = request.getFieldAsUInt32(VID_QUERY_ID);
+      uint32_t rcc = DeleteNetconfQueryDefinition(id);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         WriteAuditLog(AUDIT_SYSCFG, true, m_userId, m_workstation, m_id, 0, L"NETCONF query definition [%u] deleted", id);
+   }
+   else
+   {
+      WriteAuditLog(AUDIT_SYSCFG, false, m_userId, m_workstation, m_id, 0, L"Access denied on deleting NETCONF query definition");
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(response);
+}
+
+/**
  * Get configured object categories
  */
 void ClientSession::getObjectCategories(const NXCPMessage& request)
@@ -17923,14 +18028,14 @@ void ClientSession::modifyObjectCategory(const NXCPMessage& request)
       {
          response.setField(VID_CATEGORY_ID, categoryId);
          shared_ptr<ObjectCategory> category = GetObjectCategory(categoryId);
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object category \"%s\" [%u] modified"),
-                  (category != nullptr) ? category->getName() : _T("<unknown>"), categoryId);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Object category \"%s\" [%u] modified",
+                  (category != nullptr) ? category->getName() : L"<unknown>", categoryId);
       }
       response.setField(VID_RCC, rcc);
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on changing object category"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on changing object category");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -17950,11 +18055,11 @@ void ClientSession::deleteObjectCategory(const NXCPMessage& request)
       uint32_t rcc = DeleteObjectCategory(id, request.getFieldAsBoolean(VID_FORCE_DELETE));
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Object category [%u] deleted"), id);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Object category [%u] deleted", id);
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting object category"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting object category");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -17987,14 +18092,14 @@ void ClientSession::modifyGeoArea(const NXCPMessage& request)
       {
          response.setField(VID_AREA_ID, areaId);
          shared_ptr<GeoArea> area = GetGeoArea(areaId);
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Geo area \"%s\" [%u] modified"),
-                  (area != nullptr) ? area->getName() : _T("<unknown>"), areaId);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Geo area \"%s\" [%u] modified",
+                  (area != nullptr) ? area->getName() : L"<unknown>", areaId);
       }
       response.setField(VID_RCC, rcc);
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on changing geo area"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on changing geo area");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -18014,11 +18119,11 @@ void ClientSession::deleteGeoArea(const NXCPMessage& request)
       uint32_t rcc = DeleteGeoArea(id, request.getFieldAsBoolean(VID_FORCE_DELETE));
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Geo area [%u] deleted"), id);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Geo area [%u] deleted", id);
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting geo area"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting geo area");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
@@ -18126,11 +18231,11 @@ void ClientSession::updateCommunityList(const NXCPMessage& request)
       {
          rcc = UpdateCommunityList(request, zoneUIN);
          if (rcc == RCC_SUCCESS)
-            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, _T("Updated list of well-known SNMP community strings"));
+            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, L"Updated list of well-known SNMP community strings");
       }
       else
       {
-         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, _T("Access denied on updating list of well-known SNMP community strings"));
+         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, L"Access denied on updating list of well-known SNMP community strings");
          rcc = RCC_ACCESS_DENIED;
       }
    }
@@ -18162,11 +18267,11 @@ void ClientSession::updateUsmCredentials(const NXCPMessage& request)
       {
          rcc = UpdateUsmCredentialsList(request, zoneUIN);
          if (rcc == RCC_SUCCESS)
-            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, _T("Updated list of well-known SNMPv3 USM credentials"));
+            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, L"Updated list of well-known SNMPv3 USM credentials");
       }
       else
       {
-         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, _T("Access denied on updating list of well-known SNMPv3 USM credentials"));
+         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, L"Access denied on updating list of well-known SNMPv3 USM credentials");
          rcc = RCC_ACCESS_DENIED;
       }
    }
@@ -18198,11 +18303,11 @@ void ClientSession::updateSharedSecretList(const NXCPMessage& request)
       {
          rcc = UpdateAgentSecretList(request, zoneUIN);
          if (rcc == RCC_SUCCESS)
-            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, _T("Updated list of well-known agent shared secrets"));
+            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, L"Updated list of well-known agent shared secrets");
       }
       else
       {
-         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, _T("Access denied on updating list of well-known agent shared secrets"));
+         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, L"Access denied on updating list of well-known agent shared secrets");
          rcc = RCC_ACCESS_DENIED;
       }
    }
@@ -18245,11 +18350,11 @@ void ClientSession::updateSshCredentials(const NXCPMessage& request)
       {
          rcc = UpdateSSHCredentials(request, zoneUIN);
          if (rcc == RCC_SUCCESS)
-            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, _T("Updated list of well-known SSH credentials"));
+            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, L"Updated list of well-known SSH credentials");
       }
       else
       {
-         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, _T("Access denied on updating list of well-known SSH credentials"));
+         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, L"Access denied on updating list of well-known SSH credentials");
          rcc = RCC_ACCESS_DENIED;
       }
    }
@@ -18283,11 +18388,11 @@ void ClientSession::updateWellKnownPortList(const NXCPMessage& request)
          request.getFieldAsString(VID_TAG, tag, 16);
          rcc = UpdateWellKnownPortList(request, tag, zoneUIN);
          if (rcc == RCC_SUCCESS)
-            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, _T("Updated list of well-known ports"));
+            writeAuditLog(AUDIT_SYSCFG, true, (zone != nullptr) ? zone->getId() : 0, L"Updated list of well-known ports");
       }
       else
       {
-         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, _T("Access denied on updating list of well-known ports"));
+         writeAuditLog(AUDIT_SYSCFG, false, (zone != nullptr) ? zone->getId() : 0, L"Access denied on updating list of well-known ports");
          rcc = RCC_ACCESS_DENIED;
       }
    }
@@ -18386,7 +18491,7 @@ void ClientSession::updateSshKey(const NXCPMessage& request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on update SSH key"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on update SSH key");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -18405,7 +18510,7 @@ void ClientSession::generateSshKey(const NXCPMessage& request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on generate SSH key"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on generate SSH key");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -18424,7 +18529,7 @@ void ClientSession::get2FADrivers(const NXCPMessage& request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading two-factor authentication driver list"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on reading two-factor authentication driver list");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -18459,7 +18564,7 @@ void ClientSession::modify2FAMethod(const NXCPMessage& request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on modify 2FA method"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on modify 2FA method");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -18481,7 +18586,7 @@ void ClientSession::rename2FAMethod(const NXCPMessage& request)
             TCHAR *newName = request.getFieldAsString(VID_NEW_NAME);
             if ((newName != nullptr) && (newName[0] != 0) && !Is2FAMethodExists(newName))
             {
-               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Two-factor authentication method \"%s\" renamed to \"%s\""), name, newName);
+               writeAuditLog(AUDIT_SYSCFG, true, 0, L"Two-factor authentication method \"%s\" renamed to \"%s\"", name, newName);
                Rename2FAMethod(name, newName);
                response.setField(VID_RCC, RCC_SUCCESS);
             }
@@ -18504,7 +18609,7 @@ void ClientSession::rename2FAMethod(const NXCPMessage& request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on two-factor authentication method rename"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on two-factor authentication method rename");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -18524,7 +18629,7 @@ void ClientSession::delete2FAMethod(const NXCPMessage& request)
    }
    else
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting 2FA method"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting 2FA method");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -18544,7 +18649,7 @@ void ClientSession::getUser2FABindings(const NXCPMessage& request)
    }
    else
    {
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on getting 2FA method bindings"));
+      writeAuditLog(AUDIT_SECURITY, false, 0, L"Access denied on getting 2FA method bindings");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -18567,12 +18672,12 @@ void ClientSession::modifyUser2FABinding(const NXCPMessage& request)
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
       {
-         writeAuditLog(AUDIT_SECURITY, true, 0, _T("2FA method \"%s\" binding configuration updated for user \"%s\""), methodName, ResolveUserId(userId, buffer, true));
+         writeAuditLog(AUDIT_SECURITY, true, 0, L"2FA method \"%s\" binding configuration updated for user \"%s\"", methodName, ResolveUserId(userId, buffer, true));
       }
    }
    else
    {
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on modify 2FA method binding for user \"%s\""), ResolveUserId(userId, buffer, true));
+      writeAuditLog(AUDIT_SECURITY, false, 0, L"Access denied on modify 2FA method binding for user \"%s\"", ResolveUserId(userId, buffer, true));
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -18594,7 +18699,7 @@ void ClientSession::deleteUser2FABinding(const NXCPMessage& request)
    else
    {
       TCHAR buffer[MAX_USER_NAME];
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on deleting 2FA method for user \"%s\""), ResolveUserId(userId, buffer, true));
+      writeAuditLog(AUDIT_SECURITY, false, 0, L"Access denied on deleting 2FA method for user \"%s\"", ResolveUserId(userId, buffer, true));
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
@@ -18638,7 +18743,7 @@ void ClientSession::getBusinessServiceCheckList(const NXCPMessage& request)
          }
          else
          {
-            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on reading business service check list"));
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on reading business service check list");
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
@@ -18679,12 +18784,12 @@ void ClientSession::modifyBusinessServiceCheck(const NXCPMessage& request)
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
          {
-            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Business service check modified"));
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Business service check modified");
             response.setField(VID_RCC, static_cast<BaseBusinessService&>(*object).modifyCheckFromMessage(request));
          }
          else
          {
-            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on modifying business service check"));
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on modifying business service check");
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
@@ -18719,12 +18824,12 @@ void ClientSession::deleteBusinessServiceCheck(const NXCPMessage& request)
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
          {
-            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Business service check deleted"));
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Business service check deleted");
             response.setField(VID_RCC, static_cast<BaseBusinessService&>(*object).deleteCheck(request.getFieldAsUInt32(VID_CHECK_ID)));
          }
          else
          {
-            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on deleting business service check"));
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on deleting business service check");
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
@@ -18775,7 +18880,7 @@ void ClientSession::getBusinessServiceUptime(const NXCPMessage& request)
       }
       else
       {
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on reading business service uptime"));
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on reading business service uptime");
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -18827,7 +18932,7 @@ void ClientSession::getBusinessServiceTickets(const NXCPMessage& request)
       }
       else
       {
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on reading business service tickets"));
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on reading business service tickets");
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -18919,13 +19024,13 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
             if (withOutput)
             {
                ActionExecutionData data(this, request.getId());
-               rcc = conn->executeCommand(_T("SSH.Command"), args, true, ActionExecuteCallback, &data, true);
+               rcc = conn->executeCommand(L"SSH.Command", args, true, ActionExecuteCallback, &data, true);
             }
             else
             {
-               rcc = conn->executeCommand(_T("SSH.Command"), args);
+               rcc = conn->executeCommand(L"SSH.Command", args);
             }
-            debugPrintf(4, _T("executeSshCommand: rcc=%d"), rcc);
+            debugPrintf(4, L"executeSshCommand: rcc=%d", rcc);
 
             msg.setField(VID_RCC, AgentErrorToRCC(rcc));
             if (rcc == ERR_SUCCESS)
@@ -18935,7 +19040,7 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
                   StringList maskedFields(request, VID_MASKED_FIELD_LIST_BASE, VID_NUM_MASKED_FIELDS);
                   for (int i = 0; i < maskedFields.size(); i++)
                   {
-                     inputFields.set(maskedFields.get(i), _T("******"));
+                     inputFields.set(maskedFields.get(i), L"******");
                   }
                   command = sourceObject->expandText(originalActionString, alarm, nullptr, shared_ptr<DCObjectInfo>(), m_loginName, nullptr, nullptr, &inputFields, nullptr);
                }
@@ -18944,13 +19049,13 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
                String inputFieldsLog = BuildAuditInputFieldsString(inputFields, nullptr);
                if (sourceObject->getId() != node->getId())
                {
-                  writeAuditLog(AUDIT_OBJECTS, true, node->getId(), _T("Executed SSH command \"%s\" on %s:%u as %s (context: %s [%u])%s"),
+                  writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"Executed SSH command \"%s\" on %s:%u as %s (context: %s [%u])%s",
                         command.cstr(), node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin().cstr(),
                         sourceObject->getName(), sourceObject->getId(), inputFieldsLog.cstr());
                }
                else
                {
-                  writeAuditLog(AUDIT_OBJECTS, true, node->getId(), _T("Executed SSH command \"%s\" on %s:%u as %s%s"),
+                  writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"Executed SSH command \"%s\" on %s:%u as %s%s",
                         command.cstr(), node->getIpAddress().toString(ipAddr), node->getSshPort(), node->getSshLogin().cstr(),
                         inputFieldsLog.cstr());
                }
@@ -18970,7 +19075,7 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on executing SSH command %s"), command.cstr());
+      writeAuditLog(AUDIT_OBJECTS, false, node->getId(), L"Access denied on executing SSH command %s", command.cstr());
    }
    MemFree(originalActionString);
 
@@ -19060,7 +19165,7 @@ void ClientSession::getEventRefences(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied getting event references"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied getting event references");
    }
 
    sendMessage(response);
@@ -19111,22 +19216,22 @@ void ClientSession::readMaintenanceJournal(const NXCPMessage& request)
          uint32_t rcc = ReadMaintenanceJournal(*sources, &response, request.getFieldAsUInt32(VID_MAX_RECORDS));
          if (rcc == RCC_SUCCESS)
          {
-            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Maintenance journal read successfully"));
-            debugPrintf(6, _T("Maintenance journal for object %s [%u] read successfully"), object->getName(), object->getId());
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Maintenance journal read successfully");
+            debugPrintf(6, L"Maintenance journal for object %s [%u] read successfully", object->getName(), object->getId());
          }
          response.setField(VID_RCC, rcc);
       }
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Maintenance journal read failed: access denied"));
-         debugPrintf(6, _T("Maintenance journal read for object %s [%u] failed: access denied"), object->getName(), object->getId());
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Maintenance journal read failed: access denied");
+         debugPrintf(6, L"Maintenance journal read for object %s [%u] failed: access denied", object->getName(), object->getId());
       }
    }
    else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      debugPrintf(6, _T("Maintenance journal read for object [%u] failed: invalid object ID"), request.getFieldAsUInt32(VID_OBJECT_ID));
+      debugPrintf(6, L"Maintenance journal read for object [%u] failed: invalid object ID", request.getFieldAsUInt32(VID_OBJECT_ID));
    }
 
    sendMessage(response);
@@ -19159,22 +19264,22 @@ void ClientSession::writeMaintenanceJournal(const NXCPMessage& request)
          uint32_t rcc = AddMaintenanceJournalRecord(request, m_userId);
          if (rcc == RCC_SUCCESS)
          {
-            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("New maintenance journal entry created successfully"));
-            debugPrintf(6, _T("New maintenance journal entry for object %d created successfully for object %d"), object->getId());
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"New maintenance journal entry created successfully");
+            debugPrintf(6, L"New maintenance journal entry for object %d created successfully for object %d", object->getId());
          }
          response.setField(VID_RCC, rcc);
       }
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("New maintenance journal entry create failed: access denied"));
-         debugPrintf(6, _T("New maintenance journal entry create for object %d failed: access denied"), object->getId());
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"New maintenance journal entry create failed: access denied");
+         debugPrintf(6, L"New maintenance journal entry create for object %d failed: access denied", object->getId());
       }
    }
    else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      debugPrintf(6, _T("New maintenance journal entry create for object %d failed: invalid object ID"), request.getFieldAsUInt32(VID_OBJECT_ID));
+      debugPrintf(6, L"New maintenance journal entry create for object %d failed: invalid object ID", request.getFieldAsUInt32(VID_OBJECT_ID));
    }
 
    sendMessage(response);
@@ -19209,22 +19314,22 @@ void ClientSession::updateMaintenanceJournal(const NXCPMessage& request)
          uint32_t rcc = UpdateMaintenanceJournalRecord(request, m_userId);
          if (rcc == RCC_SUCCESS)
          {
-            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Maintenance journal entry %d edited successfully"), entryId);
-            debugPrintf(6, _T("Maintenance journal entry %d edited succsessfully for object %d"), entryId, object->getId());
+            writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Maintenance journal entry %d edited successfully", entryId);
+            debugPrintf(6, L"Maintenance journal entry %d edited succsessfully for object %d", entryId, object->getId());
          }
          response.setField(VID_RCC, rcc);
       }
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on update of maintenance journal entry %u"), entryId);
-         debugPrintf(6, _T("Maintenance journal entry %u for object %s [%u] failed: access denied"), entryId, object->getName(), object->getId());
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on update of maintenance journal entry %u", entryId);
+         debugPrintf(6, L"Maintenance journal entry %u for object %s [%u] failed: access denied", entryId, object->getName(), object->getId());
       }
    }
    else
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-      debugPrintf(6, _T("Maintenance journal entry %u edit failed: invalid object ID %u"), entryId, request.getFieldAsUInt32(VID_OBJECT_ID));
+      debugPrintf(6, L"Maintenance journal entry %u edit failed: invalid object ID %u", entryId, request.getFieldAsUInt32(VID_OBJECT_ID));
    }
 
    sendMessage(response);
@@ -19245,13 +19350,13 @@ void ClientSession::cloneNetworkMap(const NXCPMessage& request)
          SharedString name = request.getFieldAsSharedString(VID_NAME);
          SharedString alias = request.getFieldAsSharedString(VID_ALIAS);
          static_cast<NetworkMap&>(*map).clone(name, alias);
-         writeAuditLog(AUDIT_OBJECTS, true, map->getId(), _T("Network map cloned successfully"));
+         writeAuditLog(AUDIT_OBJECTS, true, map->getId(), L"Network map cloned successfully");
          response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, map->getId(), _T("Access denied on clone network map"));
+         writeAuditLog(AUDIT_OBJECTS, false, map->getId(), L"Access denied on clone network map");
       }
    }
    else
@@ -19298,7 +19403,7 @@ void ClientSession::getOspfData(const NXCPMessage& request)
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on reading OSPF information"));
+         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), L"Access denied on reading OSPF information");
       }
    }
    else
@@ -19373,7 +19478,7 @@ void ClientSession::createAssetAttribute(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on creating asset attribute"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on creating asset attribute");
    }
    sendMessage(response);
 }
@@ -19410,7 +19515,7 @@ void ClientSession::updateAssetAttribute(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating asset attribute"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on updating asset attribute");
    }
    sendMessage(response);
 }
@@ -19437,7 +19542,7 @@ void ClientSession::deleteAssetAttribute(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting asset attribute"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting asset attribute");
    }
    sendMessage(response);
 }
@@ -19475,7 +19580,7 @@ void ClientSession::setAssetProperty(const NXCPMessage& request)
             if (result.first == RCC_SUCCESS)
             {
                json_t *newObjectValues = object->toJson();
-               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldObjectValues, newObjectValues, _T("Asset property %s changed"), name.cstr());
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldObjectValues, newObjectValues, L"Asset property %s changed", name.cstr());
                json_decref(newObjectValues);
             }
             else
@@ -19492,7 +19597,7 @@ void ClientSession::setAssetProperty(const NXCPMessage& request)
       }
       else
       {
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on setting asset property %s"), name.cstr());
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on setting asset property %s", name.cstr());
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -19533,12 +19638,12 @@ void ClientSession::deleteAssetProperty(const NXCPMessage& request)
             if (result == RCC_SUCCESS)
             {
                json_t *newValue = object->toJson();
-               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Asset property %s deleted"), name.cstr());
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, L"Asset property %s deleted", name.cstr());
                json_decref(newValue);
             }
             else
             {
-               response.setField(VID_ERROR_TEXT, _T("Attribute is mandatory"));
+               response.setField(VID_ERROR_TEXT, L"Attribute is mandatory");
             }
             json_decref(oldValue);
             response.setField(VID_RCC, result);
@@ -19551,7 +19656,7 @@ void ClientSession::deleteAssetProperty(const NXCPMessage& request)
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on deleting asset property %s"), name.cstr());
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on deleting asset property %s", name.cstr());
       }
    }
    else
@@ -19620,10 +19725,10 @@ void ClientSession::linkAsset(const NXCPMessage& request)
          }
          else
          {
-            writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), _T("Access denied on linking this asset to object \"%s\" [%u]"), newTarget->getName(), newTarget->getId());
-            writeAuditLog(AUDIT_OBJECTS, false, newTarget->getId(), _T("Access denied on linking this object to asset \"%s\" [%u]"), asset->getName(), asset->getId());
+            writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), L"Access denied on linking this asset to object \"%s\" [%u]", newTarget->getName(), newTarget->getId());
+            writeAuditLog(AUDIT_OBJECTS, false, newTarget->getId(), L"Access denied on linking this object to asset \"%s\" [%u]", asset->getName(), asset->getId());
             if (oldTarget != nullptr)
-               writeAuditLog(AUDIT_OBJECTS, false, oldTarget->getId(), _T("Access denied on unlinking this object from asset \"%s\" [%u]"), asset->getName(), asset->getId());
+               writeAuditLog(AUDIT_OBJECTS, false, oldTarget->getId(), L"Access denied on unlinking this object from asset \"%s\" [%u]", asset->getName(), asset->getId());
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
@@ -19671,8 +19776,8 @@ void ClientSession::unlinkAsset(const NXCPMessage& request)
             }
             else
             {
-               writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), _T("Access denied on unlinking this asset from object \"%s\" [%u]"), target->getName(), target->getId());
-               writeAuditLog(AUDIT_OBJECTS, false, target->getId(), _T("Access denied on unlinking this object from asset \"%s\" [%u]"), asset->getName(), asset->getId());
+               writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), L"Access denied on unlinking this asset from object \"%s\" [%u]", target->getName(), target->getId());
+               writeAuditLog(AUDIT_OBJECTS, false, target->getId(), L"Access denied on unlinking this object from asset \"%s\" [%u]", asset->getName(), asset->getId());
                response.setField(VID_RCC, RCC_ACCESS_DENIED);
             }
          }
@@ -19709,14 +19814,14 @@ void ClientSession::updateNetworkMapElementLocaiton(const NXCPMessage& request)
          json_t *oldValue = networkMap->toJson();
          networkMap->updateObjectLocation(request);
          json_t *newValue = networkMap->toJson();
-         writeAuditLogWithValues(AUDIT_OBJECTS, true, networkMap->getId(), oldValue, newValue, _T("Object %s modified from client"), networkMap->getName());
+         writeAuditLogWithValues(AUDIT_OBJECTS, true, networkMap->getId(), oldValue, newValue, L"Object %s modified from client", networkMap->getName());
          json_decref(oldValue);
          json_decref(newValue);
          response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
-         writeAuditLog(AUDIT_OBJECTS, false, networkMap->getId(), _T("Access denied on \"%s\" [%u] network map object location update"), networkMap->getName(), networkMap->getId());
+         writeAuditLog(AUDIT_OBJECTS, false, networkMap->getId(), L"Access denied on \"%s\" [%u] network map object location update", networkMap->getName(), networkMap->getId());
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -19739,7 +19844,7 @@ void ClientSession::compileMibs(const NXCPMessage& request)
       uint32_t result = CompileMibFiles(this, request.getId());
       if (result == RCC_SUCCESS)
       {
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("MIB compilation started"));
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"MIB compilation started");
       }
       else
       {
@@ -19750,7 +19855,7 @@ void ClientSession::compileMibs(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on compiling MIB files"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on compiling MIB files");
       sendMessage(response);
    }
 }
@@ -19781,8 +19886,8 @@ void ClientSession::updatePeerInterface(const NXCPMessage& request)
          if (LinkInterfaces(localInterface.get(), peerInterface.get()))
          {
             response.setField(VID_RCC, RCC_SUCCESS);
-            writeAuditLog(AUDIT_OBJECTS, true, localInterface->getId(), _T("Peer interface set to %s [%u]"), peerInterface->getName(), peerInterface->getId());
-            writeAuditLog(AUDIT_OBJECTS, true, peerInterface->getId(), _T("Peer interface set to %s [%u]"), localInterface->getName(), localInterface->getId());
+            writeAuditLog(AUDIT_OBJECTS, true, localInterface->getId(), L"Peer interface set to %s [%u]", peerInterface->getName(), peerInterface->getId());
+            writeAuditLog(AUDIT_OBJECTS, true, peerInterface->getId(), L"Peer interface set to %s [%u]", localInterface->getName(), localInterface->getId());
          }
          else
          {
@@ -19791,8 +19896,8 @@ void ClientSession::updatePeerInterface(const NXCPMessage& request)
       }
       else
       {
-         writeAuditLog(AUDIT_OBJECTS, false, localInterface->getId(), _T("Access denied on setting peer interface"));
-         writeAuditLog(AUDIT_OBJECTS, false, peerInterface->getId(), _T("Access denied on setting peer interface"));
+         writeAuditLog(AUDIT_OBJECTS, false, localInterface->getId(), L"Access denied on setting peer interface");
+         writeAuditLog(AUDIT_OBJECTS, false, peerInterface->getId(), L"Access denied on setting peer interface");
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -19830,11 +19935,11 @@ void ClientSession::clearPeerInterface(const NXCPMessage& request)
             ClearPeer(iface->getPeerInterfaceId());
             ClearPeer(iface->getId());
          }
-         writeAuditLog(AUDIT_OBJECTS, true, iface->getId(), _T("Interface peer information cleared"));
+         writeAuditLog(AUDIT_OBJECTS, true, iface->getId(), L"Interface peer information cleared");
       }
       else
       {
-         writeAuditLog(AUDIT_OBJECTS, false, iface->getId(), _T("Access denied on clearing interface peer"));
+         writeAuditLog(AUDIT_OBJECTS, false, iface->getId(), L"Access denied on clearing interface peer");
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -20130,9 +20235,9 @@ void ClientSession::modifyAiDisabledList(const NXCPMessage& request)
       if (success)
       {
          response.setField(VID_RCC, RCC_SUCCESS);
-         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("AI %s \"%hs\" %s disabled list"),
-            (typeStr[0] == 'S') ? _T("skill") : _T("function"), name,
-            add ? _T("added to") : _T("removed from"));
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI %s \"%hs\" %s disabled list",
+            (typeStr[0] == 'S') ? L"skill" : L"function", name,
+            add ? L"added to" : L"removed from");
       }
       else
       {
@@ -20208,11 +20313,11 @@ void ClientSession::deleteAiAgentTask(const NXCPMessage& request)
    response.setField(VID_RCC, rcc);
    if (rcc == RCC_SUCCESS)
    {
-      writeAuditLog(AUDIT_SYSCFG, true, 0, _T("AI agent task %u deleted"), taskId);
+      writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI agent task %u deleted", taskId);
    }
    else if (rcc == RCC_ACCESS_DENIED)
    {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting AI agent task %u"), taskId);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting AI agent task %u", taskId);
    }
    sendMessage(response);
 }
@@ -20760,13 +20865,13 @@ void ClientSession::autoConnectNetworkMapNodes(const NXCPMessage& request)
          IntegerArray<uint32_t> nodeList;
          request.getFieldAsInt32Array(VID_NODE_LIST, &nodeList);
          static_cast<NetworkMap&>(*map).autoConnectNodes(nodeList);
-         writeAuditLog(AUDIT_OBJECTS, true, map->getId(), _T("Network map nodes auto-connected successfully"));
+         writeAuditLog(AUDIT_OBJECTS, true, map->getId(), L"Network map nodes auto-connected successfully");
          response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, map->getId(), _T("Access denied on auto-connecting network map nodes"));
+         writeAuditLog(AUDIT_OBJECTS, false, map->getId(), L"Access denied on auto-connecting network map nodes");
       }
    }
    else

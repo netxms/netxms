@@ -31,6 +31,7 @@
 #include <nxcore_logs.h>
 #include <nxcore_ps.h>
 #include <nxcore_websvc.h>
+#include <nxcore_netconf.h>
 #include <nms_users.h>
 #include <nxnet.h>
 #include <nxstat.h>
@@ -1647,6 +1648,7 @@ bool ActivateServer()
    // Initialize data collection subsystem
    LoadPerfDataStorageDrivers();
    LoadWebServiceDefinitions();
+   LoadNetconfQueryDefinitions();
    InitDataCollector();
    if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
       InitStorageClassMigration();

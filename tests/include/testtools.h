@@ -187,7 +187,7 @@ static inline void __AssertEquals(const wchar_t *value, const wchar_t *expected,
 static inline void StartTest(const TCHAR *name)
 {
    TCHAR filler[80];
-   int l = 60 - (int)_tcslen(name);
+   int l = 70 - (int)_tcslen(name);
    if (l > 0)
    {
       for(int i = 0; i < l; i++)
