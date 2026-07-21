@@ -1052,7 +1052,7 @@ AC_ARG_WITH(dist,
 	TEST_MODULES="agent ha test-libnxsl test-libnxnetconf test-libnxsnmp test-libnxsrv test-ncd-webhook"
 	AGENT_UNIT_TESTS="entsoe openmeteo linux-cpu-usage-collector"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk redis lldpd"
+	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb netconf ssh vmgr xen asterisk redis lldpd"
 	AGENT_DIRS="libnxtux nxsagent"
 	NCDRV_MODULES="anysms googlechat kannel matrix mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio webhook websms xmpp"
 	PDSDRV_DIRS="clickhouse influxdb rrdtool"
@@ -2304,6 +2304,10 @@ if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 
 	if test "x$HAVE_LIBSSH" = "xyes"; then
 		SUBAGENT_DIRS="$SUBAGENT_DIRS ssh"
+		check_substr "$COMPONENTS" "netconf"
+		if test $? = 0; then
+			SUBAGENT_DIRS="$SUBAGENT_DIRS netconf"
+		fi
 		AC_DEFINE(HAVE_LIBSSH, 1, Define to 1 if libssh is available)
 	else
 		if test "x$REQUIRE_SSH" = "xyes"; then
@@ -4607,6 +4611,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/mssql/Makefile
 	src/agent/subagents/mysql/Makefile
 	src/agent/subagents/netbsd/Makefile
+	src/agent/subagents/netconf/Makefile
 	src/agent/subagents/netsvc/Makefile
 	src/agent/subagents/opcua/Makefile
 	src/agent/subagents/openbsd/Makefile

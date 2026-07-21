@@ -152,7 +152,7 @@ ndd.qtech	Qtech network device driver
 ndd.saf		SAF network device driver
 ndd.westerstrand        Westerstrand network device driver
 
-netconf		NETCONF protocol support library
+netconf		NETCONF subagent and protocol support library
 
 netsvc		Netsvc subagent
 

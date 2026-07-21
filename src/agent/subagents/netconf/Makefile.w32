@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - netconf subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = netconf
+SOURCES = handlers.cpp keys.cpp main.cpp session.cpp sp.cpp
+SA_LIBS = -lnxnetconf $(LIBSSH_LIBS)
+SA_CPPFLAGS = -I$(LIBSSH_ROOT)/include
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk
