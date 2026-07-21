@@ -1589,6 +1589,10 @@ public class NXCPCodes
    public static final long VID_SAMPLING_RATE = 1016;
    public static final long VID_TRAFFIC_QUERY_TYPE = 1017;
    public static final long VID_OBSERVATION_POINTS = 1018;
+   public static final long VID_DATASTORE = 1019;
+   public static final long VID_FILTER_TYPE = 1020;
+   public static final long VID_NETCONF_PROXY = 1021;
+   public static final long VID_NETCONF_PORT = 1022;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;

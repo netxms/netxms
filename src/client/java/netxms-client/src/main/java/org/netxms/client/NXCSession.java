@@ -121,6 +121,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
 import org.netxms.client.datacollection.InterfaceTrafficDcis;
+import org.netxms.client.datacollection.NetconfQueryDefinition;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.ReconciliationStatus;
 import org.netxms.client.datacollection.RemoteChangeListener;
@@ -8067,6 +8068,16 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_VNC_PORT, data.getVncPort());
       }
 
+      if (data.getNetconfProxy() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_NETCONF_PROXY, data.getNetconfProxy().intValue());
+      }
+
+      if (data.getNetconfPort() != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NETCONF_PORT, data.getNetconfPort());
+      }
+
       if (data.getZoneProxies() != null)
       {
          msg.setField(NXCPCodes.VID_ZONE_PROXY_LIST, data.getZoneProxies());
@@ -15651,6 +15662,59 @@ public class NXCSession
       request.fillMessage(msg);
       sendMessage(msg);
       return new WebServiceCallResult(waitForRCC(msg.getMessageId()));
+   }
+
+   /**
+    * Get configured NETCONF query definitions.
+    *
+    * @return list of configured NETCONF query definitions
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<NetconfQueryDefinition> getNetconfQueryDefinitions() throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NETCONF_QUERIES);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<NetconfQueryDefinition> definitions = new ArrayList<NetconfQueryDefinition>(count);
+      for(int i = 0; i < count; i++)
+      {
+         response = waitForMessage(NXCPCodes.CMD_NETCONF_QUERY_DEFINITION, msg.getMessageId());
+         definitions.add(new NetconfQueryDefinition(response));
+      }
+      return definitions;
+   }
+
+   /**
+    * Modify (or create new) NETCONF query definition. New definition will be created if ID of provided definition object set to 0.
+    *
+    * @param definition NETCONF query definition to create or modify
+    * @return assigned ID of NETCONF query definition (same as provided if modifying existing definition)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public int modifyNetconfQueryDefinition(NetconfQueryDefinition definition) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_NETCONF_QUERY);
+      definition.fillMessage(msg);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getFieldAsInt32(NXCPCodes.VID_QUERY_ID);
+   }
+
+   /**
+    * Delete NETCONF query definition.
+    *
+    * @param id NETCONF query definition ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteNetconfQueryDefinition(int id) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_NETCONF_QUERY);
+      msg.setFieldInt32(NXCPCodes.VID_QUERY_ID, id);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 
    /**

@@ -194,6 +194,7 @@ public class General extends AbstractDCIPropertyPage
       origin.add(i18n.tr("Cloud Connector"));
       origin.add(i18n.tr("OTLP"));
       origin.add(i18n.tr("Traffic Observer"));
+      origin.add(i18n.tr("NETCONF"));
       origin.select(dco.getOrigin().getValue());
       origin.addSelectionListener(new SelectionAdapter() {
          @Override

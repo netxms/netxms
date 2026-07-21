@@ -170,6 +170,8 @@ public class NXCObjectModificationData
    private Long vncProxy;
    private String vncPassword;
    private Integer vncPort;
+   private Long netconfProxy;
+   private Integer netconfPort;
    private Long[] zoneProxies;
    private List<ObjectUrl> urls;
    private List<Long> seedObjectIds;
@@ -1972,6 +1974,38 @@ public class NXCObjectModificationData
    public void setVncPort(Integer vncPort)
    {
       this.vncPort = vncPort;
+   }
+
+   /**
+    * @return the netconfProxy
+    */
+   public Long getNetconfProxy()
+   {
+      return netconfProxy;
+   }
+
+   /**
+    * @param netconfProxy the netconfProxy to set
+    */
+   public void setNetconfProxy(long netconfProxy)
+   {
+      this.netconfProxy = netconfProxy;
+   }
+
+   /**
+    * @return the netconfPort
+    */
+   public Integer getNetconfPort()
+   {
+      return netconfPort;
+   }
+
+   /**
+    * @param netconfPort the netconfPort to set
+    */
+   public void setNetconfPort(int netconfPort)
+   {
+      this.netconfPort = netconfPort;
    }
 
    /**
