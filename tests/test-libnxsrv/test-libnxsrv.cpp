@@ -264,6 +264,10 @@ static void TestNObjectCustomAttributeInheritance()
    AssertTrue(child->getCustomAttribute(_T("site")).isNull());
    AssertTrue(grandchild->getCustomAttribute(_T("site")).isNull());
    EndTest();
+
+   // Break parent/child shared_ptr cycles before objects go out of scope
+   UnlinkObjects(child, grandchild);
+   UnlinkObjects(parent, child);
 }
 
 /**
@@ -291,6 +295,8 @@ static void TestNObjectCustomAttributeConflicts()
    AssertEquals(GetCustomAttributeFlags(child, _T("zone")), static_cast<uint32_t>(CAF_INHERITABLE));
    AssertEquals(child->getCustomAttribute(_T("zone")).cstr(), _T("A"));
    EndTest();
+
+   UnlinkObjects(parent1, child);   // break parent/child shared_ptr cycle before objects go out of scope
 }
 
 /**
@@ -340,6 +346,8 @@ static void TestNObjectCustomAttributesFromMessage()
    AssertTrue(object->getCustomAttribute(_T("inheritable")).isNull());
    AssertTrue(child->getCustomAttribute(_T("inheritable")).isNull());
    EndTest();
+
+   UnlinkObjects(object, child);   // break parent/child shared_ptr cycle before objects go out of scope
 }
 
 /**
