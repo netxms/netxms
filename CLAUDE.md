@@ -207,6 +207,7 @@ Prefer NetXMS containers for object collections and ownership management. For ma
 
 - **Semgrep SAST** runs on every PR (diff-aware, blocks on ERROR severity) and nightly (full scan, informational). Workflow: `.github/workflows/semgrep.yaml`
 - **cppcheck** runs nightly for C++ code quality. Workflow: `.github/workflows/cppcheck.yaml`
+- **Function pointer cast check** blocks on every push and PR. The build runs with GCC's `-Wcast-function-type` and fails if any warning appears. Workflow: `.github/workflows/build_and_test.yaml`
 - Custom semgrep rules go in `.semgrep.yml`; exclusions in `.semgrepignore`
 - Inline suppression: `// nosemgrep: <rule-id>` (C/C++, Java) or `# nosemgrep: <rule-id>` (Python). Always specify the rule-id
 
