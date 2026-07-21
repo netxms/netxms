@@ -1442,6 +1442,7 @@ enum class MapInitialViewMode
 #define CFG_IMPORT_REPLACE_OTEL_LOG_PARSERS           0x00010000
 #define CFG_IMPORT_REPLACE_EVERYTHING                 0x0001FFFF
 #define CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS         0x00100000
+#define CFG_IMPORT_IGNORE_MISSING_EPP_EVENTS          0x00200000
 
 /**
 * Alarm category flags

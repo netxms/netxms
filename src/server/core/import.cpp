@@ -162,6 +162,7 @@ static bool ValidateRules(json_t *root, uint32_t flags, ImportContext *context)
 
    bool success = true;
    bool ignoreMissingActions = (flags & CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS) != 0;
+   bool ignoreMissingEvents = (flags & CFG_IMPORT_IGNORE_MISSING_EPP_EVENTS) != 0;
 
    size_t ruleIndex;
    json_t *rule;
@@ -173,6 +174,38 @@ static bool ValidateRules(json_t *root, uint32_t flags, ImportContext *context)
       uuid ruleGuid = json_object_get_uuid(rule, "guid");
       TCHAR ruleGuidStr[64];
       ruleGuid.toString(ruleGuidStr);
+
+      // Validate event references. A rule with an empty event list matches any event at runtime, so a rule
+      // whose event references silently fail to resolve is not narrowed but inverted into a catch-all.
+      json_t *eventsArray = json_object_get(rule, "events");
+      if (json_is_array(eventsArray))
+      {
+         size_t eventIndex;
+         json_t *eventRef;
+         json_array_foreach(eventsArray, eventIndex, eventRef)
+         {
+            if (!json_is_object(eventRef))
+               continue;   // integer form carries a raw event code and cannot be validated by name
+
+            String eventName = json_object_get_string(eventRef, "name", nullptr);
+            if (eventName.isEmpty() || IsEventExist(eventName, root))
+               continue;
+
+            if (ignoreMissingEvents)
+            {
+               context->log(NXLOG_WARNING, _T("ValidateRules()"),
+                  _T("Event processing policy rule \"%s\" references event template \"%s\" that does not exist - event will be skipped"),
+                  ruleGuidStr, eventName.cstr());
+            }
+            else
+            {
+               context->log(NXLOG_ERROR, _T("ValidateRules()"),
+                  _T("Event processing policy rule \"%s\" references event template \"%s\" that does not exist"),
+                  ruleGuidStr, eventName.cstr());
+               success = false;
+            }
+         }
+      }
 
       // Validate actions
       json_t *actionsArray = json_object_get(rule, "actions");

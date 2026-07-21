@@ -100,6 +100,16 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
                events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
          }
       }
+
+      // If all event references failed to resolve the event list became empty, which at runtime means
+      // "match any event". Disable such a rule instead of silently inverting it into a catch-all.
+      if ((events->size() > 0) && m_events.isEmpty())
+      {
+         m_flags |= RF_DISABLED;
+         context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
+            _T("Event processing policy rule import: rule \"%s\" has no valid event references after import and was disabled to prevent it from matching all events"),
+            m_guid.toString().cstr());
+      }
    }
 
    ConfigEntry *timeFrameRoot = config.findEntry(_T("timeFrames"));
@@ -345,6 +355,16 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
             if ((eventCode != 0) && !m_events.contains(eventCode))
                m_events.add(eventCode);
          }
+      }
+
+      // If all event references failed to resolve the event list became empty, which at runtime means
+      // "match any event". Disable such a rule instead of silently inverting it into a catch-all.
+      if ((json_array_size(eventsArray) > 0) && m_events.isEmpty())
+      {
+         m_flags |= RF_DISABLED;
+         context->log(NXLOG_WARNING, _T("EPRule::EPRule()"),
+            _T("Event processing policy rule import: rule \"%s\" has no valid event references after import and was disabled to prevent it from matching all events"),
+            m_guid.toString().cstr());
       }
    }
 
