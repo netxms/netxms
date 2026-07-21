@@ -26,6 +26,7 @@ void TestUniqueLock();
 void TestCondition();
 void TestRWLock();
 void TestThreadCountAndMaxWaitTime();
+void TestThreadPoolStalledExpansion();
 void TestProcessExecutor(const char *procname);
 void TestProcessExecutorWorker();
 void TestStringConversion();
@@ -3663,6 +3664,7 @@ int main(int argc, char *argv[])
    TestThreadPool();
    TestThreadPoolDelayedExecution();
    TestThreadCountAndMaxWaitTime();
+   TestThreadPoolStalledExpansion();
 
    InitiateProcessShutdown();
 
