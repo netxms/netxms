@@ -194,3 +194,53 @@ void TestThreadCountAndMaxWaitTime()
    ThreadPoolDestroy(threadPool);
    EndTest();
 }
+
+static Mutex s_stallTestLock;
+
+static void StalledWorkload(void *arg)
+{
+   static_cast<Mutex*>(arg)->lock();
+   static_cast<Mutex*>(arg)->unlock();
+}
+
+/**
+ * Test that a pool with all worker threads blocked inside long-running tasks and
+ * a standing backlog is detected as stalled and grown. The wait-time based growth
+ * trigger cannot fire here because nothing is ever dequeued while the workers are
+ * blocked, so this exercises the separate stall detector.
+ */
+void TestThreadPoolStalledExpansion()
+{
+   StartTest(_T("Thread pool - stalled expansion"));
+
+   const int minThreads = 4;
+   ThreadPool *p = ThreadPoolCreate(_T("STALL"), minThreads, 32, 0);
+
+   ThreadPoolInfo info;
+   ThreadPoolGetInfo(p, &info);
+   AssertEquals(info.curThreads, minThreads);
+
+   // Block all worker threads inside a task and keep a backlog queued behind them.
+   // Extra tasks beyond minThreads cannot be picked up while every worker is blocked,
+   // so the queue stays non-empty and no task is ever dequeued.
+   s_stallTestLock.lock();
+   for(int i = 0; i < minThreads * 2; i++)
+   {
+      ThreadPoolExecute(p, StalledWorkload, &s_stallTestLock);
+   }
+
+   // Stall detector runs on the maintenance thread (~5 s per cycle) and grows the
+   // pool after s_stalledCyclesThreshold consecutive stalled cycles (2 by default,
+   // ~10 s). Wait long enough for it to trigger.
+   ThreadSleepMs(20000);
+
+   ThreadPoolGetInfo(p, &info);
+   AssertTrue(info.curThreads > minThreads);
+
+   // Release the workers and let the backlog drain.
+   s_stallTestLock.unlock();
+   ThreadSleepMs(500);
+
+   ThreadPoolDestroy(p);
+   EndTest();
+}
