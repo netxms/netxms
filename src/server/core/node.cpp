@@ -11446,6 +11446,12 @@ void Node::onObjectDelete(const NetObj& object)
       setModified(MODIFY_NODE_PROPERTIES);
       nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): SSH proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
    }
+   if (objectId == m_netconfProxy)
+   {
+      m_netconfProxy = 0;
+      setModified(MODIFY_NODE_PROPERTIES);
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): NETCONF proxy node %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
+   }
 
    // If deleted object is our physical container
    if (objectId == m_physicalContainer)
@@ -15590,6 +15596,8 @@ json_t *Node::toJson(bool includeSensitiveData)
    }
    json_object_set_new(root, "sshPort", json_integer(m_sshPort));
    json_object_set_new(root, "sshProxy", json_integer(m_sshProxy));
+   json_object_set_new(root, "netconfPort", json_integer(m_netconfPort));
+   json_object_set_new(root, "netconfProxy", json_integer(m_netconfProxy));
    json_object_set_new(root, "portNumberingScheme", json_integer(m_portNumberingScheme));
    json_object_set_new(root, "portRowCount", json_integer(m_portRowCount));
    json_object_set_new(root, "icmpStatCollectionMode", json_integer((int)m_icmpStatCollectionMode));

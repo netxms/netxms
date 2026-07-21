@@ -60,6 +60,7 @@ dc.agent.cache	Agent side cache
 dc.aggregation	DCI data aggregation (hourly/daily rollups)
 dc.config	Data collection configuration
 dc.modbus       Modbus data collection
+dc.netconf      NETCONF data collection
 dc.scheduler	Data collection scheduler
 dc.snmp		Agent SNMP data collection
 dc.summarytable Data collection summary tables
