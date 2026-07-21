@@ -396,7 +396,8 @@ int Array::indexOf(void *element) const
  */
 void Array::sort(int (*cb)(const void *, const void *))
 {
-   qsort(m_data, m_size, m_elementSize, cb);
+   if (m_size > 1)
+      qsort(m_data, m_size, m_elementSize, cb);
 }
 
 /**
@@ -404,7 +405,8 @@ void Array::sort(int (*cb)(const void *, const void *))
  */
 void Array::sort(int (*cb)(void *, const void *, const void *), void *context)
 {
-   QSort(m_data, m_size, m_elementSize, cb, context);
+   if (m_size > 1)
+      QSort(m_data, m_size, m_elementSize, cb, context);
 }
 
 /**
