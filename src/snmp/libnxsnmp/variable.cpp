@@ -885,7 +885,6 @@ size_t SNMP_Variable::encode(BYTE *pBuffer, size_t bufferSize) const
  */
 void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const char *codepage)
 {
-   uint32_t *pdwBuffer;
    size_t length;
 
    m_type = type;
@@ -911,12 +910,13 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
          *reinterpret_cast<uint32_t*>(m_value) = htonl(InetAddress::parse(value).getAddressV4());
          break;
       case ASN_OBJECT_ID:
-         pdwBuffer = MemAllocArrayNoInit<uint32_t>(256);
-         length = SnmpParseOID(value, pdwBuffer, 256);
+      {
+         uint32_t oidBuffer[256];
+         length = SnmpParseOID(value, oidBuffer, 256);
          if (length > 0)
          {
             reallocValueBuffer(length * sizeof(uint32_t));
-            memcpy(m_value, pdwBuffer, m_valueLength);
+            memcpy(m_value, oidBuffer, m_valueLength);
          }
          else
          {
@@ -925,6 +925,7 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
             memset(m_value, 0, m_valueLength);
          }
          break;
+      }
       case ASN_OCTET_STRING:
 #ifdef UNICODE
          length = wcslen(value) * 3;
