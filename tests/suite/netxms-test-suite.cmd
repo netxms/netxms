@@ -11,6 +11,9 @@ echo *** Running NetXMS test suite *** && (
 echo *** test-libnetxms ***
 .\x64\%BuildType%\test-libnetxms.exe
 ) && (
+echo *** test-libnxnetconf ***
+.\x64\%BuildType%\test-libnxnetconf.exe
+) && (
 echo *** test-libnxsnmp ***
 .\x64\%BuildType%\test-libnxsnmp.exe
 ) && (

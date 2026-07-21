@@ -272,7 +272,7 @@ AC_ARG_WITH(clang,
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	COMPONENTS="$COMPONENTS sqlite ethernetip snmp server agent sqlite_drv"
+	COMPONENTS="$COMPONENTS sqlite ethernetip netconf snmp server agent sqlite_drv"
 ])
 
 AC_ARG_WITH(snmp,
@@ -310,7 +310,7 @@ AC_ARG_WITH(client-proxy,
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite ethernetip snmp agent sqlite_drv"
+	COMPONENTS="$COMPONENTS sqlite ethernetip netconf snmp agent sqlite_drv"
 ])
 
 AC_ARG_WITH(otel,
@@ -1048,8 +1048,8 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp db client server agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="agent ha test-libnxsl test-libnxsnmp test-libnxsrv test-ncd-webhook"
+	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxnetconf db client server agent nxscript nxcproxy mobile-agent"
+	TEST_MODULES="agent ha test-libnxsl test-libnxnetconf test-libnxsnmp test-libnxsrv test-ncd-webhook"
 	AGENT_UNIT_TESTS="entsoe openmeteo linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk redis lldpd"
@@ -1118,6 +1118,12 @@ fi
 check_substr "$COMPONENTS" "ethernetip"
 if test $? = 0; then
 	MODULES="$MODULES ethernetip"
+fi
+
+check_substr "$COMPONENTS" "netconf"
+if test $? = 0; then
+	MODULES="$MODULES libnxnetconf"
+	TEST_MODULES="$TEST_MODULES test-libnxnetconf"
 fi
 
 check_substr "$COMPONENTS" "flow-collector"
@@ -4672,6 +4678,7 @@ AC_CONFIG_FILES([
 	src/libnxjava/java/Makefile
 	src/libnxlp/Makefile
 	src/libnxmb/Makefile
+	src/libnxnetconf/Makefile
 	src/libnxsl/Makefile
 	src/mobile-agent/Makefile
 	src/mobile-agent/java/Makefile
@@ -4811,6 +4818,7 @@ AC_CONFIG_FILES([
 	tests/test-libnetxms/Makefile
 	tests/test-libnxdb/Makefile
 	tests/test-libnxsl/Makefile
+	tests/test-libnxnetconf/Makefile
 	tests/test-libnxsnmp/Makefile
 	tests/test-libnxsrv/Makefile
 	tests/test-ncd-webhook/Makefile

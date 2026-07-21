@@ -60,6 +60,7 @@ MID_LIBS = \
     src/libnxsl \
     src/libnxlp \
     src/libnxmb \
+    src/libnxnetconf \
     src/db/libnxdb \
     src/snmp/libnxsnmp \
     src/ethernetip/libethernetip \
