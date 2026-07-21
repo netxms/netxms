@@ -427,9 +427,9 @@ private:
       return context->first(element->get(), context->second);
    }
 
-   static void enumeratorWrapper(shared_ptr<T> *element, std::pair<EnumerationCallbackResult (*)(T*, void*), void*> *context)
+   static EnumerationCallbackResult enumeratorWrapper(shared_ptr<T> *element, std::pair<EnumerationCallbackResult (*)(T*, void*), void*> *context)
    {
-      context->first(element->get(), context->second);
+      return context->first(element->get(), context->second);
    }
 
    static EnumerationCallbackResult getAllCallback(shared_ptr<T> *element, SharedObjectArray<T> *resultSet)
