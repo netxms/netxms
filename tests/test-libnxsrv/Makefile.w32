@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - test-libnxsrv (libnxsrv unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = test-libnxsrv
+SOURCES = test-libnxsrv.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/tests/include
+TOOL_LIBS = -lnxsrv -lnxsnmp -lnxsl -lnxdb -lnxagent -lnetxms -lnxjansson
+
+include $(TOPDIR)/build/tool-common.mk

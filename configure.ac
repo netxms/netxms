@@ -1049,7 +1049,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp db client server agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="agent ha test-libnxsl test-libnxsnmp test-ncd-webhook"
+	TEST_MODULES="agent ha test-libnxsl test-libnxsnmp test-libnxsrv test-ncd-webhook"
 	AGENT_UNIT_TESTS="entsoe openmeteo linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk redis lldpd"
@@ -1296,7 +1296,7 @@ if test $? = 0; then
 
 	BUILD_SERVER="yes"
 	MODULES="$MODULES libnxsl server nxscript"
-	TEST_MODULES="$TEST_MODULES ha test-libnxsl test-ncd-webhook"
+	TEST_MODULES="$TEST_MODULES ha test-libnxsl test-libnxsrv test-ncd-webhook"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music oui templates"
 	NCDRV_MODULES="$NCDRV_MODULES nxagent"
@@ -4812,6 +4812,7 @@ AC_CONFIG_FILES([
 	tests/test-libnxdb/Makefile
 	tests/test-libnxsl/Makefile
 	tests/test-libnxsnmp/Makefile
+	tests/test-libnxsrv/Makefile
 	tests/test-ncd-webhook/Makefile
 	tools/Makefile
 ])
