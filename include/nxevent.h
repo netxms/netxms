@@ -243,6 +243,7 @@
 #define EVENT_SNMP_AUTH_FAILURE                     505
 #define EVENT_SNMP_EGP_NL                           506
 #define EVENT_SNMP_DISCARD_TRAP                     507
+#define EVENT_EXT_SUBAGENT_UNAVAILABLE              508
 
 #define FIRST_USER_EVENT_ID                         100000
 

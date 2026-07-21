@@ -2327,4 +2327,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Default event for discarded SNMP traps.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) SNMP trap OID'
-	);   
+	);
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_EXT_SUBAGENT_UNAVAILABLE, 'SYS_EXT_SUBAGENT_UNAVAILABLE', '9bd5a44a-0e7d-4532-b447-fde8322d924b',
+		EVENT_SEVERITY_MAJOR, 1,
+		'External subagent %<name> is unavailable after %<failureCount> consecutive failed start attempts',
+		'Generated when agent watchdog stops relaunching an external subagent after configured number of consecutive failed start attempts (hung or crashed processes).' CONCAT CRLF CONCAT
+		'Metrics provided by this subagent remain unavailable until the problem is resolved; watchdog resumes control automatically if the subagent becomes operational.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   name - External subagent name' CONCAT CRLF CONCAT
+		'   failureCount - Number of consecutive failed start attempts'
+	);

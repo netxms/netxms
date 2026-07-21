@@ -25,11 +25,29 @@
 #include <nxtools.h>
 
 /**
- * Upgrade from 62.35 to 70.0
+ * Upgrade from 62.36 to 70.0
+ */
+static bool H_UpgradeFromV36()
+{
+   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 62.35 to 62.36
  */
 static bool H_UpgradeFromV35()
 {
-   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   CHK_EXEC(CreateEventTemplate(EVENT_EXT_SUBAGENT_UNAVAILABLE, L"SYS_EXT_SUBAGENT_UNAVAILABLE",
+      EVENT_SEVERITY_MAJOR, EF_LOG, L"9bd5a44a-0e7d-4532-b447-fde8322d924b",
+      L"External subagent %<name> is unavailable after %<failureCount> consecutive failed start attempts",
+      L"Generated when agent watchdog stops relaunching an external subagent after configured number of consecutive failed start attempts (hung or crashed processes).\r\n"
+      L"Metrics provided by this subagent remain unavailable until the problem is resolved; watchdog resumes control automatically if the subagent becomes operational.\r\n"
+      L"Parameters:\r\n"
+      L"   name - External subagent name\r\n"
+      L"   failureCount - Number of consecutive failed start attempts"));
+
+   CHK_EXEC(SetMinorSchemaVersion(36));
    return true;
 }
 
@@ -1241,7 +1259,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 35, 70,  0, H_UpgradeFromV35 },
+   { 36, 70,  0, H_UpgradeFromV36 },
+   { 35, 62, 36, H_UpgradeFromV35 },
    { 34, 62, 35, H_UpgradeFromV34 },
    { 33, 62, 34, H_UpgradeFromV33 },
    { 32, 62, 33, H_UpgradeFromV32 },

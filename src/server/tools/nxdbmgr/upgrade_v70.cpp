@@ -24,6 +24,28 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.12 to 70.13
+ */
+static bool H_UpgradeFromV12()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 36)
+   {
+      CHK_EXEC(CreateEventTemplate(EVENT_EXT_SUBAGENT_UNAVAILABLE, L"SYS_EXT_SUBAGENT_UNAVAILABLE",
+         EVENT_SEVERITY_MAJOR, EF_LOG, L"9bd5a44a-0e7d-4532-b447-fde8322d924b",
+         L"External subagent %<name> is unavailable after %<failureCount> consecutive failed start attempts",
+         L"Generated when agent watchdog stops relaunching an external subagent after configured number of consecutive failed start attempts (hung or crashed processes).\r\n"
+         L"Metrics provided by this subagent remain unavailable until the problem is resolved; watchdog resumes control automatically if the subagent becomes operational.\r\n"
+         L"Parameters:\r\n"
+         L"   name - External subagent name\r\n"
+         L"   failureCount - Number of consecutive failed start attempts"));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 36));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 70.11 to 70.12
  */
 static bool H_UpgradeFromV11()
@@ -509,6 +531,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 70, 13, H_UpgradeFromV12 },
    { 11, 70, 12, H_UpgradeFromV11 },
    { 10, 70, 11, H_UpgradeFromV10 },
    { 9,  70, 10, H_UpgradeFromV9  },
