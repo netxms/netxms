@@ -24,6 +24,55 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.12 to 70.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE netconf_queries ("
+      L"   id integer not null,"
+      L"   guid varchar(36) not null,"
+      L"   name varchar(63) null,"
+      L"   description varchar(255) null,"
+      L"   datastore integer not null,"
+      L"   filter_type integer not null,"
+      L"   filter $SQL:TEXT null,"
+      L"   cache_retention_time integer not null,"
+      L"   request_timeout integer not null,"
+      L"   flags integer not null,"
+      L"PRIMARY KEY(id))"));
+
+   static const wchar_t *batch =
+      L"ALTER TABLE nodes ADD netconf_proxy integer\n"
+      L"ALTER TABLE nodes ADD netconf_port integer\n"
+      L"ALTER TABLE nodes ADD fail_time_netconf integer\n"
+      L"UPDATE nodes SET netconf_proxy=0,netconf_port=830,fail_time_netconf=0\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"nodes", L"netconf_proxy"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"nodes", L"netconf_port"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"nodes", L"fail_time_netconf"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_NETCONF_OK, L"SYS_NETCONF_OK",
+         EVENT_SEVERITY_NORMAL, 1, L"1cddc65e-4e92-4e9c-a785-fb2d94357e42",
+         L"Node responds to NETCONF",
+         L"Generated when node becomes reachable by NETCONF.\r\n"
+         L"Parameters:\r\n"
+         L"   No event-specific parameters"
+      ));
+   CHK_EXEC(CreateEventTemplate(EVENT_NETCONF_UNREACHABLE, L"SYS_NETCONF_UNREACHABLE",
+         EVENT_SEVERITY_MAJOR, 1, L"3183eb51-d148-4c86-bde6-621fa5c1837e",
+         L"Node does not respond to NETCONF",
+         L"Generated when node becomes unreachable by NETCONF.\r\n"
+         L"Parameters:\r\n"
+         L"   No event-specific parameters"
+      ));
+
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 70.11 to 70.12
  */
 static bool H_UpgradeFromV11()
@@ -509,6 +558,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 70, 13, H_UpgradeFromV12 },
    { 11, 70, 12, H_UpgradeFromV11 },
    { 10, 70, 11, H_UpgradeFromV10 },
    { 9,  70, 10, H_UpgradeFromV9  },

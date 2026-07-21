@@ -172,6 +172,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_failTimeAgent = TIMESTAMP_NEVER;
    m_failTimeSNMP = TIMESTAMP_NEVER;
    m_failTimeSSH = TIMESTAMP_NEVER;
+   m_failTimeNetconf = TIMESTAMP_NEVER;
    m_failTimeEtherNetIP = TIMESTAMP_NEVER;
    m_failTimeModbus = TIMESTAMP_NEVER;
    m_recoveryTime = TIMESTAMP_NEVER;
@@ -185,6 +186,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
    m_pollCountSSH = 0;
+   m_pollCountNetconf = 0;
    m_pollCountEtherNetIP = 0;
    m_pollCountModbus = 0;
    m_pollCountICMP = 0;
@@ -214,6 +216,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_sshKeyId = 0;
    m_sshPort = SSH_PORT;
    m_sshProxy = 0;
+   m_netconfPort = NETCONF_DEFAULT_PORT;
+   m_netconfProxy = 0;
    m_vncPort = 5900;
    m_vncProxy = 0;
    m_portNumberingScheme = NDD_PN_UNKNOWN;
@@ -312,6 +316,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_failTimeAgent = TIMESTAMP_NEVER;
    m_failTimeSNMP = TIMESTAMP_NEVER;
    m_failTimeSSH = TIMESTAMP_NEVER;
+   m_failTimeNetconf = TIMESTAMP_NEVER;
    m_failTimeEtherNetIP = TIMESTAMP_NEVER;
    m_failTimeModbus = TIMESTAMP_NEVER;
    m_recoveryTime = TIMESTAMP_NEVER;
@@ -325,6 +330,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_pollCountAgent = 0;
    m_pollCountSNMP = 0;
    m_pollCountSSH = 0;
+   m_pollCountNetconf = 0;
    m_pollCountEtherNetIP = 0;
    m_pollCountModbus = 0;
    m_pollCountICMP = 0;
@@ -354,6 +360,8 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_sshKeyId = newNodeData->sshKeyId;
    m_sshPort = newNodeData->sshPort;
    m_sshProxy = newNodeData->sshProxyId;
+   m_netconfPort = NETCONF_DEFAULT_PORT;
+   m_netconfProxy = 0;
    m_vncPort = newNodeData->vncPort;
    m_vncProxy = newNodeData->vncProxyId;
    m_portNumberingScheme = NDD_PN_UNKNOWN;
@@ -449,7 +457,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
       _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities,last_events,decommission_time,")
-      _T("eip_address,trap_snmp_version,trap_community,trap_usm_auth_password,trap_usm_priv_password,trap_usm_methods,agent_platform_name,stp_bridge_id FROM nodes WHERE id=?"));
+      _T("eip_address,trap_snmp_version,trap_community,trap_usm_auth_password,trap_usm_priv_password,trap_usm_methods,agent_platform_name,stp_bridge_id,netconf_proxy,netconf_port,fail_time_netconf FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -528,6 +536,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
    m_sysName = DBGetField(hResult, 0, 20, nullptr, 0);
    m_baseBridgeAddress = DBGetFieldMacAddr(hResult, 0, 21);
    m_stpBridgeId = DBGetFieldMacAddr(hResult, 0, 99);
+   m_netconfProxy = DBGetFieldUInt32(hResult, 0, 100);
+   m_netconfPort = DBGetFieldUInt16(hResult, 0, 101);
+   m_failTimeNetconf = DBGetFieldLong(hResult, 0, 102);
    m_savedDownSince = m_downSince = DBGetFieldLong(hResult, 0, 22);
    m_bootTime = DBGetFieldLong(hResult, 0, 23);
 
@@ -1118,7 +1129,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          L"modbus_unit_id", L"vnc_password", L"vnc_port", L"vnc_proxy", L"path_check_reason", L"path_check_node_id",
          L"path_check_iface_id", L"expected_capabilities", L"last_events", L"decommission_time",
          L"trap_snmp_version", L"trap_community", L"trap_usm_auth_password", L"trap_usm_priv_password", L"trap_usm_methods",
-         L"eip_address", L"agent_platform_name", L"stp_bridge_id", nullptr
+         L"eip_address", L"agent_platform_name", L"stp_bridge_id", L"netconf_proxy", L"netconf_port", L"fail_time_netconf", nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"nodes", L"id", m_id, columns);
@@ -1288,6 +1299,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 98, DB_SQLTYPE_VARCHAR, m_eipAddress.isValidUnicast() ? m_eipAddress.toString(eipAddr) : nullptr, DB_BIND_STATIC);
          DBBind(hStmt, 99, DB_SQLTYPE_VARCHAR, m_agentPlatformName, DB_BIND_STATIC);
          DBBind(hStmt, 100, DB_SQLTYPE_VARCHAR, m_stpBridgeId);
+         DBBind(hStmt, 101, DB_SQLTYPE_INTEGER, m_netconfProxy);
+         DBBind(hStmt, 102, DB_SQLTYPE_INTEGER, m_netconfPort);
+         DBBind(hStmt, 103, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_failTimeNetconf));
          DBBind(hStmt, 101, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
@@ -2933,6 +2947,53 @@ restart_status_poll:
                PostSystemEventEx(eventQueue, EVENT_SSH_UNREACHABLE, m_id);
                m_failTimeSSH = now;
                m_pollCountSSH = 0;
+            }
+         }
+      }
+   }
+
+   // Check NETCONF connectivity
+   if ((m_capabilities & NC_IS_NETCONF) && (!(m_flags & NF_DISABLE_SSH)) && m_ipAddress.isValidUnicast())
+   {
+      sendPollerMsg(_T("Checking NETCONF connectivity...\r\n"));
+      if (checkNetconfConnection())
+      {
+         sendPollerMsg(_T("NETCONF connection available\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): NETCONF connected"), m_name);
+         if (m_state & NSF_NETCONF_UNREACHABLE)
+         {
+            m_pollCountNetconf++;
+            if (m_pollCountNetconf >= requiredPolls)
+            {
+               m_state &= ~NSF_NETCONF_UNREACHABLE;
+               PostSystemEventEx(eventQueue, EVENT_NETCONF_OK, m_id);
+               m_pollCountNetconf = 0;
+            }
+         }
+      }
+      else
+      {
+         sendPollerMsg(_T("Cannot connect to NETCONF\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): NETCONF unreachable"), m_name);
+         if (m_state & NSF_NETCONF_UNREACHABLE)
+         {
+            if (!(m_expectedCapabilities & NC_IS_NETCONF) && (now > m_failTimeNetconf + capabilityExpirationTime) &&
+                !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
+            {
+               m_capabilities &= ~NC_IS_NETCONF;
+               m_state &= ~NSF_NETCONF_UNREACHABLE;
+               sendPollerMsg(POLLER_WARNING _T("Attribute isNetconf set to FALSE\r\n"));
+            }
+         }
+         else
+         {
+            m_pollCountNetconf++;
+            if (m_pollCountNetconf >= requiredPolls)
+            {
+               m_state |= NSF_NETCONF_UNREACHABLE;
+               PostSystemEventEx(eventQueue, EVENT_NETCONF_UNREACHABLE, m_id);
+               m_failTimeNetconf = now;
+               m_pollCountNetconf = 0;
             }
          }
       }
@@ -5114,6 +5175,21 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    if (confPollSsh())
       modified |= MODIFY_NODE_PROPERTIES;
 
+   POLL_CANCELLATION_CHECKPOINT();
+
+   if (confPollNetconf())
+      modified |= MODIFY_NODE_PROPERTIES;
+
+   // Check if NETCONF was marked as unreachable before full poll
+   if ((m_capabilities & NC_IS_NETCONF) && !(m_expectedCapabilities & NC_IS_NETCONF) && (m_state & NSF_NETCONF_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+   {
+      m_state &= ~NSF_NETCONF_UNREACHABLE;
+      PostSystemEvent(EVENT_NETCONF_OK, m_id);
+      sendPollerMsg(POLLER_INFO _T("   NETCONF connectivity restored\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): NETCONF connectivity restored"), m_name);
+      m_pollCountNetconf = 0;
+   }
+
    // Check if SSH was marked as unreachable before full poll
    if ((m_capabilities & NC_IS_SSH) && !(m_expectedCapabilities & NC_IS_SSH) && (m_state & NSF_SSH_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
    {
@@ -7052,6 +7128,62 @@ bool Node::checkSshConnection()
    if (sshLogin.isNull() || sshLogin.isEmpty())
       return false;
    return SSHCheckConnection(getEffectiveSshProxy(), m_ipAddress, m_sshPort, sshLogin, getSshPassword(), m_sshKeyId);
+}
+
+/**
+ * Check if this node is reachable via NETCONF
+ */
+bool Node::checkNetconfConnection()
+{
+   SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
+   if (sshLogin.isNull() || sshLogin.isEmpty())
+      return false;
+   return NetconfCheckConnection(getEffectiveNetconfProxy(), m_ipAddress, m_netconfPort, sshLogin, getSshPassword(), m_sshKeyId, nullptr);
+}
+
+/**
+ * Configuration poll: check for NETCONF support (uses SSH credentials)
+ */
+bool Node::confPollNetconf()
+{
+   if ((m_flags & NF_DISABLE_SSH) || !m_ipAddress.isValidUnicast())
+      return false;
+
+   sendPollerMsg(_T("   Checking NETCONF connectivity...\r\n"));
+
+   bool modified = false;
+
+   SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
+   if (sshLogin.isNull() || sshLogin.isEmpty())
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): NETCONF check skipped (no SSH credentials)"), m_name);
+      return false;
+   }
+
+   StringList capabilities;
+   if (NetconfCheckConnection(getEffectiveNetconfProxy(), m_ipAddress, m_netconfPort, sshLogin, getSshPassword(), m_sshKeyId, &capabilities))
+   {
+      sendPollerMsg(POLLER_INFO _T("   NETCONF connection is available\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): NETCONF connected (%d capabilities)"), m_name, capabilities.size());
+
+      lockProperties();
+      if (!(m_capabilities & NC_IS_NETCONF))
+      {
+         m_capabilities |= NC_IS_NETCONF;
+         modified = true;
+      }
+      m_netconfCapabilities = std::move(capabilities);
+      unlockProperties();
+
+      ExitFromUnreachableState();
+   }
+   else
+   {
+      sendPollerMsg(_T("   Cannot connect to NETCONF\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): NETCONF unreachable"), m_name);
+   }
+
+   return modified;
 }
 
 /**
@@ -9953,6 +10085,8 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_SSH_KEY_ID, m_sshKeyId);
    msg->setField(VID_SSH_PASSWORD, m_sshPassword);
    msg->setField(VID_SSH_PORT, m_sshPort);
+   msg->setField(VID_NETCONF_PORT, m_netconfPort);
+   msg->setField(VID_NETCONF_PROXY, m_netconfProxy);
    msg->setField(VID_VNC_PROXY, m_vncProxy);
    msg->setField(VID_VNC_PASSWORD, m_vncPassword);
    msg->setField(VID_VNC_PORT, m_vncPort);
@@ -10398,6 +10532,12 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
 
    if (msg.isFieldExist(VID_SSH_PORT))
       m_sshPort = msg.getFieldAsUInt16(VID_SSH_PORT);
+
+   if (msg.isFieldExist(VID_NETCONF_PROXY))
+      m_netconfProxy = msg.getFieldAsUInt32(VID_NETCONF_PROXY);
+
+   if (msg.isFieldExist(VID_NETCONF_PORT))
+      m_netconfPort = msg.getFieldAsUInt16(VID_NETCONF_PORT);
 
    if (msg.isFieldExist(VID_VNC_PROXY))
       m_vncProxy = msg.getFieldAsUInt32(VID_VNC_PROXY);
@@ -12257,6 +12397,14 @@ uint32_t Node::getEffectiveModbusProxy(ProxySelection proxySelection)
 uint32_t Node::getEffectiveSshProxy()
 {
    return GetEffectiveProtocolProxy(this, m_sshProxy, m_zoneUIN, ProxySelection::AVAILABLE, g_dwMgmtNode);
+}
+
+/**
+ * Get effective NETCONF proxy for this node
+ */
+uint32_t Node::getEffectiveNetconfProxy()
+{
+   return GetEffectiveProtocolProxy(this, m_netconfProxy, m_zoneUIN, ProxySelection::AVAILABLE, g_dwMgmtNode);
 }
 
 /**
@@ -15238,6 +15386,7 @@ static FlagNameMapping s_capabilityMapping[] =
    { NC_IS_PRINTER, "isPrinter" },
    { NC_IS_OSPF, "isOspf" },
    { NC_IS_SSH, "isSsh" },
+   { NC_IS_NETCONF, "isNetconf" },
    { NC_IS_CDP, "isCdp" },
    { NC_IS_NDP, "isNdp" },
    { NC_IS_LLDP, "isLldp" },
@@ -15285,6 +15434,7 @@ static FlagNameMapping s_stateMapping[] =
    { NSF_SNMP_TRAP_FLOOD, "snmpTrapFlood" },
    { NSF_ICMP_UNREACHABLE, "icmpUnreachable" },
    { NSF_SSH_UNREACHABLE, "sshUnreachable" },
+   { NSF_NETCONF_UNREACHABLE, "netconfUnreachable" },
    { NSF_MODBUS_UNREACHABLE, "modbusUnreachable" },
    { NSF_DECOMMISSIONED, "decommissioned" },
    { NSF_AGENT_RESTART_PENDING, "agentRestartPending" },

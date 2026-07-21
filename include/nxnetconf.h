@@ -37,7 +37,9 @@
 /**
  * Default port for NETCONF over SSH (RFC 6242)
  */
+#ifndef NETCONF_DEFAULT_PORT
 #define NETCONF_DEFAULT_PORT           830
+#endif
 
 /**
  * NETCONF base namespace (used as default namespace in all protocol messages)

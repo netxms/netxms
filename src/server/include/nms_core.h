@@ -82,6 +82,7 @@
 #define IDG_TRUSTED_DEVICE          36
 #define IDG_CONNECTION_HISTORY      37
 #define IDG_AI_SAVED_PROMPT         38
+#define IDG_NETCONF_QUERY           39
 
 /**** ID functions *****/
 bool InitIdTable();
@@ -133,6 +134,7 @@ void SaveCurrentFreeId();
 #define DEBUG_TAG_DC_COLLECTOR      _T("dc.collector")
 #define DEBUG_TAG_DC_EIP            _T("dc.eip")
 #define DEBUG_TAG_DC_MODBUS         _T("dc.modbus")
+#define DEBUG_TAG_DC_NETCONF        _T("dc.netconf")
 #define DEBUG_TAG_DC_POLLER         _T("dc.poller")
 #define DEBUG_TAG_DC_SSH            _T("dc.ssh")
 #define DEBUG_TAG_DC_TEMPLATES      _T("dc.templates")
@@ -923,6 +925,9 @@ private:
    void getWebServices(const NXCPMessage& request);
    void modifyWebService(const NXCPMessage& request);
    void deleteWebService(const NXCPMessage& request);
+   void getNetconfQueries(const NXCPMessage& request);
+   void modifyNetconfQuery(const NXCPMessage& request);
+   void deleteNetconfQuery(const NXCPMessage& request);
    void getObjectCategories(const NXCPMessage& request);
    void modifyObjectCategory(const NXCPMessage& request);
    void deleteObjectCategory(const NXCPMessage& request);
@@ -1467,6 +1472,9 @@ bool SSHCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t 
    const TCHAR *password, uint32_t keyId);
 bool SSHCheckCommSettings(uint32_t proxyNodeId, const InetAddress& addr, int32_t zoneUIN,
    SSHCredentials *selectedCredentials, uint16_t *selectedPort);
+
+bool NetconfCheckConnection(uint32_t proxyNodeId, const InetAddress& addr, uint16_t port, const TCHAR *login,
+   const TCHAR *password, uint32_t keyId, StringList *capabilities);
 bool SSHCheckCommandChannel(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port,
    const wchar_t *login, const wchar_t *password, uint32_t keyId,
    const char *testCommand, const char *testPattern);

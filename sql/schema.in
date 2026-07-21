@@ -491,6 +491,8 @@ CREATE TABLE nodes
   ssh_port integer not null,
   ssh_key_id integer not null,
   ssh_proxy integer not null,
+  netconf_proxy integer not null,
+  netconf_port integer not null,
   vnc_password varchar(63) null,
   vnc_port integer not null,
   vnc_proxy integer not null,
@@ -502,6 +504,7 @@ CREATE TABLE nodes
   fail_time_snmp integer not null,
   fail_time_agent integer not null,
   fail_time_ssh integer not null,
+  fail_time_netconf integer not null,
   icmp_poll_mode char(1) not null,
   chassis_placement_config varchar(2000) null,
   vendor varchar(127) null,
@@ -3081,6 +3084,25 @@ CREATE TABLE websvc_headers
    value varchar(2000) null,
    PRIMARY KEY(websvc_id,name)
 ) TABLE_TYPE;
+
+/*
+** NETCONF query definitions
+*/
+CREATE TABLE netconf_queries
+(
+  id integer not null,
+  guid varchar(36) not null,
+  name varchar(63) null,
+  description varchar(255) null,
+  datastore integer not null,
+  filter_type integer not null,
+  filter SQL_TEXT null,
+  cache_retention_time integer not null,
+  request_timeout integer not null,
+  flags integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
 
 /**
  * Shared secrets default and for zones

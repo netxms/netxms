@@ -3884,6 +3884,7 @@ enum ProxyType
    MODBUS_PROXY,
    ICMP_PROXY,
    SMCLP_PROXY,
+   NETCONF_PROXY,
    MAX_PROXY_TYPE
 };
 
@@ -4179,6 +4180,7 @@ protected:
    uint32_t m_pollCountAgent;
    uint32_t m_pollCountSNMP;
    uint32_t m_pollCountSSH;
+   uint32_t m_pollCountNetconf;
    uint32_t m_pollCountEtherNetIP;
    uint32_t m_pollCountModbus;
    uint32_t m_pollCountICMP;
@@ -4223,6 +4225,7 @@ protected:
    time_t m_failTimeAgent;
    time_t m_failTimeSNMP;
    time_t m_failTimeSSH;
+   time_t m_failTimeNetconf;
    time_t m_failTimeEtherNetIP;
    time_t m_failTimeModbus;
    time_t m_recoveryTime;
@@ -4296,6 +4299,9 @@ protected:
    uint32_t m_sshKeyId;
    uint32_t m_sshProxy;
    uint16_t m_sshPort;
+   uint16_t m_netconfPort;
+   uint32_t m_netconfProxy;
+   StringList m_netconfCapabilities;
    uint16_t m_vncPort;
    uint32_t m_vncProxy;
    SharedString m_vncPassword;
@@ -4379,6 +4385,7 @@ protected:
    bool confPollAgent();
    bool confPollSnmp();
    bool confPollSsh();
+   bool confPollNetconf();
    bool confPollSmclp();
    bool confPollVnc();
    bool confPollEthernetIP();
@@ -4398,6 +4405,7 @@ protected:
    void icmpPollAddress(AgentConnection *conn, const TCHAR *target, const InetAddress& addr);
 
    bool checkSshConnection();
+   bool checkNetconfConnection();
 
    void updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyName);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
@@ -4590,6 +4598,9 @@ public:
    SharedString getSshLogin() const { return GetAttributeWithLock(m_sshLogin, m_mutexProperties); }
    SharedString getSshPassword() const { return GetAttributeWithLock(m_sshPassword, m_mutexProperties); }
    uint16_t getSshPort() const { return m_sshPort; }
+   uint16_t getNetconfPort() const { return m_netconfPort; }
+   uint32_t getNetconfProxy() const { return m_netconfProxy; }
+   StringList getNetconfCapabilities() const;
    uint32_t getSshKeyId() const { return m_sshKeyId; }
    uint32_t getSshProxy() const { return m_sshProxy; }
    SharedString getVncPassword() const { return GetAttributeWithLock(m_vncPassword, m_mutexProperties); }
@@ -4728,6 +4739,7 @@ public:
    DataCollectionError getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list, const TCHAR *context = nullptr);
    DataCollectionError getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *baseOid, StringMap **values, const TCHAR *context = nullptr);
    DataCollectionError getMetricFromAgent(const TCHAR *metric, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromNetconf(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getTableFromAgent(const TCHAR *metric, shared_ptr<Table> *table);
    DataCollectionError getListFromAgent(const TCHAR *metric, StringList **list);
    DataCollectionError getMetricFromSmclp(const wchar_t *metric, wchar_t *buffer, size_t size);
@@ -4785,6 +4797,7 @@ public:
    uint32_t getEffectiveMqttProxy();
    uint32_t getEffectiveModbusProxy(ProxySelection proxySelection = ProxySelection::AVAILABLE);
    uint32_t getEffectiveSshProxy();
+   uint32_t getEffectiveNetconfProxy();
    uint32_t getEffectiveVncProxy();
    uint32_t getEffectiveIcmpProxy();
    uint32_t getEffectiveAgentProxy();

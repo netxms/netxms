@@ -63,6 +63,10 @@
 #define SYSTEM_ID_LENGTH         SHA1_DIGEST_SIZE
 #define SSH_PORT                 22
 
+#ifndef NETCONF_DEFAULT_PORT
+#define NETCONF_DEFAULT_PORT     830
+#endif
+
 #ifndef MODBUS_TCP_DEFAULT_PORT
 #define MODBUS_TCP_DEFAULT_PORT  502
 #endif
