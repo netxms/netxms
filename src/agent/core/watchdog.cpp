@@ -33,6 +33,7 @@
 #define DEBUG_TAG _T("watchdog")
 
 StringList GetDisconnectedExtSubagents();
+StringList GetUnresponsiveExtSubagents();
 bool IsExternalSubagentConfigured(const TCHAR *name);
 uint32_t GetConnectedExtSubagentPid(const TCHAR *name);
 
@@ -302,6 +303,39 @@ struct ExternalSubagentInstance
 };
 
 /**
+ * Health tracking for an external subagent, kept for the lifetime of the watchdog and keyed by subagent
+ * name. Unlike ExternalSubagentInstance it survives process replacement, so that repeated failures can be
+ * counted across restart attempts.
+ */
+struct ExternalSubagentHealth
+{
+   uint32_t consecutiveFailures;   // failed start attempts and forced terminations in a row
+   uint32_t unresponsiveCycles;    // consecutive checks where connected subagent did not answer probe
+   bool restartSuspended;          // true after failure limit is reached
+
+   ExternalSubagentHealth()
+   {
+      consecutiveFailures = 0;
+      unresponsiveCycles = 0;
+      restartSuspended = false;
+   }
+};
+
+/**
+ * Get health record for given subagent, creating it on first use
+ */
+static ExternalSubagentHealth *GetSubagentHealth(StringObjectMap<ExternalSubagentHealth> *health, const TCHAR *name)
+{
+   ExternalSubagentHealth *h = health->get(name);
+   if (h == nullptr)
+   {
+      h = new ExternalSubagentHealth();
+      health->set(name, h);
+   }
+   return h;
+}
+
+/**
  * Read command line of a process identified by PID. Returns false on failure.
  */
 static bool ReadProcessCommandLine(DWORD pid, TCHAR *cmdLine, size_t len)
@@ -486,8 +520,25 @@ void ExternalSubagentWatchdog()
       startupTimeout = 30;
    nxlog_debug_tag(DEBUG_TAG, 3, _T("External subagent startup timeout set to %u seconds"), startupTimeout);
 
+   // Number of consecutive failed start attempts after which the watchdog stops relaunching a subagent.
+   // Restarting indefinitely is harmful: a subagent hung inside a third party library is killed mid-call,
+   // which can leave that library in a state where every subsequent attempt hangs the same way.
+   uint32_t maxStartAttempts = g_config->getValueAsUInt(_T("/CORE/ExternalSubagentMaxStartAttempts"), 5);
+   if (maxStartAttempts < 1)
+      maxStartAttempts = 1;
+
+   // Number of consecutive liveness probe failures after which a connected subagent is considered hung
+   uint32_t unresponsiveThreshold = g_config->getValueAsUInt(_T("/CORE/ExternalSubagentUnresponsiveThreshold"), 3);
+   if (unresponsiveThreshold < 1)
+      unresponsiveThreshold = 1;
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("External subagent max start attempts set to %u, unresponsive threshold set to %u"),
+         maxStartAttempts, unresponsiveThreshold);
+
    // Instances started by this watchdog, keyed by subagent name
    StringObjectMap<ExternalSubagentInstance> instances(Ownership::True);
+
+   // Health counters, keyed by subagent name. Survive process replacement.
+   StringObjectMap<ExternalSubagentHealth> health(Ownership::True);
 
    while (!AgentSleepAndCheckForShutdown(60000))
    {
@@ -495,7 +546,49 @@ void ExternalSubagentWatchdog()
       // instance, or from a removed configuration section) before deciding what to relaunch.
       ReconcileExternalSubagentProcesses();
 
+      // Being connected does not mean being able to serve requests - message loop on subagent side is
+      // sequential, so a subagent stuck inside a metric handler keeps the pipe open indefinitely. Probe
+      // connected subagents and terminate those that stopped answering, so they can be relaunched.
+      StringList unresponsiveSubagents = GetUnresponsiveExtSubagents();
+      for(int i = 0; i < unresponsiveSubagents.size(); i++)
+      {
+         const TCHAR *name = unresponsiveSubagents.get(i);
+         ExternalSubagentHealth *h = GetSubagentHealth(&health, name);
+         h->unresponsiveCycles++;
+         if (h->unresponsiveCycles < unresponsiveThreshold)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("External subagent %s did not answer liveness probe (%u of %u)"),
+                  name, h->unresponsiveCycles, unresponsiveThreshold);
+            continue;
+         }
+
+         uint32_t pid = GetConnectedExtSubagentPid(name);
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("External subagent %s (PID %u) is connected but unresponsive for %u checks, terminating hung process"),
+               name, pid, h->unresponsiveCycles);
+         h->unresponsiveCycles = 0;
+         h->consecutiveFailures++;
+         if (pid != 0)
+            TerminateProcessByPid(pid);
+      }
+
       StringList disconnectedSubagents = GetDisconnectedExtSubagents();
+
+      // Reset health counters for subagents that are connected and answered the probe
+      StringList trackedNames = health.keys();
+      for(int i = 0; i < trackedNames.size(); i++)
+      {
+         const TCHAR *name = trackedNames.get(i);
+         if (disconnectedSubagents.contains(name) || unresponsiveSubagents.contains(name))
+            continue;
+
+         ExternalSubagentHealth *h = health.get(name);
+         if (h->restartSuspended)
+            nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("External subagent %s is operational again, resuming watchdog control"), name);
+         h->consecutiveFailures = 0;
+         h->unresponsiveCycles = 0;
+         h->restartSuspended = false;
+      }
+
       if (disconnectedSubagents.isEmpty())
          continue;
 
@@ -510,6 +603,7 @@ void ExternalSubagentWatchdog()
       for(int i = 0; i < disconnectedSubagents.size(); i++)
       {
          const TCHAR *name = disconnectedSubagents.get(i);
+         ExternalSubagentHealth *h = GetSubagentHealth(&health, name);
          ExternalSubagentInstance *instance = instances.get(name);
          if ((instance != nullptr) && (WaitForSingleObject(instance->hProcess, 0) == WAIT_TIMEOUT))
          {
@@ -522,7 +616,37 @@ void ExternalSubagentWatchdog()
             nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("External subagent %s (PID %u) did not connect within %u seconds, terminating hung process"),
                   name, instance->pid, startupTimeout);
             TerminateProcess(instance->hProcess, 0);
+            h->consecutiveFailures++;
+            instances.remove(name);    // this attempt is counted; drop tracking so it is not counted again
          }
+         else if (instance != nullptr)
+         {
+            // Process is gone while subagent never got connected - start attempt ended with a crash or
+            // premature exit. Count it exactly once per started instance (hence removal from tracking);
+            // healthy cycles reset the counter, so an instance that ran fine and later died starts from zero.
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("External subagent %s (PID %u) process terminated without connecting"), name, instance->pid);
+            h->consecutiveFailures++;
+            instances.remove(name);
+         }
+
+         if (h->consecutiveFailures >= maxStartAttempts)
+         {
+            if (!h->restartSuspended)
+            {
+               h->restartSuspended = true;
+               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG,
+                     _T("External subagent %s failed to start %u times in a row, watchdog stopped relaunching it. Metrics provided by this subagent are unavailable until the problem is resolved."),
+                     name, h->consecutiveFailures);
+               PostEvent(0, _T("SYS_EXT_SUBAGENT_UNAVAILABLE"), 0,
+                     StringMap().set(_T("name"), name).set(_T("failureCount"), h->consecutiveFailures));
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("External subagent %s is not relaunched (start attempt limit reached)"), name);
+            }
+            continue;
+         }
+
          subagentsToStart.add(name);
       }
 
@@ -561,6 +685,7 @@ void ExternalSubagentWatchdog()
                else
                {
                   nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagent %s in session %u", name, sessions[i].SessionId);
+                  GetSubagentHealth(&health, name)->consecutiveFailures++;   // failed start attempt (deterministic failures must eventually trip the limit)
                }
             }
             found = true;

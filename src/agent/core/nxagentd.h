@@ -240,7 +240,7 @@ private:
 	NamedPipe *m_pipe;
 	bool m_connected;
 	MsgWaitQueue *m_msgQueue;
-	uint32_t m_requestId;
+	VolatileCounter m_requestId;   // incremented from session threads and watchdog thread concurrently
    uint32_t m_listenerStartDelay;
    uint32_t m_connectedPid;
 
@@ -278,6 +278,7 @@ public:
 	void listActions(StringList *list);
    void shutdown(bool restart);
    void restart();
+   bool ping();
    void syncPolicies();
    void notifyOnPolicyInstall(const uuid& guid);
    void notifyOnComponentToken(const AgentComponentToken *token);

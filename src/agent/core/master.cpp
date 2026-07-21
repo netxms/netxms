@@ -205,9 +205,25 @@ void MasterAgentListener()
                   exit(0);
                   break;
                case CMD_RESTART:
+                  // Subagents must be given a chance to release external resources (device handles, sessions
+                  // with vendor libraries, etc.) before replacement process starts, otherwise it may be
+                  // unable to acquire them. Full Shutdown() cannot be used here - in subagent loader mode it
+                  // joins the master agent listener thread, which is the thread executing this handler.
+                  // Instead mirror its first two steps: mark shutdown state and signal the shutdown
+                  // condition, so subagent worker threads sleeping in AgentSleepAndCheckForShutdown() wake
+                  // up immediately and their shutdown handlers can join them without waiting out the
+                  // current polling interval.
+                  g_dwFlags |= AF_SHUTDOWN;
+                  InitiateProcessShutdown();
+                  UnloadAllSubAgents();
                   RestartAgent();
                   ThreadSleep(10);
                   exit(0);
+                  break;
+               case CMD_KEEPALIVE:
+                  // Liveness probe from master agent. Answering it requires nothing but a working message
+                  // loop, so a subagent stuck inside a metric handler will fail to respond.
+                  response.setField(VID_RCC, ERR_SUCCESS);
                   break;
                case CMD_SYNC_AGENT_POLICIES:
                   SyncAgentPolicies(*msg);
