@@ -303,6 +303,7 @@ compile_commands.json
 /tests/test-libnetxms/test-libnetxms
 /tests/test-libnxdb/test-libnxdb
 /tests/test-libnxsl/test-libnxsl
+/tests/test-libnxnetconf/test-libnxnetconf
 /tests/test-libnxsnmp/test-libnxsnmp
 /tests/test-libnxsrv/test-libnxsrv
 /tests/test-ncd-webhook/test-ncd-webhook
