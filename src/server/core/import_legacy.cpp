@@ -164,6 +164,7 @@ static bool ValidateRules(const Config& config, uint32_t flags, ImportContext *c
 
    bool success = true;
    bool ignoreMissingActions = (flags & CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS) != 0;
+   bool ignoreMissingEvents = (flags & CFG_IMPORT_IGNORE_MISSING_EPP_EVENTS) != 0;
 
    unique_ptr<ObjectArray<ConfigEntry>> rules = rulesRoot->getSubEntries(_T("rule#*"));
    for (int i = 0; i < rules->size(); i++)
@@ -175,6 +176,34 @@ static bool ValidateRules(const Config& config, uint32_t flags, ImportContext *c
          ruleGuid.toString(ruleGuidStr);
       else
          _tcscpy(ruleGuidStr, _T("N/A"));
+
+      // Validate event references. A rule with an empty event list matches any event at runtime, so a rule
+      // whose event references silently fail to resolve is not narrowed but inverted into a catch-all.
+      ConfigEntry *eventsRoot = rule->findEntry(_T("events"));
+      if (eventsRoot != nullptr)
+      {
+         unique_ptr<ObjectArray<ConfigEntry>> events = eventsRoot->getSubEntries(_T("event#*"));
+         for (int j = 0; j < events->size(); j++)
+         {
+            const TCHAR *eventName = events->get(j)->getSubEntryValue(_T("name"));
+            if ((eventName == nullptr) || (*eventName == 0) || IsEventExist(eventName, config))
+               continue;
+
+            if (ignoreMissingEvents)
+            {
+               context->log(NXLOG_WARNING, _T("ValidateRules()"),
+                  _T("Event processing policy rule \"%s\" references event template \"%s\" that does not exist - event will be skipped"),
+                  ruleGuidStr, eventName);
+            }
+            else
+            {
+               context->log(NXLOG_ERROR, _T("ValidateRules()"),
+                  _T("Event processing policy rule \"%s\" references event template \"%s\" that does not exist"),
+                  ruleGuidStr, eventName);
+               success = false;
+            }
+         }
+      }
 
       // Validate actions
       ConfigEntry *actionsRoot = rule->findEntry(L"actions");

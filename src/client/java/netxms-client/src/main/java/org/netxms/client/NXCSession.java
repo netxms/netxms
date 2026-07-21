@@ -295,6 +295,7 @@ public class NXCSession
    public static final int CFG_IMPORT_REPLACE_MAPPING_TABLES            = 0x00008000;
    public static final int CFG_IMPORT_REPLACE_OTEL_LOG_PARSERS          = 0x00010000;
    public static final int CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS        = 0x00100000;
+   public static final int CFG_IMPORT_IGNORE_MISSING_EPP_EVENTS         = 0x00200000;
 
    // Address list IDs
    public static final int ADDRESS_LIST_DISCOVERY_TARGETS = 1;

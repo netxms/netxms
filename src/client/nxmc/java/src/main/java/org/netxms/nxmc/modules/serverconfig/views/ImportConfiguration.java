@@ -147,6 +147,7 @@ public class ImportConfiguration extends ConfigurationView
       addOptionCheckBox(i18n.tr("Replace OpenTelemetry log parser definitions"), NXCSession.CFG_IMPORT_REPLACE_OTEL_LOG_PARSERS);
       addOptionCheckBox(i18n.tr("Remove empty template &groups after import"), NXCSession.CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS);
       addOptionCheckBox(i18n.tr("&Ignore missing EPP rule actions"), NXCSession.CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS);
+      addOptionCheckBox(i18n.tr("Ignore missing EPP rule e&vents"), NXCSession.CFG_IMPORT_IGNORE_MISSING_EPP_EVENTS);
 
       Composite buttons = new Composite(options, SWT.NONE);
       layout = new GridLayout();
