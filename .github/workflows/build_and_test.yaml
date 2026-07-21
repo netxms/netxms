@@ -28,9 +28,20 @@ jobs:
         run: ./reconf
       - name: configure
         run: ./configure --prefix=/tmp/build --with-server --with-agent --with-pgsql
-          --with-tests
+          --with-tests CXXFLAGS="-g -O2 -Wcast-function-type"
       - name: make
-        run: make -j$(nproc)
+        run: |
+          set -o pipefail
+          make -j$(nproc) 2>&1 | tee build.log
+      - name: Check for function pointer cast mismatches
+        run: |
+          if grep -q 'cast-function-type' build.log; then
+            echo "::error::Cast between incompatible function types. Calling through such a"
+            echo "::error::pointer is undefined behaviour - a mismatched return type works on"
+            echo "::error::x86 by accident and breaks on SPARC. See issue #3445."
+            grep -B2 'cast-function-type' build.log
+            exit 1
+          fi
       - name: make install
         run: make install
       - name: Run tests
