@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include <netxms_maps.h>
 
 #define DEBUG_TAG_NETMAP   _T("netmap")
+
 #define MAX_DELETED_OBJECT_COUNT 1000
 
 /**
@@ -978,6 +979,32 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg, ClientSes
 }
 
 /**
+ * Mapping between network map flag bits (MF_*) and their JSON boolean keys. Single
+ * source of truth shared by toJson (serialization) and modifyFromJSONInternal (parsing)
+ * so the two directions cannot drift apart.
+ */
+static FlagNameMapping s_mapFlagMapping[] =
+{
+   { MF_SHOW_STATUS_ICON, "showStatusIcon" },
+   { MF_SHOW_STATUS_FRAME, "showStatusFrame" },
+   { MF_SHOW_STATUS_BKGND, "showStatusBackground" },
+   { MF_SHOW_END_NODES, "showEndNodes" },
+   { MF_CALCULATE_STATUS, "calculateStatus" },
+   { MF_FILTER_OBJECTS, "filterObjects" },
+   { MF_SHOW_LINK_DIRECTION, "showLinkDirection" },
+   { MF_USE_L1_TOPOLOGY, "useL1Topology" },
+   { MF_CENTER_BKGND_IMAGE, "centerBackgroundImage" },
+   { MF_TRANSLUCENT_LABEL_BKGND, "translucentLabelBackground" },
+   { MF_DONT_UPDATE_LINK_TEXT, "dontUpdateLinkText" },
+   { MF_FIT_BKGND_IMAGE, "fitBackgroundImage" },
+   { MF_FIT_TO_SCREEN, "fitToScreen" },
+   { MF_SHOW_AS_OBJECT_VIEW, "showAsObjectView" },
+   { MF_SHOW_TRAFFIC, "showTraffic" },
+   { MF_SHOW_WIFI_CLIENTS, "showWifiClients" },
+   { 0, nullptr }
+};
+
+/**
  * Update network map object from JSON document - stage 1 (called under property lock).
  * Mirrors modifyFromMessageInternal for the WebAPI JSON path. The "elements" array,
  * when present, fully replaces the map content (elements + links). Element and link
@@ -999,7 +1026,7 @@ uint32_t NetworkMap::modifyFromJSONInternal(json_t *json, GenericClientSession *
       return RCC_INVALID_ARGUMENT;
    if (!json_object_update_integer(json, "defaultLinkRouting", &m_defaultLinkRouting))
       return RCC_INVALID_ARGUMENT;
-   if (!json_object_update_integer(json, "defaultLinkWidht", &m_defaultLinkWidth))   // key spelling matches toJson
+   if (!json_object_update_integer(json, "defaultLinkWidth", &m_defaultLinkWidth))
       return RCC_INVALID_ARGUMENT;
    if (!json_object_update_integer(json, "defaultLinkStyle", &m_defaultLinkStyle))
       return RCC_INVALID_ARGUMENT;
@@ -1011,6 +1038,19 @@ uint32_t NetworkMap::modifyFromJSONInternal(json_t *json, GenericClientSession *
       return RCC_INVALID_ARGUMENT;
    if (!json_object_update_integer(json, "height", &m_height))
       return RCC_INVALID_ARGUMENT;
+
+   // Map flags (MF_*): an object of booleans updates individual bits (omitted keys
+   // left unchanged); an integer is a shortcut that replaces the whole flag word.
+   json_t *flags = json_object_get(json, "flags");
+   if (flags != nullptr)
+   {
+      if (json_is_object(flags))
+         m_flags = static_cast<uint32_t>(json_object_update_flags(flags, m_flags, s_mapFlagMapping));
+      else if (json_is_integer(flags))
+         m_flags = static_cast<uint32_t>(json_integer_value(flags));
+      else
+         return RCC_INVALID_ARGUMENT;
+   }
 
    json_t *value = json_object_get(json, "seedObjects");
    if (value != nullptr)
@@ -2263,12 +2303,12 @@ json_t *NetworkMap::toJson(bool includeSensitiveData)
    json_object_set_new(root, "seedObjects", m_seedObjects.toJson());
    json_object_set_new(root, "discoveryRadius", json_integer(m_discoveryRadius));
    json_object_set_new(root, "layout", json_integer(m_layout));
-   json_object_set_new(root, "flags", json_integer(m_flags));
+   json_object_set_new(root, "flags", json_boolean_object(m_flags, s_mapFlagMapping));
    json_object_set_new(root, "backgroundColor", json_integer(m_backgroundColor));
    json_object_set_new(root, "defaultLinkColor", json_integer(m_defaultLinkColor));
    json_object_set_new(root, "defaultLinkColorSource", json_integer(m_defaultLinkColorSource));
    json_object_set_new(root, "defaultLinkRouting", json_integer(m_defaultLinkRouting));
-   json_object_set_new(root, "defaultLinkWidht", json_integer(m_defaultLinkWidth));
+   json_object_set_new(root, "defaultLinkWidth", json_integer(m_defaultLinkWidth));
    json_object_set_new(root, "defaultLinkStyle", json_integer(m_defaultLinkStyle));
    json_object_set_new(root, "objectDisplayMode", json_integer(m_objectDisplayMode));
    json_object_set_new(root, "background", m_background.toJson());

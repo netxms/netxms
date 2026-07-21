@@ -11513,6 +11513,35 @@ components:
         layout:
           type: integer
           description: Automatic layout algorithm.
+        flags:
+          description: |
+            Map behavior/appearance flags. Returned as an object of booleans. On update
+            it may be supplied either as such an object (only the keys present are changed;
+            omitted keys are left unchanged) or, as a shortcut, as an integer bit mask that
+            replaces the whole flag word.
+          oneOf:
+            - type: object
+              additionalProperties:
+                type: boolean
+              properties:
+                showStatusIcon: { type: boolean }
+                showStatusFrame: { type: boolean }
+                showStatusBackground: { type: boolean }
+                showEndNodes: { type: boolean }
+                calculateStatus: { type: boolean }
+                filterObjects: { type: boolean }
+                showLinkDirection: { type: boolean }
+                useL1Topology: { type: boolean }
+                centerBackgroundImage: { type: boolean }
+                translucentLabelBackground: { type: boolean }
+                dontUpdateLinkText: { type: boolean }
+                fitBackgroundImage: { type: boolean }
+                fitToScreen: { type: boolean }
+                showAsObjectView: { type: boolean }
+                showTraffic: { type: boolean }
+                showWifiClients: { type: boolean }
+            - type: integer
+              description: Raw flag bit mask (replaces the whole flag word).
         seedObjects:
           type: array
           description: Seed object IDs for topology maps.
@@ -11530,9 +11559,9 @@ components:
         defaultLinkRouting:
           type: integer
           description: Default link routing algorithm.
-        defaultLinkWidht:
+        defaultLinkWidth:
           type: integer
-          description: Default link width. (Key spelling matches the object representation.)
+          description: Default link width.
         defaultLinkStyle:
           type: integer
           description: Default link style.
