@@ -204,6 +204,15 @@ enum class WebServiceRequestType
 };
 
 /**
+ * Request types for NETCONF query
+ */
+enum class NetconfRequestType
+{
+   DOCUMENT = 0,
+   CAPABILITIES = 1
+};
+
+/**
  * HTTP request method
  */
 enum class HttpRequestMethod

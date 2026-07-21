@@ -741,6 +741,11 @@ __PACK_END__
 #define CMD_GET_TRAFFIC_METRIC_DEFS       0x021D
 #define CMD_QUERY_TRAFFIC_DATA            0x021E
 #define CMD_NETCONF_EXECUTE               0x021F
+#define CMD_NETCONF_QUERY                 0x0220
+#define CMD_GET_NETCONF_QUERIES           0x0221
+#define CMD_MODIFY_NETCONF_QUERY          0x0222
+#define CMD_DELETE_NETCONF_QUERY          0x0223
+#define CMD_NETCONF_QUERY_DEFINITION      0x0224
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1774,6 +1779,10 @@ __PACK_END__
 #define VID_SAMPLING_RATE           ((uint32_t)1016)
 #define VID_TRAFFIC_QUERY_TYPE      ((uint32_t)1017)
 #define VID_OBSERVATION_POINTS      ((uint32_t)1018)
+#define VID_DATASTORE               ((uint32_t)1019)
+#define VID_FILTER_TYPE             ((uint32_t)1020)
+#define VID_NETCONF_PROXY           ((uint32_t)1021)
+#define VID_NETCONF_PORT            ((uint32_t)1022)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

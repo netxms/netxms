@@ -4,7 +4,7 @@
 #
 
 SUBAGENT = netconf
-SOURCES = handlers.cpp keys.cpp main.cpp session.cpp sp.cpp
+SOURCES = cache.cpp handlers.cpp keys.cpp main.cpp session.cpp sp.cpp
 SA_LIBS = -lnxnetconf $(LIBSSH_LIBS)
 SA_CPPFLAGS = -I$(LIBSSH_ROOT)/include
 

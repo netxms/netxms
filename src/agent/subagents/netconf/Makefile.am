@@ -1,7 +1,7 @@
 SUBAGENT = netconf
 
 pkglib_LTLIBRARIES = netconf.la
-netconf_la_SOURCES = handlers.cpp keys.cpp main.cpp session.cpp sp.cpp
+netconf_la_SOURCES = cache.cpp handlers.cpp keys.cpp main.cpp session.cpp sp.cpp
 netconf_la_CPPFLAGS = @LIBSSH_CPPFLAGS@ -I@top_srcdir@/include -I@top_srcdir@/build
 netconf_la_LDFLAGS = @LIBSSH_LDFLAGS@ -module -avoid-version -export-symbols ../subagent.sym
 netconf_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnxnetconf/libnxnetconf.la ../../../libnetxms/libnetxms.la -lssh

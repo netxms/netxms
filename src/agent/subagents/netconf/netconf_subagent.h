@@ -70,6 +70,7 @@ private:
    bool sendMessage(const pugi::xml_document& document);
    char *readMessage(uint32_t timeout);
    bool performHandshake();
+   char *transact(const pugi::xml_document& rpc, uint32_t messageId, uint32_t timeout, size_t *replySize);
 
 public:
    NETCONFSession(const InetAddress& addr, uint16_t port, int32_t id = 0);
@@ -97,6 +98,12 @@ public:
     * on it) or nullptr on failure.
     */
    char *executeRpc(const char *content, uint32_t timeout, size_t *replySize = nullptr);
+
+   /**
+    * Execute get (datastore < 0) or get-config request with optional filter. Returns raw
+    * rpc-reply document (caller is responsible for calling MemFree on it) or nullptr on failure.
+    */
+   char *executeGetRequest(int datastore, NetconfFilterType filterType, const char *filter, uint32_t timeout, size_t *replySize = nullptr);
 };
 
 /* Key functions */
@@ -114,10 +121,15 @@ LONG H_NETCONFCapabilities(const TCHAR *param, const TCHAR *arg, StringList *val
 
 /* message processing */
 void ExecuteNETCONFRequest(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session);
+void QueryNetconfDocument(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session);
+
+/* document cache */
+void CleanDocumentCache();
 
 /* globals */
 extern uint32_t g_netconfConnectTimeout;
 extern uint32_t g_netconfRequestTimeout;
 extern uint32_t g_netconfSessionIdleTimeout;
+extern uint32_t g_netconfCacheExpirationTime;
 
 #endif

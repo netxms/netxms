@@ -559,6 +559,11 @@ public class NXCPCodes
    public static final int CMD_GET_TRAFFIC_METRIC_DEFS = 0x021D;
    public static final int CMD_QUERY_TRAFFIC_DATA = 0x021E;
    public static final int CMD_NETCONF_EXECUTE = 0x021F;
+   public static final int CMD_NETCONF_QUERY = 0x0220;
+   public static final int CMD_GET_NETCONF_QUERIES = 0x0221;
+   public static final int CMD_MODIFY_NETCONF_QUERY = 0x0222;
+   public static final int CMD_DELETE_NETCONF_QUERY = 0x0223;
+   public static final int CMD_NETCONF_QUERY_DEFINITION = 0x0224;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

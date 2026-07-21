@@ -368,6 +368,61 @@ void NETCONFSession::disconnect()
 }
 
 /**
+ * Send RPC request and read matching reply
+ */
+char *NETCONFSession::transact(const pugi::xml_document& rpc, uint32_t messageId, uint32_t timeout, size_t *replySize)
+{
+   if (!sendMessage(rpc))
+      return nullptr;
+
+   int64_t deadline = GetCurrentTimeMs() + timeout;
+   while(true)
+   {
+      int64_t remaining = deadline - GetCurrentTimeMs();
+      if (remaining <= 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::transact: timeout waiting for reply from %s:%d"), m_addr.toString().cstr(), m_port);
+         return nullptr;
+      }
+
+      char *message = readMessage(static_cast<uint32_t>(remaining));
+      if (message == nullptr)
+         return nullptr;
+
+      pugi::xml_document reply;
+      if (!reply.load_string(message))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::transact: malformed XML message from %s:%d"), m_addr.toString().cstr(), m_port);
+         MemFree(message);
+         return nullptr;
+      }
+
+      pugi::xml_node replyElement = NETCONF_FindChildByLocalName(reply, "rpc-reply");
+      if (!replyElement)
+      {
+         // Not an RPC reply (e.g. asynchronous notification) - skip it
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("NETCONFSession::transact: ignored non-reply message from %s:%d"), m_addr.toString().cstr(), m_port);
+         MemFree(message);
+         continue;
+      }
+
+      uint32_t replyId = replyElement.attribute("message-id").as_uint(0);
+      if ((replyId != 0) && (replyId != messageId))
+      {
+         // Stale reply to a previous request - skip it
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("NETCONFSession::transact: ignored reply with unexpected message ID %u (expected %u)"), replyId, messageId);
+         MemFree(message);
+         continue;
+      }
+
+      m_lastAccess = time(nullptr);
+      if (replySize != nullptr)
+         *replySize = strlen(message);
+      return message;
+   }
+}
+
+/**
  * Execute single RPC and return raw rpc-reply document
  */
 char *NETCONFSession::executeRpc(const char *content, uint32_t timeout, size_t *replySize)
@@ -386,52 +441,30 @@ char *NETCONFSession::executeRpc(const char *content, uint32_t timeout, size_t *
       return nullptr;
    }
 
-   if (!sendMessage(rpc))
-      return nullptr;
+   return transact(rpc, messageId, timeout, replySize);
+}
 
-   int64_t deadline = GetCurrentTimeMs() + timeout;
-   while(true)
+/**
+ * Execute get or get-config request with optional filter and return raw rpc-reply document
+ */
+char *NETCONFSession::executeGetRequest(int datastore, NetconfFilterType filterType, const char *filter, uint32_t timeout, size_t *replySize)
+{
+   if (!isConnected())
    {
-      int64_t remaining = deadline - GetCurrentTimeMs();
-      if (remaining <= 0)
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::executeRpc: timeout waiting for reply from %s:%d"), m_addr.toString().cstr(), m_port);
-         return nullptr;
-      }
-
-      char *message = readMessage(static_cast<uint32_t>(remaining));
-      if (message == nullptr)
-         return nullptr;
-
-      pugi::xml_document reply;
-      if (!reply.load_string(message))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::executeRpc: malformed XML message from %s:%d"), m_addr.toString().cstr(), m_port);
-         MemFree(message);
-         return nullptr;
-      }
-
-      pugi::xml_node replyElement = NETCONF_FindChildByLocalName(reply, "rpc-reply");
-      if (!replyElement)
-      {
-         // Not an RPC reply (e.g. asynchronous notification) - skip it
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("NETCONFSession::executeRpc: ignored non-reply message from %s:%d"), m_addr.toString().cstr(), m_port);
-         MemFree(message);
-         continue;
-      }
-
-      uint32_t replyId = replyElement.attribute("message-id").as_uint(0);
-      if ((replyId != 0) && (replyId != messageId))
-      {
-         // Stale reply to a previous request - skip it
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("NETCONFSession::executeRpc: ignored reply with unexpected message ID %u (expected %u)"), replyId, messageId);
-         MemFree(message);
-         continue;
-      }
-
-      m_lastAccess = time(nullptr);
-      if (replySize != nullptr)
-         *replySize = strlen(message);
-      return message;
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::executeGetRequest: session %s is not connected"), m_name.cstr());
+      return nullptr;
    }
+
+   uint32_t messageId = ++m_messageId;
+   pugi::xml_document rpc;
+   bool success = (datastore < 0) ?
+         NETCONF_BuildGetRequest(rpc, messageId, filterType, filter) :
+         NETCONF_BuildGetConfigRequest(rpc, messageId, static_cast<NetconfDatastore>(datastore), filterType, filter);
+   if (!success)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::executeGetRequest: invalid filter"));
+      return nullptr;
+   }
+
+   return transact(rpc, messageId, timeout, replySize);
 }

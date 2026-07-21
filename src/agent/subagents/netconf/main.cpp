@@ -30,6 +30,7 @@
 uint32_t g_netconfConnectTimeout = 5000;       // milliseconds
 uint32_t g_netconfRequestTimeout = 60000;      // milliseconds
 uint32_t g_netconfSessionIdleTimeout = 300;    // seconds
+uint32_t g_netconfCacheExpirationTime = 600;   // seconds
 
 #ifdef _WIN32
 
@@ -92,6 +93,7 @@ static struct ssh_threads_callbacks_struct s_threadCallbacks =
  */
 static NX_CFG_TEMPLATE s_cfgTemplate[] =
 {
+   { _T("CacheExpirationTime"), CT_LONG, 0, 0, 0, 0, &g_netconfCacheExpirationTime },
    { _T("ConnectTimeout"), CT_LONG, 0, 0, 0, 0, &g_netconfConnectTimeout },
    { _T("RequestTimeout"), CT_LONG, 0, 0, 0, 0, &g_netconfRequestTimeout },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_netconfSessionIdleTimeout },
@@ -133,10 +135,17 @@ static void SubagentShutdown()
  */
 static bool SubagentCommandHandler(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
-   if (command != CMD_NETCONF_EXECUTE)
-      return false;
-   ExecuteNETCONFRequest(*request, response, session);
-   return true;
+   switch(command)
+   {
+      case CMD_NETCONF_EXECUTE:
+         ExecuteNETCONFRequest(*request, response, session);
+         return true;
+      case CMD_NETCONF_QUERY:
+         QueryNetconfDocument(*request, response, session);
+         return true;
+      default:
+         return false;
+   }
 }
 
 /**

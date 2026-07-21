@@ -105,6 +105,8 @@ static void HousekeeperThread()
       }
       s_lock.unlock();
       deleteList.clear();
+
+      CleanDocumentCache();
    }
 }
 

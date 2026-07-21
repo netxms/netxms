@@ -586,7 +586,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_TRAFFIC_CONNECTOR_NAMES"),
       _T("CMD_GET_TRAFFIC_METRIC_DEFS"),
       _T("CMD_QUERY_TRAFFIC_DATA"),
-      _T("CMD_NETCONF_EXECUTE")
+      _T("CMD_NETCONF_EXECUTE"),
+      _T("CMD_NETCONF_QUERY"),
+      _T("CMD_GET_NETCONF_QUERIES"),
+      _T("CMD_MODIFY_NETCONF_QUERY"),
+      _T("CMD_DELETE_NETCONF_QUERY"),
+      _T("CMD_NETCONF_QUERY_DEFINITION")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -602,7 +607,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_DEPLOY_REPORT_PACKAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_NETCONF_EXECUTE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_NETCONF_QUERY_DEFINITION))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }
