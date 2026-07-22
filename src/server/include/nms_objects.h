@@ -593,7 +593,11 @@ public:
    ObjectArray<T> *findAll(std::function<bool (T*)> comparator)
    {
       ObjectArray<T> *resultSet = new ObjectArray<T>(64, 64, Ownership::False);
-      AbstractIndexBase::findAll(resultSet, reinterpret_cast<std::function<bool (void*)>>(comparator));
+      AbstractIndexBase::findAll(resultSet,
+         [comparator] (void *e) -> bool
+         {
+            return comparator(static_cast<T*>(e));
+         });
       return resultSet;
    }
 
