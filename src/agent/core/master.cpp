@@ -28,6 +28,11 @@
 LONG RestartAgent();
 
 /**
+ * Thread performing graceful agent shutdown followed by process termination
+ */
+void ShutdownThread();
+
+/**
  * Schedule delayed restart
  */
 void ScheduleDelayedRestart();
@@ -126,6 +131,7 @@ static NamedPipe *s_pipe = nullptr;
  */
 void MasterAgentListener()
 {
+   bool stopInitiated = false;
    while(!(g_dwFlags & AF_SHUTDOWN))
 	{
       TCHAR pipeName[MAX_PATH];
@@ -200,14 +206,11 @@ void MasterAgentListener()
                case CMD_SHUTDOWN:
                   if (msg->getFieldAsBoolean(VID_RESTART))
                      ScheduleDelayedRestart();
-                  Shutdown();
-                  ThreadSleep(10);
-                  exit(0);
+                  ThreadCreate(ShutdownThread);
+                  stopInitiated = true;
                   break;
                case CMD_RESTART:
-                  RestartAgent();
-                  ThreadSleep(10);
-                  exit(0);
+                  stopInitiated = (RestartAgent() == ERR_SUCCESS);
                   break;
                case CMD_SYNC_AGENT_POLICIES:
                   SyncAgentPolicies(*msg);
@@ -228,11 +231,13 @@ void MasterAgentListener()
 				NXCP_MESSAGE *rawMsg = response.serialize();
             bool sendSuccess = s_pipe->write(rawMsg, ntohl(rawMsg->size));
             MemFree(rawMsg);
-            if (!sendSuccess)
+            if (!sendSuccess || stopInitiated)
                break;
 			}
 			delete_and_null(s_pipe);
 			AgentWriteDebugLog(1, _T("Disconnected from master agent"));
+			if (stopInitiated)
+			   break;   // agent is stopping or replacement instance takes over
       }
       else
       {
