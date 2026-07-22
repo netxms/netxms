@@ -121,7 +121,12 @@ int GoogleChatDriver::send(const NotificationContext& context)
 
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Google Chat Driver/" NETXMS_VERSION_STRING_A);
+
+   ByteStream responseData(32768);
+   responseData.setAllocationStep(32768);
+   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
    struct curl_slist *headers = nullptr;
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
