@@ -21,6 +21,7 @@ void TestSharedObjectQueue();
 void TestSQueue();
 void TestMsgWaitQueue();
 void TestMessageClass();
+void TestNXCPMessageCodeName();
 void TestMutex();
 void TestUniqueLock();
 void TestCondition();
@@ -3624,6 +3625,7 @@ int main(int argc, char *argv[])
    TestPatternMatching();
    TestShortenFilePathForDisplay();
    TestMessageClass();
+   TestNXCPMessageCodeName();
    TestMsgWaitQueue();
    TestGenericId();
    TestMacAddress();

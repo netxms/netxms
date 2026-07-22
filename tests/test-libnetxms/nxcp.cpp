@@ -276,3 +276,63 @@ void TestMessageClass()
    EndTest(GetCurrentTimeMs() - start);
 #endif
 }
+
+/**
+ * Test code for custom message name resolver
+ */
+#define TEST_CUSTOM_CODE   static_cast<uint16_t>(0x0500)
+#define TEST_CUSTOM_NAME   _T("CMD_TEST_CUSTOM_RESOLVER")
+
+/**
+ * Custom message name resolver used by TestNXCPMessageCodeName()
+ */
+static bool TestMessageNameResolver(uint16_t code, TCHAR *buffer)
+{
+   if (code == TEST_CUSTOM_CODE)
+   {
+      _tcscpy(buffer, TEST_CUSTOM_NAME);
+      return true;
+   }
+   return false;
+}
+
+/**
+ * Test NXCP message code to name resolution
+ */
+void TestNXCPMessageCodeName()
+{
+   TCHAR buffer[128];
+
+   // Codes spanning the built-in table. A misaligned entry (e.g. a missing comma
+   // merging two adjacent string literals into one) would shift every subsequent
+   // name and fail here.
+   StartTest(_T("NXCP message code name - built-in table"));
+   AssertEquals(NXCPMessageCodeName(CMD_LOGIN, buffer), _T("CMD_LOGIN"));
+   AssertEquals(NXCPMessageCodeName(CMD_KEEPALIVE, buffer), _T("CMD_KEEPALIVE"));
+   AssertEquals(NXCPMessageCodeName(CMD_REQUEST_COMPLETED, buffer), _T("CMD_REQUEST_COMPLETED"));
+   AssertEquals(NXCPMessageCodeName(CMD_RESTORE_DEVICE_CONFIG, buffer), _T("CMD_RESTORE_DEVICE_CONFIG"));
+   AssertEquals(NXCPMessageCodeName(CMD_GET_TRAFFIC_CONNECTOR_NAMES, buffer), _T("CMD_GET_TRAFFIC_CONNECTOR_NAMES"));
+   AssertEquals(NXCPMessageCodeName(CMD_QUERY_TRAFFIC_DATA, buffer), _T("CMD_QUERY_TRAFFIC_DATA"));
+   EndTest();
+
+   StartTest(_T("NXCP message code name - reporting server table"));
+   AssertEquals(NXCPMessageCodeName(CMD_RS_LIST_REPORTS, buffer), _T("CMD_RS_LIST_REPORTS"));
+   AssertEquals(NXCPMessageCodeName(CMD_RS_DEPLOY_REPORT_PACKAGE, buffer), _T("CMD_RS_DEPLOY_REPORT_PACKAGE"));
+   EndTest();
+
+   StartTest(_T("NXCP message code name - unknown code fallback"));
+   AssertEquals(NXCPMessageCodeName(TEST_CUSTOM_CODE, buffer), _T("CMD_0x0500"));
+   EndTest();
+
+   StartTest(_T("NXCP message code name - custom resolver"));
+   NXCPRegisterMessageNameResolver(TestMessageNameResolver);
+   AssertEquals(NXCPMessageCodeName(TEST_CUSTOM_CODE, buffer), TEST_CUSTOM_NAME);
+   // Codes the custom resolver does not handle must still fall back
+   AssertEquals(NXCPMessageCodeName(static_cast<uint16_t>(0x0501), buffer), _T("CMD_0x0501"));
+   // Built-in table must take precedence over custom resolvers
+   AssertEquals(NXCPMessageCodeName(CMD_LOGIN, buffer), _T("CMD_LOGIN"));
+   NXCPUnregisterMessageNameResolver(TestMessageNameResolver);
+   // After unregister the code is unknown again
+   AssertEquals(NXCPMessageCodeName(TEST_CUSTOM_CODE, buffer), _T("CMD_0x0500"));
+   EndTest();
+}
