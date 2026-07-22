@@ -193,17 +193,15 @@ template<typename T, size_t (*Reader)(const T*, ssize_t, WCHAR*, size_t), T (*Sw
 {
    size_t length = byteCount / sizeof(T);
 
-   T localBuffer[1024];
-   T* conversionBuffer = (length < 1024) ? localBuffer : MemAllocArrayNoInit<T>(length);
-   const T* s = reinterpret_cast<const T*>(source);
+   // Source points into the stream at an arbitrary offset; copy into an aligned buffer before
+   // element-wise access to avoid unaligned reads on strict-alignment architectures.
+   Buffer<T, 4096> conversionBuffer;
+   conversionBuffer.reserve(length);
+   memcpy(conversionBuffer, source, length * sizeof(T));
    for (size_t i = 0; i < length; i++)
-      conversionBuffer[i] = Swapper(*s++);
+      conversionBuffer[i] = Swapper(conversionBuffer[i]);
 
-   size_t count = Reader(conversionBuffer, length, destination, length);
-
-   if (conversionBuffer != localBuffer)
-      MemFree(conversionBuffer);
-   return count;
+   return Reader(conversionBuffer, length, destination, length);
 }
 
 /**
@@ -212,7 +210,13 @@ template<typename T, size_t (*Reader)(const T*, ssize_t, WCHAR*, size_t), T (*Sw
 template<typename T, size_t (*Reader)(const T*, ssize_t, WCHAR*, size_t)> static inline size_t ReadUnicodeString(const BYTE *source, ssize_t byteCount, WCHAR *destination)
 {
    size_t length = byteCount / sizeof(T);
-   return Reader(reinterpret_cast<const T*>(source), length, destination, length);
+
+   // Source points into the stream at an arbitrary offset; copy into an aligned buffer before
+   // element-wise conversion to avoid unaligned reads on strict-alignment architectures.
+   Buffer<T, 4096> conversionBuffer;
+   conversionBuffer.reserve(length);
+   memcpy(conversionBuffer, source, length * sizeof(T));
+   return Reader(conversionBuffer, length, destination, length);
 }
 
 /**
@@ -660,7 +664,12 @@ template<typename T> static inline size_t DirectCopyWriter(const WCHAR* source, 
  */
 template<typename T, size_t (*Writer)(const WCHAR*, ssize_t, T*, size_t), T (*Swapper)(T)> static inline size_t WriteUnicodeString(const WCHAR* source, size_t length, BYTE *destination)
 {
-   size_t l = Writer(source, length, reinterpret_cast<T*>(destination), length * 2);
+   // Destination points into the stream at an arbitrary offset; convert into an aligned buffer and
+   // copy back to avoid unaligned writes on strict-alignment architectures.
+   size_t capacity = length * 2;
+   Buffer<T, 4096> conversionBuffer;
+   conversionBuffer.reserve(capacity);
+   size_t l = Writer(source, length, conversionBuffer, capacity);
 #if __cpp_if_constexpr
    if constexpr (Swapper != nullptr)
 #else
@@ -668,11 +677,9 @@ template<typename T, size_t (*Writer)(const WCHAR*, ssize_t, T*, size_t), T (*Sw
 #endif
    {
       for (size_t i = 0; i < l; i++)
-      {
-         *reinterpret_cast<T*>(destination[i]) = Swapper(*reinterpret_cast<T*>(destination[i]));
-         i += sizeof(T);
-      }
+         conversionBuffer[i] = Swapper(conversionBuffer[i]);
    }
+   memcpy(destination, conversionBuffer, l * sizeof(T));
    return l * sizeof(T);
 }
 
