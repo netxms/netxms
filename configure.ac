@@ -1676,7 +1676,7 @@ fi
 if test "x$CXX" = "xCC" -o "x$CXX" = "xCC -std=c++11" ; then
 	SQLFLAGS="-Qn"
 	CPPFLAGS="$CPPFLAGS -mt"
-	CXXFLAGS="$CXXFLAGS -erroff=badargtype2w,wbadinit,wbadlkginit"
+	CXXFLAGS="$CXXFLAGS -erroff=badargtype2w,wbadinit,wbadlkginit -errwarn=voidretw"
 
 	TEST_XARCH="no"
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
