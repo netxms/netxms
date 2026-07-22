@@ -15719,6 +15719,8 @@ bool Node::getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min,
       *avg = (collector != nullptr) ? collector->average() : 0;
    if (loss != nullptr)
       *loss = (collector != nullptr) ? collector->packetLoss() : 0;
+   if (jitter != nullptr)
+      *jitter = (collector != nullptr) ? collector->jitter() : 0;
    unlockProperties();
    return collector != nullptr;
 }
