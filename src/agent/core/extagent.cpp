@@ -223,7 +223,7 @@ void ExternalSubagent::connect(NamedPipe *pipe)
  */
 void ExternalSubagent::shutdown(bool restart)
 {
-	NXCPMessage msg(CMD_SHUTDOWN, m_requestId++);
+	NXCPMessage msg(CMD_SHUTDOWN, InterlockedIncrement(&m_requestId));
    msg.setField(VID_RESTART, restart);
 	sendMessage(&msg);
 }
@@ -233,7 +233,7 @@ void ExternalSubagent::shutdown(bool restart)
  */
 void ExternalSubagent::restart()
 {
-   NXCPMessage msg(CMD_RESTART, m_requestId++);
+   NXCPMessage msg(CMD_RESTART, InterlockedIncrement(&m_requestId));
    sendMessage(&msg);
 }
 
@@ -246,7 +246,7 @@ NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(UINT32 *count)
 	NETXMS_SUBAGENT_PARAM *result = nullptr;
 
 	msg.setCode(CMD_GET_PARAMETER_LIST);
-	msg.setId(m_requestId++);
+	msg.setId(InterlockedIncrement(&m_requestId));
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
@@ -279,7 +279,7 @@ NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(UINT32 *count)
 	NETXMS_SUBAGENT_LIST *result = nullptr;
 
 	msg.setCode(CMD_GET_ENUM_LIST);
-	msg.setId(m_requestId++);
+	msg.setId(InterlockedIncrement(&m_requestId));
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
@@ -311,7 +311,7 @@ NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(UINT32 *count)
 	NETXMS_SUBAGENT_TABLE *result = nullptr;
 
 	msg.setCode(CMD_GET_TABLE_LIST);
-	msg.setId(m_requestId++);
+	msg.setId(InterlockedIncrement(&m_requestId));
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
@@ -344,7 +344,7 @@ ActionList *ExternalSubagent::getSupportedActions()
 	ActionList *result = nullptr;
 
 	msg.setCode(CMD_GET_ACTION_LIST);
-	msg.setId(m_requestId++);
+	msg.setId(InterlockedIncrement(&m_requestId));
 	if (sendMessage(&msg))
 	{
 		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
@@ -543,7 +543,7 @@ uint32_t ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
    uint32_t rcc;
 
 	msg.setCode(CMD_GET_PARAMETER);
-	msg.setId(m_requestId++);
+	msg.setId(InterlockedIncrement(&m_requestId));
 	msg.setField(VID_PARAMETER, name);
 	if (sendMessage(&msg))
 	{
@@ -572,7 +572,7 @@ uint32_t ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
  */
 uint32_t ExternalSubagent::getTable(const TCHAR *name, Table *value)
 {
-	NXCPMessage msg(CMD_GET_TABLE, m_requestId++);
+	NXCPMessage msg(CMD_GET_TABLE, InterlockedIncrement(&m_requestId));
 	msg.setField(VID_PARAMETER, name);
    uint32_t rcc;
    if (sendMessage(&msg))
@@ -602,7 +602,7 @@ uint32_t ExternalSubagent::getTable(const TCHAR *name, Table *value)
  */
 uint32_t ExternalSubagent::getList(const TCHAR *name, StringList *value)
 {
-	NXCPMessage msg(CMD_GET_LIST, m_requestId++);
+	NXCPMessage msg(CMD_GET_LIST, InterlockedIncrement(&m_requestId));
 	msg.setField(VID_PARAMETER, name);
    uint32_t rcc;
    if (sendMessage(&msg))
@@ -636,7 +636,7 @@ uint32_t ExternalSubagent::getList(const TCHAR *name, StringList *value)
  */
 uint32_t ExternalSubagent::executeAction(const TCHAR *name, const StringList& args, AbstractCommSession *session, uint32_t requestId, bool sendOutput)
 {
-   NXCPMessage msg(CMD_EXECUTE_ACTION, m_requestId++);
+   NXCPMessage msg(CMD_EXECUTE_ACTION, InterlockedIncrement(&m_requestId));
    msg.setField(VID_ACTION_NAME, name);
    args.fillMessage(&msg, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
    msg.setField(VID_REQUEST_ID, requestId);
@@ -677,7 +677,7 @@ void ExternalSubagent::syncPolicies()
    if (hResult == nullptr)
       return;
 
-   NXCPMessage msg(CMD_SYNC_AGENT_POLICIES, m_requestId++);
+   NXCPMessage msg(CMD_SYNC_AGENT_POLICIES, InterlockedIncrement(&m_requestId));
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    uint32_t count = 0;
    int rowCount = DBGetNumRows(hResult);
@@ -743,7 +743,7 @@ void ExternalSubagent::syncPolicies()
  */
 void ExternalSubagent::notifyOnPolicyInstall(const uuid& guid)
 {
-   NXCPMessage msg(CMD_DEPLOY_AGENT_POLICY, m_requestId++);
+   NXCPMessage msg(CMD_DEPLOY_AGENT_POLICY, InterlockedIncrement(&m_requestId));
    msg.setField(VID_GUID, guid);
    sendMessage(&msg);
 }
@@ -753,7 +753,7 @@ void ExternalSubagent::notifyOnPolicyInstall(const uuid& guid)
  */
 void ExternalSubagent::notifyOnComponentToken(const AgentComponentToken *token)
 {
-   NXCPMessage msg(CMD_SET_COMPONENT_TOKEN, m_requestId++);
+   NXCPMessage msg(CMD_SET_COMPONENT_TOKEN, InterlockedIncrement(&m_requestId));
    msg.setField(VID_TOKEN, reinterpret_cast<const BYTE*>(token), sizeof(AgentComponentToken));
    sendMessage(&msg);
 }
