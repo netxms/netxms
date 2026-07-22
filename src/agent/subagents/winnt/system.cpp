@@ -1,6 +1,6 @@
 /* 
-** Windows 2000+ NetXMS subagent
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Windows XP+ NetXMS subagent
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -469,7 +469,9 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
       value->addColumn(_T("LOGON_TIMESTAMP"), DCI_DT_UINT64, _T("Logon time"));
       value->addColumn(_T("IDLE_TIME"), DCI_DT_UINT, _T("Idle for"));
 
+#if (_WIN32_WINNT >= 0x0600)
       DWORD consoleSessionId = WTSGetActiveConsoleSessionId();
+#endif
 
       for (DWORD i = 0; i < count; i++)
       {
@@ -528,7 +530,9 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
                WTSFreeMemory(wtsStation);
 #endif
 
+#if (_WIN32_WINNT >= 0x0600)
             bool addressRetrieved = false;
+#endif
             WTS_CLIENT_ADDRESS *clientAddress;
             if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sessions[i].SessionId, WTSClientAddress, reinterpret_cast<LPTSTR*>(&clientAddress), &bytes))
             {
@@ -537,7 +541,9 @@ LONG H_ActiveUserSessionsTable(const TCHAR *cmd, const TCHAR *arg, Table *value,
                else if (clientAddress->AddressFamily == AF_INET6)
                   value->set(5, InetAddress(clientAddress->Address).toString());
                WTSFreeMemory(clientAddress);
+#if (_WIN32_WINNT >= 0x0600)
                addressRetrieved = true;
+#endif
             }
 
 #if (_WIN32_WINNT >= 0x0600)

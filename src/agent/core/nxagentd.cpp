@@ -562,21 +562,6 @@ const TCHAR *GetAgentExecutableName()
    return s_executableName;
 }
 
-#ifdef _WIN32
-
-/**
- * Get proc address and write log file
- */
-static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
-{
-   FARPROC ptr = GetProcAddress(hModule, procName);
-   if ((ptr == NULL) && (s_startupFlags & SF_LOG_UNRESOLVED_SYMBOLS))
-      nxlog_write(NXLOG_WARNING, _T("Unable to resolve symbol \"%s\""), procName);
-   return ptr;
-}
-
-#endif   /* _WIN32 */
-
 /**
  * Thread performing graceful agent shutdown followed by process termination
  */

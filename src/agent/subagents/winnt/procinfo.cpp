@@ -384,7 +384,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    }
    else
    {
-      static TCHAR *typeList[] = { _T("min"), _T("max"), _T("avg"), _T("sum"), nullptr };
+      static const TCHAR *typeList[] = { _T("min"), _T("max"), _T("avg"), _T("sum"), nullptr };
       static ProcessInfoAgregationMethod methods[] = { ProcessInfoAgregationMethod::MIN, ProcessInfoAgregationMethod::MAX, ProcessInfoAgregationMethod::AVG, ProcessInfoAgregationMethod::SUM };
       
       int i;

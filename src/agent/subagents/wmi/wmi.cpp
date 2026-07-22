@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008-2025 Victor Kirhenshtein
+** Copyright (C) 2008-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -539,7 +539,6 @@ static LONG H_WMITableQuery(const TCHAR *cmd, const TCHAR *arg, Table *value, Ab
    pEnumObject = DoWMIQuery(ns, query, &ctx);
    if (pEnumObject != NULL)
    {
-      bool headerCreated = false;
       StringList properties;
       while (pEnumObject->Next(WBEM_INFINITE, 1, &pClassObject, &uRet) == S_OK)
       {

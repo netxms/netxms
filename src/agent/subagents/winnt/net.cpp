@@ -167,36 +167,6 @@ static DWORD AdapterNameToIndex(const TCHAR *name)
 }
 
 /**
- * Get adapter name from index
- */
-static const bool AdapterIndexToName(DWORD index, TCHAR *name)
-{
-   bool result = false;
-
-   const ULONG flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
-   ULONG size = 0;
-   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
-      return false;
-
-   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)MemAlloc(size);
-   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
-   {
-      for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
-      {
-         if (iface->IfIndex == index)
-         {
-            _tcscpy(name, iface->FriendlyName);
-            result = true;
-            break;
-         }
-      }
-   }
-
-   MemFree(buffer);
-   return result;
-}
-
-/**
  * Net.InterfaceList list handler
  */
 LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
