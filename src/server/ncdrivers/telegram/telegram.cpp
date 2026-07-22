@@ -584,7 +584,7 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    memset(&proxy, 0, sizeof(ProxyInfo));
    proxy.protocol = 0x7FFF;   // "unset" indicator
 
-   char authToken[64];
+   char authToken[64] = "";
    char protocol[8] = "http";
    uint32_t options = LONG_POLLING;
    uint32_t pollingInterval = 300;
@@ -609,6 +609,12 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    if (!config->parseTemplate(_T("Telegram"), configTemplate))
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing driver configuration"));
+      return nullptr;
+   }
+
+   if (authToken[0] == 0)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Authentication token not provided"));
       return nullptr;
    }
 
