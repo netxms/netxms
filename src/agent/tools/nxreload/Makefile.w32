@@ -6,4 +6,11 @@
 TOOL = nxreload
 SOURCES = nxreload.cpp
 
+# nxreload runs while the agent installer swaps out the bundled MinGW runtime
+# DLLs (libgcc/libstdc++/libwinpthread) during an upgrade. It must therefore
+# not depend on any of them, otherwise it locks a DLL the installer needs to
+# replace and the upgrade fails. Link the runtime statically to keep it
+# self-contained.
+TOOL_LDFLAGS = -static
+
 include $(TOPDIR)/build/tool-common.mk
