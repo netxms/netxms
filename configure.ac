@@ -281,12 +281,6 @@ AC_ARG_WITH(snmp,
 	COMPONENTS="$COMPONENTS snmp"
 ])
 
-AC_ARG_WITH(flow-collector,
-[AS_HELP_STRING(--with-flow-collector,build NetFlow/IPFIX flow collector)],
-[
-	COMPONENTS="$COMPONENTS flow-collector"
-])
-
 AC_ARG_WITH(client,
 [AS_HELP_STRING(--with-client,build client library and tools)],
 [
@@ -1048,7 +1042,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp db client server agent nxscript nxcproxy mobile-agent"
+	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp db client server agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent ha test-libnxsl test-libnxsnmp test-libnxsrv test-ncd-webhook"
 	AGENT_UNIT_TESTS="entsoe openmeteo linux-cpu-usage-collector"
 	TOOLS="nxlptest"
@@ -1118,11 +1112,6 @@ fi
 check_substr "$COMPONENTS" "ethernetip"
 if test $? = 0; then
 	MODULES="$MODULES ethernetip"
-fi
-
-check_substr "$COMPONENTS" "flow-collector"
-if test $? = 0; then
-	MODULES="$MODULES flow-collector"
 fi
 
 check_substr "$COMPONENTS" "java"
@@ -4660,8 +4649,6 @@ AC_CONFIG_FILES([
 	src/ethernetip/Makefile
 	src/ethernetip/libethernetip/Makefile
 	src/ethernetip/nxethernetip/Makefile
-	src/flow-collector/Makefile
-	src/flow-collector/libipfix/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
 	src/jansson/Makefile

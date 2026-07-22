@@ -35,7 +35,6 @@ If:
     - src/agent/subagents/ping/scan_win32\.cpp
     - src/agent/subagents/ups/mec0003\.cpp
     - src/agent/subagents/ups/usb\.cpp
-    - src/flow-collector/nxflowd/winsrv\.cpp
     - src/libnetxms/npipe_win32\.cpp
     - src/libnetxms/windll\.cpp
     - src/libnxlp/vss\.cpp
@@ -103,8 +102,6 @@ If:
     # Language bridge libraries
     - src/libnxjava/.*
     - src/libnxpython/.*
-    # Flow collector (NetFlow/IPFIX) - not built in this configuration
-    - src/flow-collector/.*
     # JDK-gated C++ launchers for the Java client tools (need --with-jdk)
     - src/client/nxmc/nxmc\.cpp
     - src/client/nxshell/nxshell\.cpp

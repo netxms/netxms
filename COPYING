@@ -21,7 +21,6 @@ nxav            GPL
 nxcon           GPL
 nxcptest        GPL
 nxevent         GPL
-nxflowd         GPL
 nxlexer         GPL
 nxlptest        GPL
 nxmibc          GPL
@@ -41,7 +40,6 @@ all notification channel drivers GPL
 
 Third party components bundled with NetXMS:
 
-libipfix        LGPL
 sqlite          BSD-like
 
 
