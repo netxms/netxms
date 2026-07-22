@@ -240,7 +240,7 @@ private:
 	NamedPipe *m_pipe;
 	bool m_connected;
 	MsgWaitQueue *m_msgQueue;
-	uint32_t m_requestId;
+	VolatileCounter m_requestId;   // incremented concurrently from multiple threads
    uint32_t m_listenerStartDelay;
    uint32_t m_connectedPid;
 
