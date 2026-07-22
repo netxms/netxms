@@ -103,8 +103,6 @@ If:
     # Language bridge libraries
     - src/libnxjava/.*
     - src/libnxpython/.*
-    # RRDtool performance-data storage driver
-    - src/server/pdsdrv/rrdtool/.*
     # Flow collector (NetFlow/IPFIX) - not built in this configuration
     - src/flow-collector/.*
     # JDK-gated C++ launchers for the Java client tools (need --with-jdk)

@@ -1055,7 +1055,7 @@ AC_ARG_WITH(dist,
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk redis lldpd"
 	AGENT_DIRS="libnxtux nxsagent"
 	NCDRV_MODULES="anysms googlechat kannel matrix mattermost mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio webhook websms xmpp"
-	PDSDRV_DIRS="clickhouse influxdb rrdtool"
+	PDSDRV_DIRS="clickhouse influxdb"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
@@ -4763,7 +4763,6 @@ AC_CONFIG_FILES([
 	src/server/pdsdrv/Makefile
 	src/server/pdsdrv/clickhouse/Makefile
 	src/server/pdsdrv/influxdb/Makefile
-	src/server/pdsdrv/rrdtool/Makefile
 	src/server/tools/Makefile
 	src/server/tools/libnxdbmgr/Makefile
 	src/server/tools/nddload/Makefile

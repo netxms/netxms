@@ -8,8 +8,7 @@
 #
 DRIVERS = \
 	clickhouse \
-	influxdb \
-	rrdtool
+	influxdb
 
 .PHONY: all clean install $(DRIVERS)
 
