@@ -67,7 +67,6 @@ import org.netxms.nxmc.modules.datacollection.dialogs.SelectOtlpMetricDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSmclpDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectSnmpParamDlg;
-import org.netxms.nxmc.modules.datacollection.dialogs.SelectTrafficMetricDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectWebServiceDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.WinPerfCounterSelectionDialog;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
