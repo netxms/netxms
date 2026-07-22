@@ -575,17 +575,21 @@ static FARPROC GetProcAddressAndLog(HMODULE hModule, LPCSTR procName)
    return ptr;
 }
 
+#endif   /* _WIN32 */
+
 /**
- * Shutdown thread (created by H_RestartAgent)
+ * Thread performing graceful agent shutdown followed by process termination
  */
-static void ShutdownThread()
+void ShutdownThread()
 {
 	nxlog_debug(1, _T("Shutdown thread started"));
    Shutdown();
+#ifdef _WIN32
    ExitProcess(0);
+#else
+   exit(0);
+#endif
 }
-
-#endif   /* _WIN32 */
 
 /**
  * Build command line for agent restart
@@ -749,14 +753,7 @@ LONG RestartAgent()
    }
    if ((dwResult == ERR_SUCCESS) && (!(g_dwFlags & AF_DAEMON)))
    {
-      if (g_dwFlags & AF_HIDE_WINDOW)
-      {
-         s_shutdownCondition.set();
-      }
-      else
-      {
-         ThreadCreate(ShutdownThread);
-      }
+      ThreadCreate(ShutdownThread);
    }
    return dwResult;
 #else
