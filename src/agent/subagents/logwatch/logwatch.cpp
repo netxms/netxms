@@ -423,7 +423,7 @@ static off_t RestoreParserFilePosition(LogParser *parser)
       {
          position = static_cast<off_t>(DBGetFieldInt64(hResult, 0, 0));
          nxlog_debug_tag(DEBUG_TAG, 6, _T("Restored file position ") INT64_FMT _T(" for parser %s (file: %s)"),
-            position, parser->getName(), parser->getFileName());
+            static_cast<int64_t>(position), parser->getName(), parser->getFileName());
       }
       else
       {
