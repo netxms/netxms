@@ -4810,7 +4810,7 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                   else
                   {
                      shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(itemId, m_userId);
-                     if (dcObject != nullptr)
+                     if ((dcObject != nullptr) && (dcObjectType == dcObject->getType()))
                      {
                         oldValue = dcObject->toJson();
                         success = true;
@@ -4824,7 +4824,7 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
                   // Update existing
                   if (success)
                   {
-                     uint32_t mapCount, *mapId, *mapIndex;
+                     uint32_t mapCount = 0, *mapId = nullptr, *mapIndex = nullptr;
                      uint32_t result = static_cast<DataCollectionOwner&>(*object).updateDCObject(itemId, request, &mapCount, &mapIndex, &mapId, m_userId);
                      success = result == RCC_SUCCESS;
                      if (success)
