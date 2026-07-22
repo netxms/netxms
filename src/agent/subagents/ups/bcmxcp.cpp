@@ -114,7 +114,9 @@ static LONG GetLong(BYTE *pData)
 	return (LONG)(((DWORD)pData[3] << 24) | ((DWORD)pData[2] << 16) |
                  ((DWORD)pData[1] << 8) | (DWORD)pData[0]);
 #else
-   return *((LONG *)pData);
+   LONG value;
+   memcpy(&value, pData, sizeof(value));
+   return value;
 #endif
 }
 
@@ -128,9 +130,13 @@ static float GetFloat(BYTE *pData)
 
 	dwTemp = ((DWORD)pData[3] << 24) | ((DWORD)pData[2] << 16) |
             ((DWORD)pData[1] << 8) | (DWORD)pData[0];
-   return *((float *)&dwTemp);
+   float value;
+   memcpy(&value, &dwTemp, sizeof(value));
+   return value;
 #else
-   return *((float *)pData);
+   float value;
+   memcpy(&value, pData, sizeof(value));
+   return value;
 #endif
 }
 
