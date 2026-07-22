@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Ping3 devices
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -105,20 +105,24 @@ InterfaceList *Ping3Driver::getInterfaces(DeviceContext *context, NObject *node,
    {
       if (response->getNumVariables() == 3)
       {
-         ifList = new InterfaceList(1);
-
-         InterfaceInfo *iface = new InterfaceInfo(1);
-         _tcscpy(iface->name, _T("eth0"));
-         iface->type = IFTYPE_ETHERNET_CSMACD;
-         iface->isPhysicalPort = true;
-
          uint32_t ipAddr, ipNetMask;
-         response->getVariable(0)->getRawValue((BYTE *)&ipAddr, sizeof(uint32_t));
-         response->getVariable(1)->getRawValue((BYTE *)&ipNetMask, sizeof(uint32_t));
-         response->getVariable(0)->getRawValue(iface->macAddr, MAC_ADDR_LENGTH);
+         BYTE macAddr[MAC_ADDR_LENGTH];
+         size_t bytesAddr = response->getVariable(0)->getRawValue((BYTE *)&ipAddr, sizeof(uint32_t));
+         size_t bytesMask = response->getVariable(1)->getRawValue((BYTE *)&ipNetMask, sizeof(uint32_t));
+         size_t bytesMAC = response->getVariable(0)->getRawValue(macAddr, MAC_ADDR_LENGTH);
 
-         iface->ipAddrList.add(InetAddress(ntohl(ipAddr), ntohl(ipNetMask)));
-         ifList->add(iface);
+         if ((bytesAddr == sizeof(uint32_t)) && (bytesMask == sizeof(uint32_t)) && (bytesMAC == MAC_ADDR_LENGTH))
+         {
+            ifList = new InterfaceList(1);
+
+            InterfaceInfo *iface = new InterfaceInfo(1);
+            _tcscpy(iface->name, _T("eth0"));
+            iface->type = IFTYPE_ETHERNET_CSMACD;
+            iface->isPhysicalPort = true;
+            memcpy(iface->macAddr, macAddr, MAC_ADDR_LENGTH);
+            iface->ipAddrList.add(InetAddress(ntohl(ipAddr), ntohl(ipNetMask)));
+            ifList->add(iface);
+         }
       }
       delete response;
    }
