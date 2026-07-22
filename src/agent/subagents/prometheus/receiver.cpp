@@ -21,6 +21,10 @@
 #include "prometheus.h"
 #include <microhttpd.h>
 
+#if MHD_VERSION < 0x00097002
+#define MHD_Result int
+#endif
+
 static struct MHD_Daemon *s_daemon = nullptr;
 static char s_endpoint[256];
 
