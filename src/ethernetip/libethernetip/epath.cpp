@@ -187,7 +187,11 @@ String LIBETHERNETIP_EXPORTABLE CIP_DecodePath(const CIP_EPATH *path)
             if (size >= 4)
             {
                curr += 2;
-               sb.append(CIP_UInt16Swap(*reinterpret_cast<const uint16_t*>(curr)));
+               uint16_t v;
+               memcpy(&v, curr, 2);
+               if (!sb.isEmpty())
+                  sb.append(_T('.'));
+               sb.append(static_cast<uint32_t>(CIP_UInt16Swap(v)));
                curr += 2;
                size -= 4;
             }
@@ -202,6 +206,8 @@ String LIBETHERNETIP_EXPORTABLE CIP_DecodePath(const CIP_EPATH *path)
                curr += 2;
                uint32_t v;
                memcpy(&v, curr, 4);
+               if (!sb.isEmpty())
+                  sb.append(_T('.'));
                sb.append(CIP_UInt32Swap(v));
                curr += 4;
                size -= 6;

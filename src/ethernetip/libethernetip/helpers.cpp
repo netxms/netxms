@@ -115,7 +115,7 @@ CIP_Identity LIBETHERNETIP_EXPORTABLE *EIP_ListIdentity(const InetAddress& addr,
       identity->productRevisionMajor = response->readDataAsUInt8(item.offset + 24);
       identity->productRevisionMinor = response->readDataAsUInt8(item.offset + 25);
       identity->protocolVersion = response->readDataAsUInt16(item.offset);
-      identity->serialNumber = response->readDataAsUInt16(item.offset + 28);
+      identity->serialNumber = response->readDataAsUInt32(item.offset + 28);
       identity->state = response->readDataAsUInt8(item.offset + stateFieldOffset);
       identity->status = response->readDataAsUInt16(item.offset + 26);
       identity->tcpPort = response->readDataAsUInt16(item.offset + 4);
