@@ -27,6 +27,7 @@ SOURCES = \
 	crypto.cpp \
 	curl.cpp \
 	debug_tag_tree.cpp \
+	des.cpp \
 	diff.cpp \
 	dir.cpp \
 	dirw.cpp \

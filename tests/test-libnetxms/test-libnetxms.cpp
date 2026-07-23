@@ -35,6 +35,8 @@ void TestSubProcess(const char *procname, bool debug);
 void TestGeoLocation();
 void TestRSA();
 void TestMD4();
+void TestDES();
+void TestDESCBC();
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
 /**
@@ -3653,6 +3655,8 @@ int main(int argc, char *argv[])
    TestGeoLocation();
    TestRSA();
    TestMD4();
+   TestDES();
+   TestDESCBC();
 
    if (debug)
       nxlog_set_debug_level(9);

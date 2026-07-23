@@ -84,6 +84,20 @@ void LIBNETXMS_EXPORTABLE MD4Init(MD4_STATE *state);
 void LIBNETXMS_EXPORTABLE MD4Update(MD4_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE MD4Final(MD4_STATE *state, BYTE *hash);
 
+/**
+ * Expanded DES key (16 round keys, each split into two 24 bit halves)
+ */
+struct DES_KEY_SCHEDULE
+{
+   uint32_t subkeys[32];
+};
+
+void LIBNETXMS_EXPORTABLE DESExpandKey(const BYTE *key, DES_KEY_SCHEDULE *ks);
+void LIBNETXMS_EXPORTABLE DESEncryptBlock(const DES_KEY_SCHEDULE *ks, const BYTE *in, BYTE *out);
+void LIBNETXMS_EXPORTABLE DESDecryptBlock(const DES_KEY_SCHEDULE *ks, const BYTE *in, BYTE *out);
+size_t LIBNETXMS_EXPORTABLE DESEncryptDataCBC(const DES_KEY_SCHEDULE *ks, const BYTE *iv, const BYTE *in, size_t length, BYTE *out);
+void LIBNETXMS_EXPORTABLE DESDecryptDataCBC(const DES_KEY_SCHEDULE *ks, const BYTE *iv, const BYTE *in, size_t length, BYTE *out);
+
 #ifdef _WITH_ENCRYPTION
 struct MD_STATE
 {

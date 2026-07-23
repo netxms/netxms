@@ -27,7 +27,6 @@
 #include <nms_users.h>
 
 #include <nxcrypto.h>
-#include <openssl/des.h>
 
 #define DEBUG_TAG _T("radius")
 
@@ -50,16 +49,15 @@ static void MsChapChallengeResponse(const BYTE *challenge, const BYTE *passwdHas
    for(int i = 0; i < 3; i++)
    {
       const BYTE *ki = &passwdHash[i * 7];
-      DES_cblock k;
+      BYTE k[8];
       k[0] = ki[0];
       for(int b = 1; b < 7; b++)
          k[b] = (ki[b - 1] << (8 - b)) | (ki[b] >> b);
       k[7] = ki[6] << 1;
-      DES_set_odd_parity(&k);
 
-      DES_key_schedule ks;
-      DES_set_key_unchecked(&k, &ks);
-      DES_ecb_encrypt((DES_cblock *)challenge, (DES_cblock *)&response[i * 8], &ks, DES_ENCRYPT);
+      DES_KEY_SCHEDULE ks;
+      DESExpandKey(k, &ks);
+      DESEncryptBlock(&ks, challenge, &response[i * 8]);
    }
 }
 

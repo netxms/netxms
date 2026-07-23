@@ -50,6 +50,101 @@ void TestMD4()
 }
 
 /**
+ * DES test vectors (FIPS known answers)
+ */
+struct
+{
+   const char *key;
+   const char *plainText;
+   const char *cipherText;
+} s_desTestVectors[] =
+{
+   { "133457799BBCDFF1", "0123456789ABCDEF", "85E813540F0AB405" },
+   { "0123456789ABCDEF", "4E6F772069732074", "3FA40E8A984D4815" },
+   { "0000000000000000", "0000000000000000", "8CA64DE9C1B123A7" },
+   { "FFFFFFFFFFFFFFFF", "FFFFFFFFFFFFFFFF", "7359B2163E4EDC58" },
+   { nullptr, nullptr, nullptr }
+};
+
+/**
+ * Test DES
+ */
+void TestDES()
+{
+   StartTest(_T("DES cipher"));
+
+   for(int i = 0; s_desTestVectors[i].key != nullptr; i++)
+   {
+      BYTE key[8], plainText[8], cipherText[8];
+      StrToBinA(s_desTestVectors[i].key, key, 8);
+      StrToBinA(s_desTestVectors[i].plainText, plainText, 8);
+      StrToBinA(s_desTestVectors[i].cipherText, cipherText, 8);
+
+      DES_KEY_SCHEDULE ks;
+      DESExpandKey(key, &ks);
+
+      BYTE block[8];
+      DESEncryptBlock(&ks, plainText, block);
+      AssertTrue(!memcmp(block, cipherText, 8));
+
+      DESDecryptBlock(&ks, cipherText, block);
+      AssertTrue(!memcmp(block, plainText, 8));
+   }
+
+   // Key parity bits must be ignored
+   BYTE key[8], alteredKey[8];
+   StrToBinA("133457799BBCDFF1", key, 8);
+   for(int i = 0; i < 8; i++)
+      alteredKey[i] = key[i] ^ 0x01;
+
+   DES_KEY_SCHEDULE ks, alteredKs;
+   DESExpandKey(key, &ks);
+   DESExpandKey(alteredKey, &alteredKs);
+   AssertTrue(!memcmp(&ks, &alteredKs, sizeof(DES_KEY_SCHEDULE)));
+
+   EndTest();
+}
+
+/**
+ * Test DES in CBC mode
+ */
+void TestDESCBC()
+{
+   StartTest(_T("DES cipher (CBC mode)"));
+
+   BYTE key[8], iv[8];
+   StrToBinA("0123456789ABCDEF", key, 8);
+   StrToBinA("1234567890ABCDEF", iv, 8);
+
+   DES_KEY_SCHEDULE ks;
+   DESExpandKey(key, &ks);
+
+   // Input length is not a multiple of 8, so last block is padded with zeroes.
+   // SNMPv3 privacy relies on that, so encrypted data is compared with known value.
+   static const char text[] = "NetXMS DES self test vector!";
+   size_t textLength = strlen(text);
+   AssertTrue(textLength % 8 != 0);
+
+   BYTE expected[32];
+   StrToBinA("A323893FF38F22AFEE7F1EF7E28816A7E9D7669846D56EA94BED6394FE15403A", expected, 32);
+
+   BYTE encrypted[32];
+   size_t encryptedSize = DESEncryptDataCBC(&ks, iv, reinterpret_cast<const BYTE*>(text), textLength, encrypted);
+   AssertEquals(encryptedSize, static_cast<size_t>(32));
+   AssertTrue(!memcmp(encrypted, expected, 32));
+
+   BYTE decrypted[32];
+   DESDecryptDataCBC(&ks, iv, encrypted, encryptedSize, decrypted);
+   AssertTrue(!memcmp(decrypted, text, textLength));
+
+   // Decryption in place
+   DESDecryptDataCBC(&ks, iv, encrypted, encryptedSize, encrypted);
+   AssertTrue(!memcmp(encrypted, text, textLength));
+
+   EndTest();
+}
+
+/**
  * Test RSA encryption
  */
 void TestRSA()

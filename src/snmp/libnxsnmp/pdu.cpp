@@ -25,9 +25,6 @@
 #include <nxcrypto.h>
 
 #ifdef _WITH_ENCRYPTION
-#ifndef OPENSSL_NO_DES
-#include <openssl/des.h>
-#endif
 #ifndef OPENSSL_NO_AES
 #include <openssl/aes.h>
 #endif
@@ -712,24 +709,18 @@ bool SNMP_PDU::decryptData(const BYTE *data, size_t length, BYTE *decryptedData,
 
 	if (securityContext->getPrivMethod() == SNMP_ENCRYPT_DES)
 	{
-#ifndef OPENSSL_NO_DES
 		if (length % 8 != 0)
 			return false;	// Encrypted data length must be an integral multiple of 8
 
-		DES_cblock key;
-		DES_key_schedule schedule;
-		memcpy(&key, securityContext->getPrivKey(), 8);
-		DES_set_key_unchecked(&key, &schedule);
+		DES_KEY_SCHEDULE schedule;
+		DESExpandKey(securityContext->getPrivKey(), &schedule);
 
-		DES_cblock iv;
-		memcpy(&iv, securityContext->getPrivKey() + 8, 8);
+		BYTE iv[8];
+		memcpy(iv, securityContext->getPrivKey() + 8, 8);
 		for(int i = 0; i < 8; i++)
 			iv[i] ^= m_salt[i];
 
-		DES_ncbc_encrypt(data, decryptedData, (long)length, &schedule, &iv, DES_DECRYPT);
-#else
-		return false;  // Compiled without DES support
-#endif
+		DESDecryptDataCBC(&schedule, iv, data, length, decryptedData);
 	}
 	else if ((securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_128) ||
 	      (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_192) ||
@@ -1043,27 +1034,20 @@ size_t SNMP_PDU::encode(SNMP_PDUBuffer *outBuffer, SNMP_SecurityContext *securit
 #ifdef _WITH_ENCRYPTION
 				if (securityContext->getPrivMethod() == SNMP_ENCRYPT_DES)
 				{
-#ifndef OPENSSL_NO_DES
 					size_t encSize = (bytes % 8 == 0) ? bytes : (bytes + (8 - (bytes % 8)));
 					BYTE *encryptedPdu = static_cast<BYTE*>(SNMP_MemAlloc(encSize));
 
-					DES_cblock key;
-					DES_key_schedule schedule;
-					memcpy(&key, securityContext->getPrivKey(), 8);
-					DES_set_key_unchecked(&key, &schedule);
+					DES_KEY_SCHEDULE schedule;
+					DESExpandKey(securityContext->getPrivKey(), &schedule);
 
-					DES_cblock iv;
-					memcpy(&iv, securityContext->getPrivKey() + 8, 8);
+					BYTE iv[8];
+					memcpy(iv, securityContext->getPrivKey() + 8, 8);
 					for(int i = 0; i < 8; i++)
 						iv[i] ^= m_salt[i];
 
-					DES_ncbc_encrypt(currPos, encryptedPdu, (long)bytes, &schedule, &iv, DES_ENCRYPT);
+					DESEncryptDataCBC(&schedule, iv, currPos, bytes, encryptedPdu);
 					bytes = BER_Encode(ASN_OCTET_STRING, encryptedPdu, encSize, currPos, bufferSize - packetSize);
 					SNMP_MemFree(encryptedPdu, encSize);
-#else
-					bytes = 0;	// Error - no DES support
-					goto cleanup;
-#endif
 				}
 				else if ((securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_128) || (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_192) ||
 			         (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_256))

@@ -311,6 +311,42 @@ static void TestPDUEncoding()
 }
 
 /**
+ * Test SNMPv3 privacy. Number of bound variables is varied so that encoded PDU
+ * size hits both exact block multiples and sizes requiring padding.
+ */
+static void TestPDUPrivacy(SNMP_EncryptionMethod method, const TCHAR *name)
+{
+   StartTest(name);
+
+   static const BYTE engineId[] = { 0x80, 0x00, 0x1F, 0x88, 0x80, 0x12, 0x34, 0x56, 0x78 };
+   SNMP_Engine engine(engineId, sizeof(engineId), 1, 42);
+
+   for(int count = 1; count <= 16; count++)
+   {
+      SNMP_SecurityContext securityContext("testuser", "authPassword123", "privPassword456", SNMP_AUTH_SHA1, method);
+      securityContext.setAuthoritativeEngine(engine);
+      securityContext.recalculateKeys();
+
+      SNMP_PDU pdu(SNMP_GET_REQUEST, SnmpNewRequestId(), SNMP_VERSION_3);
+      pdu.setContextEngineId(engineId, sizeof(engineId));
+      for(int i = 0; i < count; i++)
+         pdu.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 2, 1, 1, static_cast<uint32_t>(i + 1), 0 }));
+
+      SNMP_PDUBuffer encodedPDU;
+      size_t size = pdu.encode(&encodedPDU, &securityContext);
+      AssertTrue(size > 0);
+
+      SNMP_PDU pdu2;
+      AssertTrue(pdu2.parse(encodedPDU, size, &securityContext, true));
+      AssertEquals(pdu.getNumVariables(), pdu2.getNumVariables());
+      for(int i = 0; i < pdu.getNumVariables(); i++)
+         AssertTrue(pdu.getVariable(i)->getName().equals(pdu2.getVariable(i)->getName()));
+   }
+
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -321,5 +357,7 @@ int main(int argc, char *argv[])
    TestOidClass();
    TestVariableClass();
    TestPDUEncoding();
+   TestPDUPrivacy(SNMP_ENCRYPT_DES, _T("SNMPv3 privacy (DES)"));
+   TestPDUPrivacy(SNMP_ENCRYPT_AES_128, _T("SNMPv3 privacy (AES-128)"));
    return 0;
 }
