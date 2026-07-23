@@ -57,7 +57,8 @@ static int X509_CRL_get0_by_cert(X509_CRL *crl, X509_REVOKED **ret, X509 *x)
  */
 static size_t OnCurlDataReceived(char *data, size_t size, size_t count, void *context)
 {
-   return _write(*static_cast<int*>(context), data, static_cast<int>(size * count));
+   ssize_t bytes = _write(*static_cast<int*>(context), data, size * count);
+   return (bytes > 0) ? bytes : 0;
 }
 
 /**
