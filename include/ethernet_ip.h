@@ -371,6 +371,18 @@ public:
       return CIP_UInt32Swap(v);
    }
    /**
+    * Read 16 bit integer from socket address structure embedded into message data. Socket address
+    * structures are always in network byte order, unlike other CIP data types.
+    */
+   uint16_t readDataAsNetworkOrderUInt16(size_t offset) const
+   {
+      if (offset + 2 > m_dataSize)
+         return 0;
+      uint16_t v;
+      memcpy(&v, &m_data[offset], 2);
+      return ntohs(v);
+   }
+   /**
     * Read IP address from socket address structure embedded into message data. Socket address structures are
     * always in network byte order, unlike other CIP data types.
     */
