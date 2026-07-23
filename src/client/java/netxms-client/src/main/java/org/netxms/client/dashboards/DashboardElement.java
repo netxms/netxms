@@ -60,6 +60,7 @@ public class DashboardElement
    public static final int SCRIPTED_PIE_CHART = 31;
    public static final int FILE_MONITOR = 32;
    public static final int AI_OBSERVATION_MONITOR = 33;
+   public static final int SCRIPTED_GAUGE = 34;
 
 	public static final int FILL = 0;
 	public static final int CENTER = 1;

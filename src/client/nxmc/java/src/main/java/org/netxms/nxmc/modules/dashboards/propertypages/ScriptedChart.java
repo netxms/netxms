@@ -27,7 +27,7 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
-import org.netxms.nxmc.modules.dashboards.config.ScriptedComparisonChartConfig;
+import org.netxms.nxmc.modules.dashboards.config.ScriptedElementConfig;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.xnap.commons.i18n.I18n;
@@ -39,7 +39,7 @@ public class ScriptedChart extends DashboardElementPropertyPage
 {
    private final I18n i18n = LocalizationHelper.getI18n(ScriptedChart.class);
 
-   private ScriptedComparisonChartConfig config;
+   private ScriptedElementConfig config;
    private ObjectSelector objectSelector;
    private ScriptEditor scriptEditor;
 
@@ -68,7 +68,7 @@ public class ScriptedChart extends DashboardElementPropertyPage
    @Override
    public boolean isVisible()
    {
-      return elementConfig instanceof ScriptedComparisonChartConfig;
+      return elementConfig instanceof ScriptedElementConfig;
    }
 
    /**
@@ -86,7 +86,7 @@ public class ScriptedChart extends DashboardElementPropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      config = (ScriptedComparisonChartConfig)elementConfig;
+      config = (ScriptedElementConfig)elementConfig;
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
 

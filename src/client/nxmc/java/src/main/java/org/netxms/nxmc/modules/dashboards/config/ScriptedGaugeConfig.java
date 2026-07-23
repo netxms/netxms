@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,10 +25,10 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Common base class for scripted comparison chart configurations
+ * Configuration for gauge with data obtained from server-side script
  */
 @Root(name = "element", strict = false)
-public abstract class ScriptedComparisonChartConfig extends AbstractChartConfig implements ScriptedElementConfig
+public class ScriptedGaugeConfig extends GaugeConfig implements ScriptedElementConfig
 {
    @Element(required = false)
    private String script = "";
@@ -59,33 +59,37 @@ public abstract class ScriptedComparisonChartConfig extends AbstractChartConfig 
          objectId = md.dstId;
    }
 
-	/**
-    * @return the script
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.config.ScriptedElementConfig#getScript()
     */
+   @Override
    public String getScript()
    {
       return script;
    }
 
    /**
-    * @param script the script to set
+    * @see org.netxms.nxmc.modules.dashboards.config.ScriptedElementConfig#setScript(java.lang.String)
     */
+   @Override
    public void setScript(String script)
    {
       this.script = script;
    }
 
    /**
-    * @return the objectId
+    * @see org.netxms.nxmc.modules.dashboards.config.ScriptedElementConfig#getObjectId()
     */
+   @Override
    public long getObjectId()
    {
       return objectId;
    }
 
    /**
-    * @param objectId the objectId to set
+    * @see org.netxms.nxmc.modules.dashboards.config.ScriptedElementConfig#setObjectId(long)
     */
+   @Override
    public void setObjectId(long objectId)
    {
       this.objectId = objectId;

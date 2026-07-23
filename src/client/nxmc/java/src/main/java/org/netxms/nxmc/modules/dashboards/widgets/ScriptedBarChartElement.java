@@ -32,7 +32,7 @@ import com.google.gson.Gson;
 /**
  * Scripted bar chart element
  */
-public class ScriptedBarChartElement extends ScriptedComparisonChartElement
+public class ScriptedBarChartElement extends ScriptedChartElement
 {
    private static final Logger logger = LoggerFactory.getLogger(ScriptedBarChartElement.class);
 
