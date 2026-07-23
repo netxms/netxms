@@ -61,6 +61,14 @@ static inline uint32_t CIP_UInt32Swap(uint32_t value)
 #endif
 }
 
+/**
+ * Convert UInt64 to CIP network byte order
+ */
+static inline uint64_t CIP_UInt64Swap(uint64_t value)
+{
+   return LittleEndianToHost64(value);
+}
+
 __PACK_BEGIN__
 
 /**
@@ -362,7 +370,18 @@ public:
       memcpy(&v, &m_data[offset], 4);
       return CIP_UInt32Swap(v);
    }
-   InetAddress readDataAsInetAddress(size_t offset) const { return (offset < m_dataSize - 3) ? InetAddress(ntohl(*reinterpret_cast<uint32_t*>(&m_data[offset]))) : InetAddress(); }
+   /**
+    * Read IP address from socket address structure embedded into message data. Socket address structures are
+    * always in network byte order, unlike other CIP data types.
+    */
+   InetAddress readDataAsInetAddress(size_t offset) const
+   {
+      if (offset + 4 > m_dataSize)
+         return InetAddress();
+      uint32_t v;
+      memcpy(&v, &m_data[offset], 4);
+      return InetAddress(ntohl(v));
+   }
    bool readDataAsLengthPrefixString(size_t offset, int prefixSize, TCHAR *buffer, size_t bufferSize) const;
 
    void resetWritePosition() { m_writeOffset = 0; }

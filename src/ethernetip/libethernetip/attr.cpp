@@ -91,6 +91,36 @@ static CIP_Attribute s_attrMAC = { 0, CIP_DT_MAC_ADDR };
 static CIP_Attribute s_attrByteArray = { 0, CIP_DT_BYTE_ARRAY };
 
 /**
+ * Read 16 bit integer from attribute data. Data can be unaligned, so direct cast cannot be used.
+ */
+static inline uint16_t ReadUInt16(const uint8_t *data)
+{
+   uint16_t value;
+   memcpy(&value, data, 2);
+   return CIP_UInt16Swap(value);
+}
+
+/**
+ * Read 32 bit integer from attribute data. Data can be unaligned, so direct cast cannot be used.
+ */
+static inline uint32_t ReadUInt32(const uint8_t *data)
+{
+   uint32_t value;
+   memcpy(&value, data, 4);
+   return CIP_UInt32Swap(value);
+}
+
+/**
+ * Read 64 bit integer from attribute data. Data can be unaligned, so direct cast cannot be used.
+ */
+static inline uint64_t ReadUInt64(const uint8_t *data)
+{
+   uint64_t value;
+   memcpy(&value, data, 8);
+   return CIP_UInt64Swap(value);
+}
+
+/**
  * Extract string into buffer
  */
 static void ExtractString(const uint8_t *bytes, size_t slen, TCHAR *buffer, size_t blen)
@@ -165,34 +195,34 @@ stop_search:
          _sntprintf(buffer, bufferSize, _T("%u"), static_cast<unsigned int>(*data));
          break;
       case CIP_DT_INT:
-         _sntprintf(buffer, bufferSize, _T("%d"), static_cast<int>(*reinterpret_cast<const int16_t*>(data)));
+         _sntprintf(buffer, bufferSize, _T("%d"), static_cast<int>(static_cast<int16_t>(ReadUInt16(data))));
          break;
       case CIP_DT_UINT:
-         _sntprintf(buffer, bufferSize, _T("%u"), static_cast<unsigned int>(*reinterpret_cast<const uint16_t*>(data)));
+         _sntprintf(buffer, bufferSize, _T("%u"), static_cast<unsigned int>(ReadUInt16(data)));
          break;
       case CIP_DT_DINT:
-         _sntprintf(buffer, bufferSize, _T("%d"), *reinterpret_cast<const int32_t*>(data));
+         _sntprintf(buffer, bufferSize, _T("%d"), static_cast<int32_t>(ReadUInt32(data)));
          break;
       case CIP_DT_UDINT:
-         _sntprintf(buffer, bufferSize, _T("%u"), *reinterpret_cast<const uint32_t*>(data));
+         _sntprintf(buffer, bufferSize, _T("%u"), ReadUInt32(data));
          break;
       case CIP_DT_LINT:
-         _sntprintf(buffer, bufferSize, INT64_FMT, *reinterpret_cast<const int64_t*>(data));
+         _sntprintf(buffer, bufferSize, INT64_FMT, static_cast<int64_t>(ReadUInt64(data)));
          break;
       case CIP_DT_ULINT:
-         _sntprintf(buffer, bufferSize, UINT64_FMT, *reinterpret_cast<const uint64_t*>(data));
+         _sntprintf(buffer, bufferSize, UINT64_FMT, ReadUInt64(data));
          break;
       case CIP_DT_BYTE:
          _sntprintf(buffer, bufferSize, _T("%02X"), static_cast<unsigned int>(*data));
          break;
       case CIP_DT_WORD:
-         _sntprintf(buffer, bufferSize, _T("%04X"), static_cast<unsigned int>(*reinterpret_cast<const uint16_t*>(data)));
+         _sntprintf(buffer, bufferSize, _T("%04X"), static_cast<unsigned int>(ReadUInt16(data)));
          break;
       case CIP_DT_DWORD:
-         _sntprintf(buffer, bufferSize, _T("%08X"), *reinterpret_cast<const uint32_t*>(data));
+         _sntprintf(buffer, bufferSize, _T("%08X"), ReadUInt32(data));
          break;
       case CIP_DT_LWORD:
-         _sntprintf(buffer, bufferSize, UINT64X_FMT(_T("016")), *reinterpret_cast<const uint64_t*>(data));
+         _sntprintf(buffer, bufferSize, UINT64X_FMT(_T("016")), ReadUInt64(data));
          break;
       case CIP_DT_MAC_ADDR:
          if (bufferSize >= 18)
