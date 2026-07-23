@@ -45,6 +45,21 @@ struct DateTime
    struct tm data;
 
    /**
+    * Set broken-down time to Unix epoch (1970-01-01 00:00:00, a Thursday). Used as
+    * fallback when timestamp cannot be converted into broken-down time. A zero filled
+    * struct tm cannot be used because tm_mday = 0 is not a valid broken-down time and
+    * strftime() implementations that validate their input (Windows CRT in particular)
+    * refuse to format it.
+    */
+   void resetToEpoch()
+   {
+      memset(&data, 0, sizeof(struct tm));
+      data.tm_year = 70;
+      data.tm_mday = 1;
+      data.tm_wday = 4;
+   }
+
+   /**
     * Update broken-down time structure from timestamp
     */
    void updateFromTimestamp()
@@ -53,26 +68,26 @@ struct DateTime
       {
 #if HAVE_GMTIME_R
          if (gmtime_r(&timestamp, &data) == nullptr)
-            memset(&data, 0, sizeof(struct tm));
+            resetToEpoch();
 #else
          struct tm *p = gmtime(&timestamp);
          if (p != nullptr)
             memcpy(&data, p, sizeof(struct tm));
          else
-            memset(&data, 0, sizeof(struct tm));
+            resetToEpoch();
 #endif
       }
       else
       {
 #if HAVE_LOCALTIME_R
          if (localtime_r(&timestamp, &data) == nullptr)
-            memset(&data, 0, sizeof(struct tm));
+            resetToEpoch();
 #else
          struct tm *p = localtime(&timestamp);
          if (p != nullptr)
             memcpy(&data, p, sizeof(struct tm));
          else
-            memset(&data, 0, sizeof(struct tm));
+            resetToEpoch();
 #endif
       }
 
@@ -80,7 +95,7 @@ struct DateTime
       // timestamps; reject such values so that tm_year + 1900 in the year getter
       // cannot overflow
       if (data.tm_year > INT_MAX - 1900)
-         memset(&data, 0, sizeof(struct tm));
+         resetToEpoch();
    }
 
    /**
@@ -132,8 +147,11 @@ NXSL_METHOD_DEFINITION(DateTime, format)
 
    dt->normalize();
 
+   // On failure (output longer than the buffer, or field values rejected by the
+   // platform's strftime) buffer content is undefined, so it has to be reset
    TCHAR buffer[512];
-   _tcsftime(buffer, 512, f, &dt->data);
+   if (_tcsftime(buffer, 512, f, &dt->data) == 0)
+      buffer[0] = 0;
    *result = vm->createValue(buffer);
    return NXSL_ERR_SUCCESS;
 }
@@ -307,7 +325,8 @@ void NXSL_DateTimeClass::toString(StringBuffer *sb, NXSL_Object *object)
    auto dt = static_cast<DateTime*>(object->getData());
    dt->normalize();
    TCHAR buffer[512];
-   _tcsftime(buffer, 512, dt->utc ? s_defaultFormatUTC : s_defaultFormatLocal, &dt->data);
+   if (_tcsftime(buffer, 512, dt->utc ? s_defaultFormatUTC : s_defaultFormatLocal, &dt->data) == 0)
+      buffer[0] = 0;
    sb->append(buffer);
 }
 
