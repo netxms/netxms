@@ -20,6 +20,12 @@ echo ""
 echo "********** test-libnetxms **********"
 $BINDIR/test-libnetxms || exit 1
 
+if [ -x $BINDIR/test-libethernetip ]; then
+	echo ""
+	echo "********** test-libethernetip **********"
+	$BINDIR/test-libethernetip || exit 1
+fi
+
 if [ -x $BINDIR/test-libnxsnmp ]; then
 	echo ""
 	echo "********** test-libnxsnmp **********"

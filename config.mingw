@@ -22,6 +22,7 @@ UNICODE = 1
 BUILD_AGENT = 1              # Build agent components (nxagentd, subagents)
 BUILD_CLIENT = 1             # Build client libraries and tools
 BUILD_SERVER = 1             # Server components
+BUILD_TESTS = 1              # Unit tests (equivalent of --with-tests, x64 only)
 
 # Windows XP profile flag. 0 for the normal llvm-mingw build; the Windows XP
 # profile (config.mingw.xp) sets it to 1 to select the reduced, XP-compatible

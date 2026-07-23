@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - test-libethernetip (EtherNet/IP library unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = test-libethernetip
+SOURCES = test-libethernetip.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
+TOOL_LIBS = -lethernetip -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

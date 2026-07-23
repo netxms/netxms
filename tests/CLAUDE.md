@@ -23,6 +23,7 @@ column below.
 | `suite/` | `netxms-test-suite` runner script (generated from `.in`) | always |
 | `test-libnetxms/` | Core library unit tests (containers, threading, crypto, NXCP, geolocation, …) | always |
 | `test-libnxdb/` | libnxdb tests (incl. Oracle CLOB handling) | always |
+| `test-libethernetip/` | EtherNet/IP library tests (paths, attribute decoding, CPF messages, `EIP_ListIdentity` against a loopback test server) | via `@TEST_MODULES@` |
 | `test-libnxsnmp/` | SNMP library tests | via `@TEST_MODULES@` |
 | `test-libnxsl/` | NXSL interpreter tests | via `@TEST_MODULES@` |
 | `test-libnxsrv/` | Server library tests (NObject hierarchy, drivers, mock SNMP transport, …) | via `@TEST_MODULES@` |

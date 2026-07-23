@@ -21,16 +21,19 @@ include $(CONFIG)
 BUILD_AGENT := $(strip $(BUILD_AGENT))
 BUILD_CLIENT := $(strip $(BUILD_CLIENT))
 BUILD_SERVER := $(strip $(BUILD_SERVER))
+BUILD_TESTS := $(strip $(BUILD_TESTS))
 WINXP := $(strip $(WINXP))
 
 # x86 and arm64 are agent-only targets on Windows. The client and server tiers
 # (and their supporting database/notification drivers and standalone tools) are
 # built for x64 only, so force those tiers off for any non-x64 architecture
 # regardless of what config.mingw requests. The agent and the libraries it
-# depends on are still built for every architecture.
+# depends on are still built for every architecture. The unit tests are run on
+# x64 only, so they follow the same rule.
 ifneq ($(ARCH),x64)
 BUILD_CLIENT := 0
 BUILD_SERVER := 0
+BUILD_TESTS := 0
 endif
 
 # Build subdirectories sequentially (one at a time)
@@ -146,6 +149,15 @@ SERVER_DIRS = \
     src/server/drivers
 endif
 
+# Unit tests. Mirrors the --with-tests switch of the autotools build: tests are
+# not part of a normal build and are enabled by setting BUILD_TESTS in
+# config.mingw. Only tests for libraries that are built on Windows are listed.
+TESTS_DIRS =
+ifeq ($(BUILD_TESTS),1)
+TESTS_DIRS = \
+    tests/test-libethernetip
+endif
+
 # Private ATM subsystem (optional). Private repositories live at fixed locations
 # under private/ and are absent from public/OSS builds. The subsystem is built
 # only when its dispatcher is present, so absence is a silent no-op; when
@@ -160,7 +172,7 @@ endif
 endif
 
 # Complete build order
-ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS) $(ATM_TOP)
+ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVER_DIRS) $(TESTS_DIRS) $(ATM_TOP)
 
 # Architectures built by the all-arch target
 # Override on the command line: make -f Makefile.w32 all-arch ALL_ARCHS="x64 arm64"
@@ -233,6 +245,9 @@ $(TOOLS_DIRS): $(LIBS)
 # Server depends on libraries
 $(SERVER_DIRS): $(LIBS)
 
+# Tests depend on libraries they exercise
+$(TESTS_DIRS): $(LIBS)
+
 # ATM subsystem links the agent, server and core import libraries, so it is
 # built after every in-tree tier it depends on.
 $(ATM_TOP): $(LIBS) $(AGENT_DIRS) $(SERVER_DIRS)
@@ -290,6 +305,7 @@ help:
 	@echo "    Build Agent: $(BUILD_AGENT)"
 	@echo "    Build Client: $(BUILD_CLIENT)"
 	@echo "    Build Server: $(BUILD_SERVER)"
+	@echo "    Build Tests: $(BUILD_TESTS)"
 	@echo ""
 	@echo "Components:"
 	@echo "  Core Libraries: $(CORE_LIBS)"
@@ -299,6 +315,9 @@ ifeq ($(BUILD_AGENT),1)
 endif
 ifeq ($(BUILD_CLIENT),1)
 	@echo "  Client: $(CLIENT_DIRS)"
+endif
+ifeq ($(BUILD_TESTS),1)
+	@echo "  Tests: $(TESTS_DIRS)"
 endif
 	@echo ""
 	@echo "For more information, see BUILD_WINDOWS.md"
