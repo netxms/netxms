@@ -58,7 +58,6 @@ bool GenericCiscoDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Obje
  * @param snmp SNMP transport
  * @param node Node
  * @param driverData driver data
- * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
 InterfaceList *GenericCiscoDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)

@@ -123,7 +123,6 @@ bool RuggedComDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node
  * @param snmp SNMP transport
  * @param node Node
  * @param driverData driver data
- * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
 InterfaceList *RuggedComDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
