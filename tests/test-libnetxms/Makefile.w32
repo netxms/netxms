@@ -1,0 +1,24 @@
+#
+# Makefile.w32 - test-libnetxms (core library unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = test-libnetxms
+SOURCES = \
+	cc.cpp \
+	crypto.cpp \
+	gauge64.cpp \
+	geolocation.cpp \
+	mempool.cpp \
+	nxcp.cpp \
+	proc.cpp \
+	queue.cpp \
+	test-libnetxms.cpp \
+	threads.cpp \
+	tp.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
+# RAND_bytes() is called directly by the hash map and crypto tests, so OpenSSL
+# is linked in addition to libnetxms itself.
+TOOL_LIBS = -lnetxms -lnxjansson $(SSL_LIBS)
+
+include $(TOPDIR)/build/tool-common.mk

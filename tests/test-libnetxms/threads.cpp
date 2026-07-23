@@ -155,7 +155,7 @@ void TestCondition()
    {
       AssertTrue(ThreadJoin(t[i]));
    }
-   AssertEquals(s_condPass, s_count);
+   AssertEquals(static_cast<int32_t>(s_condPass), s_count);
    EndTest();
 
    StartTest(_T("Condition - timeout"));

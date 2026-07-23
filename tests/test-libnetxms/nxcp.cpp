@@ -111,7 +111,7 @@ void TestMsgWaitQueue()
    for(uint32_t i = 0; i < MAX_THREADS; i++)
       ThreadJoin(threads[i]);
 
-   AssertEquals(s_waitFailures, 0);
+   AssertEquals(static_cast<int32_t>(s_waitFailures), 0);
 
    EndTest();
 }

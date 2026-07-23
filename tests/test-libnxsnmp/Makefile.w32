@@ -1,0 +1,11 @@
+#
+# Makefile.w32 - test-libnxsnmp (SNMP library unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = test-libnxsnmp
+SOURCES = test-libnxsnmp.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
+TOOL_LIBS = -lnxsnmp -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

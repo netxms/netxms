@@ -209,9 +209,48 @@ mingw32-make -f Makefile.w32              # Build everything for ARCH
 mingw32-make -f Makefile.w32 all-arch     # Build all architectures
 mingw32-make -f Makefile.w32 clean        # Remove build artifacts
 mingw32-make -f Makefile.w32 install      # Install to PREFIX
+mingw32-make -f Makefile.w32 test         # Build and run the unit test suite
 mingw32-make -f Makefile.w32 version      # Show version info
 mingw32-make -f Makefile.w32 help         # Show help
 ```
+
+## Unit Tests
+
+Unit tests are the MinGW equivalent of the autotools `--with-tests` switch: they
+are excluded from a normal build and enabled with
+
+```makefile
+BUILD_TESTS = 1
+```
+
+in `config.mingw`. Tests are built for **x64 only** — as with the client and
+server tiers, `BUILD_TESTS` is forced off for `x86` and `arm64`.
+
+```cmd
+mingw32-make -f Makefile.w32 test
+```
+
+builds any missing test binaries and runs `tests\suite\netxms-test-suite.cmd`,
+which executes each test in turn and stops at the first failure. Test
+executables land in `out\<arch>\<type>\bin` next to the in-tree DLLs; the
+`test` target passes the SDK directories holding the third-party DLLs (OpenSSL,
+PCRE, zlib, expat, cURL, libmodbus) to the runner through
+`NETXMS_TEST_DLL_PATH`, built from the SDK roots in `config.mingw`.
+
+To run the suite without make, put those SDK `bin\<arch>` directories on `PATH`
+(or set `NETXMS_TEST_DLL_PATH` yourself) and call the runner from the top of the
+source tree:
+
+```cmd
+tests\suite\netxms-test-suite.cmd Release x64
+```
+
+Individual binaries can also be run directly, e.g.
+`out\x64\Release\bin\test-libnetxms.exe`. `test-libnxsl` needs the directory
+holding its `*.nxsl` scripts as an argument (`.\tests\test-libnxsl`).
+
+`test-libnxdb` is built but not part of the suite — it connects to live
+MySQL/Oracle instances and must be started manually.
 
 ## Troubleshooting
 

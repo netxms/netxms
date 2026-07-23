@@ -1509,6 +1509,13 @@ int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
 
+#ifdef _WIN32
+   // InetAddress::parse() uses WSAStringToAddress(), which fails until Winsock
+   // is initialized
+   WSADATA wsaData;
+   WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
+
    TestNObjectHierarchy();
    TestNObjectCustomAttributes();
    TestNObjectCustomAttributeInheritance();

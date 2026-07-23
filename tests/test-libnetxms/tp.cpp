@@ -127,7 +127,7 @@ void TestThreadPoolDelayedExecution()
       }
    }
 
-   AssertEquals(InterlockedIncrement(&s_delayedExecutionCounter), DELAYED_EXEC_TEST_ITERATIONS + 1);
+   AssertEquals(static_cast<int32_t>(InterlockedIncrement(&s_delayedExecutionCounter)), DELAYED_EXEC_TEST_ITERATIONS + 1);
 
    ThreadPoolGetInfo(p, &info);
    AssertEquals(info.activeRequests, 0);

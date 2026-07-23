@@ -1,0 +1,14 @@
+#
+# Makefile.w32 - test-libnxsl (NXSL interpreter unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+# The test binary takes the directory holding the *.nxsl test scripts as its
+# only argument (see tests/suite/netxms-test-suite.cmd).
+#
+
+TOOL = test-libnxsl
+SOURCES = test-libnxsl.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
+TOOL_LIBS = -lnxsl -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

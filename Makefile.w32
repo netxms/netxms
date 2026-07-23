@@ -151,11 +151,25 @@ endif
 
 # Unit tests. Mirrors the --with-tests switch of the autotools build: tests are
 # not part of a normal build and are enabled by setting BUILD_TESTS in
-# config.mingw. Only tests for libraries that are built on Windows are listed.
+# config.mingw. Only tests for libraries that are built on Windows are listed
+# (the HA lease harness and the Linux CPU usage collector test are POSIX-only).
+# test-libnxdb is built but not run by the suite - it needs live database
+# servers. The agent unit tests compile the subagent sources directly, so they
+# are listed even though they do not link the built subagent.
 TESTS_DIRS =
 ifeq ($(BUILD_TESTS),1)
 TESTS_DIRS = \
-    tests/test-libethernetip
+    tests/test-libnetxms \
+    tests/test-libethernetip \
+    tests/test-libnxdb \
+    tests/test-libnxsnmp \
+    tests/test-libnxsl \
+    tests/test-ncd-webhook \
+    tests/agent/unit/entsoe \
+    tests/agent/unit/openmeteo
+ifeq ($(BUILD_SERVER),1)
+TESTS_DIRS += tests/test-libnxsrv
+endif
 endif
 
 # Private ATM subsystem (optional). Private repositories live at fixed locations
@@ -178,11 +192,17 @@ ALL_DIRS = $(LIBS) $(AGENT_DIRS) $(CLIENT_DIRS) $(DB_DIRS) $(TOOLS_DIRS) $(SERVE
 # Override on the command line: make -f Makefile.w32 all-arch ALL_ARCHS="x64 arm64"
 ALL_ARCHS = x64 x86 arm64
 
+# Directories holding the third-party DLLs the test binaries load at run time.
+# In-tree DLLs sit next to the test executables in $(BIN_DIR), so only the SDK
+# directories are needed. Derived from the SDK roots in $(CONFIG) rather than
+# hardcoded, and passed to the suite runner through NETXMS_TEST_DLL_PATH.
+TEST_DLL_PATH = $(OPENSSL_ROOT)/bin/$(ARCH);$(PCRE_ROOT)/bin/$(ARCH);$(ZLIB_ROOT)/bin/$(ARCH);$(EXPAT_ROOT)/bin/$(ARCH);$(CURL_ROOT)/bin/$(ARCH);$(MODBUS_ROOT)/bin/$(ARCH)
+
 #####################################################################
 # Targets
 #####################################################################
 
-.PHONY: all all-arch clean install help version check-config build-tag $(ALL_DIRS)
+.PHONY: all all-arch clean install test help version check-config build-tag $(ALL_DIRS)
 
 all: check-config build-tag $(ALL_DIRS)
 	@echo ""
@@ -248,6 +268,9 @@ $(SERVER_DIRS): $(LIBS)
 # Tests depend on libraries they exercise
 $(TESTS_DIRS): $(LIBS)
 
+# test-libnxsrv links libnxsrv, which belongs to the server tier
+tests/test-libnxsrv: src/server/libnxsrv
+
 # ATM subsystem links the agent, server and core import libraries, so it is
 # built after every in-tree tier it depends on.
 $(ATM_TOP): $(LIBS) $(AGENT_DIRS) $(SERVER_DIRS)
@@ -277,6 +300,17 @@ install: all
 	@echo "  Location: $(PREFIX)"
 	@echo "============================================"
 
+# Build (if needed) and run the unit test suite. The list of test binaries and
+# their arguments lives in the suite runner, which is also usable standalone.
+test: $(TESTS_DIRS)
+ifneq ($(BUILD_TESTS),1)
+	@echo "ERROR: unit tests are disabled for this build (ARCH=$(ARCH))."
+	@echo "Set BUILD_TESTS = 1 in $(CONFIG) and build for x64."
+	@exit 1
+else
+	$(Q)NETXMS_TEST_DLL_PATH="$(TEST_DLL_PATH)" cmd //c "$(TOPDIR)/tests/suite/netxms-test-suite.cmd" $(BUILD_TYPE) $(PLATFORM)
+endif
+
 version:
 	@echo "NetXMS Windows Build System"
 	@echo "Architecture: $(ARCH)"
@@ -293,6 +327,7 @@ help:
 	@echo "  make -f Makefile.w32 all-arch  Build all architectures ($(ALL_ARCHS))"
 	@echo "  make -f Makefile.w32 clean     Clean build artifacts"
 	@echo "  make -f Makefile.w32 install   Install to PREFIX"
+	@echo "  make -f Makefile.w32 test      Build and run unit tests (needs BUILD_TESTS=1)"
 	@echo "  make -f Makefile.w32 version   Show version info"
 	@echo "  make -f Makefile.w32 help      Show this help"
 	@echo ""

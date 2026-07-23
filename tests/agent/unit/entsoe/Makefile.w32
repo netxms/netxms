@@ -1,0 +1,18 @@
+#
+# Makefile.w32 - test-unit-entsoe (ENTSO-E subagent unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+# The subagent sources under test are compiled into the test binary rather than
+# linked from the built subagent. They are located through vpath so their
+# objects land in this test's own object directory instead of the subagent's.
+# main.cpp exists in both directories; the local copy wins because make only
+# consults vpath for prerequisites missing from the current directory.
+vpath %.cpp $(TOPDIR)/src/agent/subagents/entsoe
+
+TOOL = test-unit-entsoe
+SOURCES = main.cpp adapter.cpp factors.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include -I$(TOPDIR)/src/agent/subagents/entsoe
+TOOL_LIBS = -lnetxms $(CURL_LIBS)
+
+include $(TOPDIR)/build/tool-common.mk

@@ -1,0 +1,16 @@
+#
+# Makefile.w32 - test-ncd-webhook (webhook NC driver tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+# webhook_helpers.cpp is compiled into the test binary rather than linked from
+# the built driver. It is located through vpath so its object lands in this
+# test's own object directory instead of the driver's.
+vpath %.cpp $(TOPDIR)/src/server/ncdrivers/webhook
+
+TOOL = test-ncd-webhook
+SOURCES = test-ncd-webhook.cpp webhook_helpers.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include -I$(TOPDIR)/src/server/ncdrivers/webhook
+TOOL_LIBS = -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

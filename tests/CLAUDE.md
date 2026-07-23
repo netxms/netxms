@@ -39,6 +39,26 @@ and `test-libnxdb` are unconditional `SUBDIRS` in `tests/Makefile.am`; the rest
 come in through `@TEST_MODULES@` / `@AGENT_UNIT_TESTS@` (in `tests/Makefile.am`
 and `tests/agent/unit/Makefile.am`), populated by `configure.ac`.
 
+## Windows build
+
+The Windows (MinGW) build has its own wiring, parallel to the autotools one:
+
+- Each test directory has a `Makefile.w32` that sets `TOOL` / `SOURCES` /
+  `TOOL_CPPFLAGS` / `TOOL_LIBS` and includes `build/tool-common.mk`. Tests that
+  compile sources from outside their own directory (the webhook helpers, the
+  subagent sources under `agent/unit/*`) locate them with `vpath` so the objects
+  land in the test's own object directory rather than the component's.
+- The top-level `Makefile.w32` lists the test directories in `TESTS_DIRS`, gated
+  on `BUILD_TESTS` in `config.mingw` (forced off for non-x64 architectures).
+- `mingw32-make -f Makefile.w32 test` builds and runs `suite/netxms-test-suite.cmd`,
+  the Windows counterpart of `netxms-test-suite.in`. See
+  [BUILD_WINDOWS.md](../BUILD_WINDOWS.md) for details.
+
+Test binaries that resolve or parse IP addresses must call `WSAStartup()` after
+`InitNetXMSProcess()` under `#ifdef _WIN32` — `InetAddress::parse()` uses
+`WSAStringToAddress()` and silently returns an invalid address until Winsock is
+initialized.
+
 ## Test framework
 
 There is **no external framework** (no GoogleTest/Catch). Tests are hand-rolled:
@@ -81,7 +101,7 @@ with `[ -x ... ]` so a suite built without a given module still runs.
 
 ## Adding a new unit test
 
-For a **new test binary** three places must stay in sync — updating the
+For a **new test binary** five places must stay in sync — updating the
 Makefile alone is not enough:
 
 1. Create `tests/<name>/Makefile.am` defining the `bin_PROGRAM`, its
@@ -95,6 +115,9 @@ Makefile alone is not enough:
    `tests/*/Makefile` entries.
 3. Add an executable-guarded stanza to `suite/netxms-test-suite.in` so the
    runner picks it up.
+4. Create `tests/<name>/Makefile.w32` (see "Windows build" above) and add the
+   directory to `TESTS_DIRS` in the top-level `Makefile.w32`.
+5. Add a `call :RunTest <binary>` line to `suite/netxms-test-suite.cmd`.
 
 For a **new test case in an existing binary**: add the `Test*()` function (new
 `.cpp` if substantial, listed in that dir's `_SOURCES`), declare it in the

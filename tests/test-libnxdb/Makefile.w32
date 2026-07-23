@@ -1,0 +1,14 @@
+#
+# Makefile.w32 - test-libnxdb (database abstraction layer tests) for Windows/MinGW
+# Part of NetXMS project
+#
+# Not part of the automated suite: these tests connect to live MySQL/Oracle
+# instances, so they are built but must be started manually.
+#
+
+TOOL = test-libnxdb
+SOURCES = oracle.cpp test-libnxdb.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
+TOOL_LIBS = -lnxdb -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk
