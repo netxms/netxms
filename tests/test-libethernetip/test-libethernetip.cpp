@@ -84,6 +84,35 @@ static void TestHeaderLayout()
 }
 
 /**
+ * Test encapsulation header encoding for outgoing messages. All multi-byte header fields are
+ * little-endian on the wire regardless of host byte order, so raw bytes are checked directly.
+ */
+static void TestHeaderEncoding()
+{
+   StartTest(_T("EIP_Message - outgoing header byte order"));
+   EIP_Message request(EIP_SEND_RR_DATA, 4, 0x12345678);
+   request.completeDataWrite();
+   const uint8_t *bytes = request.getBytes();
+
+   // Command at offset 0 (EIP_SEND_RR_DATA = 0x006F)
+   AssertEquals(static_cast<uint32_t>(bytes[0]), 0x6Fu);
+   AssertEquals(static_cast<uint32_t>(bytes[1]), 0x00u);
+
+   // Session handle at offset 4 must be little-endian on the wire
+   AssertEquals(static_cast<uint32_t>(bytes[4]), 0x78u);
+   AssertEquals(static_cast<uint32_t>(bytes[5]), 0x56u);
+   AssertEquals(static_cast<uint32_t>(bytes[6]), 0x34u);
+   AssertEquals(static_cast<uint32_t>(bytes[7]), 0x12u);
+
+   // Header accessors must decode the same message back to host values
+   EIP_Message *parsed = new EIP_Message(bytes, request.getSize());
+   AssertEquals(static_cast<uint32_t>(parsed->getCommand()), static_cast<uint32_t>(EIP_SEND_RR_DATA));
+   AssertEquals(parsed->getSessionHandle(), 0x12345678u);
+   delete parsed;
+   EndTest();
+}
+
+/**
  * Test symbolic path parsing
  */
 static void TestSymbolicPathParsing()
@@ -614,6 +643,7 @@ int main(int argc, char *argv[])
 #endif
 
    TestHeaderLayout();
+   TestHeaderEncoding();
    TestSymbolicPathParsing();
    TestPathEncoding();
    TestPathDecoding();
