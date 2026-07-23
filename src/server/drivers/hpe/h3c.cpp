@@ -154,8 +154,16 @@ InterfaceList *H3CDriver::getInterfaces(DeviceContext *context, NObject *node, D
 	if (ifList == nullptr)
 		return nullptr;
 
-	// Find physical ports
-   SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.2.23.1.18.4.5.1.3"), PortWalkHandler, ifList);
+	// Find physical ports.
+	// On walk failure the interface list is only partially marked and therefore unusable -
+	// discard it and return NULL so that server core will not overwrite existing data.
+   uint32_t rc = SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.2.23.1.18.4.5.1.3"), PortWalkHandler, ifList);
+   if (rc != SNMP_ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG_H3C, 5, _T("H3CDriver::getInterfaces: physical port table walk failed (%s)"), SnmpGetErrorText(rc));
+      delete ifList;
+      return nullptr;
+   }
 
    // Read IPv6 addresses
    SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.10.2.71.1.1.2.1.4"), IPv6WalkHandler, ifList);

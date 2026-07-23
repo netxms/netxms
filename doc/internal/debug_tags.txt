@@ -142,7 +142,9 @@ ndd.hostmib	Hostmib related functionality
 ndd.cisco	Cisco network device driver
 ndd.cisco.sb	Cisco-SB network device driver
 ndd.cisco.wlc	Cisco-WLC network device driver
+ndd.etherwan	EtherWAN network device driver
 ndd.h3c		H3C network device driver
+ndd.hpe.hpsw	HPE switch network device driver
 ndd.huawei.optix	Huawei OptiX network device driver
 ndd.lenovo.flex	Lenovo Flex System Fabric network device driver
 ndd.mikrotik    Mikrotik network device driver

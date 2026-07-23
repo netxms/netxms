@@ -99,8 +99,16 @@ InterfaceList *Cat2900Driver::getInterfaces(DeviceContext *context, NObject *nod
 	if (ifList == NULL)
 		return NULL;
 	
-	// Set slot and port number for physical interfaces
-	SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.87.1.4.1.1.25"), HandlerPortList, ifList);
+	// Set slot and port number for physical interfaces.
+	// On walk failure the interface list is only partially marked and therefore unusable -
+	// discard it and return NULL so that server core will not overwrite existing data.
+	uint32_t rc = SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.87.1.4.1.1.25"), HandlerPortList, ifList);
+	if (rc != SNMP_ERR_SUCCESS)
+	{
+		nxlog_debug_tag(DEBUG_TAG_CISCO, 5, _T("Cat2900Driver::getInterfaces: switch port table walk failed (%s)"), SnmpGetErrorText(rc));
+		delete ifList;
+		return NULL;
+	}
 
 	return ifList;
 }

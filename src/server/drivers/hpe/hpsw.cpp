@@ -22,6 +22,8 @@
 
 #include "hpe.h"
 
+#define DEBUG_TAG _T("ndd.hpe.hpsw")
+
 /**
  * Get driver name
  */
@@ -95,7 +97,15 @@ InterfaceList *HPSwitchDriver::getInterfaces(DeviceContext *context, NObject *no
 	if (ifList == nullptr)
 		return nullptr;
 
-	// Find physical ports (walk hh3cLswPortIfindex)
-   SnmpWalk(snmp, _T(".1.3.6.1.4.1.25506.8.35.18.4.5.1.3"), PortWalkHandler, ifList);
+	// Find physical ports (walk hh3cLswPortIfindex).
+	// On walk failure the interface list is only partially marked and therefore unusable -
+	// discard it and return NULL so that server core will not overwrite existing data.
+   uint32_t rc = SnmpWalk(snmp, _T(".1.3.6.1.4.1.25506.8.35.18.4.5.1.3"), PortWalkHandler, ifList);
+   if (rc != SNMP_ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("HPSwitchDriver::getInterfaces: physical port table walk failed (%s)"), SnmpGetErrorText(rc));
+      delete ifList;
+      return nullptr;
+   }
 	return ifList;
 }
