@@ -244,6 +244,9 @@ public class DashboardControl extends Composite
          case DashboardElement.SCRIPTED_PIE_CHART:
             w = new ScriptedPieChartElement(this, e, view);
             break;
+         case DashboardElement.SCRIPTED_GAUGE:
+            w = new ScriptedGaugeElement(this, e, view);
+            break;
          case DashboardElement.SEPARATOR:
             w = new SeparatorElement(this, e, view);
             break;

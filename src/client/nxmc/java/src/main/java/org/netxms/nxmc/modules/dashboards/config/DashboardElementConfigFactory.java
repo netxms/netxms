@@ -183,6 +183,8 @@ public class DashboardElementConfigFactory
                return new Gson().fromJson(element.getData(), RackDiagramConfig.class);
             case DashboardElement.SCRIPTED_BAR_CHART:
                return new Gson().fromJson(element.getData(), ScriptedBarChartConfig.class);
+            case DashboardElement.SCRIPTED_GAUGE:
+               return new Gson().fromJson(element.getData(), ScriptedGaugeConfig.class);
             case DashboardElement.SCRIPTED_PIE_CHART:
                return new Gson().fromJson(element.getData(), ScriptedPieChartConfig.class);
             case DashboardElement.SEPARATOR:

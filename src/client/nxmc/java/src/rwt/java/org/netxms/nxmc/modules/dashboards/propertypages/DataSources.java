@@ -44,7 +44,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.AbstractChartConfig;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
-import org.netxms.nxmc.modules.dashboards.config.ScriptedComparisonChartConfig;
+import org.netxms.nxmc.modules.dashboards.config.ScriptedElementConfig;
 import org.netxms.nxmc.modules.dashboards.propertypages.helpers.DciListLabelProvider;
 import org.netxms.nxmc.modules.datacollection.dialogs.DataSourceEditDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectDciDialog;
@@ -102,7 +102,7 @@ public class DataSources extends DashboardElementPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (elementConfig instanceof AbstractChartConfig) && !(elementConfig instanceof ScriptedComparisonChartConfig);
+      return (elementConfig instanceof AbstractChartConfig) && !(elementConfig instanceof ScriptedElementConfig);
    }
 
    /**

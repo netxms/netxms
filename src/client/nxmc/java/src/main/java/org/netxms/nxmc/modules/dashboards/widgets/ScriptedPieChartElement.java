@@ -32,7 +32,7 @@ import com.google.gson.Gson;
 /**
  * Pie chart element
  */
-public class ScriptedPieChartElement extends ScriptedComparisonChartElement
+public class ScriptedPieChartElement extends ScriptedChartElement
 {
    private static final Logger logger = LoggerFactory.getLogger(ScriptedPieChartElement.class);
 

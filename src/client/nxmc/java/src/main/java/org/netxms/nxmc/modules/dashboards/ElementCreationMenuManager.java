@@ -65,6 +65,7 @@ public class ElementCreationMenuManager extends MenuManager
       chartsMenu.add(new Separator());
       addTypeToSelectionMenu(chartsMenu, i18n.tr("Scripted bar chart"), DashboardElement.SCRIPTED_BAR_CHART);
       addTypeToSelectionMenu(chartsMenu, i18n.tr("Scripted pie chart"), DashboardElement.SCRIPTED_PIE_CHART);
+      addTypeToSelectionMenu(chartsMenu, i18n.tr("Scripted gauge"), DashboardElement.SCRIPTED_GAUGE);
       chartsMenu.add(new Separator());
       addTypeToSelectionMenu(chartsMenu, i18n.tr("Status chart"), DashboardElement.STATUS_CHART);
       addTypeToSelectionMenu(chartsMenu, i18n.tr("Availability chart"), DashboardElement.AVAILABLITY_CHART);

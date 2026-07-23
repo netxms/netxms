@@ -318,6 +318,14 @@ json_t *DashboardBase::toJson(bool includeSensitiveData)
 }
 
 /**
+ * Check if given dashboard element type is script driven (status indicator, scripted bar chart, scripted pie chart, scripted gauge)
+ */
+static inline bool IsScriptedElementType(int type)
+{
+   return (type == 6) || (type == 30) || (type == 31) || (type == 33);
+}
+
+/**
  * Get element script
  */
 String DashboardBase::getElementScript(int index) const
@@ -327,7 +335,7 @@ String DashboardBase::getElementScript(int index) const
    if (m_elements.size() > index)
    {
       DashboardElement *e = m_elements.get(index);
-      if ((e->m_type == 30 || e->m_type == 31 || e->m_type == 6) && json_is_object(e->m_data))
+      if (IsScriptedElementType(e->m_type) && json_is_object(e->m_data))
       {
          const char *source = json_object_get_string_utf8(e->m_data, "script", "");
          script.appendUtf8String(source);
@@ -355,7 +363,7 @@ bool DashboardBase::isElementContextObject(int index, uint32_t contextObject) co
    if (m_elements.size() > index)
    {
       DashboardElement *e = m_elements.get(index);
-      if ((e->m_type == 30 || e->m_type == 31 || e->m_type == 6) && json_is_object(e->m_data))
+      if (IsScriptedElementType(e->m_type) && json_is_object(e->m_data))
       {
          uint32_t objectId = json_object_get_uint32(e->m_data, "objectId", 0);
          isContextObject = (objectId == contextObject);

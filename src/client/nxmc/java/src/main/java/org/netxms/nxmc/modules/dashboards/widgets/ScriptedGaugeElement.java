@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.nxmc.modules.dashboards.config.GaugeConfig;
+import org.netxms.nxmc.modules.dashboards.config.ScriptedGaugeConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.dashboards.widgets.helpers.GaugeChartHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -31,59 +31,78 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 
 /**
- * Dial chart element
+ * Gauge element with data obtained from server-side script
  */
-public class GaugeElement extends ComparisonChartElement
+public class ScriptedGaugeElement extends ScriptedChartElement
 {
-   private static final Logger logger = LoggerFactory.getLogger(GaugeElement.class);
+   private static final Logger logger = LoggerFactory.getLogger(ScriptedGaugeElement.class);
 
-	private GaugeConfig elementConfig;
+   private ScriptedGaugeConfig elementConfig;
    private Font heightCalculationFont = null;
+   private int itemCount = 1;
 
-	/**
-	 * @param parent
-	 * @param data
-	 */
-   public GaugeElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
-	{
+   /**
+    * @param parent
+    * @param element
+    * @param view
+    */
+   public ScriptedGaugeElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
+   {
       super(parent, element, view);
-      
+
       try
       {
-         elementConfig = new Gson().fromJson(element.getData(), GaugeConfig.class);
+         elementConfig = new Gson().fromJson(element.getData(), ScriptedGaugeConfig.class);
          if (elementConfig == null)
-            elementConfig = new GaugeConfig();
+            elementConfig = new ScriptedGaugeConfig();
       }
       catch(Exception e)
       {
          logger.error("Cannot parse dashboard element configuration", e);
-         elementConfig = new GaugeConfig();
+         elementConfig = new ScriptedGaugeConfig();
       }
 
       processCommonSettings(elementConfig);
 
-		refreshInterval = elementConfig.getRefreshRate();
+      script = elementConfig.getScript();
+      objectId = getEffectiveObjectId(elementConfig.getObjectId());
+      refreshInterval = elementConfig.getRefreshRate();
 
-      //updateThresholds = (elementConfig.getColorMode() == GaugeColorMode.THRESHOLD.getValue());
       chart = GaugeChartHelper.createChart(getContentArea(), elementConfig, view);
-
-      configureMetrics();
-      createContextMenu();
+      chart.rebuild();
 
       addDisposeListener((e) -> {
          if (heightCalculationFont != null)
             heightCalculationFont.dispose();
       });
-	}
+
+      startRefreshTimer();
+   }
 
    /**
-    * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()
+    * @see org.netxms.nxmc.modules.dashboards.widgets.ScriptedChartElement#onDataUpdate(int)
     */
-	@Override
-	protected ChartDciConfig[] getDciList()
-	{
-		return elementConfig.getDciList();
-	}
+   @Override
+   protected void onDataUpdate(int itemCount)
+   {
+      int count = Math.max(itemCount, 1);
+      if (this.itemCount == count)
+         return;
+
+      // Gauges are stacked when placed vertically, so element's preferred height depends on number of items returned by script
+      this.itemCount = count;
+      if (elementConfig.isVertical())
+         getParent().layout(true, true);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.widgets.ScriptedChartElement#getMinimumHeight()
+    */
+   @Override
+   protected int getMinimumHeight()
+   {
+      return 0;   // Gauge height is controlled by getPreferredHeight()
+   }
 
    /**
     * @see org.netxms.nxmc.modules.dashboards.widgets.ElementWidget#getPreferredHeight()
@@ -92,7 +111,7 @@ public class GaugeElement extends ComparisonChartElement
    protected int getPreferredHeight()
    {
       if (elementConfig.getGaugeType() == GaugeConfig.BAR)
-         return elementConfig.isVertical() ? 40 * elementConfig.getDciList().length : 40;
+         return elementConfig.isVertical() ? 40 * itemCount : 40;
 
       if (elementConfig.getGaugeType() == GaugeConfig.TEXT)
       {
@@ -106,7 +125,7 @@ public class GaugeElement extends ComparisonChartElement
          int h = WidgetHelper.getTextExtent(this, heightCalculationFont, "X").y + 10;
          if (elementConfig.isShowLegend())
             h += WidgetHelper.getTextExtent(this, "X").y;
-         return elementConfig.isVertical() ? h * elementConfig.getDciList().length : h;
+         return elementConfig.isVertical() ? h * itemCount : h;
       }
 
       return super.getPreferredHeight();

@@ -40,11 +40,11 @@ import org.xnap.commons.i18n.I18n;
 import com.google.gson.Gson;
 
 /**
- * Base class for data comparison charts - like bar chart, pie chart, etc. with data obtained from server-side script.
+ * Base class for charts with data obtained from server-side script - like bar chart, pie chart, gauge, etc.
  */
-public abstract class ScriptedComparisonChartElement extends ElementWidget
+public abstract class ScriptedChartElement extends ElementWidget
 {
-   private final I18n i18n = LocalizationHelper.getI18n(ScriptedComparisonChartElement.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScriptedChartElement.class);
 
    protected Chart chart;
 	protected NXCSession session;
@@ -59,7 +59,7 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-   public ScriptedComparisonChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
+   public ScriptedChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
       super(parent, element, view);
       session = Registry.getSession();
@@ -83,7 +83,7 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 			@Override
 			public void run()
 			{
-				if (ScriptedComparisonChartElement.this.isDisposed())
+				if (ScriptedChartElement.this.isDisposed())
 					return;
 
             refreshData();
@@ -146,6 +146,7 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
                   chart.rebuild();
                   clearMessages();
                   updateInProgress = false;
+                  onDataUpdate(values.size());
                }
             });
 			}
@@ -169,6 +170,25 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 		job.setUser(false);
 		job.start();
 	}
+
+   /**
+    * Called in UI thread after chart is updated with new data returned by script. Default implementation does nothing.
+    *
+    * @param itemCount number of data items returned by script
+    */
+   protected void onDataUpdate(int itemCount)
+   {
+   }
+
+   /**
+    * Get minimum height of this element.
+    *
+    * @return minimum element height in pixels
+    */
+   protected int getMinimumHeight()
+   {
+      return 250;
+   }
 
    /**
     * Parse double value without throwing an exception.
@@ -195,8 +215,9 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
 		Point size = super.computeSize(wHint, hHint, changed);
-		if ((hHint == SWT.DEFAULT) && (size.y < 250))
-			size.y = 250;
+      int minimumHeight = getMinimumHeight();
+      if ((hHint == SWT.DEFAULT) && (size.y < minimumHeight))
+         size.y = minimumHeight;
 		return size;
 	}
 
