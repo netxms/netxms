@@ -166,11 +166,11 @@ void NTCBDeviceSession::sendNTCBMessage(const void *data, size_t size)
 {
    NTCB_HEADER header;
    memcpy(header.preamble, "@NTC", 4);
-   header.senderId = m_ntcbReceiverId;
-   header.receiverId = m_ntcbSenderId;
-   header.dataBytes = static_cast<uint16_t>(size);
+   header.senderId = HostToLittleEndian32(m_ntcbReceiverId);
+   header.receiverId = HostToLittleEndian32(m_ntcbSenderId);
+   header.dataBytes = HostToLittleEndian16(static_cast<uint16_t>(size));
    header.dataChecksum = NTCBChecksum(data, size);
-   header.headerChecksum = NTCBChecksum(&header, 15);
+   header.headerChecksum = NTCBChecksum(&header, 15);   // Checksum is calculated on header in wire byte order
    m_socket.write(&header, 16);
    m_socket.write(data, size);
 }
@@ -215,12 +215,10 @@ void NTCBDeviceSession::readThread()
             continue;
          }
 
-         m_ntcbSenderId = header.senderId;
-         m_ntcbReceiverId = header.receiverId;
-
-#if WORDS_BIGENDIAN
-         // Fixme: swap header fields?
-#endif
+         // Header checksum is calculated on header in wire byte order, so conversion is done after validation
+         m_ntcbSenderId = LittleEndianToHost32(header.senderId);
+         m_ntcbReceiverId = LittleEndianToHost32(header.receiverId);
+         header.dataBytes = LittleEndianToHost16(header.dataBytes);
 
          void *data;
          if (header.dataBytes > 0)
@@ -238,6 +236,7 @@ void NTCBDeviceSession::readThread()
             if (cs != header.dataChecksum)
             {
                debugPrintf(6, _T("Invalid NTCB packet (invalid data checksum)"));
+               MemFree(data);
                continue;
             }
          }
@@ -317,8 +316,17 @@ void NTCBDeviceSession::processNTCBMessage(const void *data, size_t size)
          m_flexStructVersion = *curr++;
          m_flexFieldCount = *curr++;
          size_t maskBytes = (m_flexFieldCount + 7) / 8;
-         if (maskBytes > sizeof(m_flexFieldMask))
-            maskBytes = sizeof(m_flexFieldMask);
+
+         // Limit field mask to number of bytes actually received and to size of receiving buffer
+         size_t maskBytesAvailable = std::min(size - 10, sizeof(m_flexFieldMask));
+         if (maskBytes > maskBytesAvailable)
+         {
+            maskBytes = maskBytesAvailable;
+            if (m_flexFieldCount > static_cast<int>(maskBytes) * 8)
+               m_flexFieldCount = static_cast<int>(maskBytes) * 8;
+            debugPrintf(4, _T("Truncated FLEX field mask in handshake (field count limited to %d)"), m_flexFieldCount);
+         }
+
          memcpy(m_flexFieldMask, curr, maskBytes);
          memset(&m_flexFieldMask[maskBytes], 0, sizeof(m_flexFieldMask) - maskBytes);
 

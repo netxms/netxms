@@ -251,10 +251,10 @@ __PACK_END__
 static void FP_77(TelemetryDataType dataType, const TelemetryValue& value, const void *options, StringMap *pushValues)
 {
    auto lbs = reinterpret_cast<const LBS_INFO*>(value.raw);
-   pushValues->set(_T("NTCB.LBS.CellID"), lbs->cellId);
-   pushValues->set(_T("NTCB.LBS.LocalZoneID"), lbs->lac);
-   pushValues->set(_T("NTCB.LBS.CountryCode"), lbs->mcc);
-   pushValues->set(_T("NTCB.LBS.NetworkCode"), lbs->mnc);
+   pushValues->set(_T("NTCB.LBS.CellID"), LittleEndianToHost32(lbs->cellId));
+   pushValues->set(_T("NTCB.LBS.LocalZoneID"), LittleEndianToHost16(lbs->lac));
+   pushValues->set(_T("NTCB.LBS.CountryCode"), LittleEndianToHost16(lbs->mcc));
+   pushValues->set(_T("NTCB.LBS.NetworkCode"), LittleEndianToHost16(lbs->mnc));
    pushValues->set(_T("NTCB.LBS.SignalLevel"), lbs->signalLevel);
 }
 
@@ -263,11 +263,12 @@ static void FP_77(TelemetryDataType dataType, const TelemetryValue& value, const
  */
 static void FP_84_93(TelemetryDataType dataType, const TelemetryValue& value, const void *options, StringMap *pushValues)
 {
-   if (value.u16 >= 65500)
+   uint16_t amount = LittleEndianToHost16(value.u16);
+   if (amount >= 65500)
       return;  // Sensor error
 
    TCHAR buffer[32], name[64];
-   _sntprintf(buffer, 32, _T("%d.%d"), static_cast<int32_t>(value.u16) / 10, static_cast<int32_t>(value.u16) % 10);
+   _sntprintf(buffer, 32, _T("%d.%d"), static_cast<int32_t>(amount) / 10, static_cast<int32_t>(amount) % 10);
    _sntprintf(name, 64, _T("NTCB.FuelSensor%s.Amount"), static_cast<const TCHAR*>(options));
    pushValues->set(name, buffer);
 
@@ -471,7 +472,7 @@ static void FP_204(TelemetryDataType dataType, const TelemetryValue& value, cons
 
    uint32_t diagCode;
    memcpy(&diagCode, &value.raw[1], 4);
-   pushValues->set(_T("NTCB.CAN.Diagnostics.TroubleCode"), diagCode);
+   pushValues->set(_T("NTCB.CAN.Diagnostics.TroubleCode"), LittleEndianToHost32(diagCode));
 }
 
 /**
@@ -611,9 +612,9 @@ static struct TelemetryField s_telemetryFields[255] =
    { 1, TelemetryDataType::U8, nullptr, nullptr, nullptr },       // 104: Текущее состояние водителя принятое от дисплейного модуля
    { 4, TelemetryDataType::U32, nullptr, nullptr, nullptr },      // 105: Индекс последнего полученного/прочитанного сообщения на дисплейном модуле.
    { 2, TelemetryDataType::U16, nullptr, nullptr, nullptr },      // 106: Приращение к времени относительно предыдущей записи
-   { 6, TelemetryDataType::I16, nullptr, nullptr, nullptr },      // 107: Линейное ускорение по оси X Y Z
+   { 6, TelemetryDataType::STRUCT, nullptr, nullptr, nullptr },  // 107: Линейное ускорение по оси X Y Z
    { 2, TelemetryDataType::U16, nullptr, nullptr, nullptr },     // 108: EcoDriving. Длительность превышения порога
-   { 6, TelemetryDataType::I16, nullptr, nullptr, nullptr },     // 109: EcoDriving. Максимальное значение положительного, отрицательного и бокового ускорения за период
+   { 6, TelemetryDataType::STRUCT, nullptr, nullptr, nullptr },  // 109: EcoDriving. Максимальное значение положительного, отрицательного и бокового ускорения за период
    { 2, TelemetryDataType::U8, nullptr, nullptr, nullptr },      // 110: Данные счетчиков пассажиропотока  1 и 2
    { 2, TelemetryDataType::U8, nullptr, nullptr, nullptr },      // 111: Данные счетчиков пассажиропотока  3 и 4
    { 2, TelemetryDataType::U8, nullptr, nullptr, nullptr },      // 112: Данные счетчиков пассажиропотока  5 и 6
@@ -699,9 +700,9 @@ static struct TelemetryField s_telemetryFields[255] =
    { 2, TelemetryDataType::U16, nullptr, nullptr, nullptr },     // 192: Рефрижераторная установка. Сила тока аккумулятора
    { 4, TelemetryDataType::U32, nullptr, nullptr, nullptr },     // 193: Рефрижераторная установка. Моточасы работы от двигателя
    { 4, TelemetryDataType::U32, nullptr, nullptr, nullptr },     // 194: Рефрижераторная установка. Моточасы работы от сети
-   { 4, TelemetryDataType::U16, nullptr, nullptr, nullptr },     // 195: Рефрижераторная установка. Количество ошибок. Код самой важной ошибки
-   { 4, TelemetryDataType::U16, nullptr, nullptr, nullptr },     // 196: Рефрижераторная установка. Код 2й и 3й по важности ошибки
-   { 6, TelemetryDataType::U16, nullptr, nullptr, nullptr },     // 197: Рефрижераторная установка. Код 4й-6й по важности ошибки
+   { 4, TelemetryDataType::STRUCT, nullptr, nullptr, nullptr },  // 195: Рефрижераторная установка. Количество ошибок. Код самой важной ошибки
+   { 4, TelemetryDataType::STRUCT, nullptr, nullptr, nullptr },  // 196: Рефрижераторная установка. Код 2й и 3й по важности ошибки
+   { 6, TelemetryDataType::STRUCT, nullptr, nullptr, nullptr },  // 197: Рефрижераторная установка. Код 4й-6й по важности ошибки
    { 3, TelemetryDataType::STRUCT, nullptr, nullptr, nullptr },  // 198: Рефрижераторная установка. Состояние двигателя
    { 1, TelemetryDataType::U8, nullptr, nullptr, nullptr },      // 199: Рефрижераторная установка. Конфигурация компрессора
    { 2, TelemetryDataType::U16, nullptr, nullptr, nullptr },     // 200: Информация о нахождении в геозонах
@@ -765,42 +766,48 @@ static struct TelemetryField s_telemetryFields[255] =
 /**
  * Convert value of given field to string
  */
-static TCHAR *TelemetryFieldToString(const TelemetryField *field, const TelemetryValue& value, TCHAR *buffer)
+static TCHAR *TelemetryFieldToString(const TelemetryField *field, const TelemetryValue& value, TCHAR *buffer, size_t bufferSize)
 {
    switch(field->dataType)
    {
       case TelemetryDataType::I8:
-         _sntprintf(buffer, 64, _T("%d"), static_cast<int>(value.i8));
+         _sntprintf(buffer, bufferSize, _T("%d"), static_cast<int>(value.i8));
          break;
       case TelemetryDataType::I16:
-         _sntprintf(buffer, 64, _T("%d"), static_cast<int>(value.i16));
+         _sntprintf(buffer, bufferSize, _T("%d"), static_cast<int>(value.i16));
          break;
       case TelemetryDataType::I32:
-         _sntprintf(buffer, 64, _T("%d"), value.i32);
+         _sntprintf(buffer, bufferSize, _T("%d"), value.i32);
          break;
       case TelemetryDataType::I64:
-         _sntprintf(buffer, 64, INT64_FMT, value.i64);
+         _sntprintf(buffer, bufferSize, INT64_FMT, value.i64);
          break;
       case TelemetryDataType::U8:
-         _sntprintf(buffer, 64, _T("%u"), static_cast<unsigned int>(value.u8));
+         _sntprintf(buffer, bufferSize, _T("%u"), static_cast<unsigned int>(value.u8));
          break;
       case TelemetryDataType::U16:
-         _sntprintf(buffer, 64, _T("%u"), static_cast<unsigned int>(value.u16));
+         _sntprintf(buffer, bufferSize, _T("%u"), static_cast<unsigned int>(value.u16));
          break;
       case TelemetryDataType::U32:
-         _sntprintf(buffer, 64, _T("%u"), value.u32);
+         _sntprintf(buffer, bufferSize, _T("%u"), value.u32);
          break;
       case TelemetryDataType::U64:
-         _sntprintf(buffer, 64, UINT64_FMT, value.u64);
+         _sntprintf(buffer, bufferSize, UINT64_FMT, value.u64);
          break;
       case TelemetryDataType::F32:
-         _sntprintf(buffer, 64, _T("%f"), value.f32);
+         _sntprintf(buffer, bufferSize, _T("%f"), value.f32);
          break;
       case TelemetryDataType::F64:
-         _sntprintf(buffer, 64, _T("%f"), value.f64);
+         _sntprintf(buffer, bufferSize, _T("%f"), value.f64);
          break;
       default:
-         BinToStr(value.raw, field->size, buffer);
+         {
+            // Each byte is represented by two characters, plus terminating zero
+            size_t bytes = (bufferSize - 1) / 2;
+            if (bytes > field->size)
+               bytes = field->size;
+            BinToStr(value.raw, bytes, buffer);
+         }
          break;
    }
    return buffer;
@@ -821,12 +828,8 @@ TelemetryRecord::TelemetryRecord(const shared_ptr<MobileDevice>& device, bool ar
  */
 void TelemetryRecord::processField(NTCBDeviceSession *session, int fieldIndex, const TelemetryField *field, const TelemetryValue& value)
 {
-   TCHAR stringValue[64];
-   session->debugPrintf(7, _T("Telemetry record #%d = %s"), fieldIndex, TelemetryFieldToString(field, value, stringValue));
-
-#if WORDS_BIGENDIAN
-   // TODO: swap bytes on big endian system
-#endif
+   TCHAR stringValue[128];
+   session->debugPrintf(7, _T("Telemetry record #%d = %s"), fieldIndex, TelemetryFieldToString(field, value, stringValue, 128));
 
    // Process fields with special meaning
    switch(fieldIndex)
@@ -899,6 +902,38 @@ void TelemetryRecord::updateDevice()
 }
 
 /**
+ * Convert telemetry value received from device to host byte order. Telemetry values are transmitted
+ * in little endian byte order. Structures are left as is - multi-byte elements within them are
+ * converted by corresponding field parsers.
+ */
+static inline void TelemetryValueToHostByteOrder(const TelemetryField *field, TelemetryValue *value)
+{
+   switch(field->dataType)
+   {
+      case TelemetryDataType::U16:
+      case TelemetryDataType::I16:
+         value->u16 = LittleEndianToHost16(value->u16);
+         break;
+      case TelemetryDataType::U32:
+      case TelemetryDataType::I32:
+         value->u32 = LittleEndianToHost32(value->u32);
+         break;
+      case TelemetryDataType::U64:
+      case TelemetryDataType::I64:
+         value->u64 = LittleEndianToHost64(value->u64);
+         break;
+      case TelemetryDataType::F32:
+         value->f32 = LittleEndianToHostF(value->f32);
+         break;
+      case TelemetryDataType::F64:
+         value->f64 = LittleEndianToHostD(value->f64);
+         break;
+      default:    // Single byte values and structures
+         break;
+   }
+}
+
+/**
  * Read single FLEX telemetry record
  */
 bool NTCBDeviceSession::readTelemetryRecord(bool archived)
@@ -919,6 +954,7 @@ bool NTCBDeviceSession::readTelemetryRecord(bool archived)
             debugPrintf(5, _T("readTelemetryRecord: failed to read field #%d"), fieldIndex + 1);
             return false;
          }
+         TelemetryValueToHostByteOrder(field, &value);
 
          record->processField(this, fieldIndex + 1, field, value);
       }
