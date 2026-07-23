@@ -370,7 +370,7 @@ json_t *DashboardBase::toJson(bool includeSensitiveData)
  */
 static inline bool IsScriptedElementType(int type)
 {
-   return (type == 6) || (type == 30) || (type == 31) || (type == 34);
+   return (type == 6) || (type == 30) || (type == 31) || (type == 33);
 }
 
 /**

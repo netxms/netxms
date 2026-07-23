@@ -69,8 +69,8 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
       i18n.tr("Scripted bar chart"),
       i18n.tr("Scripted pie chart"),
       i18n.tr("File monitor"),
-      i18n.tr("AI observation monitor"),
-      i18n.tr("Scripted gauge")
+      i18n.tr("Scripted gauge"),
+      i18n.tr("AI observation monitor")
 	};
 
    /**
