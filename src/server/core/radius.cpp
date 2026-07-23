@@ -347,14 +347,13 @@ static void encrypt_attr_style_1(char *secret, char *vector, VALUE_PAIR *vp)
 	 * packet, and the most significant bit must be set - see RFC 2868.
 	 *
 	 * We take the vp pointer, which should be different between attributes,
-	 * xor-ed with the first longword of the vector to make it a little more
-	 * unique.
+	 * xor-ed with the first word of the vector to make it a little more
+	 * unique. The vector is not guaranteed to be aligned, so it is read
+	 * through memcpy.
 	 */
-#ifdef _WIN32
-   salt = htons((WORD)((((ULONG_PTR)vp ^ *(ULONG_PTR *)vector) & 0xffff) | 0x8000));
-#else
-	salt = htons((WORD)((((long)vp ^ *(long *)vector) & 0xffff) | 0x8000));
-#endif
+	uint32_t vectorWord;
+	memcpy(&vectorWord, vector, sizeof(vectorWord));
+	salt = htons((WORD)((((uintptr_t)vp ^ vectorWord) & 0xffff) | 0x8000));
 	memcpy(o, &salt, sizeof(salt));
 	o += sizeof(salt);
 
