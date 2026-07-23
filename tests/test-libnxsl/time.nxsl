@@ -89,11 +89,14 @@ assert(d.dayOfWeek == 6);	// Saturday
 assert(d.dayOfYear == 230);	// 0-based, Jan 1 = 0
 
 // Extreme value must not crash or produce garbage. timegm() may reject it and
-// return -1; normalization then yields a defined 1969-12-31 result. Either way
-// string() is non-empty.
+// return -1, in which case normalization yields a defined 1969-12-31 result;
+// where timegm() accepts it, the resulting timestamp is out of range for
+// gmtime() (Windows CRT caps it at year 3000) and the broken-down time falls
+// back to the epoch. Either way string() is non-empty.
 d = new DateTime(1689937200, true);
 d.year = 0xfffffff;
 assert(string(d) != '');
+assert(d.day > 0);	// never a zero-filled struct tm, which strftime cannot format
 
 // Combined near-INT_MAX year and huge month: the normalized year does not fit
 // tm_year, so timegm() rejects it and returns -1, yielding a defined 1969-12-31
@@ -103,5 +106,13 @@ d.year = 2147483647;
 d.month = 22812;
 assert(string(d) != '');
 assert(d.year > 0);
+
+// Output longer than format()'s internal buffer: strftime() returns 0 and leaves
+// the buffer undefined, so format() must return an empty string.
+d = new DateTime(1689937200, true);
+f = "";
+for(i = 0; i < 80; i++)
+	f ..= "%Y-%m-%d ";
+assert(d.format(f) == '');
 
 return 0;
