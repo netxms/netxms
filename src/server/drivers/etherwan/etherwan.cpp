@@ -23,6 +23,8 @@
 #include "etherwan.h"
 #include <netxms-version.h>
 
+#define DEBUG_TAG _T("ndd.etherwan")
+
 /**
  * Get driver name
  */
@@ -136,7 +138,9 @@ InterfaceList *EtherWanDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
          iface->alias[0] = 0;
    }
 
-   SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 2736, 1, 1, 2, 2, 1, 2 },
+   // On walk failure the interface list is only partially marked and therefore unusable -
+   // discard it and return NULL so that server core will not overwrite existing data.
+   uint32_t rc = SnmpWalk(snmp, { 1, 3, 6, 1, 4, 1, 2736, 1, 1, 2, 2, 1, 2 },
       [ifList] (SNMP_Variable *v) -> uint32_t
       {
          TCHAR ifName[64];
@@ -153,6 +157,12 @@ InterfaceList *EtherWanDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
          }
          return SNMP_ERR_SUCCESS;
       });
+   if (rc != SNMP_ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("EtherWanDriver::getInterfaces: physical port table walk failed (%s)"), SnmpGetErrorText(rc));
+      delete ifList;
+      return nullptr;
+   }
    return ifList;
 }
 
