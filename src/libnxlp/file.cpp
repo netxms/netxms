@@ -326,18 +326,28 @@ off_t LogParser::processNewRecords(int fh, const TCHAR *fileName, bool processIn
                   }
                   if (processIncompleteRecord)
                   {
-                     // Make sure there is room for string terminator
-                     if (remaining + charSize > m_readBufferSize)
+                     // String terminator must be placed on character boundary, so trailing bytes of
+                     // partially written character (if any) are left in buffer until character is complete
+                     int recordBytes = remaining - remaining % charSize;
+                     int tailBytes = remaining - recordBytes;
+                     if (recordBytes > 0)
                      {
-                        m_readBufferSize += 4096;
-                        m_readBuffer = MemRealloc(m_readBuffer, m_readBufferSize);
-                        m_textBuffer = MemReallocArray(m_textBuffer, m_readBufferSize);
+                        // Make sure there is room for string terminator
+                        if (recordBytes + charSize > m_readBufferSize)
+                        {
+                           m_readBufferSize += 4096;
+                           m_readBuffer = MemRealloc(m_readBuffer, m_readBufferSize);
+                           m_textBuffer = MemReallocArray(m_textBuffer, m_readBufferSize);
+                        }
+                        char tail[4];
+                        memcpy(tail, &m_readBuffer[recordBytes], tailBytes);
+                        memset(&m_readBuffer[recordBytes], 0, charSize);
+                        nxlog_debug_tag(DEBUG_TAG, 6, _T("Flushing incomplete last record (%d bytes) for file \"%s\""), recordBytes, m_fileName);
+                        processRecord(m_readBuffer, fileName);
+                        resetPos += recordBytes;
+                        memcpy(m_readBuffer, tail, tailBytes);
+                        remaining = tailBytes;
                      }
-                     memset(&m_readBuffer[remaining], 0, charSize);
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Flushing incomplete last record (%d bytes) for file \"%s\""), remaining, m_fileName);
-                     processRecord(m_readBuffer, fileName);
-                     resetPos += remaining;
-                     remaining = 0;
                   }
                }
                bufPos = remaining;
