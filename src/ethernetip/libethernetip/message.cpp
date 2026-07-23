@@ -48,7 +48,7 @@ EIP_Message::EIP_Message(EIP_Command command, size_t dataSize, EIP_SessionHandle
    m_header->command = CIP_UInt16Swap(command);
    uint64_t context = GetCurrentTimeMs();
    memcpy(m_header->context, &context, 8);
-   m_header->sessionHandle = handle;
+   m_header->sessionHandle = CIP_UInt32Swap(handle);
    m_data = m_bytes + sizeof(EIP_EncapsulationHeader);
    m_dataSize = dataSize;
    m_itemCount = 0;
