@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -42,13 +43,14 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
    private final I18n i18n = LocalizationHelper.getI18n(OtherOptionsTable.class);
 
 	private DataCollectionTable dci;
+   private Button checkHideInViewMode;
 	private Combo agentCacheMode;
    private ObjectSelector relatedObject;
    private LabeledText userTag;
 
    /**
     * Constructor
-    * 
+    *
     * @param editor
     */
    public OtherOptionsTable(DataCollectionObjectEditor editor)
@@ -64,19 +66,24 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
 	{
 	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsTable();
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
+      checkHideInViewMode = new Button(dialogArea, SWT.CHECK);
+      checkHideInViewMode.setText(i18n.tr("&Hide in view mode"));
+      checkHideInViewMode.setSelection(dci.isHideOnLastValuesView());
+      checkHideInViewMode.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+
       agentCacheMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Agent cache mode"), new GridData());
       agentCacheMode.add(i18n.tr("Default"));
       agentCacheMode.add(i18n.tr("On"));
       agentCacheMode.add(i18n.tr("Off"));
       agentCacheMode.select(dci.getCacheMode().getValue());
-      
+
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
       relatedObject.setLabel("Related object");
       relatedObject.setObjectClass(GenericObject.class);
@@ -103,6 +110,7 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
    @Override
 	protected boolean applyChanges(final boolean isApply)
 	{
+      dci.setHideOnLastValuesView(checkHideInViewMode.getSelection());
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
       dci.setRelatedObject(relatedObject.getObjectId());
       dci.setUserTag(userTag.getText().trim());
@@ -117,6 +125,7 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
+		checkHideInViewMode.setSelection(false);
 		agentCacheMode.select(0);
 		relatedObject.setObjectId(0);
 	}
