@@ -122,7 +122,6 @@ bool EtherWanDriver::getHardwareInformation(DeviceContext *context, NObject *nod
  * @param context device context
  * @param node Node
  * @param driverData driver data
- * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
 InterfaceList *EtherWanDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)

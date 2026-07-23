@@ -145,7 +145,7 @@ static uint32_t HandlerIpAddr(SNMP_Variable *pVar, SNMP_Transport *pTransport, I
  * @param context device context
  * @param node Node
  */
-InterfaceList *TelcoBridgesDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *TelcoBridgesDriver::getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable)
 {
    SNMP_Transport *snmp = context->getSNMPTransport();
    bool success = false;

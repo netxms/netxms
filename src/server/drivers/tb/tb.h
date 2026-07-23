@@ -32,12 +32,12 @@
 class TelcoBridgesDriver : public NetworkDeviceDriver
 {
 public:
-	virtual const TCHAR *getName();
-	virtual const TCHAR *getVersion();
+	virtual const TCHAR *getName() override;
+	virtual const TCHAR *getVersion() override;
 
-	virtual int isPotentialDevice(const SNMP_ObjectId& oid);
-	virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid);
-	virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
+	virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+	virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+	virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
 #endif
