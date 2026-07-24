@@ -227,6 +227,9 @@ void GenericAgentPolicy::validate()
  */
 void GenericAgentPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
 {
+   if (IsShutdownInProgress())
+      return;
+
    shared_ptr<AgentConnectionEx> conn = data->node->getAgentConnection();
    if (conn == nullptr)
    {
@@ -962,6 +965,9 @@ static wchar_t *FilePermissionsToText(uint32_t bits, wchar_t *buffer)
  */
 void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
 {
+   if (IsShutdownInProgress())
+      return;
+
    nxlog_debug_tag(DEBUG_TAG, 4, _T("FileDeliveryPolicy::deploy(%s): start deployment"), data->debugId);
 
    if (!data->newTypeFormat)
@@ -991,7 +997,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    m_contentLock.unlock();
 
    // Delete files from agent before uploading new ones
-   for(int i = 0; i < filesToDelete.size(); i++)
+   for(int i = 0; (i < filesToDelete.size()) && !IsShutdownInProgress(); i++)
    {
       const TCHAR *path = filesToDelete.get(i);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): deleting file %s from agent"), data->debugId, path);
@@ -1035,7 +1041,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       return;
    }
 
-   for (int i = 0; i < remoteFiles->size(); i++)
+   for (int i = 0; (i < remoteFiles->size()) && !IsShutdownInProgress(); i++)
    {
       RemoteFileInfo *remoteFile = remoteFiles->get(i);
       if ((remoteFile->status() != ERR_SUCCESS) && (remoteFile->status() != ERR_FILE_STAT_FAILED))
@@ -1171,6 +1177,9 @@ bool LogParserPolicy::isUsingEvent(uint32_t eventCode) const
  */
 void RemoveAgentPolicy(const shared_ptr<AgentPolicyRemovalData>& data)
 {
+   if (IsShutdownInProgress())
+      return;
+
    shared_ptr<AgentConnectionEx> conn = data->node->getAgentConnection();
    if (conn != nullptr)
    {

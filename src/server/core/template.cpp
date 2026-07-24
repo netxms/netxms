@@ -923,7 +923,7 @@ bool Template::removePolicy(const uuid& guid)
  */
 void Template::applyPolicyChanges(const SharedObjectArray<NetObj>& nodes)
 {
-   for(int i = 0; i < nodes.size(); i++)
+   for(int i = 0; (i < nodes.size()) && !IsShutdownInProgress(); i++)
    {
       shared_ptr<Node> node = static_pointer_cast<Node>(nodes.getShared(i));
       AgentPolicyInfo *ap;
@@ -970,7 +970,7 @@ void Template::forceApplyPolicyChanges()
          nodes->add(clusterNodes->getShared(j));
    }
 
-   if (!nodes->isEmpty())
+   if (!nodes->isEmpty() && !IsShutdownInProgress())
    {
       lockProperties();
       for(int i = 0; i < nodes->size(); i++)
@@ -997,7 +997,7 @@ void Template::forceApplyPolicyChanges()
  */
 void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap)
 {
-   if (node->getAgentConnection() == nullptr)
+   if (IsShutdownInProgress() || (node->getAgentConnection() == nullptr))
       return;
 
    wchar_t key[64] = L"AgentPolicyDeployment_";

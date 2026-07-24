@@ -1605,7 +1605,7 @@ static void CH_ChangeFilePermissions(NXCPMessage *request, NXCPMessage *response
 
          if (success && counter)
          {
-            success = SetNamedSecurityInfo(fullPath, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, nullptr, nullptr, pACL, nullptr);
+            success = (SetNamedSecurityInfo(fullPath, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, nullptr, nullptr, pACL, nullptr) == ERROR_SUCCESS);
          }
 
          if (pEveryoneSID != nullptr)
@@ -1613,6 +1613,10 @@ static void CH_ChangeFilePermissions(NXCPMessage *request, NXCPMessage *response
             FreeSid(pEveryoneSID);
          }
          LocalFree(pACL);
+         if (pSD != nullptr)
+         {
+            LocalFree(pSD);
+         }
          MemFree(ea);
 
          if (success)
