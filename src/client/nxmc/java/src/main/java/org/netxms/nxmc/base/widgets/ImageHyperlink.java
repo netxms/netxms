@@ -46,13 +46,16 @@ public class ImageHyperlink extends Hyperlink
     */
    public int textSpacing = 5;
 
+   /**
+    * Alpha value used for drawing image when link is disabled.
+    */
+   private static final int DISABLED_IMAGE_ALPHA = 96;
+
    private Image image;
 
    private Image hoverImage;
 
    private Image activeImage;
-
-   private Image disabledImage;
 
    private int state;
 
@@ -74,10 +77,6 @@ public class ImageHyperlink extends Hyperlink
    {
       super(parent, removeAlignment(style));
       extractAlignment(style);
-      addDisposeListener(e -> {
-         if (disabledImage != null)
-            disabledImage.dispose();
-      });
    }
 
    @Override
@@ -89,20 +88,16 @@ public class ImageHyperlink extends Hyperlink
    protected void paintHyperlink(GC gc, Rectangle bounds)
    {
       Image image = null;
-      if (!isEnabled())
-      {
-         createDisabledImage();
-         image = disabledImage;
-      }
-      else
+      if (isEnabled())
       {
          if ((state & ACTIVE) != 0)
             image = activeImage;
          else if ((state & HOVER) != 0)
             image = hoverImage;
-         if (image == null)
-            image = this.image;
       }
+      if (image == null)
+         image = this.image;
+
       Rectangle ibounds = image != null ? image.getBounds() : new Rectangle(0, 0, 0, 0);
       Point maxsize = computeMaxImageSize();
       int spacing = image != null ? textSpacing : 0;
@@ -114,7 +109,7 @@ public class ImageHyperlink extends Hyperlink
          int x = bounds.x + marginWidth + maxsize.x / 2 - ibounds.width / 2;
          int textX = bounds.x + marginWidth + maxsize.x + spacing;
          if (image != null)
-            gc.drawImage(image, x, y);
+            drawImage(gc, image, x, y);
          if (getText() != null)
             drawText(gc, bounds, textX, textWidth);
       }
@@ -127,7 +122,30 @@ public class ImageHyperlink extends Hyperlink
          }
          x += maxsize.x / 2 - ibounds.width / 2 + spacing;
          if (image != null)
-            gc.drawImage(image, x, y);
+            drawImage(gc, image, x, y);
+      }
+   }
+
+   /**
+    * Draw link image. Image is dimmed if link is disabled.
+    *
+    * @param gc graphics context
+    * @param image image to draw
+    * @param x x coordinate
+    * @param y y coordinate
+    */
+   private void drawImage(GC gc, Image image, int x, int y)
+   {
+      if (isEnabled())
+      {
+         gc.drawImage(image, x, y);
+      }
+      else
+      {
+         int alpha = gc.getAlpha();
+         gc.setAlpha(DISABLED_IMAGE_ALPHA);
+         gc.drawImage(image, x, y);
+         gc.setAlpha(alpha);
       }
    }
 
@@ -286,20 +304,7 @@ public class ImageHyperlink extends Hyperlink
    public void setImage(Image image)
    {
       this.image = image;
-      if (disabledImage != null)
-      {
-         disabledImage.dispose();
-         disabledImage = null;
-      }
       redraw();
-   }
-
-   private void createDisabledImage()
-   {
-      if ((disabledImage == null || disabledImage.isDisposed()) && image != null && !image.isDisposed())
-      {
-         disabledImage = new Image(getDisplay(), image, SWT.IMAGE_DISABLE);
-      }
    }
 
    private Point computeMaxImageSize()
@@ -377,13 +382,7 @@ public class ImageHyperlink extends Hyperlink
    @Override
    public void setEnabled(boolean enabled)
    {
-      if (!enabled)
-         createDisabledImage();
       super.setEnabled(enabled);
-      if (enabled && disabledImage != null)
-      {
-         disabledImage.dispose();
-         disabledImage = null;
-      }
+      redraw();
    }
 }

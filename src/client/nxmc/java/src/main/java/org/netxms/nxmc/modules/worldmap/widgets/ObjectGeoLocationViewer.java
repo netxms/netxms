@@ -360,8 +360,12 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements ISe
       if (image == null)
          image = SharedIcons.IMG_UNKNOWN_OBJECT;
 
-      int w = image.getImageData().width + LABEL_X_MARGIN * 2;
-      int h = image.getImageData().height + LABEL_Y_MARGIN * 2;
+      // getBounds() reads cached width/height; getImageData() copies the entire
+      // pixel array out of the native handle into a fresh ImageData, and in web
+      // client will fail on shared icon owned by already closed UI session.
+      Rectangle imageBounds = image.getBounds();
+      int w = imageBounds.width + LABEL_X_MARGIN * 2;
+      int h = imageBounds.height + LABEL_Y_MARGIN * 2;
       Rectangle rect = new Rectangle(x - w / 2 - 1, y - LABEL_ARROW_HEIGHT - h, w, h);
 
       Color bgColor = selected ? SELECTION_COLOR : ColorConverter.adjustColor(StatusDisplayInfo.getStatusColor(object.getStatus()), new RGB(0, 0, 0), 0.2f, colorCache);
