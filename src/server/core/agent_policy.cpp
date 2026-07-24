@@ -1131,9 +1131,26 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
             nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): cannot create remote directory (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       }
 
-      if (((remoteFile->status() == ERR_FILE_STAT_FAILED) && (rcc == ERR_SUCCESS) && ((localFile->owner != nullptr) || (localFile->group != nullptr))) ||
-          ((localFile->owner != nullptr) && _tcscmp(CHECK_NULL_EX(remoteFile->ownerUser()), localFile->owner)) ||
-          ((localFile->group != nullptr) && _tcscmp(CHECK_NULL_EX(remoteFile->ownerGroup()), localFile->group)))
+      // Windows agent reports owner name in DOMAIN\name format and does not support group ownership,
+      // so owner can be compared only if policy contains domain qualified name, and group is never compared
+      const wchar_t *ownerToCompare = localFile->owner;
+      const wchar_t *groupToCompare = localFile->group;
+      if (windowsAgent)
+      {
+         if ((ownerToCompare != nullptr) && (wcschr(ownerToCompare, L'\\') == nullptr))
+            ownerToCompare = nullptr;
+         groupToCompare = nullptr;
+      }
+
+      // Account names are case insensitive on Windows
+      bool ownerChangeNeeded = (ownerToCompare != nullptr) &&
+               (windowsAgent ?
+                  (wcsicmp(CHECK_NULL_EX(remoteFile->ownerUser()), ownerToCompare) != 0) :
+                  (wcscmp(CHECK_NULL_EX(remoteFile->ownerUser()), ownerToCompare) != 0));
+
+      if (((remoteFile->status() == ERR_FILE_STAT_FAILED) && (rcc == ERR_SUCCESS) && ((localFile->owner != nullptr) || (groupToCompare != nullptr))) ||
+          ownerChangeNeeded ||
+          ((groupToCompare != nullptr) && _tcscmp(CHECK_NULL_EX(remoteFile->ownerGroup()), groupToCompare)))
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing ownership for %s to %s:%s"),
                   data->debugId, localFile->path, CHECK_NULL(localFile->owner), CHECK_NULL(localFile->group));

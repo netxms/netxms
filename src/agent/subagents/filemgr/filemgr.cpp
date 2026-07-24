@@ -1672,6 +1672,54 @@ static void CH_ChangeFilePermissions(NXCPMessage *request, NXCPMessage *response
    }
 }
 
+#ifdef _WIN32
+
+/**
+ * Set file owner on Windows
+ */
+static uint32_t SetFileOwner(TCHAR *path, const TCHAR *userName)
+{
+   BYTE sidBuffer[SECURITY_MAX_SID_SIZE];
+   PSID sid = reinterpret_cast<PSID>(sidBuffer);
+   DWORD sidSize = SECURITY_MAX_SID_SIZE;
+   TCHAR domainName[256];
+   DWORD domainNameSize = 256;
+   SID_NAME_USE use;
+   if (!LookupAccountName(nullptr, userName, sid, &sidSize, domainName, &domainNameSize, &use))
+   {
+      TCHAR errorText[1024];
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("SetFileOwner(\"%s\"): cannot resolve account name \"%s\" (%s)"),
+               path, userName, GetSystemErrorText(GetLastError(), errorText, 1024));
+      return ERR_BAD_ARGUMENTS;
+   }
+
+   // SE_RESTORE_NAME privilege is required to assign ownership to another account
+   HANDLE token = INVALID_HANDLE_VALUE;
+   bool privilegeEnabled = false;
+   if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+      privilegeEnabled = SetPrivilege(token, SE_RESTORE_NAME, true);
+
+   DWORD rc = SetNamedSecurityInfo(path, SE_FILE_OBJECT, OWNER_SECURITY_INFORMATION, sid, nullptr, nullptr, nullptr);
+
+   if (privilegeEnabled)
+      SetPrivilege(token, SE_RESTORE_NAME, false);
+   if (token != INVALID_HANDLE_VALUE)
+      CloseHandle(token);
+
+   if (rc == ERROR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SetFileOwner(\"%s\"): owner set to \"%s\\%s\""), path, domainName, userName);
+      return ERR_SUCCESS;
+   }
+
+   TCHAR errorText[1024];
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("SetFileOwner(\"%s\"): cannot set owner to \"%s\" (%s)"),
+            path, userName, GetSystemErrorText(rc, errorText, 1024));
+   return ((rc == ERROR_ACCESS_DENIED) || (rc == ERROR_PRIVILEGE_NOT_HELD) || (rc == ERROR_INVALID_OWNER)) ? ERR_ACCESS_DENIED : ERR_IO_FAILURE;
+}
+
+#endif
+
 /**
  * Handler for "change file owner" command.
  */
@@ -1691,7 +1739,18 @@ static void CH_ChangeFileOwner(NXCPMessage *request, NXCPMessage *response, Abst
    if (CheckFullPath(fileName, &fullPath, false))
    {
 #if defined(_WIN32)
-      response->setField(VID_RCC, ERR_SUCCESS);
+      // Only file owner can be changed on Windows - primary group is not used by access checks
+      TCHAR userName[UNLEN + 1] = {};
+      request->getFieldAsString(VID_USER_NAME, userName, UNLEN + 1);
+      if (userName[0] != 0)
+      {
+         response->setField(VID_RCC, SetFileOwner(fullPath, userName));
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("SetFileOwner(\"%s\"): group ownership change is not supported on Windows"), fullPath);
+         response->setField(VID_RCC, ERR_NOT_IMPLEMENTED);
+      }
 #else // POSIX
       char* userName = request->getFieldAsMBString(VID_USER_NAME);
       char* groupName = request->getFieldAsMBString(VID_GROUP_NAME);
