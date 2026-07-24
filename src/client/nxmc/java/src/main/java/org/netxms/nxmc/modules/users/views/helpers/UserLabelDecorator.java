@@ -22,6 +22,7 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
  */
 public class UserLabelDecorator implements ILabelDecorator
 {
+   private Map<ImageDescriptor, Image> baseImages = new HashMap<ImageDescriptor, Image>();
    private Map<ImageDescriptor, Image[]> imageCache = new HashMap<ImageDescriptor, Image[]>();
 
    /**
@@ -64,10 +65,18 @@ public class UserLabelDecorator implements ILabelDecorator
          overlays[IDecoration.BOTTOM_RIGHT] = StatusDisplayInfo.getStatusOverlayImageDescriptor(ObjectStatus.DISABLED);
       if ((state & 2) != 0)
          overlays[IDecoration.TOP_LEFT] = StatusDisplayInfo.getStatusOverlayImageDescriptor(ObjectStatus.MINOR);
-      Image baseImage = baseDescriptor.createImage();
+
+      // Base image cannot be disposed after composition - decorated image keeps lazy reference to it
+      // and reads image data from it on repaint when new zoom level is requested.
+      Image baseImage = baseImages.get(baseDescriptor);
+      if (baseImage == null)
+      {
+         baseImage = baseDescriptor.createImage();
+         baseImages.put(baseDescriptor, baseImage);
+      }
+
       DecorationOverlayIcon icon = new DecorationOverlayIcon(baseImage, overlays);
       decoratedImages[index] = icon.createImage();
-      baseImage.dispose();
       return decoratedImages[index];
    }
 
@@ -90,6 +99,11 @@ public class UserLabelDecorator implements ILabelDecorator
          for(Image image : images)
             if (image != null)
                image.dispose();
+      imageCache.clear();
+
+      for(Image image : baseImages.values())
+         image.dispose();
+      baseImages.clear();
    }
 
    /**
