@@ -467,6 +467,9 @@ static void BuildFileList(ConfigEntry *currEntry, StringBuffer *currPath, Object
 static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content, bool updateGuid = true)
 {
    auto files = make_unique<ObjectArray<FileInfo>>(64, 64, Ownership::True);
+   if ((content == nullptr) || (*content == 0))
+      return files;
+
    Config data;
    data.loadXmlConfigFromMemory(content, static_cast<int>(strlen(content)), nullptr, "FileDeliveryPolicy", false);
    unique_ptr<ObjectArray<ConfigEntry>> rootElements = data.getSubEntries(_T("/elements"), _T("*"));
@@ -489,6 +492,9 @@ static unique_ptr<ObjectArray<FileInfo>> GetFilesFromConfig(const char* content,
 static StringList GetFilesToDeleteFromConfig(const char *content)
 {
    StringList paths;
+   if ((content == nullptr) || (*content == 0))
+      return paths;
+
    Config data;
    data.loadXmlConfigFromMemory(content, static_cast<int>(strlen(content)), nullptr, "FileDeliveryPolicy", false);
    unique_ptr<ObjectArray<ConfigEntry>> entries = data.getSubEntries(_T("/filesToDelete"), _T("path"));
@@ -824,22 +830,25 @@ uint32_t FileDeliveryPolicy::modifyFromMessage(const NXCPMessage& request)
 
    if (request.getFieldAsBoolean(VID_DUPLICATE))
    {
-      m_contentLock.lock();
       ObjectArray<FileInfo> files(64, 64, Ownership::True);
-      Config data;
-      data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
-      unique_ptr<ObjectArray<ConfigEntry>> rootElements = data.getSubEntries(_T("/elements"), _T("*"));
-      if (rootElements != nullptr)
+      m_contentLock.lock();
+      if ((m_content != nullptr) && (*m_content != 0))
       {
-         for (int i = 0; i < rootElements->size(); i++)
+         Config data;
+         data.loadXmlConfigFromMemory(m_content, static_cast<int>(strlen(m_content)), nullptr, "FileDeliveryPolicy", false);
+         unique_ptr<ObjectArray<ConfigEntry>> rootElements = data.getSubEntries(_T("/elements"), _T("*"));
+         if (rootElements != nullptr)
          {
-            StringBuffer path;
-            BuildFileList(rootElements->get(i), &path, &files, true, false);
+            for (int i = 0; i < rootElements->size(); i++)
+            {
+               StringBuffer path;
+               BuildFileList(rootElements->get(i), &path, &files, true, false);
+            }
          }
+         MemFree(m_content);
+         data.setTopLevelTag(_T("FileDeliveryPolicy"));
+         m_content = data.createXml().getUTF8String();
       }
-      MemFree(m_content);
-      data.setTopLevelTag(_T("FileDeliveryPolicy"));
-      m_content = data.createXml().getUTF8String();
       m_contentLock.unlock();
 
       for (int i = 0; i < files.size(); i++)
