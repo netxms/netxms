@@ -21,6 +21,7 @@
 **/
 
 #include "webapi.h"
+#include <nms_users.h>
 
 /**
  * Handler for /v1/alarms
@@ -46,8 +47,21 @@ int H_Alarms(Context *context)
          json_object_set_new(json, "severity", json_integer(alarm->getCurrentSeverity()));
          json_object_set_new(json, "state", json_integer(alarm->getState() & ALARM_STATE_MASK));
          json_object_set_new(json, "source", json_integer(object->getId()));
+         json_object_set_new(json, "sourceName", json_string_t(object->getName()));
+         json_object_set_new(json, "zoneUIN", json_integer(alarm->getZoneUIN()));
          json_object_set_new(json, "message", json_string_t(alarm->getMessage()));
+         json_object_set_new(json, "repeatCount", json_integer(alarm->getRepeatCount()));
+         json_object_set_new(json, "commentCount", json_integer(alarm->getCommentCount()));
+         json_object_set_new(json, "helpdeskReference", json_string_t(alarm->getHelpDeskRef()));
+         json_object_set_new(json, "creationTime", json_time_string(alarm->getCreationTime()));
          json_object_set_new(json, "lastChangeTime", json_time_string(alarm->getLastChangeTime()));
+
+         wchar_t userName[MAX_USER_NAME];
+         json_object_set_new(json, "ackByUserName", json_string_t(
+            (alarm->getAckByUser() != INVALID_UID) ? ResolveUserId(alarm->getAckByUser(), userName, true) : L""));
+         json_object_set_new(json, "resolvedByUserName", json_string_t(
+            (alarm->getResolvedByUser() != INVALID_UID) ? ResolveUserId(alarm->getResolvedByUser(), userName, true) : L""));
+
          json_object_set_new(json, "categories", alarm->categoryListToJson());
          if (includeObjectDetails)
          {

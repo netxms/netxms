@@ -93,6 +93,7 @@ public:
    const uuid& getRuleGuid() const { return m_ruleGuid; }
    const TCHAR *getRuleDescription() const { return m_ruleDescription; }
    uint32_t getSourceObject() const { return m_sourceObject; }
+   int32_t getZoneUIN() const { return m_zoneUIN; }
    uint32_t getSourceEventCode() const { return m_sourceEventCode; }
    const TCHAR *getEventTags() const { return m_eventTags; }
    uint32_t getDciId() const { return m_dciId; }

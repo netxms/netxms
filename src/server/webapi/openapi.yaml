@@ -1398,11 +1398,35 @@ paths:
                     source:
                       type: integer
                       description: Source object ID
+                    sourceName:
+                      type: string
+                      description: Name of the source object
+                    zoneUIN:
+                      type: integer
+                      description: Zone UIN of the source object (0 if zoning is disabled)
                     message:
                       type: string
+                    repeatCount:
+                      type: integer
+                      description: Number of times the alarm was raised
+                    commentCount:
+                      type: integer
+                      description: Number of comments attached to the alarm
+                    helpdeskReference:
+                      type: string
+                      description: Helpdesk issue reference (empty if not linked)
+                    creationTime:
+                      type: string
+                      format: date-time
                     lastChangeTime:
                       type: string
                       format: date-time
+                    ackByUserName:
+                      type: string
+                      description: Name of the user who acknowledged the alarm (empty if not acknowledged)
+                    resolvedByUserName:
+                      type: string
+                      description: Name of the user who resolved the alarm (empty if not resolved)
                     categories:
                       type: array
                       description: Alarm categories (as assigned by the event processing policy rule that raised the alarm)
