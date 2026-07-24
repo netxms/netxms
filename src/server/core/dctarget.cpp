@@ -1006,7 +1006,8 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(NXCPMessage *msg, uint32_t user
    for (int i = 0; i < m_dcObjects.size(); i++)
 	{
 		DCObject *object = m_dcObjects.get(i);
-      if ((object->getPerfTabSettings() != nullptr) &&
+      SharedString perfTabSettings = object->getPerfTabSettings();
+      if (!perfTabSettings.isBlank() &&
           object->hasValue() &&
           (object->getStatus() == ITEM_STATUS_ACTIVE) &&
           object->matchClusterResource() &&
@@ -1015,7 +1016,7 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(NXCPMessage *msg, uint32_t user
 			msg->setField(fieldId, object->getId());
 			msg->setField(fieldId+1, object->getDescription());
 			msg->setField(fieldId+2, static_cast<uint16_t>(object->getStatus()));
-			msg->setField(fieldId+3, object->getPerfTabSettings());
+			msg->setField(fieldId+3, perfTabSettings);
 			msg->setField(fieldId+4, static_cast<uint16_t>(object->getType()));
 			msg->setField(fieldId+5, object->getTemplateItemId());
          msg->setField(fieldId+6, object->getInstanceDiscoveryData());
@@ -1104,7 +1105,8 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(json_t *output, uint32_t userId
    for (int i = 0; i < m_dcObjects.size(); i++)
    {
       DCObject *object = m_dcObjects.get(i);
-      if ((object->getPerfTabSettings() != nullptr) &&
+      SharedString perfTabSettings = object->getPerfTabSettings();
+      if (!perfTabSettings.isBlank() &&
           object->hasValue() &&
           (object->getStatus() == ITEM_STATUS_ACTIVE) &&
           object->matchClusterResource() &&
@@ -1122,7 +1124,7 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(json_t *output, uint32_t userId
          shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);
          json_object_set_new(dci, "rootTemplateDciId", json_integer((src != nullptr) ? src->getTemplateItemId() : 0));
 
-         json_t *chartConfig = ParsePerfTabSettings(object->getPerfTabSettings());
+         json_t *chartConfig = ParsePerfTabSettings(perfTabSettings);
          json_object_set_new(dci, "chartConfig", (chartConfig != nullptr) ? chartConfig : json_object());
 
          json_array_append_new(output, dci);
