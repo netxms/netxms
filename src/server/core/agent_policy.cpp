@@ -958,6 +958,13 @@ bool FileDeliveryPolicy::hasFile(const uuid& fileGuid)
 }
 
 /**
+ * File permission bit masks
+ */
+#define FILE_PERM_OWNER_MASK     0x0007
+#define FILE_PERM_GROUP_MASK     0x0038
+#define FILE_PERM_EXECUTE_MASK   0x0124
+
+/**
  * Convert file permissions to text
  */
 static wchar_t *FilePermissionsToText(uint32_t bits, wchar_t *buffer)
@@ -967,6 +974,22 @@ static wchar_t *FilePermissionsToText(uint32_t bits, wchar_t *buffer)
       if ((bits & (1 << i)) == 0)
          buffer[i] = L'-';
    return buffer;
+}
+
+/**
+ * Mask out permission bits that cannot be enforced on Windows agent. Windows agent does not
+ * set execute bits, and creates owner and group access entries only when corresponding names
+ * are provided in policy. Bits that are not enforced will always be read back with values
+ * derived from inherited ACEs, so they should be excluded from comparison.
+ */
+static inline uint32_t MaskWindowsPermissions(uint32_t permissions, const FileInfo *file)
+{
+   uint32_t mask = ~FILE_PERM_EXECUTE_MASK;
+   if (file->owner == nullptr)
+      mask &= ~FILE_PERM_OWNER_MASK;
+   if (file->group == nullptr)
+      mask &= ~FILE_PERM_GROUP_MASK;
+   return permissions & mask;
 }
 
 /**
@@ -1004,6 +1027,8 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
    unique_ptr<ObjectArray<FileInfo>> files = GetFilesFromConfig(m_content);
    StringList filesToDelete = GetFilesToDeleteFromConfig(m_content);
    m_contentLock.unlock();
+
+   bool windowsAgent = !wcsncmp(data->node->getPlatformName(), L"windows-", 8);
 
    // Delete files from agent before uploading new ones
    for(int i = 0; (i < filesToDelete.size()) && !IsShutdownInProgress(); i++)
@@ -1119,7 +1144,14 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
             nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): cannot change file ownership (%s)"), data->debugId, AgentErrorCodeToText(rcc));
       }
 
-      if (localFile->permissions != remoteFile->permissions())
+      uint32_t requiredPermissions = localFile->permissions;
+      uint32_t currentPermissions = remoteFile->permissions();
+      if (windowsAgent)
+      {
+         requiredPermissions = MaskWindowsPermissions(requiredPermissions, localFile);
+         currentPermissions = MaskWindowsPermissions(currentPermissions, localFile);
+      }
+      if (requiredPermissions != currentPermissions)
       {
          TCHAR buffer[16];
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing permissions for %s to %s"),
