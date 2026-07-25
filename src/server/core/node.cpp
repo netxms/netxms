@@ -13468,8 +13468,17 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    }
 
    InetAddress addr = baseAddr.getSubnetAddress();
-   if ((addr.getFamily() == AF_INET) && ((addr.getAddressV4() & 0xFF000000) == 0))
-      return shared_ptr<Subnet>();  // Do not create subnet from 0.0.0.0/8
+
+   // Subnet with non-unicast base address (for example ::/64 derived from malformed IPv6 address with zeroed prefix)
+   // will not be added to address index, and therefore will be created again on each poll
+   // Do not create IPv4 subnets from range 0.0.0.0/8
+   if (!addr.isValidUnicast() || ((addr.getFamily() == AF_INET) && ((addr.getAddressV4() & 0xFF000000) == 0)))
+   {
+      wchar_t buffer[64];
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Node::createSubnet(%s [%u]): refusing to create subnet with invalid base address %s/%d",
+            m_name, m_id, addr.toString(buffer), addr.getMaskBits());
+      return shared_ptr<Subnet>();
+   }
 
    if (IsAddressInTopologyExcludedSubnet(m_zoneUIN, addr))
       return shared_ptr<Subnet>();
