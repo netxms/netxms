@@ -180,7 +180,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
 
    JavaBridgeError result;
 
-   T_JNI_CreateJavaVM JNI_CreateJavaVM = (T_JNI_CreateJavaVM)DLGetSymbolAddr(s_jvmModule, "JNI_CreateJavaVM", errorText);
+   T_JNI_CreateJavaVM JNI_CreateJavaVM = DLGetFunctionAddr<T_JNI_CreateJavaVM>(s_jvmModule, "JNI_CreateJavaVM", errorText);
    if (JNI_CreateJavaVM != nullptr)
    {
       if (JNI_CreateJavaVM(&s_javaVM, (void **)env, &vmArgs) == JNI_OK)

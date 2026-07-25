@@ -2480,7 +2480,7 @@ private:
 
    static int sortCallback(void *context, const shared_ptr<T> **e1, const shared_ptr<T> **e2)
    {
-      int (*cb)(const T&, const T&) = reinterpret_cast<int (*)(const T&, const T&)>(context);
+      int (*cb)(const T&, const T&) = *static_cast<int (**)(const T&, const T&)>(context);
       return cb(*((*e1)->get()), *((*e2)->get()));
    }
 
@@ -2539,7 +2539,7 @@ public:
    int size() const { return m_data.size(); }
    bool isEmpty() const { return m_data.isEmpty(); }
 
-   void sort(int (*cb)(const T&, const T&)) { m_data.sort(reinterpret_cast<int (*)(void *, const void *, const void *)>(sortCallback), (void *)cb); }
+   void sort(int (*cb)(const T&, const T&)) { m_data.sort(reinterpret_cast<int (*)(void *, const void *, const void *)>(sortCallback), &cb); }
 
    SharedPtrIterator<T> begin()
    {
@@ -5944,12 +5944,21 @@ enum class StateChange
 };
 
 /**
- * Wrapper for DLGetSymbolAddr to get pointer to function
+ * Wrapper for DLGetSymbolAddr to get pointer to function. Conversion between pointer to object
+ * and pointer to function is conditionally supported by C++ standard, but is required here
+ * because dlsym and alike return void pointer.
  */
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconditionally-supported"
+#endif
 template<typename T> static inline T DLGetFunctionAddr(HMODULE hModule, const char *symbol, TCHAR *errorText = nullptr)
 {
    return reinterpret_cast<T>(DLGetSymbolAddr(hModule, symbol, errorText));
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 #define EMA_FP_SHIFT  11                  /* nr of bits of precision */
 #define EMA_FP_1      (1 << EMA_FP_SHIFT) /* 1.0 as fixed-point */

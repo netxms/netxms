@@ -331,31 +331,6 @@ static inline uint32_t GetCurrentThreadId()
 #endif   /* _WIN32 */
 
 /**
- * Template wrapper for ThreadCreate/ThreadCreateEx thread functions (no arguments)
- */
-static inline THREAD_RESULT THREAD_CALL ThreadCreate_Wrapper_0(void *function)
-{
-   ((void (*)())function)();
-   return THREAD_OK;
-}
-
-/**
- * Template wrapper for ThreadCreate (no arguments)
- */
-static inline bool ThreadCreate(void (*function)(), int stackSize = 0)
-{
-   return ThreadCreate(ThreadCreate_Wrapper_0, stackSize, (void*)function);
-}
-
-/**
- * Template wrapper for ThreadCreateEx (no arguments)
- */
-static inline THREAD ThreadCreateEx(void (*function)(), int stackSize = 0)
-{
-   return ThreadCreateEx(ThreadCreate_Wrapper_0, stackSize, (void*)function);
-}
-
-/**
  * Template wrapper data for ThreadCreate/ThreadCreateEx thread functions (1 argument)
  */
 template<typename R> class ThreadCreate_WrapperData_1
@@ -403,6 +378,32 @@ template<typename R> THREAD ThreadCreateEx(void (*function)(R), R arg, int stack
    if (thread == INVALID_THREAD_HANDLE)
       delete wd;
    return thread;
+}
+
+/**
+ * Caller for ThreadCreate/ThreadCreateEx thread functions without arguments. Thread function
+ * is passed as an argument to single argument wrapper, which avoids conversion between
+ * pointer to function and pointer to object.
+ */
+static inline void ThreadCreate_Caller_0(void (*function)())
+{
+   function();
+}
+
+/**
+ * Template wrapper for ThreadCreate (no arguments)
+ */
+static inline bool ThreadCreate(void (*function)(), int stackSize = 0)
+{
+   return ThreadCreate(ThreadCreate_Caller_0, function, stackSize);
+}
+
+/**
+ * Template wrapper for ThreadCreateEx (no arguments)
+ */
+static inline THREAD ThreadCreateEx(void (*function)(), int stackSize = 0)
+{
+   return ThreadCreateEx(ThreadCreate_Caller_0, function, stackSize);
 }
 
 /**
@@ -753,6 +754,16 @@ uint32_t LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestMaxWaitTime(ThreadPo
 StringList LIBNETXMS_EXPORTABLE ThreadPoolGetAllPools();
 void LIBNETXMS_EXPORTABLE ThreadPoolSetResizeParameters(int responsiveness, uint32_t waitTimeHWM, uint32_t waitTimeLWM);
 
+/*
+ * Wrappers below pass pointer to function without arguments as thread pool task context.
+ * Conversion between pointer to object and pointer to function is conditionally supported
+ * by C++ standard, but is used here to avoid additional memory allocation for each task.
+ */
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconditionally-supported"
+#endif
+
 /**
  * Wrapper for ThreadPoolExecute for function without arguments
  */
@@ -800,6 +811,10 @@ static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, voi
 {
    ThreadPoolScheduleRelative(p, delay, ThreadPoolExecute_NoArg_Wrapper, (void *)f);
 }
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 /**
  * Wrapper for ThreadPoolExecute to use pointer to given type as argument

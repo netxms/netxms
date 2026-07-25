@@ -212,7 +212,7 @@ bool LoadSubAgent(const TCHAR *moduleName)
    if (hModule != nullptr)
    {
       bool (*SubAgentRegister)(NETXMS_SUBAGENT_INFO**, Config*);
-      SubAgentRegister = (bool (*)(NETXMS_SUBAGENT_INFO**, Config*))DLGetSymbolAddr(hModule, "NxSubAgentRegister", errorText);
+      SubAgentRegister = DLGetFunctionAddr<bool (*)(NETXMS_SUBAGENT_INFO**, Config*)>(hModule, "NxSubAgentRegister", errorText);
       if (SubAgentRegister != nullptr)
       {
          success = InitSubAgent(hModule, fullName, SubAgentRegister);

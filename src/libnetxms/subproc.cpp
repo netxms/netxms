@@ -32,6 +32,11 @@
 static Condition s_stopCondition(true);
 
 /**
+ * Sub-process request handler (set once by SubProcessMain)
+ */
+static SubProcessRequestHandler s_requestHandler = nullptr;
+
+/**
  * Sub-process pipe connector
  */
 static void PipeConnector(NamedPipe *pipe, void *userArg)
@@ -70,7 +75,7 @@ static void PipeConnector(NamedPipe *pipe, void *userArg)
                   data = nullptr;
                   size = 0;
                }
-               response = reinterpret_cast<SubProcessRequestHandler>(userArg)(request->getCode(), data, size);
+               response = s_requestHandler(request->getCode(), data, size);
                if (response != nullptr)
                   response->setId(request->getId());
             }
@@ -97,9 +102,11 @@ stop:
  */
 int LIBNETXMS_EXPORTABLE SubProcessMain(int argc, char *argv[], SubProcessRequestHandler requestHandler)
 {
+   s_requestHandler = requestHandler;
+
    TCHAR pipeName[256];
    _sntprintf(pipeName, 256, _T("netxms.subprocess.%u"), GetCurrentProcessId());
-   NamedPipeListener *pipeListener = NamedPipeListener::create(pipeName, PipeConnector, reinterpret_cast<void*>(requestHandler), nullptr);
+   NamedPipeListener *pipeListener = NamedPipeListener::create(pipeName, PipeConnector, nullptr, nullptr);
    if (pipeListener == nullptr)
       return 1;
    pipeListener->start();

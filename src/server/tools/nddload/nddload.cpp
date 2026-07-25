@@ -411,7 +411,7 @@ static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVe
    transport->setSecurityContext(new SNMP_SecurityContext(community));
 
    int *apiVersion = static_cast<int*>(DLGetSymbolAddr(hModule, "nddAPIVersion", errorText));
-   ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = (ObjectArray<NetworkDeviceDriver> *(*)())DLGetSymbolAddr(hModule, "nddCreateInstances", errorText);
+   ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = DLGetFunctionAddr<ObjectArray<NetworkDeviceDriver> *(*)()>(hModule, "nddCreateInstances", errorText);
    if ((apiVersion != nullptr) && (CreateInstances != nullptr))
    {
       if (*apiVersion == NDDRV_API_VERSION)

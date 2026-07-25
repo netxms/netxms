@@ -76,8 +76,8 @@ void InitLocalNetInfo()
       s_hSubAgent = DLOpen(subagentName, errorText);
       if (s_hSubAgent != nullptr)
       {
-         imp_NxSubAgentGetIfList = (BOOL (*)(StringList *))DLGetSymbolAddr(s_hSubAgent, "__NxSubAgentGetIfList", nullptr);
-         imp_NxSubAgentGetArpCache = (BOOL (*)(StringList *))DLGetSymbolAddr(s_hSubAgent, "__NxSubAgentGetArpCache", nullptr);
+         imp_NxSubAgentGetIfList = DLGetFunctionAddr<BOOL (*)(StringList *)>(s_hSubAgent, "__NxSubAgentGetIfList", nullptr);
+         imp_NxSubAgentGetArpCache = DLGetFunctionAddr<BOOL (*)(StringList *)>(s_hSubAgent, "__NxSubAgentGetArpCache", nullptr);
          if ((imp_NxSubAgentGetIfList == nullptr) && (imp_NxSubAgentGetArpCache == nullptr))
          {
             DLClose(s_hSubAgent);
