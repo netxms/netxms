@@ -58,7 +58,7 @@ public:
 /**
  * Mikrotik Device data
  */
-class MikrotikDriverData : public DriverData
+class MikrotikDriverData : public HostMibDriverData
 {
 private:
    StringMap m_oidCache;
