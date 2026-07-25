@@ -45,7 +45,7 @@ static void LoadDriver(const TCHAR *file, const StringList &blacklist)
    if (hModule != nullptr)
    {
 		int *apiVersion = (int *)DLGetSymbolAddr(hModule, "nddAPIVersion", errorText);
-      ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = (ObjectArray<NetworkDeviceDriver> *(*)())DLGetSymbolAddr(hModule, "nddCreateInstances", errorText);
+      ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = DLGetFunctionAddr<ObjectArray<NetworkDeviceDriver> *(*)()>(hModule, "nddCreateInstances", errorText);
       if ((apiVersion != NULL) && (CreateInstances != NULL))
       {
          if (*apiVersion == NDDRV_API_VERSION)

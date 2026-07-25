@@ -214,7 +214,7 @@ static void LoadDriver(const wchar_t *file)
    if (hModule != nullptr)
    {
 		int *apiVersion = (int *)DLGetSymbolAddr(hModule, "pdsdrvAPIVersion", errorText);
-      PerfDataStorageDriver *(*CreateInstance)() = (PerfDataStorageDriver *(*)())DLGetSymbolAddr(hModule, "pdsdrvCreateInstance", errorText);
+      PerfDataStorageDriver *(*CreateInstance)() = DLGetFunctionAddr<PerfDataStorageDriver *(*)()>(hModule, "pdsdrvCreateInstance", errorText);
 
       if ((apiVersion != nullptr) && (CreateInstance != nullptr))
       {

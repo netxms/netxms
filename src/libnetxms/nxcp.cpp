@@ -34,7 +34,7 @@
 /**
  * Additional message name resolvers
  */
-static Array s_resolvers(4, 4, Ownership::False);
+static StructArray<NXCPMessageNameResolver> s_resolvers(4, 4);
 static Mutex s_resolversLock;
 
 /**
@@ -614,7 +614,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       bool resolved = false;
       s_resolversLock.lock();
       for(int i = 0; i < s_resolvers.size(); i++)
-         if (((NXCPMessageNameResolver)s_resolvers.get(i))(code, buffer))
+         if ((*s_resolvers.get(i))(code, buffer))
          {
             resolved = true;
             break;
@@ -632,8 +632,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
 void LIBNETXMS_EXPORTABLE NXCPRegisterMessageNameResolver(NXCPMessageNameResolver r)
 {
    s_resolversLock.lock();
-   if (s_resolvers.indexOf((void *)r) == -1)
-      s_resolvers.add((void *)r);
+   if (s_resolvers.indexOf(r) == -1)
+      s_resolvers.add(r);
    s_resolversLock.unlock();
 }
 
@@ -643,7 +643,7 @@ void LIBNETXMS_EXPORTABLE NXCPRegisterMessageNameResolver(NXCPMessageNameResolve
 void LIBNETXMS_EXPORTABLE NXCPUnregisterMessageNameResolver(NXCPMessageNameResolver r)
 {
    s_resolversLock.lock();
-   s_resolvers.remove((void *)r);
+   s_resolvers.remove(r);
    s_resolversLock.unlock();
 }
 

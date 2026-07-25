@@ -90,7 +90,7 @@ static bool Initialize(const char *options)
 #ifndef _WIN32
    s_libpq = dlopen("libpq.so.5", RTLD_NOW);
    if (s_libpq != nullptr)
-      s_PQsetSingleRowMode = (int (*)(PGconn *))dlsym(s_libpq, "PQsetSingleRowMode");
+      s_PQsetSingleRowMode = DLGetFunctionAddr<int (*)(PGconn *)>(s_libpq, "PQsetSingleRowMode");
    nxlog_debug_tag(DEBUG_TAG, 2, _T("PostgreSQL driver: single row mode %s"), (s_PQsetSingleRowMode != NULL) ? _T("enabled") : _T("disabled"));
 #endif
 	return true;

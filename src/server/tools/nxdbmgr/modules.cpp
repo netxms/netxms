@@ -92,12 +92,12 @@ static bool LoadServerModule(const wchar_t *name, bool mandatory, bool quiet)
       {
          wcslcpy(m->name, name, MAX_PATH);
       }
-      m->CheckDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_CheckDB", errorText);
-      m->CheckDBVersion = (bool (*)())DLGetSymbolAddr(hModule, "NXM_CheckDBVersion", errorText);
-      m->UpgradeDB = (bool (*)())DLGetSymbolAddr(hModule, "NXM_UpgradeDB", errorText);
-      m->GetTables = (const TCHAR* const * (*)())DLGetSymbolAddr(hModule, "NXM_GetTables", errorText);
-      m->GetSchemaPrefix = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaPrefix", errorText);
-      m->GetSchemaVersionMetadataTag = (const TCHAR* (*)())DLGetSymbolAddr(hModule, "NXM_GetSchemaVersionMetadataTag", errorText);
+      m->CheckDB = DLGetFunctionAddr<bool (*)()>(hModule, "NXM_CheckDB", errorText);
+      m->CheckDBVersion = DLGetFunctionAddr<bool (*)()>(hModule, "NXM_CheckDBVersion", errorText);
+      m->UpgradeDB = DLGetFunctionAddr<bool (*)()>(hModule, "NXM_UpgradeDB", errorText);
+      m->GetTables = DLGetFunctionAddr<const TCHAR* const * (*)()>(hModule, "NXM_GetTables", errorText);
+      m->GetSchemaPrefix = DLGetFunctionAddr<const TCHAR* (*)()>(hModule, "NXM_GetSchemaPrefix", errorText);
+      m->GetSchemaVersionMetadataTag = DLGetFunctionAddr<const TCHAR* (*)()>(hModule, "NXM_GetSchemaVersionMetadataTag", errorText);
       if ((m->CheckDB != nullptr) || (m->UpgradeDB != nullptr) || (m->GetTables != nullptr) || (m->GetSchemaPrefix != nullptr))
       {
          if (!quiet)
