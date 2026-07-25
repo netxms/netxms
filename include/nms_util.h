@@ -5196,6 +5196,7 @@ class LIBNETXMS_EXPORTABLE SocketCommChannel : public AbstractCommChannel
 private:
    SOCKET m_socket;
    bool m_owner;
+   bool m_closed;
 #ifndef _WIN32
    int m_controlPipe[2];
 #endif
