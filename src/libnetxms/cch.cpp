@@ -44,6 +44,7 @@ SocketCommChannel::SocketCommChannel(SOCKET socket, BackgroundSocketPollerHandle
 {
    m_socket = socket;
    m_owner = (owner == Ownership::True);
+   m_closed = false;
 #ifndef _WIN32
    if (pipe(m_controlPipe) != 0)
    {
@@ -107,7 +108,7 @@ ssize_t SocketCommChannel::recv(void *buffer, size_t size, uint32_t timeout)
  */
 int SocketCommChannel::poll(uint32_t timeout, bool write)
 {
-   if (m_socket == INVALID_SOCKET)
+   if (m_closed || (m_socket == INVALID_SOCKET))
       return -1;
 
    SocketPoller sp(write);
@@ -129,17 +130,20 @@ int SocketCommChannel::shutdown()
 }
 
 /**
- * Close channel
+ * Close channel. Socket descriptor is only shut down here and stays open until channel destruction.
+ * Background poll callback could be reading from this channel at this moment, and closing descriptor
+ * here would allow it to be reused by another socket while still being read through this channel.
  */
 void SocketCommChannel::close()
 {
-   if (m_socket == INVALID_SOCKET)
+   if (m_closed || (m_socket == INVALID_SOCKET))
       return;
+
+   m_closed = true;
 
    if (m_socketPoller != nullptr)
       m_socketPoller->poller.cancel(m_socket);
-   closesocket(m_socket);
-   m_socket = INVALID_SOCKET;
+   shutdown();
 }
 
 /**
@@ -166,7 +170,7 @@ static void BackgroundPollWrapper(BackgroundSocketPollResult pollResult, SOCKET 
  */
 void SocketCommChannel::backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context)
 {
-   if ((m_socketPoller != nullptr) && (m_socket != INVALID_SOCKET))
+   if ((m_socketPoller != nullptr) && !m_closed && (m_socket != INVALID_SOCKET))
    {
       auto wrapperContext = MemAllocStruct<BackgroundPollContext>();
       wrapperContext->channel = this;
