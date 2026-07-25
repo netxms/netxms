@@ -99,22 +99,46 @@ public class LoginJob implements IRunnableWithProgress
       monitor.beginTask(i18n.tr("Connecting..."), 9);
       final String hostName;
       int port = NXCSession.DEFAULT_CONN_PORT;
-      final String[] split = server.split(":");
-      if (split.length == 2)
+      String portText = null;
+      if (server.startsWith("["))
       {
-         hostName = split[0];
+         // Bracketed IPv6 literal, optionally followed by port
+         int bracket = server.indexOf(']');
+         if (bracket > 0)
+         {
+            hostName = server.substring(1, bracket);
+            if ((bracket + 1 < server.length()) && (server.charAt(bracket + 1) == ':'))
+               portText = server.substring(bracket + 2);
+         }
+         else
+         {
+            hostName = server;
+         }
+      }
+      else
+      {
+         // Single colon means host:port, multiple colons mean unbracketed IPv6 literal without port
+         int colon = server.indexOf(':');
+         if ((colon != -1) && (server.indexOf(':', colon + 1) == -1))
+         {
+            hostName = server.substring(0, colon);
+            portText = server.substring(colon + 1);
+         }
+         else
+         {
+            hostName = server;
+         }
+      }
+      if (portText != null)
+      {
          try
          {
-            port = Integer.valueOf(split[1]);
+            port = Integer.parseInt(portText);
          }
          catch(NumberFormatException e)
          {
             // ignore
          }
-      }
-      else
-      {
-         hostName = server;
       }
 
       logger.info("Connecting to " + hostName + " port " + port);
