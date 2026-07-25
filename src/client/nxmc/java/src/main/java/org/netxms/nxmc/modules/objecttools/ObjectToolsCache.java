@@ -26,6 +26,7 @@ import java.util.ServiceLoader;
 import java.util.UUID;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.NXCommon;
@@ -50,6 +51,7 @@ public class ObjectToolsCache
    
    private Map<Long, ObjectTool> objectTools = new HashMap<Long, ObjectTool>();
    private Map<Long, ImageDescriptor> icons = new HashMap<Long, ImageDescriptor>();
+   private Map<UUID, Image> iconImages = new HashMap<UUID, Image>();
    private Display display = null;
 	private NXCSession session = null;
 
@@ -163,7 +165,7 @@ public class ObjectToolsCache
                try
                {
                   imageProvider.preloadImageFromServer(iconGuid);
-                  Image image = imageProvider.getObjectIcon(iconGuid);
+                  Image image = getIconImage(imageProvider, iconGuid);
                   if (image != null)
                      icons.put(tool.getId(), WidgetHelper.createImageDescriptor(image));
                }
@@ -180,9 +182,33 @@ public class ObjectToolsCache
 		}
 	}
 
+   /**
+    * Get cache owned copy of object tool icon, creating it if necessary. Cache cannot use images provided by image provider
+    * directly - they are held in LRU cache and can be disposed on eviction, while image descriptor created from image reads image
+    * data from it lazily on every repaint at previously unseen zoom level. Must be called while holding lock on icons map.
+    *
+    * @param imageProvider image provider
+    * @param guid library image GUID
+    * @return cache owned copy of icon image or null if image is not available
+    */
+   private Image getIconImage(ImageProvider imageProvider, UUID guid)
+   {
+      Image image = iconImages.get(guid);
+      if (image != null)
+         return image;
+
+      Image sourceImage = imageProvider.getObjectIcon(guid);
+      if (sourceImage == null)
+         return null;
+
+      image = new Image(display, sourceImage, SWT.IMAGE_COPY);
+      iconImages.put(guid, image);
+      return image;
+   }
+
 	/**
 	 * Handler for object tool change
-	 * 
+	 *
 	 * @param toolId ID of changed tool
 	 */
 	private void onObjectToolChange(final long toolId)
@@ -216,15 +242,21 @@ public class ObjectToolsCache
          return;
 
       ImageProvider imageProvider = ImageProvider.getInstance();
-      ImageDescriptor icon = null;
-      if (imageProvider.getLibraryImageObject(guid) != null)
-      {
-         Image image = imageProvider.getObjectIcon(guid);
-         if (image != null)
-            icon = WidgetHelper.createImageDescriptor(image);
-      }
       synchronized(icons)
       {
+         // Image content has changed, so cached copy has to be re-created. Old copy is intentionally not disposed here - image
+         // descriptors already given to menus and actions read image data from it lazily on repaint. Copies left behind are 16x16
+         // images and their number is limited by number of image library updates within single session.
+         iconImages.remove(guid);
+
+         ImageDescriptor icon = null;
+         if (imageProvider.getLibraryImageObject(guid) != null)
+         {
+            Image image = getIconImage(imageProvider, guid);
+            if (image != null)
+               icon = WidgetHelper.createImageDescriptor(image);
+         }
+
          for(Long toolId : affectedTools)
          {
             if (icon != null)
