@@ -392,6 +392,11 @@ DataCollectionError MikrotikDriver::getMetric(DeviceContext *context, NObject *n
       return DCE_COLLECTION_ERROR;
 
    MikrotikDriverData *d = static_cast<MikrotikDriverData*>(driverData);
+
+   DataCollectionError rc = getHostMibMetric(snmp, d, name, value, size);
+   if (rc != DCE_NOT_SUPPORTED)
+      return rc;
+
    TCHAR oid[64];
    if (!d->getMetricOID(name, snmp, oid))
    {
