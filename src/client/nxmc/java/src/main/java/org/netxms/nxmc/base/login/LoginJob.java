@@ -99,12 +99,9 @@ public class LoginJob implements IRunnableWithProgress
    {
       monitor.beginTask(i18n.tr("Connecting..."), 9);
       final InetSocketAddress serverAddress = NXCSession.parseConnectionAddress(server);
-      final String hostName = serverAddress.getHostString();
-      final int port = serverAddress.getPort();
+      logger.info("Connecting to " + serverAddress.getHostString() + " port " + serverAddress.getPort());
 
-      logger.info("Connecting to " + hostName + " port " + port);
-
-      final NXCSession session = createSession(hostName, port);
+      final NXCSession session = createSession(serverAddress);
       try
       {
          session.setClientLanguage(Locale.getDefault().getLanguage());
@@ -286,15 +283,14 @@ public class LoginJob implements IRunnableWithProgress
 
    /**
     * Create new session object.
-    * 
-    * @param hostName
-    * @param port
+    *
+    * @param serverAddress
     * @return
     */
-   private NXCSession createSession(String hostName, int port)
+   private NXCSession createSession(InetSocketAddress serverAddress)
    {
       // TODO: implement session providers
-      return new NXCSession(hostName, port, enableCompression);
+      return new NXCSession(serverAddress, enableCompression);
    }
 
    /**

@@ -1575,6 +1575,29 @@ public class NXCSession
    }
 
    /**
+    * Create session object that will connect to given socket address without encryption. Address is not resolved by this
+    * constructor, only host name and port are taken from it.
+    *
+    * @param connAddress server socket address
+    */
+   public NXCSession(InetSocketAddress connAddress)
+   {
+      this(connAddress.getHostString(), connAddress.getPort(), true);
+   }
+
+   /**
+    * Create session object that will connect to given socket address. Address is not resolved by this constructor, only host name
+    * and port are taken from it.
+    *
+    * @param connAddress server socket address
+    * @param enableCompression enable message compression
+    */
+   public NXCSession(InetSocketAddress connAddress, boolean enableCompression)
+   {
+      this(connAddress.getHostString(), connAddress.getPort(), enableCompression);
+   }
+
+   /**
     * Parse server address given in "host", "host:port", "[ipv6]", or "[ipv6]:port" format. Unbracketed address containing more
     * than one colon is interpreted as IPv6 literal without port. Default port (4701) is used if port is not present or cannot be
     * parsed as valid TCP port number.
