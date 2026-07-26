@@ -55,7 +55,7 @@ static const NXMC_CHAR *s_optClassPath = nullptr;
 /**
  * Display error message
  */
-static void ShowErrorMessage(const TCHAR *format, ...)
+static void ShowErrorMessage(const TCHAR *title, const TCHAR *format, ...)
 {
    TCHAR message[1024];
    va_list args;
@@ -63,7 +63,7 @@ static void ShowErrorMessage(const TCHAR *format, ...)
    _vsntprintf(message, 1024, format, args);
    va_end(args);
 #ifdef _WIN32
-   MessageBox(nullptr, message, _T("NetXMS Management Console - Startup Error"), MB_OK | MB_ICONERROR);
+   MessageBox(nullptr, message, title, MB_OK | MB_ICONERROR);
 #else
    _tprintf(_T("%s\n"), message);
 #endif
@@ -107,7 +107,7 @@ static int StartApp(int argc, NXMC_CHAR *argv[], const StringList& jreOptions)
    {
       if (FindJavaRuntime(jre, MAX_PATH) == nullptr)
       {
-         ShowErrorMessage(_T("Cannot find suitable Java runtime environment"));
+         ShowErrorMessage(_T("NetXMS Management Console - Startup Error"), _T("Cannot find suitable Java runtime environment"));
          return 2;
       }
    }
@@ -220,21 +220,29 @@ static int StartApp(int argc, NXMC_CHAR *argv[], const StringList& jreOptions)
          strcpy(startupClass, "org/netxms/nxmc/Startup");
       }
 
+      StringBuffer exceptionText;
 #ifdef _WIN32
-      err = StartJavaApplication(env, startupClass, argc, nullptr, argv);
+      err = StartJavaApplication(env, startupClass, argc, nullptr, argv, &exceptionText);
 #else
-      err = StartJavaApplication(env, startupClass, argc, argv, nullptr);
+      err = StartJavaApplication(env, startupClass, argc, argv, nullptr, &exceptionText);
 #endif
-      if (err != NXJAVA_SUCCESS)
+      if (err == NXJAVA_APP_EXECUTION_FAILED)
       {
-         ShowErrorMessage(_T("Cannot start Java application (%s)"), GetJavaBridgeErrorMessage(err));
+         // Application was started but terminated with unhandled exception
+         ShowErrorMessage(_T("NetXMS Management Console - Application Error"), _T("Application terminated with unhandled exception (%s)"),
+            exceptionText.isEmpty() ? GetJavaBridgeErrorMessage(err) : exceptionText.cstr());
+         rc = 4;
+      }
+      else if (err != NXJAVA_SUCCESS)
+      {
+         ShowErrorMessage(_T("NetXMS Management Console - Startup Error"), _T("Cannot start Java application (%s)"), GetJavaBridgeErrorMessage(err));
          rc = 4;
       }
       DestroyJavaVM();
    }
    else
    {
-      ShowErrorMessage(_T("Unable to create Java VM (%s)"), GetJavaBridgeErrorMessage(err));
+      ShowErrorMessage(_T("NetXMS Management Console - Startup Error"), _T("Unable to create Java VM (%s)"), GetJavaBridgeErrorMessage(err));
       rc = 3;
    }
 
