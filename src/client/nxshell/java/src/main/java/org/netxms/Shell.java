@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.util.Properties;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.NXCException;
@@ -189,38 +190,19 @@ public class Shell
          sync = Boolean.parseBoolean(syncOption);
       }
 
-      final String hostName;
-      int port = NXCSession.DEFAULT_CONN_PORT;
+      final InetSocketAddress serverAddress = NXCSession.parseConnectionAddress(optServer);
+      final String hostName = serverAddress.getHostString();
+      int port = serverAddress.getPort();
       if ((optPort != null) && !optPort.isEmpty())
       {
-         hostName = optServer;
+         // Explicitly given port overrides port taken from server address
          try
          {
-            port = Integer.valueOf(optPort);
+            port = Integer.parseInt(optPort);
          }
          catch(NumberFormatException e)
          {
             // ignore
-         }
-      }
-      else
-      {
-         final String[] parts = optServer.split(":");
-         if (parts.length == 2)
-         {
-            hostName = parts[0];
-            try
-            {
-               port = Integer.valueOf(parts[1]);
-            }
-            catch(NumberFormatException e)
-            {
-               // ignore
-            }
-         }
-         else
-         {
-            hostName = optServer;
          }
       }
 

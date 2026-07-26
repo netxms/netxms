@@ -1,5 +1,6 @@
 package org.netxms.tcpproxy;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -164,16 +165,9 @@ public class TcpProxyApp
 
    private void parseServer(String serverSpec)
    {
-      String[] parts = serverSpec.split(":");
-      if (parts.length == 2)
-      {
-         server = parts[0];
-         serverPort = Integer.parseInt(parts[1]);
-      }
-      else
-      {
-         server = serverSpec;
-      }
+      InetSocketAddress serverAddress = NXCSession.parseConnectionAddress(serverSpec);
+      server = serverAddress.getHostString();
+      serverPort = serverAddress.getPort();
    }
 
    private void run() throws Exception

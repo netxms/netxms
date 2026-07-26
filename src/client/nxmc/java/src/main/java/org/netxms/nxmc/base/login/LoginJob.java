@@ -19,6 +19,7 @@
 package org.netxms.nxmc.base.login;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.InetSocketAddress;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.List;
@@ -97,49 +98,9 @@ public class LoginJob implements IRunnableWithProgress
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
       monitor.beginTask(i18n.tr("Connecting..."), 9);
-      final String hostName;
-      int port = NXCSession.DEFAULT_CONN_PORT;
-      String portText = null;
-      if (server.startsWith("["))
-      {
-         // Bracketed IPv6 literal, optionally followed by port
-         int bracket = server.indexOf(']');
-         if (bracket > 0)
-         {
-            hostName = server.substring(1, bracket);
-            if ((bracket + 1 < server.length()) && (server.charAt(bracket + 1) == ':'))
-               portText = server.substring(bracket + 2);
-         }
-         else
-         {
-            hostName = server;
-         }
-      }
-      else
-      {
-         // Single colon means host:port, multiple colons mean unbracketed IPv6 literal without port
-         int colon = server.indexOf(':');
-         if ((colon != -1) && (server.indexOf(':', colon + 1) == -1))
-         {
-            hostName = server.substring(0, colon);
-            portText = server.substring(colon + 1);
-         }
-         else
-         {
-            hostName = server;
-         }
-      }
-      if (portText != null)
-      {
-         try
-         {
-            port = Integer.parseInt(portText);
-         }
-         catch(NumberFormatException e)
-         {
-            // ignore
-         }
-      }
+      final InetSocketAddress serverAddress = NXCSession.parseConnectionAddress(server);
+      final String hostName = serverAddress.getHostString();
+      final int port = serverAddress.getPort();
 
       logger.info("Connecting to " + hostName + " port " + port);
 
