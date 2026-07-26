@@ -265,10 +265,26 @@ public class Startup
             i.dispose();
       }
 
-      display.dispose();
+      // Display disposal dispatches events that are still pending, so any exception thrown by them will be thrown here.
+      // It should not be propagated to the native launcher, which would interpret it as application execution failure.
+      try
+      {
+         display.dispose();
+      }
+      catch(Throwable t)
+      {
+         logger.error("Exception during display disposal", t);
+      }
       logger.info("Application exit");
 
-      Registry.dispose();
+      try
+      {
+         Registry.dispose();
+      }
+      catch(Throwable t)
+      {
+         logger.error("Exception during registry disposal", t);
+      }
 
       logger.debug("Running threads on shutdown:");
       for(Thread t : Thread.getAllStackTraces().keySet())

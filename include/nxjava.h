@@ -170,9 +170,10 @@ void LIBNXJAVA_EXPORTABLE DetachThreadFromJavaVM();
  * @param argc number of command line arguments
  * @param argv pointers to arguments (expected to be encoded using system locale code page) or nullptr if wide character version is used
  * @param wargv pointers to arguments encoded as wide character strings
+ * @param exceptionText buffer for description of Java exception that caused application failure (can be nullptr)
  * @return NXJAVA_SUCCESS on success or appropriate error code
  */
-JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const char *appClass, int argc, char **argv, WCHAR **wargv = nullptr);
+JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const char *appClass, int argc, char **argv, WCHAR **wargv = nullptr, StringBuffer *exceptionText = nullptr);
 
 /**
  * Create global reference to Java class

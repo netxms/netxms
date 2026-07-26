@@ -251,9 +251,10 @@ void LIBNXJAVA_EXPORTABLE DetachThreadFromJavaVM()
 }
 
 /**
- * Log pending Java exception and clear exception state
+ * Log pending Java exception and clear exception state. If description buffer is provided, exception description
+ * will be copied into it.
  */
-static void LogPendingJavaException(JNIEnv *env)
+static void LogPendingJavaException(JNIEnv *env, StringBuffer *description = nullptr)
 {
    jthrowable exception = env->ExceptionOccurred();
    if (exception == nullptr)
@@ -286,6 +287,8 @@ static void LogPendingJavaException(JNIEnv *env)
             else
             {
                nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_RUNTIME, _T("Java exception: %s"), buffer);
+               if (description != nullptr)
+                  description->append(buffer);
                logged = true;
             }
             env->DeleteLocalRef(message);
@@ -314,14 +317,15 @@ static void LogPendingJavaException(JNIEnv *env)
  * @param argc number of command line arguments
  * @param argv pointers to arguments (expected to be encoded using system locale code page) or nullptr if wide character version is used
  * @param wargv pointers to arguments encoded as wide character strings
+ * @param exceptionText buffer for description of Java exception that caused application failure (can be nullptr)
  * @return NXJAVA_SUCCESS on success or appropriate error code
  */
-JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const char *appClass, int argc, char **argv, WCHAR **wargv)
+JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const char *appClass, int argc, char **argv, WCHAR **wargv, StringBuffer *exceptionText)
 {
    jclass app = env->FindClass(appClass);
    if (app == nullptr)
    {
-      LogPendingJavaException(env);
+      LogPendingJavaException(env, exceptionText);
       return NXJAVA_APP_CLASS_NOT_FOUND;
    }
 
@@ -329,7 +333,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const cha
    jmethodID appMain = env->GetStaticMethodID(app, "main", "([Ljava/lang/String;)V");
    if (appMain == nullptr)
    {
-      LogPendingJavaException(env);
+      LogPendingJavaException(env, exceptionText);
       return NXJAVA_APP_ENTRY_POINT_NOT_FOUND;
    }
 
@@ -349,7 +353,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE StartJavaApplication(JNIEnv *env, const cha
    JavaBridgeError result = NXJAVA_SUCCESS;
    if (env->ExceptionCheck())
    {
-      LogPendingJavaException(env);
+      LogPendingJavaException(env, exceptionText);
       result = NXJAVA_APP_EXECUTION_FAILED;
    }
    env->DeleteLocalRef(jargs);

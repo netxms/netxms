@@ -36,6 +36,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
@@ -435,30 +436,34 @@ public class AlarmNotifier
                }
 
                Window window = Registry.getMainWindow();
-               if (window != null)
+               Shell shell = (window != null) ? window.getShell() : null;
+               if ((shell == null) || shell.isDisposed() || trayIcon.isDisposed())
                {
-                  final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
-                  tip.setText(i18n.tr("NetXMS Alarm ({0})", StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity())));
-                  tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId())) + ": "
-                        + alarm.getMessage());
-                  tip.setAutoHide(false);
-                  trayIcon.setToolTip(tip);
-                  tip.setVisible(true);
-                  tip.getDisplay().timerExec(10000, new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        tip.dispose();
-                     }
-                  });
-                  tip.addDisposeListener(new DisposeListener() {
-                     @Override
-                     public void widgetDisposed(DisposeEvent e)
-                     {
-                        trayPopupCount.decrementAndGet();
-                     }
-                  });
+                  trayPopupCount.decrementAndGet();
+                  return;
                }
+
+               final ToolTip tip = new ToolTip(shell, SWT.BALLOON | severityFlag);
+               tip.setText(i18n.tr("NetXMS Alarm ({0})", StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity())));
+               tip.setMessage(((object != null) ? object.getObjectName() : Long.toString(alarm.getSourceObjectId())) + ": "
+                     + alarm.getMessage());
+               tip.setAutoHide(false);
+               trayIcon.setToolTip(tip);
+               tip.setVisible(true);
+               tip.getDisplay().timerExec(10000, new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     tip.dispose();
+                  }
+               });
+               tip.addDisposeListener(new DisposeListener() {
+                  @Override
+                  public void widgetDisposed(DisposeEvent e)
+                  {
+                     trayPopupCount.decrementAndGet();
+                  }
+               });
             }
          });
       }
@@ -477,35 +482,39 @@ public class AlarmNotifier
                   int severityFlag = SWT.ICON_INFORMATION;
    
                   Window window = Registry.getMainWindow();
-                  if (window != null)
+                  Shell shell = (window != null) ? window.getShell() : null;
+                  if ((shell == null) || shell.isDisposed() || trayIcon.isDisposed())
                   {
-                     final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | severityFlag);
-                     tip.setText(i18n.tr("Too many consecutive alarms"));
-                     tip.setMessage(i18n.tr("Skipping alarm tray popup creation - too many consecutive alarms"));
-                     tip.setAutoHide(false);
-                     trayIcon.setToolTip(tip);
-                     tip.setVisible(true);
-                     tip.getDisplay().timerExec(10000, new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                           tip.dispose();
-                        }
-                     });
-                     tip.addDisposeListener(new DisposeListener() {
-                        @Override
-                        public void widgetDisposed(DisposeEvent e)
-                        {
-                           Display.getCurrent().timerExec(60000, new Runnable() {
-                              @Override
-                              public void run()
-                              {
-                                 trayPopupError.decrementAndGet();
-                              }
-                           });
-                        }
-                     });
+                     trayPopupError.decrementAndGet();
+                     return;
                   }
+
+                  final ToolTip tip = new ToolTip(shell, SWT.BALLOON | severityFlag);
+                  tip.setText(i18n.tr("Too many consecutive alarms"));
+                  tip.setMessage(i18n.tr("Skipping alarm tray popup creation - too many consecutive alarms"));
+                  tip.setAutoHide(false);
+                  trayIcon.setToolTip(tip);
+                  tip.setVisible(true);
+                  tip.getDisplay().timerExec(10000, new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        tip.dispose();
+                     }
+                  });
+                  tip.addDisposeListener(new DisposeListener() {
+                     @Override
+                     public void widgetDisposed(DisposeEvent e)
+                     {
+                        Display.getCurrent().timerExec(60000, new Runnable() {
+                           @Override
+                           public void run()
+                           {
+                              trayPopupError.decrementAndGet();
+                           }
+                        });
+                     }
+                  });
                }
             });
          }
