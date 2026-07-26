@@ -1595,6 +1595,65 @@ public class NXCSession
    }
 
    /**
+    * Parse server address given in "host", "host:port", "[ipv6]", or "[ipv6]:port" format. Unbracketed address containing more
+    * than one colon is interpreted as IPv6 literal without port. Default port (4701) is used if port is not present or cannot be
+    * parsed as valid TCP port number.
+    *
+    * @param address server address, optionally with TCP port
+    * @return unresolved socket address with server host name and TCP port
+    */
+   public static InetSocketAddress parseConnectionAddress(String address)
+   {
+      String hostName;
+      String portText = null;
+      if (address.startsWith("["))
+      {
+         // Bracketed IPv6 literal, optionally followed by port
+         int bracket = address.indexOf(']');
+         if (bracket > 0)
+         {
+            hostName = address.substring(1, bracket);
+            if ((bracket + 1 < address.length()) && (address.charAt(bracket + 1) == ':'))
+               portText = address.substring(bracket + 2);
+         }
+         else
+         {
+            hostName = address;
+         }
+      }
+      else
+      {
+         // Single colon means host:port, multiple colons mean unbracketed IPv6 literal without port
+         int colon = address.indexOf(':');
+         if ((colon != -1) && (address.indexOf(':', colon + 1) == -1))
+         {
+            hostName = address.substring(0, colon);
+            portText = address.substring(colon + 1);
+         }
+         else
+         {
+            hostName = address;
+         }
+      }
+
+      int port = DEFAULT_CONN_PORT;
+      if (portText != null)
+      {
+         try
+         {
+            int n = Integer.parseInt(portText);
+            if ((n > 0) && (n <= 65535))
+               port = n;
+         }
+         catch(NumberFormatException e)
+         {
+            // ignore
+         }
+      }
+      return InetSocketAddress.createUnresolved(hostName, port);
+   }
+
+   /**
     * Create custom object from NXCP message. May be overridden by derived classes to create custom
     * NetXMS objects. This method called before standard object creation, so it can be used for
     * overriding standard object classes. If this method returns null, standard object
