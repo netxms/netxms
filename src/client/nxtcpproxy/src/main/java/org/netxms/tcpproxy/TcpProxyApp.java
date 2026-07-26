@@ -23,8 +23,7 @@ public class TcpProxyApp
 {
    private static final Logger logger = LoggerFactory.getLogger(TcpProxyApp.class);
 
-   private String server;
-   private int serverPort = 4701;
+   private InetSocketAddress serverAddress;
    private String login;
    private String password;
    private String token;
@@ -65,7 +64,7 @@ public class TcpProxyApp
                   System.err.println("Option " + args[i - 1] + " requires an argument");
                   return false;
                }
-               parseServer(args[i]);
+               serverAddress = NXCSession.parseConnectionAddress(args[i]);
                break;
             case "-u":
             case "--user":
@@ -118,11 +117,11 @@ public class TcpProxyApp
          }
       }
 
-      if (server == null)
+      if (serverAddress == null)
       {
          String env = System.getenv("NETXMS_SERVER");
          if (env != null)
-            parseServer(env);
+            serverAddress = NXCSession.parseConnectionAddress(env);
       }
       if (login == null)
          login = System.getenv("NETXMS_LOGIN");
@@ -134,7 +133,7 @@ public class TcpProxyApp
       if (debug)
          System.setProperty("nxtcpproxy.debug", "true");
 
-      if (server == null)
+      if (serverAddress == null)
       {
          System.err.println("Server address is required (-H or NETXMS_SERVER)");
          return false;
@@ -163,17 +162,10 @@ public class TcpProxyApp
       return true;
    }
 
-   private void parseServer(String serverSpec)
-   {
-      InetSocketAddress serverAddress = NXCSession.parseConnectionAddress(serverSpec);
-      server = serverAddress.getHostString();
-      serverPort = serverAddress.getPort();
-   }
-
    private void run() throws Exception
    {
-      logger.info("Connecting to NetXMS server {}:{}", server, serverPort);
-      NXCSession session = new NXCSession(server, serverPort);
+      logger.info("Connecting to NetXMS server {}:{}", serverAddress.getHostString(), serverAddress.getPort());
+      NXCSession session = new NXCSession(serverAddress);
       session.connect(new int[] { ProtocolVersion.INDEX_TCPPROXY });
 
       if (token != null)
