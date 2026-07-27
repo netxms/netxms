@@ -33,4 +33,10 @@
 bool RegisterConfigHelperNatives(JNIEnv *env);
 bool RegisterPlatformNatives(JNIEnv *env);
 
+// JNI native method registration requires casting function pointers to void*
+// (JNINativeMethod::fnPtr), which is conditionally-supported by the C++ standard
+#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9))
+#pragma GCC diagnostic ignored "-Wconditionally-supported"
+#endif
+
 #endif   /* _libnxjava_h_ */
