@@ -145,6 +145,7 @@ juniper_la_SOURCES = juniper/juniper.cpp juniper/netscreen.cpp
 juniper_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 juniper_la_LDFLAGS = -module -avoid-version
 juniper_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../libnxnetconf/libnxnetconf.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 

@@ -516,6 +516,35 @@ static void TestResponseParsing()
    AssertTrue(response.getErrorText().equals(_T("MTU value 25000 is not within range 256..9192; operation-failed")));
    EndTest();
 
+   StartTest(_T("Response - nested error reply"));
+   const char *nestedErrorReply =
+      "<rpc-reply message-id=\"106\" xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\">"
+      "<load-configuration-results>"
+      "<rpc-error>"
+      "<error-type>protocol</error-type>"
+      "<error-tag>operation-failed</error-tag>"
+      "<error-severity>error</error-severity>"
+      "<error-message>syntax error</error-message>"
+      "</rpc-error>"
+      "<load-error-count>1</load-error-count>"
+      "</load-configuration-results>"
+      "</rpc-reply>";
+   AssertTrue(response.parse(nestedErrorReply, strlen(nestedErrorReply)));
+   AssertFalse(response.isSuccess());
+   AssertEquals(response.getErrors().size(), 1);
+   AssertTrue(response.getErrorText().equals(_T("syntax error")));
+   EndTest();
+
+   StartTest(_T("Response - rpc-error look-alike inside data ignored"));
+   const char *errorInDataReply =
+      "<rpc-reply message-id=\"107\" xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\">"
+      "<data><event-log><rpc-error>recorded failure</rpc-error></event-log></data>"
+      "</rpc-reply>";
+   AssertTrue(response.parse(errorInDataReply, strlen(errorInDataReply)));
+   AssertTrue(response.isSuccess());
+   AssertFalse(response.hasErrors());
+   EndTest();
+
    StartTest(_T("Response - warnings do not fail request"));
    const char *warningReply =
       "<rpc-reply message-id=\"104\" xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\">"

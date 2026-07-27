@@ -22,6 +22,7 @@
 
 #include "juniper.h"
 #include <netxms-version.h>
+#include <nxnetconf.h>
 
 /**
  * Get driver name
@@ -462,14 +463,235 @@ bool JuniperDriver::isConfigBackupSupported()
 }
 
 /**
+ * XML writer for serializing configuration data into byte stream
+ */
+class XmlByteStreamWriter : public pugi::xml_writer
+{
+private:
+   ByteStream& m_out;
+
+public:
+   XmlByteStreamWriter(ByteStream& out) : m_out(out) { }
+
+   virtual void write(const void *data, size_t size) override
+   {
+      m_out.write(data, size);
+   }
+};
+
+/**
+ * Recursively remove junos: prefixed attributes from configuration tree. They carry
+ * commit metadata (junos:commit-seconds, junos:commit-user, etc.) that changes with
+ * every commit, and reference a namespace declared on the rpc-reply element which is
+ * not part of the serialized subtree.
+ */
+static void RemoveJunosMetadataAttributes(pugi::xml_node node)
+{
+   pugi::xml_attribute attr = node.first_attribute();
+   while (attr)
+   {
+      pugi::xml_attribute next = attr.next_attribute();
+      if (!strncmp(attr.name(), "junos:", 6) || !strcmp(attr.name(), "xmlns:junos"))
+         node.remove_attribute(attr);
+      attr = next;
+   }
+   for(pugi::xml_node child = node.first_child(); child; child = child.next_sibling())
+      RemoveJunosMetadataAttributes(child);
+}
+
+/**
+ * Get running configuration via NETCONF in native XML format
+ */
+static bool GetRunningConfigViaNETCONF(DeviceContext *ctx, ByteStream *output)
+{
+   char *reply = ctx->executeNETCONFRequest("<get-config><source><running/></source></get-config>");
+   if (reply == nullptr)
+   {
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("GetRunningConfigViaNETCONF: RPC execution failed"));
+      return false;
+   }
+
+   NETCONF_Response response;
+   bool success = response.parse(reply, strlen(reply)) && response.isSuccess();
+   MemFree(reply);
+   if (!success)
+   {
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("GetRunningConfigViaNETCONF: device returned error (%s)"), response.getErrorText().cstr());
+      return false;
+   }
+
+   pugi::xml_node configuration = NETCONF_FindChildByLocalName(response.getData(), "configuration");
+   if (!configuration)
+   {
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("GetRunningConfigViaNETCONF: no configuration element in device reply"));
+      return false;
+   }
+
+   RemoveJunosMetadataAttributes(configuration);
+
+   XmlByteStreamWriter writer(*output);
+   configuration.print(writer, "    ", pugi::format_default);
+   return output->size() > 0;
+}
+
+/**
  * Get running configuration from device
  */
 bool JuniperDriver::getRunningConfig(DeviceContext *ctx, ByteStream *output)
 {
+   if (ctx->isNETCONFAvailable())
+   {
+      if (GetRunningConfigViaNETCONF(ctx, output))
+         return true;
+      nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getRunningConfig: NETCONF configuration read failed, falling back to CLI"));
+   }
+
    SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
    if (ssh == nullptr)
       return false;
    return ssh->executeCommand("show configuration", output);
+}
+
+/**
+ * Check if configuration restore is supported
+ */
+bool JuniperDriver::isConfigRestoreSupported()
+{
+   return true;
+}
+
+/**
+ * Build load-configuration RPC content from saved configuration. Accepts both native
+ * XML format (configuration element produced by NETCONF backup) and curly-brace text
+ * format (produced by CLI backup). Resulting request is written as NUL-terminated
+ * UTF-8 string.
+ */
+static bool BuildLoadConfigurationRequest(const ByteStream& config, ByteStream *request)
+{
+   const char *data = reinterpret_cast<const char*>(config.buffer());
+   size_t size = config.size();
+   size_t i = 0;
+   while((i < size) && ((data[i] == ' ') || (data[i] == '\t') || (data[i] == '\r') || (data[i] == '\n')))
+      i++;
+   if (i >= size)
+      return false;
+
+   pugi::xml_document document;
+   pugi::xml_node load = document.append_child("load-configuration");
+   load.append_attribute("action") = "override";
+   if (data[i] == '<')
+   {
+      load.append_attribute("format") = "xml";
+      if (!load.append_buffer(data + i, size - i) || !NETCONF_FindChildByLocalName(load, "configuration"))
+         return false;
+   }
+   else
+   {
+      load.append_attribute("format") = "text";
+      char *text = MemAllocArrayNoInit<char>(size - i + 1);
+      memcpy(text, data + i, size - i);
+      text[size - i] = 0;
+      load.append_child("configuration-text").text().set(text);
+      MemFree(text);
+   }
+
+   XmlByteStreamWriter writer(*request);
+   document.print(writer, "", pugi::format_raw | pugi::format_no_declaration);
+   request->write('\0');
+   return true;
+}
+
+/**
+ * Restore configuration via NETCONF using candidate datastore with full override
+ * semantics. Confirmed commit is used so that device rolls back automatically if the
+ * confirming commit cannot be delivered (e.g. restored configuration cuts management
+ * connectivity).
+ */
+bool JuniperDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+      const std::function<void (int, int)>& progressCallback)
+{
+   if (!ctx->isNETCONFAvailable())
+   {
+      errorLog->append(L"NETCONF access is required for configuration restore");
+      return false;
+   }
+
+   ByteStream loadRequest;
+   if (!BuildLoadConfigurationRequest(config, &loadRequest))
+   {
+      errorLog->append(L"Cannot parse saved configuration");
+      return false;
+   }
+
+   static const char *unlockRequest = "<unlock><target><candidate/></target></unlock>";
+   static const wchar_t *stepNames[] = { L"lock candidate datastore", L"load configuration", L"commit configuration", L"confirm commit", L"unlock candidate datastore" };
+
+   const char *requests[5];
+   requests[0] = "<lock><target><candidate/></target></lock>";
+   requests[1] = reinterpret_cast<const char*>(loadRequest.buffer());
+   requests[2] = "<commit><confirmed/><confirm-timeout>300</confirm-timeout></commit>";
+   requests[3] = "<commit/>";
+   requests[4] = unlockRequest;
+
+   char *replies[5];
+   int received = ctx->executeNETCONFRequests(5, requests, replies, 120000);
+   if (received < 0)
+   {
+      errorLog->append(L"Cannot execute NETCONF request (device or proxy connection failure)");
+      return false;
+   }
+
+   // Proxy agent stops the sequence at first failed RPC, so only the last received
+   // reply can indicate failure; a missing reply means device connection was lost
+   int failedStep = -1;
+   for(int i = 0; (i < received) && (i < 4); i++)
+   {
+      NETCONF_Response response;
+      if (response.parse(replies[i], strlen(replies[i])) && response.isSuccess())
+      {
+         progressCallback(i + 1, 4);
+         continue;
+      }
+      String errorText = response.getErrorText();
+      errorLog->appendFormattedString(L"Cannot %s: %s", stepNames[i], errorText.isEmpty() ? L"device returned error" : errorText.cstr());
+      failedStep = i;
+      break;
+   }
+   if ((failedStep == -1) && (received < 4))
+   {
+      errorLog->appendFormattedString(L"Device connection lost during \"%s\" operation", stepNames[received]);
+      failedStep = received;
+   }
+
+   bool success = (failedStep == -1);
+   if (success && (received == 5))
+   {
+      NETCONF_Response response;
+      if (!response.parse(replies[4], strlen(replies[4])) || !response.isSuccess())
+         nxlog_debug_tag(JUNIPER_DEBUG_TAG, 4, _T("restoreConfig: configuration committed but candidate datastore unlock failed (%s)"), response.getErrorText().cstr());
+   }
+
+   for(int i = 0; i < 5; i++)
+      MemFree(replies[i]);
+
+   if (success)
+      return true;
+
+   if ((failedStep == 1) || (failedStep == 2))
+   {
+      // Candidate datastore may contain partially loaded configuration - discard changes
+      // and release the lock (best effort; session termination releases the lock anyway)
+      const char *cleanupRequests[2] = { "<discard-changes/>", unlockRequest };
+      char *cleanupReplies[2];
+      ctx->executeNETCONFRequests(2, cleanupRequests, cleanupReplies, 60000);
+      MemFree(cleanupReplies[0]);
+      MemFree(cleanupReplies[1]);
+   }
+   else if (failedStep == 3)
+   {
+      errorLog->append(L"; device will roll back to previous configuration automatically (confirmed commit timeout 300 seconds)");
+   }
+   return false;
 }
 
 /**

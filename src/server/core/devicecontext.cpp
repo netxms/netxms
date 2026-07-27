@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nddrv.h>
+#include <nxcore_netconf.h>
 
 #define DEBUG_TAG L"ndd"
 
@@ -135,6 +136,29 @@ bool NodeDeviceContext::executeSSHCommand(const char *command, ByteStream *outpu
       return false;
    }
    return true;
+}
+
+/**
+ * Check if NETCONF is available
+ */
+bool NodeDeviceContext::isNETCONFAvailable()
+{
+   return (m_node->getCapabilities() & NC_IS_NETCONF) != 0;
+}
+
+/**
+ * Execute sequence of NETCONF RPCs on a single device session
+ */
+int NodeDeviceContext::executeNETCONFRequests(int count, const char * const *requests, char **replies, uint32_t timeout)
+{
+   uint32_t agentRcc;
+   int received = ExecuteNetconfRpcBatch(*m_node, count, requests, replies, timeout, &agentRcc);
+   if (received < count)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NodeDeviceContext::executeNETCONFRequests(%s [%u]): %d of %d RPCs executed (agent error %u: %s)",
+            m_node->getName(), m_node->getId(), (received > 0) ? received : 0, count, agentRcc, AgentErrorCodeToText(agentRcc));
+   }
+   return received;
 }
 
 /**

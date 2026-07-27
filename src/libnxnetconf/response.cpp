@@ -55,6 +55,27 @@ NETCONF_Response::NETCONF_Response() : m_errors(0, 8, Ownership::True)
 }
 
 /**
+ * Recursively collect rpc-error elements from reply. Some devices report operation
+ * failures nested inside operation-specific result elements instead of directly under
+ * rpc-reply (e.g. JunOS wraps load-configuration errors in load-configuration-results),
+ * so the whole reply tree has to be scanned. The data element is excluded - it carries
+ * datastore content, not protocol status.
+ */
+static void CollectErrors(const pugi::xml_node& node, ObjectArray<NETCONF_Error> *errors)
+{
+   for(pugi::xml_node child = node.first_child(); child; child = child.next_sibling())
+   {
+      if (child.type() != pugi::node_element)
+         continue;
+      const char *name = NETCONF_LocalName(child);
+      if (!strcmp(name, "rpc-error"))
+         errors->add(new NETCONF_Error(child));
+      else if (strcmp(name, "data"))
+         CollectErrors(child, errors);
+   }
+}
+
+/**
  * Parse rpc-reply message
  */
 bool NETCONF_Response::parse(const char *data, size_t size)
@@ -79,11 +100,7 @@ bool NETCONF_Response::parse(const char *data, size_t size)
 
    m_messageId = m_reply.attribute("message-id").as_uint(0);
 
-   for(pugi::xml_node child = m_reply.first_child(); child; child = child.next_sibling())
-   {
-      if ((child.type() == pugi::node_element) && !strcmp(NETCONF_LocalName(child), "rpc-error"))
-         m_errors.add(new NETCONF_Error(child));
-   }
+   CollectErrors(m_reply, &m_errors);
 
    m_valid = true;
    return true;

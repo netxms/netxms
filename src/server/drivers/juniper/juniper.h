@@ -51,6 +51,9 @@ public:
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
    virtual bool isConfigBackupSupported() override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
+   virtual bool isConfigRestoreSupported() override;
+   virtual bool restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+         const std::function<void (int, int)>& progressCallback) override;
 };
 
 /**

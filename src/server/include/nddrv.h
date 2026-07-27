@@ -533,10 +533,33 @@ public:
    virtual bool isSSHCommandChannelAvailable() = 0;
    virtual bool isSSHInteractiveChannelAvailable() = 0;
    virtual bool isSNMPAvailable() = 0;
+   virtual bool isNETCONFAvailable() = 0;
 
    virtual SSHInteractiveChannel *getInteractiveSSH() = 0;
    virtual bool executeSSHCommand(const char *command, ByteStream *output) = 0;
    virtual SNMP_Transport *getSNMPTransport() = 0;
+
+   /**
+    * Execute sequence of NETCONF RPCs on a single device session, so datastore locks
+    * span the sequence. Each request is the RPC content (operation element) without
+    * the rpc envelope, in UTF-8. Execution stops at the first RPC that fails on
+    * transport level or returns rpc-error. Returns number of replies received (the
+    * last one may contain rpc-error), or -1 if no RPC could be delivered to the
+    * device; on return each element of replies is either a UTF-8 rpc-reply document
+    * to be released with MemFree() or nullptr. Timeout is per RPC in milliseconds
+    * (0 = proxy agent default).
+    */
+   virtual int executeNETCONFRequests(int count, const char * const *requests, char **replies, uint32_t timeout) = 0;
+
+   /**
+    * Execute single NETCONF RPC. Returns rpc-reply document (UTF-8, caller releases
+    * with MemFree, may contain rpc-error) or nullptr on communication failure.
+    */
+   char *executeNETCONFRequest(const char *request, uint32_t timeout = 0)
+   {
+      char *reply = nullptr;
+      return (executeNETCONFRequests(1, &request, &reply, timeout) == 1) ? reply : nullptr;
+   }
 };
 
 /**
@@ -555,10 +578,16 @@ public:
    virtual bool isSSHCommandChannelAvailable() override { return false; }
    virtual bool isSSHInteractiveChannelAvailable() override { return false; }
    virtual bool isSNMPAvailable() override { return m_transport != nullptr; }
+   virtual bool isNETCONFAvailable() override { return false; }
 
    virtual SSHInteractiveChannel *getInteractiveSSH() override { return nullptr; }
    virtual bool executeSSHCommand(const char *command, ByteStream *output) override { return false; }
    virtual SNMP_Transport *getSNMPTransport() override { return m_transport; }
+   virtual int executeNETCONFRequests(int count, const char * const *requests, char **replies, uint32_t timeout) override
+   {
+      memset(replies, 0, count * sizeof(char*));
+      return -1;
+   }
 };
 
 /**

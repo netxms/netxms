@@ -4888,10 +4888,12 @@ public:
    bool isSSHCommandChannelAvailable() override;
    bool isSSHInteractiveChannelAvailable() override;
    bool isSNMPAvailable() override;
+   bool isNETCONFAvailable() override;
 
    SSHInteractiveChannel *getInteractiveSSH() override;
    bool executeSSHCommand(const char *command, ByteStream *output) override;
    SNMP_Transport *getSNMPTransport() override;
+   int executeNETCONFRequests(int count, const char * const *requests, char **replies, uint32_t timeout) override;
 };
 
 /**

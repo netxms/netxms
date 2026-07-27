@@ -5,5 +5,6 @@
 
 DRIVER = juniper
 SOURCES = juniper.cpp netscreen.cpp
+DRV_LIBS = -lnxnetconf
 
 include $(TOPDIR)/src/server/drivers/ndd-common.mk
