@@ -1491,6 +1491,193 @@ paths:
         - BearerAuth: []
       tags:
         - Alarms
+  /v1/alarms/{alarm-id}/comments:
+    get:
+      operationId: getAlarmComments
+      summary: List Alarm Comments
+      description: Retrieve all comments attached to an alarm.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of alarm comments.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlarmComment'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Alarms
+    post:
+      operationId: createAlarmComment
+      summary: Create Alarm Comment
+      description: Add a new comment to an alarm. If the alarm is linked to an open helpdesk issue, the comment is also added to that issue.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: Comment text
+      responses:
+        '201':
+          description: Comment created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlarmComment'
+        '400':
+          description: Invalid alarm ID or empty comment text
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have update access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Alarms
+  /v1/alarms/{alarm-id}/comments/{comment-id}:
+    put:
+      operationId: updateAlarmComment
+      summary: Update Alarm Comment
+      description: Update text of an existing alarm comment.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: comment-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  description: Comment text
+      responses:
+        '200':
+          description: Comment updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlarmComment'
+        '400':
+          description: Invalid alarm ID, invalid comment ID, or empty comment text
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have update access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist, or comment with given ID does not belong to that alarm
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Alarms
+    delete:
+      operationId: deleteAlarmComment
+      summary: Delete Alarm Comment
+      description: Delete an alarm comment.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: comment-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Comment deleted.
+        '400':
+          description: Invalid alarm ID or invalid comment ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have update access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist, or comment with given ID does not belong to that alarm
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Alarms
+  /v1/alarms/{alarm-id}/events:
+    get:
+      operationId: getAlarmEvents
+      summary: List Alarm Related Events
+      description: >-
+        Retrieve events related to an alarm, limited to the 200 most recent root events. The list is flat and ordered from newest to oldest,
+        with each root event immediately followed by the events correlated to it. Correlation is expressed by the parentId attribute, so the
+        client can rebuild the correlation tree. Requires system-wide "view event log" access in addition to read access to the alarm.
+      parameters:
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of related events.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlarmEvent'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have "view event log" system access right, or read access to alarm or alarm's source object
+        '404':
+          description: Alarm with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Alarms
   /v1/alarms/{alarm-id}/resolve:
     post:
       operationId: resolveAlarm
@@ -10121,6 +10308,63 @@ components:
           description: Alarm categories (as assigned by the event processing policy rule that raised the alarm)
           items:
             $ref: '#/components/schemas/AlarmCategoryReference'
+    AlarmComment:
+      type: object
+      description: Comment attached to an alarm
+      properties:
+        id:
+          type: integer
+          description: Comment ID
+        alarmId:
+          type: integer
+          description: ID of the alarm this comment belongs to
+        userId:
+          type: integer
+          description: ID of the user who created or last edited the comment
+        userName:
+          type: string
+          description: Name of the user who created or last edited the comment
+        lastChangeTime:
+          type: string
+          format: date-time
+          description: Time when the comment was created or last edited
+        text:
+          type: string
+          description: Comment text
+    AlarmEvent:
+      type: object
+      description: Event related to an alarm
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Event ID
+        parentId:
+          type: integer
+          format: int64
+          description: ID of the event this event is correlated to (0 for a root event)
+        code:
+          type: integer
+          description: Event code
+        name:
+          type: string
+          description: Event name
+        severity:
+          type: integer
+          description: "Event severity: 0=Normal, 1=Warning, 2=Minor, 3=Major, 4=Critical"
+        source:
+          type: integer
+          description: Source object ID
+        sourceName:
+          type: string
+          description: Name of the source object (empty if the object no longer exists)
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp
+        message:
+          type: string
+          description: Event message
     AlarmCategoryReference:
       type: object
       description: Reference to an alarm category assigned to an alarm

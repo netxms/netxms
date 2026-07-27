@@ -1131,6 +1131,28 @@ static void FillEventData(NXCPMessage *msg, uint32_t baseId, DB_RESULT hResult, 
 }
 
 /**
+ * Prepare query for selecting events correlated to given event
+ */
+static DB_STATEMENT PrepareCorrelatedEventsQuery(DB_HANDLE hdb)
+{
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_ORACLE:
+         return DBPrepare(hdb,
+                  L"SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message "
+                  L"FROM event_log e,event_cfg c WHERE zero_to_null(e.root_event_id)=? AND c.event_code=e.event_code");
+      case DB_SYNTAX_TSDB:
+         return DBPrepare(hdb,
+                  L"SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,date_part('epoch',e.event_timestamp)::int,e.event_message "
+                  L"FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code");
+      default:
+         return DBPrepare(hdb,
+                  L"SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message "
+                  L"FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code");
+   }
+}
+
+/**
  * Get events correlated to given event into NXCP message
  *
  * @return number of consumed variable identifiers
@@ -1138,25 +1160,7 @@ static void FillEventData(NXCPMessage *msg, uint32_t baseId, DB_RESULT hResult, 
 static uint32_t GetCorrelatedEvents(uint64_t eventId, NXCPMessage *msg, uint32_t baseId, DB_HANDLE hdb)
 {
 	uint32_t fieldId = baseId;
-	DB_STATEMENT hStmt;
-	switch(g_dbSyntax)
-	{
-	   case DB_SYNTAX_ORACLE:
-	      hStmt = DBPrepare(hdb,
-	               _T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
-	               _T("FROM event_log e,event_cfg c WHERE zero_to_null(e.root_event_id)=? AND c.event_code=e.event_code"));
-	      break;
-	   case DB_SYNTAX_TSDB:
-         hStmt = DBPrepare(hdb,
-                  _T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,date_part('epoch',e.event_timestamp)::int,e.event_message ")
-                  _T("FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code"));
-         break;
-	   default:
-         hStmt = DBPrepare(hdb,
-                  _T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
-                  _T("FROM event_log e,event_cfg c WHERE e.root_event_id=? AND c.event_code=e.event_code"));
-         break;
-	}
+	DB_STATEMENT hStmt = PrepareCorrelatedEventsQuery(hdb);
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, eventId);
@@ -1179,29 +1183,31 @@ static uint32_t GetCorrelatedEvents(uint64_t eventId, NXCPMessage *msg, uint32_t
 }
 
 /**
+ * Get query for selecting alarm's related events (limited to 200 most recent)
+ */
+static const wchar_t *AlarmEventsQuery()
+{
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_ORACLE:
+         return L"SELECT * FROM (SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC) WHERE ROWNUM<=200";
+      case DB_SYNTAX_MSSQL:
+         return L"SELECT TOP 200 event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC";
+      case DB_SYNTAX_DB2:
+         return L"SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message "
+                L"FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC FETCH FIRST 200 ROWS ONLY";
+      default:
+         return L"SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC LIMIT 200";
+   }
+}
+
+/**
  * Fill NXCP message with alarm's related events
  */
 static void FillAlarmEventsMessage(NXCPMessage *msg, uint32_t alarmId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   const TCHAR *query;
-   switch(g_dbSyntax)
-   {
-		case DB_SYNTAX_ORACLE:
-			query = _T("SELECT * FROM (SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC) WHERE ROWNUM<=200");
-			break;
-		case DB_SYNTAX_MSSQL:
-			query = _T("SELECT TOP 200 event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC");
-			break;
-		case DB_SYNTAX_DB2:
-			query = _T("SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message ")
-			   _T("FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC FETCH FIRST 200 ROWS ONLY");
-			break;
-		default:
-			query = _T("SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC LIMIT 200");
-			break;
-	}
-	DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	DB_STATEMENT hStmt = DBPrepare(hdb, AlarmEventsQuery());
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
@@ -1223,6 +1229,84 @@ static void FillAlarmEventsMessage(NXCPMessage *msg, uint32_t alarmId)
       DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Create JSON object from event data in SQL query result
+ * Expected field order: event_id,event_code,event_name,severity,source_object_id,event_timestamp,message
+ */
+static json_t *EventDataToJson(DB_RESULT hResult, int row, uint64_t parentId)
+{
+   wchar_t buffer[MAX_EVENT_MSG_LENGTH];
+
+   json_t *event = json_object();
+   json_object_set_new(event, "id", json_integer(DBGetFieldUInt64(hResult, row, 0)));
+   json_object_set_new(event, "parentId", json_integer(parentId));
+   json_object_set_new(event, "code", json_integer(DBGetFieldULong(hResult, row, 1)));
+   json_object_set_new(event, "name", json_string_t(DBGetField(hResult, row, 2, buffer, MAX_DB_STRING)));
+   json_object_set_new(event, "severity", json_integer(DBGetFieldLong(hResult, row, 3)));
+   uint32_t sourceObjectId = DBGetFieldULong(hResult, row, 4);
+   json_object_set_new(event, "source", json_integer(sourceObjectId));
+   json_object_set_new(event, "sourceName", json_string_t(GetObjectName(sourceObjectId, L"")));
+   json_object_set_new(event, "timestamp", json_time_string(DBGetFieldULong(hResult, row, 5)));
+   json_object_set_new(event, "message", json_string_t(DBGetField(hResult, row, 6, buffer, MAX_EVENT_MSG_LENGTH)));
+   return event;
+}
+
+/**
+ * Add events correlated to given event to JSON array
+ */
+static void AddCorrelatedEventsToJson(json_t *events, uint64_t eventId, DB_HANDLE hdb)
+{
+   DB_STATEMENT hStmt = PrepareCorrelatedEventsQuery(hdb);
+   if (hStmt == nullptr)
+      return;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, eventId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         json_array_append_new(events, EventDataToJson(hResult, i, eventId));
+         AddCorrelatedEventsToJson(events, DBGetFieldUInt64(hResult, i, 0), hdb);
+      }
+      DBFreeResult(hResult);
+   }
+   DBFreeStatement(hStmt);
+}
+
+/**
+ * Get alarm's related events as JSON array. Events are ordered from newest to oldest, and each root event
+ * is followed by events correlated to it. Correlation is expressed by "parentId" attribute, which is set
+ * to 0 for root events.
+ */
+json_t NXCORE_EXPORTABLE *GetAlarmEventsAsJson(uint32_t alarmId)
+{
+   json_t *events = json_array();
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, AlarmEventsQuery());
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, alarmId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            json_array_append_new(events, EventDataToJson(hResult, i, 0));
+            AddCorrelatedEventsToJson(events, DBGetFieldUInt64(hResult, i, 0), hdb);
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   return events;
 }
 
 /**

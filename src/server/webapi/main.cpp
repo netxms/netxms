@@ -81,7 +81,12 @@ int H_AlarmCategoryCreate(Context *context);
 int H_AlarmCategoryDelete(Context *context);
 int H_AlarmCategoryDetails(Context *context);
 int H_AlarmCategoryUpdate(Context *context);
+int H_AlarmCommentCreate(Context *context);
+int H_AlarmCommentDelete(Context *context);
+int H_AlarmCommentUpdate(Context *context);
+int H_AlarmComments(Context *context);
 int H_AlarmDetails(Context *context);
+int H_AlarmEvents(Context *context);
 int H_AlarmResolve(Context *context);
 int H_AlarmTerminate(Context *context);
 int H_Alarms(Context *context);
@@ -370,6 +375,17 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/alarms/:alarm-id/acknowledge")
       .POST(H_AlarmAcknowledge)
+      .build();
+   RouteBuilder("v1/alarms/:alarm-id/comments")
+      .GET(H_AlarmComments)
+      .POST(H_AlarmCommentCreate)
+      .build();
+   RouteBuilder("v1/alarms/:alarm-id/comments/:comment-id")
+      .PUT(H_AlarmCommentUpdate)
+      .DELETE(H_AlarmCommentDelete)
+      .build();
+   RouteBuilder("v1/alarms/:alarm-id/events")
+      .GET(H_AlarmEvents)
       .build();
    RouteBuilder("v1/alarms/:alarm-id/resolve")
       .POST(H_AlarmResolve)
