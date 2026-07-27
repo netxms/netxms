@@ -1302,7 +1302,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 101, DB_SQLTYPE_INTEGER, m_netconfProxy);
          DBBind(hStmt, 102, DB_SQLTYPE_INTEGER, m_netconfPort);
          DBBind(hStmt, 103, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_failTimeNetconf));
-         DBBind(hStmt, 101, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 104, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
