@@ -272,6 +272,7 @@ uint32_t NXCORE_EXPORTABLE UpdateAlarmComment(uint32_t alarmId, uint32_t *noteId
 uint32_t NXCORE_EXPORTABLE DeleteAlarmCommentByID(uint32_t alarmId, uint32_t noteId);
 uint32_t NXCORE_EXPORTABLE GetAlarmComments(uint32_t alarmId, NXCPMessage *msg);
 ObjectArray<AlarmComment> NXCORE_EXPORTABLE *GetAlarmComments(uint32_t alarmId);
+json_t NXCORE_EXPORTABLE *GetAlarmEventsAsJson(uint32_t alarmId);
 
 bool DeleteObjectAlarms(uint32_t objectId, DB_HANDLE hdb);
 
