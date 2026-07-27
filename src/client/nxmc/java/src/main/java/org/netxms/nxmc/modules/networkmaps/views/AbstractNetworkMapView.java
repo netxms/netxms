@@ -1039,9 +1039,9 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
 		viewer.setLayoutAlgorithm(algorithm);
 
-		actionSetAlgorithm[layoutAlgorithm.getValue()].setChecked(false);
 		layoutAlgorithm = alg;
-		actionSetAlgorithm[layoutAlgorithm.getValue()].setChecked(true);
+		for(int i = 0; i < actionSetAlgorithm.length; i++)
+			actionSetAlgorithm[i].setChecked(i == alg.getValue());
 	}
 
 	/**
@@ -1218,6 +1218,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 				{
 					setLayoutAlgorithm(alg, true);
 					viewer.setInput(mapPage);
+					saveLayout();
 				}
 			};
 			actionSetAlgorithm[i].setChecked(layoutAlgorithm.getValue() == i);

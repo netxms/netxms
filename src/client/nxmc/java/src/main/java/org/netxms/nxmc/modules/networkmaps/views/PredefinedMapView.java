@@ -357,8 +357,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       else
       {
          automaticLayoutEnabled = true;
-         layoutAlgorithm = mapObject.getLayout();
-         setLayoutAlgorithm(layoutAlgorithm, true);
+         setLayoutAlgorithm(mapObject.getLayout(), true);
       }
 
       setObjectDisplayMode(mapObject.getObjectDisplayMode(), false);
