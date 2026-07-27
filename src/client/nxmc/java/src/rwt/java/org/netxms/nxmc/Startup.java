@@ -195,6 +195,8 @@ public class Startup implements EntryPoint, StartupParameters
             return 0;
          }
 
+         DateFormatFactory.updateTimeZone();
+
          display.addListener(SWT.Dispose, (e) -> {
             logger.info("Main display disposed");
             NXCSession session = Registry.getSession(display);

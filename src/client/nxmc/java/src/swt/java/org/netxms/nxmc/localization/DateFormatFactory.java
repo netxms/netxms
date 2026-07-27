@@ -68,7 +68,15 @@ public class DateFormatFactory
       dateFormatString = ps.getAsString("DateFormatFactory.Format.Date");
       timeFormatString = ps.getAsString("DateFormatFactory.Format.Time");
       shortTimeFormatString = ps.getAsString("DateFormatFactory.Format.ShortTime");
-      if (ps.getAsBoolean("DateFormatFactory.UseServerTimeZone", false))
+   }
+
+   /**
+    * Update time zone from preferences. Setting server time zone requires active client session, so this method should be called
+    * only after successful login.
+    */
+   public static void updateTimeZone()
+   {
+      if (PreferenceStore.getInstance().getAsBoolean("DateFormatFactory.UseServerTimeZone", false))
          Registry.setServerTimeZone();
       else
          Registry.resetTimeZone();

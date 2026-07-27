@@ -192,6 +192,7 @@ public class Startup
       if (doLogin(display, args))
       {
          NXCSession session = Registry.getSession();
+         DateFormatFactory.updateTimeZone();
          DataCollectionDisplayInfo.init();
          MaintenanceTimePeriods.init(session);
          MibCache.init(session, display);
