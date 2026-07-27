@@ -73,7 +73,7 @@ void LoadHelpDeskLink()
    if (hModule != nullptr)
    {
       auto apiVersion = static_cast<int*>(DLGetSymbolAddr(hModule, "hdlinkAPIVersion", errorText));
-      auto CreateInstance = reinterpret_cast<HelpDeskLink *(*)()>(DLGetSymbolAddr(hModule, "hdlinkCreateInstance", errorText));
+      auto CreateInstance = DLGetFunctionAddr<HelpDeskLink *(*)()>(hModule, "hdlinkCreateInstance", errorText);
       if ((apiVersion != nullptr) && (CreateInstance != nullptr))
       {
          if (*apiVersion == HDLINK_API_VERSION)
