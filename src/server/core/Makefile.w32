@@ -32,7 +32,7 @@ LDFLAGS = $(COMMON_LDFLAGS) $(COMMON_LIBDIRS) \
 
 # In-tree libs found via -L$(LIB_DIR) in COMMON_LIBDIRS
 LIBS = -lnxsrv -lnxsl -lnxsnmp -lnxlp -lnxdb -lnxagent -lnxjava \
-	-lethernetip -lnetxms -lnxjansson -largon2 \
+	-lethernetip -lnxnetconf -lnetxms -lnxjansson -largon2 \
 	$(MICROHTTPD_LIBS) \
 	$(CURL_LIBS) \
 	$(SSL_LIBS) \

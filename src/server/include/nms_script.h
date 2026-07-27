@@ -778,6 +778,18 @@ public:
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
+/**
+ * NXSL "NETCONFSession" class
+ */
+class NXSL_NetconfSessionClass : public NXSL_Class
+{
+public:
+   NXSL_NetconfSessionClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -889,6 +901,7 @@ extern NXSL_InterfaceClass g_nxslInterfaceClass;
 extern NXSL_LinkDataSourceClass g_nxslLinkDataSourceClass;
 extern NXSL_MaintenanceJournalRecordClass g_nxslMaintenanceJournalRecordClass;
 extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
+extern NXSL_NetconfSessionClass g_nxslNetconfSessionClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NetworkMapClass g_nxslNetworkMapClass;
 extern NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;

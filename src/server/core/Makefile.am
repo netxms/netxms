@@ -47,6 +47,7 @@ libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../../ethernetip/libethernetip/libethernetip.la \
+	../../libnxnetconf/libnxnetconf.la \
 	../../libnxlp/libnxlp.la \
 	../../db/libnxdb/libnxdb.la \
 	../../libnxsl/libnxsl.la \

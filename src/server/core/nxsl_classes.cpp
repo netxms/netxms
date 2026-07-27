@@ -32,6 +32,8 @@
 #include <nxai.h>
 #include <nddrv.h>
 #include <device-backup.h>
+#include <nxcore_netconf.h>
+#include <nxnetconf.h>
 
 /**
  * Maintenance journal access
@@ -59,6 +61,19 @@ struct SSHSessionData
          channel->close();
       }
    }
+};
+
+/**
+ * NETCONF session handle for NXSL. Server side is stateless - each operation is executed
+ * as separate request via node's effective NETCONF proxy, and proxy agent's session pool
+ * keeps the underlying NETCONF session alive between calls.
+ */
+struct NetconfSessionData
+{
+   shared_ptr<Node> node;
+   MutableString lastError;
+
+   NetconfSessionData(const shared_ptr<Node>& n) : node(n) { }
 };
 
 /**
@@ -2812,6 +2827,22 @@ NXSL_METHOD_DEFINITION(Node, openSSHSession)
 }
 
 /**
+ * Node::openNETCONFSession() method
+ */
+NXSL_METHOD_DEFINITION(Node, openNETCONFSession)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   shared_ptr<Node> node = *static_cast<shared_ptr<Node>*>(object->getData());
+   *result = vm->createValue(vm->createObject(&g_nxslNetconfSessionClass, new NetconfSessionData(node)));
+   return 0;
+}
+
+/**
  * Node::readAgentParameter(name) method
  */
 NXSL_METHOD_DEFINITION(Node, readAgentParameter)
@@ -3377,6 +3408,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, executeAgentCommand, -1);
    NXSL_REGISTER_METHOD(Node, executeAgentCommandWithOutput, -1);
    NXSL_REGISTER_METHOD(Node, executeSSHCommand, 1);
+   NXSL_REGISTER_METHOD(Node, openNETCONFSession, 0);
    NXSL_REGISTER_METHOD(Node, openSSHSession, -1);
    NXSL_REGISTER_METHOD(Node, getBlockedPorts, 1);
    NXSL_REGISTER_METHOD(Node, getInstalledPackages, -1);
@@ -10090,6 +10122,384 @@ void NXSL_SSHSessionClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * XML writer for serializing NETCONF documents into byte stream
+ */
+class NetconfXmlWriter : public pugi::xml_writer
+{
+private:
+   ByteStream& m_out;
+
+public:
+   NetconfXmlWriter(ByteStream& out) : m_out(out) { }
+
+   virtual void write(const void *data, size_t size) override
+   {
+      m_out.write(data, size);
+   }
+};
+
+/**
+ * Create NXSL string value from XML node serialization
+ */
+static NXSL_Value *CreateValueFromXmlNode(NXSL_VM *vm, const pugi::xml_node& node)
+{
+   ByteStream xml;
+   NetconfXmlWriter writer(xml);
+   node.print(writer, "", pugi::format_raw);
+   xml.write('\0');
+   wchar_t *text = WideStringFromUTF8String(reinterpret_cast<const char*>(xml.buffer()));
+   NXSL_Value *value = vm->createValue(text);
+   MemFree(text);
+   return value;
+}
+
+/**
+ * Get NETCONF datastore element name from datastore name given as NXSL argument
+ */
+static const char *DatastoreElementName(const wchar_t *name)
+{
+   if (!wcsicmp(name, L"running"))
+      return "running";
+   if (!wcsicmp(name, L"candidate"))
+      return "candidate";
+   if (!wcsicmp(name, L"startup"))
+      return "startup";
+   return nullptr;
+}
+
+/**
+ * Append filter element to NETCONF get/get-config operation. Returns false on invalid
+ * filter with error text stored in session handle.
+ */
+static bool AppendNetconfFilter(pugi::xml_node op, const wchar_t *filter, const wchar_t *filterType, NetconfSessionData *session)
+{
+   pugi::xml_node filterNode = op.append_child("filter");
+   if ((filterType == nullptr) || !wcsicmp(filterType, L"subtree"))
+   {
+      filterNode.append_attribute("type").set_value("subtree");
+      char *utf8Filter = UTF8StringFromWideString(filter);
+      bool success = filterNode.append_buffer(utf8Filter, strlen(utf8Filter));
+      MemFree(utf8Filter);
+      if (!success)
+         session->lastError = L"Invalid subtree filter";
+      return success;
+   }
+   if (!wcsicmp(filterType, L"xpath"))
+   {
+      filterNode.append_attribute("type").set_value("xpath");
+      char *utf8Filter = UTF8StringFromWideString(filter);
+      filterNode.append_attribute("select").set_value(utf8Filter);
+      MemFree(utf8Filter);
+      return true;
+   }
+   session->lastError = L"Invalid filter type";
+   return false;
+}
+
+/**
+ * Execute NETCONF operation prepared as XML document. Returns parsed rpc-reply on success
+ * or nullptr on failure with error text stored in session handle.
+ */
+static NETCONF_Response *ExecuteNetconfOperation(NetconfSessionData *session, const pugi::xml_document& operation)
+{
+   ByteStream content;
+   NetconfXmlWriter writer(content);
+   operation.save(writer, "", pugi::format_raw | pugi::format_no_declaration);
+   content.write('\0');
+
+   uint32_t agentRcc;
+   char *reply = ExecuteNetconfRpc(*session->node, reinterpret_cast<const char*>(content.buffer()), 0, &agentRcc);
+   if (reply == nullptr)
+   {
+      session->lastError = AgentErrorCodeToText(agentRcc);
+      return nullptr;
+   }
+
+   auto response = new NETCONF_Response();
+   bool success = response->parse(reply, strlen(reply));
+   MemFree(reply);
+   if (!success)
+   {
+      session->lastError = L"Cannot parse rpc-reply message";
+      delete response;
+      return nullptr;
+   }
+   if (!response->isSuccess())
+   {
+      session->lastError = response->getErrorText();
+      delete response;
+      return nullptr;
+   }
+   session->lastError = L"";
+   return response;
+}
+
+/**
+ * NETCONFSession::get([filter], [filterType]) method
+ */
+NXSL_METHOD_DEFINITION(NETCONFSession, get)
+{
+   if (argc > 2)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   if ((argc > 0) && !argv[0]->isString() && !argv[0]->isNull())
+      return NXSL_ERR_NOT_STRING;
+   if ((argc > 1) && !argv[1]->isString() && !argv[1]->isNull())
+      return NXSL_ERR_NOT_STRING;
+
+   NetconfSessionData *session = static_cast<NetconfSessionData*>(object->getData());
+
+   pugi::xml_document request;
+   pugi::xml_node op = request.append_child("get");
+   if ((argc > 0) && argv[0]->isString())
+   {
+      if (!AppendNetconfFilter(op, argv[0]->getValueAsCString(), ((argc > 1) && argv[1]->isString()) ? argv[1]->getValueAsCString() : nullptr, session))
+      {
+         *result = vm->createValue();
+         return 0;
+      }
+   }
+
+   NETCONF_Response *response = ExecuteNetconfOperation(session, request);
+   if (response != nullptr)
+   {
+      *result = CreateValueFromXmlNode(vm, response->getData());
+      delete response;
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
+ * NETCONFSession::getConfig([datastore], [filter], [filterType]) method
+ */
+NXSL_METHOD_DEFINITION(NETCONFSession, getConfig)
+{
+   if (argc > 3)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   for(int i = 0; i < argc; i++)
+      if (!argv[i]->isString() && !argv[i]->isNull())
+         return NXSL_ERR_NOT_STRING;
+
+   NetconfSessionData *session = static_cast<NetconfSessionData*>(object->getData());
+
+   const char *datastore = ((argc > 0) && argv[0]->isString()) ? DatastoreElementName(argv[0]->getValueAsCString()) : "running";
+   if (datastore == nullptr)
+   {
+      session->lastError = L"Invalid datastore name";
+      *result = vm->createValue();
+      return 0;
+   }
+
+   pugi::xml_document request;
+   pugi::xml_node op = request.append_child("get-config");
+   op.append_child("source").append_child(datastore);
+   if ((argc > 1) && argv[1]->isString())
+   {
+      if (!AppendNetconfFilter(op, argv[1]->getValueAsCString(), ((argc > 2) && argv[2]->isString()) ? argv[2]->getValueAsCString() : nullptr, session))
+      {
+         *result = vm->createValue();
+         return 0;
+      }
+   }
+
+   NETCONF_Response *response = ExecuteNetconfOperation(session, request);
+   if (response != nullptr)
+   {
+      *result = CreateValueFromXmlNode(vm, response->getData());
+      delete response;
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
+ * NETCONFSession::editConfig(config, [target], [defaultOperation]) method
+ */
+NXSL_METHOD_DEFINITION(NETCONFSession, editConfig)
+{
+   if ((argc < 1) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+   for(int i = 1; i < argc; i++)
+      if (!argv[i]->isString() && !argv[i]->isNull())
+         return NXSL_ERR_NOT_STRING;
+
+   NetconfSessionData *session = static_cast<NetconfSessionData*>(object->getData());
+
+   const char *target = ((argc > 1) && argv[1]->isString()) ? DatastoreElementName(argv[1]->getValueAsCString()) : "running";
+   if (target == nullptr)
+   {
+      session->lastError = L"Invalid datastore name";
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   const char *defaultOperation = nullptr;
+   if ((argc > 2) && argv[2]->isString())
+   {
+      const wchar_t *name = argv[2]->getValueAsCString();
+      if (!wcsicmp(name, L"merge"))
+         defaultOperation = "merge";
+      else if (!wcsicmp(name, L"replace"))
+         defaultOperation = "replace";
+      else if (!wcsicmp(name, L"none"))
+         defaultOperation = "none";
+      if (defaultOperation == nullptr)
+      {
+         session->lastError = L"Invalid default operation";
+         *result = vm->createValue(false);
+         return 0;
+      }
+   }
+
+   pugi::xml_document request;
+   pugi::xml_node op = request.append_child("edit-config");
+   op.append_child("target").append_child(target);
+   if (defaultOperation != nullptr)
+      op.append_child("default-operation").text().set(defaultOperation);
+
+   char *utf8Config = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   bool validConfig = op.append_child("config").append_buffer(utf8Config, strlen(utf8Config));
+   MemFree(utf8Config);
+   if (!validConfig)
+   {
+      session->lastError = L"Invalid configuration document";
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   NETCONF_Response *response = ExecuteNetconfOperation(session, request);
+   *result = vm->createValue(response != nullptr);
+   delete response;
+   return 0;
+}
+
+/**
+ * NETCONFSession::commit() method
+ */
+NXSL_METHOD_DEFINITION(NETCONFSession, commit)
+{
+   NetconfSessionData *session = static_cast<NetconfSessionData*>(object->getData());
+   pugi::xml_document request;
+   request.append_child("commit");
+   NETCONF_Response *response = ExecuteNetconfOperation(session, request);
+   *result = vm->createValue(response != nullptr);
+   delete response;
+   return 0;
+}
+
+/**
+ * NETCONFSession::discardChanges() method
+ */
+NXSL_METHOD_DEFINITION(NETCONFSession, discardChanges)
+{
+   NetconfSessionData *session = static_cast<NetconfSessionData*>(object->getData());
+   pugi::xml_document request;
+   request.append_child("discard-changes");
+   NETCONF_Response *response = ExecuteNetconfOperation(session, request);
+   *result = vm->createValue(response != nullptr);
+   delete response;
+   return 0;
+}
+
+/**
+ * NETCONFSession::rpc(content) method. Content is the RPC operation element without
+ * rpc envelope. Returns full rpc-reply document (even if it contains rpc-error) or
+ * null on communication failure.
+ */
+NXSL_METHOD_DEFINITION(NETCONFSession, rpc)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   NetconfSessionData *session = static_cast<NetconfSessionData*>(object->getData());
+
+   char *content = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   pugi::xml_document validator;
+   if (!validator.load_buffer(content, strlen(content)))
+   {
+      MemFree(content);
+      session->lastError = L"Invalid RPC content";
+      *result = vm->createValue();
+      return 0;
+   }
+
+   uint32_t agentRcc;
+   char *reply = ExecuteNetconfRpc(*session->node, content, 0, &agentRcc);
+   MemFree(content);
+   if (reply == nullptr)
+   {
+      session->lastError = AgentErrorCodeToText(agentRcc);
+      *result = vm->createValue();
+      return 0;
+   }
+
+   NETCONF_Response response;
+   if (response.parse(reply, strlen(reply)) && !response.isSuccess())
+      session->lastError = response.getErrorText();
+   else
+      session->lastError = L"";
+
+   wchar_t *text = WideStringFromUTF8String(reply);
+   MemFree(reply);
+   *result = vm->createValue(text);
+   MemFree(text);
+   return 0;
+}
+
+/**
+ * NXSL class NETCONFSession: constructor
+ */
+NXSL_NetconfSessionClass::NXSL_NetconfSessionClass() : NXSL_Class()
+{
+   setName(_T("NETCONFSession"));
+   NXSL_REGISTER_METHOD(NETCONFSession, get, -1);
+   NXSL_REGISTER_METHOD(NETCONFSession, getConfig, -1);
+   NXSL_REGISTER_METHOD(NETCONFSession, editConfig, -1);
+   NXSL_REGISTER_METHOD(NETCONFSession, commit, 0);
+   NXSL_REGISTER_METHOD(NETCONFSession, discardChanges, 0);
+   NXSL_REGISTER_METHOD(NETCONFSession, rpc, 1);
+}
+
+/**
+ * NXSL class NETCONFSession: get attribute
+ */
+NXSL_Value *NXSL_NetconfSessionClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   NetconfSessionData *session = static_cast<NetconfSessionData*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("lastErrorMessage"))
+   {
+      value = vm->createValue(session->lastError.cstr());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("nodeId"))
+   {
+      value = vm->createValue(session->node->getId());
+   }
+   return value;
+}
+
+/**
+ * NETCONFSession object destruction handler
+ */
+void NXSL_NetconfSessionClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<NetconfSessionData*>(object->getData());
+}
+
+/**
  * Class objects
  */
 NXSL_AccessPointClass g_nxslAccessPointClass;
@@ -10117,6 +10527,7 @@ NXSL_InterfaceClass g_nxslInterfaceClass;
 NXSL_LinkDataSourceClass g_nxslLinkDataSourceClass;
 NXSL_MaintenanceJournalRecordClass g_nxslMaintenanceJournalRecordClass;
 NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
+NXSL_NetconfSessionClass g_nxslNetconfSessionClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NetworkMapClass g_nxslNetworkMapClass;
 NXSL_NetworkMapLinkClass g_nxslNetworkMapLinkClass;

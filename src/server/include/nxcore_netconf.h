@@ -84,5 +84,6 @@ shared_ptr<NetconfQueryDefinition> NXCORE_EXPORTABLE FindNetconfQueryDefinition(
 shared_ptr<NetconfQueryDefinition> NXCORE_EXPORTABLE FindNetconfQueryDefinition(const TCHAR *name);
 uint32_t NXCORE_EXPORTABLE ModifyNetconfQueryDefinition(shared_ptr<NetconfQueryDefinition> definition);
 uint32_t NXCORE_EXPORTABLE DeleteNetconfQueryDefinition(uint32_t id);
+char NXCORE_EXPORTABLE *ExecuteNetconfRpc(Node& node, const char *rpcContent, uint32_t timeout, uint32_t *agentRcc);
 
 #endif   /* _nxcore_netconf_h_ */

@@ -414,3 +414,60 @@ DataCollectionError Node::getMetricFromNetconf(const TCHAR *metric, TCHAR *buffe
    delete response;
    return rc;
 }
+
+/**
+ * Execute single NETCONF RPC on node's NETCONF endpoint via effective NETCONF proxy.
+ * RPC content is the operation element without rpc envelope (envelope with session-scoped
+ * message-id is added by proxy agent). Returns rpc-reply document as UTF-8 string owned
+ * by caller or nullptr on communication failure; agent error code is stored in *agentRcc.
+ * Zero timeout selects proxy agent's default NETCONF request timeout.
+ */
+char NXCORE_EXPORTABLE *ExecuteNetconfRpc(Node& node, const char *rpcContent, uint32_t timeout, uint32_t *agentRcc)
+{
+   shared_ptr<NetObj> proxyNode = FindObjectById(node.getEffectiveNetconfProxy(), OBJECT_NODE);
+   if (proxyNode == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"ExecuteNetconfRpc(%s [%u]): invalid NETCONF proxy node", node.getName(), node.getId());
+      *agentRcc = ERR_CONNECT_FAILED;
+      return nullptr;
+   }
+
+   shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*proxyNode).acquireProxyConnection(NETCONF_PROXY);
+   if (conn == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"ExecuteNetconfRpc(%s [%u]): cannot acquire connection to proxy agent", node.getName(), node.getId());
+      *agentRcc = ERR_CONNECT_FAILED;
+      return nullptr;
+   }
+
+   NXCPMessage request(CMD_NETCONF_EXECUTE, conn->generateRequestId(), conn->getProtocolVersion());
+   request.setField(VID_IP_ADDRESS, node.getIpAddress());
+   request.setField(VID_PORT, node.getNetconfPort());
+   request.setField(VID_USER_NAME, node.getSshLogin());
+   request.setField(VID_PASSWORD, node.getSshPassword());
+   request.setField(VID_SSH_KEY_ID, node.getSshKeyId());
+   request.setField(VID_TIMEOUT, timeout);
+   request.setField(VID_NUM_ELEMENTS, static_cast<int32_t>(1));
+   request.setFieldFromUtf8String(VID_ELEMENT_LIST_BASE, rpcContent);
+
+   NXCPMessage *response = conn->customRequest(&request);
+   if (response == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"ExecuteNetconfRpc(%s [%u]): timeout waiting for proxy agent response", node.getName(), node.getId());
+      *agentRcc = ERR_REQUEST_TIMEOUT;
+      return nullptr;
+   }
+
+   char *reply = nullptr;
+   *agentRcc = response->getFieldAsUInt32(VID_RCC);
+   if ((*agentRcc == ERR_SUCCESS) && (response->getFieldAsInt32(VID_NUM_ELEMENTS) > 0))
+   {
+      reply = response->getFieldAsUtf8String(VID_ELEMENT_LIST_BASE);
+   }
+   else if (*agentRcc != ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"ExecuteNetconfRpc(%s [%u]): agent error %u (%s)", node.getName(), node.getId(), *agentRcc, AgentErrorCodeToText(*agentRcc));
+   }
+   delete response;
+   return reply;
+}
