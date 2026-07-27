@@ -289,6 +289,7 @@ public class RegionalSettingsPage extends PropertyPage
       ps.setValue("DateFormatFactory.UseServerTimeZone", checkServerTimeZone.getSelection()); 
 
 		DateFormatFactory.updateFromPreferences();
+      DateFormatFactory.updateTimeZone();
 
 		return true;
 	}
