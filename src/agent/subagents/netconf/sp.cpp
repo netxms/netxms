@@ -73,13 +73,18 @@ void ReleaseSession(NETCONFSession *session, bool invalidate)
 {
    s_lock.lock();
    session->release();
-   if (invalidate || !session->isConnected())
+   bool remove = invalidate || !session->isConnected();
+   if (remove)
    {
       nxlog_debug_tag(DEBUG_TAG, 7, _T("ReleaseSession: session %s removed (%s)"),
                       session->getName(), invalidate ? _T("invalidated") : _T("disconnected"));
-      s_sessions.remove(session);
+      s_sessions.unlink(session);
    }
    s_lock.unlock();
+
+   // Session destructor performs blocking network I/O, so it should be called with pool lock released
+   if (remove)
+      delete session;
 }
 
 /**
