@@ -1095,8 +1095,8 @@ String Alarm::requestAIAssistantComment(GenericClientSession *session) const
    prompt.append(L"Do not include alarm message in your response. ");
    prompt.append(L"Use additional tools and data sources if needed to enrich your analysis.\n");
    prompt.append(L"Here is the alarm information:\n");
-   prompt.append(L"Source object name: ").append(object->getName()).append("\n");
-   prompt.append(L"Source object ID: ").append(object->getId()).append("\n");
+   prompt.append(L"Source object name: ").append(object->getName()).append(L"\n");
+   prompt.append(L"Source object ID: ").append(object->getId()).append(L"\n");
    prompt.append(L"Severity: ").append(AlarmSeverityTextFromCode(m_currentSeverity)).append(L"\n");
    prompt.append(L"Message: ").append(m_message).append(L"\n");
    prompt.append(L"Last change time: ").append(FormatTimestamp(m_lastChangeTime)).append(L"\n");

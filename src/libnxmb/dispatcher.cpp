@@ -36,14 +36,13 @@ THREAD_RESULT THREAD_CALL NXMBDispatcher::workerThreadStarter(void *arg)
 /**
  * Constructor
  */
-NXMBDispatcher::NXMBDispatcher() : m_subscriberListAccess(MutexType::FAST), m_callHandlerAccess(MutexType::FAST), m_startCondition(true), m_stopCondition(true)
+NXMBDispatcher::NXMBDispatcher() : m_subscriberListAccess(MutexType::FAST), m_startCondition(true), m_stopCondition(true)
 {
 	m_queue = new Queue;
 	m_numSubscribers = 0;
 	m_subscribers = nullptr;
 	m_filters = nullptr;
 	m_workerThreadHandle = INVALID_THREAD_HANDLE;
-   m_callHandlers = new CallHandlerMap();
 }
 
 /**
@@ -75,8 +74,6 @@ NXMBDispatcher::~NXMBDispatcher()
 	}
 	MemFree(m_subscribers);
 	MemFree(m_filters);
-
-   delete m_callHandlers;
 }
 
 /**
@@ -184,44 +181,6 @@ void NXMBDispatcher::removeSubscriber(const TCHAR *id)
 	}
 
    m_subscriberListAccess.unlock();
-}
-
-/**
- * Add call handler
- */
-void NXMBDispatcher::addCallHandler(const TCHAR *callName, NXMBCallHandler handler)
-{
-   m_callHandlerAccess.lock();
-   m_callHandlers->set(callName, handler);
-   m_callHandlerAccess.unlock();
-}
-
-/**
- * Remove call handler
- */
-void NXMBDispatcher::removeCallHandler(const TCHAR *callName)
-{
-   m_callHandlerAccess.lock();
-   m_callHandlers->remove(callName);
-   m_callHandlerAccess.unlock();
-}
-
-/**
- * Make a call
- */
-bool NXMBDispatcher::call(const TCHAR *callName, const void *input, void *output)
-{
-   m_callHandlerAccess.lock();
-   NXMBCallHandler handler = m_callHandlers->get(callName);
-   m_callHandlerAccess.unlock();
-   if (handler == nullptr)
-   {
-      nxlog_debug_tag(NXMB_DEBUG_TAG, 7, _T("NXMB call handler %s not registered"), callName);
-      return false;
-   }
-   bool success = handler(callName, input, output);
-   nxlog_debug_tag(NXMB_DEBUG_TAG, 7, _T("NXMB call to %s %s"), callName, success ? _T("successful") : _T("failed"));
-   return success;
 }
 
 /**
