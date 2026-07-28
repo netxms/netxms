@@ -26,6 +26,8 @@
 #include <uthash.h>
 #include <vector>
 
+#define DEBUG_TAG _T("calltbl")
+
 /**
  * Call table entry
  */
@@ -63,6 +65,7 @@ void LIBNETXMS_EXPORTABLE RegisterCallHandler(const char *name, CallHandler hand
    }
    entry->handler = handler;
    s_callTableLock.unlock();
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Handler for call \"%hs\" registered"), name);
 }
 
 /**
@@ -77,6 +80,7 @@ void LIBNETXMS_EXPORTABLE UnregisterCallHandler(const char *name)
    {
       HASH_DEL(s_callTable, entry);
       MemFree(entry);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Handler for call \"%hs\" unregistered"), name);
    }
 }
 
@@ -88,7 +92,14 @@ int LIBNETXMS_EXPORTABLE CallNamedFunction(const char *name, const void *input, 
    ReadLockGuard lockGuard(s_callTableLock);
    CallTableEntry *entry;
    HASH_FIND(hh, s_callTable, name, static_cast<unsigned int>(strlen(name)), entry);
-   return (entry != nullptr) ? entry->handler(input, output): -1;
+   if (entry == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Handler for call \"%hs\" is not registered"), name);
+      return -1;
+   }
+   int rc = entry->handler(input, output);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Call \"%hs\" completed with result %d"), name, rc);
+   return rc;
 }
 
 /**

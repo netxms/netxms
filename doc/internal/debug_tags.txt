@@ -25,6 +25,8 @@ client.session	Client sessions
 
 cloud.discovery	Cloud domain resource discovery and reconciliation
 
+calltbl		Named call handler registration and invocation
+
 cas		CAS
 comm.*		Communications (in agent log)
 comm.listener	All listeners

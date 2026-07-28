@@ -488,13 +488,13 @@ static String GenerateDigestMessage(const wchar_t *channelName, const wchar_t *r
 
    // Build prompt for AI
    StringBuffer prompt;
-   prompt.append("You are a network monitoring system generating a notification digest. "
-      "The following notifications were suppressed due to rate limiting. "
-      "Produce a concise summary of the key issues. "
-      "Output only the summary text — no introductory phrases, no headers, no questions. "
-      "Do not start with phrases like \"Here's a summary\" or \"Below is a digest\". "
-      "Do not end with questions or offers for further detail. "
-      "Just state the facts: what happened, how many times, and what may need attention.\n\n");
+   prompt.append(L"You are a network monitoring system generating a notification digest. "
+      L"The following notifications were suppressed due to rate limiting. "
+      L"Produce a concise summary of the key issues. "
+      L"Output only the summary text - no introductory phrases, no headers, no questions. "
+      L"Do not start with phrases like \"Here's a summary\" or \"Below is a digest\". "
+      L"Do not end with questions or offers for further detail. "
+      L"Just state the facts: what happened, how many times, and what may need attention.\n\n");
 
    int limit = std::min(messages.size(), 50);
    for (int i = 0; i < limit; i++)

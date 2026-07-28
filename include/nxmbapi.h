@@ -103,30 +103,6 @@ public:
 };
 
 /**
- * Call handler
- */
-typedef bool (* NXMBCallHandler)(const TCHAR *, const void *, void *);
-
-/**
- * String map template for holding objects as values
- */
-class CallHandlerMap : public StringMapBase
-{
-public:
-	CallHandlerMap() : StringMapBase(Ownership::False) { }
-
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconditionally-supported"
-#endif
-	void set(const TCHAR *name, NXMBCallHandler handler) { setObject((TCHAR *)name, (void *)handler, false); }
-	NXMBCallHandler get(const TCHAR *name) { return (NXMBCallHandler)getObject(name); }
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-};
-
-/**
  * Message dispatcher class
  */
 class LIBNXMB_EXPORTABLE NXMBDispatcher
@@ -138,8 +114,6 @@ private:
 	NXMBFilter **m_filters;
 	Mutex m_subscriberListAccess;
 	THREAD m_workerThreadHandle;
-   CallHandlerMap *m_callHandlers;
-   Mutex m_callHandlerAccess;
    Condition m_startCondition;
    Condition m_stopCondition;
 
@@ -151,13 +125,9 @@ public:
 	~NXMBDispatcher();
 
 	void postMessage(NXMBMessage *msg);
-   bool call(const TCHAR *callName, const void *input, void *output);
-	
+
 	void addSubscriber(NXMBSubscriber *subscriber, NXMBFilter *filter);
 	void removeSubscriber(const TCHAR *id);
-
-   void addCallHandler(const TCHAR *callName, NXMBCallHandler handler);
-   void removeCallHandler(const TCHAR *callName);
 
    static NXMBDispatcher *getInstance();
 };
