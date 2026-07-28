@@ -1018,7 +1018,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
          // Report current speed when interface is up, last known speed otherwise (current speed is unavailable while down)
          uint64_t eventSpeed = (operState == IF_OPER_STATE_UP) ? speed : m_lastKnownSpeed;
          readLockParentList();
-         for(const std::shared_ptr<NetObj> parent : getParentList())
+         for(const std::shared_ptr<NetObj>& parent : getParentList())
          {
             EventBuilder((expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status], parent->getId())
                .param(_T("interfaceObjectId"), m_id)
@@ -1067,7 +1067,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
    if (oldSpeed != speed)
    {
       readLockParentList();
-      for(const std::shared_ptr<NetObj> parent : getParentList())
+      for(const std::shared_ptr<NetObj>& parent : getParentList())
       {
          EventBuilder(EVENT_IF_SPEED_CHANGED, parent->getId())
             .param(_T("ifIndex"), m_index)
@@ -1248,7 +1248,7 @@ void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const No
       unlockProperties();
 
       readLockParentList();
-      for(const std::shared_ptr<NetObj> parent : getParentList())
+      for(const std::shared_ptr<NetObj>& parent : getParentList())
       {
          EventBuilder(EVENT_IF_STP_STATE_CHANGED, parent->getId())
             .param(_T("ifIndex"), m_index)
@@ -1283,7 +1283,7 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 		modified = true;
 
 		readLockParentList();
-      for(const std::shared_ptr<NetObj> parent : getParentList())
+      for(const std::shared_ptr<NetObj>& parent : getParentList())
       {
          EventBuilder(EVENT_8021X_PAE_STATE_CHANGED, parent->getId())
             .param(_T("newPaeStateCode"), paeState)
@@ -1313,7 +1313,7 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 		modified = true;
 
 		readLockParentList();
-      for(const std::shared_ptr<NetObj> parent : getParentList())
+      for(const std::shared_ptr<NetObj>& parent : getParentList())
       {
          EventBuilder(EVENT_8021X_BACKEND_STATE_CHANGED, parent->getId())
             .param(_T("newBackendStateCode"), backendState)
@@ -1541,7 +1541,7 @@ void Interface::setExpectedStateInternal(int state)
          // Node ID can be 0 when interface object is just created and not attached to node object yet
          // Expected state change event is meaningless in that case
          readLockParentList();
-         for(const std::shared_ptr<NetObj> parent : getParentList())
+         for(const std::shared_ptr<NetObj>& parent : getParentList())
          {
             EventBuilder(eventCode[state], parent->getId())
                .param(_T("interfaceIndex"), m_index)
@@ -1744,7 +1744,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
    if (peerChanged)
    {
       readLockParentList();
-      for(const std::shared_ptr<NetObj> parent : getParentList())
+      for(const std::shared_ptr<NetObj>& parent : getParentList())
       {
          EventBuilder(EVENT_IF_PEER_CHANGED, parent->getId())
             .param(_T("localIfId"), m_id)
@@ -1803,7 +1803,7 @@ void Interface::setPeer(AccessPoint *ap, LinkLayerProtocol protocol)
    if (peerChanged)
    {
       readLockParentList();
-      for(const std::shared_ptr<NetObj> parent : getParentList())
+      for(const std::shared_ptr<NetObj>& parent : getParentList())
       {
          EventBuilder(EVENT_IF_PEER_CHANGED, parent->getId())
             .param(_T("localIfId"), m_id)
@@ -2251,7 +2251,8 @@ void Interface::clearOSPFInformation()
 void Interface::onMgmtStatusChange(bool isManaged, int oldStatus)
 {
    const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
-   for(const std::shared_ptr<NetObj> parent : getParentList())
+   readLockParentList();
+   for(const std::shared_ptr<NetObj>& parent : getParentList())
    {
       EventBuilder(isManaged ? EVENT_INTERFACE_UNKNOWN : EVENT_INTERFACE_UNMANAGED, parent->getId())
                     .param(_T("interfaceObjectId"), m_id)
@@ -2261,6 +2262,7 @@ void Interface::onMgmtStatusChange(bool isManaged, int oldStatus)
                     .param(_T("interfaceIndex"), m_index)
                     .post();
    }
+   unlockParentList();
 
    if (!isManaged && ConfigReadBoolean(_T("Objects.Interfaces.ClearPeerOnUnmanage"), false))
    {
