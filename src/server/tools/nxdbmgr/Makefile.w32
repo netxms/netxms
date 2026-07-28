@@ -3,13 +3,25 @@
 # Part of NetXMS project
 #
 # The set of sources built on Windows equals *.cpp in this directory (verified
-# against nxdbmgr.vcxproj), so the list is taken via wildcard.
+# against nxdbmgr.vcxproj), so the list is taken via wildcard. tables.cpp is a
+# generated file (see the rule below) that may not exist yet, so it is added
+# explicitly; $(sort) drops the duplicate when a prior build already produced it.
 #
 
 TOOL = nxdbmgr
-SOURCES = $(wildcard *.cpp)
+SOURCES = $(sort $(wildcard *.cpp) tables.cpp)
 
 TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/src/sqlite
 TOOL_LIBS = -lnxdbmgr -lnxsrv -lnxsl -lnxdb -lnetxms -lnxjansson -lnxsqlite
 
+# tables.cpp is generated from the SQL schema by create_table_list.pl (mirrors
+# the rule in Makefile.am). It is .gitignore'd, so regenerate it here rather
+# than relying on a prior autotools build. Listed in GENERATED_SOURCES so
+# tool-common.mk's clean rule removes it.
+GENERATED_SOURCES = tables.cpp
+
 include $(TOPDIR)/build/tool-common.mk
+
+tables.cpp: $(TOPDIR)/sql/schema.in
+	@echo "  GEN     $@"
+	$(Q)perl $(TOPDIR)/tools/create_table_list.pl $< > $@
