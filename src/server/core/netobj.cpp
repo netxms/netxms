@@ -373,7 +373,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_status);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (m_isDeleted ? 1 : 0));
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (m_inheritAccessRights ? 1 : 0));
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_timestamp);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_timestamp));
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_statusCalcAlg);
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_statusPropAlg);
          DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_fixedStatus);
@@ -386,7 +386,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 15, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
          DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
          DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_geoLocation.getAccuracy());
-         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
+         DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_geoLocation.getTimestamp()));
          DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_guid);
          DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_mapImage);
          DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_drilldownObjectId);
