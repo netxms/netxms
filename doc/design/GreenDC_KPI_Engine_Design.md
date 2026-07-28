@@ -1,6 +1,6 @@
 # NetXMS Green DC Monitor — Server Integration Design
 
-**Status:** draft for review
+**Status:** draft for review (rev. 2 — sample-attribute layer generalized to core infrastructure)
 **Project:** NetXMS Green DC Monitor · 1.2.1.2.i.2/1/24/A/CFLA/006
 **Companion documents:**
 - *GreenDC KPI Data Model & Conceptual Architecture v0.1* (external, "the KPI doc") — defines the
@@ -197,7 +197,14 @@ Per the verified Traffic Observer checklist plus the object-model survey; every 
 
 ---
 
-## 4. Uncertain-value support
+## 4. Per-sample attribute infrastructure (core)
+
+The attribute vocabulary defined by the KPI doc §2.1 — quality class, bounds, completeness,
+method identity — contains nothing GreenDC-specific: it is the generic vocabulary of any engine
+that derives, estimates, fills or degrades sample data. This section therefore specifies **core
+DCI infrastructure**, with the GreenDC KPI engine as its first consumer. Types live in
+`nms_dcoll.h`, tables carry no `gdc_` prefix, and `greendc.h` retains only slots, components and
+the provider contract.
 
 ### 4.1 Structural decision: companion attribute storage, not a new data type
 
@@ -207,11 +214,13 @@ evaluated against the codebase:
 **(a) New `DCI_DT_*` data type.** Rejected. The data-type enum (`nms_common.h:963-974`) is shared
 by agent, server, drivers and tools; the type drives ~10 switch sites in the value pipeline (delta
 calculation `dcitem.cpp:1737-1909`, conversion `:1698`, NXSL mapping `:2012`, wire encoding
-`session.cpp:5505-5556`, …). Old Java clients map unknown type values to `INT32` with a warning
-(`DataType.java:96-105`) and would *misparse* history rows — violating R1 for the exact population
-R1 protects. The transformation pipeline is also a string round-trip
-(`vm->createValue(value.getString())`, `dcitem.cpp:1920`), so attributes could not survive it
-in-band anyway.
+`session.cpp:5505-5556`, …). Client-version compatibility is *not* a factor — the release policy
+couples client and server at major.minor, so same-release clients always know the format — but two
+decisive objections remain. First, provenance is a property of the sample, not the series (KPI doc
+principle 2): the normative case is a mixed series — metered samples interleaved with estimator
+backfill — and a series-level type cannot represent it. Second, the transformation pipeline is a
+string round-trip (`vm->createValue(value.getString())`, `dcitem.cpp:1920`), so attributes could
+not survive it in-band anyway.
 
 **(b) Point estimate stays in the normal pipeline; attributes ride beside it.** Chosen. The point
 estimate is an ordinary `DCI_DT_FLOAT` value flowing through the untouched collection/storage
@@ -220,7 +229,7 @@ are written **only** by producers that actually have them. This makes the KPI do
 structural properties rather than conventions:
 
 - **R1 (legacy degradation)** — every existing consumer (idata readers, NXSL, thresholds, PDS
-  drivers, Grafana SQL, old clients) reads the same `idata_value varchar(255)` it always did.
+  drivers, Grafana SQL, export) reads the same `idata_value varchar(255)` it always did.
   Nothing degrades because nothing changed for them.
 - **R2 (aggregation blanking)** — built-in aggregation (`dcagg.cpp`, TSDB continuous aggregates,
   `PrepareAggregatedDataSelect`, cluster aggregation) never touches the attribute table, so
@@ -238,19 +247,21 @@ read paths skip the attribute join for the overwhelming majority of DCIs.
 Fixed, compact, frozen vocabulary (KPI doc §2.1 — deliberately not a property bag):
 
 ```cpp
-// src/server/include/greendc.h
-enum class GdcQualityClass : int16_t
+// src/server/include/nms_dcoll.h — core, not GreenDC-specific
+enum class SampleQualityClass : int16_t
 {
    MEASURED = 0, PROXY = 1, ESTIMATED = 2, INTERPOLATED = 3, MISSING = 4
+   // Append-only registry: future engines may add classes (e.g. FORECAST).
+   // Existing values never change meaning — audit-grade frozen semantics.
 };
 
-struct GdcSampleAttributes
+struct SampleAttributes
 {
-   GdcQualityClass qualityClass;
+   SampleQualityClass qualityClass;
    double lowerBound;        // at the declared coverage level
    double upperBound;
    double completeness;      // 0.0 .. 1.0
-   uint32_t methodId;        // FK into gdc_methods
+   uint32_t methodId;        // FK into computation_methods
    uint32_t methodVersion;
 };
 ```
@@ -269,7 +280,7 @@ honoring R5 (no silent substitution) without fabricating data.
 One global table (not per-object — volume is meter-scale, not interface-counter-scale):
 
 ```
-gdc_sample_attributes
+dci_sample_attributes
    item_id           integer      not null
    sample_timestamp  SQL_INT64    not null   -- ms, same epoch as idata_timestamp
    quality           integer      not null
@@ -291,7 +302,7 @@ payload through `DELAYED_IDATA_INSERT` (`dbwrite.cpp:42-49`):
 
 ```cpp
 void NXCORE_EXPORTABLE WriteAttributedSample(uint32_t nodeId, uint32_t dciId,
-      Timestamp timestamp, double value, const GdcSampleAttributes& attributes);
+      Timestamp timestamp, double value, const SampleAttributes& attributes);
 ```
 
 It pushes the point estimate through the normal `processNewDCValue` path (so cache, thresholds and
@@ -300,20 +311,41 @@ queues the attribute row on the standard delayed-write queue. Determinism (R4) m
 idempotent: attribute upsert is `INSERT … ON CONFLICT DO UPDATE` / `MERGE`
 (`BuildAggregateUpsert` pattern, `dcagg.cpp:119-173`).
 
-### 4.4 Producers
+### 4.4 Producers and write-side enforcement
 
 | Producer | Point estimate | Attributes |
 |---|---|---|
 | Ordinary collector (agent/SNMP/web service) on a slot-bound DCI | normal pipeline | none stored — implicit `MEASURED`, no bounds, completeness 1.0 |
-| Collection failure | no idata row (existing behavior) | none — engine derives `MISSING` from the gap |
-| KPI engine (mirror DCIs, §6.7) | via `WriteAttributedSample` | explicit, from the computation provider |
-| Commercial estimator (via provider contract) | via engine only — providers never write storage (R6) | carried on provider output, written by engine |
+| Collection failure | no idata row (existing behavior) | none — a consuming engine derives `MISSING` from the gap |
+| Computation engine (GreenDC mirror DCIs, §6.7; future engines) | via `WriteAttributedSample` | explicit, supplied by the engine |
+| Commercial estimator (via GreenDC provider contract) | via engine only — providers never write storage (R6) | carried on provider output, written by engine |
+
+Engine-written series get a dedicated **data origin** `DS_COMPUTED`. The data-origin enum is the
+established discriminator that already changes collection behavior (push origins are not polled);
+a `DS_COMPUTED` DCI additionally rejects `CMD_PUSH_DCI_DATA` and transformation scripts —
+`WriteAttributedSample` is its only feed. This enforces producer exclusivity (R3) at the source
+instead of by convention, while keeping the object model unchanged: no third `DCObject` variation
+(a series-level type cannot express per-sample provenance; see §13).
+
+Prospective second consumers already visible in the tree — the reason this layer is core rather
+than GreenDC-owned:
+
+- the vestigial prediction-engine seam (`items.npe_name`, `PredictionEngine` forward declaration
+  in `nxmodule.h`) — forecast series need exactly bounds + method version, and would motivate a
+  `FORECAST` quality class;
+- per-sample anomaly marking — `raw_dci_values.anomaly_detected` is a per-DCI-latest quality bit
+  that a future revision could carry per sample;
+- cluster aggregation with missing members (`DCF_AGGREGATE_WITH_ERRORS`) — the completeness
+  fraction is the quantified form of that flag.
 
 ### 4.5 Method registry
 
+Core table shared by all engines; methods are namespaced by the owning engine:
+
 ```
-gdc_methods
+computation_methods
    id             integer       not null   -- IDG-allocated
+   engine         varchar(15)   not null   -- 'GREENDC'; future engine identifiers
    name           varchar(63)   not null   -- e.g. 'direct-computation', 'nxee-estimator'
    version        integer       not null
    tier           char(1)       not null   -- 'O' open / 'C' commercial
@@ -322,9 +354,9 @@ gdc_methods
    PRIMARY KEY(id, version)
 ```
 
-Providers self-register their method identity at load; the engine refuses to run a provider whose
-(id, version) is not registered — the registry is what makes the supersede chain (§6.6) resolvable
-years later.
+Providers self-register their method identity at load; the GreenDC engine refuses to run a
+provider whose (id, version) is not registered — the registry is what makes the supersede chain
+(§6.6) resolvable years later.
 
 ### 4.6 Wire protocol and client surfaces
 
@@ -337,8 +369,9 @@ constraint: unknown trailing bytes desynchronize `parseDataRows`, `NXCSession.ja
 the bit is strictly opt-in).
 
 The server sets the bit only when the client asked for attributes via a new flag field in the
-`CMD_GET_DCI_DATA` request. Old clients never send it, never see the bit, and parse exactly as
-today — R1 on the wire.
+`CMD_GET_DCI_DATA` request. Under the release policy, client and server are version-coupled at
+major.minor, so this opt-in is **not** a compatibility gate — it is an efficiency choice: the
+attribute block adds ~34 bytes per row and most queries do not want it.
 
 Client model: `DciDataRow` gains `qualityClass`, `lowerBound`, `upperBound`, `completeness`,
 `methodId`, `methodVersion` following the `sampleCount` side-channel precedent
@@ -359,6 +392,24 @@ scripts have no write path to tags or attributes.
 Charts (deferred with UI, but the seam exists): `LineChart` already renders min/max companion
 series from `DciDataRow` (`LineChart.java:926-980` swt, `:880` rwt); bounds map onto the same
 band machinery when the UI strand picks this up.
+
+### 4.7 Scope rules for the core layer
+
+Two doctrines follow from making this layer core rather than GreenDC-private:
+
+1. **Only computation engines write attributes; generic consolidation never does.** R2 was a
+   GreenDC rule; it is now server doctrine. Built-in rollups (`dcagg.cpp`, TSDB continuous
+   aggregates, on-the-fly bucketing, cluster aggregation) operate on point estimates and never
+   emit attribute rows. Uncertainty does not average and correlated errors do not cancel — a
+   built-in consolidation that emitted bounds would produce confidently wrong intervals, worse
+   than none.
+2. **The data plane is generic; control planes are per-engine.** Sample attributes, quality
+   vocabulary, method registry, `WriteAttributedSample`, `DS_COMPUTED`, and the wire/REST/NXSL
+   exposure are core. Slot taxonomies, record schemas, settlement lifecycles, and provider
+   contracts are owned by each engine (GreenDC's in §§5–6). No generic "engine framework" is
+   introduced while there is a single engine: if a second engine materializes, extracting a
+   shared skeleton is a mechanical refactor, whereas guessing its shape now is speculative
+   abstraction.
 
 ---
 
@@ -529,7 +580,7 @@ struct GdcComponentValue
 {
    wchar_t component[16];                       // 'EIT', 'EDC', 'WIN', 'REUSE', 'REN', ...
    double value;
-   GdcSampleAttributes attributes;              // quality, bounds, completeness, method id+ver
+   SampleAttributes attributes;                 // core type (§4.2): quality, bounds, completeness, method id+ver
 };
 
 class NXCORE_EXPORTABLE GreenDCComputationProvider
@@ -582,7 +633,7 @@ Per cycle, for each Facility (iteration via `g_idxObjectById.getObjects` filtere
 1. Determine the recompute horizon: every facility-local day from the oldest `PROVISIONAL` record
    (bounded by `GreenDC.MaxRecomputeDays`, default 45) through yesterday.
 2. For each day: resolve bindings (§5.4), assemble input series from `idata` +
-   `gdc_sample_attributes` (LEFT JOIN), integrate POWER slots, build the request.
+   `dci_sample_attributes` (LEFT JOIN), integrate POWER slots, build the request.
 3. Invoke the facility's provider. Refusals/partial output become `MISSING`/degraded component
    rows — never absent rows, so the day is always accounted for (R5).
 4. Upsert daily records (`ON CONFLICT`/`MERGE`, `BuildAggregateUpsert` pattern) with
@@ -683,8 +734,8 @@ Two consumption tiers, both reading `gdc_daily_components`:
    `GreenDC.Component(EIT,month)` etc. as point estimates — instantly usable in ordinary DCIs,
    thresholds, dashboards, with zero new client code (R1 semantics by construction).
 2. **Mirror DCIs** (optional, per facility flag): the engine materializes daily component series as
-   push DCIs on the Facility via `WriteAttributedSample` (§4.3), giving attribute-aware history
-   charts and NXSL access through the standard surfaces.
+   `DS_COMPUTED` DCIs on the Facility via `WriteAttributedSample` (§4.3–4.4), giving
+   attribute-aware history charts and NXSL access through the standard surfaces.
 
 ---
 
@@ -778,8 +829,8 @@ New tables (all in `sql/schema.in`; `nxdbmgr` table list regenerates automatical
 | `gdc_power_domains` | §3.4 | |
 | `gdc_cooling_zones` | §3.4 | |
 | `gdc_metering_profile` | §5.5 | |
-| `gdc_sample_attributes` | §4.3 | TSDB hypertable on TSDB builds; retention tied to DCI history |
-| `gdc_methods` | §4.5 | |
+| `dci_sample_attributes` | §4.3 | **core table**, not GreenDC-owned; TSDB hypertable on TSDB builds; retention tied to DCI history |
+| `computation_methods` | §4.5 | **core table**; methods namespaced by owning engine |
 | `gdc_daily_components` | §6.4 | no retention (regulatory substrate) |
 | `gdc_annual_snapshots` | §6.6 | insert-only |
 | `gdc_meter_coverage` | §5.5 | reserved, lands with OQ-1 resolution (v0.2) |
@@ -827,7 +878,9 @@ Corrections and inputs for the next revision, per its §8 review instructions:
 3. **§2 "new first-class DCI value type" (implementation strategy).** Realized as
    point-estimate-in-pipeline + companion attribute storage + opt-in wire extension, not a new
    wire/data type — R1/R2/R3 become structural guarantees instead of conventions (§4.1 above).
-   No change to the contract, only to its realization.
+   Furthermore, the attribute vocabulary is engine-neutral, so it ships as core DCI
+   infrastructure with the GreenDC engine as its first consumer (§4). No change to the contract,
+   only to its realization.
 4. **OQ-1** — the provider request struct carries an optional coverage-graph pointer from day one
    and the `gdc_meter_coverage` table is reserved; confirming "yes" costs a table + populate flow,
    not a contract change.
@@ -852,7 +905,7 @@ Corrections and inputs for the next revision, per its §8 review instructions:
 | **2. Binding** | Slot catalog, validation, resolver, metering profile, `CMD_GET_GDC_SLOT_CATALOG` / profile commands | 1 |
 | **3. Engine (open tier)** | Method registry, DIRECT provider, daily computation task, component records, settlement, KPI derivation, internal metrics, events | 2 |
 | **4. Query surfaces** | Remaining NXCP commands, REST endpoints, NXSL functions | 3 |
-| **5. Attributes on the wire** | `gdc_sample_attributes`, `WriteAttributedSample`, mirror DCIs, wire option bit, Java/REST/NXSL row attributes | 3 (parallel to 4) |
+| **5. Attributes on the wire** | `dci_sample_attributes`, `WriteAttributedSample`, `DS_COMPUTED` origin, mirror DCIs, wire option bit, Java/REST/NXSL row attributes | 3 (parallel to 4) |
 | **6. Snapshots** | Freeze task, supersede chain, snapshot commands/REST | 3 |
 | **7. Commercial seam hardening** | Provider registration soak test with a stub `.nxm`, nxdbmgr module-schema walkthrough, component registration | 3 |
 
@@ -866,7 +919,10 @@ commercial contracts.
 
 | Decision | Alternatives rejected | Why |
 |---|---|---|
-| Attributes beside the pipeline, not a new `DCI_DT` | new data type; widened idata columns; attributes encoded in value string | R1 for old clients breaks on unknown data types (`DataType.java` fallback); idata is the hottest schema in the product (per-object tables × N + 6 TSDB hypertables); string encoding breaks DB-level readers |
+| Attributes beside the pipeline, not a new `DCI_DT` | new data type; widened idata columns; attributes encoded in value string; third `DCObject` variation | provenance is per-sample — a mixed measured/backfilled series is the normative case and no series-level type can express it; idata is the hottest schema in the product (per-object tables × N + 6 TSDB hypertables); string encoding breaks DB-level readers; a third DCO type forks the entire item/table machinery (client factory, editors, storage, thresholds, PDS) for values that are still scalars. Client-version compatibility is *not* the driver — release policy couples client and server at major.minor |
+| Sample-attribute layer is core infrastructure, not GreenDC-private | `gdc_`-prefixed types and tables | vocabulary (quality, bounds, completeness, method identity) is engine-neutral; second consumers already visible in-tree (prediction-engine seam, per-sample anomaly marking, cluster-aggregation completeness); avoids a rename migration later |
+| `DS_COMPUTED` data origin for engine-written series | third `DCObject` type; convention-only R3 | data origins already gate collection behavior (push origins are not polled); enforces producer exclusivity at the source with zero new branches in storage, wire, thresholds or client parsing |
+| No generic computation-engine framework | speculative shared skeleton for future engines | single engine today; control planes differ per engine in record shape and lifecycle; extract shared code when a second engine exists |
 | Compile-time slot catalog | asset-schema-style DB catalog | regulatory vocabulary must version with code/method, not with admin edits; catalog still exported to clients via command |
 | `systemTag` + `relatedObject` binding | new binding table; userTag | reuses interpretation-tag machinery verbatim (`iface-*` precedent incl. instance-discovery re-sync); `userTag` stays free for operators |
 | Binding at PDU/UPS domain objects for feed identity | feed encoded only in tags (KPI doc R7) | user-confirmed topology need (main entries → UPS → PDU); objects give rollup boundaries and equipment linkage; tags alone can't model lineage |
