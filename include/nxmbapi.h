@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Message Bus API
-** Copyright (C) 2009-2020 Victor Kirhenshtein
+** Copyright (C) 2009-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,8 +115,15 @@ class CallHandlerMap : public StringMapBase
 public:
 	CallHandlerMap() : StringMapBase(Ownership::False) { }
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconditionally-supported"
+#endif
 	void set(const TCHAR *name, NXMBCallHandler handler) { setObject((TCHAR *)name, (void *)handler, false); }
 	NXMBCallHandler get(const TCHAR *name) { return (NXMBCallHandler)getObject(name); }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 };
 
 /**
