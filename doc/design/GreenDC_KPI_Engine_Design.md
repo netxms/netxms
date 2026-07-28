@@ -77,6 +77,11 @@ three DC targets is deliberate:
 - `showThresholdSummary()` and the threshold/event machinery come for free.
 - `getInternalMetric` gives a zero-cost query surface for current KPI values (§6.7).
 
+Unlike `Collector`/`Circuit`, the new classes do **not** take the `AutoBindTarget` mixin: this
+hierarchy is a declared physical topology feeding a regulatory report, so membership is
+deliberate, never script-derived. Auto-bind can be added later without schema impact if operators
+demand it.
+
 `Rack` (`OBJECT_RACK = 32`, `AbstractContainer`, `rack.cpp`) is **extended, not duplicated**: it
 gains no new C++ state. Its role in the Green DC model is purely relational (membership edges to
 PowerDomains and CoolingZones) plus DCI bindings on devices it already contains. The existing
@@ -118,10 +123,18 @@ PDUs are unmetered). PowerDomain carries:
 
 - `domainType` enum: `GRID_ENTRY`, `GENERATOR`, `UPS`, `PDU`, `BUSWAY`, `OTHER`
 - `feedTag` (short string, e.g. "A"/"B") — feed identity as a first-class object attribute
-- `equipmentId` — optional object reference to the Node representing the physical device (UPS,
-  metered PDU). The device node itself stays wherever the network model puts it (subnet,
-  container); this reference is not a containment edge, so no cycle risk. The `ups` subagent
-  (`src/agent/subagents/ups/`) and SNMP-polled PDUs supply that node's DCIs.
+- `ratedPower` (watts, 0 = unknown) — nameplate capacity; static configuration that cannot be
+  collected as a DCI, consumed as a plausibility bound by binding-time and computation-time
+  sanity checks (a measured feed exceeding nameplate flags a mis-scaled meter) and by capacity
+  views later
+
+Equipment linkage is **containment membership, not a reference attribute**: the Node(s)
+representing the physical devices — UPS modules, metered PDUs — are added as children of the
+domain (§3.3 admits Nodes/Sensors there). Cardinality is naturally correct: one PDU is one child;
+an N+1 parallel UPS system is several node children of one logical UPS domain. Multi-parent
+containment lets the device node also stay wherever the network model puts it (subnet, management
+container). The `ups` subagent (`src/agent/subagents/ups/`) and SNMP-polled PDUs supply those
+nodes' DCIs.
 
 Refinement of KPI doc rule **R7** ("feed identity lives on DCI binding tags"): with an explicit
 PowerDomain hierarchy, feed identity lives primarily on the **PowerDomain object** (`feedTag`), and
@@ -130,8 +143,10 @@ a DCI's feed is implied by which domain it is bound to (§5). A tag *qualifier* 
 than tags alone and keeps R8 intact: membership edges are never summed; energy balance operates on
 the flow graph implied by bindings (KPI doc §4.2, unchanged).
 
-CoolingZone carries `zoneType` enum: `PLANT`, `ZONE`, `OTHER`, plus the same optional
-`equipmentId` (chiller/CRAH node).
+CoolingZone carries `zoneType` enum: `PLANT`, `ZONE`, `OTHER`, plus `ratedCapacity` (watts
+thermal, 0 = unknown) with the same sanity-bound role as `ratedPower`. Equipment linkage follows
+the same containment rule — a server room cooled by two CRAC units has both CRAC nodes as
+children of its CoolingZone; a chiller-plant zone holds the chiller nodes.
 
 ### 3.3 Containment rules
 
@@ -149,8 +164,12 @@ Notes:
 - One Facility per EED submission (KPI doc §4.1). Multi-facility deployments hold several Facility
   objects under Infrastructure. No enforcement of "one facility" — the boundary is per object, not
   per server.
-- Nodes/Sensors are accepted under Power/Cooling domains so that meter and equipment devices can be
-  *grouped* there for navigation; grouping carries no semantic weight (R8).
+- Node/Sensor children of a PowerDomain or CoolingZone are, by convention, its equipment and
+  meters (§3.2) — distinguishable from racks and nested domains by class alone, so no role marker
+  is needed. The edge buys navigation, drilldown, gap diagnosis, and status propagation
+  (`calculateCompoundStatus` colors a domain when its UPS or CRAC fails, tunable through the
+  standard per-object status-calculation options). It carries **no** energy-flow semantics: R8 is
+  unchanged — flows come exclusively from tagged DCI bindings, never from membership.
 - Multi-parent semantics need no new mechanism: edges persist in `container_members`
   (`sql/schema.in:864`), `NetObj::deleteObject` already detaches instead of deleting when
   `getParentCount() > 1` (`netobj.cpp:974`).
@@ -167,8 +186,8 @@ class-specific columns; everything else comes from `object_properties` / `object
 
 - `gdc_facilities` — provider name, settlement lag (days), reporting-year start (MM-DD), coverage
   level, flags.
-- `gdc_power_domains` — domain type, feed tag, equipment object id.
-- `gdc_cooling_zones` — zone type, equipment object id.
+- `gdc_power_domains` — domain type, feed tag, rated power.
+- `gdc_cooling_zones` — zone type, rated capacity.
 
 All three classes are loaded via the standard `LoadObjectsFromTable<T>` calls in `LoadObjects`
 (`objects.cpp:1607-1705`), registered in `object_containers` with their class id, and cached under
@@ -789,7 +808,8 @@ Registered via `RegisterDCIFunctions`-style table in `gdc_engine.cpp`:
   `completeness`, `quality` (read-only class, `DCObjectInfo`-snapshot style).
 - `GetFacilityComponents(facility, from, to)` → array of component record objects.
 - NXSL classes `Facility` / `PowerDomain` / `CoolingZone` expose `domainType`, `feedTag`,
-  `equipment` (resolved object), `provider`, `settlementLag`.
+  `ratedPower` / `ratedCapacity`, `provider`, `settlementLag`; equipment is enumerated through
+  the standard `children` attribute.
 - Object-query constants `FACILITY`, `POWERDOMAIN`, `COOLINGZONE` (`object_queries.cpp:~549`).
 
 ---
@@ -930,3 +950,5 @@ commercial contracts.
 | Daily records in dedicated table, KPIs derived | KPIs as stored DCIs; ratios stored | ratios don't aggregate; idata can't carry the attribute set; regulatory no-retention requirement conflicts with DCI retention machinery |
 | Facility-local day + `YYYYMMDD` key | UTC epoch day | EED reporting is calendar-local; avoids DST double-count/gap at day boundaries |
 | Settlement 5 days, P→S state column | aggregation-style close window (seconds); open-interval sentinel | corrections arrive on day scale; explicit state beats sentinel for audit queries (`business_service_downtime` sentinel considered and rejected — records here are per-day, not intervals) |
+| Equipment linkage via containment membership | scalar `equipmentId` attribute; multi-value equipment reference table | scalar is wrong cardinality (two CRAC units per zone is the ordinary case; N+1 parallel UPS modules per domain); children give status propagation and drilldown for free; no dangling-id maintenance; R8 unchanged — membership carries no flow semantics |
+| No `AutoBindTarget` on the new classes | Collector-style auto-bind scripts | declared physical topology behind a regulatory report — membership must be deliberate; can be added later without schema impact |
