@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Westerstrand clocks
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -170,7 +170,7 @@ GeoLocation WesterstrandDriver::getGeoLocation(SNMP_Transport *snmp, NObject *no
       lon = _tcstod(v->getValueAsString(buffer, 256), &eptr);
       if (*eptr == 0)
          vlon = true;
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getGeoLocation(%s): got longitude \"%s\" (%s number)"), node->getName(), buffer, vlat ? _T("valid") : _T("invalid"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getGeoLocation(%s): got longitude \"%s\" (%s number)"), node->getName(), buffer, vlon ? _T("valid") : _T("invalid"));
    }
 
    delete response;

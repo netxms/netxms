@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Nortel WLAN Security Switch series
-** Copyright (C) 2013-2024 Raden Solutions
+** Copyright (C) 2013-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -270,26 +270,26 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *t
 
    uint32_t ipAddr;
    oid[14] = 6; // wsCcRfMuIpAddr
-   ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &ipAddr, sizeof(ipAddr), 0, NULL);
-   UINT32 vlanInfex;
+   ret = SnmpGetEx(transport, nullptr, oid, sizeof(oid) / sizeof(oid[0]), &ipAddr, sizeof(ipAddr), 0, nullptr);
+   uint32_t vlanInfex;
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[14] = 4; // wsCcRfMuVlanIndex
-      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &vlanInfex, sizeof(vlanInfex), 0, NULL);
+      ret = SnmpGetEx(transport, nullptr, oid, sizeof(oid) / sizeof(oid[0]), &vlanInfex, sizeof(vlanInfex), 0, nullptr);
    }
 
-   UINT32 wlanInfex;
+   uint32_t wlanInfex;
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[14] = 2; // wsCcRfMuWlanIndex
-      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &wlanInfex, sizeof(vlanInfex), 0, NULL);
+      ret = SnmpGetEx(transport, nullptr, oid, sizeof(oid) / sizeof(oid[0]), &wlanInfex, sizeof(wlanInfex), 0, nullptr);
    }
 
    UINT32 rfIndex;
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[14] = 3; // wsCcRfMuRadioIndex
-      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &rfIndex, sizeof(rfIndex), 0, NULL);
+      ret = SnmpGetEx(transport, nullptr, oid, sizeof(oid) / sizeof(oid[0]), &rfIndex, sizeof(rfIndex), 0, nullptr);
    }
 
    TCHAR ssid[MAX_SSID_LENGTH];
@@ -298,7 +298,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *t
       UINT32 wlanOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 14, 1, 1, 4, 0 };
       wlanOid[(sizeof(wlanOid) / sizeof(wlanOid[0])) - 1] = wlanInfex;
 
-      ret = SnmpGetEx(transport, NULL, wlanOid, sizeof(wlanOid) / sizeof(wlanOid[0]), ssid, sizeof(ssid), 0, NULL);
+      ret = SnmpGetEx(transport, nullptr, wlanOid, sizeof(wlanOid) / sizeof(wlanOid[0]), ssid, sizeof(ssid), 0, nullptr);
    }
 
    if (ret == SNMP_ERR_SUCCESS)
