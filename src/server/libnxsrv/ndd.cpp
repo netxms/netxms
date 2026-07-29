@@ -1385,8 +1385,7 @@ static uint32_t FDBHandler(SNMP_Variable *var, SNMP_Transport *snmp, StructArray
          int status = varStatus->getValueAsInt();
          if ((port > 0) && ((status == 3) || (status == 5) || (status == 6)))  // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
          {
-            ForwardingDatabaseEntry *entry = fdb->addPlaceholder();
-            memset(entry, 0, sizeof(ForwardingDatabaseEntry));
+            ForwardingDatabaseEntry *entry = new(fdb->addPlaceholder()) ForwardingDatabaseEntry();
             entry->bridgePort = port;
             entry->macAddr = var->getValueAsMACAddr();
             entry->vlanId = 1;
@@ -1422,8 +1421,7 @@ static uint32_t Dot1qTpFdbHandler(SNMP_Variable *var, SNMP_Transport *snmp, Stru
       int status = response->getVariable(0)->getValueAsInt();
       if ((status == 3) || (status == 5) || (status == 6)) // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
       {
-         ForwardingDatabaseEntry *entry = fdb->addPlaceholder();
-         memset(entry, 0, sizeof(ForwardingDatabaseEntry));
+         ForwardingDatabaseEntry *entry = new(fdb->addPlaceholder()) ForwardingDatabaseEntry();
          entry->bridgePort = port;
          size_t oidLen = oid.length();
          BYTE macAddrBytes[MAC_ADDR_LENGTH];
