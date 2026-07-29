@@ -677,19 +677,20 @@ bool JuniperDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, 
    if (success)
       return true;
 
-   if ((failedStep == 1) || (failedStep == 2))
+   if ((failedStep >= 1) && (failedStep <= 3))
    {
-      // Candidate datastore may contain partially loaded configuration - discard changes
-      // and release the lock (best effort; session termination releases the lock anyway)
+      // Candidate datastore may contain partially loaded or already committed configuration -
+      // discard changes and release the lock. Lock cannot be left to session termination because
+      // proxy agent keeps NETCONF sessions pooled after request completion. Discarding changes
+      // does not cancel pending confirmed commit, so automatic rollback is not affected.
       const char *cleanupRequests[2] = { "<discard-changes/>", unlockRequest };
       char *cleanupReplies[2];
       ctx->executeNETCONFRequests(2, cleanupRequests, cleanupReplies, 60000);
       MemFree(cleanupReplies[0]);
       MemFree(cleanupReplies[1]);
-   }
-   else if (failedStep == 3)
-   {
-      errorLog->append(L"; device will roll back to previous configuration automatically (confirmed commit timeout 300 seconds)");
+
+      if (failedStep == 3)
+         errorLog->append(L"; device will roll back to previous configuration automatically (confirmed commit timeout 300 seconds)");
    }
    return false;
 }
