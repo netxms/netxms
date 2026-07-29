@@ -299,8 +299,7 @@ static uint32_t FDBHandler(SNMP_Variable *var, SNMP_Transport *snmp, uint16_t vl
          int status = varStatus->getValueAsInt();
          if ((port > 0) && ((status == 3) || (status == 5) || (status == 6)))  // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
          {
-            ForwardingDatabaseEntry *entry = fdb->addPlaceholder();
-            memset(entry, 0, sizeof(ForwardingDatabaseEntry));
+            ForwardingDatabaseEntry *entry = new(fdb->addPlaceholder()) ForwardingDatabaseEntry();
             entry->bridgePort = port;
             entry->macAddr = var->getValueAsMACAddr();
             entry->vlanId = vlanId;
