@@ -839,13 +839,14 @@ void PackageDeploymentJob::execute()
       if (maxWaitTime < 30)
          maxWaitTime = 30;
       agentConn->setCommandTimeout(maxWaitTime * 1000);
-      uint32_t rcc = agentConn->installPackage(m_packageFile, m_packageType, (m_command.charAt(0) == '@') ? node->expandText(m_command.cstr() + 1) : m_command);
+      rcc = agentConn->installPackage(m_packageFile, m_packageType, (m_command.charAt(0) == '@') ? node->expandText(m_command.cstr() + 1) : m_command);
       if (rcc == ERR_SUCCESS)
       {
          success = true;
       }
       else
       {
+         success = false;
          const wchar_t *errorMessage = AgentErrorCodeToText(rcc);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("PackageDeploymentJob::execute(): installation of package \"%s\" [%u] failed on node \"%s\" [%u] (%s)"),
             m_packageFile.cstr(), m_packageId, node->getName(), node->getId(), errorMessage);
