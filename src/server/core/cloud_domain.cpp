@@ -436,7 +436,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
          StringSet discoveredIds;
          std::function<void(const ResourceDescriptor *, uint32_t)> reconcileResources;
 
-         reconcileResources = [this, &connector, &discoveredIds, &reconcileResources](const ResourceDescriptor *desc, uint32_t parentObjId) {
+         reconcileResources = [this, &discoveredIds, &reconcileResources](const ResourceDescriptor *desc, uint32_t parentObjId) {
             for (const ResourceDescriptor *d = desc; d != nullptr; d = d->next)
             {
                if (IsShutdownInProgress())
@@ -533,7 +533,7 @@ void CloudDomain::configurationPoll(PollerInfo *poller, ClientSession *session, 
          unlockProperties();
 
          std::function<void(uint32_t)> removeStaleResources;
-         removeStaleResources = [this, &discoveredIds, &removeStaleResources, removalPolicy, gracePeriod](uint32_t parentObjId) {
+         removeStaleResources = [&discoveredIds, &removeStaleResources, removalPolicy, gracePeriod] (uint32_t parentObjId) {
             shared_ptr<NetObj> parentObj = FindObjectById(parentObjId);
             if (parentObj == nullptr)
                return;

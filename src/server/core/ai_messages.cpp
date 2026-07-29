@@ -60,7 +60,7 @@ static void CleanupThread()
       s_messages.forEach(
          [now, &expiredMessages] (AIMessage *msg) -> EnumerationCallbackResult
          {
-            if (msg->isExpired())
+            if (now > msg->getExpirationTime())
             {
                expiredMessages.add(msg->getId());
                nxlog_debug_tag(DEBUG_TAG, 5, L"AI message %u expired", msg->getId());
