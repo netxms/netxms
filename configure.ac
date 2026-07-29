@@ -1535,6 +1535,8 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	AC_CPP_CHECK_OPTION(-Werror=return-type)
 	AC_CXX_CHECK_OPTION(-Wreorder)
 	AC_CXX_CHECK_OPTION(-Waddress)
+	AC_CXX_CHECK_OPTION(-Wnontrivial-memcall)
+	AC_CXX_CHECK_OPTION(-Wclass-memaccess)
 	AC_CXX_CHECK_OPTION(-Wnon-pod-varargs)
 	AC_CXX_CHECK_OPTION(-Wdeprecated-copy)
 	AC_CXX_CHECK_OPTION(-Woverloaded-virtual)
