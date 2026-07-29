@@ -1,5 +1,6 @@
 %option never-interactive
 %option 8bit
+%option nounput
 
 %a 14000
 %p 12000
