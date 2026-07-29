@@ -908,7 +908,6 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
                for(int i = 0; i < count; i++)
                {
                   OSPFNeighbor *n = m_ospfNeighbors.addPlaceholder();
-                  memset(n, 0, sizeof(OSPFNeighbor));
                   n->routerId = DBGetFieldIPAddr(hResult, i, 0);
                   n->areaId = DBGetFieldIPAddr(hResult, i, 1);
                   n->ipAddress = DBGetFieldInetAddr(hResult, i, 2);
@@ -916,6 +915,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
                   n->ifIndex = DBGetFieldUInt32(hResult, i, 4);
                   n->isVirtual = DBGetFieldLong(hResult, i, 5) ? true : false;
                   n->state = static_cast<OSPFNeighborState>(DBGetFieldLong(hResult, i, 6));
+                  n->ifObject = 0;
                }
             }
             DBFreeResult(hResult);

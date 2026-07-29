@@ -115,14 +115,6 @@ static void uuid_unpack(const uuid_t in, struct __uuid *uu)
 	memcpy(uu->node, ptr, 6);
 }
 
-/**
- * Clear a UUID
- */
-void LIBNETXMS_EXPORTABLE _uuid_clear(uuid_t uu)
-{
-	memset(uu, 0, 16);
-}
-
 #define UUCMP(u1,u2) if (u1 != u2) return((u1 < u2) ? -1 : 1);
 
 /**

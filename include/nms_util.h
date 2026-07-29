@@ -132,6 +132,16 @@ void LIBNETXMS_EXPORTABLE bswap_array_16(uint16_t *v, int len);
 void LIBNETXMS_EXPORTABLE bswap_array_32(uint32_t *v, int len);
 
 /**
+ * Initialize given object with all zeroes using memset
+ * Fail at compile time if object is not of trivially copyable type
+ */
+template<typename T> static inline void ZeroInit(T& obj) noexcept
+{
+   static_assert(std::is_trivially_copyable_v<T>, "ZeroInit() requires a trivially copyable type");
+   memset(static_cast<void*>(&obj), 0, sizeof(T));
+}
+
+/**
  * Return codes for IcmpPing()
  */
 #define ICMP_SUCCESS          0

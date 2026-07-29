@@ -25,7 +25,14 @@ typedef unsigned char uuid_t[UUID_LENGTH];
 #define UUID_VARIANT_MICROSOFT   2
 #define UUID_VARIANT_OTHER       3
 
-void LIBNETXMS_EXPORTABLE _uuid_clear(uuid_t uu);
+/**
+ * Clear a UUID
+ */
+static inline void _uuid_clear(uuid_t uu)
+{
+   memset(uu, 0, 16);
+}
+
 int LIBNETXMS_EXPORTABLE _uuid_compare(const uuid_t uu1, const uuid_t uu2);
 void LIBNETXMS_EXPORTABLE _uuid_generate(uuid_t out);
 bool LIBNETXMS_EXPORTABLE _uuid_is_null(const uuid_t uu);

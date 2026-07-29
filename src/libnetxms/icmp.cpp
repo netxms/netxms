@@ -668,7 +668,7 @@ retry:
 uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment)
 {
    PingRequest request;
-   memset(&request, 0, sizeof(request));
+   ZeroInit(request);
    request.address = addr;
    request.packetSize = packetSize;
    request.dontFragment = dontFragment;
