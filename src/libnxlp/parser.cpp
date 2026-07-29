@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -925,12 +925,12 @@ static void EndElement(void *userData, const char *name)
 			}
 			else
 			{
-				while((*eptr == ' '))
+				while(*eptr == ' ')
 					++eptr;
 				if (*eptr == '-')
 				{
 				   ++eptr;
-	            while((*eptr == ' '))
+	            while(*eptr == ' ')
 	               ++eptr;
 				   end = _tcstoul(eptr, nullptr, 0);
 				}

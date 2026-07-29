@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Symbol WS series wireless switches
-** Copyright (C) 2013-2024 Raden Solutions
+** Copyright (C) 2013-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -430,7 +430,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *t
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[14] = 2; // wsCcRfMuWlanIndex
-      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &wlanInfex, sizeof(vlanInfex), 0, NULL);
+      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &wlanInfex, sizeof(wlanInfex), 0, NULL);
    }
 
    uint32_t rfIndex;

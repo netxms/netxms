@@ -1527,7 +1527,6 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
 
    bool useParallel = !s_import && (g_migrationWorkers > 1);
    ThreadPool *threadPool = nullptr;
-   int numConnections = 0;
    ObjectArray<ConnectionPair> poolConnections(16, 16, Ownership::False);
 
    if (useParallel)
@@ -1555,7 +1554,6 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
          pair->slot = i;
          s_connectionPool.put(pair);
          poolConnections.add(pair);
-         numConnections++;
       }
 
       if (!poolCreated)
@@ -1570,7 +1568,6 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
             delete pair;
          }
          poolConnections.clear();
-         numConnections = 0;
          useParallel = false;
       }
       else
