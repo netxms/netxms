@@ -118,16 +118,9 @@ struct LIBNXSL_EXPORTABLE NXSL_Identifier
       length = (BYTE)strlen(value);
    }
 
-   NXSL_Identifier(const NXSL_Identifier& src)
-   {
-      memcpy(this, &src, sizeof(NXSL_Identifier));
-   }
+   NXSL_Identifier(const NXSL_Identifier& src) = default;
 
-   NXSL_Identifier& operator=(const NXSL_Identifier& src)
-   {
-      memcpy(this, &src, sizeof(NXSL_Identifier));
-      return *this;
-   }
+   NXSL_Identifier& operator=(const NXSL_Identifier& src) = default;
 
    NXSL_Identifier& operator=(const identifier_t& src)
    {
