@@ -332,6 +332,7 @@ bool LoadActions()
          s_logRecordId = std::max(DBGetFieldInt64(hResult, 0, 0), static_cast<int64_t>(s_logRecordId));
       DBFreeResult(hResult);
    }
+   s_logRecordId += HAGetRecordIdGap();
 
    DBConnectionPoolReleaseConnection(hdb);
    return success;

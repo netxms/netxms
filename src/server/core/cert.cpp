@@ -562,6 +562,7 @@ void ReseedCertificateActionLogRecordId()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
+   s_logRecordId += static_cast<int32_t>(HAGetRecordIdGap());
 }
 
 /**

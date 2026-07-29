@@ -536,6 +536,7 @@ void StartOtelLogProcessing()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
+   s_recordId += HAGetRecordIdGap();
 
    InitLogParserLibrary();
 

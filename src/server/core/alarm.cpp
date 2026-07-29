@@ -3203,6 +3203,7 @@ void ActivateAlarmManager()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
+   s_stateChangeLogRecordId += HAGetRecordIdGap();
 
    s_alarmDbWriterThread = ThreadCreateEx(AlarmDbWriterThread);
    s_watchdogThread = ThreadCreateEx(WatchdogThread);

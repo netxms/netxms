@@ -51,6 +51,7 @@ void HAWaitForActivation();
 void HAShutdownController();
 bool NXCORE_EXPORTABLE HAIsFenced();
 bool NXCORE_EXPORTABLE HACheckFence();
+uint32_t NXCORE_EXPORTABLE HAGetRecordIdGap();
 bool NXCORE_EXPORTABLE HAInitiateSwitchover();
 HALeaseManager NXCORE_EXPORTABLE *HAGetLeaseManager();
 void NXCORE_EXPORTABLE HAGetActiveServerAddress(wchar_t *buffer, size_t size);

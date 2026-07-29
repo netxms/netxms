@@ -110,6 +110,7 @@ void InitAuditLog()
          s_recordId = std::max(DBGetFieldLong(hResult, 0, 0), static_cast<int32_t>(s_recordId));
       DBFreeResult(hResult);
    }
+   s_recordId += static_cast<int32_t>(HAGetRecordIdGap());
 
 	// External audit server
 	TCHAR temp[256];

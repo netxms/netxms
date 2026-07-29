@@ -1131,6 +1131,7 @@ void InitAIOperators()
          s_observationId = DBGetFieldInt64(hResult, 0, 0);
       DBFreeResult(hResult);
    }
+   s_observationId += HAGetRecordIdGap();
 
    hResult = DBSelect(hdb, L"SELECT max(record_id) FROM ai_operator_execution_log");
    if (hResult != nullptr)
@@ -1139,6 +1140,7 @@ void InitAIOperators()
          s_logRecordId = DBGetFieldInt64(hResult, 0, 0);
       DBFreeResult(hResult);
    }
+   s_logRecordId += HAGetRecordIdGap();
 
    hResult = DBSelect(hdb,
       L"SELECT id,name,description,owner_user_id,enabled,scope_filter,model_slot,min_interval,max_interval,daily_token_budget,"

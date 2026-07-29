@@ -606,6 +606,7 @@ void StartWindowsEventProcessing()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
+   s_eventId += HAGetRecordIdGap();
 
    InitLogParserLibrary();
 

@@ -513,6 +513,15 @@ bool InitIdTable()
 
    LoadLastEventId(hdb);
 
+   // ID groups for append-only log tables must start above records the
+   // predecessor may still commit after this node has taken over the cluster
+   // lease (see HAGetRecordIdGap)
+   uint32_t recordIdGap = HAGetRecordIdGap();
+   s_freeIdTable[IDG_BUSINESS_SERVICE_RECORD] += recordIdGap;
+   s_freeIdTable[IDG_MAINTENANCE_JOURNAL] += recordIdGap;
+   s_freeIdTable[IDG_INCIDENT_ACTIVITY] += recordIdGap;
+   s_freeIdTable[IDG_CONNECTION_HISTORY] += recordIdGap;
+
    DBConnectionPoolReleaseConnection(hdb);
    return true;
 }

@@ -69,6 +69,7 @@ void LoadLastEventId(DB_HANDLE hdb)
          s_eventId = std::max(static_cast<int64_t>(s_eventId), DBGetFieldInt64(hResult, 0, 0));
       DBFreeResult(hResult);
    }
+   s_eventId += HAGetRecordIdGap();
 }
 
 EventProcessingPolicy NXCORE_EXPORTABLE *GetEventProcessingPolicy()

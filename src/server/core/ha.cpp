@@ -133,6 +133,20 @@ bool NXCORE_EXPORTABLE HAIsClusterMode()
 }
 
 /**
+ * Get gap to be added to log record ID counters seeded from database maximum.
+ * A demoted node cannot recall statements already handed to the database when
+ * it fenced (residual commit window, doc/HA_Design.md 1.3), so records written
+ * by the predecessor can still appear after the new active has read the table
+ * maximum. Starting above them prevents primary key collisions. The number of
+ * such records is bounded by the number of writer threads; gaps in log record
+ * IDs are normal (they already occur after a server crash).
+ */
+uint32_t NXCORE_EXPORTABLE HAGetRecordIdGap()
+{
+   return (s_clusterMode != 0) ? 100 : 0;
+}
+
+/**
  * Check if this node has been fenced
  */
 bool NXCORE_EXPORTABLE HAIsFenced()

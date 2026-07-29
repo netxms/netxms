@@ -52,6 +52,7 @@ void InitAITasks()
          s_logRecordId = std::max(DBGetFieldInt64(hResult, 0, 0), static_cast<int64_t>(s_logRecordId));
       DBFreeResult(hResult);
    }
+   s_logRecordId += HAGetRecordIdGap();
 
    // Load tasks from database
    hResult = DBSelect(hdb, _T("SELECT id,description,prompt,memento,last_execution_time,next_execution_time,iteration,user_id FROM ai_tasks ORDER BY id"));

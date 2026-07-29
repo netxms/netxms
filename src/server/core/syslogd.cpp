@@ -1405,6 +1405,7 @@ void StartSyslogServer()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
+   s_msgId += HAGetRecordIdGap();
 
    InitLogParserLibrary();
 

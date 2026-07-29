@@ -791,6 +791,7 @@ void StartSnmpTrapReceiver()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
+   s_trapId += HAGetRecordIdGap();
 
    s_receiverThread = ThreadCreateEx(ReceiverThread);
    s_processorThread = ThreadCreateEx(ProcessorThread);

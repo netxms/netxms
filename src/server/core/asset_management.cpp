@@ -505,6 +505,7 @@ static void InitAssetChangeLogId()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
+   s_assetChangeLogId += HAGetRecordIdGap();
 }
 
 /**

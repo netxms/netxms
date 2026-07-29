@@ -1990,6 +1990,7 @@ void LoadNotificationChannels()
          s_notificationId = std::max(DBGetFieldInt64(hResult, 0, 0), static_cast<int64_t>(s_notificationId));
       DBFreeResult(hResult);
    }
+   s_notificationId += HAGetRecordIdGap();
 
    hResult = DBSelect(hdb, _T("SELECT name,driver_name,description,configuration FROM notification_channels"));
    if (hResult != nullptr)
