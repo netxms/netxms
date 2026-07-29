@@ -148,8 +148,7 @@ static void ProcessNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable *var, 
 {
    SNMP_ObjectId oid = var->getName();
 
-   OSPFNeighbor *neighbor = neighbors->addPlaceholder();
-   memset(neighbor, 0, sizeof(OSPFNeighbor));
+   OSPFNeighbor *neighbor = new(neighbors->addPlaceholder()) OSPFNeighbor();
    neighbor->ipAddress = InetAddress((oid.getElement(10) << 24) | (oid.getElement(11) << 16) | (oid.getElement(12) << 8) | oid.getElement(13));
    neighbor->routerId = ntohl(var->getValueAsUInt());
    neighbor->ifIndex = oid.getLastElement();
@@ -194,8 +193,7 @@ static void ProcessVirtualNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable
 {
    SNMP_ObjectId oid = var->getName();
 
-   OSPFNeighbor *neighbor = neighbors->addPlaceholder();
-   memset(neighbor, 0, sizeof(OSPFNeighbor));
+   OSPFNeighbor *neighbor = new(neighbors->addPlaceholder()) OSPFNeighbor();
    neighbor->ipAddress = InetAddress(ntohl(var->getValueAsUInt()));
    neighbor->areaId = (oid.getElement(10) << 24) | (oid.getElement(11) << 16) | (oid.getElement(12) << 8) | oid.getElement(13);
    neighbor->routerId = (oid.getElement(14) << 24) | (oid.getElement(15) << 16) | (oid.getElement(16) << 8) | oid.getElement(17);
@@ -215,7 +213,7 @@ static void ProcessVirtualNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable
    }
 
    shared_ptr<Node> routerNode = FindNodeByIP(node->getZoneUIN(), neighbor->ipAddress);
-   if (routerNode != 0)
+   if (routerNode != nullptr)
       neighbor->nodeId = routerNode->getId();
 }
 

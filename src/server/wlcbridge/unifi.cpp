@@ -579,8 +579,7 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
  */
 static WirelessStationInfo *WirelessStationInfoFromJSON(json_t *client)
 {
-   auto ws = new WirelessStationInfo;
-   memset(ws, 0, sizeof(WirelessStationInfo));
+   auto ws = new WirelessStationInfo();
 
    const char *macText = json_object_get_string_utf8(client, "mac", "00:00:00:00:00:00");
    memcpy(ws->macAddr, MacAddress::parse(macText).value(), MAC_ADDR_LENGTH);

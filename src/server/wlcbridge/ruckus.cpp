@@ -209,8 +209,7 @@ static ObjectArray<AccessPointInfo> *GetAccessPoints(NObject *wirelessDomain)
  */
 static WirelessStationInfo *WirelessStationInfoFromJSON(json_t *client)
 {
-   auto ws = new WirelessStationInfo;
-   memset(ws, 0, sizeof(WirelessStationInfo));
+   auto ws = new WirelessStationInfo();
    memcpy(ws->macAddr, MacAddress::parse(json_object_get_string_utf8(client, "clientMac", "00:00:00:00:00:00")).value(), MAC_ADDR_LENGTH);
    ws->ipAddr = InetAddress::parse(json_object_get_string_utf8(client, "ipAddress", "0.0.0.0"));
    ws->vlan = json_object_get_int32(client, "vlan", 0);

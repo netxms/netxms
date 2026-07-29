@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2023 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -83,8 +83,8 @@ void InitMobileDeviceListeners()
 class MobileDeviceListener : public StreamSocketListener
 {
 protected:
-   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
-   virtual bool isStopConditionReached();
+   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer) override;
+   virtual bool isStopConditionReached() override;
 
 public:
    MobileDeviceListener(uint16_t port) : StreamSocketListener(port) { setName(_T("MobileDevices")); }

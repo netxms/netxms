@@ -297,8 +297,7 @@ static LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abs
             return SYSINFO_RC_UNSUPPORTED;   // Invalid hostname
          }
 
-         t = new PING_TARGET;
-         memset(t, 0, sizeof(PING_TARGET));
+         t = new PING_TARGET();
          t->ipAddr = addr;
          _tcslcpy(t->dnsName, target, MAX_DB_STRING);
          _tcslcpy(t->name, target, MAX_DB_STRING);
@@ -563,8 +562,7 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
    InetAddress addr = InetAddress::resolveHostName(addrStart);
    if (addr.isValid())
 	{
-      PING_TARGET *t = new PING_TARGET;
-		memset(t, 0, sizeof(PING_TARGET));
+      PING_TARGET *t = new PING_TARGET();
 		t->ipAddr = addr;
 		_tcslcpy(t->dnsName, addrStart, MAX_DB_STRING);
 		if (pszName != nullptr)

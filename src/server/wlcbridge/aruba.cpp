@@ -896,8 +896,7 @@ static ObjectArray<WirelessStationInfo> *ParseClients(const char *output, const 
 
       int channel = ParseLeadingInt(columns[CLIENT_COL_CHANNEL]);
 
-      WirelessStationInfo *ws = new WirelessStationInfo;
-      memset(ws, 0, sizeof(WirelessStationInfo));
+      WirelessStationInfo *ws = new WirelessStationInfo();
       memcpy(ws->macAddr, clientMac.value(), MAC_ADDR_LENGTH);
       ws->ipAddr = InetAddress::parse(columns[CLIENT_COL_IP]);
       utf8_to_wchar(columns[CLIENT_COL_SSID], -1, ws->ssid, MAX_SSID_LENGTH);
