@@ -44,8 +44,7 @@ MsgWaitQueue::MsgWaitQueue() : m_unclaimedMessagesPool(64), m_waitersPool(64), m
    m_messagesHead = m_unclaimedMessagesPool.allocate();
    memset(m_messagesHead, 0, sizeof(WaitQueueUnclaimedMessage));
    m_messagesTail = m_messagesHead;
-   m_waiters = m_waitersPool.allocate();
-   memset(m_waiters, 0, sizeof(WaitQueueWaiter));
+   m_waiters = nullptr;
    m_lastExpirationCheck = time(nullptr);
 }
 
@@ -57,7 +56,7 @@ MsgWaitQueue::~MsgWaitQueue()
    for(WaitQueueUnclaimedMessage *m = m_messagesHead->next; m != nullptr; m = m->next)
       DeleteMessage(m);
 
-   for(WaitQueueWaiter *w = m_waiters->next; w != nullptr; w = w->next)
+   for(WaitQueueWaiter *w = m_waiters; w != nullptr; w = w->next)
    {
       w->wakeupCondition.set();
       ThreadSleepMs(10);
@@ -81,13 +80,12 @@ void MsgWaitQueue::clear()
    memset(m_messagesHead, 0, sizeof(WaitQueueUnclaimedMessage));
    m_messagesTail = m_messagesHead;
 
-   for(WaitQueueWaiter *w = m_waiters->next; w != nullptr; w = w->next)
+   for(WaitQueueWaiter *w = m_waiters; w != nullptr; w = w->next)
    {
       w->wakeupCondition.set();
    }
    m_waitersPool.reset();
-   m_waiters = m_waitersPool.allocate();
-   memset(m_waiters, 0, sizeof(WaitQueueWaiter));
+   m_waiters = nullptr;
 
    m_mutex.unlock();
 }
@@ -121,13 +119,17 @@ void MsgWaitQueue::put(bool isBinary, uint16_t code, uint32_t id, void *msg)
       m_lastExpirationCheck = now;
    }
 
-   for(WaitQueueWaiter *w = m_waiters->next, *p = m_waiters; w != nullptr; p = w, w = w->next)
+   for(WaitQueueWaiter *w = m_waiters, *p = nullptr; w != nullptr; p = w, w = w->next)
    {
       if ((w->isBinary == isBinary) && (w->code == code) && (w->id == id))
       {
          w->msg = msg;
          w->wakeupCondition.set();
-         p->next = w->next;   // Remove waiter from list now to avoid duplicate matches (waiter object will be destroyed in waitForMessage)
+         // Remove waiter from list now to avoid duplicate matches (waiter object will be destroyed in waitForMessage)
+         if (p != nullptr)
+            p->next = w->next;
+         else
+            m_waiters = w->next;
          return;
       }
    }
@@ -169,8 +171,8 @@ void *MsgWaitQueue::waitForMessage(bool isBinary, uint16_t code, uint32_t id, ui
    }
 
    WaitQueueWaiter *waiter = new(m_waitersPool.allocate()) WaitQueueWaiter(isBinary, code, id);
-   waiter->next = m_waiters->next;
-   m_waiters->next = waiter;
+   waiter->next = m_waiters;
+   m_waiters = waiter;
 
    m_mutex.unlock();
 
@@ -178,11 +180,14 @@ void *MsgWaitQueue::waitForMessage(bool isBinary, uint16_t code, uint32_t id, ui
    void *msg = waiter->msg;
 
    m_mutex.lock();
-   for(WaitQueueWaiter *w = m_waiters->next, *p = m_waiters; w != nullptr; p = w, w = w->next)
+   for(WaitQueueWaiter *w = m_waiters, *p = nullptr; w != nullptr; p = w, w = w->next)
    {
       if (w == waiter)
       {
-         p->next = w->next;
+         if (p != nullptr)
+            p->next = w->next;
+         else
+            m_waiters = w->next;
          break;
       }
    }

@@ -219,15 +219,6 @@ struct WaitQueueWaiter
    uint16_t code;       // Message code
    bool isBinary;       // true for binary (raw) messages
 
-   WaitQueueWaiter() : wakeupCondition(true)
-   {
-      next = nullptr;
-      msg = nullptr;
-      id = 0;
-      code = 0;
-      isBinary = 0;
-   }
-
    WaitQueueWaiter(bool _isBinary, uint16_t _code, uint32_t _id) : wakeupCondition(true)
    {
       next = nullptr;
