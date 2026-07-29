@@ -3150,8 +3150,8 @@ template<class K> class HashSet : public HashSetBase
 {
 public:
    HashSet() : HashSetBase(sizeof(K), false) { }
-   HashSet(const HashSet<K>& src) : HashSetBase(src) { };
-   HashSet(HashSet<K>&& src) : HashSetBase(std::move(src)) { };
+   HashSet(const HashSet<K>& src) : HashSetBase(src) { }
+   HashSet(HashSet<K>&& src) : HashSetBase(std::move(src)) { }
 
    HashSet<K>& operator =(const HashSet<K>& src)
    {
@@ -3221,8 +3221,8 @@ template<class K> class CountingHashSet : public HashSetBase
 {
 public:
    CountingHashSet() : HashSetBase(sizeof(K), true) { }
-   CountingHashSet(const CountingHashSet<K>& src) : HashSetBase(src) { };
-   CountingHashSet(CountingHashSet<K>&& src) : HashSetBase(std::move(src)) { };
+   CountingHashSet(const CountingHashSet<K>& src) : HashSetBase(src) { }
+   CountingHashSet(CountingHashSet<K>&& src) : HashSetBase(std::move(src)) { }
 
    CountingHashSet<K>& operator =(const CountingHashSet<K>& src)
    {

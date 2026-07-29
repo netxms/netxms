@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2024 Raden Solutions
+** Copyright (C) 2021-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ public:
    virtual const TCHAR *getChallenge() const { return nullptr; }
    virtual const TCHAR *getQRLabel() const { return nullptr; }
 
-   const TCHAR *getMethodName() const { return m_methodName; };
+   const TCHAR *getMethodName() const { return m_methodName; }
 };
 
 /**
@@ -65,9 +65,9 @@ public:
    TOTPToken(const TCHAR* methodName, const BYTE* secret, const TCHAR *userName, bool newSecret);
    virtual ~TOTPToken();
 
-   virtual const TCHAR *getQRLabel() const { return m_uri; }
+   virtual const TCHAR *getQRLabel() const override { return m_uri; }
 
-   const void* getSecret() const { return m_secret; };
+   const void* getSecret() const { return m_secret; }
    bool isNewSecret() const { return m_newSecret; }
 };
 
@@ -85,7 +85,7 @@ public:
    }
    virtual ~MessageToken() {}
 
-   uint32_t getSecret() const { return m_secret; };
+   uint32_t getSecret() const { return m_secret; }
 };
 
 void LoadTwoFactorAuthenticationMethods();

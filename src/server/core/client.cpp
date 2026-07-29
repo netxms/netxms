@@ -175,8 +175,8 @@ void InitClientListeners()
 class ClientListener : public StreamSocketListener
 {
 protected:
-   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
-   virtual bool isStopConditionReached();
+   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer) override;
+   virtual bool isStopConditionReached() override;
 
 public:
    ClientListener(uint16_t port) : StreamSocketListener(port) { setName(_T("Clients")); }

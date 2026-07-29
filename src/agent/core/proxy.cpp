@@ -392,8 +392,8 @@ void UpdateProxyConfiguration(uint64_t serverId, HashMap<ServerObjectKey, DataCo
 class ProxyConnectionListener : public DatagramSocketListener
 {
 protected:
-   virtual ConnectionProcessingResult processDatagram(SOCKET s);
-   virtual bool isStopConditionReached();
+   virtual ConnectionProcessingResult processDatagram(SOCKET s) override;
+   virtual bool isStopConditionReached() override;
 
 public:
    ProxyConnectionListener(uint16_t port, bool allowV4, bool allowV6) : DatagramSocketListener(port, allowV4, allowV6) { setName(_T("ProxyHeartbeat")); }

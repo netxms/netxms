@@ -1773,8 +1773,8 @@ static Mutex s_tunnelListenerLock;
 class TunnelListener : public StreamSocketListener
 {
 protected:
-   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
-   virtual bool isStopConditionReached();
+   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer) override;
+   virtual bool isStopConditionReached() override;
 
 public:
    TunnelListener(UINT16 port) : StreamSocketListener(port) { setName(_T("AgentTunnels")); }

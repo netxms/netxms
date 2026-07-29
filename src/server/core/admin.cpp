@@ -277,8 +277,8 @@ close_session:
 class LocalAdminListener : public StreamSocketListener
 {
 protected:
-   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
-   virtual bool isStopConditionReached();
+   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer) override;
+   virtual bool isStopConditionReached() override;
 
 public:
    LocalAdminListener() : StreamSocketListener(LOCAL_ADMIN_PORT) { setName(_T("LocalAdmin")); }

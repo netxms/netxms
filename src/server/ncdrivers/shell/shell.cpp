@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Notification channel driver that writes messages to text file
-** Copyright (C) 2019-2025 Raden Solutions
+** Copyright (C) 2019-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ public:
    OutputLoggingExecutor(const TCHAR *command) : ProcessExecutor(command, true, true)
    {
       m_sendOutput = true;
-   };
+   }
 };
 
 /**

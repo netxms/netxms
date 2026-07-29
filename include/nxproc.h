@@ -280,8 +280,8 @@ public:
    SubProcessExecutor(const TCHAR *name, const TCHAR *command);
    virtual ~SubProcessExecutor();
 
-   virtual bool execute();
-   virtual void stop();
+   virtual bool execute() override;
+   virtual void stop() override;
 
    bool sendCommand(uint16_t command, const void *data = nullptr, size_t dataSize = 0, uint32_t *requestId = nullptr);
    bool sendRequest(uint16_t command, const void *data, size_t dataSize, void **response, size_t *rspSize, uint32_t timeout);

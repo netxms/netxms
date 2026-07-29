@@ -429,10 +429,10 @@ public:
    virtual uint32_t generateRequestId() override;
    virtual int getProtocolVersion() override { return m_protocolVersion; }
 
-   virtual uint32_t getId() override { return m_id; };
+   virtual uint32_t getId() override { return m_id; }
 
    virtual uint64_t getServerId() override { return m_serverId; }
-	virtual const InetAddress& getServerAddress() override { return m_serverAddr; }
+   virtual const InetAddress& getServerAddress() override { return m_serverAddr; }
 
    virtual bool isMasterServer() override { return m_masterServer; }
    virtual bool isControlServer() override { return m_controlServer; }
@@ -479,7 +479,7 @@ public:
 
    virtual uint32_t getId() override { return m_id; }
 
-   virtual uint64_t getServerId() override { return m_serverId; };
+   virtual uint64_t getServerId() override { return m_serverId; }
    virtual const InetAddress& getServerAddress() override { return InetAddress::LOOPBACK; }
 
    virtual bool isMasterServer() override { return false; }
@@ -533,7 +533,7 @@ public:
 
    virtual uint32_t getId() override { return m_id; }
 
-   virtual uint64_t getServerId() override { return m_serverId; };
+   virtual uint64_t getServerId() override { return m_serverId; }
    virtual const InetAddress& getServerAddress() override { return m_serverAddress; }
 
    virtual bool isMasterServer() override { return m_masterServer; }

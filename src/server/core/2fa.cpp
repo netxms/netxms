@@ -103,9 +103,9 @@ public:
    virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const = 0;
    virtual void updateBindingConfiguration(Config* binding, const StringMap& updates) const = 0;
 
-   bool isValid() const { return m_isValid; };
-   const TCHAR *getName() const { return m_methodName; };
-   const TCHAR *getDescription() const { return m_description; };
+   bool isValid() const { return m_isValid; }
+   const TCHAR *getName() const { return m_methodName; }
+   const TCHAR *getDescription() const { return m_description; }
    const char *getConfiguration() const { return m_configuration; }
 
    json_t *toJson() const;

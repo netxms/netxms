@@ -1693,8 +1693,8 @@ public:
    virtual ~ISC();
 
    uint32_t connect(uint32_t service, RSA_KEY serverKey = nullptr, bool requireEncryption = false);
-	void disconnect();
-   bool connected() { return m_flags & ISCF_IS_CONNECTED; };
+   void disconnect();
+   bool connected() { return m_flags & ISCF_IS_CONNECTED; }
 
    bool sendMessage(NXCPMessage *msg);
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_msgWaitQueue->waitForMessage(code, id, timeout); }

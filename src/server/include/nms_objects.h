@@ -814,18 +814,18 @@ public:
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase(DB_STATEMENT hStmt) const;
 
-   ChangeCode getChangeCode() const { return m_changeCode; };
-   HardwareComponentCategory getCategory() const { return m_category; };
+   ChangeCode getChangeCode() const { return m_changeCode; }
+   HardwareComponentCategory getCategory() const { return m_category; }
    const wchar_t *getCategoryName() const;
    uint32_t getIndex() const { return m_index; }
    uint64_t getCapacity() const { return m_capacity; }
-   const wchar_t *getType() const { return CHECK_NULL_EX(m_type); };
-   const wchar_t *getVendor() const { return CHECK_NULL_EX(m_vendor); };
-   const wchar_t *getModel() const { return CHECK_NULL_EX(m_model); };
-   const wchar_t *getLocation() const { return CHECK_NULL_EX(m_location); };
-   const wchar_t *getPartNumber() const { return CHECK_NULL_EX(m_partNumber); };
-   const wchar_t *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); };
-   const wchar_t *getDescription() const { return CHECK_NULL_EX(m_description); };
+   const wchar_t *getType() const { return CHECK_NULL_EX(m_type); }
+   const wchar_t *getVendor() const { return CHECK_NULL_EX(m_vendor); }
+   const wchar_t *getModel() const { return CHECK_NULL_EX(m_model); }
+   const wchar_t *getLocation() const { return CHECK_NULL_EX(m_location); }
+   const wchar_t *getPartNumber() const { return CHECK_NULL_EX(m_partNumber); }
+   const wchar_t *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
+   const wchar_t *getDescription() const { return CHECK_NULL_EX(m_description); }
 
    json_t *toJson() const;
 
@@ -2070,8 +2070,8 @@ public:
    DelegateObject(NetObj *_this) { _this->m_asDelegate = this; }
    DelegateObject(NetObj *_this, const DelegateObject &src) : m_objectSet(src.m_objectSet), m_dciSet(src.m_dciSet) { _this->m_asDelegate = this; }
 
-   bool containsObject(const shared_ptr<NetObj>& object) { return m_objectSet.contains(object->getId()); };
-   bool containsDci(uint32_t dciId) { return m_dciSet.contains(dciId); };
+   bool containsObject(const shared_ptr<NetObj>& object) { return m_objectSet.contains(object->getId()); }
+   bool containsDci(uint32_t dciId) { return m_dciSet.contains(dciId); }
 };
 
 /**
@@ -6482,7 +6482,12 @@ public:
    bool isRecalled() const { return m_recall; }
    const TCHAR *getMessage() const { return m_message; }
 
-   void recall() { m_recall = true; processUpdate(); };
+   void recall()
+   {
+      m_recall = true;
+      processUpdate();
+   }
+
    void processUpdate();
    bool isApplicable(uint32_t nodeId) const;
    void fillMessage(uint32_t base, NXCPMessage *msg, bool fullInfo = true) const;

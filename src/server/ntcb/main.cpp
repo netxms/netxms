@@ -87,8 +87,8 @@ void UnregisterNTCBDeviceSession(session_id_t id)
 class NTCBListener : public StreamSocketListener
 {
 protected:
-   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer);
-   virtual bool isStopConditionReached();
+   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer) override;
+   virtual bool isStopConditionReached() override;
 
 public:
    NTCBListener(uint16_t port) : StreamSocketListener(port) { setName(_T("NTCB")); }

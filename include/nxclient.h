@@ -221,7 +221,7 @@ public:
    ObjectController(NXCSession *session);
    virtual ~ObjectController();
 
-   virtual bool handleMessage(NXCPMessage *msg);
+   virtual bool handleMessage(NXCPMessage *msg) override;
 
    uint32_t sync();
    uint32_t syncObjectSet(const uint32_t *idList, size_t length, uint16_t flags);

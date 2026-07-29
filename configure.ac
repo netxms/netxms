@@ -1538,9 +1538,13 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	AC_CXX_CHECK_OPTION(-Wnon-pod-varargs)
 	AC_CXX_CHECK_OPTION(-Wdeprecated-copy)
 	AC_CXX_CHECK_OPTION(-Woverloaded-virtual)
+	AC_CXX_CHECK_OPTION(-Wsuggest-override)
+	AC_CXX_CHECK_OPTION(-Wnon-virtual-dtor)
 	AC_CXX_CHECK_OPTION(-Wtemplate-id-cdtor)
 	AC_CXX_CHECK_OPTION(-Wrange-loop-construct)
+	AC_CXX_CHECK_OPTION(-Wextra-semi)
 	AC_CXX_CHECK_OPTION(-Werror=conditionally-supported)
+	AC_CXX_CHECK_OPTION(-Werror=vla)
 	AC_CXX_CHECK_OPTION(-fno-exceptions)
 	if test "x$ENABLE_RTTI" != "xyes"; then
 		AC_CXX_CHECK_OPTION(-fno-rtti)

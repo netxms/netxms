@@ -1237,7 +1237,7 @@ public:
    const TCHAR *getMetadataEntry(const TCHAR *key) const { return m_metadata.get(key); }
    const StringMap& getMetadata() const { return m_metadata; }
 
-   virtual uint64_t getMemoryUsage() const;
+   virtual uint64_t getMemoryUsage() const override;
 
    void dump(FILE *fp) const;
 

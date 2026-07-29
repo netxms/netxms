@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NXCP API
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,12 +28,7 @@
 #include <nms_threads.h>
 #include <uuid.h>
 #include <nxcrypto.h>
-
-#ifdef __cplusplus
 #include <istream>
-#endif
-
-#ifdef __cplusplus
 
 struct MessageField;
 
@@ -144,9 +139,21 @@ public:
    void setFieldFromTime(uint32_t fieldId, time_t value) { uint64_t t = static_cast<uint64_t>(value); set(fieldId, NXCP_DT_INT64, &t); }
    void setFieldFromInt32Array(uint32_t fieldId, size_t numElements, const uint32_t *elements);
    void setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<uint32_t>& data);
-   void setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<uint32_t> *data) { if (data != nullptr) { setFieldFromInt32Array(fieldId, *data); } else { set(fieldId, NXCP_DT_BINARY, NULL, false, 0); } }
+   void setFieldFromInt32Array(uint32_t fieldId, const IntegerArray<uint32_t> *data)
+   {
+      if (data != nullptr)
+         setFieldFromInt32Array(fieldId, *data);
+      else
+         set(fieldId, NXCP_DT_BINARY, NULL, false, 0);
+   }
    void setFieldFromInt32Array(uint32_t fieldId, const HashSet<uint32_t>& data);
-   void setFieldFromInt32Array(uint32_t fieldId, const HashSet<uint32_t> *data)  { if (data != nullptr) { setFieldFromInt32Array(fieldId, *data); } else { set(fieldId, NXCP_DT_BINARY, NULL, false, 0); } };
+   void setFieldFromInt32Array(uint32_t fieldId, const HashSet<uint32_t> *data)
+   {
+      if (data != nullptr)
+         setFieldFromInt32Array(fieldId, *data);
+      else
+         set(fieldId, NXCP_DT_BINARY, NULL, false, 0);
+   }
    bool setFieldFromFile(uint32_t fieldId, const TCHAR *fileName);
 
    int16_t getFieldAsInt16(uint32_t fieldId) const;
@@ -481,9 +488,9 @@ class LIBNETXMS_EXPORTABLE DummyStreamCompressor : public StreamCompressor
 public:
    virtual ~DummyStreamCompressor();
 
-   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
-   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);
-   virtual size_t compressBufferSize(size_t dataSize);
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize) override;
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out) override;
+   virtual size_t compressBufferSize(size_t dataSize) override;
 };
 
 struct __LZ4_stream_t;
@@ -510,9 +517,9 @@ public:
    LZ4StreamCompressor(bool compress, size_t maxBlockSize);
    virtual ~LZ4StreamCompressor();
 
-   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
-   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);
-   virtual size_t compressBufferSize(size_t dataSize);
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize) override;
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out) override;
+   virtual size_t compressBufferSize(size_t dataSize) override;
 };
 
 struct z_stream_s;
@@ -532,51 +539,10 @@ public:
    DeflateStreamCompressor(bool compress, size_t maxBlockSize);
    virtual ~DeflateStreamCompressor();
 
-   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
-   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);
-   virtual size_t compressBufferSize(size_t dataSize);
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize) override;
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out) override;
+   virtual size_t compressBufferSize(size_t dataSize) override;
 };
-
-#if 0
-/**
- * NXCP message consumer interface
- */
-class LIBNETXMS_EXPORTABLE MessageConsumer
-{
-public:
-   virtual SOCKET getSocket() = 0;
-   virtual void processMessage(NXCPMessage *msg) = 0;
-};
-
-/**
- * Socket receiver - manages receiving NXCP messages from multiple sockets
- */
-class LIBNETXMS_EXPORTABLE SocketReceiver
-{
-private:
-   THREAD m_thread;
-   HashMap<SOCKET, MessageConsumer> *m_consumers;
-
-   static int m_maxSocketsPerThread;
-   static ObjectArray<SocketReceiver> *m_receivers;
-
-public:
-   static void start();
-   static void shutdown();
-
-   static void addConsumer(MessageConsumer *mc);
-   static void removeConsumer(MessageConsumer *mc);
-
-   static String getDiagInfo();
-};
-#endif
-
-#else    /* __cplusplus */
-
-typedef void NXCPMessage;
-typedef void NXCPEncryptionContext;
-
-#endif
 
 typedef bool (*NXCPMessageNameResolver)(uint16_t code, TCHAR *buffer);
 
@@ -584,8 +550,6 @@ typedef bool (*NXCPMessageNameResolver)(uint16_t code, TCHAR *buffer);
 //
 // Functions
 //
-
-#ifdef __cplusplus
 
 NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(uint16_t code, uint32_t id, uint16_t flags, const void *data, size_t dataSize,
       NXCP_MESSAGE *buffer, bool allowCompression);
@@ -629,7 +593,5 @@ static inline bool NXCPDecryptMessage(NXCPEncryptionContext *ctx, NXCP_ENCRYPTED
 {
    return (ctx != nullptr) ? ctx->decryptMessage(msg, pDecryptionBuffer) : false;
 }
-
-#endif   /* __cplusplus */
 
 #endif   /* _nxcpapi_h_ */
