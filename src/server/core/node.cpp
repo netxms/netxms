@@ -9080,12 +9080,13 @@ DataCollectionError Node::getMetricFromSmclp(const wchar_t *metric, wchar_t *buf
       if (propertyIndex == -1)
          return DCE_COLLECTION_ERROR;
 
-      ssize_t valueSart = propertyIndex + wcslen(property);
-      ssize_t valueEnd = output.find(L"\n", valueSart);
-      if (propertyIndex == -1)
+      size_t valueStart = static_cast<size_t>(propertyIndex) + wcslen(property);
+      ssize_t eol = output.find(L"\n", valueStart);
+      size_t valueEnd = (eol != -1) ? static_cast<size_t>(eol) : output.length();
+      if (valueEnd < valueStart)
          return DCE_COLLECTION_ERROR;
 
-      wcslcpy(buffer, output + valueSart, MIN(size, valueEnd - valueSart));
+      wcslcpy(buffer, output.cstr() + valueStart, std::min(size, valueEnd - valueStart + 1));
       result = DCE_SUCCESS;
    }
 
