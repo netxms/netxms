@@ -25,6 +25,17 @@
 #include <vector>
 
 /**
+ * Table cell alignment as defined by delimiter row
+ */
+enum class TableCellAlignment
+{
+   DEFAULT = 0,
+   LEFT = 1,
+   CENTER = 2,
+   RIGHT = 3
+};
+
+/**
  * Abstract renderer interface driven by the parser. Output is accumulated in m_out as UTF-8.
  */
 class MarkdownRenderer
@@ -36,6 +47,13 @@ public:
    virtual ~MarkdownRenderer() { }
 
    const std::string& output() const { return m_out; }
+
+   /**
+    * Returns true if renderer expects table cell content without inline markup (renderers that
+    * lay out tables as preformatted text, where markup would either be shown literally or break
+    * the surrounding preformatted block).
+    */
+   virtual bool plainTableCells() const { return false; }
 
    virtual void text(const char *s, size_t len) = 0;
    virtual void softBreak() = 0;
@@ -62,7 +80,25 @@ public:
    virtual void codeSpan(const char *s, size_t len) = 0;
    virtual void linkStart(const char *url, size_t urlLen) = 0;
    virtual void linkEnd(const char *url, size_t urlLen, bool urlSameAsText) = 0;
+   virtual void tableStart(int columns) = 0;
+   virtual void tableEnd() = 0;
+   virtual void tableRowStart(bool header) = 0;
+   virtual void tableRowEnd(bool header) = 0;
+   virtual void tableCellStart(bool header, int column, TableCellAlignment alignment) = 0;
+   virtual void tableCellEnd(bool header, int column) = 0;
 };
+
+/**
+ * Count characters in UTF-8 string (continuation bytes are not counted)
+ */
+static size_t Utf8CharCount(const char *s, size_t len)
+{
+   size_t count = 0;
+   for(size_t i = 0; i < len; i++)
+      if ((s[i] & 0xC0) != 0x80)
+         count++;
+   return count;
+}
 
 /**
  * Append HTML-escaped text (&, <, >)
@@ -118,21 +154,76 @@ static void AppendHTMLAttributeEscaped(std::string& out, const char *s, size_t l
 }
 
 /**
+ * Rendered table cell for text-style renderers
+ */
+struct TextTableCell
+{
+   std::string text;
+   size_t width;
+};
+
+/**
  * Base class for renderers producing line-oriented text output (plain text, Telegram HTML,
- * Slack mrkdwn). Handles block separation and list layout; subclasses provide escaping and
- * inline markup.
+ * Slack mrkdwn). Handles block separation, list layout, and tables rendered as text with
+ * aligned columns; subclasses provide escaping and inline markup.
  */
 class TextStyleRenderer : public MarkdownRenderer
 {
+private:
+   std::vector<std::vector<TextTableCell>> m_tableRows;
+   std::vector<TableCellAlignment> m_tableAlignments;
+   size_t m_cellOutputStart;
+   size_t m_cellWidth;
+   bool m_inTableCell;
+
+   void appendPaddedCell(const TextTableCell& cell, size_t width, TableCellAlignment alignment, bool lastColumn)
+   {
+      size_t pad = (width > cell.width) ? width - cell.width : 0;
+      size_t padBefore, padAfter;
+      switch(alignment)
+      {
+         case TableCellAlignment::RIGHT:
+            padBefore = pad;
+            padAfter = 0;
+            break;
+         case TableCellAlignment::CENTER:
+            padBefore = pad / 2;
+            padAfter = pad - padBefore;
+            break;
+         default:
+            padBefore = 0;
+            padAfter = pad;
+            break;
+      }
+      m_out.append(padBefore, ' ');
+      m_out.append(cell.text);
+      if (!lastColumn)
+         m_out.append(padAfter, ' ');
+   }
+
 protected:
    bool m_afterListStart;
 
    TextStyleRenderer()
    {
       m_afterListStart = false;
+      m_cellOutputStart = 0;
+      m_cellWidth = 0;
+      m_inTableCell = false;
    }
 
    virtual void appendEscaped(const char *s, size_t len) = 0;
+
+   // Markup placed around table rendered as preformatted text
+   virtual const char *tablePrefix() const
+   {
+      return nullptr;
+   }
+
+   virtual const char *tableSuffix() const
+   {
+      return nullptr;
+   }
 
    // Ensure blank line separation before a new top-level block
    void blockSeparator()
@@ -170,8 +261,15 @@ protected:
    }
 
 public:
+   virtual bool plainTableCells() const override
+   {
+      return true;
+   }
+
    virtual void text(const char *s, size_t len) override
    {
+      if (m_inTableCell)
+         m_cellWidth += Utf8CharCount(s, len);
       appendEscaped(s, len);
    }
 
@@ -239,6 +337,85 @@ public:
       blockSeparator();
       m_out.append("\xE2\x80\x94\xE2\x80\x94\xE2\x80\x94"); // "———"
    }
+
+   virtual void tableStart(int columns) override
+   {
+      blockSeparator();
+      m_tableRows.clear();
+      m_tableAlignments.assign(columns, TableCellAlignment::DEFAULT);
+   }
+
+   virtual void tableEnd() override
+   {
+      size_t columns = m_tableAlignments.size();
+      std::vector<size_t> widths(columns, 0);
+      for(const std::vector<TextTableCell>& row : m_tableRows)
+         for(size_t i = 0; i < row.size(); i++)
+            if (row[i].width > widths[i])
+               widths[i] = row[i].width;
+
+      const char *prefix = tablePrefix();
+      if (prefix != nullptr)
+         m_out.append(prefix);
+      for(size_t r = 0; r < m_tableRows.size(); r++)
+      {
+         if (r > 0)
+            m_out.push_back('\n');
+         const std::vector<TextTableCell>& row = m_tableRows[r];
+         for(size_t c = 0; c < columns; c++)
+         {
+            if (c > 0)
+               m_out.append(" | ");
+            appendPaddedCell(row[c], widths[c], m_tableAlignments[c], c == columns - 1);
+         }
+         while(!m_out.empty() && (m_out[m_out.length() - 1] == ' '))   // empty cell at end of row
+            m_out.resize(m_out.length() - 1);
+         if (r == 0)   // separator line below header row
+         {
+            m_out.push_back('\n');
+            for(size_t c = 0; c < columns; c++)
+            {
+               if (c > 0)
+                  m_out.append("-+-");
+               m_out.append(widths[c], '-');
+            }
+         }
+      }
+      const char *suffix = tableSuffix();
+      if (suffix != nullptr)
+         m_out.append(suffix);
+
+      m_tableRows.clear();
+      m_tableAlignments.clear();
+   }
+
+   virtual void tableRowStart(bool header) override
+   {
+      m_tableRows.push_back(std::vector<TextTableCell>());
+   }
+
+   virtual void tableRowEnd(bool header) override
+   {
+   }
+
+   virtual void tableCellStart(bool header, int column, TableCellAlignment alignment) override
+   {
+      if (header && (static_cast<size_t>(column) < m_tableAlignments.size()))
+         m_tableAlignments[column] = alignment;
+      m_cellOutputStart = m_out.length();
+      m_cellWidth = 0;
+      m_inTableCell = true;
+   }
+
+   virtual void tableCellEnd(bool header, int column) override
+   {
+      TextTableCell cell;
+      cell.text = m_out.substr(m_cellOutputStart);
+      cell.width = m_cellWidth;
+      m_out.resize(m_cellOutputStart);
+      m_tableRows.back().push_back(cell);
+      m_inTableCell = false;
+   }
 };
 
 /**
@@ -300,6 +477,16 @@ protected:
    virtual void appendEscaped(const char *s, size_t len) override
    {
       AppendHTMLEscaped(m_out, s, len);
+   }
+
+   virtual const char *tablePrefix() const override
+   {
+      return "<pre>";
+   }
+
+   virtual const char *tableSuffix() const override
+   {
+      return "</pre>";
    }
 
 public:
@@ -389,6 +576,16 @@ protected:
       AppendHTMLEscaped(m_out, s, len); // Slack requires exactly &, <, > escaped
    }
 
+   virtual const char *tablePrefix() const override
+   {
+      return "```\n";
+   }
+
+   virtual const char *tableSuffix() const override
+   {
+      return "\n```";
+   }
+
 public:
    SlackTextRenderer() : TextStyleRenderer()
    {
@@ -465,11 +662,13 @@ class GenericHTMLRenderer : public MarkdownRenderer
 {
 private:
    bool m_codeBlockHasLang;
+   bool m_inTableBody;
 
 public:
    GenericHTMLRenderer() : MarkdownRenderer()
    {
       m_codeBlockHasLang = false;
+      m_inTableBody = false;
    }
 
    virtual void text(const char *s, size_t len) override
@@ -572,6 +771,53 @@ public:
    virtual void linkEnd(const char *url, size_t urlLen, bool urlSameAsText) override
    {
       m_out.append("</a>");
+   }
+   virtual void tableStart(int columns) override
+   {
+      m_out.append("<table>\n");
+   }
+   virtual void tableEnd() override
+   {
+      m_out.append(m_inTableBody ? "</tbody>\n</table>\n" : "</table>\n");
+      m_inTableBody = false;
+   }
+   virtual void tableRowStart(bool header) override
+   {
+      if (header)
+         m_out.append("<thead>\n");
+      m_out.append("<tr>");
+   }
+   virtual void tableRowEnd(bool header) override
+   {
+      m_out.append("</tr>\n");
+      if (header)
+      {
+         m_out.append("</thead>\n<tbody>\n");
+         m_inTableBody = true;
+      }
+   }
+   virtual void tableCellStart(bool header, int column, TableCellAlignment alignment) override
+   {
+      m_out.append(header ? "<th" : "<td");
+      switch(alignment)
+      {
+         case TableCellAlignment::LEFT:
+            m_out.append(" align=\"left\"");
+            break;
+         case TableCellAlignment::CENTER:
+            m_out.append(" align=\"center\"");
+            break;
+         case TableCellAlignment::RIGHT:
+            m_out.append(" align=\"right\"");
+            break;
+         default:
+            break;
+      }
+      m_out.push_back('>');
+   }
+   virtual void tableCellEnd(bool header, int column) override
+   {
+      m_out.append(header ? "</th>" : "</td>");
    }
 };
 
@@ -818,6 +1064,105 @@ struct ListLevel
 };
 
 /**
+ * Trim leading and trailing whitespace
+ */
+static std::string TrimWhitespace(const std::string& s)
+{
+   size_t start = s.find_first_not_of(" \t");
+   if (start == std::string::npos)
+      return std::string();
+   size_t end = s.find_last_not_of(" \t");
+   return s.substr(start, end - start + 1);
+}
+
+/**
+ * Check if line contains pipe character not escaped by backslash
+ */
+static bool ContainsUnescapedPipe(const char *s, size_t len)
+{
+   for(size_t i = 0; i < len; i++)
+   {
+      if (s[i] == '\\')
+         i++;
+      else if (s[i] == '|')
+         return true;
+   }
+   return false;
+}
+
+/**
+ * Split table row into trimmed cells. Leading and trailing pipes are optional, escaped pipes
+ * are left intact for inline parser to unescape.
+ */
+static void SplitTableRow(const char *s, size_t len, std::vector<std::string> *cells)
+{
+   while((len > 0) && ((s[len - 1] == ' ') || (s[len - 1] == '\t') || (s[len - 1] == '\r')))
+      len--;
+
+   size_t start = 0;
+   while((start < len) && ((s[start] == ' ') || (s[start] == '\t')))
+      start++;
+   if ((start < len) && (s[start] == '|'))
+      start++;
+   if ((len > start) && (s[len - 1] == '|') && ((len - 1 == start) || (s[len - 2] != '\\')))
+      len--;
+
+   std::string current;
+   for(size_t i = start; i < len; i++)
+   {
+      if ((s[i] == '\\') && (i + 1 < len) && (s[i + 1] == '|'))
+      {
+         current.append("\\|");
+         i++;
+      }
+      else if (s[i] == '|')
+      {
+         cells->push_back(TrimWhitespace(current));
+         current.clear();
+      }
+      else
+      {
+         current.push_back(s[i]);
+      }
+   }
+   cells->push_back(TrimWhitespace(current));
+}
+
+/**
+ * Check if line is a table delimiter row (---|:---:|---:) and read column alignments from it
+ */
+static bool IsTableDelimiterRow(const char *s, size_t len, std::vector<TableCellAlignment> *alignments)
+{
+   if (!ContainsUnescapedPipe(s, len))
+      return false;
+
+   std::vector<std::string> cells;
+   SplitTableRow(s, len, &cells);
+   for(const std::string& cell : cells)
+   {
+      size_t i = 0;
+      bool alignLeft = (i < cell.length()) && (cell[i] == ':');
+      if (alignLeft)
+         i++;
+      size_t dashes = 0;
+      while((i < cell.length()) && (cell[i] == '-'))
+      {
+         dashes++;
+         i++;
+      }
+      bool alignRight = (i < cell.length()) && (cell[i] == ':');
+      if (alignRight)
+         i++;
+      if ((dashes == 0) || (i != cell.length()))
+         return false;
+      alignments->push_back(alignLeft ?
+            (alignRight ? TableCellAlignment::CENTER : TableCellAlignment::LEFT) :
+            (alignRight ? TableCellAlignment::RIGHT : TableCellAlignment::DEFAULT));
+   }
+   return true;
+}
+
+/**
  * Block-level markdown parser
  */
 class MarkdownParser
@@ -896,6 +1241,8 @@ private:
    }
 
    void processLine(const char *line, size_t len);
+   void renderTableCell(const std::string& content, bool header, int column, TableCellAlignment alignment);
+   bool processTable(const std::vector<std::string>& lines, size_t *index);
 
 public:
    MarkdownParser(MarkdownRenderer& renderer) : m_renderer(renderer)
@@ -1099,22 +1446,103 @@ void MarkdownParser::processLine(const char *line, size_t len)
 }
 
 /**
+ * Render single table cell
+ */
+void MarkdownParser::renderTableCell(const std::string& content, bool header, int column, TableCellAlignment alignment)
+{
+   m_renderer.tableCellStart(header, column, alignment);
+   if (m_renderer.plainTableCells())
+   {
+      PlainTextRenderer plainText;
+      ParseInline(content.c_str(), content.length(), plainText);
+      const std::string& text = plainText.output();
+      if (!text.empty())
+         m_renderer.text(text.c_str(), text.length());
+   }
+   else
+   {
+      ParseInline(content.c_str(), content.length(), m_renderer);
+   }
+   m_renderer.tableCellEnd(header, column);
+}
+
+/**
+ * Process table starting at given line. Returns false if lines at given position do not form
+ * a table, otherwise renders it and moves index to the last line of the table.
+ */
+bool MarkdownParser::processTable(const std::vector<std::string>& lines, size_t *index)
+{
+   const std::string& header = lines[*index];
+   if (!ContainsUnescapedPipe(header.c_str(), header.length()))
+      return false;
+
+   const std::string& delimiter = lines[*index + 1];
+   std::vector<TableCellAlignment> alignments;
+   if (!IsTableDelimiterRow(delimiter.c_str(), delimiter.length(), &alignments))
+      return false;
+
+   std::vector<std::string> headerCells;
+   SplitTableRow(header.c_str(), header.length(), &headerCells);
+   if (headerCells.size() != alignments.size())
+      return false;
+
+   closeAllBlocks();
+
+   int columns = static_cast<int>(headerCells.size());
+   m_renderer.tableStart(columns);
+   m_renderer.tableRowStart(true);
+   for(int i = 0; i < columns; i++)
+      renderTableCell(headerCells[i], true, i, alignments[i]);
+   m_renderer.tableRowEnd(true);
+
+   // Table body ends at blank line or at line that cannot be a table row
+   size_t line = *index + 2;
+   while(line < lines.size())
+   {
+      const std::string& row = lines[line];
+      if (!ContainsUnescapedPipe(row.c_str(), row.length()))
+         break;
+
+      std::vector<std::string> cells;
+      SplitTableRow(row.c_str(), row.length(), &cells);
+      m_renderer.tableRowStart(false);
+      for(int i = 0; i < columns; i++)
+         renderTableCell((static_cast<size_t>(i) < cells.size()) ? cells[i] : std::string(), false, i, alignments[i]);
+      m_renderer.tableRowEnd(false);
+      line++;
+   }
+   m_renderer.tableEnd();
+
+   *index = line - 1;
+   return true;
+}
+
+/**
  * Parse markdown document
  */
 void MarkdownParser::parse(const char *input)
 {
+   std::vector<std::string> lines;
    const char *p = input;
    while(*p != 0)
    {
       const char *eol = strchr(p, '\n');
       if (eol == nullptr)
       {
-         processLine(p, strlen(p));
+         lines.push_back(std::string(p));
          break;
       }
-      processLine(p, eol - p);
+      lines.push_back(std::string(p, eol - p));
       p = eol + 1;
    }
+
+   for(size_t i = 0; i < lines.size(); i++)
+   {
+      if (!m_inFence && (i + 1 < lines.size()) && processTable(lines, &i))
+         continue;
+      processLine(lines[i].c_str(), lines[i].length());
+   }
+
    if (m_inFence)
       m_renderer.codeBlockEnd();
    closeAllBlocks();

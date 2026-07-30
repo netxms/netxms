@@ -152,6 +152,76 @@ void TestMarkdown()
    CheckPlain("a\n\n\n\nb", "a\n\nb");
    EndTest();
 
+   StartTest(_T("Markdown - tables"));
+   const char *table =
+         "| Node | Status |\n"
+         "|------|--------|\n"
+         "| web-1 | up |\n"
+         "| db-1 | down |";
+   CheckGeneric(table,
+         "<table>\n"
+         "<thead>\n"
+         "<tr><th>Node</th><th>Status</th></tr>\n"
+         "</thead>\n"
+         "<tbody>\n"
+         "<tr><td>web-1</td><td>up</td></tr>\n"
+         "<tr><td>db-1</td><td>down</td></tr>\n"
+         "</tbody>\n"
+         "</table>");
+   CheckPlain(table,
+         "Node  | Status\n"
+         "------+-------\n"
+         "web-1 | up\n"
+         "db-1  | down");
+   CheckTelegram(table,
+         "<pre>Node  | Status\n"
+         "------+-------\n"
+         "web-1 | up\n"
+         "db-1  | down</pre>");
+   CheckSlack(table,
+         "```\n"
+         "Node  | Status\n"
+         "------+-------\n"
+         "web-1 | up\n"
+         "db-1  | down\n"
+         "```");
+   // Alignment
+   CheckGeneric("a | b | c\n:---|:---:|---:\n1 | 2 | 3",
+         "<table>\n"
+         "<thead>\n"
+         "<tr><th align=\"left\">a</th><th align=\"center\">b</th><th align=\"right\">c</th></tr>\n"
+         "</thead>\n"
+         "<tbody>\n"
+         "<tr><td align=\"left\">1</td><td align=\"center\">2</td><td align=\"right\">3</td></tr>\n"
+         "</tbody>\n"
+         "</table>");
+   CheckPlain("value | count\n---:|:---\nx | 1\nlonger | 22",
+         " value | count\n-------+------\n     x | 1\nlonger | 22");
+   // Inline markup inside cells
+   CheckGeneric("| a | b |\n|---|---|\n| **x** | `y` |",
+         "<table>\n"
+         "<thead>\n"
+         "<tr><th>a</th><th>b</th></tr>\n"
+         "</thead>\n"
+         "<tbody>\n"
+         "<tr><td><b>x</b></td><td><code>y</code></td></tr>\n"
+         "</tbody>\n"
+         "</table>");
+   CheckTelegram("| a | b |\n|---|---|\n| **x** | 5 < 6 |",
+         "<pre>a | b\n--+------\nx | 5 &lt; 6</pre>");   // no markup inside Telegram <pre> block
+   // Missing and extra cells, escaped pipes
+   CheckPlain("a | b\n---|---\n1 |\n2 | 3 | 4", "a | b\n--+--\n1 |\n2 | 3");
+   CheckPlain("a | b\n---|---\nx \\| y | z", "a     | b\n------+--\nx | y | z");
+   // Table surrounded by other blocks
+   CheckGeneric("Text\n\n| a |\n| - |\n| 1 |\n\nMore",
+         "<p>Text</p>\n<table>\n<thead>\n<tr><th>a</th></tr>\n</thead>\n<tbody>\n<tr><td>1</td></tr>\n</tbody>\n</table>\n<p>More</p>");
+   CheckPlain("Text\n\nc1 | c2\n---|---\n1 | 2\n\nMore", "Text\n\nc1 | c2\n---+---\n1  | 2\n\nMore");
+   // Not tables
+   CheckGeneric("a\n---\nb", "<p>a</p>\n<hr/>\n<p>b</p>");
+   CheckGeneric("a | b\nc | d", "<p>a | b<br/>\nc | d</p>");
+   CheckPlain("```\na | b\n---|---\n```", "a | b\n---|---");
+   EndTest();
+
    StartTest(_T("Markdown - degenerate input"));
    CheckPlain("", "");
    CheckTelegram("", "");

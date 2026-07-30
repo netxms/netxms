@@ -39,16 +39,17 @@
  */
 enum class MarkdownHTMLDialect
 {
-   GENERIC = 0,   // Full HTML with structural tags (h1-h6, p, ul/ol/li, blockquote, hr)
-   TELEGRAM = 1   // Telegram bot API subset (b, i, s, code, pre, a, blockquote; headings and lists as styled text lines)
+   GENERIC = 0,   // Full HTML with structural tags (h1-h6, p, ul/ol/li, blockquote, hr, table)
+   TELEGRAM = 1   // Telegram bot API subset (b, i, s, code, pre, a, blockquote; headings, lists, and tables as preformatted text)
 };
 
 /**
  * Markdown conversion functions. Input and output are UTF-8. All functions accept a pragmatic
  * CommonMark subset (bold, italic, strikethrough, inline code, links, headings, lists with one
- * nesting level, fenced code blocks, blockquotes, horizontal rules); unrecognized syntax is
- * passed through as literal text. Returned string is allocated with MemAlloc and should be
- * freed by the caller.
+ * nesting level, fenced code blocks, blockquotes, horizontal rules) with GFM tables;
+ * unrecognized syntax is passed through as literal text. Formats without native table support
+ * (plain text, Telegram, Slack) get tables laid out as text with aligned columns. Returned
+ * string is allocated with MemAlloc and should be freed by the caller.
  */
 char LIBNXSRV_EXPORTABLE *MarkdownToPlainText(const char *markdown);
 char LIBNXSRV_EXPORTABLE *MarkdownToHTML(const char *markdown, MarkdownHTMLDialect dialect);
