@@ -212,6 +212,11 @@ struct WaitQueueWaiter
    uint16_t code;       // Message code
    bool isBinary;       // true for binary (raw) messages
 
+   // Default constructor is not used but required for explicit instantiation of ObjectMemoryPool<WaitQueueWaiter> on Windows
+   WaitQueueWaiter() : WaitQueueWaiter(false, 0, 0)
+   {
+   }
+
    WaitQueueWaiter(bool _isBinary, uint16_t _code, uint32_t _id) : wakeupCondition(true)
    {
       next = nullptr;
