@@ -118,17 +118,58 @@ static void ProcessLogRecord(const shared_ptr<Node>& node, const std::map<std::s
 }
 
 /**
+ * Recover a trace or span ID parsed from an OTLP/JSON payload. OTLP/JSON encodes
+ * these fields as hex text while the proto3 JSON mapping used by the parser expects
+ * base64, so a hex-encoded ID of N bytes silently decodes into N * 1.5 garbage bytes.
+ * Re-encoding those bytes as base64 restores the original hex text, which is then
+ * decoded into the actual ID bytes. IDs that already have the expected size are left
+ * as is (sender used base64 encoding).
+ */
+static void RecoverJsonEncodedId(std::string *id, size_t expectedSize)
+{
+   if (id->size() != expectedSize * 3 / 2)
+      return;
+
+   char hexText[48];
+   base64_encode(id->data(), id->size(), hexText, sizeof(hexText));
+   for (const char *p = hexText; *p != 0; p++)
+      if (!isxdigit(static_cast<unsigned char>(*p)))
+         return;
+
+   uint8_t bytes[16];
+   StrToBinA(hexText, bytes, expectedSize);
+   id->assign(reinterpret_cast<char*>(bytes), expectedSize);
+}
+
+/**
  * Handler for OTLP logs endpoint (POST /otlp-backend/v1/logs)
  */
 int H_OtlpLogs(Context *context)
 {
    opentelemetry::proto::collector::logs::v1::ExportLogsServiceRequest request;
-   if (!context->hasRequestData() ||
-       !request.ParseFromArray(context->getRequestData(), static_cast<int>(context->getRequestDataSize())))
+   if (!ParseOtlpRequest(context, &request))
    {
       nxlog_debug_tag(DEBUG_TAG_OTLP, 4, L"Failed to parse OTLP ExportLogsServiceRequest");
-      context->setErrorResponse("Invalid protobuf payload");
+      context->setErrorResponse("Invalid request payload");
       return 400;
+   }
+
+   if (IsOtlpJsonRequest(context))
+   {
+      for (int r = 0; r < request.resource_logs_size(); r++)
+      {
+         auto *resourceLogs = request.mutable_resource_logs(r);
+         for (int s = 0; s < resourceLogs->scope_logs_size(); s++)
+         {
+            auto *scopeLogs = resourceLogs->mutable_scope_logs(s);
+            for (int l = 0; l < scopeLogs->log_records_size(); l++)
+            {
+               auto *record = scopeLogs->mutable_log_records(l);
+               RecoverJsonEncodedId(record->mutable_trace_id(), 16);
+               RecoverJsonEncodedId(record->mutable_span_id(), 8);
+            }
+         }
+      }
    }
 
    nxlog_debug_tag(DEBUG_TAG_OTLP, 6, L"Received OTLP logs batch with %d resource logs", request.resource_logs_size());
@@ -172,8 +213,6 @@ int H_OtlpLogs(Context *context)
    opentelemetry::proto::collector::logs::v1::ExportLogsServiceResponse response;
    if (rejectedRecords > 0)
       response.mutable_partial_success()->set_rejected_log_records(rejectedRecords);
-   std::string serialized;
-   response.SerializeToString(&serialized);
-   context->setResponseData(serialized.data(), serialized.size(), "application/x-protobuf");
+   SendOtlpResponse(context, response);
    return 200;
 }

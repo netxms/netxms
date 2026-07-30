@@ -34,6 +34,31 @@
 
 #define DEBUG_TAG_OTLP  _T("otlp")
 
+namespace google
+{
+   namespace protobuf
+   {
+      class Message;
+   }
+}
+
+/**
+ * Check if OTLP request uses JSON encoding (based on Content-Type header)
+ */
+bool IsOtlpJsonRequest(Context *context);
+
+/**
+ * Parse OTLP request body into given message, selecting protobuf or JSON decoder
+ * from the request content type
+ */
+bool ParseOtlpRequest(Context *context, google::protobuf::Message *request);
+
+/**
+ * Serialize OTLP response message using the same encoding as the request,
+ * as required by the OTLP/HTTP specification
+ */
+void SendOtlpResponse(Context *context, const google::protobuf::Message& response);
+
 /**
  * Convert wide character string to UTF-8 std::string
  */
