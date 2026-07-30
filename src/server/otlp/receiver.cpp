@@ -23,7 +23,62 @@
 #include "otlp.h"
 #include "generated/metrics_service.pb.h"
 #include "otlp_attributes.h"
+#include <google/protobuf/util/json_util.h>
 #include <uthash.h>
+
+/**
+ * Check if OTLP request uses JSON encoding (based on Content-Type header)
+ */
+bool IsOtlpJsonRequest(Context *context)
+{
+   const char *contentType = context->getRequestHeader(MHD_HTTP_HEADER_CONTENT_TYPE);
+   return (contentType != nullptr) && (!strcmp(contentType, "application/json") || !strncmp(contentType, "application/json;", 17));
+}
+
+/**
+ * Parse OTLP request body into given message, selecting protobuf or JSON decoder
+ * from the request content type
+ */
+bool ParseOtlpRequest(Context *context, google::protobuf::Message *request)
+{
+   if (!context->hasRequestData())
+      return false;
+
+   if (IsOtlpJsonRequest(context))
+   {
+      google::protobuf::util::JsonParseOptions options;
+      options.ignore_unknown_fields = true;  // OTLP requires receivers to ignore unknown fields
+      auto status = google::protobuf::util::JsonStringToMessage(context->getRequestData(), request, options);
+      if (!status.ok())
+      {
+         nxlog_debug_tag(DEBUG_TAG_OTLP, 4, L"Cannot parse OTLP JSON payload (%hs)", status.ToString().c_str());
+         return false;
+      }
+      return true;
+   }
+
+   return request->ParseFromArray(context->getRequestData(), static_cast<int>(context->getRequestDataSize()));
+}
+
+/**
+ * Serialize OTLP response message using the same encoding as the request,
+ * as required by the OTLP/HTTP specification
+ */
+void SendOtlpResponse(Context *context, const google::protobuf::Message& response)
+{
+   std::string serialized;
+   if (IsOtlpJsonRequest(context))
+   {
+      if (!google::protobuf::util::MessageToJsonString(response, &serialized).ok())
+         serialized = "{}";
+      context->setResponseData(serialized.data(), serialized.size(), "application/json");
+   }
+   else
+   {
+      response.SerializeToString(&serialized);
+      context->setResponseData(serialized.data(), serialized.size(), "application/x-protobuf");
+   }
+}
 
 /**
  * Counter state for monotonic sum rate computation
@@ -344,13 +399,11 @@ static void ProcessMetricsForNode(const shared_ptr<Node>& node, const openteleme
  */
 int H_OtlpMetrics(Context *context)
 {
-   // Parse protobuf request
    opentelemetry::proto::collector::metrics::v1::ExportMetricsServiceRequest request;
-   if (!context->hasRequestData() ||
-       !request.ParseFromArray(context->getRequestData(), static_cast<int>(context->getRequestDataSize())))
+   if (!ParseOtlpRequest(context, &request))
    {
       nxlog_debug_tag(DEBUG_TAG_OTLP, 4, L"Failed to parse OTLP ExportMetricsServiceRequest");
-      context->setErrorResponse("Invalid protobuf payload");
+      context->setErrorResponse("Invalid request payload");
       return 400;
    }
 
@@ -388,10 +441,7 @@ int H_OtlpMetrics(Context *context)
 
    nxlog_debug_tag(DEBUG_TAG_OTLP, 5, L"OTLP batch processed: %d matched, %d unmatched", matchedCount, unmatchedCount);
 
-   // Return OTLP response (protobuf)
    opentelemetry::proto::collector::metrics::v1::ExportMetricsServiceResponse response;
-   std::string serialized;
-   response.SerializeToString(&serialized);
-   context->setResponseData(serialized.data(), serialized.size(), "application/x-protobuf");
+   SendOtlpResponse(context, response);
    return 200;
 }
