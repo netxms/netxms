@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2025 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -333,7 +333,7 @@ public class PackageManager extends ConfigurationView
                }
                else
                {
-                  pattern = Pattern.compile("^nxagent-atm-([0-9]+\\.[0-9]+\\.[0-9]+(-rc[0-9.]+|\\.[0-9]+)?)(-x64|-x86|-aarch64)?\\.exe$", Pattern.CASE_INSENSITIVE);
+                  pattern = Pattern.compile("^nxagent-atm-([0-9]+\\.[0-9]+\\.[0-9]+(-rc[0-9.]+|\\.[0-9]+)?)(-x64|-x86|-aarch64|-xp)?\\.exe$", Pattern.CASE_INSENSITIVE);
                   matcher = pattern.matcher(name);
                   if (matcher.matches())
                   {
@@ -426,7 +426,7 @@ public class PackageManager extends ConfigurationView
     */
    private static String windowsPlatformNameFromSuffix(String suffix)
    {
-      if ((suffix == null) || suffix.equalsIgnoreCase("-x86"))
+      if ((suffix == null) || suffix.equalsIgnoreCase("-x86") || suffix.equalsIgnoreCase("-xp"))
          return "windows-i386";
       if (suffix.equalsIgnoreCase("-aarch64"))
          return "windows-aarch64";
