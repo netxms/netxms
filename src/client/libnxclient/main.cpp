@@ -277,9 +277,11 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(uint32_t error)
       _T("Zone proxy is not accessible"),
       _T("Package is not trusted"),
       _T("Package downgrade is not allowed"),
-      _T("Server is a standby cluster node")
+      _T("Server is a standby cluster node"),
+      _T("Network device driver mismatch between source and target nodes"),
+      _T("Notification channel is provided by chat bot and cannot be changed")
    };
-	return (error <= RCC_SERVER_IS_STANDBY) ? errorText[error] : _T("No message for this error");
+	return (error <= RCC_CHANNEL_PROVIDED_BY_CHAT_BOT) ? errorText[error] : _T("No message for this error");
 }
 
 #ifdef _WIN32

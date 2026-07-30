@@ -804,6 +804,7 @@ enum SessionState
 #define RCC_DOWNGRADE_NOT_ALLOWED         ((uint32_t)192)
 #define RCC_SERVER_IS_STANDBY             ((uint32_t)193)
 #define RCC_DEVICE_DRIVER_MISMATCH        ((uint32_t)194)
+#define RCC_CHANNEL_PROVIDED_BY_CHAT_BOT  ((uint32_t)195)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

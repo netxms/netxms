@@ -134,6 +134,12 @@ int H_NotificationChannelUpdate(Context *context)
    if (!IsNotificationChannelExists(channelName))
       return 404;
 
+   if (IsNotificationChannelProvidedByChatBot(channelName))
+   {
+      context->setErrorResponse("Notification channel is provided by chat bot and cannot be modified");
+      return 409;
+   }
+
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
       return 400;
@@ -188,6 +194,15 @@ int H_NotificationChannelDelete(Context *context)
    wchar_t name[MAX_OBJECT_NAME];
    wcslcpy(name, channelName, MAX_OBJECT_NAME);
 
+   if (!IsNotificationChannelExists(name))
+      return 404;
+
+   if (IsNotificationChannelProvidedByChatBot(name))
+   {
+      context->setErrorResponse("Notification channel is provided by chat bot and cannot be deleted");
+      return 409;
+   }
+
    if (CheckChannelIsUsedInAction(name))
    {
       context->setErrorResponse("Notification channel is used in server actions");
@@ -216,6 +231,12 @@ int H_NotificationChannelRename(Context *context)
 
    if (!IsNotificationChannelExists(channelName))
       return 404;
+
+   if (IsNotificationChannelProvidedByChatBot(channelName))
+   {
+      context->setErrorResponse("Notification channel is provided by chat bot and cannot be renamed");
+      return 409;
+   }
 
    json_t *request = context->getRequestDocument();
    if (request == nullptr)

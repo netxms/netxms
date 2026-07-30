@@ -1504,6 +1504,19 @@ bool NXCORE_EXPORTABLE IsNotificationChannelExists(const wchar_t *name)
 }
 
 /**
+ * Check if notification channel with given name is provided by chat bot. Such channels
+ * cannot be updated, renamed, or deleted by the user.
+ */
+bool NXCORE_EXPORTABLE IsNotificationChannelProvidedByChatBot(const wchar_t *name)
+{
+   s_channelListLock.lock();
+   NotificationChannel *nc = s_channelList.get(name);
+   bool result = (nc != nullptr) && nc->isProvidedByChatBot();
+   s_channelListLock.unlock();
+   return result;
+}
+
+/**
  * Create new notification channel
  */
 static shared_ptr<NotificationChannel> CreateNotificationChannelObject(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration)

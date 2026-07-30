@@ -1533,6 +1533,7 @@ json_t NXCORE_EXPORTABLE *GetNotificationDriversAsJson();
 void NXCORE_EXPORTABLE GetNotificationDrivers(NXCPMessage *msg);
 char NXCORE_EXPORTABLE *GetNotificationChannelConfiguration(const TCHAR *name);
 bool NXCORE_EXPORTABLE IsNotificationChannelExists(const wchar_t *name);
+bool NXCORE_EXPORTABLE IsNotificationChannelProvidedByChatBot(const wchar_t *name);
 void NXCORE_EXPORTABLE CreateNotificationChannel(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration);
 void NXCORE_EXPORTABLE UpdateNotificationChannel(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration);
 void NXCORE_EXPORTABLE RenameNotificationChannel(wchar_t *name, wchar_t *newName);

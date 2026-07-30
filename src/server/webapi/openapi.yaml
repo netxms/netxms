@@ -6868,7 +6868,7 @@ paths:
     put:
       operationId: updateNotificationChannel
       summary: Update a notification channel
-      description: Update an existing notification channel. Only provided fields are updated.
+      description: Update an existing notification channel. Only provided fields are updated. Channels provided by chat bots cannot be updated.
       parameters:
         - name: channel-name
           in: path
@@ -6905,6 +6905,8 @@ paths:
           description: Access denied
         '404':
           description: Notification channel not found
+        '409':
+          description: Channel is provided by chat bot and cannot be updated
       security:
         - BearerAuth: []
       tags:
@@ -6912,7 +6914,7 @@ paths:
     delete:
       operationId: deleteNotificationChannel
       summary: Delete a notification channel
-      description: Delete a notification channel. Fails if the channel is used in server actions.
+      description: Delete a notification channel. Fails if the channel is used in server actions or provided by a chat bot.
       parameters:
         - name: channel-name
           in: path
@@ -6928,7 +6930,7 @@ paths:
         '404':
           description: Notification channel not found
         '409':
-          description: Channel is used in server actions
+          description: Channel is used in server actions or provided by chat bot
       security:
         - BearerAuth: []
       tags:
@@ -6937,7 +6939,7 @@ paths:
     post:
       operationId: renameNotificationChannel
       summary: Rename a notification channel
-      description: Rename an existing notification channel. Also updates references in server actions.
+      description: Rename an existing notification channel. Also updates references in server actions. Channels provided by chat bots cannot be renamed.
       parameters:
         - name: channel-name
           in: path
@@ -6967,7 +6969,7 @@ paths:
         '404':
           description: Notification channel not found
         '409':
-          description: Channel with the new name already exists
+          description: Channel with the new name already exists, or channel is provided by chat bot
       security:
         - BearerAuth: []
       tags:
@@ -10321,6 +10323,9 @@ components:
         queueSize:
           type: integer
           description: Current message queue size
+        providedByChatBot:
+          type: boolean
+          description: Whether the channel is provided by a chat bot (such channels cannot be modified, renamed, or deleted)
     LogParser:
       type: object
       properties:

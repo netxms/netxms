@@ -17176,14 +17176,21 @@ void ClientSession::updateNotificationChannel(const NXCPMessage& request)
          {
             if (IsNotificationChannelExists(name))
             {
-               TCHAR description[MAX_NC_DESCRIPTION];
-               request.getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
-               char *configuration = request.getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
-               UpdateNotificationChannel(name, description, driverName, configuration);
-               msg.setField(VID_RCC, RCC_SUCCESS);
-               NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
-               MemFree(configuration);
-               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Updated configuration of notification channel %s"), name);
+               if (!IsNotificationChannelProvidedByChatBot(name))
+               {
+                  TCHAR description[MAX_NC_DESCRIPTION];
+                  request.getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+                  char *configuration = request.getFieldAsMBString(VID_XML_CONFIG, nullptr, 0);
+                  UpdateNotificationChannel(name, description, driverName, configuration);
+                  msg.setField(VID_RCC, RCC_SUCCESS);
+                  NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
+                  MemFree(configuration);
+                  writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Updated configuration of notification channel %s"), name);
+               }
+               else
+               {
+                  msg.setField(VID_RCC, RCC_CHANNEL_PROVIDED_BY_CHAT_BOT);
+               }
             }
             else
             {
@@ -17221,7 +17228,11 @@ void ClientSession::removeNotificationChannel(const NXCPMessage& request)
    {
       TCHAR name[MAX_OBJECT_NAME];
       request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      if (!CheckChannelIsUsedInAction(name))
+      if (IsNotificationChannelProvidedByChatBot(name))
+      {
+         msg.setField(VID_RCC, RCC_CHANNEL_PROVIDED_BY_CHAT_BOT);
+      }
+      else if (!CheckChannelIsUsedInAction(name))
       {
          if (DeleteNotificationChannel(name))
          {
@@ -17260,18 +17271,26 @@ void ClientSession::renameNotificationChannel(const NXCPMessage& request)
       {
          if (IsNotificationChannelExists(name))
          {
-            TCHAR *newName = request.getFieldAsString(VID_NEW_NAME);
-            if (!IsNotificationChannelExists(newName))
+            if (!IsNotificationChannelProvidedByChatBot(name))
             {
-               writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s renamed to %s"), name, newName);
-               RenameNotificationChannel(name, newName); //will release names
-               response.setField(VID_RCC, RCC_SUCCESS);
+               TCHAR *newName = request.getFieldAsString(VID_NEW_NAME);
+               if (!IsNotificationChannelExists(newName))
+               {
+                  writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Notification channel %s renamed to %s"), name, newName);
+                  RenameNotificationChannel(name, newName); //will release names
+                  response.setField(VID_RCC, RCC_SUCCESS);
+               }
+               else
+               {
+                  MemFree(name);
+                  MemFree(newName);
+                  response.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+               }
             }
             else
             {
                MemFree(name);
-               MemFree(newName);
-               response.setField(VID_RCC, RCC_CHANNEL_ALREADY_EXIST);
+               response.setField(VID_RCC, RCC_CHANNEL_PROVIDED_BY_CHAT_BOT);
             }
          }
          else
