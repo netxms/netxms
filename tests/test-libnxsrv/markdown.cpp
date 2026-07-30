@@ -81,6 +81,8 @@ void TestMarkdown()
    CheckSlack("run `nxdbmgr check` now", "run `nxdbmgr check` now");
    CheckPlain("run `nxdbmgr check` now", "run nxdbmgr check now");
    CheckTelegram("escape `a < b` inside", "escape <code>a &lt; b</code> inside");
+   CheckTelegram("`123456`", "<code>123456</code>");   // 2FA code (issue #2478) - single backtick must not start fenced block
+   CheckPlain("`123456`", "123456");
    EndTest();
 
    StartTest(_T("Markdown - links"));

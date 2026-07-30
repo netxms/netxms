@@ -354,13 +354,17 @@ TwoFactorAuthenticationToken* MessageAuthMethod::prepareChallenge(uint32_t userI
    uint32_t challenge;
    GenerateRandomBytes(reinterpret_cast<BYTE*>(&challenge), sizeof(challenge));
    challenge = challenge % 1000000; // We will use 6 digits code
-   TCHAR challengeStr[7];
-   _sntprintf(challengeStr, 7, _T("%06u"), challenge);
 
-   TCHAR userName[MAX_USER_NAME];
-   TCHAR *recipient = MemCopyString(binding->getValue(_T("/MethodBinding/Recipient"), ResolveUserId(userId, userName, true)));
-   const TCHAR *subject = binding->getValue(_T("/MethodBinding/Subject"), _T("NetXMS two-factor authentication code"));
-   SendNotification(m_channelName, recipient, subject, challengeStr, 0, 0, uuid::NULL_UUID);
+   // Code is sent as markdown code span, so that channels with markdown support show it as monospace text
+   // (Telegram and other clients copy monospace text to clipboard on click). Channels without markdown
+   // support will receive plain text rendition containing only the code itself.
+   wchar_t challengeStr[16];
+   nx_swprintf(challengeStr, 16, L"`%06u`", challenge);
+
+   wchar_t userName[MAX_USER_NAME];
+   wchar_t *recipient = MemCopyString(binding->getValue(L"/MethodBinding/Recipient", ResolveUserId(userId, userName, true)));
+   const wchar_t *subject = binding->getValue(L"/MethodBinding/Subject", L"NetXMS two-factor authentication code");
+   SendNotification(m_channelName, recipient, subject, challengeStr, 0, 0, uuid::NULL_UUID, nullptr, true);
    MemFree(recipient);
 
    return new MessageToken(m_methodName, challenge);
