@@ -220,7 +220,7 @@ ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(const Node& node, SNMP_T
 	   {
 	      LLDP_LOCAL_PORT_INFO *p = ports->get(i);
 	      nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 6, _T("GetLLDPLocalPortInfo(%s [%u]): port=%u, idSubType=%s(%u), idLen=%d, id=%s, ifDescr=\"%s\""), node.getName(), node.getId(),
-	               p->portNumber, PortIdSubtypeAsText(p->localIdSubtype), p->localIdSubtype, (int)p->localIdLen, BinToStr(p->localId, p->localIdLen, buffer), p->ifDescr);
+	               p->portNumber, PortIdSubtypeAsText(p->localIdSubtype), p->localIdSubtype, (int)p->localIdLen, BinToStr(p->localId, MIN(p->localIdLen, 255), buffer), p->ifDescr);
 	   }
 	}
 	return ports;
@@ -237,7 +237,7 @@ ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(const Node& node, SNMP_T
 static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idSubType, BYTE *id, size_t idLen)
 {
 	TCHAR buffer[256];
-   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindRemoteInterface(%s [%u]): idSubType=%s(%u) id=%s (%d)"), node->getName(), node->getId(), PortIdSubtypeAsText(idSubType), idSubType, BinToStr(id, idLen, buffer), (int)idLen);
+   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindRemoteInterface(%s [%u]): idSubType=%s(%u) id=%s (%d)"), node->getName(), node->getId(), PortIdSubtypeAsText(idSubType), idSubType, BinToStr(id, MIN(idLen, 127), buffer), (int)idLen);
 
 	// Try local LLDP port info first
    shared_ptr<Interface> ifc;
@@ -424,7 +424,7 @@ static shared_ptr<AccessPoint> FindRemoteLldpAccessPoint(Node *node, uint32_t id
    if ((ap == nullptr) && (sysName != nullptr) && (sysName[0] != 0))
    {
       TCHAR idBuffer[256];
-      BinToStr(chassisId, chassisIdLen, idBuffer);
+      BinToStr(chassisId, MIN(chassisIdLen, 127), idBuffer);
       nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindRemoteLldpAccessPoint(%s [%u]): remoteIdSubType=%s(%u) remoteId=%s: FindAccessPointByMAC failed, fallback to sysName (\"%s\")"),
                node->getName(), node->getId(), ChassisIdSubtypeAsText(idSubType), idSubType, idBuffer, sysName);
       ap = static_pointer_cast<AccessPoint>(FindObjectByName(sysName, OBJECT_ACCESSPOINT));
@@ -836,7 +836,7 @@ static void ProcessLLDPConnectionEntry(Node *node, const StringObjectMap<SNMP_Va
 	else
 	{
       TCHAR remoteId[256];
-      BinToStr(lldpRemChassisId->getValue(), lldpRemChassisId->getValueLength(), remoteId);
+      BinToStr(lldpRemChassisId->getValue(), MIN(lldpRemChassisId->getValueLength(), 127), remoteId);
 	   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("ProcessLLDPConnectionEntry(%s [%u], %s): SNMP get failed for remote ID %s"), node->getName(), node->getId(), LLDP_MIB_NAME(lldpMibVersion2), remoteId);
 	}
 }
@@ -931,6 +931,10 @@ static bool ParseMACAddress(const char *text, size_t length, BYTE *mac, size_t *
  */
 String BuildLldpId(uint32_t type, const BYTE *data, size_t length)
 {
+   // Limit length of stored LLDP ID to 120 bytes so resulting text ID
+   // (type + '@' + hex string, max 242 chars) fits into varchar(255) DB column
+   length = MIN(length, 120);
+
    StringBuffer sb;
    sb.append(type);
    sb.append(_T('@'));
