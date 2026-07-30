@@ -1495,6 +1495,7 @@ void InitializeTaskScheduler()
          s_taskId = DBGetFieldInt64(hResult, 0, 0);
       DBFreeResult(hResult);
    }
+   s_taskId += HAGetRecordIdGap();
 
    hResult = DBSelect(hdb, _T("SELECT id,taskId,schedule,params,execution_time,last_execution_time,flags,owner,object_id,comments,task_key FROM scheduled_tasks"));
    if (hResult != nullptr)
