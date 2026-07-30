@@ -746,6 +746,12 @@ __PACK_END__
 #define CMD_MODIFY_NETCONF_QUERY          0x0222
 #define CMD_DELETE_NETCONF_QUERY          0x0223
 #define CMD_NETCONF_QUERY_DEFINITION      0x0224
+#define CMD_GET_CHAT_BOTS                 0x0225
+#define CMD_CREATE_CHAT_BOT               0x0226
+#define CMD_UPDATE_CHAT_BOT               0x0227
+#define CMD_DELETE_CHAT_BOT               0x0228
+#define CMD_RENAME_CHAT_BOT               0x0229
+#define CMD_GET_CHAT_BOT_DRIVERS          0x022A
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

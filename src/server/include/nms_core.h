@@ -916,6 +916,12 @@ private:
    void removeEventForwarder(const NXCPMessage& request);
    void renameEventForwarder(const NXCPMessage& request);
    void getEventForwarderDrivers(const NXCPMessage& request);
+   void getChatBots(const NXCPMessage& request);
+   void createChatBot(const NXCPMessage& request);
+   void updateChatBot(const NXCPMessage& request);
+   void deleteChatBot(const NXCPMessage& request);
+   void renameChatBot(const NXCPMessage& request);
+   void getChatBotDrivers(const NXCPMessage& request);
    void getNotificationDrivers(const NXCPMessage& request);
    void startActiveDiscovery(const NXCPMessage& request);
    void scanNetworkRange(const NXCPMessage& request);
@@ -1508,6 +1514,11 @@ NetworkDeviceDriver *FindDriverByName(const TCHAR *name);
 void AddDriverSpecificOids(StringList *list);
 void PrintNetworkDeviceDriverList(ServerConsole *console);
 
+class NCDriver;
+class NCDriverStorageManager;
+struct NCConfigurationTemplate;
+class ChatBotDriver;
+
 void LoadNotificationChannelDrivers();
 void LoadNotificationChannels();
 void ShutdownNotificationChannels();
@@ -1526,6 +1537,40 @@ void NXCORE_EXPORTABLE CreateNotificationChannel(const wchar_t *name, const wcha
 void NXCORE_EXPORTABLE UpdateNotificationChannel(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration);
 void NXCORE_EXPORTABLE RenameNotificationChannel(wchar_t *name, wchar_t *newName);
 bool NXCORE_EXPORTABLE DeleteNotificationChannel(const wchar_t *name);
+void NXCORE_EXPORTABLE RegisterNotificationChannelDriver(const wchar_t *name, NCDriver *(*instanceFactory)(Config*, NCDriverStorageManager*),
+      const NCConfigurationTemplate *confTemplate, bool xmlConfiguration);
+NCDriverStorageManager *CreateNCDriverStorageManager(const wchar_t *channelName);
+void DestroyNCDriverStorageManager(NCDriverStorageManager *storageManager);
+bool RegisterChatBotNotificationChannel(const wchar_t *name, const wchar_t *description, NCDriver *driver);
+void UnregisterChatBotNotificationChannel(const wchar_t *name);
+void RenameChatBotNotificationChannel(const wchar_t *name, const wchar_t *newName);
+
+/**
+ * Chat bot user mapping entry (platform peer ID to NetXMS user ID)
+ */
+struct ChatBotUserMapping
+{
+   char peerId[128];    // Platform-specific peer ID (UTF-8)
+   uint32_t userId;
+};
+
+void LoadChatBots();
+void ShutdownChatBots();
+void NXCORE_EXPORTABLE RegisterChatBotDriver(const wchar_t *name, ChatBotDriver *(*instanceFactory)(Config*, NCDriverStorageManager*));
+bool NXCORE_EXPORTABLE IsChatBotExists(const wchar_t *name);
+void NXCORE_EXPORTABLE GetChatBots(NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *GetChatBots(bool includeSensitiveData);
+json_t NXCORE_EXPORTABLE *GetChatBotByName(const wchar_t *name, bool includeSensitiveData = false);
+void NXCORE_EXPORTABLE GetChatBotDrivers(NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *GetChatBotDriversAsJson();
+uint32_t NXCORE_EXPORTABLE CreateChatBot(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration,
+      uint32_t idleTimeout, const char *providerSlot, const StructArray<ChatBotUserMapping>& userMappings);
+uint32_t NXCORE_EXPORTABLE UpdateChatBot(const wchar_t *name, const wchar_t *description, const wchar_t *driverName, char *configuration,
+      uint32_t idleTimeout, const char *providerSlot, const StructArray<ChatBotUserMapping>& userMappings);
+uint32_t NXCORE_EXPORTABLE RenameChatBot(const wchar_t *name, const wchar_t *newName);
+uint32_t NXCORE_EXPORTABLE DeleteChatBot(const wchar_t *name);
+uint32_t NXCORE_EXPORTABLE CreateChatBotFromJson(json_t *config);
+uint32_t NXCORE_EXPORTABLE UpdateChatBotFromJson(const wchar_t *name, json_t *config);
 
 void LoadEventForwarders();
 void ShutdownEventForwarders();

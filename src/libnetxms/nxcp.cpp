@@ -591,7 +591,13 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_NETCONF_QUERIES"),
       _T("CMD_MODIFY_NETCONF_QUERY"),
       _T("CMD_DELETE_NETCONF_QUERY"),
-      _T("CMD_NETCONF_QUERY_DEFINITION")
+      _T("CMD_NETCONF_QUERY_DEFINITION"),
+      _T("CMD_GET_CHAT_BOTS"),
+      _T("CMD_CREATE_CHAT_BOT"),
+      _T("CMD_UPDATE_CHAT_BOT"),
+      _T("CMD_DELETE_CHAT_BOT"),
+      _T("CMD_RENAME_CHAT_BOT"),
+      _T("CMD_GET_CHAT_BOT_DRIVERS")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -607,7 +613,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_DEPLOY_REPORT_PACKAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_NETCONF_QUERY_DEFINITION))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_CHAT_BOT_DRIVERS))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

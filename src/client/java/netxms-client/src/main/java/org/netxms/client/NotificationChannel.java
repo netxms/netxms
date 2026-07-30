@@ -45,6 +45,7 @@ public class NotificationChannel
    private int failureCount;
    private int queueSize;
    private int digestedCount;
+   private boolean providedByChatBot;
 
 	/**
 	 * Create notification channel object from NXCP message
@@ -68,6 +69,7 @@ public class NotificationChannel
       failureCount = msg.getFieldAsInt32(baseId + 12);
       queueSize = msg.getFieldAsInt32(baseId + 13);
       digestedCount = msg.getFieldAsInt32(baseId + 14);
+      providedByChatBot = msg.getFieldAsBoolean(baseId + 15);
 	}
 
 	/**
@@ -232,6 +234,17 @@ public class NotificationChannel
    public int getDigestedCount()
    {
       return digestedCount;
+   }
+
+   /**
+    * Check if this channel is automatically provided by a chat bot. Such channels cannot be modified,
+    * renamed, or deleted independently - they follow the lifecycle of the owning chat bot.
+    *
+    * @return true if this channel is provided by a chat bot
+    */
+   public boolean isProvidedByChatBot()
+   {
+      return providedByChatBot;
    }
 
    /**

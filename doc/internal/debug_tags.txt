@@ -22,6 +22,8 @@ bind9		Bind9 subagent messages
 bizsvc		Business services
 bizsvc.check	Business service check
 
+chatbot		Chat bots
+
 client.session	Client sessions
 
 cloud.discovery	Cloud domain resource discovery and reconciliation

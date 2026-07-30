@@ -564,6 +564,12 @@ public class NXCPCodes
    public static final int CMD_MODIFY_NETCONF_QUERY = 0x0222;
    public static final int CMD_DELETE_NETCONF_QUERY = 0x0223;
    public static final int CMD_NETCONF_QUERY_DEFINITION = 0x0224;
+   public static final int CMD_GET_CHAT_BOTS = 0x0225;
+   public static final int CMD_CREATE_CHAT_BOT = 0x0226;
+   public static final int CMD_UPDATE_CHAT_BOT = 0x0227;
+   public static final int CMD_DELETE_CHAT_BOT = 0x0228;
+   public static final int CMD_RENAME_CHAT_BOT = 0x0229;
+   public static final int CMD_GET_CHAT_BOT_DRIVERS = 0x022A;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

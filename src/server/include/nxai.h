@@ -340,6 +340,7 @@ private:
    time_t m_lastUpdateTime;
    PendingQuestion *m_pendingQuestion;
    Mutex m_questionMutex;
+   std::function<void (const PendingQuestion&)> m_questionListener;
    AsyncRequestState m_asyncState;
    char *m_asyncResult;
    char *m_asyncErrorMessage;
@@ -402,6 +403,13 @@ public:
    void handleQuestionResponse(uint64_t questionId, bool positive, int selectedOption);
    bool hasPendingQuestion() const { return m_pendingQuestion != nullptr; }
    json_t *getPendingQuestion();
+
+   /**
+    * Set question listener called each time a new pending question is posted (in addition to
+    * client session delivery). Called from the thread executing the chat request with question
+    * mutex held - the listener must not block and should dispatch actual delivery asynchronously.
+    */
+   void setQuestionListener(std::function<void (const PendingQuestion&)> listener) { m_questionListener = listener; }
 };
 
 /**

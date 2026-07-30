@@ -1954,6 +1954,24 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_EVENT_FORWARDER_DRIVERS:
          getEventForwarderDrivers(*request);
          break;
+      case CMD_GET_CHAT_BOTS:
+         getChatBots(*request);
+         break;
+      case CMD_CREATE_CHAT_BOT:
+         createChatBot(*request);
+         break;
+      case CMD_UPDATE_CHAT_BOT:
+         updateChatBot(*request);
+         break;
+      case CMD_DELETE_CHAT_BOT:
+         deleteChatBot(*request);
+         break;
+      case CMD_RENAME_CHAT_BOT:
+         renameChatBot(*request);
+         break;
+      case CMD_GET_CHAT_BOT_DRIVERS:
+         getChatBotDrivers(*request);
+         break;
       case CMD_START_ACTIVE_DISCOVERY:
          startActiveDiscovery(*request);
          break;
@@ -17518,6 +17536,210 @@ void ClientSession::renameEventForwarder(const NXCPMessage& request)
    else
    {
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on event forwarder rename"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Read chat bot user mappings from request message
+ */
+static void ReadChatBotUserMappings(const NXCPMessage& request, StructArray<ChatBotUserMapping> *mappings)
+{
+   int count = request.getFieldAsInt32(VID_NUM_RECORDS);
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < count; i++)
+   {
+      ChatBotUserMapping *m = mappings->addPlaceholder();
+      memset(m, 0, sizeof(ChatBotUserMapping));
+      request.getFieldAsUtf8String(fieldId++, m->peerId, sizeof(m->peerId));
+      m->userId = request.getFieldAsUInt32(fieldId++);
+   }
+}
+
+/**
+ * Get list of configured chat bots
+ */
+void ClientSession::getChatBots(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      GetChatBots(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on reading chat bot list");
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Create chat bot
+ */
+void ClientSession::createChatBot(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      wchar_t name[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if (name[0] != 0)
+      {
+         wchar_t driverName[MAX_OBJECT_NAME];
+         request.getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+         if (driverName[0] != 0)
+         {
+            wchar_t description[MAX_NC_DESCRIPTION];
+            request.getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+            char *configuration = request.getFieldAsUtf8String(VID_XML_CONFIG);
+            uint32_t idleTimeout = request.getFieldAsUInt32(VID_TIMEOUT);
+            char providerSlot[32];
+            providerSlot[0] = 0;
+            request.getFieldAsUtf8String(VID_AI_MODEL_SLOT, providerSlot, sizeof(providerSlot));
+            StructArray<ChatBotUserMapping> mappings;
+            ReadChatBotUserMappings(request, &mappings);
+            uint32_t rcc = CreateChatBot(name, description, driverName, configuration, idleTimeout, providerSlot, mappings);
+            response.setField(VID_RCC, rcc);
+            if (rcc == RCC_SUCCESS)
+               writeAuditLog(AUDIT_SYSCFG, true, 0, L"Created new chat bot %s", name);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INVALID_DRIVER_NAME);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on new chat bot creation");
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Update chat bot
+ */
+void ClientSession::updateChatBot(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      wchar_t name[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      if (name[0] != 0)
+      {
+         wchar_t driverName[MAX_OBJECT_NAME];
+         request.getFieldAsString(VID_DRIVER_NAME, driverName, MAX_OBJECT_NAME);
+         if (driverName[0] != 0)
+         {
+            wchar_t description[MAX_NC_DESCRIPTION];
+            request.getFieldAsString(VID_DESCRIPTION, description, MAX_NC_DESCRIPTION);
+            char *configuration = request.getFieldAsUtf8String(VID_XML_CONFIG);
+            uint32_t idleTimeout = request.getFieldAsUInt32(VID_TIMEOUT);
+            char providerSlot[32];
+            providerSlot[0] = 0;
+            request.getFieldAsUtf8String(VID_AI_MODEL_SLOT, providerSlot, sizeof(providerSlot));
+            StructArray<ChatBotUserMapping> mappings;
+            ReadChatBotUserMappings(request, &mappings);
+            uint32_t rcc = UpdateChatBot(name, description, driverName, configuration, idleTimeout, providerSlot, mappings);
+            response.setField(VID_RCC, rcc);
+            if (rcc == RCC_SUCCESS)
+               writeAuditLog(AUDIT_SYSCFG, true, 0, L"Updated configuration of chat bot %s", name);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INVALID_DRIVER_NAME);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on chat bot update");
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Delete chat bot
+ */
+void ClientSession::deleteChatBot(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      wchar_t name[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      uint32_t rcc = DeleteChatBot(name);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Chat bot %s deleted", name);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on chat bot deletion");
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Rename chat bot
+ */
+void ClientSession::renameChatBot(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      wchar_t name[MAX_OBJECT_NAME], newName[MAX_OBJECT_NAME];
+      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
+      request.getFieldAsString(VID_NEW_NAME, newName, MAX_OBJECT_NAME);
+      if ((name[0] != 0) && (newName[0] != 0))
+      {
+         uint32_t rcc = RenameChatBot(name, newName);
+         response.setField(VID_RCC, rcc);
+         if (rcc == RCC_SUCCESS)
+            writeAuditLog(AUDIT_SYSCFG, true, 0, L"Chat bot %s renamed to %s", name, newName);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INVALID_CHANNEL_NAME);
+      }
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on chat bot rename");
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Get list of available chat bot drivers
+ */
+void ClientSession::getChatBotDrivers(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
+   {
+      GetChatBotDrivers(&response);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on reading chat bot driver list");
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);

@@ -15,6 +15,7 @@ serverinclude_HEADERS = \
 	ai_provider.h \
 	asset_management.h \
 	auth-token.h \
+	chatdrv.h \
 	cloud-connector.h \
 	dci_table_creation.h \
 	device-backup.h \

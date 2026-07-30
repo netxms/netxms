@@ -3019,6 +3019,31 @@ CREATE TABLE nc_persistent_storage
 ) TABLE_TYPE;
 
 /**
+ * Chat bot configurations
+ */
+CREATE TABLE chat_bots
+(
+   name varchar(63) not null,
+   driver_name varchar(63) not null,
+   description varchar(255) null,
+   configuration SQL_TEXT null,
+   idle_timeout integer not null,
+   provider_slot varchar(31) null,
+   PRIMARY KEY(name)
+) TABLE_TYPE;
+
+/**
+ * Chat bot user mappings (platform peer ID to NetXMS user)
+ */
+CREATE TABLE chat_bot_users
+(
+   channel_name varchar(63) not null,
+   peer_id varchar(127) not null,
+   user_id integer not null,
+   PRIMARY KEY(channel_name, peer_id)
+) TABLE_TYPE;
+
+/**
  * Event forwarder configurations
  */
 CREATE TABLE event_forwarders

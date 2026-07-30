@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <ncdrv.h>
+#include <chatdrv.h>
 #include <nxsl.h>
 #include <nxai.h>
 
@@ -31,6 +32,11 @@
  * Static configuration template for built-in NXSL driver
  */
 static const NCConfigurationTemplate s_nxslConfigTemplate(true, true);
+
+/**
+ * Static configuration template for chat bot provided channels
+ */
+static const NCConfigurationTemplate s_chatBotConfTemplate(false, true);
 
 #define NC_THREAD_KEY L"NotificationChannel"
 
@@ -263,6 +269,7 @@ private:
    NCDriverServerStorageManager *m_storageManager;
    NCSendStatus m_sendStatus;
    bool m_healthCheckStatus;
+   bool m_providedByChatBot;
    bool m_queueOverflow;
    time_t m_lastMessageTime;
    uint32_t m_messageCount;
@@ -312,7 +319,8 @@ private:
 
 public:
    NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const wchar_t *name,
-            const wchar_t *description, const wchar_t *driverName, char *config, const NCConfigurationTemplate *confTemplate, const wchar_t *errorMessage);
+            const wchar_t *description, const wchar_t *driverName, char *config, const NCConfigurationTemplate *confTemplate,
+            const wchar_t *errorMessage, bool providedByChatBot = false);
    ~NotificationChannel();
 
    void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription);
@@ -324,6 +332,7 @@ public:
    const wchar_t *getDescription() const { return m_description; }
    const wchar_t *getDriverName() const { return m_driverName; }
    const char *getConfiguration() const { return m_configuration; }
+   bool isProvidedByChatBot() const { return m_providedByChatBot; }
    void getStatus(NotificationChannelStatus *status);
 
    void fillMessage(NXCPMessage *msg, uint32_t base) const;
@@ -536,7 +545,8 @@ static String GenerateDigestMessage(const wchar_t *channelName, const wchar_t *r
  * Notification channel constructor
  */
 NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const wchar_t *name,
-      const wchar_t *description, const wchar_t *driverName, char *config, const NCConfigurationTemplate *confTemplate, const wchar_t *errorMessage) :
+      const wchar_t *description, const wchar_t *driverName, char *config, const NCConfigurationTemplate *confTemplate,
+      const wchar_t *errorMessage, bool providedByChatBot) :
             m_driverLock(MutexType::FAST), m_notificationQueue(64, Ownership::True),
             m_recipientBuckets(Ownership::True), m_recipientBucketsLock(MutexType::FAST),
             m_digestAccumulator(Ownership::True), m_digestLock(MutexType::FAST)
@@ -551,6 +561,7 @@ NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorage
    wcslcpy(m_errorMessage, errorMessage, MAX_NC_ERROR_MESSAGE);
    m_sendStatus = NCSendStatus::UNKNOWN;
    m_healthCheckStatus = false;
+   m_providedByChatBot = providedByChatBot;
    m_queueOverflow = false;
    m_lastMessageTime = 0;
    m_messageCount = 0;
@@ -1206,6 +1217,7 @@ void NotificationChannel::fillMessage(NXCPMessage *msg, uint32_t base) const
    msg->setField(base + 12, m_failureCount);
    msg->setField(base + 13, static_cast<uint32_t>(m_notificationQueue.size()));
    msg->setField(base + 14, m_digestedCount);
+   msg->setField(base + 15, m_providedByChatBot);
 }
 
 /**
@@ -1238,6 +1250,7 @@ json_t *NotificationChannel::toJson(bool includeSensitiveData) const
    json_object_set_new(root, "failureCount", json_integer(m_failureCount));
    json_object_set_new(root, "queueSize", json_integer(m_notificationQueue.size()));
    json_object_set_new(root, "digestedCount", json_integer(m_digestedCount));
+   json_object_set_new(root, "providedByChatBot", json_boolean(m_providedByChatBot));
    return root;
 }
 
@@ -1426,13 +1439,18 @@ static void DeleteNotificationChannelInternal(wchar_t *name)
 bool DeleteNotificationChannel(const wchar_t *name)
 {
    s_channelListLock.lock();
-   bool contains = s_channelList.contains(name);
+   NotificationChannel *nc = s_channelList.get(name);
+   bool canDelete = (nc != nullptr) && !nc->isProvidedByChatBot();
    s_channelListLock.unlock();
-   if (contains)
+   if (canDelete)
    {
       ThreadPoolExecuteSerialized(g_mainThreadPool, NC_THREAD_KEY, DeleteNotificationChannelInternal, MemCopyString(name));
    }
-   return contains;
+   else if (nc != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Attempt to delete notification channel \"%s\" provided by chat bot denied", name);
+   }
+   return canDelete;
 }
 
 /**
@@ -1525,7 +1543,12 @@ void NXCORE_EXPORTABLE UpdateNotificationChannel(const wchar_t *name, const wcha
    shared_ptr<NotificationChannel> nc = s_channelList.getShared(name);
    s_channelListLock.unlock();
    if (nc != nullptr)
-      nc->update(description, driverName, configuration);
+   {
+      if (!nc->isProvidedByChatBot())
+         nc->update(description, driverName, configuration);
+      else
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Attempt to update notification channel \"%s\" provided by chat bot denied", name);
+   }
 }
 
 /**
@@ -1580,14 +1603,16 @@ static void RenameNotificationChannelInDB(std::pair<wchar_t*, wchar_t*> *names)
 }
 
 /**
- * Rename notification channel
+ * Rename notification channel. Renames channels provided by chat bots only when allowChatBotChannel
+ * is set (used by chat bot rename to keep the auto-registered channel in sync).
  */
-void NXCORE_EXPORTABLE RenameNotificationChannel(wchar_t *name, wchar_t *newName)
+static void RenameNotificationChannelInternal(wchar_t *name, wchar_t *newName, bool allowChatBotChannel)
 {
    s_channelListLock.lock();
-   shared_ptr<NotificationChannel> nc = s_channelList.unlink(name);
-   if (nc != nullptr)
+   NotificationChannel *curr = s_channelList.get(name);
+   if ((curr != nullptr) && (allowChatBotChannel || !curr->isProvidedByChatBot()))
    {
+      shared_ptr<NotificationChannel> nc = s_channelList.unlink(name);
       nc->updateName(newName);
       s_channelList.set(newName, nc);
       auto pair = new std::pair<wchar_t*, wchar_t*>(name, newName);
@@ -1596,10 +1621,20 @@ void NXCORE_EXPORTABLE RenameNotificationChannel(wchar_t *name, wchar_t *newName
    }
    else
    {
+      if (curr != nullptr)
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Attempt to rename notification channel \"%s\" provided by chat bot denied", name);
       MemFree(name);
       MemFree(newName);
    }
    s_channelListLock.unlock();
+}
+
+/**
+ * Rename notification channel
+ */
+void NXCORE_EXPORTABLE RenameNotificationChannel(wchar_t *name, wchar_t *newName)
+{
+   RenameNotificationChannelInternal(name, newName, false);
 }
 
 /**
@@ -1848,6 +1883,21 @@ bool NXCORE_EXPORTABLE ClearNotificationChannelQueue(const wchar_t *name)
 }
 
 /**
+ * Register notification channel driver. Intended to be called during server core or module initialization.
+ */
+void NXCORE_EXPORTABLE RegisterNotificationChannelDriver(const wchar_t *name, NCDriver *(*instanceFactory)(Config*, NCDriverStorageManager*),
+      const NCConfigurationTemplate *confTemplate, bool xmlConfiguration)
+{
+   NCDriverDescriptor *dd = new NCDriverDescriptor();
+   dd->instanceFactory = instanceFactory;
+   dd->confTemplate = confTemplate;
+   dd->xmlConfiguration = xmlConfiguration;
+   wcslcpy(dd->name, name, MAX_OBJECT_NAME);
+   s_driverList.set(dd->name, dd);
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel driver %s registered successfully", dd->name);
+}
+
+/**
  * Load notification channel driver
  *
  * @param file Driver's file name
@@ -1868,15 +1918,16 @@ static void LoadDriver(const TCHAR *file)
       {
          if (*apiVersion == NCDRV_API_VERSION)
          {
-            NCDriverDescriptor *ncDriverDescriptor = new NCDriverDescriptor();
-            ncDriverDescriptor->instanceFactory = InstanceFactory;
-            ncDriverDescriptor->confTemplate = GetConfigTemplate();
-            ncDriverDescriptor->xmlConfiguration = true;
-            TCHAR *tmp = WideStringFromMBString(*name);
-            _tcslcpy(ncDriverDescriptor->name, tmp, MAX_OBJECT_NAME);
-            MemFree(tmp);
-            s_driverList.set(ncDriverDescriptor->name, ncDriverDescriptor);
-            nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel driver %s loaded successfully", ncDriverDescriptor->name);
+            wchar_t *driverName = WideStringFromMBString(*name);
+            RegisterNotificationChannelDriver(driverName, InstanceFactory, GetConfigTemplate(), true);
+
+            // Optional chat bot capability provided by the same module
+            wchar_t chatErrorText[256];
+            ChatBotDriverFactory chatFactory = DLGetFunctionAddr<ChatBotDriverFactory>(hModule, "NcdCreateChatBotInstance", chatErrorText);
+            if (chatFactory != nullptr)
+               RegisterChatBotDriver(driverName, chatFactory);
+
+            MemFree(driverName);
          }
          else
          {
@@ -1931,14 +1982,8 @@ void LoadNotificationChannelDrivers()
    SetDllDirectory(nullptr);
 #endif
 
-   // Register built-in NXSL driver
-   NCDriverDescriptor *nxslDriver = new NCDriverDescriptor();
-   nxslDriver->instanceFactory = CreateNXSLDriverInstance;
-   nxslDriver->confTemplate = &s_nxslConfigTemplate;
-   nxslDriver->xmlConfiguration = false;   // configuration is raw NXSL script source
-   wcscpy(nxslDriver->name, L"NXSL");
-   s_driverList.set(nxslDriver->name, nxslDriver);
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Built-in NXSL notification channel driver registered"));
+   // Register built-in NXSL driver (configuration is raw NXSL script source)
+   RegisterNotificationChannelDriver(L"NXSL", CreateNXSLDriverInstance, &s_nxslConfigTemplate, false);
 
    nxlog_debug_tag(DEBUG_TAG, 1, L"%d notification channel drivers loaded", s_driverList.size());
 }
@@ -2019,6 +2064,71 @@ void LoadNotificationChannels()
    s_healthCheckThread = ThreadCreateEx(CheckNotificationDriversHealth);
 
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Create server-side driver storage manager instance (for use by chat bot manager)
+ */
+NCDriverStorageManager *CreateNCDriverStorageManager(const wchar_t *channelName)
+{
+   return new NCDriverServerStorageManager(channelName);
+}
+
+/**
+ * Destroy driver storage manager previously created by CreateNCDriverStorageManager
+ */
+void DestroyNCDriverStorageManager(NCDriverStorageManager *storageManager)
+{
+   delete static_cast<NCDriverServerStorageManager*>(storageManager);
+}
+
+/**
+ * Register notification channel provided by chat bot. Channel is backed by given driver
+ * (adapter around live chat bot driver instance), is not saved to database, and cannot be
+ * modified or deleted independently. Takes ownership of the driver. Returns false if channel
+ * with given name already exists (driver is destroyed in that case).
+ */
+bool RegisterChatBotNotificationChannel(const wchar_t *name, const wchar_t *description, NCDriver *driver)
+{
+   s_channelListLock.lock();
+   if (s_channelList.contains(name))
+   {
+      s_channelListLock.unlock();
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
+         L"Cannot register notification channel for chat bot \"%s\" - channel with same name already exists (delete the standalone channel to use the bot provided one)", name);
+      delete driver;
+      return false;
+   }
+   s_channelList.set(name, make_shared<NotificationChannel>(driver, new NCDriverServerStorageManager(name), name,
+         description, L"ChatBot", MemCopyStringA(""), &s_chatBotConfTemplate, L"", true));
+   s_channelListLock.unlock();
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel for chat bot \"%s\" registered", name);
+   NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
+   return true;
+}
+
+/**
+ * Unregister notification channel provided by chat bot
+ */
+void UnregisterChatBotNotificationChannel(const wchar_t *name)
+{
+   s_channelListLock.lock();
+   NotificationChannel *nc = s_channelList.get(name);
+   if ((nc != nullptr) && nc->isProvidedByChatBot())
+   {
+      s_channelList.unlink(name);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Notification channel for chat bot \"%s\" unregistered", name);
+   }
+   s_channelListLock.unlock();
+   NotifyClientSessions(NX_NOTIFY_NC_CHANNEL_CHANGED, 0);
+}
+
+/**
+ * Rename notification channel provided by chat bot (called by chat bot rename)
+ */
+void RenameChatBotNotificationChannel(const wchar_t *name, const wchar_t *newName)
+{
+   RenameNotificationChannelInternal(MemCopyStringW(name), MemCopyStringW(newName), true);
 }
 
 /**

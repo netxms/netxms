@@ -10,7 +10,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			anomaly_profile.cpp alarm.cpp alarm_category.cpp asset.cpp \
 			asset_management.cpp audit.cpp authtokens.cpp beacon.cpp bizservice.cpp \
 			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp cas_validator.cpp \
-			ccy.cpp cdp.cpp cert.cpp chassis.cpp circuit.cpp client.cpp cloud_connector.cpp cloud_domain.cpp cluster.cpp collector.cpp \
+			ccy.cpp cdp.cpp cert.cpp chassis.cpp chatbot.cpp circuit.cpp client.cpp cloud_connector.cpp cloud_domain.cpp cluster.cpp collector.cpp \
 			columnfilter.cpp condition.cpp config.cpp conn_history.cpp console.cpp container.cpp correlate.cpp \
 			dashboard.cpp datacoll.cpp dbwrite.cpp dc_nxsl.cpp dcagg.cpp dci_data_query.cpp dci_recalc.cpp dcitem.cpp \
 			dcithreshold.cpp dcivalue.cpp dcobject.cpp dcowner.cpp dcst.cpp \

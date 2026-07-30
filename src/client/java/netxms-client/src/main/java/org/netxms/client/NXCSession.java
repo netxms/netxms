@@ -15520,6 +15520,103 @@ public class NXCSession
    }
 
    /**
+    * Get configured chat bots.
+    *
+    * @return list of configured chat bots
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<ChatBot> getChatBots() throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CHAT_BOTS);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<ChatBot> bots = new ArrayList<ChatBot>(count);
+      long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++, base += 4096)
+         bots.add(new ChatBot(response, base));
+      return bots;
+   }
+
+   /**
+    * Create chat bot.
+    *
+    * @param bot chat bot configuration
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void createChatBot(ChatBot bot) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_CHAT_BOT);
+      bot.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Update chat bot configuration.
+    *
+    * @param bot chat bot configuration
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void updateChatBot(ChatBot bot) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_CHAT_BOT);
+      bot.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Delete chat bot.
+    *
+    * @param name name of chat bot to delete
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteChatBot(String name) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_CHAT_BOT);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Rename chat bot (also renames automatically registered notification channel with the same name).
+    *
+    * @param oldName old chat bot name
+    * @param newName new chat bot name
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void renameChatBot(String oldName, String newName) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RENAME_CHAT_BOT);
+      msg.setField(NXCPCodes.VID_NAME, oldName);
+      msg.setField(NXCPCodes.VID_NEW_NAME, newName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get list of available chat bot drivers.
+    *
+    * @return list of available chat bot drivers
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<String> getChatBotDrivers() throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CHAT_BOT_DRIVERS);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getStringListFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_DRIVER_COUNT);
+   }
+
+   /**
     * Start active discovery for provided list manually
     *
     * @param ranges IP address ranges to scan

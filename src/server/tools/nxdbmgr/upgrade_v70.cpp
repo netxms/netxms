@@ -24,6 +24,32 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.13 to 70.14
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE chat_bots ("
+      L"   name varchar(63) not null,"
+      L"   driver_name varchar(63) not null,"
+      L"   description varchar(255) null,"
+      L"   configuration $SQL:TEXT null,"
+      L"   idle_timeout integer not null,"
+      L"   provider_slot varchar(31) null,"
+      L"PRIMARY KEY(name))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE chat_bot_users ("
+      L"   channel_name varchar(63) not null,"
+      L"   peer_id varchar(127) not null,"
+      L"   user_id integer not null,"
+      L"PRIMARY KEY(channel_name,peer_id))"));
+
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 70.12 to 70.13
  */
 static bool H_UpgradeFromV12()
@@ -558,6 +584,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 13, 70, 14, H_UpgradeFromV13 },
    { 12, 70, 13, H_UpgradeFromV12 },
    { 11, 70, 12, H_UpgradeFromV11 },
    { 10, 70, 11, H_UpgradeFromV10 },

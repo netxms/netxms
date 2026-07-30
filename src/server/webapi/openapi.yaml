@@ -54,6 +54,8 @@ tags:
     description: Notification channel and driver management
   - name: Event Forwarders
     description: Event forwarder and driver management
+  - name: Chat Bots
+    description: Chat bot and driver management
   - name: SNMP MIB
     description: Browse the server's compiled SNMP MIB tree
   - name: SSH Keys
@@ -7276,6 +7278,257 @@ paths:
         - BearerAuth: []
       tags:
         - Event Forwarders
+  /v1/chat-bots:
+    get:
+      operationId: listChatBots
+      summary: List chat bots
+      description: Retrieve a list of all chat bots configured on the server.
+      responses:
+        '200':
+          description: Chat bots retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatBot'
+        '403':
+          description: Access denied
+      security:
+        - BearerAuth: []
+      tags:
+        - Chat Bots
+    post:
+      operationId: createChatBot
+      summary: Create a chat bot
+      description: Create a new chat bot with the specified driver and configuration. A notification channel with the same name is registered automatically.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - driverName
+              properties:
+                name:
+                  type: string
+                  description: Unique chat bot name
+                description:
+                  type: string
+                  description: Chat bot description
+                driverName:
+                  type: string
+                  description: Chat bot driver name
+                configuration:
+                  type: string
+                  description: Driver-specific configuration text
+                idleTimeout:
+                  type: integer
+                  description: Session idle timeout in seconds
+                providerSlot:
+                  type: string
+                  description: AI provider slot for bot sessions (empty for default)
+                userMappings:
+                  type: array
+                  description: Platform peer ID to NetXMS user ID mappings
+                  items:
+                    type: object
+                    properties:
+                      peerId:
+                        type: string
+                        description: Platform-specific peer ID
+                      userId:
+                        type: integer
+                        description: NetXMS user ID
+      responses:
+        '201':
+          description: Chat bot created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatBot'
+        '400':
+          description: Invalid or missing required fields
+        '403':
+          description: Access denied
+        '409':
+          description: Chat bot with this name already exists
+      security:
+        - BearerAuth: []
+      tags:
+        - Chat Bots
+  /v1/chat-bots/{bot-name}:
+    get:
+      operationId: getChatBot
+      summary: Get chat bot details
+      description: Retrieve details of a specific chat bot.
+      parameters:
+        - name: bot-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Chat bot name
+      responses:
+        '200':
+          description: Chat bot details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatBot'
+        '403':
+          description: Access denied
+        '404':
+          description: Chat bot not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Chat Bots
+    put:
+      operationId: updateChatBot
+      summary: Update a chat bot
+      description: Update an existing chat bot. Only provided fields are updated.
+      parameters:
+        - name: bot-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Chat bot name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: Chat bot description
+                driverName:
+                  type: string
+                  description: Chat bot driver name
+                configuration:
+                  type: string
+                  description: Driver-specific configuration text
+                idleTimeout:
+                  type: integer
+                  description: Session idle timeout in seconds
+                providerSlot:
+                  type: string
+                  description: AI provider slot for bot sessions (empty for default)
+                userMappings:
+                  type: array
+                  description: Platform peer ID to NetXMS user ID mappings
+                  items:
+                    type: object
+                    properties:
+                      peerId:
+                        type: string
+                        description: Platform-specific peer ID
+                      userId:
+                        type: integer
+                        description: NetXMS user ID
+      responses:
+        '200':
+          description: Chat bot updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatBot'
+        '400':
+          description: Invalid request
+        '403':
+          description: Access denied
+        '404':
+          description: Chat bot not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Chat Bots
+    delete:
+      operationId: deleteChatBot
+      summary: Delete a chat bot
+      description: Delete a chat bot together with its automatically registered notification channel.
+      parameters:
+        - name: bot-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Chat bot name
+      responses:
+        '204':
+          description: Chat bot deleted successfully
+        '403':
+          description: Access denied
+        '404':
+          description: Chat bot not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Chat Bots
+  /v1/chat-bots/{bot-name}/rename:
+    post:
+      operationId: renameChatBot
+      summary: Rename a chat bot
+      description: Rename an existing chat bot. Also renames the automatically registered notification channel and updates references in server actions.
+      parameters:
+        - name: bot-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Current chat bot name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - newName
+              properties:
+                newName:
+                  type: string
+                  description: New chat bot name
+      responses:
+        '200':
+          description: Chat bot renamed successfully
+        '400':
+          description: Invalid or missing new name
+        '403':
+          description: Access denied
+        '404':
+          description: Chat bot not found
+        '409':
+          description: Chat bot with the new name already exists
+      security:
+        - BearerAuth: []
+      tags:
+        - Chat Bots
+  /v1/chat-bot-drivers:
+    get:
+      operationId: listChatBotDrivers
+      summary: List chat bot drivers
+      description: Retrieve a list of all registered chat bot driver names.
+      responses:
+        '200':
+          description: Chat bot drivers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '403':
+          description: Access denied
+      security:
+        - BearerAuth: []
+      tags:
+        - Chat Bots
   /v1/log-parsers/{parser-type}:
     parameters:
       - name: parser-type
@@ -10124,6 +10377,54 @@ components:
         queueSize:
           type: integer
           description: Current event queue size
+    ChatBot:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Chat bot name
+        description:
+          type: string
+          description: Chat bot description
+        driverName:
+          type: string
+          description: Chat bot driver name
+        configuration:
+          type: string
+          description: Driver-specific configuration text
+        driverInitialized:
+          type: boolean
+          description: Whether the driver was initialized and started successfully
+        healthCheckStatus:
+          type: boolean
+          description: Health check status
+        idleTimeout:
+          type: integer
+          description: Session idle timeout in seconds
+        providerSlot:
+          type: string
+          description: AI provider slot for bot sessions (empty for default)
+        activeSessions:
+          type: integer
+          description: Number of currently active chat sessions
+        lastInboundMessageTime:
+          type: string
+          description: Timestamp of last inbound message
+        errorMessage:
+          type: string
+          description: Last error message
+        userMappings:
+          type: array
+          description: Platform peer ID to NetXMS user ID mappings
+          items:
+            type: object
+            properties:
+              peerId:
+                type: string
+                description: Platform-specific peer ID
+              userId:
+                type: integer
+                description: NetXMS user ID
     AlarmCategory:
       type: object
       properties:

@@ -22,6 +22,7 @@
 **/
 
 #include <ncdrv.h>
+#include <chatdrv.h>
 #include <nms_util.h>
 #include <netxms-version.h>
 #include <nxlibcurl.h>
@@ -204,6 +205,7 @@ private:
    bool m_longPollingMode;
    bool m_useLocalResolver;
    uint32_t m_pollingInterval;
+   ChatBotMessageSink *m_sink;
 
    TelegramDriver(NCDriverStorageManager *storageManager) : NCDriver(), m_chats(Ownership::True), m_chatsLock(MutexType::FAST), m_shutdownCondition(true)
    {
@@ -217,6 +219,7 @@ private:
       m_longPollingMode = true;
       m_useLocalResolver = false;
       m_pollingInterval = 300;
+      m_sink = nullptr;
    }
 
    static void updateHandler(TelegramDriver *driver);
@@ -230,18 +233,37 @@ public:
 
    bool isShutdown() const { return m_shutdownFlag; }
    void processUpdate(json_t *data);
+   void processCallbackQuery(json_t *callbackQuery);
+
+   void setSink(ChatBotMessageSink *sink) { m_sink = sink; }
+   void shutdown();
+   int sendMessageToChat(const char *peerId, const char *text);
+   bool sendQuestionToChat(const char *peerId, const char *text, const StringList& options, uint64_t questionId);
 
    static TelegramDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
 };
+
+/**
+ * Stop update handler thread
+ */
+void TelegramDriver::shutdown()
+{
+   m_shutdownFlag = true;
+   m_shutdownCondition.set();
+   if (m_updateHandlerThread != INVALID_THREAD_HANDLE)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Waiting for update handler thread completion for bot %s"), m_botName);
+      ThreadJoin(m_updateHandlerThread);
+      m_updateHandlerThread = INVALID_THREAD_HANDLE;
+   }
+}
 
 /**
  * Driver destructor
  */
 TelegramDriver::~TelegramDriver()
 {
-   m_shutdownFlag = true;
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("Waiting for update handler thread completion for bot %s"), m_botName);
-   ThreadJoin(m_updateHandlerThread);
+   shutdown();
    MemFree(m_botName);
 }
 
@@ -929,6 +951,13 @@ void TelegramDriver::processUpdate(json_t *data)
       if (id >= m_nextUpdateId)
          m_nextUpdateId = id + 1;
 
+      json_t *callbackQuery = json_object_get(update, "callback_query");
+      if (json_is_object(callbackQuery))
+      {
+         processCallbackQuery(callbackQuery);
+         continue;
+      }
+
       json_t *message = json_object_get(update, "message");
       if (!json_is_object(message))
       {
@@ -942,6 +971,24 @@ void TelegramDriver::processUpdate(json_t *data)
          continue;
 
       const char *type = json_object_get_string_utf8(chat, "type", "unknown");
+
+      // Dispatch direct messages to chat bot message sink if attached. Done before username
+      // check because private chats are identified by chat ID and sender may have no username.
+      if ((m_sink != nullptr) && !strcmp(type, "private"))
+      {
+         const char *messageText = json_object_get_string_utf8(message, "text", nullptr);
+         int64_t privateChatId = json_object_get_int64(chat, "id", 0);
+         if ((messageText != nullptr) && (*messageText != 0) && (privateChatId != 0))
+         {
+            char peerId[32];
+            snprintf(peerId, sizeof(peerId), INT64_FMTA, privateChatId);
+            const char *displayName = json_object_get_string_utf8(chat, "username", nullptr);
+            if (displayName == nullptr)
+               displayName = json_object_get_string_utf8(chat, "first_name", "");
+            m_sink->onMessage(peerId, displayName, messageText);
+         }
+      }
+
       TCHAR *username = json_object_get_string_t(chat, (!strcmp(type, "group") || !strcmp(type, "channel") || !strcmp(type, "supergroup")) ? "title" : "username", nullptr);
       if (username == nullptr)
          continue;
@@ -1009,6 +1056,96 @@ void TelegramDriver::processUpdate(json_t *data)
 
       MemFree(username);
    }
+}
+
+/**
+ * Process callback query (response to inline keyboard button press)
+ */
+void TelegramDriver::processCallbackQuery(json_t *callbackQuery)
+{
+   const char *data = json_object_get_string_utf8(callbackQuery, "data", nullptr);
+   json_t *chat = json_object_get_by_path_a(callbackQuery, "message/chat");
+   int64_t chatId = json_object_get_int64(chat, "id", 0);
+
+   if ((m_sink != nullptr) && (data != nullptr) && (chatId != 0))
+   {
+      char *eptr;
+      uint64_t questionId = strtoull(data, &eptr, 10);
+      if (*eptr == ':')
+      {
+         int selectedOption = static_cast<int>(strtol(eptr + 1, nullptr, 10));
+         char peerId[32];
+         snprintf(peerId, sizeof(peerId), INT64_FMTA, chatId);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Callback query from chat ") INT64_FMT _T(": question ") UINT64_FMT _T(", option %d"), chatId, questionId, selectedOption);
+         m_sink->onChoiceResponse(peerId, questionId, selectedOption);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Malformed callback query data \"%hs\" from chat ") INT64_FMT, data, chatId);
+      }
+   }
+
+   // Acknowledge callback query to stop client-side progress indicator
+   const char *queryId = json_object_get_string_utf8(callbackQuery, "id", nullptr);
+   if (queryId != nullptr)
+   {
+      json_t *request = json_object();
+      json_object_set_new(request, "callback_query_id", json_string(queryId));
+      CallResponse response = SendTelegramRequest(m_authToken, m_proxies.size() > 0 ? &m_proxies : nullptr, m_ipVersion,
+            m_useLocalResolver && (m_proxies.size() > 0), "answerCallbackQuery", request);
+      json_decref(request);
+      json_decref(response.data);
+   }
+}
+
+/**
+ * Send plain text message to given chat (chat bot interface)
+ */
+int TelegramDriver::sendMessageToChat(const char *peerId, const char *text)
+{
+   NotificationContext context;
+   context.recipient = peerId;
+   context.subject = "";
+   context.body = text;
+   return send(context);
+}
+
+/**
+ * Send question with inline keyboard to given chat (chat bot interface)
+ */
+bool TelegramDriver::sendQuestionToChat(const char *peerId, const char *text, const StringList& options, uint64_t questionId)
+{
+   json_t *request = json_object();
+   json_object_set_new(request, "chat_id", json_string(peerId));
+   json_object_set_new(request, "text", json_string(text));
+
+   json_t *keyboard = json_array();
+   for(int i = 0; i < options.size(); i++)
+   {
+      json_t *button = json_object();
+      char *label = UTF8StringFromTString(options.get(i));
+      json_object_set_new(button, "text", json_string(label));
+      MemFree(label);
+      char callbackData[64];
+      snprintf(callbackData, sizeof(callbackData), UINT64_FMTA ":%d", questionId, i);
+      json_object_set_new(button, "callback_data", json_string(callbackData));
+      json_t *row = json_array();
+      json_array_append_new(row, button);
+      json_array_append_new(keyboard, row);
+   }
+   json_t *markup = json_object();
+   json_object_set_new(markup, "inline_keyboard", keyboard);
+   json_object_set_new(request, "reply_markup", markup);
+
+   CallResponse response = SendTelegramRequest(m_authToken, m_proxies.size() > 0 ? &m_proxies : nullptr, m_ipVersion,
+         m_useLocalResolver && (m_proxies.size() > 0), "sendMessage", request);
+   json_decref(request);
+
+   bool success = json_is_object(response.data) && json_is_true(json_object_get(response.data, "ok"));
+   if (!success)
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send question to chat %hs (HTTP response status code %03d)"), peerId, response.statusCode);
+   json_decref(response.data);
+   return success;
 }
 
 /**
@@ -1153,6 +1290,67 @@ DECLARE_NCD_ENTRY_POINT(Telegram, &s_config)
       return nullptr;
    }
    return TelegramDriver::createInstance(config, storageManager);
+}
+
+/**
+ * Chat bot driver - wraps Telegram driver instance, dispatching inbound private messages
+ * and inline keyboard responses into the server-provided message sink
+ */
+class TelegramChatBot : public ChatBotDriver
+{
+private:
+   TelegramDriver *m_driver;
+
+public:
+   TelegramChatBot(TelegramDriver *driver) : ChatBotDriver()
+   {
+      m_driver = driver;
+   }
+
+   virtual ~TelegramChatBot()
+   {
+      delete m_driver;
+   }
+
+   virtual bool start(ChatBotMessageSink *sink) override
+   {
+      m_driver->setSink(sink);
+      return true;
+   }
+
+   virtual void stop() override
+   {
+      m_driver->shutdown();
+   }
+
+   virtual bool sendMessage(const char *peerId, const char *text) override
+   {
+      return m_driver->sendMessageToChat(peerId, text) == 0;
+   }
+
+   virtual bool sendQuestion(const char *peerId, const char *text, const StringList& options, uint64_t questionId) override
+   {
+      return m_driver->sendQuestionToChat(peerId, text, options, questionId);
+   }
+
+   virtual bool checkHealth() override
+   {
+      return m_driver->checkHealth();
+   }
+};
+
+/**
+ * Chat bot entry point
+ */
+DECLARE_CHATBOT_ENTRY_POINT
+{
+   if (!InitializeLibCURL())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
+      return nullptr;
+   }
+   TelegramDriver *driver = TelegramDriver::createInstance(config, storageManager);
+   return (driver != nullptr) ? new TelegramChatBot(driver) : nullptr;
 }
 
 #ifdef _WIN32

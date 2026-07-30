@@ -113,8 +113,17 @@ public class NotificationChannels extends ConfigurationView
          public void selectionChanged(SelectionChangedEvent event)
          {
             IStructuredSelection selection = viewer.getStructuredSelection();
-            actionEditChannel.setEnabled(selection.size() == 1);
-            actionDeleteChannel.setEnabled(selection.size() > 0);
+            boolean containsBotProvided = false;
+            for(Object o : selection.toList())
+            {
+               if ((o instanceof NotificationChannel) && ((NotificationChannel)o).isProvidedByChatBot())
+               {
+                  containsBotProvided = true;
+                  break;
+               }
+            }
+            actionEditChannel.setEnabled((selection.size() == 1) && !containsBotProvided);
+            actionDeleteChannel.setEnabled((selection.size() > 0) && !containsBotProvided);
          }
       });
 
@@ -338,6 +347,12 @@ public class NotificationChannels extends ConfigurationView
          return;
 
       final NotificationChannel channel = (NotificationChannel)selection.getFirstElement();
+      if (channel.isProvidedByChatBot())
+      {
+         MessageDialogHelper.openInformation(getWindow().getShell(), i18n.tr("Notification Channel"),
+               i18n.tr("This notification channel is provided by a chat bot and cannot be edited directly. Edit the chat bot configuration instead."));
+         return;
+      }
       final String oldChannelName = channel.getName();
       final NotificationChannelPropertiesDialog dlg = new NotificationChannelPropertiesDialog(getWindow().getShell(), channel);
       if (dlg.open() != Window.OK)

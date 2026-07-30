@@ -242,6 +242,13 @@ int H_EventForwarderUpdate(Context *context);
 int H_EventForwarderDelete(Context *context);
 int H_EventForwarderRename(Context *context);
 int H_EventForwarderDrivers(Context *context);
+int H_ChatBots(Context *context);
+int H_ChatBotDetails(Context *context);
+int H_ChatBotCreate(Context *context);
+int H_ChatBotUpdate(Context *context);
+int H_ChatBotDelete(Context *context);
+int H_ChatBotRename(Context *context);
+int H_ChatBotDrivers(Context *context);
 int H_LogParser(Context *context);
 int H_LogParserUpdate(Context *context);
 int H_SummaryTables(Context *context);
@@ -511,6 +518,21 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/event-forwarder-drivers")
       .GET(H_EventForwarderDrivers)
+      .build();
+   RouteBuilder("v1/chat-bots")
+      .GET(H_ChatBots)
+      .POST(H_ChatBotCreate)
+      .build();
+   RouteBuilder("v1/chat-bots/:bot-name")
+      .GET(H_ChatBotDetails)
+      .PUT(H_ChatBotUpdate)
+      .DELETE(H_ChatBotDelete)
+      .build();
+   RouteBuilder("v1/chat-bots/:bot-name/rename")
+      .POST(H_ChatBotRename)
+      .build();
+   RouteBuilder("v1/chat-bot-drivers")
+      .GET(H_ChatBotDrivers)
       .build();
    RouteBuilder("v1/log-parsers/:parser-type")
       .GET(H_LogParser)

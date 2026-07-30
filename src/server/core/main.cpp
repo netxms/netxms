@@ -1633,6 +1633,7 @@ bool ActivateServer()
    // Initialize notification channels
    LoadNotificationChannelDrivers();
    LoadNotificationChannels();
+   LoadChatBots();
    LoadEventForwarders();
 
    InitMappingTables();
@@ -1957,6 +1958,7 @@ void NXCORE_EXPORTABLE Shutdown()
    CleanupActions();
    ShutdownEventSubsystem();
    ShutdownIncidentManager();
+   ShutdownChatBots();
    ShutdownNotificationChannels();
    ShutdownEventForwarders();
    nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Event processing stopped"));

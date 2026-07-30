@@ -1960,6 +1960,8 @@ bool Chat::askConfirmation(const char *text, const char *context, ConfirmationTy
       m_id, m_pendingQuestion->id, m_userId, text);
 
    SendQuestionToUser(m_userId, m_id, m_pendingQuestion);
+   if (m_questionListener)
+      m_questionListener(*m_pendingQuestion);
 
    // Wait for response with timeout
    m_questionMutex.unlock();
@@ -2016,6 +2018,8 @@ int Chat::askMultipleChoice(const char *text, const char *context, const StringL
       m_id, m_pendingQuestion->id, m_userId, text);
 
    SendQuestionToUser(m_userId, m_id, m_pendingQuestion);
+   if (m_questionListener)
+      m_questionListener(*m_pendingQuestion);
 
    // Wait for response with timeout
    m_questionMutex.unlock();
