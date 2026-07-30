@@ -207,14 +207,16 @@ public:
       if ((context.recipient == nullptr) || (*context.recipient == 0))
          return -1;
 
+      // Chat bot drivers treat message text as markdown, so pass original markdown body when available
+      const char *body = (context.markdownBody != nullptr) ? context.markdownBody : context.body;
       std::string text;
       if ((context.subject != nullptr) && (*context.subject != 0))
       {
          text.append(context.subject);
          text.append("\n\n");
       }
-      if (context.body != nullptr)
-         text.append(context.body);
+      if (body != nullptr)
+         text.append(body);
       return m_bot->sendMessageToPeer(context.recipient, text.c_str()) ? 0 : -1;
    }
 

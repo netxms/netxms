@@ -25,6 +25,7 @@
 #include <chatdrv.h>
 #include <nxsl.h>
 #include <nxai.h>
+#include <nxmarkdown.h>
 
 #define DEBUG_TAG L"nc"
 
@@ -91,9 +92,10 @@ class NotificationMessage
    Event *m_event;                    // Event context for NXSL driver (can be nullptr)
    shared_ptr<NetObj> m_sourceObject; // Source object for NXSL driver (can be nullptr)
    ObjectArray<NotificationMessage> *m_digestMessages;  // Accumulated messages for digest (can be nullptr)
+   bool m_isMarkdown;                 // Message body is markdown
 
 public:
-   NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body,
+   NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body, bool isMarkdown,
                        uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const wchar_t *ruleDescription = nullptr,
                        const Event *event = nullptr, const shared_ptr<NetObj>& sourceObject = shared_ptr<NetObj>());
    NotificationMessage(const wchar_t *recipient, ObjectArray<NotificationMessage> *digestMessages);
@@ -104,6 +106,8 @@ public:
    const wchar_t *getBody() const { return m_body; }
    void setSubject(const wchar_t *subject) { MemFree(m_subject); m_subject = MemCopyStringW(subject); }
    void setBody(const wchar_t *body) { MemFree(m_body); m_body = MemCopyStringW(body); }
+   bool isMarkdown() const { return m_isMarkdown; }
+   void convertToPlainText();
    uint32_t getEventCode() const { return m_eventCode; }
    uint64_t getEventId() const { return m_eventId; }
    const uuid& getRuleId() const { return m_ruleId; }
@@ -323,8 +327,8 @@ public:
             const wchar_t *errorMessage, bool providedByChatBot = false);
    ~NotificationChannel();
 
-   void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription);
-   void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body,
+   void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription);
+   void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown,
              const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription);
    void clearQueue();
 
@@ -381,13 +385,14 @@ int64_t GetLastNotificationId()
 /**
  * Notification message constructor
  */
-NotificationMessage::NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body,
+NotificationMessage::NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body, bool isMarkdown,
       uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const wchar_t *ruleDescription,
       const Event *event, const shared_ptr<NetObj>& sourceObject) : m_ruleId(ruleId), m_sourceObject(sourceObject)
 {
    m_recipient = MemCopyStringW(recipient);
    m_subject = MemCopyStringW(subject);
    m_body = MemCopyStringW(body);
+   m_isMarkdown = isMarkdown;
    m_eventCode = eventCode;
    m_eventId = eventId;
    m_ruleDescription = MemCopyStringW(ruleDescription);
@@ -403,11 +408,29 @@ NotificationMessage::NotificationMessage(const wchar_t *recipient, ObjectArray<N
    m_recipient = MemCopyStringW(recipient);
    m_subject = nullptr;
    m_body = nullptr;
+   m_isMarkdown = false;
    m_eventCode = 0;
    m_eventId = 0;
    m_ruleDescription = nullptr;
    m_event = nullptr;
    m_digestMessages = digestMessages;
+}
+
+/**
+ * Convert markdown message body to plain text (used before absorbing into digest)
+ */
+void NotificationMessage::convertToPlainText()
+{
+   if (!m_isMarkdown || (m_body == nullptr))
+      return;
+
+   char *markdown = UTF8StringFromWideString(m_body);
+   char *plainText = MarkdownToPlainText(markdown);
+   MemFree(m_body);
+   m_body = WideStringFromUTF8String(plainText);
+   MemFree(plainText);
+   MemFree(markdown);
+   m_isMarkdown = false;
 }
 
 /**
@@ -677,18 +700,30 @@ void NotificationChannel::workerThread()
       m_messageCount++;
       m_lastMessageTime = time(nullptr);
 
-      // Driver interface uses UTF-8, convert message once before send attempts
+      // Driver interface uses UTF-8, convert message once before send attempts.
+      // For markdown messages body/bodyW carry plain text rendition and original
+      // markdown is provided separately, so drivers without markdown support
+      // always receive clean plain text.
       char *recipientUtf8 = UTF8StringFromWideString(notification->getRecipient());
       char *subjectUtf8 = UTF8StringFromWideString(notification->getSubject());
       char *bodyUtf8 = UTF8StringFromWideString(notification->getBody());
+      char *markdownBody = nullptr;
+      wchar_t *plainBodyW = nullptr;
+      if (notification->isMarkdown())
+      {
+         markdownBody = bodyUtf8;
+         bodyUtf8 = MarkdownToPlainText(markdownBody);
+         plainBodyW = WideStringFromUTF8String(bodyUtf8);
+      }
 
       NotificationContext context;
       context.recipient = recipientUtf8;
       context.subject = subjectUtf8;
       context.body = bodyUtf8;
+      context.markdownBody = markdownBody;
       context.recipientW = notification->getRecipient();
       context.subjectW = notification->getSubject();
-      context.bodyW = notification->getBody();
+      context.bodyW = (plainBodyW != nullptr) ? plainBodyW : notification->getBody();
       context.event = notification->getEvent();
       context.sourceObject = notification->getSourceObject();
       context.channelName = m_name;
@@ -745,6 +780,8 @@ void NotificationChannel::workerThread()
       MemFree(recipientUtf8);
       MemFree(subjectUtf8);
       MemFree(bodyUtf8);
+      MemFree(markdownBody);
+      MemFree(plainBodyW);
       delete notification;
    }
    nxlog_debug_tag(DEBUG_TAG, 2, L"Worker thread for channel \"%s\" stopped", m_name);
@@ -928,6 +965,8 @@ void NotificationChannel::absorbIntoDigest(NotificationMessage *msg)
 {
    nxlog_debug_tag(DEBUG_TAG, 4, L"Message to \"%s\" via channel \"%s\" absorbed into digest", msg->getRecipient(), m_name);
 
+   msg->convertToPlainText();  // Digest messages are always composed from plain text
+
    m_digestLock.lock();
    ObjectArray<NotificationMessage> *recipientDigest = m_digestAccumulator.get(msg->getRecipient());
    if (recipientDigest == nullptr)
@@ -1089,7 +1128,7 @@ void NotificationChannel::reloadThrottlingConfig()
 /**
  * Public method to send notification. It adds notification to the queue.
  */
-void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription)
+void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription)
 {
    if (((m_confTemplate == nullptr) || m_confTemplate->needRecipient) && ((recipient == nullptr) || IsBlankString(recipient)))
    {
@@ -1124,17 +1163,17 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
    // Absorb into digest if throttling is enabled and queue is above digest threshold
    if ((m_channelBucket != nullptr) && shouldDigest())
    {
-      absorbIntoDigest(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId, ruleDescription));
+      absorbIntoDigest(new NotificationMessage(recipient, subject, body, isMarkdown, eventCode, eventId, ruleId, ruleDescription));
       return;
    }
 
-   m_notificationQueue.put(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId, ruleDescription));
+   m_notificationQueue.put(new NotificationMessage(recipient, subject, body, isMarkdown, eventCode, eventId, ruleId, ruleDescription));
 }
 
 /**
  * Public method to send notification with event/object context. It adds notification to the queue.
  */
-void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body,
+void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown,
                                const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription)
 {
    if (((m_confTemplate == nullptr) || m_confTemplate->needRecipient) && ((recipient == nullptr) || IsBlankString(recipient)))
@@ -1173,11 +1212,11 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
    // Absorb into digest if throttling is enabled and queue is above digest threshold
    if ((m_channelBucket != nullptr) && shouldDigest())
    {
-      absorbIntoDigest(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId, ruleDescription, event, sourceObject));
+      absorbIntoDigest(new NotificationMessage(recipient, subject, body, isMarkdown, eventCode, eventId, ruleId, ruleDescription, event, sourceObject));
       return;
    }
 
-   m_notificationQueue.put(new NotificationMessage(recipient, subject, body, eventCode, eventId, ruleId, ruleDescription, event, sourceObject));
+   m_notificationQueue.put(new NotificationMessage(recipient, subject, body, isMarkdown, eventCode, eventId, ruleId, ruleDescription, event, sourceObject));
 }
 
 /**
@@ -1797,7 +1836,7 @@ char NXCORE_EXPORTABLE *GetNotificationChannelConfiguration(const TCHAR *name)
 /**
  * Send notification
  */
-void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription)
+void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription, bool isMarkdown)
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
@@ -1813,13 +1852,13 @@ void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, con
                *next = 0;
             Trim(curr);
             nxlog_debug_tag(DEBUG_TAG, 5, _T("SendNotification: sending message to \"%s\" via channel \"%s\""), curr, name);
-            nc->send(curr, subject, message, eventCode, eventId, ruleId, ruleDescription);
+            nc->send(curr, subject, message, isMarkdown, eventCode, eventId, ruleId, ruleDescription);
             curr = next + 1;
          } while(next != nullptr);
       }
       else
       {
-         nc->send(recipient, subject, message, eventCode, eventId, ruleId, ruleDescription);
+         nc->send(recipient, subject, message, isMarkdown, eventCode, eventId, ruleId, ruleDescription);
       }
    }
    else
@@ -1833,7 +1872,7 @@ void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, con
  * Send notification with event/object context (for NXSL notification channels)
  */
 void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message,
-                                         const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription)
+                                         const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription, bool isMarkdown)
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
@@ -1849,13 +1888,13 @@ void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, con
                *next = 0;
             Trim(curr);
             nxlog_debug_tag(DEBUG_TAG, 5, _T("SendNotification: sending message to \"%s\" via channel \"%s\""), curr, name);
-            nc->send(curr, subject, message, event, sourceObject, ruleId, ruleDescription);
+            nc->send(curr, subject, message, isMarkdown, event, sourceObject, ruleId, ruleDescription);
             curr = next + 1;
          } while(next != nullptr);
       }
       else
       {
-         nc->send(recipient, subject, message, event, sourceObject, ruleId, ruleDescription);
+         nc->send(recipient, subject, message, isMarkdown, event, sourceObject, ruleId, ruleDescription);
       }
    }
    else

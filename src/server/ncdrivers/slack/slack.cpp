@@ -24,6 +24,7 @@
 #include <ncdrv.h>
 #include <nms_util.h>
 #include <nxlibcurl.h>
+#include <nxmarkdown.h>
 
 #define DEBUG_TAG _T("ncd.slack")
 
@@ -66,7 +67,8 @@ SlackDriver::SlackDriver(Config *config)
 int SlackDriver::send(const NotificationContext& context)
 {
    const char *recipient = context.recipient;
-   const char *body = context.body;
+   char *mrkdwnBody = (context.markdownBody != nullptr) ? MarkdownToSlackText(context.markdownBody) : nullptr;
+   const char *body = (mrkdwnBody != nullptr) ? mrkdwnBody : context.body;
    int result = 0;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("channel=\"%hs\", text=\"%hs\""), recipient, body);
@@ -173,6 +175,7 @@ int SlackDriver::send(const NotificationContext& context)
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
    }
 
+   MemFree(mrkdwnBody);
    return result;
 }
 

@@ -1694,6 +1694,7 @@ CREATE TABLE actions
   // action name with optional arguments for remote execution actions
   action_data SQL_TEXT null,
   channel_name varchar(63) null,
+  is_markdown integer not null,
   PRIMARY KEY(action_id)
 ) TABLE_TYPE;
 

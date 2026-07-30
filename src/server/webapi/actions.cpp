@@ -105,6 +105,7 @@ int H_ServerActionCreate(Context *context)
    // If additional fields provided, update the action
    if (json_object_get(request, "type") != nullptr ||
        json_object_get(request, "isDisabled") != nullptr ||
+       json_object_get(request, "isMarkdown") != nullptr ||
        json_object_get(request, "data") != nullptr ||
        json_object_get(request, "recipientAddress") != nullptr ||
        json_object_get(request, "emailSubject") != nullptr ||

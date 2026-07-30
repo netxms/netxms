@@ -26,6 +26,7 @@
 #include <nms_util.h>
 #include <netxms-version.h>
 #include <nxlibcurl.h>
+#include <nxmarkdown.h>
 
 #define DEBUG_TAG _T("ncd.telegram")
 
@@ -1099,52 +1100,82 @@ void TelegramDriver::processCallbackQuery(json_t *callbackQuery)
 }
 
 /**
- * Send plain text message to given chat (chat bot interface)
+ * Send message to given chat (chat bot interface). Message text is markdown
+ * (chat bot messages are produced by LLM).
  */
 int TelegramDriver::sendMessageToChat(const char *peerId, const char *text)
 {
+   char *plainText = MarkdownToPlainText(text);
    NotificationContext context;
    context.recipient = peerId;
    context.subject = "";
-   context.body = text;
-   return send(context);
+   context.body = plainText;
+   context.markdownBody = text;
+   int result = send(context);
+   MemFree(plainText);
+   return result;
 }
 
 /**
- * Send question with inline keyboard to given chat (chat bot interface)
+ * Send question with inline keyboard to given chat (chat bot interface). Question text is
+ * markdown (chat bot messages are produced by LLM); on HTML mode rejection question is
+ * resent once as plain text.
  */
 bool TelegramDriver::sendQuestionToChat(const char *peerId, const char *text, const StringList& options, uint64_t questionId)
 {
-   json_t *request = json_object();
-   json_object_set_new(request, "chat_id", json_string(peerId));
-   json_object_set_new(request, "text", json_string(text));
+   char *htmlText = MarkdownToHTML(text, MarkdownHTMLDialect::TELEGRAM);
+   char *plainText = nullptr;
 
-   json_t *keyboard = json_array();
-   for(int i = 0; i < options.size(); i++)
+   bool success = false;
+   for(int attempt = 0; attempt < 2; attempt++)
    {
-      json_t *button = json_object();
-      char *label = UTF8StringFromTString(options.get(i));
-      json_object_set_new(button, "text", json_string(label));
-      MemFree(label);
-      char callbackData[64];
-      snprintf(callbackData, sizeof(callbackData), UINT64_FMTA ":%d", questionId, i);
-      json_object_set_new(button, "callback_data", json_string(callbackData));
-      json_t *row = json_array();
-      json_array_append_new(row, button);
-      json_array_append_new(keyboard, row);
+      bool htmlMode = (attempt == 0);
+      if (!htmlMode)
+         plainText = MarkdownToPlainText(text);
+
+      json_t *request = json_object();
+      json_object_set_new(request, "chat_id", json_string(peerId));
+      json_object_set_new(request, "text", json_string(htmlMode ? htmlText : plainText));
+      if (htmlMode)
+         json_object_set_new(request, "parse_mode", json_string("HTML"));
+
+      json_t *keyboard = json_array();
+      for(int i = 0; i < options.size(); i++)
+      {
+         json_t *button = json_object();
+         char *label = UTF8StringFromTString(options.get(i));
+         json_object_set_new(button, "text", json_string(label));
+         MemFree(label);
+         char callbackData[64];
+         snprintf(callbackData, sizeof(callbackData), UINT64_FMTA ":%d", questionId, i);
+         json_object_set_new(button, "callback_data", json_string(callbackData));
+         json_t *row = json_array();
+         json_array_append_new(row, button);
+         json_array_append_new(keyboard, row);
+      }
+      json_t *markup = json_object();
+      json_object_set_new(markup, "inline_keyboard", keyboard);
+      json_object_set_new(request, "reply_markup", markup);
+
+      CallResponse response = SendTelegramRequest(m_authToken, m_proxies.size() > 0 ? &m_proxies : nullptr, m_ipVersion,
+            m_useLocalResolver && (m_proxies.size() > 0), "sendMessage", request);
+      json_decref(request);
+
+      success = json_is_object(response.data) && json_is_true(json_object_get(response.data, "ok"));
+      if (!success && htmlMode && (json_object_get_int32(response.data, "error_code", response.statusCode) == 400))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Question to chat %hs rejected in HTML mode, resending as plain text"), peerId);
+         json_decref(response.data);
+         continue;
+      }
+      if (!success)
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send question to chat %hs (HTTP response status code %03d)"), peerId, response.statusCode);
+      json_decref(response.data);
+      break;
    }
-   json_t *markup = json_object();
-   json_object_set_new(markup, "inline_keyboard", keyboard);
-   json_object_set_new(request, "reply_markup", markup);
 
-   CallResponse response = SendTelegramRequest(m_authToken, m_proxies.size() > 0 ? &m_proxies : nullptr, m_ipVersion,
-         m_useLocalResolver && (m_proxies.size() > 0), "sendMessage", request);
-   json_decref(request);
-
-   bool success = json_is_object(response.data) && json_is_true(json_object_get(response.data, "ok"));
-   if (!success)
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send question to chat %hs (HTTP response status code %03d)"), peerId, response.statusCode);
-   json_decref(response.data);
+   MemFree(htmlText);
+   MemFree(plainText);
    return success;
 }
 
@@ -1200,53 +1231,79 @@ int TelegramDriver::send(const NotificationContext& context)
 
    if ((chatId != 0) || useRecipientName)
    {
-      json_t *request = json_object();
-      json_object_set_new(request, "chat_id", useRecipientName ? json_string(recipient) : json_integer(chatId));
-      json_object_set_new(request, "text", json_string(body));
-      if (*m_parseMode != 0)
-      {
-         json_object_set_new(request, "parse_mode", json_string(m_parseMode));
-      }
-      if (topicId != 0)
-      {
-         json_object_set_new(request, "message_thread_id", json_integer(topicId));
-      }
+      char *htmlBody = (context.markdownBody != nullptr) ? MarkdownToHTML(context.markdownBody, MarkdownHTMLDialect::TELEGRAM) : nullptr;
 
-      CallResponse response = SendTelegramRequest(m_authToken, m_proxies.size() > 0 ? &m_proxies : nullptr, m_ipVersion, m_useLocalResolver && (m_proxies.size() > 0), "sendMessage", request);
-      json_decref(request);
-
-      if (json_is_object(response.data))
+      // First attempt uses HTML rendering of markdown body if provided; if Telegram rejects
+      // the message with HTTP 400 (malformed entities), it is resent once as plain text so
+      // a rendering problem degrades formatting instead of losing the notification
+      for(int attempt = 0; attempt < 2; attempt++)
       {
-         if (json_is_true(json_object_get(response.data, "ok")))
+         bool htmlMode = (htmlBody != nullptr) && (attempt == 0);
+
+         json_t *request = json_object();
+         json_object_set_new(request, "chat_id", useRecipientName ? json_string(recipient) : json_integer(chatId));
+         json_object_set_new(request, "text", json_string(htmlMode ? htmlBody : body));
+         if (htmlMode)
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("Message from bot %s to recipient %hs successfully sent"), m_botName, recipient);
-            result = 0;
+            json_object_set_new(request, "parse_mode", json_string("HTML"));
+         }
+         else if ((context.markdownBody == nullptr) && (*m_parseMode != 0))
+         {
+            json_object_set_new(request, "parse_mode", json_string(m_parseMode));
+         }
+         if (topicId != 0)
+         {
+            json_object_set_new(request, "message_thread_id", json_integer(topicId));
+         }
+
+         CallResponse response = SendTelegramRequest(m_authToken, m_proxies.size() > 0 ? &m_proxies : nullptr, m_ipVersion, m_useLocalResolver && (m_proxies.size() > 0), "sendMessage", request);
+         json_decref(request);
+
+         if (json_is_object(response.data))
+         {
+            if (json_is_true(json_object_get(response.data, "ok")))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("Message from bot %s to recipient %hs successfully sent"), m_botName, recipient);
+               result = 0;
+            }
+            else
+            {
+               int errorCode = json_object_get_int32(response.data, "error_code", response.statusCode);
+               switch (errorCode)
+               {
+                  case 420: // FLOOD
+                  case 429: // Too many requests
+                     result = json_object_get_int32(json_object_get(response.data, "parameters"), "retry_after", 15);
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("Too many requests, retry is allowed in %d seconds (message from bot %s to recipient %hs)"), result, m_botName, recipient);
+                     break;
+                  case 400:
+                     if (htmlMode)
+                     {
+                        nxlog_debug_tag(DEBUG_TAG, 4, _T("Message from bot %s to recipient %hs rejected in HTML mode (%hs), resending as plain text"),
+                                 m_botName, recipient, json_object_get_string_utf8(response.data, "description", "Unknown reason"));
+                        json_decref(response.data);
+                        continue;
+                     }
+                     /* fallthrough */
+                  default:
+                     result = -1;
+                     nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %hs: API error (%hs)"),
+                              m_botName, recipient, json_object_get_string_utf8(response.data, "description", "Unknown reason"));
+                     break;
+               }
+            }
          }
          else
          {
-            int errorCode = json_object_get_int32(response.data, "error_code", response.statusCode);
-            switch (errorCode)
-            {
-               case 420: // FLOOD
-               case 429: // Too many requests
-                  result = json_object_get_int32(json_object_get(response.data, "parameters"), "retry_after", 15);
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Too many requests, retry is allowed in %d seconds (message from bot %s to recipient %hs)"), result, m_botName, recipient);
-                  break;
-               default:
-                  result = -1;
-                  nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %hs: API error (%hs)"),
-                           m_botName, recipient, json_object_get_string_utf8(response.data, "description", "Unknown reason"));
-                  break;
-            }
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %hs: invalid API response (HTTP response status code %03d)"), m_botName, recipient, response.statusCode);
+            if (response.allowRetry)
+               result = 60;   // Retry in 60 seconds if allowed by SendTelegramRequest
          }
+         json_decref(response.data);
+         break;
       }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %hs: invalid API response (HTTP response status code %03d)"), m_botName, recipient, response.statusCode);
-         if (response.allowRetry)
-            result = 60;   // Retry in 60 seconds if allowed by SendTelegramRequest
-      }
-      json_decref(response.data);
+
+      MemFree(htmlBody);
    }
    else
    {

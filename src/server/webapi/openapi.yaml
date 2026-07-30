@@ -13186,6 +13186,9 @@ components:
         isDisabled:
           type: boolean
           description: Whether the action is disabled
+        isMarkdown:
+          type: boolean
+          description: Whether the notification message body is markdown
         recipientAddress:
           type: string
           description: Recipient address (supports macros)
@@ -13221,6 +13224,9 @@ components:
         isDisabled:
           type: boolean
           description: Whether the action is disabled
+        isMarkdown:
+          type: boolean
+          description: Whether the notification message body is markdown
         data:
           type: string
           description: Action data (command, message, or script name depending on type)
@@ -13245,6 +13251,9 @@ components:
         isDisabled:
           type: boolean
           description: Whether the action is disabled
+        isMarkdown:
+          type: boolean
+          description: Whether the notification message body is markdown
         data:
           type: string
           description: Action data (command, message, or script name depending on type)

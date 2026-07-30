@@ -69,6 +69,7 @@ public class EditActionDlg extends Dialog
 	private Button typeNotification;
 	private Button typeForward;
 	private Button markDisabled;
+	private Button markdownMessage;
 	private List<NotificationChannel> notificationChannels = null;
 	private List<EventForwarder> eventForwarders = null;
 
@@ -176,6 +177,10 @@ public class EditActionDlg extends Dialog
 		markDisabled = new Button(optionsGroup, SWT.CHECK);
       markDisabled.setText(i18n.tr("Action is &disabled"));
 		markDisabled.setSelection(action.isDisabled());
+
+      markdownMessage = new Button(optionsGroup, SWT.CHECK);
+      markdownMessage.setText(i18n.tr("Message contains &markdown"));
+      markdownMessage.setSelection(action.isMarkdown());
 
       channelName = new LabeledCombo(dialogArea, SWT.NONE);
       channelName.setLabel(i18n.tr("Channel name"));
@@ -308,6 +313,7 @@ public class EditActionDlg extends Dialog
 		action.setEmailSubject(subject.getText());
 		action.setData(data.getText());
 		action.setDisabled(markDisabled.getSelection());
+      action.setMarkdown(typeNotification.getSelection() && markdownMessage.getSelection());
 
       if (typeNotification.getSelection() && (notificationChannels != null) && (channelName.getSelectionIndex() >= 0))
          action.setChannelName(notificationChannels.get(channelName.getSelectionIndex()).getName());
@@ -422,6 +428,7 @@ public class EditActionDlg extends Dialog
             data.setEnabled(true);
             break;
 		}
+      markdownMessage.setEnabled(type == ServerActionType.NOTIFICATION);
 
 		recipient.setLabel(getRcptLabel(type));
 		data.setLabel(getDataLabel(type));

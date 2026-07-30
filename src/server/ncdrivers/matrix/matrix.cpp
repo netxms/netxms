@@ -25,6 +25,7 @@
 #include <nms_util.h>
 #include <netxms-version.h>
 #include <nxlibcurl.h>
+#include <nxmarkdown.h>
 
 #define DEBUG_TAG _T("ncd.matrix")
 
@@ -397,7 +398,7 @@ int MatrixDriver::send(const NotificationContext& context)
 {
    const char *recipient = context.recipient;
    const char *subject = context.subject;
-   const char *body = context.body;
+   const char *body = context.body;   // Always plain text; markdown original is in context.markdownBody
    nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending to %hs: \"%hs\""), recipient, body);
 
    char *roomId = getRoomId(recipient);
@@ -439,7 +440,22 @@ int MatrixDriver::send(const NotificationContext& context)
    json_object_set_new(message, "body", json_string(plainText));
    MemFree(plainText);
 
-   if (m_htmlFormatting)
+   if (context.markdownBody != nullptr)
+   {
+      // HTML formatted version rendered from markdown; plain text version above serves as fallback
+      char *renderedBody = MarkdownToHTML(context.markdownBody, MarkdownHTMLDialect::GENERIC);
+      size_t htmlBufferSize = (hasSubject ? strlen(subject) + 32 : 0) + strlen(renderedBody) + 1;
+      char *htmlBody = MemAllocStringA(htmlBufferSize);
+      if (hasSubject)
+         snprintf(htmlBody, htmlBufferSize, "<strong>%s</strong><br/><br/>%s", subject, renderedBody);
+      else
+         strlcpy(htmlBody, renderedBody, htmlBufferSize);
+      json_object_set_new(message, "format", json_string("org.matrix.custom.html"));
+      json_object_set_new(message, "formatted_body", json_string(htmlBody));
+      MemFree(htmlBody);
+      MemFree(renderedBody);
+   }
+   else if (m_htmlFormatting)
    {
       // HTML formatted version
       char *htmlBody = MemAllocStringA(bufferSize);

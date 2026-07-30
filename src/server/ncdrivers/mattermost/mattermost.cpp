@@ -158,7 +158,7 @@ int MattermostDriver::send(const NotificationContext& context)
 {
    const char *recipient = context.recipient;
    const char *subject = context.subject;
-   const char *body = context.body;
+   const char *body = (context.markdownBody != nullptr) ? context.markdownBody : context.body;   // Mattermost renders markdown natively
    // Attempt to lookup channel alias (channel mappings are stored as wide strings)
    TCHAR *key = TStringFromUTF8String(recipient);
    const TCHAR *alias = m_channels.get(key);

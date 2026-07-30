@@ -15,6 +15,7 @@ SOURCES = \
 	hostmib.cpp \
 	iflist.cpp \
 	isc.cpp \
+	markdown.cpp \
 	modbus.cpp \
 	ndd.cpp \
 	nobject.cpp \

@@ -1789,6 +1789,7 @@ __PACK_END__
 #define VID_FILTER_TYPE             ((uint32_t)1020)
 #define VID_NETCONF_PROXY           ((uint32_t)1021)
 #define VID_NETCONF_PORT            ((uint32_t)1022)
+#define VID_MARKDOWN                ((uint32_t)1023)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

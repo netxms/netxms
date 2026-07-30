@@ -33,6 +33,7 @@ Action::Action(const wchar_t *name)
    guid = uuid::generate();
    wcslcpy(this->name, name, MAX_OBJECT_NAME);
    isDisabled = true;
+   isMarkdown = false;
    type = ServerActionType::LOCAL_COMMAND;
    emailSubject[0] = 0;
    rcptAddr[0] = 0;
@@ -54,6 +55,7 @@ Action::Action(DB_RESULT hResult, int row)
    DBGetField(hResult, row, 6, emailSubject, MAX_EMAIL_SUBJECT_LEN);
    data = DBGetField(hResult, row, 7, NULL, 0);
    DBGetField(hResult, row, 8, channelName, MAX_OBJECT_NAME);
+   isMarkdown = DBGetFieldLong(hResult, row, 9) ? true : false;
 }
 
 /**
@@ -66,6 +68,7 @@ Action::Action(const Action& src)
    wcscpy(name, src.name);
    type = src.type;
    isDisabled = src.isDisabled;
+   isMarkdown = src.isMarkdown;
    wcscpy(rcptAddr, src.rcptAddr);
    wcscpy(emailSubject, src.emailSubject);
    data = MemCopyString(src.data);
@@ -86,6 +89,7 @@ void Action::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_ACTION_NAME, name);
    msg->setField(VID_RCPT_ADDR, rcptAddr);
    msg->setField(VID_CHANNEL_NAME, channelName);
+   msg->setField(VID_MARKDOWN, isMarkdown);
 }
 
 /**
@@ -97,7 +101,7 @@ void Action::saveToDatabase() const
 
    static const wchar_t *columns[] = { _T("guid"), _T("action_name"), _T("action_type"),
             _T("is_disabled"), _T("rcpt_addr"), _T("email_subject"), _T("action_data"),
-            _T("channel_name"), nullptr };
+            _T("channel_name"), _T("is_markdown"), nullptr };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"actions", L"action_id", id, columns);
    if (hStmt != nullptr)
    {
@@ -109,7 +113,8 @@ void Action::saveToDatabase() const
       DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, emailSubject, DB_BIND_STATIC);
       DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, data, DB_BIND_STATIC);
       DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, channelName, DB_BIND_STATIC);
-      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, id);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(isMarkdown ? 1 : 0));
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, id);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -174,6 +179,7 @@ json_t *Action::toJson() const
    json_object_set_new(root, "type", json_integer(static_cast<uint32_t>(type)));
    json_object_set_new(root, "typeDescription", json_string(ServerActionTypeDescription(type)));
    json_object_set_new(root, "isDisabled", json_boolean(isDisabled));
+   json_object_set_new(root, "isMarkdown", json_boolean(isMarkdown));
    json_object_set_new(root, "recipientAddress", json_string_t(rcptAddr));
    json_object_set_new(root, "emailSubject", json_string_t(emailSubject));
    json_object_set_new(root, ServerActionDataFieldName(type), json_string_t(CHECK_NULL_EX(data)));
@@ -300,7 +306,7 @@ bool LoadActions()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT action_id,guid,action_name,action_type,is_disabled,rcpt_addr,email_subject,action_data,channel_name FROM actions ORDER BY action_id"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT action_id,guid,action_name,action_type,is_disabled,rcpt_addr,email_subject,action_data,channel_name,is_markdown FROM actions ORDER BY action_id"));
    if (hResult != nullptr)
    {
       s_actions.clear();
@@ -593,7 +599,7 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, co
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, context->recipient.cstr(), context->data.cstr());
             // Pass event and source object for NXSL notification channels
             shared_ptr<NetObj> sourceObject = FindObjectById(event.getSourceId());
-            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, &event, sourceObject, ruleId, ruleDescription);
+            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, &event, sourceObject, ruleId, ruleDescription, action->isMarkdown);
          }
          else
          {
@@ -749,6 +755,7 @@ uint32_t ModifyActionFromMessage(const NXCPMessage& msg)
       msg.getFieldAsString(VID_EMAIL_SUBJECT, action->emailSubject, MAX_EMAIL_SUBJECT_LEN);
       msg.getFieldAsString(VID_RCPT_ADDR, action->rcptAddr, MAX_RCPT_ADDR_LEN);
       msg.getFieldAsString(VID_CHANNEL_NAME, action->channelName, MAX_OBJECT_NAME);
+      action->isMarkdown = msg.getFieldAsBoolean(VID_MARKDOWN);
       _tcscpy(action->name, name);
 
       action->saveToDatabase();
@@ -800,6 +807,10 @@ uint32_t NXCORE_EXPORTABLE ModifyActionFromJson(uint32_t actionId, json_t *json,
    v = json_object_get(json, "isDisabled");
    if (json_is_boolean(v))
       action->isDisabled = json_boolean_value(v);
+
+   v = json_object_get(json, "isMarkdown");
+   if (json_is_boolean(v))
+      action->isMarkdown = json_boolean_value(v);
 
    v = json_object_get(json, "recipientAddress");
    if (json_is_string(v))
@@ -973,7 +984,7 @@ json_t *CreateActionExportRecord(uint32_t id)
    json_t *action = nullptr;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name FROM actions WHERE action_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name,is_markdown FROM actions WHERE action_id=?"));
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -996,6 +1007,7 @@ json_t *CreateActionExportRecord(uint32_t id)
          json_object_set_new(action, "emailSubject", json_string_t(DBGetField(hResult, 0, 4, buffer, 256)));
          json_object_set_new(action, "data", json_string_t(DBGetField(hResult, 0, 5, buffer, 256)));
          json_object_set_new(action, "channelName", json_string_t(DBGetField(hResult, 0, 6, buffer, 256)));
+         json_object_set_new(action, "isMarkdown", json_boolean(DBGetFieldLong(hResult, 0, 7) != 0));
       }
       DBFreeResult(hResult);
    }
@@ -1117,6 +1129,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context)
       action->channelName[0] = 0;
    else
       _tcslcpy(action->channelName, config->getSubEntryValue(_T("channelName")), MAX_OBJECT_NAME);
+   action->isMarkdown = config->getSubEntryValueAsBoolean(_T("isMarkdown"), 0, false);
 
    if (action->data != nullptr)
       MemFree(action->data);
@@ -1180,6 +1193,7 @@ bool ImportAction(json_t *action, bool overwrite, ImportContext *context)
    _tcslcpy(actionObj->rcptAddr, rcptAddr, MAX_RCPT_ADDR_LEN);
    String channelName = json_object_get_string(action, "channelName", _T(""));
    _tcslcpy(actionObj->channelName, channelName, MAX_OBJECT_NAME);
+   actionObj->isMarkdown = json_is_true(json_object_get(action, "isMarkdown"));
    String data = json_object_get_string(action, "data", _T(""));
    if (actionObj->data != nullptr)
       MemFree(actionObj->data);

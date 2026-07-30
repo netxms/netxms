@@ -33,7 +33,7 @@ class NetObj;
 /**
  * API version
  */
-#define NCDRV_API_VERSION           5
+#define NCDRV_API_VERSION           6
 
 /**
  * Notification channel status
@@ -89,10 +89,11 @@ struct NotificationContext
 {
    const char *recipient;           // Recipient (UTF-8)
    const char *subject;             // Subject (UTF-8)
-   const char *body;                // Message body (UTF-8)
+   const char *body;                // Message body as plain text (UTF-8)
+   const char *markdownBody;        // Original markdown version of message body (UTF-8), or nullptr if message was submitted as plain text
    const wchar_t *recipientW;       // Recipient (wide string original)
    const wchar_t *subjectW;         // Subject (wide string original)
-   const wchar_t *bodyW;            // Message body (wide string original)
+   const wchar_t *bodyW;            // Message body as plain text (wide string)
    const Event *event;              // Event that triggered the notification (can be nullptr)
    shared_ptr<NetObj> sourceObject; // Source object of the event (can be nullptr)
    const wchar_t *channelName;      // Name of the notification channel
@@ -103,6 +104,7 @@ struct NotificationContext
       recipient = nullptr;
       subject = nullptr;
       body = nullptr;
+      markdownBody = nullptr;
       recipientW = nullptr;
       subjectW = nullptr;
       bodyW = nullptr;

@@ -36,6 +36,7 @@ public class ServerAction
 	private String emailSubject;
 	private boolean disabled;
 	private String channelName;
+   private boolean markdown;
 
 	/**
 	 * Create server action object with given ID
@@ -50,6 +51,7 @@ public class ServerAction
 		data = "";
 		disabled = false;
 		channelName = "";
+      markdown = false;
 	}
 	
    /**
@@ -68,6 +70,7 @@ public class ServerAction
       emailSubject = src.emailSubject;
       disabled = src.disabled;
       channelName = src.channelName;
+      markdown = src.markdown;
    }
 
 	/**
@@ -85,6 +88,7 @@ public class ServerAction
 		emailSubject = msg.getFieldAsString(NXCPCodes.VID_EMAIL_SUBJECT);
 		disabled = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DISABLED);
       channelName = msg.getFieldAsString(NXCPCodes.VID_CHANNEL_NAME);
+      markdown = msg.getFieldAsBoolean(NXCPCodes.VID_MARKDOWN);
 	}
 	
 	/**
@@ -101,6 +105,7 @@ public class ServerAction
 		msg.setField(NXCPCodes.VID_EMAIL_SUBJECT, emailSubject);
 		msg.setFieldInt16(NXCPCodes.VID_IS_DISABLED, disabled ? 1 : 0);
       msg.setField(NXCPCodes.VID_CHANNEL_NAME, channelName);
+      msg.setField(NXCPCodes.VID_MARKDOWN, markdown);
 	}
 
 	/**
@@ -229,5 +234,21 @@ public class ServerAction
    public void setChannelName(String channelName)
    {
       this.channelName = channelName;
+   }
+
+   /**
+    * @return true if notification message body is markdown
+    */
+   public boolean isMarkdown()
+   {
+      return markdown;
+   }
+
+   /**
+    * @param markdown true if notification message body is markdown
+    */
+   public void setMarkdown(boolean markdown)
+   {
+      this.markdown = markdown;
    }
 }

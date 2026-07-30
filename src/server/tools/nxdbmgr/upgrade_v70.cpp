@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.14 to 70.15
+ */
+static bool H_UpgradeFromV14()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE actions ADD is_markdown integer\n"
+      L"UPDATE actions SET is_markdown=0\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"actions", L"is_markdown"));
+
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 70.13 to 70.14
  */
 static bool H_UpgradeFromV13()
@@ -584,6 +600,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 14, 70, 15, H_UpgradeFromV14 },
    { 13, 70, 14, H_UpgradeFromV13 },
    { 12, 70, 13, H_UpgradeFromV12 },
    { 11, 70, 12, H_UpgradeFromV11 },

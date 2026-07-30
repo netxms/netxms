@@ -48,7 +48,7 @@ kannel_la_LIBADD = ../../libnetxms/libnetxms.la
 matrix_la_SOURCES = matrix/matrix.cpp
 matrix_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 matrix_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
-matrix_la_LIBADD = ../../libnetxms/libnetxms.la
+matrix_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la
 if USE_INTERNAL_JANSSON
 matrix_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
@@ -108,7 +108,7 @@ shell_la_LIBADD = ../../libnetxms/libnetxms.la
 slack_la_SOURCES = slack/slack.cpp
 slack_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 slack_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
-slack_la_LIBADD = ../../libnetxms/libnetxms.la
+slack_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la
 if USE_INTERNAL_JANSSON
 slack_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
@@ -138,7 +138,7 @@ snmptrap_la_LIBADD = ../../libnetxms/libnetxms.la ../../snmp/libnxsnmp/libnxsnmp
 telegram_la_SOURCES = telegram/telegram.cpp
 telegram_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 telegram_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
-telegram_la_LIBADD = ../../libnetxms/libnetxms.la
+telegram_la_LIBADD = ../../libnetxms/libnetxms.la ../libnxsrv/libnxsrv.la
 if USE_INTERNAL_JANSSON
 telegram_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
