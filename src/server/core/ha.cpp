@@ -273,7 +273,19 @@ void HAUpdateServerClusterObject()
       {
          Node *member = static_cast<Node*>(members->get(i));
          if (!wcsicmp(member->getName(), peerName) || !wcsicmp(member->getPrimaryHostName().cstr(), peerAddress))
-            return;   // peer's host already registered
+         {
+            // Peer's host already registered; a loopback primary address left over
+            // from single server operation has to be replaced with the peer's fixed
+            // address - after failover it would start representing the active member
+            if (member->getPrimaryIpAddress().isLoopback() && wcsicmp(member->getPrimaryHostName().cstr(), peerAddress))
+            {
+               nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Primary address of cluster member node %s [%u] changed from loopback to cluster node address %s",
+                     member->getName(), member->getId(), peerAddress);
+               member->setPrimaryHostName(peerAddress);
+               member->markAsModified(MODIFY_NODE_PROPERTIES);
+            }
+            return;
+         }
       }
 
       InetAddress addr = InetAddress::resolveHostName(peerAddress);

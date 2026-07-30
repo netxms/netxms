@@ -157,14 +157,23 @@ int GetPollerCount(PollerType type)
 /**
  * Create management node object
  */
-static void CreateManagementNode(const InetAddress& addr)
+static void CreateManagementNode(const InetAddress& addr, const wchar_t *name = nullptr, const wchar_t *primaryHostName = nullptr)
 {
 	NewNodeData newNodeData(addr);
 	auto node = make_shared<Node>(&newNodeData, 0);
 	node->setLocalMgmtFlag();
    NetObjInsert(node, true, false);
-   TCHAR buffer[256];
-	node->setName(GetLocalHostName(buffer, 256, false));
+   if (name != nullptr)
+   {
+      node->setName(name);
+   }
+   else
+   {
+      wchar_t buffer[256];
+      node->setName(GetLocalHostName(buffer, 256, false));
+   }
+   if (primaryHostName != nullptr)
+      node->setPrimaryHostName(primaryHostName);
 	node->setComments(_T("NetXMS server node (created automatically by server process)"));
 
    static_cast<Pollable&>(*node).doForcedConfigurationPoll(RegisterPoller(PollerType::CONFIGURATION, node));
@@ -196,9 +205,65 @@ static EnumerationCallbackResult CheckMgmtFlagCallback(NetObj *object, void *dat
  */
 void CheckForMgmtNode()
 {
-   bool roaming = ConfigReadBoolean(L"Server.RoamingMode", false);
+   if (HAIsClusterMode())
+   {
+      // Each cluster member is represented by a node with its fixed client-reachable
+      // address ([CLUSTER] NodeAddress) as primary address - never by loopback, which
+      // after failover would start representing whichever member is currently active
+      const wchar_t *nodeName = HAGetLocalNodeName();
+      const wchar_t *nodeAddress = HAGetLocalNodeAddress();
+      InetAddress addr = InetAddress::resolveHostName(nodeAddress);
 
-   if (roaming)
+      struct SearchData { const wchar_t *name; const wchar_t *address; };
+      SearchData searchData = { nodeName, nodeAddress };
+      shared_ptr<Node> node = static_pointer_cast<Node>(g_idxNodeById.find(
+         [](NetObj *object, void *context) -> bool
+         {
+            auto data = static_cast<SearchData*>(context);
+            return !wcsicmp(object->getName(), data->name) || !wcsicmp(static_cast<Node*>(object)->getPrimaryHostName().cstr(), data->address);
+         }, &searchData));
+      if ((node == nullptr) && (addr.isValidUnicast() || addr.isLoopback()))
+         node = FindNodeByIP(0, addr);
+      if (node == nullptr)
+      {
+         // A management node left over from single server operation may not be findable
+         // by configured node name or address (loopback primary address is not indexed);
+         // locate it by local interface addresses
+         InterfaceList *ifList = GetLocalInterfaceList();
+         if (ifList != nullptr)
+         {
+            for(int i = 0; (i < ifList->size()) && (node == nullptr); i++)
+            {
+               InterfaceInfo *iface = ifList->get(i);
+               if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
+                  continue;
+               shared_ptr<Node> candidate = FindNodeByIP(0, &iface->ipAddrList);
+               if ((candidate != nullptr) && candidate->isLocalManagement())
+                  node = candidate;
+            }
+            delete ifList;
+         }
+      }
+
+      if (node != nullptr)
+      {
+         if (!node->isLocalManagement())
+            node->setLocalMgmtFlag();
+         g_dwMgmtNode = node->getId();
+         if (node->getPrimaryIpAddress().isLoopback() && wcsicmp(node->getPrimaryHostName().cstr(), nodeAddress))
+         {
+            nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_POLL_MANAGER, L"Primary address of local management node %s [%u] changed from loopback to cluster node address %s",
+                  node->getName(), node->getId(), nodeAddress);
+            node->setPrimaryHostName(nodeAddress);
+            node->markAsModified(MODIFY_NODE_PROPERTIES);
+         }
+      }
+      else
+      {
+         CreateManagementNode((addr.isValidUnicast() || addr.isLoopback()) ? addr : InetAddress(), nodeName, nodeAddress);
+      }
+   }
+   else if (ConfigReadBoolean(L"Server.RoamingMode", false))
    {
       shared_ptr<NetObj> mgmtNode = g_idxNodeById.find([](NetObj *object, void *) { return static_cast<Node*>(object)->isLocalManagement(); }, nullptr);
       if (mgmtNode != nullptr)
