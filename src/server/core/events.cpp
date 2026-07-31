@@ -1242,6 +1242,7 @@ uint32_t UpdateEventTemplate(const NXCPMessage& request, NXCPMessage *response, 
       EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
 
       response->setField(VID_EVENT_CODE, e->getCode());
+      response->setField(VID_GUID, e->getGuid());
    }
 
    s_eventTemplatesLock.unlock();

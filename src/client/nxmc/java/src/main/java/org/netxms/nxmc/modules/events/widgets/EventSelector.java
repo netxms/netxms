@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.events.widgets;
 import java.util.UUID;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.base.NXCommon;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.Registry;
@@ -81,7 +82,8 @@ public class EventSelector extends AbstractSelector
 			{
 				eventCode = events[0].getCode();
 				eventName = events[0].getName();
-				eventGuid = events[0].getGuid();
+            UUID guid = events[0].getGuid();
+            eventGuid = ((guid != null) && !guid.equals(NXCommon.EMPTY_GUID)) ? guid : null;
 				setText(events[0].getName());
             setImage(StatusDisplayInfo.getStatusImage(events[0].getSeverity()));
             getTextControl().setToolTipText(generateToolTipText(events[0]));
@@ -164,7 +166,8 @@ public class EventSelector extends AbstractSelector
 			if (evt != null)
 			{
 			   eventName = evt.getName();
-			   eventGuid = evt.getGuid();
+            UUID guid = evt.getGuid();
+            eventGuid = ((guid != null) && !guid.equals(NXCommon.EMPTY_GUID)) ? guid : null;
 				setText(eventName);
 			   setImage(StatusDisplayInfo.getStatusImage(((EventTemplate)evt).getSeverity()));
 				getTextControl().setToolTipText(generateToolTipText(evt));

@@ -247,6 +247,14 @@ public class EventTemplate
    }
 
    /**
+    * @param guid the guid to set
+    */
+   public void setGuid(UUID guid)
+   {
+      this.guid = guid;
+   }
+
+   /**
     * @param code the code to set
     */
    public void setCode(int code)
