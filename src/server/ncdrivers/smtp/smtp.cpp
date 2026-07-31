@@ -25,6 +25,7 @@
 #include <nms_util.h>
 #include <nxcldefs.h>
 #include <nxlibcurl.h>
+#include <nxmarkdown.h>
 
 #define DEBUG_TAG _T("ncd.smtp")
 
@@ -72,7 +73,7 @@ private:
 
    SmtpDriver();
 
-   void prepareMailBody(ByteStream *data, const char *recipient, const char *subject, const char *body);
+   void prepareMailBody(ByteStream *data, const NotificationContext& context);
    bool acquireOAuthToken();
 
 public:
@@ -370,9 +371,29 @@ static char *EncodeHeader(const char *header, const char *data, char *buffer, si
 }
 
 /**
+ * Style sheet and document frame for HTML rendered from markdown
+ */
+static const char s_htmlDocumentHead[] =
+   "<!DOCTYPE html>\r\n"
+   "<html>\r\n"
+   "<head>\r\n"
+   "<meta charset=\"utf-8\"/>\r\n"
+   "<style>\r\n"
+   "body { font-family: sans-serif; font-size: 14px; }\r\n"
+   "table { border-collapse: collapse; margin: 8px 0; }\r\n"
+   "th, td { border: 1px solid #cccccc; padding: 4px 8px; }\r\n"   // alignment comes from align attribute on cells
+   "th { background-color: #f0f0f0; }\r\n"
+   "pre { background-color: #f5f5f5; padding: 8px; }\r\n"
+   "blockquote { border-left: 3px solid #cccccc; margin-left: 0; padding-left: 10px; color: #555555; }\r\n"
+   "</style>\r\n"
+   "</head>\r\n"
+   "<body>\r\n";
+static const char s_htmlDocumentTail[] = "</body>\r\n</html>\r\n";
+
+/**
  * Prepare mail body
  */
-void SmtpDriver::prepareMailBody(ByteStream *data, const char *recipient, const char *subject, const char *body)
+void SmtpDriver::prepareMailBody(ByteStream *data, const NotificationContext& context)
 {
    char buffer[1204];
 
@@ -381,10 +402,10 @@ void SmtpDriver::prepareMailBody(ByteStream *data, const char *recipient, const 
    snprintf(buffer, sizeof(buffer), "From: \"%s\" <%s>\r\n", EncodeHeader(nullptr, m_fromName, from, 512), m_fromAddr);
    data->writeString(buffer, strlen(buffer), false, false);
 
-   snprintf(buffer, sizeof(buffer), "To: <%s>\r\n", recipient);
+   snprintf(buffer, sizeof(buffer), "To: <%s>\r\n", context.recipient);
    data->writeString(buffer, strlen(buffer), false, false);
 
-   EncodeHeader("Subject", subject, buffer, sizeof(buffer));
+   EncodeHeader("Subject", context.subject, buffer, sizeof(buffer));
    data->writeString(buffer, strlen(buffer), false, false);
 
    // date
@@ -427,14 +448,50 @@ void SmtpDriver::prepareMailBody(ByteStream *data, const char *recipient, const 
 #endif
    data->writeString(buffer, strlen(buffer), false, false);
 
+   if (context.markdownBody != nullptr)
+   {
+      // Markdown message is sent as multipart/alternative - plain text rendition for clients
+      // that cannot display HTML, and HTML rendered from original markdown for the rest
+      char boundary[64] = "=_NetXMS_";
+      uuid::generate().toStringA(&boundary[9]);
+
+      snprintf(buffer, sizeof(buffer),
+            "MIME-Version: 1.0\r\n"
+            "Content-Type: multipart/alternative; boundary=\"%s\"\r\n"
+            "\r\n"
+            "--%s\r\n"
+            "Content-Type: text/plain; charset=utf-8\r\n"
+            "Content-Transfer-Encoding: 8bit\r\n\r\n", boundary, boundary);
+      data->writeString(buffer, strlen(buffer), false, false);
+      data->writeString(context.body, strlen(context.body), false, false);
+
+      snprintf(buffer, sizeof(buffer),
+            "\r\n--%s\r\n"
+            "Content-Type: text/html; charset=utf-8\r\n"
+            "Content-Transfer-Encoding: 8bit\r\n\r\n", boundary);
+      data->writeString(buffer, strlen(buffer), false, false);
+
+      char *html = MarkdownToHTML(context.markdownBody, MarkdownHTMLDialect::GENERIC);
+      data->writeString(s_htmlDocumentHead, sizeof(s_htmlDocumentHead) - 1, false, false);
+      data->writeString(html, strlen(html), false, false);
+      data->writeString("\r\n", 2, false, false);
+      data->writeString(s_htmlDocumentTail, sizeof(s_htmlDocumentTail) - 1, false, false);
+      MemFree(html);
+
+      snprintf(buffer, sizeof(buffer), "\r\n--%s--\r\n", boundary);
+      data->writeString(buffer, strlen(buffer), false, false);
+      return;
+   }
+
    // content-type
    snprintf(buffer, sizeof(buffer),
+         "MIME-Version: 1.0\r\n"
          "Content-Type: text/%s; charset=utf-8\r\n"
          "Content-Transfer-Encoding: 8bit\r\n\r\n", m_isHtml ? "html" : "plain");
    data->writeString(buffer, strlen(buffer), false, false);
 
    // Mail body
-   data->writeString(body, strlen(body), false, false);
+   data->writeString(context.body, strlen(context.body), false, false);
    data->writeString("\r\n", 2, false, false);
 }
 
@@ -453,7 +510,6 @@ int SmtpDriver::send(const NotificationContext& context)
 {
    const char *recipient = context.recipient;
    const char *subject = context.subject;
-   const char *body = context.body;
 #ifdef CURLPROTO_SMTP
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
@@ -501,7 +557,7 @@ int SmtpDriver::send(const NotificationContext& context)
    }
 
    ByteStream mailBody;
-   prepareMailBody(&mailBody, recipient, subject, body);
+   prepareMailBody(&mailBody, context);
    mailBody.seek(0, SEEK_SET);
 
    curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);

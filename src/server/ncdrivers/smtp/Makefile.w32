@@ -5,6 +5,6 @@
 
 DRIVER = smtp
 SOURCES = $(wildcard *.cpp)
-DRV_LIBS = -lnxjansson $(CURL_LIBS)
+DRV_LIBS = -lnxsrv -lnxjansson $(CURL_LIBS)
 
 include $(TOPDIR)/src/server/ncdrivers/ncdrv-common.mk
