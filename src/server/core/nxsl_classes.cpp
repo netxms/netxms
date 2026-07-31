@@ -7347,7 +7347,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    {
 		value = vm->createValue(dci->getId());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("instance"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("instance") || NXSL_COMPARE_ATTRIBUTE_NAME("instanceValue"))
    {
       value = vm->createValue(dci->getInstanceData());
    }
