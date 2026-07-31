@@ -10505,7 +10505,11 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_EVENT_INFO);
       tmpl.fillMessage(msg);
       sendMessage(msg);
-      tmpl.setCode(waitForRCC(msg.getMessageId()).getFieldAsInt32(NXCPCodes.VID_EVENT_CODE));
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      tmpl.setCode(response.getFieldAsInt32(NXCPCodes.VID_EVENT_CODE));
+      UUID guid = response.getFieldAsUUID(NXCPCodes.VID_GUID);
+      if (guid != null)
+         tmpl.setGuid(guid);
    }
 
    /**
