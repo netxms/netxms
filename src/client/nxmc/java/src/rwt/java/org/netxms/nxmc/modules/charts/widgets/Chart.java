@@ -74,6 +74,8 @@ public class Chart extends Composite
    private ChartLegend legend;
    private Composite plotAreaComposite;
    private PlotArea plotArea;
+   private Date timeFrom = null;
+   private Date timeTo = null;
    private boolean mouseDown = false;
    private Set<IDoubleClickListener> doubleClickListeners = new HashSet<IDoubleClickListener>();
    private MenuManager menuManager = null;
@@ -401,6 +403,11 @@ public class Chart extends Composite
             plotArea = null;
       }
       plotAreaComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+      // Newly created plot area starts with default time range, so re-apply last range set on this chart
+      if ((plotArea instanceof LineChart) && (timeFrom != null) && (timeTo != null))
+         ((LineChart)plotArea).setTimeRange(timeFrom, timeTo);
+
       if (menuManager != null)
       {
          Menu menu = menuManager.createContextMenu(plotAreaComposite);
@@ -549,6 +556,8 @@ public class Chart extends Composite
     */
    public void setTimeRange(final Date from, final Date to)
    {
+      timeFrom = from;
+      timeTo = to;
       if (plotArea instanceof LineChart)
          ((LineChart)plotArea).setTimeRange(from, to);
    }

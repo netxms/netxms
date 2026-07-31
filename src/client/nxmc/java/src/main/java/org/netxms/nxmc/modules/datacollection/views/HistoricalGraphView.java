@@ -394,7 +394,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             item.name = session.getObjectName(dci.nodeId) + " - " + dci.getLabel();
          chart.addParameter(item);
       }
-      updateDciInfo();
 
       // Check that all DCI's are form one node
       if (chart.getItemCount() > 1)
@@ -408,39 +407,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       actionAutoRefresh.setChecked(configuration.isAutoRefresh());
       refreshMenuSelection();
       refreshController.setInterval(configuration.isAutoRefresh() ? configuration.getRefreshRate() : -1);
-   }
-
-   /**
-    * Get DCI info (unit name and multiplier)
-    */
-   private void updateDciInfo()
-   {
-      Job job = new Job("Get DCI info", this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (chart.isDisposed())
-                     return;
-                  
-                  chart.rebuild();
-                  chartParent.layout(true, true);
-                  updateChart();
-               }
-            });
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return null;
-         }
-      };
-      job.setUser(false);
-      job.start();
    }
 
    /**
