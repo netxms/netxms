@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -126,6 +125,7 @@ public class ProcessesView extends ObjectView
       previousTimestamp = 0;
       cpuCount = 0;
       currentNodeId = 0;
+      viewer.resetAutoResizeBaseline();
       if (isActive())
          refresh();
       else
@@ -150,13 +150,7 @@ public class ProcessesView extends ObjectView
       createActions();
       createContextMenu();
 
-      refreshController = new ViewRefreshController(this, autoRefreshEnabled ? AUTOREFRESH_INTERVAL : -1, new Runnable() {
-         @Override
-         public void run()
-         {
-            refresh();
-         }
-      });
+      refreshController = new ViewRefreshController(this, autoRefreshEnabled ? AUTOREFRESH_INTERVAL : -1, () -> refresh());
    }
 
    /**
@@ -190,12 +184,7 @@ public class ProcessesView extends ObjectView
    {
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager manager)
-         {
-            fillContextMenu(manager);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);

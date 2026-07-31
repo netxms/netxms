@@ -58,6 +58,7 @@ public class SortableTreeViewer extends TreeViewer
    private String configPrefix;
 	private boolean autoResizeEnabled = true;
    private RefreshTimer packTimer;
+   private int[] packBaseline = null;
 
    /**
     * Constructor for delayed initialization
@@ -177,35 +178,128 @@ public class SortableTreeViewer extends TreeViewer
 
    /**
     * Pack columns. When <code>force</code> is <code>false</code>, columns are packed only if automatic
-    * column resize is enabled on this viewer; this allows callers in refresh paths to respect the user's
-    * "Resize columns automatically" preference.
+    * column resize is enabled on this viewer and content has grown past the widths of the last pack
+    * (columns are never automatically shrunk); this allows callers in refresh paths to respect the
+    * user's "Resize columns automatically" preference without paying full measurement cost on every
+    * refresh. When <code>force</code> is <code>true</code>, columns are packed unconditionally and the
+    * content baseline is reset.
     *
-    * @param force if true, pack columns regardless of auto-resize preference
+    * @param force if true, pack columns regardless of auto-resize preference and current content
     */
    public void packColumns(boolean force)
    {
       if (!force && !autoResizeEnabled)
          return;
 
+      // Actual packing does native measurement of every cell and a full repaint, so refresh paths
+      // (which call this on every data update) only pack when some column's content is wider than
+      // it was at the last pack. Text length is used as a width proxy - plain string reads, no
+      // native calls.
+      int[] textLengths = scanColumnTextLengths();
+      if (!force && !isPackNeeded(textLengths))
+         return;
+      packBaseline = textLengths;
+
       Tree tree = getTree();
       // Suppress intermediate repaints so per-column resizes coalesce into a single repaint (avoids flicker on Windows)
       tree.setRedraw(false);
       int count = tree.getColumnCount();
-      for(int i = 0; i < count; i++)
+      // On GTK, once rows have been painted, pack() reports the previously computed column width and
+      // ignores in-place cell text changes; the pack itself triggers recomputation, so only a second
+      // pass reads widths measured from actual content. Without it columns can never shrink on GTK.
+      int passes = SWT.getPlatform().equals("gtk") ? 2 : 1;
+      for(int pass = 0; pass < passes; pass++)
       {
-         TreeColumn c = tree.getColumn(i);
-         if (c.getResizable())
+         for(int i = 0; i < count; i++)
          {
-            // setWidth(0) forces SWT to drop any cached minimum and recompute from current content,
-            // otherwise pack() on some platforms won't shrink columns that were previously wider.
-            c.setWidth(0);
-            c.pack();
-            // Add some padding for better readability
-            // Column 0 has extra padding because pack() may not count space needed for expand indicator
-            c.setWidth(c.getWidth() + ((i == 0) ? 20 : 4));
+            TreeColumn c = tree.getColumn(i);
+            if (c.getResizable())
+            {
+               // setWidth(0) forces SWT to drop any cached minimum and recompute from current content,
+               // otherwise pack() on some platforms won't shrink columns that were previously wider.
+               c.setWidth(0);
+               c.pack();
+               // Add some padding for better readability
+               // Column 0 has extra padding because pack() may not count space needed for expand indicator
+               c.setWidth(c.getWidth() + ((i == 0) ? 20 : 4));
+            }
          }
       }
       tree.setRedraw(true);
+   }
+
+   /**
+    * Scan maximum text length for each resizable column (header text included). Non-resizable
+    * columns (including hidden ones) get 0 so they never influence pack decisions. Only
+    * materialized tree items are scanned, matching what native pack() would measure.
+    *
+    * @return per-column maximum text length
+    */
+   private int[] scanColumnTextLengths()
+   {
+      Tree tree = getTree();
+      int count = tree.getColumnCount();
+      int[] lengths = new int[count];
+      boolean[] resizable = new boolean[count];
+      for(int i = 0; i < count; i++)
+      {
+         TreeColumn c = tree.getColumn(i);
+         resizable[i] = c.getResizable();
+         if (resizable[i])
+            lengths[i] = c.getText().length();
+      }
+      for(TreeItem item : tree.getItems())
+         scanItemTextLengths(item, resizable, lengths);
+      return lengths;
+   }
+
+   /**
+    * Scan text lengths of given tree item and its materialized children, updating per-column maximums.
+    *
+    * @param item tree item to scan
+    * @param resizable per-column resizable flags
+    * @param lengths per-column maximum text lengths to update
+    */
+   private void scanItemTextLengths(TreeItem item, boolean[] resizable, int[] lengths)
+   {
+      for(int i = 0; i < lengths.length; i++)
+      {
+         if (!resizable[i])
+            continue;
+         int l = item.getText(i).length();
+         if (l > lengths[i])
+            lengths[i] = l;
+      }
+      for(TreeItem child : item.getItems())
+         scanItemTextLengths(child, resizable, lengths);
+   }
+
+   /**
+    * Check if automatic pack is needed given current per-column text lengths. Pack is needed if
+    * there is no baseline, column count changed, or some column's content grew past the baseline.
+    *
+    * @param textLengths current per-column maximum text lengths
+    * @return true if columns should be packed
+    */
+   private boolean isPackNeeded(int[] textLengths)
+   {
+      if ((packBaseline == null) || (packBaseline.length != textLengths.length))
+         return true;
+      for(int i = 0; i < textLengths.length; i++)
+         if (textLengths[i] > packBaseline[i])
+            return true;
+      return false;
+   }
+
+   /**
+    * Reset content baseline used by automatic column resize, so that the next automatic pack will
+    * resize columns unconditionally (allowing them to shrink). Intended for views to call when the
+    * viewer's context changes (e.g. a different object is selected) and column widths from the
+    * previous content should not be retained.
+    */
+   public void resetAutoResizeBaseline()
+   {
+      packBaseline = null;
    }
 
 	/**
@@ -263,6 +357,7 @@ public class SortableTreeViewer extends TreeViewer
    {
       initialized = false;
       columns.clear();
+      packBaseline = null;
       getTree().removeAll();
       for(TreeColumn c : getTree().getColumns())
          c.dispose();
@@ -402,6 +497,9 @@ public class SortableTreeViewer extends TreeViewer
          }
 
          new MenuItem(headerMenu, SWT.SEPARATOR);
+         MenuItem fitItem = new MenuItem(headerMenu, SWT.PUSH);
+         fitItem.setText(i18n.tr("Fit columns to content"));
+         fitItem.addListener(SWT.Selection, ev -> packColumns(true));
          MenuItem resetItem = new MenuItem(headerMenu, SWT.PUSH);
          resetItem.setText(i18n.tr("Restore Default Column Order"));
          resetItem.addListener(SWT.Selection, ev -> resetColumnOrder());

@@ -1344,6 +1344,8 @@ public class DataCollectionView extends BaseDataCollectionView
          switchMode();
       }
 
+      viewer.resetAutoResizeBaseline();
+
       // Request server to open data collection configuration
       new Job(i18n.tr("Opening data collection configuration for {0}", object.getObjectName()), this) {
          @Override
@@ -1362,13 +1364,7 @@ public class DataCollectionView extends BaseDataCollectionView
                   @Override
                   public void onObjectChange()
                   {
-                     runInUIThread(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                           DataCollectionView.this.showInformationMessage();
-                        }
-                     });
+                     runInUIThread(() -> DataCollectionView.this.showInformationMessage());
                   }
                });
             }
@@ -1388,19 +1384,15 @@ public class DataCollectionView extends BaseDataCollectionView
                }
             }
 
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
+            runInUIThread(() -> {
+               if (editMode)
                {
-                  if (editMode)
-                  {
-                     dciConfig.setUserData(DataCollectionView.this);
-                     dciConfig.setRemoteChangeListener(changeListener);
-                  }
-
-                  if (isActive())
-                     refresh();
+                  dciConfig.setUserData(DataCollectionView.this);
+                  dciConfig.setRemoteChangeListener(changeListener);
                }
+
+               if (isActive())
+                  refresh();
             });
          }
 
