@@ -372,7 +372,7 @@ void MobileDeviceSession::login(const NXCPMessage& request)
 				TCHAR deviceId[MAX_OBJECT_NAME] = _T("");
 				request.getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
 				shared_ptr<MobileDevice> md = FindMobileDeviceByDeviceID(deviceId);
-				if (md != nullptr)
+				if ((md != nullptr) && md->checkAccessRights(m_userId, OBJECT_ACCESS_PUSH_DATA))
 				{
 					m_deviceObjectId = md->getId();
 					m_authenticated = true;
@@ -386,6 +386,14 @@ void MobileDeviceSession::login(const NXCPMessage& request)
 					debugPrintf(3, _T("User %s authenticated as mobile device"), m_userName);
 					WriteAuditLog(AUDIT_SECURITY, true, m_userId, m_hostName, m_id, 0,
 									  _T("Mobile device logged in as user \"%s\" (client info: %s)"), szLogin, m_clientInfo);
+				}
+				else if (md != nullptr)
+				{
+					debugPrintf(3, _T("User \"%s\" does not have push data access right on mobile device object with device ID \"%s\""), szLogin, deviceId);
+					msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+					WriteAuditLog(AUDIT_SECURITY, false, m_userId, m_hostName, m_id, md->getId(),
+									  _T("Mobile device login as user \"%s\" failed - user does not have push data access right on mobile device object (client info: %s)"),
+									  szLogin, m_clientInfo);
 				}
 				else
 				{
