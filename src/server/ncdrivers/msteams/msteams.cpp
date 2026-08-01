@@ -1,7 +1,7 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Notification channel driver for Microsoft Teams
-** Copyright (C) 2014-2025 Raden Solutions
+** Copyright (C) 2014-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -19,19 +19,18 @@
 **
 ** File: msteams.cpp
 **
+** Sends notifications to Microsoft Teams Workflows (Power Automate) webhook URLs
+** as Adaptive Cards wrapped in a Bot Framework message envelope. Legacy Office 365
+** connector webhooks are not supported (retired by Microsoft).
+**
 **/
 
 #include <ncdrv.h>
-#include <nms_util.h>
+#include <nms_core.h>
 #include <netxms-version.h>
 #include <nxlibcurl.h>
 
 #define DEBUG_TAG _T("ncd.msteams")
-
-/**
- * Flags
- */
-#define MST_USE_CARDS   0x0001
 
 /**
  * Microsoft Teams driver class
@@ -39,16 +38,12 @@
 class MicrosoftTeamsDriver : public NCDriver
 {
 private:
-   uint32_t m_flags;
+   bool m_severityMapping;
    StringMap m_channels;
-   char m_themeColor[8];
 
-   MicrosoftTeamsDriver(uint32_t flags, const TCHAR *themeColor) : NCDriver()
+   MicrosoftTeamsDriver(bool severityMapping) : NCDriver()
    {
-      m_flags = flags;
-      char *color8 = UTF8StringFromTString(themeColor);
-      strlcpy(m_themeColor, color8, 8);
-      MemFree(color8);
+      m_severityMapping = severityMapping;
    }
 
 public:
@@ -64,12 +59,10 @@ MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new MS Teams driver instance"));
 
-   uint32_t flags = 0;
-   TCHAR themeColor[8] = _T("FF6A00");
+   bool severityMapping = false;
    NX_CFG_TEMPLATE configTemplate[] =
 	{
-		{ _T("ThemeColor"), CT_STRING, 0, 0, sizeof(themeColor) / sizeof(TCHAR), 0, themeColor },
-      { _T("UseMessageCards"), CT_BOOLEAN_FLAG_32, 0, 0, MST_USE_CARDS, 0, &flags },
+      { _T("EventSeverityMapping"), CT_BOOLEAN, 0, 0, 1, 0, &severityMapping },
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 	};
 
@@ -79,7 +72,10 @@ MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
 	   return nullptr;
 	}
 
-   MicrosoftTeamsDriver *driver = new MicrosoftTeamsDriver(flags, themeColor);
+   if ((config->getValue(_T("/MicrosoftTeams/UseMessageCards")) != nullptr) || (config->getValue(_T("/MicrosoftTeams/ThemeColor")) != nullptr))
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Configuration parameters UseMessageCards and ThemeColor are ignored (legacy Office 365 connector support was removed)"));
+
+   MicrosoftTeamsDriver *driver = new MicrosoftTeamsDriver(severityMapping);
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Microsoft Teams driver instantiated"));
 
    unique_ptr<ObjectArray<ConfigEntry>> channels = config->getSubEntries(_T("/Channels"), _T("*"));
@@ -96,11 +92,87 @@ MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
 }
 
 /**
- * Append UTF-8 text to request being built
+ * Get adaptive card container style for given event severity
  */
-static inline void AppendText(ByteStream& request, const char *text)
+static const char *StyleFromSeverity(uint32_t severity)
 {
-   request.write(text, strlen(text));
+   switch(severity)
+   {
+      case EVENT_SEVERITY_NORMAL:
+         return "good";
+      case EVENT_SEVERITY_WARNING:
+      case EVENT_SEVERITY_MINOR:
+         return "warning";
+      case EVENT_SEVERITY_MAJOR:
+      case EVENT_SEVERITY_CRITICAL:
+         return "attention";
+      default:
+         return "default";
+   }
+}
+
+/**
+ * Build message payload (adaptive card in Bot Framework message envelope)
+ */
+static char *BuildMessagePayload(const NotificationContext& context, bool severityMapping)
+{
+   json_t *items = json_array();
+   if ((context.subject != nullptr) && (context.subject[0] != 0))
+   {
+      json_t *title = json_object();
+      json_object_set_new(title, "type", json_string("TextBlock"));
+      json_object_set_new(title, "size", json_string("Large"));
+      json_object_set_new(title, "weight", json_string("Bolder"));
+      json_object_set_new(title, "wrap", json_true());
+      json_object_set_new(title, "text", json_string(context.subject));
+      json_array_append_new(items, title);
+   }
+
+   json_t *text = json_object();
+   json_object_set_new(text, "type", json_string("TextBlock"));
+   json_object_set_new(text, "wrap", json_true());
+   json_object_set_new(text, "text", json_string((context.markdownBody != nullptr) ? context.markdownBody : CHECK_NULL_EX_A(context.body)));
+   json_array_append_new(items, text);
+
+   json_t *cardBody;
+   if (severityMapping && (context.event != nullptr))
+   {
+      json_t *container = json_object();
+      json_object_set_new(container, "type", json_string("Container"));
+      json_object_set_new(container, "style", json_string(StyleFromSeverity(context.event->getSeverity())));
+      json_object_set_new(container, "bleed", json_true());
+      json_object_set_new(container, "items", items);
+      cardBody = json_array();
+      json_array_append_new(cardBody, container);
+   }
+   else
+   {
+      cardBody = items;
+   }
+
+   json_t *card = json_object();
+   json_object_set_new(card, "$schema", json_string("http://adaptivecards.io/schemas/adaptive-card.json"));
+   json_object_set_new(card, "type", json_string("AdaptiveCard"));
+   json_object_set_new(card, "version", json_string("1.4"));
+   json_t *msteams = json_object();
+   json_object_set_new(msteams, "width", json_string("Full"));
+   json_object_set_new(card, "msteams", msteams);
+   json_object_set_new(card, "body", cardBody);
+
+   json_t *attachment = json_object();
+   json_object_set_new(attachment, "contentType", json_string("application/vnd.microsoft.card.adaptive"));
+   json_object_set_new(attachment, "contentUrl", json_null());
+   json_object_set_new(attachment, "content", card);
+
+   json_t *root = json_object();
+   json_object_set_new(root, "type", json_string("message"));
+   json_t *attachments = json_array();
+   json_array_append_new(attachments, attachment);
+   json_object_set_new(root, "attachments", attachments);
+
+   char *payload = json_dumps(root, JSON_COMPACT);
+   json_decref(root);
+   return payload;
 }
 
 /**
@@ -108,55 +180,18 @@ static inline void AppendText(ByteStream& request, const char *text)
  */
 int MicrosoftTeamsDriver::send(const NotificationContext& context)
 {
-   const char *recipient = context.recipient;
-   const char *subject = context.subject;
-   const char *body = context.body;
-   char *jsubject = EscapeStringForJSONUtf8(subject);
-   char *jbody = EscapeStringForJSONUtf8(body);
-
-   ByteStream request(4096);
-   AppendText(request, "{ ");
-   if (m_flags & MST_USE_CARDS)
+   char *request = BuildMessagePayload(context, m_severityMapping);
+   if (request == nullptr)
    {
-      AppendText(request, "\"@type\":\"MessageCard\", \"@context\":\"https://schema.org/extensions\", \"themeColor\":\"");
-      AppendText(request, m_themeColor);
-      AppendText(request, "\", \"summary\":\"");
-      if (jsubject[0] == 0)
-      {
-         AppendText(request, jbody);
-      }
-      else
-      {
-         AppendText(request, jsubject);
-         AppendText(request, "\", \"title\":\"");
-         AppendText(request, jsubject);
-      }
-      AppendText(request, "\", \"text\":\"");
-      AppendText(request, jbody);
-      AppendText(request, "\"");
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot serialize message payload"));
+      return -1;
    }
-   else
-   {
-      AppendText(request, "\"text\":\"");
-      AppendText(request, jsubject);
-      if ((jsubject[0] != 0) && (jbody[0] != 0))
-         AppendText(request, "\\n\\n");
-      AppendText(request, jbody);
-      AppendText(request, "\"");
-   }
-   AppendText(request, " }");
-   request.write('\0');
-
-   MemFree(jsubject);
-   MemFree(jbody);
-
-   const char *json = reinterpret_cast<const char*>(request.buffer());
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %hs"), json);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %hs"), request);
 
    // Attempt to lookup URL alias (channel mappings are stored as wide strings)
-   TCHAR *key = TStringFromUTF8String(recipient);
+   TCHAR *key = TStringFromUTF8String(context.recipient);
    const TCHAR *alias = m_channels.get(key);
-   char *url = (alias != nullptr) ? UTF8StringFromTString(alias) : MemCopyStringA(recipient);
+   char *url = (alias != nullptr) ? UTF8StringFromTString(alias) : MemCopyStringA(context.recipient);
    MemFree(key);
 
    CURL *curl = curl_easy_init();
@@ -164,6 +199,7 @@ int MicrosoftTeamsDriver::send(const NotificationContext& context)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
       MemFree(url);
+      MemFree(request);
       return -1;
    }
 
@@ -186,7 +222,7 @@ int MicrosoftTeamsDriver::send(const NotificationContext& context)
    responseData.setAllocationStep(32768);
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
+   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
 
    struct curl_slist *headers = nullptr;
    headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -215,43 +251,29 @@ int MicrosoftTeamsDriver::send(const NotificationContext& context)
 
    if (result == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes"), static_cast<int>(responseData.size()));
+      // Workflow trigger normally responds with 202 Accepted and empty body
       long httpCode = 0;
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-      if (httpCode != 200)
+      if ((httpCode >= 200) && (httpCode <= 299))
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: HTTP response code is %d"), httpCode);
-         if (httpCode == 412 || httpCode == 429 || httpCode == 502 || httpCode == 504)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Message successfully sent (HTTP response code %03d)"), static_cast<int>(httpCode));
+      }
+      else
+      {
+         responseData.write('\0');
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: HTTP response code is %03d (%hs)"),
+            static_cast<int>(httpCode), reinterpret_cast<const char*>(responseData.buffer()));
+         if (httpCode == 429 || httpCode == 502 || httpCode == 503 || httpCode == 504)
             result = 10;
          else
             result = -1;
       }
    }
 
-   if (result == 0 && responseData.size() <= 0)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Empty response from webhook"));
-      result = -1;
-   }
-
-   if (result == 0)
-   {
-      responseData.write('\0');
-      const char* data = reinterpret_cast<const char*>(responseData.buffer());
-      if (!strcmp(data, "1"))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("Message successfully sent"));
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Error response from webhook: %hs"), data);
-         result = -1;
-      }
-   }
-
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
    MemFree(url);
+   MemFree(request);
    return result;
 }
 

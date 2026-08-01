@@ -69,6 +69,11 @@ msteams_la_SOURCES = msteams/msteams.cpp
 msteams_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 msteams_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
 msteams_la_LIBADD = ../../libnetxms/libnetxms.la
+if USE_INTERNAL_JANSSON
+msteams_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+msteams_la_LIBADD += -ljansson
+endif
 
 mymobile_la_SOURCES = mymobile/mymobile.cpp
 mymobile_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
