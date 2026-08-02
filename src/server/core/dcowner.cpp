@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -553,22 +553,23 @@ unique_ptr<IntegerArray<uint32_t>> DataCollectionOwner::setItemStatus(const Inte
 		int j;
       for(j = 0; j < m_dcObjects.size(); j++)
       {
-         if (m_dcObjects.get(j)->getId() == dciList.get(i))
+         DCObject *dcObject = m_dcObjects.get(j);
+         if (dcObject->getId() == dciList.get(i))
          {
-            if (m_dcObjects.get(j)->hasAccess(userId))
+            if (dcObject->hasAccess(userId))
             {
-               m_dcObjects.get(j)->setStatus(status, true, userChange);
-               result->set(j, RCC_SUCCESS);
-               break;
+               dcObject->setStatus(status, true, userChange);
+               result->set(i, RCC_SUCCESS);
             }
             else
             {
-               result->set(j, RCC_ACCESS_DENIED);
+               result->set(i, RCC_ACCESS_DENIED);
             }
+            break;
          }
       }
       if (j == m_dcObjects.size())
-         result->set(j, RCC_INVALID_DCI_ID);
+         result->set(i, RCC_INVALID_DCI_ID);
    }
    unlockDciAccess();
    return result;
