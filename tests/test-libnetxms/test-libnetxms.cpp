@@ -747,6 +747,69 @@ static void TestStringFunctionsW()
 }
 
 /**
+ * Test that case conversion does not depend on process locale (issue #3483).
+ * All assertions run with LC_CTYPE explicitly set to "C", where the C library
+ * wide character functions fold only ASCII.
+ */
+static void TestUnicodeCase()
+{
+   char *savedLocale = MemCopyStringA(setlocale(LC_CTYPE, nullptr));
+   setlocale(LC_CTYPE, "C");
+
+   StartTest(_T("Unicode case conversion in C locale"));
+
+   // ASCII
+   AssertEquals(nx_towupper(L'a'), L'A');
+   AssertEquals(nx_towlower(L'A'), L'a');
+   AssertEquals(nx_towupper(L'5'), L'5');
+   AssertEquals(nx_towlower(L'_'), L'_');
+
+   // Cyrillic
+   AssertEquals(nx_towupper(L'\x0441'), L'\x0421');
+   AssertEquals(nx_towlower(L'\x0421'), L'\x0441');
+
+   // Greek
+   AssertEquals(nx_towupper(L'\x03B1'), L'\x0391');
+   AssertEquals(nx_towlower(L'\x0391'), L'\x03B1');
+
+   // Latin-1 supplement
+   AssertEquals(nx_towupper(L'\x00FC'), L'\x00DC');
+   AssertEquals(nx_towlower(L'\x00DC'), L'\x00FC');
+
+   // Characters without case mapping must be returned unchanged
+   AssertEquals(nx_towupper(L'\x4E2D'), L'\x4E2D');
+   AssertEquals(nx_towlower(L'\x2603'), L'\x2603');
+
+   EndTest();
+
+   StartTest(_T("Unicode string comparison in C locale"));
+
+   AssertEquals(nx_wcsicmp(L"\x0421\x0440\x0435\x0434", L"\x0441\x0440\x0435\x0434"), 0);
+   AssertTrue(nx_wcsicmp(L"\x0421\x0440\x0435\x0434", L"\x0441\x0440\x0435\x0435") != 0);
+   AssertEquals(nx_wcsicmp(L"", L""), 0);
+   AssertEquals(nx_wcsnicmp(L"\x0421\x0440\x0435\x0434", L"\x0441\x0440\x0435\x0417", 3), 0);
+   AssertTrue(nx_wcsnicmp(L"\x0421\x0440\x0435\x0434", L"\x0441\x0440\x0435\x0417", 4) != 0);
+
+   static const WCHAR *cyrillicText = L"\x041E\x0434\x0438\x043D \x0414\x0432\x0430";
+   AssertTrue(&cyrillicText[5] == nx_wcsistr(cyrillicText, L"\x0434\x0432\x0430"));
+   AssertNull(nx_wcsistr(cyrillicText, L"\x0442\x0440\x0438"));
+
+   WCHAR buffer[16];
+   wcslcpy(buffer, L"\x0421\x0440\x0435\x0434", 16);
+   AssertEquals(nx_wcslwr(buffer), L"\x0441\x0440\x0435\x0434");
+   AssertEquals(nx_wcsupr(buffer), L"\x0421\x0420\x0415\x0414");
+
+   // Case insensitive pattern matching (NXSL "ilike" operator)
+   AssertTrue(MatchString(L"*\x0441\x0440\x0435\x0434*", L"\x041F\x0421\x0440\x0435\x0434\x041F", false));
+   AssertFalse(MatchString(L"*\x0441\x0440\x0435\x0434*", L"\x041F\x0421\x0440\x0435\x0434\x041F", true));
+
+   EndTest();
+
+   setlocale(LC_CTYPE, savedLocale);
+   MemFree(savedLocale);
+}
+
+/**
  * Test pattern matching functions
  */
 static void TestPatternMatching()
@@ -3621,6 +3684,7 @@ int main(int argc, char *argv[])
    TestStringToBinaryConversions();
    TestBinaryToStringConversions();
    TestByteStream();
+   TestUnicodeCase();
    TestPatternMatching();
    TestShortenFilePathForDisplay();
    TestMessageClass();

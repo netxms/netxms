@@ -104,7 +104,7 @@ template<typename T, T Transform(T)> int TransformString(NXSL_Value *v, NXSL_Val
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 #ifdef UNICODE
-   return TransformString<wint_t, towupper>(argv[0], result, vm);
+   return TransformString<wchar_t, nx_towupper>(argv[0], result, vm);
 #else
    return TransformString<int, toupper>(argv[0], result, vm);
 #endif
@@ -116,7 +116,7 @@ int F_upper(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 int F_lower(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 #ifdef UNICODE
-   return TransformString<wint_t, towlower>(argv[0], result, vm);
+   return TransformString<wchar_t, nx_towlower>(argv[0], result, vm);
 #else
    return TransformString<int, tolower>(argv[0], result, vm);
 #endif

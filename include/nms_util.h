@@ -5431,10 +5431,6 @@ const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int32_t code, CodeLookupElement *lo
 int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CodeLookupElement *lookupTable, int32_t defaultCode = -1);
 
 #ifndef _WIN32
-#if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
-void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in);
-#define wcsupr __wcsupr
-#endif
 void LIBNETXMS_EXPORTABLE __strupr(char *in);
 #define strupr __strupr
 #endif   /* _WIN32 */
@@ -5725,10 +5721,6 @@ wchar_t LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, wchar_t *strerrbuf, size_t 
 char LIBNETXMS_EXPORTABLE *strlwr(char *str);
 #endif
 
-#if !HAVE_WCSLWR && !defined(_WIN32)
-WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str);
-#endif
-
 #if !HAVE_STRLCPY
 size_t LIBNETXMS_EXPORTABLE strlcpy(char *dst, const char *src, size_t size);
 #endif
@@ -5745,20 +5737,8 @@ size_t LIBNETXMS_EXPORTABLE strlcat(char *dst, const char *src, size_t size);
 size_t LIBNETXMS_EXPORTABLE wcslcat(WCHAR *dst, const WCHAR *src, size_t size);
 #endif
 
-#if !HAVE_WCSCASECMP && !defined(_WIN32)
-int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
-#endif
-
-#if !HAVE_WCSNCASECMP && !defined(_WIN32)
-int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
-#endif
-
 #if !HAVE_STRCASESTR
 char LIBNETXMS_EXPORTABLE *strcasestr(const char *s, const char *ss);
-#endif
-
-#if !HAVE_WCSCASESTR
-WCHAR LIBNETXMS_EXPORTABLE *wcscasestr(const WCHAR *s, const WCHAR *ss);
 #endif
 
 #if !HAVE_MEMMEM
@@ -5767,10 +5747,7 @@ void LIBNETXMS_EXPORTABLE *memmem(const void *h0, size_t k, const void *n0, size
 
 #ifdef _WIN32
 #define stristr strcasestr
-#define wcsistr wcscasestr
-#ifdef UNICODE
-#define _tcsistr wcscasestr
-#else
+#ifndef UNICODE
 #define _tcsistr strcasestr
 #endif
 #endif

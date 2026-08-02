@@ -486,9 +486,9 @@
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="tp.cpp" />
     <ClCompile Include="unicode.cpp" />
+    <ClCompile Include="unicode_case.cpp" />
     <ClCompile Include="uuid.cpp" />
     <ClCompile Include="vault.cpp" />
-    <ClCompile Include="wcscasestr.cpp" />
     <ClCompile Include="wcslcat.cpp" />
     <ClCompile Include="wcslcpy.cpp" />
     <ClCompile Include="windll.cpp" />

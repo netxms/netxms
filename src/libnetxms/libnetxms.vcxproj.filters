@@ -180,6 +180,9 @@
     <ClCompile Include="unicode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="unicode_case.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="uuid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -220,9 +223,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="strcasestr.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="wcscasestr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="getopt.cpp">

@@ -467,7 +467,7 @@ static inline bool _ccw(WCHAR c1, WCHAR c2)
  */
 static inline bool _ccwi(WCHAR c1, WCHAR c2)
 {
-   return towupper(c1) == towupper(c2);
+   return nx_towupper(c1) == nx_towupper(c2);
 }
 
 /**
@@ -766,26 +766,6 @@ void LIBNETXMS_EXPORTABLE __strupr(char *in)
       *p = toupper(*p);
    }
 }
-
-#if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
-
-/**
- * wcsupr() implementation for non-Windows platforms
- */
-void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in)
-{
-   if (in == NULL)
-      return;
-
-   WCHAR *p = in;
-   for (; *p != 0; p++)
-   {
-      // TODO: check/set locale
-      *p = towupper(*p);
-   }
-}
-
-#endif
 
 #endif
 
@@ -3600,22 +3580,6 @@ char LIBNETXMS_EXPORTABLE *strlwr(char *str)
    for(char *p = str; *p != 0; p++)
    {
       *p = tolower(*p);
-   }
-   return str;
-}
-
-#endif
-
-#if !HAVE_WCSLWR && !defined(_WIN32)
-
-/**
- * Convert UNICODE string to lowercase
- */
-WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
-{
-   for(WCHAR *p = str; *p != 0; p++)
-   {
-      *p = towlower(*p);
    }
    return str;
 }
