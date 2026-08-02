@@ -138,7 +138,7 @@ int H_DataCollectionConfigCreate(Context *context)
       delete dcObject;
       return 500;
    }
-   owner->applyDCIChanges(true);
+   owner->applyDCIChanges(false);   // addDCObject sets modification flag
 
    shared_ptr<DCObject> added = owner->getDCObjectById(dciId, 0, true);
    json_t *newValue = (added != nullptr) ? added->toJson() : json_object();
@@ -236,7 +236,7 @@ int H_DataCollectionConfigDelete(Context *context)
       }
       return 404;
    }
-   owner->applyDCIChanges(true);
+   owner->applyDCIChanges(false);   // deleteDCObject sets modification flag
 
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, owner->getId(), oldValue, nullptr,
          L"Data collection configuration item [%u] on object %s [%u] deleted", dciId, owner->getName(), owner->getId());

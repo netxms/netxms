@@ -364,8 +364,13 @@ bool DataCollectionOwner::addDCObject(DCObject *object, bool alreadyLocked, bool
 	if (success)
 	{
       setModified(MODIFY_DATA_COLLECTION);
+      setDCIModificationFlag();
 		if (notify)
 		   NotifyClientsOnDCIUpdate(*this, object);
+
+      // Callers that already hold DCI list lock are processing multiple elements and will apply changes themselves
+      if (!alreadyLocked && !isDCIChangeProcessingDeferred())
+         applyDCIChanges(false);
 	}
    return success;
 }
@@ -427,7 +432,13 @@ bool DataCollectionOwner::deleteDCObject(uint32_t dcObjectId, bool needLock, uin
 	{
 	   lockProperties();
 	   setModified(MODIFY_DATA_COLLECTION, false);
+	   m_dciListModified = true;
 	   unlockProperties();
+
+	   // Callers that keep DCI list locked are processing multiple elements and will apply changes themselves
+	   if (needLock && !isDCIChangeProcessingDeferred())
+	      applyDCIChanges(false);
+
       if (rcc != nullptr)
          *rcc = RCC_SUCCESS;
 	}
@@ -517,6 +528,7 @@ uint32_t DataCollectionOwner::updateDCObject(uint32_t dcObjectId, const NXCPMess
    if (result == RCC_SUCCESS)
    {
       setModified(MODIFY_DATA_COLLECTION);
+      setDCIModificationFlag();
    }
 
    return result;
@@ -547,6 +559,7 @@ void DataCollectionOwner::updateInstanceDiscoveryItems(DCObject *dci)
 unique_ptr<IntegerArray<uint32_t>> DataCollectionOwner::setItemStatus(const IntegerArray<uint32_t>& dciList, int status, uint32_t userId, bool userChange)
 {
    auto result = make_unique<IntegerArray<uint32_t>>();
+   bool changed = false;
    readLockDciAccess();
    for(int i = 0; i < dciList.size(); i++)
    {
@@ -560,6 +573,7 @@ unique_ptr<IntegerArray<uint32_t>> DataCollectionOwner::setItemStatus(const Inte
             {
                dcObject->setStatus(status, true, userChange);
                result->set(i, RCC_SUCCESS);
+               changed = true;
             }
             else
             {
@@ -572,6 +586,10 @@ unique_ptr<IntegerArray<uint32_t>> DataCollectionOwner::setItemStatus(const Inte
          result->set(i, RCC_INVALID_DCI_ID);
    }
    unlockDciAccess();
+
+   if (changed)
+      setDCIModificationFlag();
+
    return result;
 }
 
@@ -633,7 +651,10 @@ int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request, uin
    unlockDciAccess();
 
    if (count > 0)
+   {
       setModified(MODIFY_DATA_COLLECTION);
+      setDCIModificationFlag();
+   }
 
    return count;
 }

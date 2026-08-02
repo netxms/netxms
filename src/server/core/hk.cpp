@@ -651,6 +651,18 @@ static void HouseKeeper()
             return _CONTINUE;
          });
 
+      // Reconcile data collection configuration on agents that collect data in cache mode, so that
+      // configuration change missed for any reason will not leave agent with outdated element list
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue data collection configuration synchronization with agents"));
+      g_idxNodeById.forEach(
+         [] (NetObj *object) -> EnumerationCallbackResult
+         {
+            Node *node = static_cast<Node*>(object);
+            if (node->getAgentCacheElementCount() > 0)
+               node->scheduleDataCollectionSyncWithAgent();
+            return _CONTINUE;
+         });
+
 	   // Validate scripts in script library
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Validate server NXSL scripts"));
 	   ValidateScripts();

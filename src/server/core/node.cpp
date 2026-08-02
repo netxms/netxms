@@ -137,6 +137,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_agentUpTime = 0;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_pendingDataConfigurationSync = 0;
+   m_lastDataCollectionSyncTime = 0;
+   m_agentCacheElementCount = 0;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
    m_lastSyslogMessageId = 0;
@@ -280,6 +282,8 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_agentUpTime = 0;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
    m_pendingDataConfigurationSync = 0;
+   m_lastDataCollectionSyncTime = 0;
+   m_agentCacheElementCount = 0;
    m_lastAgentTrapId = 0;
    m_lastSNMPTrapId = 0;
    m_lastSyslogMessageId = 0;
@@ -14775,11 +14779,13 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 
       msg.setField(VID_NUM_ELEMENTS, data.count);
       msg.setField(VID_NUM_NODES, data.nodeInfoCount);
+      m_agentCacheElementCount = data.count;
    }
    else
    {
       msg.setField(VID_NUM_ELEMENTS, 0);
       msg.setField(VID_NUM_NODES, 0);
+      m_agentCacheElementCount = 0;
    }
 
    uint32_t rcc;
@@ -14807,6 +14813,8 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
          m_state |= NSF_CACHE_MODE_NOT_SUPPORTED;
       }
    }
+
+   m_lastDataCollectionSyncTime = time(nullptr);
 }
 
 /**
@@ -14888,45 +14896,66 @@ void Node::dataCollectionSyncCallback()
       if (!newConnection)
          syncDataCollectionWithAgent(m_agentConnection.get());
    }
+   else
+   {
+      // Agent is unreachable, but attempt still counts for synchronization rate limiting
+      m_lastDataCollectionSyncTime = time(nullptr);
+   }
    agentUnlock();
 }
 
 /**
- * Schedule data collection synchronization with agent
+ * Delay before sending data collection configuration to agent after first change. Short delay is needed
+ * to combine multiple changes caused by single user action into one configuration upload.
+ */
+#define DC_SYNC_INITIAL_DELAY  2000
+
+/**
+ * Minimal interval between two consecutive data collection configuration uploads to agent
+ */
+#define DC_SYNC_MIN_INTERVAL   30
+
+/**
+ * Schedule data collection synchronization with agent. Configuration is sent to agent almost immediately
+ * after first change, and all subsequent changes are accumulated and sent not more often than once per
+ * DC_SYNC_MIN_INTERVAL seconds, so that active editing of data collection configuration will not cause
+ * repetitive agent reconfiguration.
  */
 void Node::scheduleDataCollectionSyncWithAgent()
 {
    if (!(m_capabilities & NC_IS_NATIVE_AGENT))
       return;
 
-   if (InterlockedIncrement(&m_pendingDataConfigurationSync) == 1)
+   if (InterlockedIncrement(&m_pendingDataConfigurationSync) != 1)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%u]): scheduling data collection sync"), m_name, m_id);
-      ThreadPoolScheduleRelative(g_pollerThreadPool, 30000, self(), &Node::dataCollectionSyncCallback); // wait for possible subsequent update requests within 30 seconds
-   }
-   else
-   {
-      // data collection configuration update already scheduled
+      // Data collection configuration upload already scheduled, it will pick up this change as well
       InterlockedDecrement(&m_pendingDataConfigurationSync);
-      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 7, _T("Node::onDataCollectionChange(%s [%u]): configuration upload already scheduled"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 7, _T("Node::scheduleDataCollectionSyncWithAgent(%s [%u]): configuration upload already scheduled"), m_name, m_id);
+      return;
    }
+
+   time_t elapsed = time(nullptr) - m_lastDataCollectionSyncTime;
+   uint32_t delay = (elapsed >= DC_SYNC_MIN_INTERVAL) ? DC_SYNC_INITIAL_DELAY : static_cast<uint32_t>((DC_SYNC_MIN_INTERVAL - elapsed) * 1000);
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::scheduleDataCollectionSyncWithAgent(%s [%u]): data collection sync scheduled in %u milliseconds"), m_name, m_id, delay);
+   ThreadPoolScheduleRelative(g_pollerThreadPool, delay, self(), &Node::dataCollectionSyncCallback);
 }
 
 /**
- * Update proxy node data collection configuration if required
+ * Update data collection configuration on node that collects metrics on behalf of this node
+ * (SNMP or Modbus proxy, or source node for metrics with source node override)
  */
-void Node::updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyName)
+void Node::updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyRole)
 {
-   if (proxyId == 0)
+   if ((proxyId == 0) || (proxyId == m_id))
       return;
 
    shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
    if (proxy == nullptr)
       return;
 
-   nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::updateProxyDataCollectionConfiguration(%s [%u]): scheduling data collection sync for %s proxy %s [%u]"),
-         m_name, m_id, proxyName, proxy->getName(), proxy->getId());
-   scheduleDataCollectionSyncWithAgent();
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::updateProxyDataCollectionConfiguration(%s [%u]): scheduling data collection sync for %s %s [%u]"),
+         m_name, m_id, proxyRole, proxy->getName(), proxy->getId());
+   proxy->scheduleDataCollectionSyncWithAgent();
 }
 
 /**
@@ -14938,10 +14967,37 @@ void Node::onDataCollectionChange()
 
    scheduleDataCollectionSyncWithAgent();
 
-   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(ProxySelection::PRIMARY), _T("SNMP"));
-   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(ProxySelection::BACKUP), _T("backup SNMP"));
-   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(ProxySelection::PRIMARY), _T("Modbus"));
-   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(ProxySelection::BACKUP), _T("backup Modbus"));
+   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(ProxySelection::PRIMARY), _T("SNMP proxy"));
+   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(ProxySelection::BACKUP), _T("backup SNMP proxy"));
+   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(ProxySelection::PRIMARY), _T("Modbus proxy"));
+   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(ProxySelection::BACKUP), _T("backup Modbus proxy"));
+
+   // Metrics with source node override are collected by agent on source node, so its configuration
+   // has to be updated as well. Source nodes referenced before this change are picked up too, so that
+   // configuration will be updated on source node of deleted metric or on previously used source node.
+   IntegerArray<uint32_t> sourceNodes;
+   readLockDciAccess();
+   for(int i = 0; i < m_dcObjects.size(); i++)
+   {
+      DCObject *dco = m_dcObjects.get(i);
+      uint32_t sourceNode = dco->getSourceNode();
+      if ((sourceNode != 0) && (dco->getDataSource() == DS_NATIVE_AGENT) && !sourceNodes.contains(sourceNode))
+         sourceNodes.add(sourceNode);
+   }
+   unlockDciAccess();
+
+   lockProperties();
+   IntegerArray<uint32_t> updateList(m_dciSourceNodes);
+   m_dciSourceNodes.clear();
+   m_dciSourceNodes.addAll(sourceNodes);
+   unlockProperties();
+
+   for(int i = 0; i < sourceNodes.size(); i++)
+      if (!updateList.contains(sourceNodes.get(i)))
+         updateList.add(sourceNodes.get(i));
+
+   for(int i = 0; i < updateList.size(); i++)
+      updateProxyDataCollectionConfiguration(updateList.get(i), _T("source node"));
 }
 
 /**
