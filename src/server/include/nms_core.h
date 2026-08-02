@@ -1741,6 +1741,7 @@ int GetServerCertificateDaysUntilExpiration();
 time_t GetServerCertificateExpirationTime();
 bool IsServerCertificateLoaded();
 bool GenerateAutoSignedCertificates(RSA_KEY *serverKey);
+bool SetupServerTlsContext(SSL_CTX *context);
 
 #ifndef _WIN32
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);

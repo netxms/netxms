@@ -28,6 +28,12 @@
  */
 #define NXCP_VERSION                   5
 
+/**
+ * Peer capability flags transmitted in lower 24 bits of CMD_NXCP_CAPS control data
+ * (upper 8 bits carry NXCP protocol version)
+ */
+#define NXCP_CAP_TLS_TUNNEL            0x00000001
+
 #define SERVER_LISTEN_PORT_FOR_CLIENTS 4701
 #define SERVER_LISTEN_PORT_FOR_MOBILES 4747
 #define MAX_DCI_STRING_VALUE           256

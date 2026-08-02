@@ -22,7 +22,7 @@
 
 #include "nxcore.h"
 #include <netxms-regex.h>
-#include <agent_tunnel.h>
+#include <nxcore_agent_tunnel.h>
 #include <dci_table_creation.h>
 #include <netxms_maps.h>
 #include <asset_management.h>

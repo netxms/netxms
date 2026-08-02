@@ -21,6 +21,7 @@
 **/
 
 #include "libnxsrv.h"
+#include <agent_tunnel.h>
 #include <netxms_getopt.h>
 #include <netxms-version.h>
 
@@ -33,6 +34,27 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
    _vtprintf(format, args);
    _fputtc(_T('\n'), stdout);
 }
+
+/**
+ * Agent connection over outbound TLS tunnel
+ */
+class TunnelAgentConnection : public AgentConnection
+{
+private:
+   shared_ptr<AgentTunnel> m_tunnel;
+
+protected:
+   virtual shared_ptr<AbstractCommChannel> createChannel() override
+   {
+      return m_tunnel->createChannel();
+   }
+
+public:
+   TunnelAgentConnection(const shared_ptr<AgentTunnel>& tunnel, const InetAddress& addr, uint16_t port, const TCHAR *secret)
+      : AgentConnection(addr, port, secret), m_tunnel(tunnel)
+   {
+   }
+};
 
 /**
  * Run server-side command line tool.
@@ -50,7 +72,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    wcslcat(keyFile, DFILE_KEYS, MAX_PATH);
 
    wchar_t *eptr;
-   bool start = true, useProxy = false;
+   bool start = true, useProxy = false, useTls = false, checkAgentCertFingerprint = false;
    int i, ch, iExitCode = 3;
    int iEncryptionPolicy = ENCRYPTION_PREFERRED;
    uint16_t agentPort = AGENT_LISTEN_PORT, proxyPort = AGENT_LISTEN_PORT;
@@ -59,6 +81,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    wchar_t szProxy[MAX_OBJECT_NAME] = L"";
    wchar_t *proxySecret = nullptr;
    RSA_KEY serverKey = nullptr;
+   BYTE agentCertFingerprint[SHA256_DIGEST_SIZE];
 
 #ifndef _WIN32
    wchar_t **wargv = MemAllocArray<wchar_t*>(tool->argc);
@@ -70,7 +93,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
 
    // Parse command line
    _topterr = 1;
-   char options[128] = "D:e:hK:O:p:s:S:vw:W:X:";
+   char options[128] = "AD:e:g:hK:O:p:s:S:vw:W:X:";
    strlcat(options, tool->additionalOptions, 128);
 
    while ((ch = getoptW(tool->argc, wargv, options)) != -1)
@@ -80,6 +103,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          case 'h':   // Display help and exit
             WriteToTerminalEx(L"%s\n"
                L"Common options:\n"
+               L"   -A           : Connect to agent using TLS tunnel.\n"
                L"   -D level     : Set debug level (0..9 or off, default is off).\n"
                L"   -e policy    : Set encryption policy. Possible values are:\n"
                L"                    0 = Encryption disabled;\n"
@@ -87,6 +111,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                L"                    2 = Encrypt connection if agent supports encryption;\n"
                L"                    3 = Force encrypted connection;\n"
                L"                  Default value is 1.\n"
+               L"   -g fprint    : Expected SHA-256 fingerprint of agent's certificate (implies -A).\n"
                L"   -h           : Display help and exit.\n"
                L"   -K file      : Specify server's key file\n"
                L"                  (default is %s).\n"
@@ -101,6 +126,26 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                L"\n",
                tool->mainHelpText, keyFile, agentPort, agentPort);
             start = false;
+            break;
+         case 'A':   // Use TLS tunnel
+            useTls = true;
+            break;
+         case 'g':   // Expected agent certificate fingerprint
+            {
+               StringBuffer fp(optargW);
+               fp.replace(L":", L"");
+               if (fp.length() != SHA256_DIGEST_SIZE * 2)
+               {
+                  WriteToTerminalEx(L"Invalid certificate fingerprint \"%s\"\n", optargW);
+                  start = false;
+               }
+               else
+               {
+                  StrToBin(fp, agentCertFingerprint, SHA256_DIGEST_SIZE);
+                  checkAgentCertFingerprint = true;
+                  useTls = true;
+               }
+            }
             break;
          case 'D':   // debug level
             if (!wcsicmp(optargW, L"off"))
@@ -198,6 +243,12 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          start = false;
       }
 
+      if (useTls && useProxy)
+      {
+         WriteToTerminal(L"Proxy agent cannot be used together with TLS connection\n");
+         start = false;
+      }
+
       // Load server key if requested
       if ((iEncryptionPolicy != ENCRYPTION_DISABLED) && start)
       {
@@ -243,21 +294,76 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          }
          else
          {
-            auto conn = make_shared<AgentConnection>(addr, agentPort, secret);
-            conn->setConnectionTimeout(dwConnTimeout);
-            conn->setCommandTimeout(dwTimeout);
-            conn->setEncryptionPolicy(iEncryptionPolicy);
-            if (useProxy)
-               conn->setProxy(proxyAddr, proxyPort, proxySecret);
-            if (conn->connect(serverKey, &dwError))
+            shared_ptr<AgentConnection> conn;
+            shared_ptr<AgentTunnel> tunnel;
+            if (useTls)
             {
-               iExitCode = tool->executeCommandCb(conn.get(), tool->argc, wargv, optindW, serverKey);
+               g_agentConnectionThreadPool = ThreadPoolCreate(_T("AGENT"), 1, 4);
+
+               AgentTunnelEstablishmentStatus status;
+               BYTE actualFingerprint[SHA256_DIGEST_SIZE];
+               tunnel = OutboundAgentTunnel::establish(addr, agentPort, 0, 0,
+                     checkAgentCertFingerprint ? agentCertFingerprint : nullptr, actualFingerprint, &status);
+               if (tunnel != nullptr)
+               {
+                  TCHAR fingerprintText[SHA256_DIGEST_SIZE * 2 + 1];
+                  BinToStr(actualFingerprint, SHA256_DIGEST_SIZE, fingerprintText);
+                  nxlog_debug_tag(_T("agent.tunnel"), 2, _T("Agent certificate fingerprint is %s"), fingerprintText);
+                  tunnel->setCommandTimeout(dwTimeout);
+                  conn = make_shared<TunnelAgentConnection>(tunnel, addr, agentPort, secret);
+               }
+               else
+               {
+                  switch(status)
+                  {
+                     case AgentTunnelEstablishmentStatus::CONNECT_FAILED:
+                        WriteToTerminal(L"Cannot establish connection with agent\n");
+                        break;
+                     case AgentTunnelEstablishmentStatus::TLS_HANDSHAKE_FAILED:
+                        WriteToTerminal(L"TLS handshake failed\n");
+                        break;
+                     case AgentTunnelEstablishmentStatus::CERTIFICATE_MISMATCH:
+                        {
+                           TCHAR fingerprintText[SHA256_DIGEST_SIZE * 2 + 1];
+                           BinToStr(actualFingerprint, SHA256_DIGEST_SIZE, fingerprintText);
+                           WriteToTerminalEx(L"Agent certificate fingerprint mismatch (actual fingerprint is %s)\n", fingerprintText);
+                        }
+                        break;
+                     case AgentTunnelEstablishmentStatus::SETUP_TIMEOUT:
+                        WriteToTerminal(L"Timeout waiting for tunnel setup completion\n");
+                        break;
+                     default:
+                        WriteToTerminal(L"Cannot establish TLS tunnel with agent\n");
+                        break;
+                  }
+                  iExitCode = 2;
+               }
             }
             else
             {
-               WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
-               iExitCode = 2;
+               conn = make_shared<AgentConnection>(addr, agentPort, secret);
             }
+
+            if (conn != nullptr)
+            {
+               conn->setConnectionTimeout(dwConnTimeout);
+               conn->setCommandTimeout(dwTimeout);
+               conn->setEncryptionPolicy(iEncryptionPolicy);
+               if (useProxy)
+                  conn->setProxy(proxyAddr, proxyPort, proxySecret);
+               if (conn->connect(serverKey, &dwError))
+               {
+                  iExitCode = tool->executeCommandCb(conn.get(), tool->argc, wargv, optindW, serverKey);
+               }
+               else
+               {
+                  WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+                  iExitCode = 2;
+               }
+               conn.reset();
+            }
+            if (tunnel != nullptr)
+               tunnel->shutdown();
          }
       }
    }

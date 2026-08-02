@@ -4100,6 +4100,7 @@ public:
       return *this;
    }
 
+   using GenericId<HARDWARE_ID_LENGTH>::equals;
    bool equals(const NodeHardwareId &a) const { return GenericId<HARDWARE_ID_LENGTH>::equals(a); }
    bool equals(const BYTE *value) const { return GenericId<HARDWARE_ID_LENGTH>::equals(value, HARDWARE_ID_LENGTH); }
 

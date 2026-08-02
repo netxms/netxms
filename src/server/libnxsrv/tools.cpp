@@ -92,6 +92,7 @@ static struct
    { ERR_UNTRUSTED_PACKAGE, _T("Package is not trusted") },
    { ERR_DOWNGRADE_NOT_ALLOWED, _T("Package downgrade is not allowed") },
    { ERR_PROXY_CONNECT_FAILED, _T("Cannot connect to proxy agent") },
+   { ERR_TLS_REQUIRED, _T("TLS connection required") },
    { 0xFFFFFFFF, nullptr }
 };
 

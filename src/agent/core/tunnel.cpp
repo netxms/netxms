@@ -94,15 +94,11 @@ public:
 };
 
 /**
- * Tunnel class
+ * Tunnel base class - initiator-agnostic session core shared by outbound and inbound tunnels
  */
 class Tunnel
 {
-private:
-   TCHAR *m_hostname;
-   uint16_t m_port;
-   TCHAR *m_certificate;
-   char *m_pkeyPassword;
+protected:
    InetAddress m_address;
    SOCKET m_socket;
    SSL_CTX *m_context;
@@ -118,21 +114,57 @@ private:
    MsgWaitQueue *m_queue;
    SharedHashMap<uint32_t, TunnelCommChannel> m_channels;
    Mutex m_channelLock;
-   int m_tlsHandshakeFailures;
-   bool m_ignoreClientCertificate;
-   BYTE *m_fingerprint; // Server certificate fingerprint
+   int64_t m_lastMessageTime;
 
-   Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint);
+   Tunnel(const InetAddress& address);
 
-   bool connectToServer();
-   void processHandshakeError(int sslErr, bool certificateLoaded);
    int sslWrite(const void *data, size_t size);
    bool sendMessage(const NXCPMessage& msg);
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id) { return (m_queue != nullptr) ? m_queue->waitForMessage(code, id, REQUEST_TIMEOUT) : nullptr; }
 
-   void processBindRequest(NXCPMessage *request);
+   void prepareSetupMessage(NXCPMessage *msg, bool extProvCertificate);
    void processChannelCloseRequest(const NXCPMessage& request);
    void createSession(const NXCPMessage& request);
+   void closeAllChannels();
+
+   void recvThread();
+
+   virtual bool processCustomMessage(NXCPMessage *msg) = 0;  // returns true if message was consumed
+   virtual bool isIdleTimeoutReached() { return false; }
+
+public:
+   virtual ~Tunnel();
+
+   virtual void disconnect();
+   virtual const TCHAR *getDisplayName() const = 0;
+
+   shared_ptr<TunnelCommChannel> createChannel();
+   void closeChannel(TunnelCommChannel *channel);
+   ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
+
+   void debugPrintf(int level, const TCHAR *format, ...);
+};
+
+/**
+ * Outbound (agent to server) tunnel
+ */
+class OutboundTunnel : public Tunnel
+{
+private:
+   TCHAR *m_hostname;
+   uint16_t m_port;
+   TCHAR *m_certificate;
+   char *m_pkeyPassword;
+   int m_tlsHandshakeFailures;
+   bool m_ignoreClientCertificate;
+   BYTE *m_fingerprint; // Server certificate fingerprint
+
+   OutboundTunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint);
+
+   bool connectToServer();
+   void processHandshakeError(int sslErr, bool certificateLoaded);
+
+   void processBindRequest(NXCPMessage *request);
 
    X509_REQ *createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey);
    bool saveCertificate(X509 *cert, EVP_PKEY *key);
@@ -142,43 +174,90 @@ private:
    bool loadCertificateFromStoreWithPK();
    bool loadCertificateFromStoreWithEngine();
 
-   void recvThread();
    static THREAD_RESULT THREAD_CALL recvThreadStarter(void *arg);
 
    bool verifyServerCertificateFingerprint(STACK_OF(X509) * certChain);
 
+protected:
+   virtual bool processCustomMessage(NXCPMessage *msg) override;
+
 public:
-   ~Tunnel();
+   virtual ~OutboundTunnel();
 
    void checkConnection();
-   void disconnect();
 
-   shared_ptr<TunnelCommChannel> createChannel();
-   void closeChannel(TunnelCommChannel *channel);
-   ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
-
+   virtual const TCHAR *getDisplayName() const override { return m_hostname; }
    const TCHAR *getHostname() const { return m_hostname; }
 
-   void debugPrintf(int level, const TCHAR *format, ...);
-
-   static Tunnel *createFromConfig(const TCHAR *config);
-   static Tunnel *createFromConfig(const ConfigEntry& ce);
+   static OutboundTunnel *createFromConfig(const TCHAR *config);
+   static OutboundTunnel *createFromConfig(const ConfigEntry& ce);
 };
 
 /**
- * Tunnel constructor
+ * Inbound (server to agent) tunnel established over TLS connection accepted by agent's listener
  */
-Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint = nullptr)
-   : m_channelLock(MutexType::FAST)
+class InboundTunnel : public Tunnel
 {
-   m_hostname = MemCopyString(hostname);
-   m_port = port;
-   m_certificate = MemCopyString(certificate);
-#ifdef UNICODE
-   m_pkeyPassword = UTF8StringFromWideString(pkeyPassword);
-#else
-   m_pkeyPassword = MemCopyStringA(pkeyPassword);
-#endif
+private:
+   weak_ptr<InboundTunnel> m_self;
+   TCHAR m_displayName[64];
+
+   InboundTunnel(SOCKET socket, SSL *ssl, const InetAddress& peer);
+
+   void recvThreadWrapper();
+
+protected:
+   virtual bool processCustomMessage(NXCPMessage *msg) override;
+   virtual bool isIdleTimeoutReached() override;
+
+public:
+   virtual ~InboundTunnel() = default;
+
+   virtual void disconnect() override;
+   virtual const TCHAR *getDisplayName() const override { return m_displayName; }
+
+   shared_ptr<InboundTunnel> self() { return m_self.lock(); }
+
+   bool setup();
+
+   static shared_ptr<InboundTunnel> create(SOCKET socket, SSL *ssl, const InetAddress& peer);
+};
+
+/**
+ * Inbound tunnel registry
+ */
+static SharedObjectArray<InboundTunnel> s_inboundTunnels(0, 16);
+static Mutex s_inboundTunnelLock;
+
+/**
+ * Register inbound tunnel
+ */
+static void RegisterInboundTunnel(const shared_ptr<InboundTunnel>& tunnel)
+{
+   LockGuard lockGuard(s_inboundTunnelLock);
+   s_inboundTunnels.add(tunnel);
+}
+
+/**
+ * Unregister inbound tunnel
+ */
+static void UnregisterInboundTunnel(InboundTunnel *tunnel)
+{
+   LockGuard lockGuard(s_inboundTunnelLock);
+   for(int i = 0; i < s_inboundTunnels.size(); i++)
+      if (s_inboundTunnels.get(i) == tunnel)
+      {
+         s_inboundTunnels.remove(i);
+         break;
+      }
+}
+
+/**
+ * Tunnel base class constructor
+ */
+Tunnel::Tunnel(const InetAddress& address) : m_channelLock(MutexType::FAST)
+{
+   m_address = address;
    m_socket = INVALID_SOCKET;
    m_context = nullptr;
    m_ssl = nullptr;
@@ -188,13 +267,11 @@ Tunnel::Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, c
    m_requestId = 0;
    m_recvThread = INVALID_THREAD_HANDLE;
    m_queue = nullptr;
-   m_tlsHandshakeFailures = 0;
-   m_ignoreClientCertificate = false;
-   m_fingerprint = fingerprint == nullptr ? nullptr : MemCopyBlock(fingerprint, SHA256_DIGEST_SIZE);
+   m_lastMessageTime = 0;
 }
 
 /**
- * Tunnel destructor
+ * Tunnel base class destructor
  */
 Tunnel::~Tunnel()
 {
@@ -205,6 +282,33 @@ Tunnel::~Tunnel()
       SSL_free(m_ssl);
    if (m_context != nullptr)
       SSL_CTX_free(m_context);
+}
+
+/**
+ * Outbound tunnel constructor
+ */
+OutboundTunnel::OutboundTunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint = nullptr)
+   : Tunnel(InetAddress())
+{
+   m_hostname = MemCopyString(hostname);
+   m_port = port;
+   m_certificate = MemCopyString(certificate);
+#ifdef UNICODE
+   m_pkeyPassword = UTF8StringFromWideString(pkeyPassword);
+#else
+   m_pkeyPassword = MemCopyStringA(pkeyPassword);
+#endif
+   m_tlsHandshakeFailures = 0;
+   m_ignoreClientCertificate = false;
+   m_fingerprint = fingerprint == nullptr ? nullptr : MemCopyBlock(fingerprint, SHA256_DIGEST_SIZE);
+}
+
+/**
+ * Outbound tunnel destructor
+ */
+OutboundTunnel::~OutboundTunnel()
+{
+   disconnect();
    MemFree(m_hostname);
    MemFree(m_certificate);
    MemFree(m_pkeyPassword);
@@ -221,7 +325,7 @@ void Tunnel::debugPrintf(int level, const TCHAR *format, ...)
    TCHAR buffer[8192];
    _vsntprintf(buffer, 8192, format, args);
    va_end(args);
-   nxlog_debug_tag(DEBUG_TAG, level, _T("%s: %s"), m_hostname, buffer);
+   nxlog_debug_tag(DEBUG_TAG, level, _T("%s: %s"), getDisplayName(), buffer);
 }
 
 /**
@@ -238,6 +342,14 @@ void Tunnel::disconnect()
    delete_and_null(m_queue);
    m_stateLock.unlock();
 
+   closeAllChannels();
+}
+
+/**
+ * Close all channels
+ */
+void Tunnel::closeAllChannels()
+{
    SharedObjectArray<TunnelCommChannel> channels(g_maxCommSessions, 16);
    m_channelLock.lock();
    auto it = m_channels.begin();
@@ -252,15 +364,15 @@ void Tunnel::disconnect()
 /**
  * Receiver thread starter
  */
-THREAD_RESULT THREAD_CALL Tunnel::recvThreadStarter(void *arg)
+THREAD_RESULT THREAD_CALL OutboundTunnel::recvThreadStarter(void *arg)
 {
    char name[256];
 #ifdef UNICODE
-   snprintf(name, 256, "TunnelRecvThread/%S", static_cast<Tunnel*>(arg)->m_hostname);
+   snprintf(name, 256, "TunnelRecvThread/%S", static_cast<OutboundTunnel*>(arg)->m_hostname);
 #else
-   snprintf(name, 256, "TunnelRecvThread/%s", static_cast<Tunnel*>(arg)->m_hostname);
+   snprintf(name, 256, "TunnelRecvThread/%s", static_cast<OutboundTunnel*>(arg)->m_hostname);
 #endif
-   static_cast<Tunnel*>(arg)->recvThread();
+   static_cast<OutboundTunnel*>(arg)->recvThread();
    return THREAD_OK;
 }
 
@@ -276,6 +388,8 @@ void Tunnel::recvThread()
       NXCPMessage *msg = receiver.readMessage(1000, &result);
       if (msg != nullptr)
       {
+         m_lastMessageTime = GetMonotonicClockTime();
+
          if (nxlog_get_debug_level() >= 6)
          {
             TCHAR buffer[64];
@@ -292,10 +406,6 @@ void Tunnel::recvThread()
 
          switch(msg->getCode())
          {
-            case CMD_BIND_AGENT_TUNNEL:
-               ThreadPoolExecute(g_commThreadPool, this, &Tunnel::processBindRequest, msg);
-               msg = nullptr; // prevent message deletion
-               break;
             case CMD_CREATE_CHANNEL:
                createSession(*msg);
                break;
@@ -315,8 +425,9 @@ void Tunnel::recvThread()
                processChannelCloseRequest(*msg);
                break;
             default:
-               m_queue->put(msg);
-               msg = nullptr; // prevent message deletion
+               if (!processCustomMessage(msg))
+                  m_queue->put(msg);
+               msg = nullptr; // prevent message deletion (ownership transferred)
                break;
          }
          delete msg;
@@ -327,8 +438,25 @@ void Tunnel::recvThread()
          m_reset = true;
          break;
       }
+      else if (isIdleTimeoutReached())
+      {
+         debugPrintf(4, _T("Receiver thread stopped (connection idle timeout)"));
+         m_reset = true;
+         break;
+      }
    }
-   nxlog_report_event(61, NXLOG_WARNING, 1, _T("Tunnel with %s closed"), m_hostname);
+   nxlog_report_event(61, NXLOG_WARNING, 1, _T("Tunnel with %s closed"), getDisplayName());
+}
+
+/**
+ * Process tunnel messages specific to outbound tunnels
+ */
+bool OutboundTunnel::processCustomMessage(NXCPMessage *msg)
+{
+   if (msg->getCode() != CMD_BIND_AGENT_TUNNEL)
+      return false;
+   ThreadPoolExecute(g_commThreadPool, this, &OutboundTunnel::processBindRequest, msg);
+   return true;
 }
 
 /**
@@ -393,9 +521,66 @@ bool Tunnel::sendMessage(const NXCPMessage& msg)
 }
 
 /**
+ * Fill tunnel setup message with agent information
+ */
+void Tunnel::prepareSetupMessage(NXCPMessage *msg, bool extProvCertificate)
+{
+   msg->setField(VID_AGENT_VERSION, NETXMS_VERSION_STRING);
+   msg->setField(VID_AGENT_BUILD_TAG, NETXMS_BUILD_TAG);
+   msg->setField(VID_AGENT_ID, g_agentId);
+   msg->setField(VID_SYS_NAME, g_systemName);
+   msg->setField(VID_ZONE_UIN, g_zoneUIN);
+   msg->setField(VID_USERAGENT_INSTALLED, IsUserAgentInstalled());
+   msg->setField(VID_AGENT_PROXY, (g_dwFlags & AF_ENABLE_PROXY) ? true : false);
+   msg->setField(VID_SNMP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_PROXY) ? true : false);
+   msg->setField(VID_SNMP_TRAP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY) ? true : false);
+   msg->setField(VID_SYSLOG_PROXY, (g_dwFlags & AF_ENABLE_SYSLOG_PROXY) ? true : false);
+   msg->setField(VID_EXTPROV_CERTIFICATE, extProvCertificate);
+
+   BYTE hwid[HARDWARE_ID_LENGTH];
+   if (GetSystemHardwareId(hwid))
+      msg->setField(VID_HARDWARE_ID, hwid, sizeof(hwid));
+
+   char serial[256];
+   if (GetHardwareSerialNumber(serial, sizeof(serial)))
+      msg->setFieldFromMBString(VID_SERIAL_NUMBER, serial);
+
+   TCHAR fqdn[256];
+   if (GetLocalHostName(fqdn, 256, true))
+      msg->setField(VID_HOSTNAME, fqdn);
+
+   VirtualSession session(0);
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   if (GetMetricValue(_T("System.PlatformName"), buffer, &session) == ERR_SUCCESS)
+      msg->setField(VID_PLATFORM_NAME, buffer);
+   if (GetMetricValue(_T("System.OSPlatformName"), buffer, &session) == ERR_SUCCESS)
+      msg->setField(VID_OS_PLATFORM_NAME, buffer);
+   if (GetMetricValue(_T("System.UName"), buffer, &session) == ERR_SUCCESS)
+      msg->setField(VID_SYS_DESCRIPTION, buffer);
+
+   StringList ifList;
+   if (GetListValue(_T("Net.InterfaceList"), &ifList, &session) == ERR_SUCCESS)
+   {
+      HashSet<MacAddress> macAddressList;
+      for(int i = 0; i < ifList.size(); i++)
+      {
+         TCHAR buffer[MAX_RESULT_LENGTH];
+         ExtractWord(ifList.get(i), buffer, 3);
+         MacAddress macAddr = MacAddress::parse(buffer);
+         if (macAddr.isValid())
+            macAddressList.put(macAddr);
+      }
+      msg->setField(VID_MAC_ADDR_COUNT, macAddressList.size());
+      uint32_t fieldId = VID_MAC_ADDR_LIST_BASE;
+      for(const MacAddress *m : macAddressList)
+         msg->setField(fieldId++, *m);
+   }
+}
+
+/**
  * Load certificate for this tunnel from file
  */
-bool Tunnel::loadCertificate()
+bool OutboundTunnel::loadCertificate()
 {
    return ((m_certificate != nullptr) && (*m_certificate == _T('@'))) ? loadCertificateFromStore() : loadCertificateFromFile();
 }
@@ -403,7 +588,7 @@ bool Tunnel::loadCertificate()
 /**
  * Load certificate for this tunnel from file
  */
-bool Tunnel::loadCertificateFromFile()
+bool OutboundTunnel::loadCertificateFromFile()
 {
    debugPrintf(6, _T("Loading certificate from file"));
 
@@ -520,7 +705,7 @@ static Mutex s_mutexEngineLoad;
 /**
  * Load certificate for this tunnel from Windows store
  */
-bool Tunnel::loadCertificateFromStore()
+bool OutboundTunnel::loadCertificateFromStore()
 {
 #ifdef _WIN32
    debugPrintf(6, _T("Loading certificate from system certificate store"));
@@ -536,7 +721,7 @@ bool Tunnel::loadCertificateFromStore()
 /**
  * Load certificate for this tunnel from Windows store with private key
  */
-bool Tunnel::loadCertificateFromStoreWithPK()
+bool OutboundTunnel::loadCertificateFromStoreWithPK()
 {
 #if defined(_WIN32) && (_WIN32_WINNT >= 0x0600)   // CNG key export (ncrypt.dll) is Vista+
    HCERTSTORE hStore = CertOpenStore(CERT_STORE_PROV_SYSTEM_A, 0, 0,
@@ -680,7 +865,7 @@ bool Tunnel::loadCertificateFromStoreWithPK()
 /**
  * Load certificate for this tunnel from Windows store using crypto engine
  */
-bool Tunnel::loadCertificateFromStoreWithEngine()
+bool OutboundTunnel::loadCertificateFromStoreWithEngine()
 {
 #if defined(_WIN32) && (_WIN32_WINNT >= 0x0600)   // CNG OpenSSL engine (ncrypt.dll) is Vista+
    debugPrintf(6, _T("Fallback to OpenSSL engine for signing (will switch to TLS 1.1)"));
@@ -861,7 +1046,7 @@ static bool VerifyServerCertificate(X509 *cert)
 /**
  * Verify server certificate
  */
-bool Tunnel::verifyServerCertificateFingerprint(STACK_OF(X509) * chain)
+bool OutboundTunnel::verifyServerCertificateFingerprint(STACK_OF(X509) * chain)
 {
    bool valid = false;
    if (chain != nullptr)
@@ -884,7 +1069,7 @@ bool Tunnel::verifyServerCertificateFingerprint(STACK_OF(X509) * chain)
 /**
  * Process handshake error
  */
-void Tunnel::processHandshakeError(int sslErr, bool certificateLoaded)
+void OutboundTunnel::processHandshakeError(int sslErr, bool certificateLoaded)
 {
    char buffer[128];
    debugPrintf(4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
@@ -911,7 +1096,7 @@ void Tunnel::processHandshakeError(int sslErr, bool certificateLoaded)
 /**
  * Connect to server
  */
-bool Tunnel::connectToServer()
+bool OutboundTunnel::connectToServer()
 {
    m_stateLock.lock();
 
@@ -1107,7 +1292,7 @@ bool Tunnel::connectToServer()
    delete m_queue;
    m_queue = new MsgWaitQueue();
    m_connected = true;
-   m_recvThread = ThreadCreateEx(Tunnel::recvThreadStarter, 0, this);
+   m_recvThread = ThreadCreateEx(OutboundTunnel::recvThreadStarter, 0, this);
 
    m_stateLock.unlock();
 
@@ -1115,57 +1300,7 @@ bool Tunnel::connectToServer()
 
    // Do handshake
    NXCPMessage msg(CMD_SETUP_AGENT_TUNNEL, InterlockedIncrement(&m_requestId), 4);  // Use version 4 during setup
-   msg.setField(VID_AGENT_VERSION, NETXMS_VERSION_STRING);
-   msg.setField(VID_AGENT_BUILD_TAG, NETXMS_BUILD_TAG);
-   msg.setField(VID_AGENT_ID, g_agentId);
-   msg.setField(VID_SYS_NAME, g_systemName);
-   msg.setField(VID_ZONE_UIN, g_zoneUIN);
-   msg.setField(VID_USERAGENT_INSTALLED, IsUserAgentInstalled());
-   msg.setField(VID_AGENT_PROXY, (g_dwFlags & AF_ENABLE_PROXY) ? true : false);
-   msg.setField(VID_SNMP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_PROXY) ? true : false);
-   msg.setField(VID_SNMP_TRAP_PROXY, (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY) ? true : false);
-   msg.setField(VID_SYSLOG_PROXY, (g_dwFlags & AF_ENABLE_SYSLOG_PROXY) ? true : false);
-   msg.setField(VID_EXTPROV_CERTIFICATE, m_certificate != nullptr);
-
-   BYTE hwid[HARDWARE_ID_LENGTH];
-   if (GetSystemHardwareId(hwid))
-      msg.setField(VID_HARDWARE_ID, hwid, sizeof(hwid));
-
-   char serial[256];
-   if (GetHardwareSerialNumber(serial, sizeof(serial)))
-      msg.setFieldFromMBString(VID_SERIAL_NUMBER, serial);
-
-   TCHAR fqdn[256];
-   if (GetLocalHostName(fqdn, 256, true))
-      msg.setField(VID_HOSTNAME, fqdn);
-
-   VirtualSession session(0);
-   TCHAR buffer[MAX_RESULT_LENGTH];
-   if (GetMetricValue(_T("System.PlatformName"), buffer, &session) == ERR_SUCCESS)
-      msg.setField(VID_PLATFORM_NAME, buffer);
-   if (GetMetricValue(_T("System.OSPlatformName"), buffer, &session) == ERR_SUCCESS)
-      msg.setField(VID_OS_PLATFORM_NAME, buffer);
-   if (GetMetricValue(_T("System.UName"), buffer, &session) == ERR_SUCCESS)
-      msg.setField(VID_SYS_DESCRIPTION, buffer);
-
-   StringList ifList;
-   if (GetListValue(_T("Net.InterfaceList"), &ifList, &session) == ERR_SUCCESS)
-   {
-      HashSet<MacAddress> macAddressList;
-      for(int i = 0; i < ifList.size(); i++)
-      {
-         TCHAR buffer[MAX_RESULT_LENGTH];
-         ExtractWord(ifList.get(i), buffer, 3);
-         MacAddress macAddr = MacAddress::parse(buffer);
-         if (macAddr.isValid())
-            macAddressList.put(macAddr);
-      }
-      msg.setField(VID_MAC_ADDR_COUNT, macAddressList.size());
-      uint32_t fieldId = VID_MAC_ADDR_LIST_BASE;
-      for(const MacAddress *m : macAddressList)
-         msg.setField(fieldId++, *m);
-   }
-
+   prepareSetupMessage(&msg, m_certificate != nullptr);
    sendMessage(msg);
 
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
@@ -1199,7 +1334,7 @@ bool Tunnel::connectToServer()
 /**
  * Check tunnel connection and connect as needed
  */
-void Tunnel::checkConnection()
+void OutboundTunnel::checkConnection()
 {
    if (m_reset)
    {
@@ -1241,7 +1376,7 @@ void Tunnel::checkConnection()
 /**
  * Create certificate request
  */
-X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey)
+X509_REQ *OutboundTunnel::createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey)
 {
    RSA_KEY key = RSAGenerateKey(NETXMS_RSA_KEYLEN);
    if (key == nullptr)
@@ -1329,7 +1464,7 @@ static void BackupFileIfExist(const TCHAR *name)
 /**
  * Save certificate
  */
-bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
+bool OutboundTunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
 {
    BYTE addressHash[SHA1_DIGEST_SIZE];
 #ifdef UNICODE
@@ -1383,7 +1518,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
 /**
  * Process tunnel bind request
  */
-void Tunnel::processBindRequest(NXCPMessage *request)
+void OutboundTunnel::processBindRequest(NXCPMessage *request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId(), 4);
 
@@ -1585,7 +1720,7 @@ ssize_t Tunnel::sendChannelData(uint32_t id, const void *data, size_t len)
  * Create tunnel object from configuration record
  * Record format is address[:port][,certificate[%password]]
  */
-Tunnel *Tunnel::createFromConfig(const TCHAR *config)
+OutboundTunnel *OutboundTunnel::createFromConfig(const TCHAR *config)
 {
    StringBuffer sb(config);
 
@@ -1619,13 +1754,13 @@ Tunnel *Tunnel::createFromConfig(const TCHAR *config)
       if ((port < 1) || (port > 65535))
          return nullptr;
    }
-   return new Tunnel(sb.cstr(), port, certificate, password);
+   return new OutboundTunnel(sb.cstr(), port, certificate, password);
 }
 
 /**
  * Create tunnel object from ConfigEntry
  */
-Tunnel *Tunnel::createFromConfig(const ConfigEntry& ce)
+OutboundTunnel *OutboundTunnel::createFromConfig(const ConfigEntry& ce)
 {
    const TCHAR *hostname = ce.getSubEntryValue(_T("Hostname"), 0, nullptr);
    if (hostname == nullptr)
@@ -1658,12 +1793,432 @@ Tunnel *Tunnel::createFromConfig(const ConfigEntry& ce)
 
    StringBuffer fingerprintString = ce.getSubEntryValue(_T("ServerCertificateFingerprint"), 0, nullptr);
    if (fingerprintString.isEmpty())
-      return new Tunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password);
+      return new OutboundTunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password);
 
    fingerprintString.replace(_T(":"), _T(""));
    BYTE fingerprint[SHA256_DIGEST_SIZE];
    StrToBin(fingerprintString, fingerprint, SHA256_DIGEST_SIZE);
-   return new Tunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password, fingerprint);
+   return new OutboundTunnel(hostname, port, (certificate[0] != 0) ? certificate : nullptr, password, fingerprint);
+}
+
+/**
+ * Inbound tunnel constructor
+ */
+InboundTunnel::InboundTunnel(SOCKET socket, SSL *ssl, const InetAddress& peer) : Tunnel(peer)
+{
+   m_socket = socket;
+   m_ssl = ssl;
+   peer.toString(m_displayName);
+}
+
+/**
+ * Create inbound tunnel object
+ */
+shared_ptr<InboundTunnel> InboundTunnel::create(SOCKET socket, SSL *ssl, const InetAddress& peer)
+{
+   auto tunnel = shared_ptr<InboundTunnel>(new InboundTunnel(socket, ssl, peer));
+   tunnel->m_self = tunnel;
+   RegisterInboundTunnel(tunnel);
+   return tunnel;
+}
+
+/**
+ * Disconnect inbound tunnel. Remaining cleanup is done by receiver thread on exit.
+ */
+void InboundTunnel::disconnect()
+{
+   m_stateLock.lock();
+   if (m_socket != INVALID_SOCKET)
+      shutdown(m_socket, SHUT_RDWR);
+   m_connected = false;
+   m_stateLock.unlock();
+}
+
+/**
+ * Process tunnel messages specific to inbound tunnels
+ */
+bool InboundTunnel::processCustomMessage(NXCPMessage *msg)
+{
+   if (msg->getCode() != CMD_KEEPALIVE)
+      return false;
+   NXCPMessage response(CMD_KEEPALIVE, msg->getId(), 4);
+   sendMessage(response);
+   delete msg;
+   return true;
+}
+
+/**
+ * Check if inbound connection is idle for too long
+ */
+bool InboundTunnel::isIdleTimeoutReached()
+{
+   return GetMonotonicClockTime() - m_lastMessageTime > static_cast<int64_t>(g_dwIdleTimeout) * 1000;
+}
+
+/**
+ * Receiver thread wrapper for inbound tunnel
+ */
+void InboundTunnel::recvThreadWrapper()
+{
+   recvThread();
+   m_connected = false;
+   closeAllChannels();
+   UnregisterInboundTunnel(this);
+}
+
+/**
+ * Setup inbound tunnel after TLS session establishment
+ */
+bool InboundTunnel::setup()
+{
+   m_queue = new MsgWaitQueue();
+   m_connected = true;
+   m_lastMessageTime = GetMonotonicClockTime();
+   ThreadCreate(self(), &InboundTunnel::recvThreadWrapper);
+
+   NXCPMessage msg(CMD_SETUP_AGENT_TUNNEL, InterlockedIncrement(&m_requestId), 4);  // Use version 4 during setup
+   prepareSetupMessage(&msg, false);
+   if (!sendMessage(msg))
+   {
+      debugPrintf(4, _T("Cannot send tunnel setup request"));
+      disconnect();
+      return false;
+   }
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+   if (response == nullptr)
+   {
+      debugPrintf(4, _T("Cannot configure tunnel (request timeout)"));
+      disconnect();
+      return false;
+   }
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   delete response;
+   if (rcc != ERR_SUCCESS)
+   {
+      debugPrintf(4, _T("Cannot configure tunnel (error %d)"), rcc);
+      disconnect();
+      return false;
+   }
+
+   nxlog_report_event(60, NXLOG_INFO, 1, _T("Tunnel with %s established"), m_displayName);
+   return true;
+}
+
+/**
+ * Generate self-signed certificate for agent's TLS listener
+ */
+static bool GenerateListenerCertificate(X509 **pcert, EVP_PKEY **pkey)
+{
+   RSA_KEY rsaKey = RSAGenerateKey(NETXMS_RSA_KEYLEN);
+   if (rsaKey == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GenerateListenerCertificate: call to RSAGenerateKey() failed"));
+      return false;
+   }
+
+   EVP_PKEY *key = EVP_PKEY_from_RSA_KEY(rsaKey);
+   if (key == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GenerateListenerCertificate: call to EVP_PKEY_from_RSA_KEY() failed"));
+      RSAFree(rsaKey);
+      return false;
+   }
+
+   X509 *cert = X509_new();
+   if (cert == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GenerateListenerCertificate: call to X509_new() failed"));
+      EVP_PKEY_free(key);
+      return false;
+   }
+
+   bool success = false;
+   X509_set_version(cert, 2);
+
+   BYTE serialBytes[8];
+   GenerateRandomBytes(serialBytes, sizeof(serialBytes));
+   serialBytes[0] &= 0x7F;   // Serial number must be positive
+   BIGNUM *serial = BN_bin2bn(serialBytes, sizeof(serialBytes), nullptr);
+   if (serial != nullptr)
+   {
+      BN_to_ASN1_INTEGER(serial, X509_get_serialNumber(cert));
+      BN_free(serial);
+
+      X509_gmtime_adj(X509_get_notBefore(cert), -86400);  // one day back to compensate possible clock skew
+      X509_gmtime_adj(X509_get_notAfter(cert), 3650 * 86400);
+
+      char cn[64];
+      g_agentId.toStringA(cn);
+      X509_NAME *subject = X509_get_subject_name(cert);
+      if ((X509_NAME_add_entry_by_txt(subject, "O", MBSTRING_UTF8, (const BYTE *)"netxms.org", -1, -1, 0) != 0) &&
+          (X509_NAME_add_entry_by_txt(subject, "CN", MBSTRING_UTF8, (const BYTE *)cn, -1, -1, 0) != 0) &&
+          (X509_set_issuer_name(cert, subject) != 0) &&
+          (X509_set_pubkey(cert, key) != 0))
+      {
+         if (X509_sign(cert, key, EVP_sha256()) > 0)
+         {
+            *pcert = cert;
+            *pkey = key;
+            success = true;
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("GenerateListenerCertificate: call to X509_sign() failed"));
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("GenerateListenerCertificate: cannot set certificate attributes"));
+      }
+   }
+
+   if (!success)
+   {
+      X509_free(cert);
+      EVP_PKEY_free(key);
+   }
+   return success;
+}
+
+/**
+ * Save listener certificate and key. Failure to save is not fatal but will cause certificate
+ * fingerprint change on agent restart.
+ */
+static void SaveListenerCertificate(X509 *cert, EVP_PKEY *key)
+{
+   TCHAR name[MAX_PATH];
+   _sntprintf(name, MAX_PATH, _T("%slistener.crt"), g_certificateDirectory);
+   FILE *f = _tfopen(name, _T("w"));
+   if (f != nullptr)
+   {
+      int rc = PEM_write_X509(f, cert);
+      fclose(f);
+      if (rc == 1)
+      {
+         _sntprintf(name, MAX_PATH, _T("%slistener.key"), g_certificateDirectory);
+         f = _tfopen(name, _T("w"));
+         if (f != nullptr)
+         {
+            rc = PEM_write_PrivateKey(f, key, EVP_aes_256_cbc(), nullptr, 0, 0, (void *)"nxagentd");
+            fclose(f);
+            if (rc == 1)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("TLS listener certificate and private key saved"));
+               return;
+            }
+         }
+      }
+   }
+   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot save TLS listener certificate to file \"%s\" (certificate fingerprint will change on agent restart)"), name);
+}
+
+/**
+ * Load listener certificate and key from files
+ */
+static bool LoadListenerCertificate(X509 **pcert, EVP_PKEY **pkey)
+{
+   TCHAR name[MAX_PATH];
+   _sntprintf(name, MAX_PATH, _T("%slistener.crt"), g_certificateDirectory);
+   FILE *f = _tfopen(name, _T("r"));
+   if (f == nullptr)
+      return false;
+   X509 *cert = PEM_read_X509(f, nullptr, nullptr, nullptr);
+   fclose(f);
+   if (cert == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot load TLS listener certificate from file \"%s\""), name);
+      return false;
+   }
+
+   _sntprintf(name, MAX_PATH, _T("%slistener.key"), g_certificateDirectory);
+   f = _tfopen(name, _T("r"));
+   if (f == nullptr)
+   {
+      X509_free(cert);
+      return false;
+   }
+   EVP_PKEY *key = PEM_read_PrivateKey(f, nullptr, nullptr, (void *)"nxagentd");
+   fclose(f);
+   if (key == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot load TLS listener private key from file \"%s\""), name);
+      X509_free(cert);
+      return false;
+   }
+
+   *pcert = cert;
+   *pkey = key;
+   return true;
+}
+
+/**
+ * Verification callback for accepting any certificate provided by connecting server
+ * (verification against trusted roots is done after handshake completion)
+ */
+static int AcceptAllCertificatesCallback(int preverify, X509_STORE_CTX *ctx)
+{
+   return 1;
+}
+
+/**
+ * TLS context for inbound tunnels (created on first use)
+ */
+static SSL_CTX *s_listenerContext = nullptr;
+static Mutex s_listenerContextLock;
+
+/**
+ * Get TLS context for inbound tunnels
+ */
+static SSL_CTX *GetListenerSslContext()
+{
+   LockGuard lockGuard(s_listenerContextLock);
+   if (s_listenerContext != nullptr)
+      return s_listenerContext;
+
+   X509 *cert = nullptr;
+   EVP_PKEY *key = nullptr;
+   if (!LoadListenerCertificate(&cert, &key))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Generating new TLS listener certificate"));
+      if (!GenerateListenerCertificate(&cert, &key))
+         return nullptr;
+      SaveListenerCertificate(cert, key);
+   }
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   const SSL_METHOD *method = TLS_method();
+#else
+   const SSL_METHOD *method = SSLv23_method();
+#endif
+   SSL_CTX *context = (method != nullptr) ? SSL_CTX_new((SSL_METHOD *)method) : nullptr;
+   if (context != nullptr)
+   {
+      if (g_dwFlags & AF_ENABLE_SSL_TRACE)
+      {
+         SSL_CTX_set_info_callback(context, SSLInfoCallback);
+      }
+#ifdef SSL_OP_NO_COMPRESSION
+      SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
+#else
+      SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+#endif
+      if ((SSL_CTX_use_certificate(context, cert) == 1) && (SSL_CTX_use_PrivateKey(context, key) == 1))
+      {
+         if (g_dwFlags & AF_CHECK_SERVER_CERTIFICATE)
+            SSL_CTX_set_verify(context, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, AcceptAllCertificatesCallback);
+         s_listenerContext = context;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot setup certificate on TLS listener context"));
+         SSL_CTX_free(context);
+      }
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create TLS listener context"));
+   }
+
+   X509_free(cert);
+   EVP_PKEY_free(key);
+   return s_listenerContext;
+}
+
+/**
+ * Setup inbound tunnel on incoming TLS connection (called from listener's connection processor)
+ */
+void SetupInboundTunnel(SOCKET s, const InetAddress& peer)
+{
+   TCHAR peerName[64];
+   peer.toString(peerName);
+
+   SSL_CTX *context = GetListenerSslContext();
+   if (context == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot accept inbound tunnel from %s (TLS context not available)"), peerName);
+      shutdown(s, SHUT_RDWR);
+      closesocket(s);
+      return;
+   }
+
+   SSL *ssl = SSL_new(context);
+   if (ssl == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot accept inbound tunnel from %s (cannot create SSL object)"), peerName);
+      shutdown(s, SHUT_RDWR);
+      closesocket(s);
+      return;
+   }
+
+   SSL_set_accept_state(ssl);
+   SSL_set_fd(ssl, (int)s);
+
+   bool success = false;
+   while(true)
+   {
+      int rc = SSL_do_handshake(ssl);
+      if (rc == 1)
+      {
+         success = true;
+         break;
+      }
+      int sslErr = SSL_get_error(ssl, rc);
+      if ((sslErr == SSL_ERROR_WANT_READ) || (sslErr == SSL_ERROR_WANT_WRITE))
+      {
+         SocketPoller poller(sslErr == SSL_ERROR_WANT_WRITE);
+         poller.add(s);
+         if (poller.poll(REQUEST_TIMEOUT) > 0)
+            continue;
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("TLS handshake with %s failed (timeout)"), peerName);
+      }
+      else
+      {
+         char buffer[128];
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("TLS handshake with %s failed (%hs)"), peerName, ERR_error_string(sslErr, buffer));
+         unsigned long error;
+         while((error = ERR_get_error()) != 0)
+         {
+            ERR_error_string_n(error, buffer, sizeof(buffer));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Caused by: %hs"), buffer);
+         }
+      }
+      break;
+   }
+
+   if (success && (g_dwFlags & AF_CHECK_SERVER_CERTIFICATE))
+   {
+      success = false;
+      X509 *cert = SSL_get_peer_certificate(ssl);
+      if (cert != nullptr)
+      {
+         String subject = GetCertificateSubjectString(cert);
+         String issuer = GetCertificateIssuerString(cert);
+         bool valid = VerifyServerCertificate(cert);
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Certificate \"%s\" for issuer %s - verification %s"), subject.cstr(), issuer.cstr(), valid ? _T("successful") : _T("failed"));
+         X509_free(cert);
+         success = valid;
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Server at %s did not provide certificate"), peerName);
+      }
+   }
+
+   if (!success)
+   {
+      SSL_free(ssl);
+      shutdown(s, SHUT_RDWR);
+      closesocket(s);
+      return;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("TLS handshake with %s completed"), peerName);
+
+   shared_ptr<InboundTunnel> tunnel = InboundTunnel::create(s, ssl, peer);
+   if (tunnel->setup())
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Inbound tunnel from %s is active"), peerName);
 }
 
 /**
@@ -1893,7 +2448,7 @@ void TunnelCommChannel::putData(const BYTE *data, size_t size)
 /**
  * Configured tunnels
  */
-static ObjectArray<Tunnel> s_tunnels(0, 8, Ownership::True);
+static ObjectArray<OutboundTunnel> s_tunnels(0, 8, Ownership::True);
 
 #endif	/* _WITH_ENCRYPTION */
 
@@ -1907,7 +2462,7 @@ void ParseTunnelList(const StringSet& tunnels)
    while(it.hasNext())
    {
       const TCHAR *config = it.next();
-      Tunnel *t = Tunnel::createFromConfig(config);
+      OutboundTunnel *t = OutboundTunnel::createFromConfig(config);
       if (t != nullptr)
       {
          s_tunnels.add(t);
@@ -1929,7 +2484,7 @@ void ParseTunnelList(const ObjectArray<ConfigEntry>& config)
 #ifdef _WITH_ENCRYPTION
    for (ConfigEntry *ce : config)
    {
-      Tunnel *t = Tunnel::createFromConfig(*ce);
+      OutboundTunnel *t = OutboundTunnel::createFromConfig(*ce);
       if (t != nullptr)
       {
          s_tunnels.add(t);
@@ -1940,6 +2495,23 @@ void ParseTunnelList(const ObjectArray<ConfigEntry>& config)
          nxlog_write(NXLOG_ERROR, _T("Invalid server connection configuration record \"%s\""), ce->getName());
       }
    }
+#endif
+}
+
+/**
+ * Close all inbound tunnels
+ */
+void CloseInboundTunnels()
+{
+#ifdef _WITH_ENCRYPTION
+   s_inboundTunnelLock.lock();
+   SharedObjectArray<InboundTunnel> tunnels(s_inboundTunnels.size(), 16);
+   for(int i = 0; i < s_inboundTunnels.size(); i++)
+      tunnels.add(s_inboundTunnels.getShared(i));
+   s_inboundTunnelLock.unlock();
+
+   for(int i = 0; i < tunnels.size(); i++)
+      tunnels.get(i)->disconnect();
 #endif
 }
 
@@ -1961,7 +2533,7 @@ void TunnelManager()
    {
       for(int i = 0; i < s_tunnels.size(); i++)
       {
-         Tunnel *t = s_tunnels.get(i);
+         OutboundTunnel *t = s_tunnels.get(i);
          t->checkConnection();
       }
    }

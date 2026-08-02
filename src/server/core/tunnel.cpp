@@ -21,10 +21,8 @@
 
 #include "nxcore.h"
 #include <socket_listener.h>
-#include <agent_tunnel.h>
+#include <nxcore_agent_tunnel.h>
 #include <nms_users.h>
-
-#define MAX_MSG_SIZE    268435456
 
 #define REQUEST_TIMEOUT 10000
 
@@ -39,9 +37,9 @@ static Mutex s_certificateMappingsLock;
 /**
  * Tunnel registration
  */
-static SharedHashMap<uint32_t, AgentTunnel> s_tunnels;   // All tunnels indexed by tunnel ID
-static SharedHashMap<uint32_t, AgentTunnel> s_boundTunnels;
-static SharedObjectArray<AgentTunnel> s_unboundTunnels(16, 16);
+static SharedHashMap<uint32_t, InboundAgentTunnel> s_tunnels;   // All tunnels indexed by tunnel ID
+static SharedHashMap<uint32_t, InboundAgentTunnel> s_boundTunnels;
+static SharedObjectArray<InboundAgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock(MutexType::FAST);
 static VolatileCounter s_activeSetupCalls = 0;  // Number of tunnel setup calls currently running
 
@@ -85,7 +83,7 @@ static void ExecuteTunnelHookScript(const shared_ptr<AgentTunnel>& tunnel)
 /**
  * Register tunnel
  */
-static void RegisterTunnel(const shared_ptr<AgentTunnel>& tunnel)
+static void RegisterTunnel(const shared_ptr<InboundAgentTunnel>& tunnel)
 {
    s_tunnelListLock.lock();
    s_tunnels.set(tunnel->getId(), tunnel);
@@ -104,7 +102,7 @@ static void RegisterTunnel(const shared_ptr<AgentTunnel>& tunnel)
 /**
  * Unregister tunnel
  */
-static void UnregisterTunnel(AgentTunnel *tunnel)
+static void UnregisterTunnel(InboundAgentTunnel *tunnel)
 {
    tunnel->debugPrintf(4, _T("Tunnel unregistered"));
    s_tunnelListLock.lock();
@@ -124,7 +122,7 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
       // Check that current tunnel for node is tunnel being unregistered
       // New tunnel could be established while old one still finishing
       // outstanding requests
-      AgentTunnel *registeredTunnel = s_boundTunnels.get(tunnel->getNodeId());
+      InboundAgentTunnel *registeredTunnel = s_boundTunnels.get(tunnel->getNodeId());
       if ((registeredTunnel != nullptr) && (registeredTunnel->getId() == tunnel->getId()))
          s_boundTunnels.remove(tunnel->getNodeId());
    }
@@ -158,7 +156,7 @@ shared_ptr<AgentTunnel> GetTunnelForNode(uint32_t nodeId)
  */
 uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId)
 {
-   shared_ptr<AgentTunnel> tunnel;
+   shared_ptr<InboundAgentTunnel> tunnel;
    s_tunnelListLock.lock();
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
@@ -263,7 +261,7 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
             _T(" ID  | Node ID | EP  | Chan. | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
             _T("-----+---------+-----+-------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
-   for(const shared_ptr<AgentTunnel>& t : s_boundTunnels)
+   for(const shared_ptr<InboundAgentTunnel>& t : s_boundTunnels)
    {
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %7u | %-3s | %5d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
@@ -275,7 +273,7 @@ void ShowAgentTunnels(CONSOLE_CTX console)
             _T("\n\x1b[1mUNBOUND TUNNELS\x1b[0m\n")
             _T(" ID  | EP  | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
             _T("-----+-----+--------------------------+--------------------------+--------------------------+------------------+---------------+------------------------------------\n"));
-   for(const shared_ptr<AgentTunnel>& t : s_unboundTunnels)
+   for(const shared_ptr<InboundAgentTunnel>& t : s_unboundTunnels)
    {
       TCHAR ipAddrBuffer[64];
       ConsolePrintf(console, _T("%4d | %-3s | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->isExtProvCertificate() ? _T("YES") : _T("NO"),
@@ -288,161 +286,38 @@ void ShowAgentTunnels(CONSOLE_CTX console)
 /**
  * Create shared tunnel object
  */
-shared_ptr<AgentTunnel> AgentTunnel::create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
+shared_ptr<InboundAgentTunnel> InboundAgentTunnel::create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
          int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
          time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller)
 {
-   shared_ptr<AgentTunnel> tunnel = make_shared<AgentTunnel>(context, ssl, sock, addr, nodeId, zoneUIN, certificateSubject,
+   shared_ptr<InboundAgentTunnel> tunnel = make_shared<InboundAgentTunnel>(context, ssl, sock, addr, nodeId, zoneUIN, certificateSubject,
             certificateIssuer, certificateExpirationTime, certificateIssueTime, socketPoller);
    tunnel->m_self = tunnel;
    return tunnel;
 }
 
 /**
- * Next free tunnel ID
+ * Inbound agent tunnel constructor
  */
-static VolatileCounter s_nextTunnelId = 0;
-
-/**
- * Agent tunnel constructor
- */
-AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
+InboundAgentTunnel::InboundAgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
          uint32_t nodeId, int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer,
-         time_t certificateExpirationTime, time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller) : m_channelLock(MutexType::FAST)
+         time_t certificateExpirationTime, time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller)
+         : AgentTunnel(context, ssl, sock, addr, nodeId, zoneUIN, socketPoller)
 {
-   m_id = InterlockedIncrement(&s_nextTunnelId);
-   m_address = addr;
-   m_socket = sock;
-   m_socketPoller = socketPoller;
-   m_messageReceiver = nullptr;
-   _sntprintf(m_threadPoolKey, 12, _T("TN%u"), m_id);
-   m_context = context;
-   m_ssl = ssl;
-   m_requestId = 0;
-   m_nodeId = nodeId;
-   m_zoneUIN = zoneUIN;
    m_certificateSubject = MemCopyString(certificateSubject);
    m_certificateIssuer = MemCopyString(certificateIssuer);
    m_certificateExpirationTime = certificateExpirationTime;
    m_certificateIssueTime = certificateIssueTime;
-   m_state = AGENT_TUNNEL_INIT;
-   m_serialNumber = nullptr;
-   m_systemName = nullptr;
-   m_platformName = nullptr;
-   m_systemInfo = nullptr;
-   m_agentVersion = nullptr;
-   m_agentBuildTag = nullptr;
    m_bindRequestId = 0;
    m_bindUserId = 0;
-   m_hostname[0] = 0;
-   m_startTime = time(nullptr);
-   m_userAgentInstalled = false;
-   m_agentProxy = false;
-   m_snmpProxy = false;
-   m_snmpTrapProxy = false;
-   m_syslogProxy = false;
-   m_extProvCertificate = false;
    m_resetPending = false;
+   setCommandTimeout(g_agentCommandTimeout);
 }
 
 /**
- * Agent tunnel destructor
+ * Process tunnel messages specific to inbound tunnels
  */
-AgentTunnel::~AgentTunnel()
-{
-   shutdown();
-   SSL_CTX_free(m_context);
-   SSL_free(m_ssl);
-   closesocket(m_socket);
-   MemFree(m_serialNumber);
-   MemFree(m_systemName);
-   MemFree(m_platformName);
-   MemFree(m_systemInfo);
-   MemFree(m_agentVersion);
-   MemFree(m_agentBuildTag);
-   MemFree(m_certificateIssuer);
-   MemFree(m_certificateSubject);
-   delete m_messageReceiver;
-   InterlockedDecrement(&m_socketPoller->usageCount);
-   debugPrintf(4, _T("Tunnel destroyed"));
-}
-
-/**
- * Debug output
- */
-void AgentTunnel::debugPrintf(int level, const TCHAR *format, ...)
-{
-   va_list args;
-   va_start(args, format);
-   nxlog_debug_tag_object2(DEBUG_TAG, m_id, level, format, args);
-   va_end(args);
-}
-
-/**
- * Read data from socket
- */
-bool AgentTunnel::readSocket()
-{
-   MessageReceiverResult result = readMessage(true);
-   while(result == MSGRECV_SUCCESS)
-      result = readMessage(false);
-   return (result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE);
-}
-
-/**
- * Read single message from socket
- */
-MessageReceiverResult AgentTunnel::readMessage(bool allowSocketRead)
-{
-   MessageReceiverResult result;
-   NXCPMessage *msg = m_messageReceiver->readMessage(0, &result, allowSocketRead);
-   if ((result == MSGRECV_WANT_READ) || (result == MSGRECV_WANT_WRITE))
-      return result;
-
-   if (result != MSGRECV_SUCCESS)
-   {
-      if (result == MSGRECV_CLOSED)
-         debugPrintf(4, L"Tunnel closed by peer");
-      else
-         debugPrintf(4, L"Communication error (%s)", AbstractMessageReceiver::resultToText(result));
-      return result;
-   }
-
-   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
-   {
-      wchar_t buffer[64];
-      debugPrintf(6, L"Received message %s (%u)", NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
-   }
-
-   if (msg->getCode() == CMD_CHANNEL_DATA)
-   {
-      if (msg->isBinary())
-      {
-         m_channelLock.lock();
-         shared_ptr<AgentTunnelCommChannel> channel = m_channels.getShared(msg->getId());
-         m_channelLock.unlock();
-         if (channel != nullptr)
-         {
-            channel->putData(msg->getBinaryData(), msg->getBinaryDataSize());
-         }
-         else
-         {
-            debugPrintf(6, _T("Received channel data for non-existing channel %u"), msg->getId());
-         }
-      }
-      delete msg;
-   }
-   else
-   {
-      ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, m_threadPoolKey, self(), &AgentTunnel::processMessage, msg);
-   }
-   return MSGRECV_SUCCESS;
-}
-
-/**
- * Process incoming message
- */
-void AgentTunnel::processMessage(NXCPMessage *msg)
+bool InboundAgentTunnel::processCustomMessage(NXCPMessage *msg)
 {
    switch(msg->getCode())
    {
@@ -451,150 +326,28 @@ void AgentTunnel::processMessage(NXCPMessage *msg)
             NXCPMessage response(CMD_KEEPALIVE, msg->getId());
             sendMessage(response);
          }
-         break;
-      case CMD_SETUP_AGENT_TUNNEL:
-         setup(msg);
-         break;
+         delete msg;
+         return true;
       case CMD_REQUEST_CERTIFICATE:
          processCertificateRequest(msg);
-         break;
-      case CMD_CLOSE_CHANNEL:    // channel close notification
-         processChannelClose(msg->getFieldAsUInt32(VID_CHANNEL_ID));
-         break;
-      default:
-         m_queue.put(msg);
-         msg = nullptr; // prevent message deletion
-         break;
+         delete msg;
+         return true;
    }
-   delete msg;
+   return false;
 }
 
 /**
- * Finalize tunnel closure
+ * Close handler for inbound tunnels
  */
-void AgentTunnel::finalize()
+void InboundAgentTunnel::onTunnelClose()
 {
-   m_state = AGENT_TUNNEL_SHUTDOWN;
    UnregisterTunnel(this);
-
-   // shutdown all channels
-   m_channelLock.lock();
-   auto it = m_channels.begin();
-   while(it.hasNext())
-   {
-      AgentTunnelCommChannel *channel = it.next().get();
-      channel->shutdown();
-      channel->detach();
-   }
-   m_channels.clear();
-   m_channelLock.unlock();
-
-   debugPrintf(4, _T("Tunnel closure completed"));
-}
-
-/**
- * Socket poller callback
- */
-void AgentTunnel::socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, AgentTunnel *tunnel)
-{
-   if (pollResult == BackgroundSocketPollResult::SUCCESS)
-   {
-      if (tunnel->readSocket())
-      {
-         tunnel->m_socketPoller->poller.poll(hSocket, 60000, socketPollerCallback, tunnel);
-         return;
-      }
-   }
-   else
-   {
-      tunnel->debugPrintf(5, _T("Socket poll error (%d)"), static_cast<int>(pollResult));
-   }
-   ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, tunnel->m_threadPoolKey, tunnel->self(), &AgentTunnel::finalize);
-}
-
-/**
- * Write to SSL
- */
-int AgentTunnel::sslWrite(const void *data, size_t size)
-{
-   bool canRetry;
-   int bytes;
-   m_writeLock.lock();
-   do
-   {
-      canRetry = false;
-      m_sslLock.lock();
-      bytes = SSL_write(m_ssl, data, (int)size);
-      if (bytes <= 0)
-      {
-         int err = SSL_get_error(m_ssl, bytes);
-         if ((err == SSL_ERROR_WANT_READ) || (err == SSL_ERROR_WANT_WRITE))
-         {
-            m_sslLock.unlock();
-            SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
-            sp.add(m_socket);
-            if (sp.poll(REQUEST_TIMEOUT) > 0)
-               canRetry = true;
-            m_sslLock.lock();
-         }
-         else
-         {
-            debugPrintf(7, _T("SSL_write error (bytes=%d ssl_err=%d socket_err=%d)"), bytes, err, WSAGetLastError());
-            if (err == SSL_ERROR_SSL)
-               LogOpenSSLErrorStack(7);
-         }
-      }
-      m_sslLock.unlock();
-   }
-   while(canRetry);
-   m_writeLock.unlock();
-   return bytes;
-}
-
-/**
- * Send message on tunnel
- */
-bool AgentTunnel::sendMessage(const NXCPMessage& msg)
-{
-   if (m_state == AGENT_TUNNEL_SHUTDOWN)
-      return false;
-
-   if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
-   {
-      TCHAR buffer[64];
-      debugPrintf(6, _T("Sending message %s (%u)"), NXCPMessageCodeName(msg.getCode(), buffer), msg.getId());
-   }
-   NXCP_MESSAGE *data = msg.serialize(true);
-   bool success = (sslWrite(data, ntohl(data->size)) == static_cast<int>(ntohl(data->size)));
-   MemFree(data);
-   return success;
-}
-
-/**
- * Start tunnel
- */
-void AgentTunnel::start()
-{
-   debugPrintf(4, _T("Tunnel started"));
-   m_messageReceiver = new TlsMessageReceiver(m_socket, m_ssl, &m_sslLock, 4096, MAX_MSG_SIZE);
-   m_socketPoller->poller.poll(m_socket, 60000, socketPollerCallback, this);
-}
-
-/**
- * Shutdown tunnel
- */
-void AgentTunnel::shutdown()
-{
-   if (m_socket != INVALID_SOCKET)
-      ::shutdown(m_socket, SHUT_RDWR);
-   m_state = AGENT_TUNNEL_SHUTDOWN;
-   debugPrintf(4, _T("Tunnel shutdown"));
 }
 
 /**
  * Background certificate renewal
  */
-static void BackgroundRenewCertificate(const shared_ptr<AgentTunnel>& tunnel)
+static void BackgroundRenewCertificate(const shared_ptr<InboundAgentTunnel>& tunnel)
 {
    uint32_t rcc = tunnel->renewCertificate();
    if (rcc == RCC_SUCCESS)
@@ -606,162 +359,76 @@ static void BackgroundRenewCertificate(const shared_ptr<AgentTunnel>& tunnel)
 }
 
 /**
- * Process setup request
+ * Setup completion handler for inbound tunnels
  */
-void AgentTunnel::setup(const NXCPMessage *request)
+void InboundAgentTunnel::onSetupComplete()
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
+   ExecuteTunnelHookScript(self());
 
-   if (m_state == AGENT_TUNNEL_INIT)
+   auto msg = new NXCPMessage(CMD_AGENT_TUNNEL_UPDATE, 0);
+   fillMessage(msg, VID_ELEMENT_LIST_BASE);
+   msg->setField(VID_NOTIFICATION_CODE, NX_NOTIFY_AGENT_TUNNEL_OPEN);
+   ThreadPoolExecute(g_clientThreadPool,
+      [msg] () -> void
+      {
+         NotifyClientSessions(*msg, NXC_CHANNEL_AGENT_TUNNELS);
+         delete msg;
+      });
+
+   if (m_state == AGENT_TUNNEL_BOUND)
    {
-      m_systemName = request->getFieldAsString(VID_SYS_NAME);
-      m_systemInfo = request->getFieldAsString(VID_SYS_DESCRIPTION);
-      m_platformName = request->getFieldAsString(VID_PLATFORM_NAME);
-      m_agentId = request->getFieldAsGUID(VID_AGENT_ID);
-      m_userAgentInstalled = request->getFieldAsBoolean(VID_USERAGENT_INSTALLED);
-      m_agentProxy = request->getFieldAsBoolean(VID_AGENT_PROXY);
-      m_snmpProxy = request->getFieldAsBoolean(VID_SNMP_PROXY);
-      m_snmpTrapProxy = request->getFieldAsBoolean(VID_SNMP_TRAP_PROXY);
-      m_syslogProxy = request->getFieldAsBoolean(VID_SYSLOG_PROXY);
-      m_extProvCertificate = request->getFieldAsBoolean(VID_EXTPROV_CERTIFICATE);
-      request->getFieldAsString(VID_HOSTNAME, m_hostname, MAX_DNS_NAME);
-      m_agentVersion = request->getFieldAsString(VID_AGENT_VERSION);
-      m_agentBuildTag = request->getFieldAsString(VID_AGENT_BUILD_TAG);
-      if (m_agentBuildTag == nullptr)
+      EventBuilder(EVENT_TUNNEL_OPEN, m_nodeId)
+         .param(_T("tunnelId"), m_id)
+         .param(_T("ipAddress"), m_address)
+         .param(_T("systemName"), m_systemName)
+         .param(_T("hostName"), m_hostname)
+         .param(_T("platformName"), m_platformName)
+         .param(_T("systemInfo"), m_systemInfo)
+         .param(_T("agentVersion"), m_agentVersion)
+         .param(_T("agentId"), m_agentId)
+         .post();
+
+      int32_t reissueInterval = ConfigReadInt(_T("AgentTunnels.Certificates.ReissueInterval"), 30) * 86400;
+      time_t now = time(nullptr);
+      if (!m_extProvCertificate && (m_certificateExpirationTime > 0) &&
+          ((m_certificateExpirationTime - now <= 2592000) || (now - m_certificateIssueTime >= reissueInterval))) // 30 days
       {
-         // Agents before 3.0 release return tag as version
-         m_agentBuildTag = MemCopyString(m_agentVersion);
-         TCHAR *p = _tcsrchr(m_agentVersion, _T('-'));
-         if (p != nullptr)
-            *p = 0;  // Remove git commit hash from version string
-      }
-      size_t size;
-      const BYTE *hardwareId = request->getBinaryFieldPtr(VID_HARDWARE_ID, &size);
-      m_hardwareId = ((hardwareId != nullptr) && (size == HARDWARE_ID_LENGTH)) ? NodeHardwareId(hardwareId) : NodeHardwareId();
-      m_serialNumber = request->getFieldAsString(VID_SERIAL_NUMBER);
-
-      int count = request->getFieldAsInt32(VID_MAC_ADDR_COUNT);
-      uint32_t fieldId = VID_MAC_ADDR_LIST_BASE;
-      for(int i = 0; i < count; i++)
-         m_macAddressList.add(request->getFieldAsMacAddress(fieldId++));
-
-      m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
-      response.setField(VID_RCC, ERR_SUCCESS);
-      response.setField(VID_IS_ACTIVE, m_state == AGENT_TUNNEL_BOUND);
-
-      // For bound tunnels zone UIN taken from node object
-      if (m_state != AGENT_TUNNEL_BOUND)
-         m_zoneUIN = request->getFieldAsUInt32(VID_ZONE_UIN);
-
-      TCHAR hardwareIdText[HARDWARE_ID_LENGTH * 2 + 1];
-      debugPrintf(3, _T("%s tunnel initialized"), (m_state == AGENT_TUNNEL_BOUND) ? _T("Bound") : _T("Unbound"));
-      debugPrintf(4, _T("   System name..............: %s"), m_systemName);
-      debugPrintf(4, _T("   Hostname.................: %s"), m_hostname);
-      debugPrintf(4, _T("   System information.......: %s"), m_systemInfo);
-      debugPrintf(4, _T("   Platform name............: %s"), m_platformName);
-      debugPrintf(4, _T("   Hardware ID..............: %s"), BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareIdText));
-      debugPrintf(4, _T("   Serial number............: %s"), m_serialNumber);
-      if (!m_macAddressList.isEmpty())
-      {
-         StringBuffer sb;
-         for(int i = 0; i < m_macAddressList.size(); i++)
-         {
-            if (i > 0)
-               sb.append(_T(", "));
-            sb.append(m_macAddressList.get(i)->toString());
-         }
-         debugPrintf(4, _T("   MAC addresses............: %s"), sb.cstr());
-      }
-      debugPrintf(4, _T("   Agent ID.................: %s"), m_agentId.toString().cstr());
-      debugPrintf(4, _T("   Agent version............: %s"), m_agentVersion);
-      debugPrintf(4, _T("   Zone UIN.................: %d"), m_zoneUIN);
-      debugPrintf(4, _T("   Agent proxy..............: %s"), m_agentProxy ? _T("YES") : _T("NO"));
-      debugPrintf(4, _T("   SNMP proxy...............: %s"), m_snmpProxy ? _T("YES") : _T("NO"));
-      debugPrintf(4, _T("   SNMP trap proxy..........: %s"), m_snmpTrapProxy ? _T("YES") : _T("NO"));
-      debugPrintf(4, _T("   Syslog proxy.............: %s"), m_syslogProxy ? _T("YES") : _T("NO"));
-      debugPrintf(4, _T("   User agent...............: %s"), m_userAgentInstalled ? _T("YES") : _T("NO"));
-      if (m_certificateExpirationTime != 0)
-      {
-         debugPrintf(4, _T("   Certificate expires at...: %s"), FormatTimestamp(m_certificateExpirationTime).cstr());
-         debugPrintf(4, _T("   Certificate issued at....: %s"), FormatTimestamp(m_certificateIssueTime).cstr());
-         debugPrintf(4, _T("   Externally provisioned...: %s"), m_extProvCertificate ? _T("YES") : _T("NO"));
-         debugPrintf(4, _T("   Certificate subject......: %s"), CHECK_NULL(m_certificateSubject));
-         debugPrintf(4, _T("   Certificate issuer.......: %s"), CHECK_NULL(m_certificateIssuer));
+         debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
+         ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, self());
       }
 
-      ExecuteTunnelHookScript(self());
-
-      auto msg = new NXCPMessage(CMD_AGENT_TUNNEL_UPDATE, 0);
-      fillMessage(msg, VID_ELEMENT_LIST_BASE);
-      msg->setField(VID_NOTIFICATION_CODE, NX_NOTIFY_AGENT_TUNNEL_OPEN);
-      ThreadPoolExecute(g_clientThreadPool,
-         [msg] () -> void
-         {
-            NotifyClientSessions(*msg, NXC_CHANNEL_AGENT_TUNNELS);
-            delete msg;
-         });
-
-      if (m_state == AGENT_TUNNEL_BOUND)
+      if (m_replacedTunnel != nullptr)
       {
-         EventBuilder(EVENT_TUNNEL_OPEN, m_nodeId)
-            .param(_T("tunnelId"), m_id)
-            .param(_T("ipAddress"), m_address)
-            .param(_T("systemName"), m_systemName)
-            .param(_T("hostName"), m_hostname)
-            .param(_T("platformName"), m_platformName)
-            .param(_T("systemInfo"), m_systemInfo)
-            .param(_T("agentVersion"), m_agentVersion)
-            .param(_T("agentId"), m_agentId)
-            .post();
-
-         int32_t reissueInterval = ConfigReadInt(_T("AgentTunnels.Certificates.ReissueInterval"), 30) * 86400;
-         time_t now = time(nullptr);
-         if (!m_extProvCertificate && (m_certificateExpirationTime > 0) &&
-             ((m_certificateExpirationTime - now <= 2592000) || (now - m_certificateIssueTime >= reissueInterval))) // 30 days
+         if (!m_replacedTunnel->getHardwareId().equals(m_hardwareId) ||
+             !m_replacedTunnel->getAgentId().equals(m_agentId) ||
+             _tcscmp(m_replacedTunnel->getHostname(), m_hostname) ||
+             _tcscmp(m_replacedTunnel->getSystemName(), m_systemName))
          {
-            debugPrintf(4, _T("Certificate will expire soon, requesting renewal"));
-            ThreadPoolExecute(g_mainThreadPool, BackgroundRenewCertificate, self());
+            // Old and new tunnels seems to be from different machines but binding to same node
+            debugPrintf(3, _T("Host data mismatch with existing tunnel (IP address: %s -> %s, Hostname: \"%s\" -> \"%s\", System name: \"%s\" -> \"%s\")"),
+                     m_replacedTunnel->getAddress().toString().cstr(), m_address.toString().cstr(),
+                     m_replacedTunnel->getHostname(), m_hostname, m_replacedTunnel->getSystemName(), m_systemName);
+            EventBuilder(EVENT_TUNNEL_HOST_DATA_MISMATCH, m_nodeId)
+               .param(_T("tunnelId"), m_id)
+               .param(_T("oldIPAddress"), m_replacedTunnel->getAddress())
+               .param(_T("newIPAddress"), m_address)
+               .param(_T("oldSystemName"), m_replacedTunnel->getSystemName())
+               .param(_T("newSystemName"), m_systemName)
+               .param(_T("oldHostName"), m_replacedTunnel->getHostname())
+               .param(_T("newHostName"), m_hostname)
+               .param(_T("oldHardwareId"), NodeHardwareId(m_replacedTunnel->getHardwareId().value()).toString())
+               .param(_T("newHardwareId"), NodeHardwareId(m_hardwareId.value()).toString())
+               .post();
          }
-
-         if (m_replacedTunnel != nullptr)
-         {
-            if (!m_replacedTunnel->getHardwareId().equals(m_hardwareId) ||
-                !m_replacedTunnel->getAgentId().equals(m_agentId) ||
-                _tcscmp(m_replacedTunnel->getHostname(), m_hostname) ||
-                _tcscmp(m_replacedTunnel->getSystemName(), m_systemName))
-            {
-               // Old and new tunnels seems to be from different machines but binding to same node
-               debugPrintf(3, _T("Host data mismatch with existing tunnel (IP address: %s -> %s, Hostname: \"%s\" -> \"%s\", System name: \"%s\" -> \"%s\")"),
-                        m_replacedTunnel->getAddress().toString().cstr(), m_address.toString().cstr(),
-                        m_replacedTunnel->getHostname(), m_hostname, m_replacedTunnel->getSystemName(), m_systemName);
-               EventBuilder(EVENT_TUNNEL_HOST_DATA_MISMATCH, m_nodeId)
-                  .param(_T("tunnelId"), m_id)
-                  .param(_T("oldIPAddress"), m_replacedTunnel->getAddress())
-                  .param(_T("newIPAddress"), m_address)
-                  .param(_T("oldSystemName"), m_replacedTunnel->getSystemName())
-                  .param(_T("newSystemName"), m_systemName)
-                  .param(_T("oldHostName"), m_replacedTunnel->getHostname())
-                  .param(_T("newHostName"), m_hostname)
-                  .param(_T("oldHardwareId"), m_replacedTunnel->getHardwareId().toString())
-                  .param(_T("newHardwareId"), m_hardwareId.toString())
-                  .post();
-            }
-            m_replacedTunnel.reset();
-         }
+         m_replacedTunnel.reset();
       }
    }
-   else
-   {
-      response.setField(VID_RCC, ERR_OUT_OF_STATE_REQUEST);
-   }
-
-   sendMessage(response);
 }
 
 /**
  * Bind tunnel to node
  */
-uint32_t AgentTunnel::bind(uint32_t nodeId, uint32_t userId)
+uint32_t InboundAgentTunnel::bind(uint32_t nodeId, uint32_t userId)
 {
    if ((m_state != AGENT_TUNNEL_UNBOUND) || (m_bindRequestId != 0) || m_extProvCertificate)
       return RCC_OUT_OF_STATE_REQUEST;
@@ -802,7 +469,7 @@ uint32_t AgentTunnel::bind(uint32_t nodeId, uint32_t userId)
 /**
  * Renew agent certificate
  */
-uint32_t AgentTunnel::renewCertificate()
+uint32_t InboundAgentTunnel::renewCertificate()
 {
    shared_ptr<NetObj> node = FindObjectById(m_nodeId, OBJECT_NODE);
    if (node == nullptr)
@@ -813,7 +480,7 @@ uint32_t AgentTunnel::renewCertificate()
 /**
  * Initiate certificate request by agent. This method will return when certificate issuing process is completed.
  */
-uint32_t AgentTunnel::initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId)
+uint32_t InboundAgentTunnel::initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId)
 {
    NXCPMessage request(CMD_BIND_AGENT_TUNNEL, InterlockedIncrement(&m_requestId));
    request.setField(VID_SERVER_ID, g_serverId);
@@ -857,7 +524,7 @@ uint32_t AgentTunnel::initiateCertificateRequest(const uuid& nodeGuid, uint32_t 
 /**
  * Process certificate request
  */
-void AgentTunnel::processCertificateRequest(NXCPMessage *request)
+void InboundAgentTunnel::processCertificateRequest(NXCPMessage *request)
 {
    NXCPMessage response(CMD_NEW_CERTIFICATE, request->getId());
 
@@ -943,437 +610,6 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
 }
 
 /**
- * Create channel
- */
-shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
-{
-   if (m_state != AGENT_TUNNEL_BOUND)
-   {
-      debugPrintf(4, _T("createChannel: tunnel is not in bound state"));
-      return shared_ptr<AgentTunnelCommChannel>();
-   }
-
-   NXCPMessage request(CMD_CREATE_CHANNEL, InterlockedIncrement(&m_requestId));
-   if (!sendMessage(request))
-   {
-      debugPrintf(4, _T("createChannel: cannot send setup message"));
-      return shared_ptr<AgentTunnelCommChannel>();
-   }
-
-   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId());
-   if (response == nullptr)
-   {
-      debugPrintf(4, _T("createChannel: request timeout"));
-      return shared_ptr<AgentTunnelCommChannel>();
-   }
-
-   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
-   if (rcc != ERR_SUCCESS)
-   {
-      delete response;
-      debugPrintf(4, _T("createChannel: agent error %u (%s)"), rcc, AgentErrorCodeToText(rcc));
-      return shared_ptr<AgentTunnelCommChannel>();
-   }
-
-   shared_ptr<AgentTunnelCommChannel> channel = make_shared<AgentTunnelCommChannel>(self(), response->getFieldAsUInt32(VID_CHANNEL_ID));
-   delete response;
-   m_channelLock.lock();
-   if (m_state == AGENT_TUNNEL_BOUND)
-   {
-      m_channels.set(channel->getId(), channel);
-   }
-   else
-   {
-      channel.reset();
-   }
-   m_channelLock.unlock();
-
-   if (channel != nullptr)
-      debugPrintf(4, _T("createChannel: new channel created (ID=%d)"), channel->getId());
-   else
-      debugPrintf(4, _T("createChannel: tunnel disconnected during channel setup"));
-
-   return channel;
-}
-
-/**
- * Process channel close notification from agent
- */
-void AgentTunnel::processChannelClose(uint32_t channelId)
-{
-   debugPrintf(4, _T("processChannelClose: notification of channel %u closure"), channelId);
-
-   m_channelLock.lock();
-   shared_ptr<AgentTunnelCommChannel> channel = m_channels.getShared(channelId);
-   m_channelLock.unlock();
-   if (channel != nullptr)
-   {
-      channel->shutdown();
-   }
-}
-
-/**
- * Close channel
- */
-void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
-{
-   if (m_state == AGENT_TUNNEL_SHUTDOWN)
-      return;
-
-   debugPrintf(4, _T("closeChannel: request to close channel %u"), channel->getId());
-
-   m_channelLock.lock();
-   m_channels.remove(channel->getId());
-   m_channelLock.unlock();
-
-   // Inform agent that channel is closing
-   NXCPMessage msg(CMD_CLOSE_CHANNEL, InterlockedIncrement(&m_requestId));
-   msg.setField(VID_CHANNEL_ID, channel->getId());
-   sendMessage(msg);
-}
-
-/**
- * Send channel data
- */
-ssize_t AgentTunnel::sendChannelData(uint32_t id, const void *data, size_t len)
-{
-   NXCP_MESSAGE *msg = CreateRawNXCPMessage(CMD_CHANNEL_DATA, id, 0, data, len, nullptr, false);
-   ssize_t rc = sslWrite(msg, ntohl(msg->size));
-   if (rc == static_cast<ssize_t>(ntohl(msg->size)))
-      rc = len;  // adjust number of bytes to exclude tunnel overhead
-   MemFree(msg);
-   return rc;
-}
-
-/**
- * Fill NXCP message with tunnel data
- */
-void AgentTunnel::fillMessage(NXCPMessage *msg, uint32_t baseId) const
-{
-   msg->setField(baseId, m_id);
-   msg->setField(baseId + 1, m_guid);
-   msg->setField(baseId + 2, m_nodeId);
-   msg->setField(baseId + 3, m_address);
-   msg->setField(baseId + 4, m_systemName);
-   msg->setField(baseId + 5, m_systemInfo);
-   msg->setField(baseId + 6, m_platformName);
-   msg->setField(baseId + 7, m_agentVersion);
-   m_channelLock.lock();
-   msg->setField(baseId + 8, m_channels.size());
-   m_channelLock.unlock();
-   msg->setField(baseId + 9, m_zoneUIN);
-   msg->setField(baseId + 10, m_hostname);
-   msg->setField(baseId + 11, m_agentId);
-   msg->setField(baseId + 12, m_userAgentInstalled);
-   msg->setField(baseId + 13, m_agentProxy);
-   msg->setField(baseId + 14, m_snmpProxy);
-   msg->setField(baseId + 15, m_snmpTrapProxy);
-   msg->setFieldFromTime(baseId + 16, m_certificateExpirationTime);
-   msg->setField(baseId + 17, m_hardwareId.value(), HARDWARE_ID_LENGTH);
-   msg->setField(baseId + 18, m_syslogProxy);
-   msg->setField(baseId + 19, m_extProvCertificate);
-   msg->setField(baseId + 20, m_certificateIssuer);
-   msg->setField(baseId + 21, m_certificateSubject);
-   msg->setFieldFromTime(baseId + 22, m_startTime);
-   msg->setField(baseId + 23, m_serialNumber);
-}
-
-/**
- * Channel constructor
- */
-AgentTunnelCommChannel::AgentTunnelCommChannel(const shared_ptr<AgentTunnel>& tunnel, uint32_t id) : m_tunnel(tunnel), m_buffer(65536, 65536)
-{
-   m_id = id;
-   m_active = true;
-#ifdef _WIN32
-   InitializeCriticalSectionAndSpinCount(&m_bufferLock, 4000);
-   InitializeConditionVariable(&m_dataCondition);
-#else
-#if HAVE_DECL_PTHREAD_MUTEX_ADAPTIVE_NP
-   pthread_mutexattr_t a;
-   pthread_mutexattr_init(&a);
-   pthread_mutexattr_settype(&a, PTHREAD_MUTEX_ADAPTIVE_NP);
-   pthread_mutex_init(&m_bufferLock, &a);
-   pthread_mutexattr_destroy(&a);
-#else
-   pthread_mutex_init(&m_bufferLock, nullptr);
-#endif
-   pthread_cond_init(&m_dataCondition, nullptr);
-#endif
-   memset(m_pollers, 0, sizeof(m_pollers));
-   m_pollerCount = 0;
-}
-
-/**
- * Channel destructor
- */
-AgentTunnelCommChannel::~AgentTunnelCommChannel()
-{
-#ifdef _WIN32
-   DeleteCriticalSection(&m_bufferLock);
-#else
-   pthread_mutex_destroy(&m_bufferLock);
-   pthread_cond_destroy(&m_dataCondition);
-#endif
-}
-
-/**
- * Send data
- */
-ssize_t AgentTunnelCommChannel::send(const void *data, size_t size, Mutex *mutex)
-{
-   if (!m_active)
-      return -1;
-   shared_ptr<AgentTunnel> tunnel = m_tunnel.lock();
-   return (tunnel != nullptr) ? tunnel->sendChannelData(m_id, data, size) : -1;
-}
-
-/**
- * Receive data
- */
-ssize_t AgentTunnelCommChannel::recv(void *buffer, size_t size, uint32_t timeout)
-{
-   if (!m_active)
-      return 0;
-
-#ifdef _WIN32
-   EnterCriticalSection(&m_bufferLock);
-#else
-   pthread_mutex_lock(&m_bufferLock);
-#endif
-   if (m_buffer.isEmpty())
-   {
-      if (timeout == 0)
-      {
-#ifdef _WIN32
-         LeaveCriticalSection(&m_bufferLock);
-#else
-         pthread_mutex_unlock(&m_bufferLock);
-#endif
-         return -4;  // WANT READ
-      }
-
-#ifdef _WIN32
-      // SleepConditionVariableCS is subject to spurious wakeups so we need a loop here
-      BOOL signalled = FALSE;
-      do
-      {
-         int64_t startTime = GetCurrentTimeMs();
-         signalled = SleepConditionVariableCS(&m_dataCondition, &m_bufferLock, timeout);
-         if (signalled)
-            break;
-         timeout -= std::min(timeout, static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
-      } while (timeout > 0);
-#elif HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
-      struct timespec ts;
-      ts.tv_sec = timeout / 1000;
-      ts.tv_nsec = (timeout % 1000) * 1000000;
-      bool signalled = (pthread_cond_reltimedwait_np(&m_dataCondition, &m_bufferLock, &ts) == 0);
-#else
-      struct timeval now;
-      struct timespec ts;
-      gettimeofday(&now, nullptr);
-      ts.tv_sec = now.tv_sec + (timeout / 1000);
-      now.tv_usec += (timeout % 1000) * 1000;
-      ts.tv_sec += now.tv_usec / 1000000;
-      ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
-      bool signalled = (pthread_cond_timedwait(&m_dataCondition, &m_bufferLock, &ts) == 0);
-#endif
-      if (!signalled)
-      {
-#ifdef _WIN32
-         LeaveCriticalSection(&m_bufferLock);
-#else
-         pthread_mutex_unlock(&m_bufferLock);
-#endif
-         return -2;  // timeout
-      }
-
-      if (!m_active) // closed while waiting
-      {
-#ifdef _WIN32
-         LeaveCriticalSection(&m_bufferLock);
-#else
-         pthread_mutex_unlock(&m_bufferLock);
-#endif
-         return 0;
-      }
-   }
-
-   size_t bytes = m_buffer.read((BYTE *)buffer, size);
-#ifdef _WIN32
-   LeaveCriticalSection(&m_bufferLock);
-#else
-   pthread_mutex_unlock(&m_bufferLock);
-#endif
-   return (int)bytes;
-}
-
-/**
- * Poll for data
- */
-int AgentTunnelCommChannel::poll(uint32_t timeout, bool write)
-{
-   if (write)
-      return 1;
-
-   if (!m_active)
-      return -1;
-
-#ifdef _WIN32
-   EnterCriticalSection(&m_bufferLock);
-#else
-   pthread_mutex_lock(&m_bufferLock);
-#endif
-   BOOL success;
-   if (m_buffer.isEmpty())
-   {
-#ifdef _WIN32
-      // SleepConditionVariableCS is subject to spurious wakeups so we need a loop here
-      success = FALSE;
-      do
-      {
-         int64_t startTime = GetCurrentTimeMs();
-         success = SleepConditionVariableCS(&m_dataCondition, &m_bufferLock, timeout);
-         if (success)
-            break;
-         timeout -= std::min(timeout, static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
-      } while (timeout > 0);
-#elif HAVE_PTHREAD_COND_RELTIMEDWAIT_NP
-      struct timespec ts;
-      ts.tv_sec = timeout / 1000;
-      ts.tv_nsec = (timeout % 1000) * 1000000;
-      success = (pthread_cond_reltimedwait_np(&m_dataCondition, &m_bufferLock, &ts) == 0);
-#else
-      struct timeval now;
-      struct timespec ts;
-      gettimeofday(&now, nullptr);
-      ts.tv_sec = now.tv_sec + (timeout / 1000);
-      now.tv_usec += (timeout % 1000) * 1000;
-      ts.tv_sec += now.tv_usec / 1000000;
-      ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
-      success = (pthread_cond_timedwait(&m_dataCondition, &m_bufferLock, &ts) == 0);
-#endif
-   }
-   else
-   {
-      success = TRUE;
-   }
-#ifdef _WIN32
-   LeaveCriticalSection(&m_bufferLock);
-#else
-   pthread_mutex_unlock(&m_bufferLock);
-#endif
-
-   return success ? 1 : 0;
-}
-
-/**
- * Start background poll
- */
-void AgentTunnelCommChannel::backgroundPoll(uint32_t timeout, void (*callback)(BackgroundSocketPollResult, AbstractCommChannel*, void*), void *context)
-{
-#ifdef _WIN32
-   EnterCriticalSection(&m_bufferLock);
-#else
-   pthread_mutex_lock(&m_bufferLock);
-#endif
-   if (m_active)
-   {
-      if (m_buffer.isEmpty())
-      {
-         if (m_pollerCount < 16)
-         {
-            m_pollers[m_pollerCount].callback = callback;
-            m_pollers[m_pollerCount].context = context;
-            m_pollerCount++;
-         }
-         else
-         {
-            ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::FAILURE, static_cast<AbstractCommChannel*>(this), context);
-         }
-      }
-      else
-      {
-         ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::SUCCESS, static_cast<AbstractCommChannel*>(this), context);
-      }
-   }
-   else
-   {
-      ThreadPoolExecute(g_agentConnectionThreadPool, callback, BackgroundSocketPollResult::SHUTDOWN, static_cast<AbstractCommChannel*>(this), context);
-   }
-#ifdef _WIN32
-   LeaveCriticalSection(&m_bufferLock);
-#else
-   pthread_mutex_unlock(&m_bufferLock);
-#endif
-}
-
-/**
- * Shutdown channel
- */
-int AgentTunnelCommChannel::shutdown()
-{
-#ifdef _WIN32
-   EnterCriticalSection(&m_bufferLock);
-#else
-   pthread_mutex_lock(&m_bufferLock);
-#endif
-   m_active = false;
-   if (m_pollerCount > 0)
-   {
-      for(int i = 0; i < m_pollerCount; i++)
-         ThreadPoolExecute(g_agentConnectionThreadPool, m_pollers[i].callback, BackgroundSocketPollResult::SHUTDOWN, static_cast<AbstractCommChannel*>(this), m_pollers[i].context);
-      m_pollerCount = 0;
-   }
-#ifdef _WIN32
-   WakeAllConditionVariable(&m_dataCondition);
-   LeaveCriticalSection(&m_bufferLock);
-#else
-   pthread_cond_broadcast(&m_dataCondition);
-   pthread_mutex_unlock(&m_bufferLock);
-#endif
-   return 0;
-}
-
-/**
- * Close channel
- */
-void AgentTunnelCommChannel::close()
-{
-   shutdown();
-   shared_ptr<AgentTunnel> tunnel = m_tunnel.lock();
-   if (tunnel != nullptr)
-      tunnel->closeChannel(this);
-}
-
-/**
- * Put data into buffer
- */
-void AgentTunnelCommChannel::putData(const BYTE *data, size_t size)
-{
-#ifdef _WIN32
-   EnterCriticalSection(&m_bufferLock);
-#else
-   pthread_mutex_lock(&m_bufferLock);
-#endif
-   m_buffer.write(data, size);
-   if (m_pollerCount > 0)
-   {
-      for(int i = 0; i < m_pollerCount; i++)
-         ThreadPoolExecute(g_agentConnectionThreadPool, m_pollers[i].callback, BackgroundSocketPollResult::SUCCESS, static_cast<AbstractCommChannel*>(this), m_pollers[i].context);
-      m_pollerCount = 0;
-   }
-#ifdef _WIN32
-   WakeAllConditionVariable(&m_dataCondition);
-   LeaveCriticalSection(&m_bufferLock);
-#else
-   pthread_cond_broadcast(&m_dataCondition);
-   pthread_mutex_unlock(&m_bufferLock);
-#endif
-}
-
-/**
  * Incoming connection data
  */
 struct ConnectionRequest
@@ -1453,7 +689,7 @@ static void SetupTunnel(ConnectionRequest *request)
    SSL_CTX *context = nullptr;
    SSL *ssl = nullptr;
    BackgroundSocketPollerHandle *sp = nullptr;
-   shared_ptr<AgentTunnel> tunnel;
+   shared_ptr<InboundAgentTunnel> tunnel;
    int rc;
    uint32_t nodeId = 0;
    int32_t zoneUIN = 0;
@@ -1741,7 +977,7 @@ retry:
    }
    s_pollerListLock.unlock();
 
-   tunnel = AgentTunnel::create(context, ssl, request->sock, request->addr, nodeId, zoneUIN,
+   tunnel = InboundAgentTunnel::create(context, ssl, request->sock, request->addr, nodeId, zoneUIN,
          !certSubject.isEmpty() ? certSubject.cstr() : nullptr, !certIssuer.isEmpty() ? certIssuer.cstr() : nullptr,
          certExpTime, certIssueTime, sp);
    RegisterTunnel(tunnel);
@@ -2053,13 +1289,13 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
    if (timeout < 0)
       return;  // Auto bind disabled
 
-   SharedObjectArray<AgentTunnel> processingList(16, 16);
+   SharedObjectArray<InboundAgentTunnel> processingList(16, 16);
 
    s_tunnelListLock.lock();
    time_t now = time(nullptr);
    for(int i = 0; i < s_unboundTunnels.size(); i++)
    {
-      shared_ptr<AgentTunnel> t = s_unboundTunnels.getShared(i);
+      shared_ptr<InboundAgentTunnel> t = s_unboundTunnels.getShared(i);
       nxlog_debug_tag(DEBUG_TAG, 9, _T("Checking tunnel from %s (%s): state=%d, startTime=%ld"),
                t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), t->getState(), (long)t->getStartTime());
       if ((t->getState() == AGENT_TUNNEL_UNBOUND) && !t->isResetPending() && (t->getStartTime() + timeout <= now))
@@ -2073,7 +1309,7 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
    TimeoutAction action = static_cast<TimeoutAction>(ConfigReadInt(_T("AgentTunnels.UnboundTunnelTimeoutAction"), RESET));
    for(int i = 0; i < processingList.size(); i++)
    {
-      AgentTunnel *t = processingList.get(i);
+      InboundAgentTunnel *t = processingList.get(i);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Processing timeout for unbound tunnel from %s (%s) - action=%d"),
                t->getDisplayName(), t->getAddress().toString().cstr(), action);
       switch(action)
@@ -2162,7 +1398,7 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
  */
 void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
-   SharedObjectArray<AgentTunnel> processingList(16, 16);
+   SharedObjectArray<InboundAgentTunnel> processingList(16, 16);
 
    s_tunnelListLock.lock();
    time_t now = time(nullptr);
@@ -2170,7 +1406,7 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
    auto it = s_boundTunnels.begin();
    while(it.hasNext())
    {
-      shared_ptr<AgentTunnel> t = it.next();
+      shared_ptr<InboundAgentTunnel> t = it.next();
       if (!t->isExtProvCertificate() && (t->getCertificateExpirationTime() > 0) &&
           ((t->getCertificateExpirationTime() - now <= 2592000) || (now - t->getCertificateIssueTime() >= reissueInterval))) // 30 days
       {
@@ -2189,7 +1425,7 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
 
    for(int i = 0; i < processingList.size(); i++)
    {
-      AgentTunnel *t = processingList.get(i);
+      InboundAgentTunnel *t = processingList.get(i);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Renewing certificate for tunnel from %s (%s)"), t->getDisplayName(), t->getAddress().toString().cstr());
       uint32_t rcc = t->renewCertificate();
       if (rcc == RCC_SUCCESS)

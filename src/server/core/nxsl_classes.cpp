@@ -23,7 +23,7 @@
 #include "nxcore.h"
 #include <entity_mib.h>
 #include <ethernet_ip.h>
-#include <agent_tunnel.h>
+#include <nxcore_agent_tunnel.h>
 #include <nxcore_websvc.h>
 #include <netxms_maps.h>
 #include <asset_management.h>
@@ -6004,7 +6004,7 @@ NXSL_METHOD_DEFINITION(Tunnel, bind)
 
    shared_ptr<AgentTunnel> tunnel = *static_cast<shared_ptr<AgentTunnel>*>(object->getData());
    uint32_t nodeId = (*static_cast<shared_ptr<Node>*>(node->getData()))->getId();
-   uint32_t rcc = tunnel->bind(nodeId, 0);
+   uint32_t rcc = tunnel->isInbound() ? static_cast<InboundAgentTunnel&>(*tunnel).bind(nodeId, 0) : RCC_OUT_OF_STATE_REQUEST;
    *result = vm->createValue(rcc);
    return 0;
 }

@@ -1146,6 +1146,7 @@ private:
    uint32_t m_debugId;
    InetAddress m_addr;
    int m_nProtocolVersion;
+   uint32_t m_peerCapabilities;
    bool m_controlServer;
    bool m_masterServer;
    char m_secret[MAX_SECRET_LENGTH];
@@ -1247,6 +1248,7 @@ public:
    time_t getLastCommandTime() const { return m_tLastCommandTime; }
    bool isProxyMode() { return m_useProxy; }
 	int getProtocolVersion() const { return m_nProtocolVersion; }
+	bool isTlsTunnelSupported() const { return (m_peerCapabilities & NXCP_CAP_TLS_TUNNEL) != 0; }
 	bool isControlServer() const { return m_controlServer; }
 	bool isMasterServer() const { return m_masterServer; }
 	bool isCompressionAllowed() const { return m_allowCompression && (m_nProtocolVersion >= 4); }

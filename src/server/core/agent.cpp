@@ -21,7 +21,7 @@
 **/
 
 #include "nxcore.h"
-#include <agent_tunnel.h>
+#include <nxcore_agent_tunnel.h>
 #include <nxcore_websvc.h>
 
 /**

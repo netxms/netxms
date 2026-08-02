@@ -23,6 +23,7 @@ SOURCES = \
 	snmpproxy.cpp \
 	ssh_channel.cpp \
 	tools.cpp \
+	tunnel.cpp \
 	vlan.cpp \
 	windll.cpp \
 	xml_to_json.cpp

@@ -23,6 +23,11 @@
 #include "nxagentd.h"
 
 /**
+ * Setup inbound tunnel on incoming TLS connection (implemented in tunnel.cpp)
+ */
+void SetupInboundTunnel(SOCKET s, const InetAddress& peer);
+
+/**
  * Statistics
  */
 uint32_t g_acceptErrors = 0;
@@ -218,8 +223,135 @@ void NotifyConnectedServers(const TCHAR *notificationCode)
 }
 
 /**
+ * Incoming connection request
+ */
+struct IncomingConnectionRequest
+{
+   SOCKET socket;
+   InetAddress addr;
+   bool masterServer;
+   bool controlServer;
+   bool upgradeServer;
+};
+
+#ifdef _WITH_ENCRYPTION
+
+/**
+ * Reject legacy NXCP connection when TLS is required by agent configuration. Speaks minimal NXCP
+ * so that connecting server can learn agent capabilities and the reason for rejection: responds to
+ * protocol version negotiation normally (advertising TLS support) and to the first regular request
+ * with ERR_TLS_REQUIRED, then closes the connection.
+ */
+static void RejectLegacyConnection(SOCKET socket, const InetAddress& addr)
+{
+   int protocolVersion = NXCP_VERSION;
+   SocketMessageReceiver receiver(socket, 4096, MAX_AGENT_MSG_SIZE);
+   int64_t deadline = GetMonotonicClockTime() + 10000;
+   while(GetMonotonicClockTime() < deadline)
+   {
+      MessageReceiverResult result;
+      NXCPMessage *msg = receiver.readMessage(1000, &result);
+      if (msg == nullptr)
+      {
+         if (result == MSGRECV_TIMEOUT)
+            continue;
+         break;
+      }
+
+      if (msg->isControl() && (msg->getCode() == CMD_GET_NXCP_CAPS))
+      {
+         uint32_t peerNXCPVersion = msg->getEncodedProtocolVersion(); // Before NXCP version 5 encoded version will be 0, assume version 4
+         protocolVersion = (peerNXCPVersion == 0) ? 4 : MIN(peerNXCPVersion, NXCP_VERSION);
+
+         BYTE rawResponse[NXCP_HEADER_SIZE];
+         NXCP_MESSAGE *response = reinterpret_cast<NXCP_MESSAGE*>(rawResponse);
+         response->id = htonl(msg->getId());
+         response->code = htons((uint16_t)CMD_NXCP_CAPS);
+         response->flags = htons(MF_CONTROL | MF_NXCP_VERSION(protocolVersion));
+         response->numFields = htonl((protocolVersion << 24) | NXCP_CAP_TLS_TUNNEL);
+         response->size = htonl(NXCP_HEADER_SIZE);
+         SendEx(socket, response, NXCP_HEADER_SIZE, 0, nullptr);
+         delete msg;
+      }
+      else if (!msg->isControl() && !msg->isBinary())
+      {
+         NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), protocolVersion);
+         response.setField(VID_RCC, ERR_TLS_REQUIRED);
+         NXCP_MESSAGE *rawResponse = response.serialize(false);
+         SendEx(socket, rawResponse, ntohl(rawResponse->size), 0, nullptr);
+         MemFree(rawResponse);
+         delete msg;
+         break;   // rejection delivered
+      }
+      else
+      {
+         delete msg;
+      }
+   }
+
+   shutdown(socket, SHUT_RDWR);
+   closesocket(socket);
+}
+
+#endif   /* _WITH_ENCRYPTION */
+
+/**
+ * Setup incoming connection. Detects protocol (TLS handshake vs legacy NXCP) by peeking at
+ * first byte sent by the server, then routes connection to inbound tunnel setup or creates
+ * communication session directly. Runs in communication thread pool because it can block
+ * waiting for initial data.
+ */
+static void SetupIncomingConnection(IncomingConnectionRequest *request)
+{
+   // Wait for initial data from server to detect TLS ClientHello (0x16 is TLS handshake
+   // record type and is never a valid first byte of NXCP message)
+   BYTE firstByte = 0;
+   SocketPoller sp;
+   sp.add(request->socket);
+   if (sp.poll(5000) > 0)
+   {
+      char b;
+      if (recv(request->socket, &b, 1, MSG_PEEK) == 1)
+         firstByte = static_cast<BYTE>(b);
+   }
+
+   TCHAR buffer[64];
+   if (firstByte == 0x16)
+   {
+#ifdef _WITH_ENCRYPTION
+      nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("TLS connection detected from %s"), request->addr.toString(buffer));
+      SetupInboundTunnel(request->socket, request->addr);
+#else
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_COMM, _T("Incoming TLS connection from %s rejected (agent built without encryption support)"), request->addr.toString(buffer));
+      shutdown(request->socket, SHUT_RDWR);
+      closesocket(request->socket);
+#endif
+   }
+   else
+   {
+#ifdef _WITH_ENCRYPTION
+      if (g_dwFlags & AF_REQUIRE_TLS)
+      {
+         nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("Rejecting legacy connection from %s (TLS required by agent configuration)"), request->addr.toString(buffer));
+         RejectLegacyConnection(request->socket, request->addr);
+         delete request;
+         return;
+      }
+#endif
+      shared_ptr<SocketCommChannel> channel = make_shared<SocketCommChannel>(request->socket, nullptr, Ownership::True);
+      shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, request->addr, request->masterServer, request->controlServer, request->upgradeServer);
+      if (RegisterSession(session))
+      {
+         nxlog_debug_tag(DEBUG_TAG_COMM, 9, _T("Session registered for %s"), request->addr.toString(buffer));
+         session->run();
+      }
+   }
+   delete request;
+}
+
+/**
  * TCP/IP Listener
- */ 
+ */
 void ListenerThread()
 {
    // Create socket(s)
@@ -445,15 +577,15 @@ void ListenerThread()
             g_acceptedConnections++;
             nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("Connection from %s accepted"), buffer);
 
-            // Create new session structure and threads
-            shared_ptr<SocketCommChannel> channel = make_shared<SocketCommChannel>(hClientSocket, nullptr, Ownership::True);
-            shared_ptr<CommSession> session = MakeSharedCommSession<CommSession>(channel, addr, masterServer, controlServer, upgradeServer);
-
-            if (RegisterSession(session))
-            {
-               nxlog_debug_tag(DEBUG_TAG_COMM, 9, _T("Session registered for %s"), buffer);
-               session->run();
-            }
+            // Hand connection over to processing thread for protocol detection
+            // (it can block waiting for initial data and must not delay listener)
+            auto request = new IncomingConnectionRequest();
+            request->socket = hClientSocket;
+            request->addr = addr;
+            request->masterServer = masterServer;
+            request->controlServer = controlServer;
+            request->upgradeServer = upgradeServer;
+            ThreadPoolExecute(g_commThreadPool, SetupIncomingConnection, request);
          }
          else     // Unauthorized connection
          {

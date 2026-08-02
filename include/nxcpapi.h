@@ -546,6 +546,7 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(uint16_t code, uint32_t 
       NXCP_MESSAGE *buffer, bool allowCompression);
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET s, int *pnVersion, Mutex *mutex);
 bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCommChannel>& channel, int *pnVersion, Mutex *mutex);
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCommChannel>& channel, int *pnVersion, uint32_t *capabilities, Mutex *mutex);
 
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off64_t offset,
          void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod = NXCP_STREAM_COMPRESSION_NONE,

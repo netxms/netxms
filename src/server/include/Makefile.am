@@ -43,6 +43,7 @@ serverinclude_HEADERS = \
 	nms_users.h \
 	nxai.h \
 	nxcore_2fa.h \
+	nxcore_agent_tunnel.h \
 	nxcore_discovery.h \
 	nxcore_logs.h \
 	nxcore_ps.h \

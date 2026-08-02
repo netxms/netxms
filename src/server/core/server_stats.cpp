@@ -24,7 +24,7 @@
 #include <nxcore_discovery.h>
 #include <nxcore_ha.h>
 #include <gauge_helpers.h>
-#include <agent_tunnel.h>
+#include <nxcore_agent_tunnel.h>
 #include <ncdrv.h>
 
 #ifndef _WIN32

@@ -84,6 +84,19 @@
 # RequireEncryption = no
 
 #
+# RequireTLS
+#
+# If set to "yes", incoming connections using legacy NXCP protocol will be
+# rejected with "TLS connection required" error, forcing the server to
+# reconnect using TLS tunnel. Default value is "no". This parameter has no
+# effect if agent was compiled without encryption support. Note that agents
+# reachable only through an agent proxy should not enable this option, as
+# proxied connections currently use legacy NXCP protocol.
+#
+# Example:
+# RequireTLS = no
+
+#
 # EnabledCiphers
 #
 # Control what ciphers agent can use for connection encryption. Value for

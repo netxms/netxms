@@ -532,6 +532,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_proxyPort = 4700;
    m_proxySecret[0] = 0;
    m_nProtocolVersion = NXCP_VERSION;
+   m_peerCapabilities = 0;
 	m_hCurrFile = -1;
    m_fileDecompressor = nullptr;
    m_deleteFileOnDownloadFailure = true;
@@ -717,7 +718,7 @@ bool AgentConnection::connect(RSA_KEY serverKey, uint32_t *error, uint32_t *sock
    m_channel = channel;
    unlock();
 
-   if (!NXCPGetPeerProtocolVersion(m_channel, &m_nProtocolVersion, &m_mutexSocketWrite))
+   if (!NXCPGetPeerProtocolVersion(m_channel, &m_nProtocolVersion, &m_peerCapabilities, &m_mutexSocketWrite))
    {
       debugPrintf(6, _T("Protocol version negotiation failed"));
       dwError = ERR_INTERNAL_ERROR;
@@ -741,7 +742,7 @@ setup_encryption:
       {
          dwError = setupEncryption(serverKey);
          if ((dwError != ERR_SUCCESS) &&
-             ((m_encryptionPolicy == ENCRYPTION_REQUIRED) || forceEncryption))
+             ((dwError == ERR_TLS_REQUIRED) || (m_encryptionPolicy == ENCRYPTION_REQUIRED) || forceEncryption))
             goto connect_cleanup;
       }
       else
@@ -813,9 +814,15 @@ setup_encryption:
 	      if (rsp != nullptr)
 	      {
 	         if (rsp->isControl())
+	         {
 	            m_nProtocolVersion = rsp->getControlData() >> 24;
+	            m_peerCapabilities = rsp->getControlData() & 0x00FFFFFF;
+	         }
 	         else
+	         {
 	            m_nProtocolVersion = 1; // assume that peer doesn't understand CMD_GET_NXCP_CAPS message
+	            m_peerCapabilities = 0;
+	         }
 	         delete rsp;
 	      }
 	      else
@@ -2611,7 +2618,19 @@ uint32_t AgentConnection::setupEncryption(RSA_KEY serverKey)
       }
       else
       {
-         result = ERR_REQUEST_TIMEOUT;
+         // Agent may reject session key request with error response (e.g. when TLS connection is required)
+         NXCPMessage *errorResponse = waitForMessage(CMD_REQUEST_COMPLETED, requestId, 100);
+         if (errorResponse != nullptr)
+         {
+            result = errorResponse->getFieldAsUInt32(VID_RCC);
+            if (result == ERR_SUCCESS)
+               result = ERR_INTERNAL_ERROR;
+            delete errorResponse;
+         }
+         else
+         {
+            result = ERR_REQUEST_TIMEOUT;
+         }
       }
    }
    else

@@ -105,6 +105,7 @@ void UpdateUserAgentsEnvironment();
 
 void ParseTunnelList(const StringSet& tunnels);
 void ParseTunnelList(const ObjectArray<ConfigEntry>& config);
+void CloseInboundTunnels();
 
 void StartWebServiceHousekeeper();
 
@@ -390,6 +391,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix, nullptr },
    { _T("RequireAuthentication"), CT_BOOLEAN_FLAG_32, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags, nullptr },
    { _T("RequireEncryption"), CT_BOOLEAN_FLAG_32, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags, nullptr },
+   { _T("RequireTLS"), CT_BOOLEAN_FLAG_32, 0, 0, AF_REQUIRE_TLS, 0, &g_dwFlags, nullptr },
    { _T("ServerConnection"), CT_STRING_SET, 0, 0, 0, 0, &s_serverConnectionList, nullptr },
    { _T("Servers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszServerList, nullptr },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, nullptr },
@@ -1737,6 +1739,7 @@ void Shutdown()
 		ThreadJoin(s_sessionWatchdogThread);
 		ThreadJoin(s_listenerThread);
 		ThreadJoin(s_tunnelManagerThread);
+		CloseInboundTunnels();
 		StopExternalSubagentConnectors();
 		StopExtensions(false);
 	}

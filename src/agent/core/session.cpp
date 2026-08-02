@@ -336,7 +336,11 @@ void CommSession::readThread()
                response->id = htonl(msg->getId());
                response->code = htons((uint16_t)CMD_NXCP_CAPS);
                response->flags = htons(MF_CONTROL | MF_NXCP_VERSION(m_protocolVersion));
+#ifdef _WITH_ENCRYPTION
+               response->numFields = htonl((m_protocolVersion << 24) | NXCP_CAP_TLS_TUNNEL);
+#else
                response->numFields = htonl(m_protocolVersion << 24);
+#endif
                response->size = htonl(NXCP_HEADER_SIZE);
                sendRawMessage(response, m_encryptionContext.get());
             }

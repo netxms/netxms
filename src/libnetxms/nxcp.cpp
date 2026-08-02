@@ -907,9 +907,10 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
 }
 
 /**
- * Get version of NXCP used by peer
+ * Get version of NXCP used by peer along with peer capability flags
+ * transmitted in lower 24 bits of capability response
  */
-bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCommChannel>& channel, int *version, Mutex *mutex)
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCommChannel>& channel, int *version, uint32_t *capabilities, Mutex *mutex)
 {
    bool success = false;
 
@@ -928,6 +929,8 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCo
       {
          success = true;
          *version = response->getControlData() >> 24;
+         if (capabilities != nullptr)
+            *capabilities = response->getControlData() & 0x00FFFFFF;
       }
       else if ((result == MSGRECV_TIMEOUT) || (result == MSGRECV_PROTOCOL_ERROR))
       {
@@ -936,10 +939,20 @@ bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCo
          // and set version number to 1
          success = true;
          *version = 1;
+         if (capabilities != nullptr)
+            *capabilities = 0;
       }
       delete response;
    }
    return success;
+}
+
+/**
+ * Get version of NXCP used by peer
+ */
+bool LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(const shared_ptr<AbstractCommChannel>& channel, int *version, Mutex *mutex)
+{
+   return NXCPGetPeerProtocolVersion(channel, version, nullptr, mutex);
 }
 
 /**

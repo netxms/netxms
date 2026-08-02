@@ -34,7 +34,6 @@
 #include "nxcore.h"
 #include <nxcore_ha.h>
 #include <socket_listener.h>
-#include <agent_tunnel.h>
 
 #define DEBUG_TAG L"ha.channel"
 

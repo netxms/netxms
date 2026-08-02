@@ -1,7 +1,6 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Server Core
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,24 +16,21 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: nxcore.h
+** File: agent_tunnel.h
 **
 **/
 
 #ifndef _agent_tunnel_h_
 #define _agent_tunnel_h_
 
-#include <nms_util.h>
-
-#define UNBOUND_TUNNEL_PROCESSOR_TASK_ID _T("AgentTunnels.ProcessUnbound")
-#define RENEW_AGENT_CERTIFICATES_TASK_ID _T("AgentTunnels.RenewCertificates")
+#include <nxsrvapi.h>
 
 class AgentTunnel;
 
 /**
  * Agent tunnel communication channel
  */
-class AgentTunnelCommChannel : public AbstractCommChannel
+class LIBNXSRV_EXPORTABLE AgentTunnelCommChannel : public AbstractCommChannel
 {
 private:
    weak_ptr<AgentTunnel> m_tunnel;
@@ -89,9 +85,10 @@ enum AgentTunnelState
 };
 
 /**
- * Agent tunnel
+ * Agent tunnel base class - initiator-agnostic session core shared by inbound
+ * (agent to server) and outbound (server to agent) tunnels
  */
-class AgentTunnel
+class LIBNXSRV_EXPORTABLE AgentTunnel
 {
 protected:
    weak_ptr<AgentTunnel> m_self;
@@ -108,6 +105,7 @@ protected:
    Mutex m_writeLock;
    MsgWaitQueue m_queue;
    VolatileCounter m_requestId;
+   uint32_t m_commandTimeout;
    uint32_t m_nodeId;
    int32_t m_zoneUIN;
    TCHAR *m_certificateSubject;
@@ -116,7 +114,7 @@ protected:
    time_t m_certificateIssueTime;
    AgentTunnelState m_state;
    time_t m_startTime;
-   NodeHardwareId m_hardwareId;
+   GenericId<HARDWARE_ID_LENGTH> m_hardwareId;
    TCHAR *m_serialNumber;
    TCHAR *m_systemName;
    TCHAR m_hostname[MAX_DNS_NAME];
@@ -125,20 +123,18 @@ protected:
    TCHAR *m_agentVersion;
    TCHAR *m_agentBuildTag;
    uuid m_agentId;
-   uint32_t m_bindRequestId;
-   uuid m_bindGuid;
-   uint32_t m_bindUserId;
    bool m_userAgentInstalled;
    bool m_agentProxy;
    bool m_snmpProxy;
    bool m_snmpTrapProxy;
    bool m_syslogProxy;
    bool m_extProvCertificate;
-   bool m_resetPending;
    StructArray<MacAddress> m_macAddressList;
    SharedHashMap<uint32_t, AgentTunnelCommChannel> m_channels;
    Mutex m_channelLock;
-   shared_ptr<AgentTunnel> m_replacedTunnel; // Tunnel that was replaced by this tunnel
+
+   AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
+            BackgroundSocketPollerHandle *socketPoller);
 
    bool readSocket();
    MessageReceiverResult readMessage(bool allowSocketRead);
@@ -148,41 +144,36 @@ protected:
 
    int sslWrite(const void *data, size_t size);
    bool sendMessage(const NXCPMessage& msg);
-   NXCPMessage *waitForMessage(uint16_t code, uint32_t id) { return m_queue.waitForMessage(code, id, g_agentCommandTimeout); }
+   NXCPMessage *waitForMessage(uint16_t code, uint32_t id) { return m_queue.waitForMessage(code, id, m_commandTimeout); }
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_queue.waitForMessage(code, id, timeout); }
 
-   void processCertificateRequest(NXCPMessage *request);
    void processChannelClose(uint32_t channelId);
 
    void setup(const NXCPMessage *request);
-   uint32_t initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId);
+
+   virtual bool processCustomMessage(NXCPMessage *msg);  // returns true if message was consumed
+   virtual void onSetupComplete();
+   virtual void onTunnelClose();
 
 public:
-   static shared_ptr<AgentTunnel> create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
-            int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
-            time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller);
-
-   AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
-            const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
-            time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller);
-   ~AgentTunnel();
+   virtual ~AgentTunnel();
 
    shared_ptr<AgentTunnel> self() { return m_self.lock(); }
 
    void start();
    void shutdown();
-   uint32_t bind(uint32_t nodeId, uint32_t userId);
-   uint32_t renewCertificate();
+   void setCommandTimeout(uint32_t timeout) { m_commandTimeout = timeout; }
    shared_ptr<AgentTunnelCommChannel> createChannel();
    void closeChannel(AgentTunnelCommChannel *channel);
    ssize_t sendChannelData(uint32_t id, const void *data, size_t len);
    void resetStartTime() { m_startTime = time(nullptr); }
-   void setReplacedTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_replacedTunnel = tunnel; }
+
+   virtual bool isInbound() const = 0;
 
    uint32_t getId() const { return m_id; }
    uuid getGUID() const { return m_guid; }
    const InetAddress& getAddress() const { return m_address; }
-   const NodeHardwareId& getHardwareId() const { return m_hardwareId; }
+   const GenericId<HARDWARE_ID_LENGTH>& getHardwareId() const { return m_hardwareId; }
    const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
    const TCHAR *getSystemName() const { return CHECK_NULL_EX(m_systemName); }
    const TCHAR *getHostname() const { return m_hostname; }
@@ -215,7 +206,6 @@ public:
    bool isSyslogProxy() const { return m_syslogProxy; }
    bool isUserAgentInstalled() const { return m_userAgentInstalled; }
    bool isExtProvCertificate() const { return m_extProvCertificate; }   // Check if certificate is externally provisioned
-   bool isResetPending() const { return m_resetPending; }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
@@ -223,36 +213,48 @@ public:
 };
 
 /**
- * Setup server side TLS context
+ * Outbound (server to agent) tunnel establishment status
  */
-bool SetupServerTlsContext(SSL_CTX *context);
-
-/**
- * Get tunnel for node
- */
-shared_ptr<AgentTunnel> GetTunnelForNode(uint32_t nodeId);
-
-/**
- * Tunnel capability filter
- */
-enum class TunnelCapabilityFilter
+enum class AgentTunnelEstablishmentStatus
 {
-   ANY = 0,
-   AGENT_PROXY = 1,
-   SNMP_PROXY = 2,
-   SNMP_TRAP_PROXY = 3,
-   SYSLOG_PROXY = 4,
-   USER_AGENT = 5
+   SUCCESS = 0,
+   CONNECT_FAILED = 1,
+   TLS_HANDSHAKE_FAILED = 2,
+   CERTIFICATE_MISMATCH = 3,
+   SETUP_TIMEOUT = 4
 };
 
 /**
- * Get tunnel type by type
+ * Outbound (server to agent) tunnel established over TLS connection initiated by server
  */
-int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels);
+class LIBNXSRV_EXPORTABLE OutboundAgentTunnel : public AgentTunnel
+{
+private:
+   Condition m_setupCondition;
 
-/**
- * Update agent certificate mapping index for externally provisioned certificates
- */
-void UpdateAgentCertificateMappingIndex(const shared_ptr<Node>& node, const TCHAR *oldValue, const TCHAR *newValue);
+   OutboundAgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
+            BackgroundSocketPollerHandle *socketPoller);
+
+   static void keepaliveTimer(const shared_ptr<OutboundAgentTunnel>& tunnel);
+
+protected:
+   virtual void onSetupComplete() override;
+   virtual void onTunnelClose() override;
+
+public:
+   /**
+    * Establish outbound tunnel to agent. Performs TCP connect, TLS handshake, agent certificate
+    * fingerprint check, and waits for tunnel setup completion. Peer certificate's SHA-256
+    * fingerprint is always stored into actualFingerprint (SHA256_DIGEST_SIZE bytes) when
+    * available. If expectedFingerprint is not null it is checked against the peer certificate
+    * and mismatch fails the establishment. Optional tlsContextSetup callback can be used to
+    * additionally configure TLS context (client certificate, minimal TLS version, etc.).
+    */
+   static shared_ptr<OutboundAgentTunnel> establish(const InetAddress& addr, uint16_t port, uint32_t nodeId, int32_t zoneUIN,
+            const BYTE *expectedFingerprint, BYTE *actualFingerprint, AgentTunnelEstablishmentStatus *status,
+            bool (*tlsContextSetup)(SSL_CTX*) = nullptr);
+
+   virtual bool isInbound() const override { return false; }
+};
 
 #endif
