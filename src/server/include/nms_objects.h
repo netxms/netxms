@@ -2217,6 +2217,14 @@ public:
    virtual void applyDCIChanges(bool forcedChange);
    virtual bool applyToTarget(const shared_ptr<DataCollectionTarget>& target);
 
+   /**
+    * Check if processing of data collection configuration changes for this object should be postponed
+    * until client closes data collection configuration or until next housekeeper run. It is done for
+    * objects where change processing is expensive - templates and clusters push data collection
+    * configuration to all member objects on every change.
+    */
+   virtual bool isDCIChangeProcessingDeferred() const { return false; }
+
    void queueUpdate();
    void queueRemoveFromTarget(uint32_t targetId, bool removeDCI);
 
@@ -2407,6 +2415,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual void applyDCIChanges(bool forcedChange) override;
    virtual bool applyToTarget(const shared_ptr<DataCollectionTarget>& target) override;
+   virtual bool isDCIChangeProcessingDeferred() const override { return true; }
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
@@ -3346,6 +3355,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool showThresholdSummary() const override;
    virtual bool isContainerObject() const override { return true; }
+   virtual bool isDCIChangeProcessingDeferred() const override { return true; }
    virtual void prepareForDeletion() override;
 
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
@@ -4114,6 +4124,9 @@ protected:
    shared_ptr<AgentConnectionEx> m_agentConnection;
    ProxyAgentConnection *m_proxyConnections;
    VolatileCounter m_pendingDataConfigurationSync;
+   time_t m_lastDataCollectionSyncTime;
+   uint32_t m_agentCacheElementCount;         // Number of data collection elements sent to agent during last synchronization
+   IntegerArray<uint32_t> m_dciSourceNodes;   // Source nodes referenced by DCIs at the moment of last data collection change
    uint64_t m_lastAgentTrapId;        // ID of last received agent trap
    uint64_t m_lastAgentPushRequestId; // ID of last received agent push request
    uint32_t m_lastSNMPTrapId;
@@ -4272,7 +4285,7 @@ protected:
 
    bool checkSshConnection();
 
-   void updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyName);
+   void updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyRole);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
    void syncEnvironmentWithAgent(AgentConnectionEx *conn);
 
@@ -4524,6 +4537,7 @@ public:
    void clearFileUpdateConnection();
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
    void scheduleDataCollectionSyncWithAgent();
+   uint32_t getAgentCacheElementCount() const { return m_agentCacheElementCount; }
    void relatedNodeDataCollectionChanged() { onDataCollectionChange(); }
    void clearSshKey() { m_sshKeyId = 0; }
 

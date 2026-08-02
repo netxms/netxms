@@ -4824,10 +4824,9 @@ void ClientSession::modifyNodeDCI(const NXCPMessage& request)
             }
             if (success)
             {
-               if (m_openDataCollectionConfigurations.contains(dwObjectId))
-                  static_cast<DataCollectionOwner&>(*object).setDCIModificationFlag();
-               else
-                  static_cast<DataCollectionOwner&>(*object).applyDCIChanges(true);
+               if (!static_cast<DataCollectionOwner&>(*object).isDCIChangeProcessingDeferred() ||
+                   !m_openDataCollectionConfigurations.contains(dwObjectId))
+                  static_cast<DataCollectionOwner&>(*object).applyDCIChanges(false);
                writeAuditLogWithValues(AUDIT_OBJECTS, true, dwObjectId, oldValue, newValue, _T("Data collection configuration item [%u] on object %s %s"),
                      itemId, object->getName(), (newValue == nullptr) ? _T("deleted") : ((oldValue == nullptr) ? _T("created") : _T("updated")));
             }
@@ -4918,10 +4917,9 @@ void ClientSession::changeDCIStatus(const NXCPMessage& request)
 
             if (successCount > 0)
             {
-               if (m_openDataCollectionConfigurations.contains(object->getId()))
-                 static_cast<DataCollectionOwner&>(*object).setDCIModificationFlag();
-              else
-                 static_cast<DataCollectionOwner&>(*object).applyDCIChanges(true);
+               if (!static_cast<DataCollectionOwner&>(*object).isDCIChangeProcessingDeferred() ||
+                   !m_openDataCollectionConfigurations.contains(object->getId()))
+                  static_cast<DataCollectionOwner&>(*object).applyDCIChanges(false);
             }
          }
          else  // User doesn't have MODIFY rights on object
@@ -5247,7 +5245,13 @@ void ClientSession::copyDCI(const NXCPMessage& request)
 
             // Cleanup
             MemFree(pdwItemList);
-            static_cast<DataCollectionOwner&>(*destinationObject).applyDCIChanges(!m_openDataCollectionConfigurations.contains(destinationObject->getId()));
+            if (!static_cast<DataCollectionOwner&>(*destinationObject).isDCIChangeProcessingDeferred() ||
+                !m_openDataCollectionConfigurations.contains(destinationObject->getId()))
+               static_cast<DataCollectionOwner&>(*destinationObject).applyDCIChanges(false);
+            if (doMove &&
+                (!static_cast<DataCollectionOwner&>(*sourceObject).isDCIChangeProcessingDeferred() ||
+                 !m_openDataCollectionConfigurations.contains(sourceObject->getId())))
+               static_cast<DataCollectionOwner&>(*sourceObject).applyDCIChanges(false);
             response.setField(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
 
             // Queue template/cluster update
@@ -5288,6 +5292,9 @@ void ClientSession::bulkDCIUpdate(const NXCPMessage& request)
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
          {
             response.setField(VID_NUM_ITEMS, static_cast<DataCollectionOwner&>(*object).updateMultipleDCObjects(request, m_userId));
+            if (!static_cast<DataCollectionOwner&>(*object).isDCIChangeProcessingDeferred() ||
+                !m_openDataCollectionConfigurations.contains(object->getId()))
+               static_cast<DataCollectionOwner&>(*object).applyDCIChanges(false);
             response.setField(VID_RCC, RCC_SUCCESS);
             writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Successful bulk DCI update"));
          }
