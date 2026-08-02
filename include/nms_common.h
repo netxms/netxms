@@ -276,8 +276,6 @@
 #define vscwprintf   _vscwprintf
 #define stricmp      _stricmp
 #define strnicmp     _strnicmp
-#define wcsicmp      _wcsicmp
-#define wcsnicmp     _wcsnicmp
 #define strlwr(s)    _strlwr(s)
 #define strupr(s)    _strupr(s)
 
@@ -396,16 +394,6 @@ static inline time_t FileTimeToUnixTime(const FILETIME &ft)
 
 #include <wchar.h>
 #include <wctype.h>
-
-// Fix for wcs* functions visibility in Solaris 11
-#if defined(__sun) && (__cplusplus >= 199711L) && (__SUNPRO_CC < 0x5150)
-#if HAVE_WCSCASECMP
-using std::wcscasecmp;
-#endif
-#if HAVE_WCSNCASECMP
-using std::wcsncasecmp;
-#endif
-#endif
 
 #include <errno.h>
 
@@ -928,16 +916,36 @@ static inline BYTE hex2bin(TCHAR x)
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 /**
- * Define case ignoring functions for non-Windows platforms
+ * Define case ignoring functions for narrow strings on non-Windows platforms
  */
 #ifndef _WIN32
 #define stricmp   strcasecmp
 #define strnicmp  strncasecmp
 #define stristr   strcasestr
-#define wcsicmp   wcscasecmp
-#define wcsnicmp  wcsncasecmp
-#define wcsistr   wcscasestr
 #endif
+
+/**
+ * Case conversion for wide characters and strings.
+ *
+ * Implemented by NetXMS from Unicode simple case mappings (see
+ * src/libnetxms/unicode_case.cpp) instead of using C library functions, which
+ * fold according to LC_CTYPE and therefore handle only ASCII when process runs
+ * in C locale. Behavior is identical on all platforms and does not depend on
+ * how the process was started.
+ */
+wchar_t LIBNETXMS_EXPORTABLE nx_towupper(wchar_t ch);
+wchar_t LIBNETXMS_EXPORTABLE nx_towlower(wchar_t ch);
+int LIBNETXMS_EXPORTABLE nx_wcsicmp(const wchar_t *s1, const wchar_t *s2);
+int LIBNETXMS_EXPORTABLE nx_wcsnicmp(const wchar_t *s1, const wchar_t *s2, size_t n);
+wchar_t LIBNETXMS_EXPORTABLE *nx_wcsistr(const wchar_t *s, const wchar_t *ss);
+wchar_t LIBNETXMS_EXPORTABLE *nx_wcsupr(wchar_t *s);
+wchar_t LIBNETXMS_EXPORTABLE *nx_wcslwr(wchar_t *s);
+
+#define wcsicmp   nx_wcsicmp
+#define wcsnicmp  nx_wcsnicmp
+#define wcsistr   nx_wcsistr
+#define wcsupr    nx_wcsupr
+#define wcslwr    nx_wcslwr
 
 /**
  * Compare two numbers and return -1, 0, or 1

@@ -3077,8 +3077,7 @@ AC_CHECK_HEADERS([iconv.h])
 AC_CHECK_SIZEOF(wchar_t,,[
 #include <wchar.h>
 ])
-AC_CHECK_FUNCS([wcslwr putws wcslcpy wcslcat])
-AC_CHECK_FUNCS([wcscasecmp wcsncasecmp wcscasestr])
+AC_CHECK_FUNCS([putws wcslcpy wcslcat])
 
 AC_CHECK_DECLS([putws],,,[
 #include <wchar.h>

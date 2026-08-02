@@ -183,4 +183,18 @@ assert(not s1.startsWith("Beta"));
 assert(s1.endsWith("Gamma"));
 assert(not s1.endsWith("Beta"));
 
+/* Case conversion must not depend on process locale (issue #3483) */
+s1 = "Средства Проверки Microsoft Edge";
+assert(s1.toLowerCase() == "средства проверки microsoft edge");
+assert(s1.toUpperCase() == "СРЕДСТВА ПРОВЕРКИ MICROSOFT EDGE");
+assert("ΑΘΗΝΑ".toLowerCase() == "αθηνα");
+/* Sharp s has no simple uppercase mapping and is left unchanged */
+assert("grüße".toUpperCase() == "GRÜßE");
+assert("Средства".equalsIgnoreCase("средства"));
+assert("Средства".compareToIgnoreCase("средства") == 0);
+assert(not "Средства".equalsIgnoreCase("проверки"));
+assert(s1 ilike "*средства проверки*");
+assert(not (s1 like "*средства проверки*"));
+assert(s1 like "*Средства Проверки*");
+
 return 0;
