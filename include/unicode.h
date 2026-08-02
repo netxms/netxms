@@ -58,6 +58,7 @@
 #define _tcstoll  wcstoll
 #define _tcstoull wcstoull
 #define _tcstok_r wcstok_s
+#define _tcsistr  wcsistr
 #define _tcslcpy  wcslcpy
 #define _tcslcat  wcslcat
 
@@ -68,6 +69,7 @@
 #define _tcstoll  strtoll
 #define _tcstoull strtoull
 #define _tcstok_r strtok_s
+#define _tcsistr  stristr
 #define _tcslcpy  strlcpy
 #define _tcslcat  strlcat
 

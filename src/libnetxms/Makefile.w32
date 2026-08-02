@@ -87,9 +87,9 @@ SOURCES = \
 	tools.cpp \
 	tp.cpp \
 	unicode.cpp \
+	unicode_case.cpp \
 	uuid.cpp \
 	vault.cpp \
-	wcscasestr.cpp \
 	wcslcat.cpp \
 	wcslcpy.cpp \
 	windll.cpp \
