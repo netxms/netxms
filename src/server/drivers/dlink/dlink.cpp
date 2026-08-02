@@ -26,6 +26,11 @@
 #define DEBUG_TAG _T("ndd.dlink")
 
 /**
+ * Default number of ifIndex values reserved per stack unit (used when port location cannot be parsed from interface description)
+ */
+#define DEFAULT_SLOT_SIZE 48
+
+/**
  * Get driver name
  */
 const TCHAR *DLinkDriver::getName()
@@ -72,8 +77,6 @@ bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& o
  */
 void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, NObject *node, DriverData **driverData)
 {
-	node->setCustomAttribute(_T(".dlink.slotSize"), 48);
-
 	// Check if device returns incorrect values for ifHighSpeed
 	bool ifHighSpeedInBps = false;
 	SnmpWalk(snmp, _T(".1.3.6.1.2.1.31.1.1.1.15"), [snmp, node, &ifHighSpeedInBps](SNMP_Variable *v) {
@@ -102,6 +105,30 @@ void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const SNMP_ObjectId& oid, 
 }
 
 /**
+ * Parse port location from interface description in form "... Port <port> on Unit <unit>"
+ */
+static bool ParsePortLocationFromDescription(const wchar_t *description, uint32_t *module, uint32_t *port)
+{
+   const wchar_t *p = wcsstr(description, L"Port ");
+   if (p == nullptr)
+      return false;
+
+   wchar_t *eptr;
+   uint32_t portNumber = wcstoul(p + 5, &eptr, 10);
+   if ((portNumber == 0) || (wcsncmp(eptr, L" on Unit ", 9) != 0))
+      return false;
+
+   const wchar_t *u = eptr + 9;
+   uint32_t unitNumber = wcstoul(u, &eptr, 10);
+   if ((unitNumber == 0) || (eptr == u))
+      return false;
+
+   *module = unitNumber;
+   *port = portNumber;
+   return true;
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
@@ -116,8 +143,6 @@ InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
 	if (ifList == nullptr)
 		return nullptr;
 
-	uint32_t slotSize = node->getCustomAttributeAsUInt32(_T(".dlink.slotSize"), 48);
-
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)
 	{
@@ -125,8 +150,11 @@ InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
 		if (iface->index < 1024)
 		{
 			iface->isPhysicalPort = true;
-			iface->location.module = (iface->index / slotSize) + 1;
-			iface->location.port = iface->index % slotSize;
+			if (!ParsePortLocationFromDescription(iface->description, &iface->location.module, &iface->location.port))
+			{
+			   iface->location.module = (iface->index / DEFAULT_SLOT_SIZE) + 1;
+			   iface->location.port = iface->index % DEFAULT_SLOT_SIZE;
+			}
 		}
 	}
 
