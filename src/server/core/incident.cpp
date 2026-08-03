@@ -313,18 +313,19 @@ void Incident::updateInDatabase()
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
-      _T("UPDATE incidents SET last_change_time=?,state=?,assigned_user_id=?,")
+      _T("UPDATE incidents SET last_change_time=?,state=?,assigned_user_id=?,title=?,")
       _T("resolved_by_user=?,closed_by_user=?,resolve_time=?,close_time=? WHERE id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastChangeTime));
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_state);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_assignedUserId);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_resolvedByUser);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_closedByUser);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_resolveTime));
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_closeTime));
-      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_title, DB_BIND_STATIC, 255);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_resolvedByUser);
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_closedByUser);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_resolveTime));
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_closeTime));
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -557,6 +558,8 @@ uint32_t Incident::linkAlarm(uint32_t alarmId, uint32_t userId)
    }
    DBConnectionPoolReleaseConnection(hdb);
 
+   updateInDatabase();
+
    TCHAR alarmIdStr[32];
    _sntprintf(alarmIdStr, 32, _T("%u"), alarmId);
    logActivity(INCIDENT_ACTIVITY_ALARM_LINKED, userId, nullptr, alarmIdStr, nullptr);
@@ -608,6 +611,8 @@ uint32_t Incident::unlinkAlarm(uint32_t alarmId, uint32_t userId)
       DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
+
+   updateInDatabase();
 
    TCHAR alarmIdStr[32];
    _sntprintf(alarmIdStr, 32, _T("%u"), alarmId);
