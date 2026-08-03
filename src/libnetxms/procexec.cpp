@@ -869,6 +869,13 @@ bool ProcessExecutor::execute()
       return false;
    }
 
+   // Prevent pipe descriptors from leaking into children spawned concurrently by other
+   // threads — an inherited write end would keep the pipe open after our child terminates,
+   // and readOutput() would never see EOF (child's stdout/stderr copies made by dup2 in
+   // ProcessEntry() do not carry FD_CLOEXEC)
+   fcntl(m_pipe[0], F_SETFD, fcntl(m_pipe[0], F_GETFD) | FD_CLOEXEC);
+   fcntl(m_pipe[1], F_SETFD, fcntl(m_pipe[1], F_GETFD) | FD_CLOEXEC);
+
    m_initLock.lock();
 
 #ifdef UNICODE
@@ -1056,6 +1063,8 @@ do_wait:
    int pipe = executor->getOutputPipe();
    fcntl(pipe, F_SETFD, fcntl(pipe, F_GETFD) | O_NONBLOCK);
 
+   int status = 0;
+   bool childReaped = false;
    SocketPoller sp;
    while(true)
    {
@@ -1091,6 +1100,16 @@ do_wait:
       {
          // Send empty output on timeout
          executor->onOutput("", 0);
+
+         // Pipe will never report EOF if its write end is held open by an unrelated
+         // process (leaked descriptor or detached grandchild); reap the dead child
+         // here so waitForCompletion() in stop() does not block indefinitely
+         if (waitpid(executor->m_pid, &status, WNOHANG) == executor->m_pid)
+         {
+            childReaped = true;
+            nxlog_debug_tag_object(DEBUG_TAG, executor->m_id, 6, _T("ProcessExecutor::readOutput(): process %u terminated without closing output pipe"), executor->m_pid);
+            break;
+         }
       }
       else
       {
@@ -1105,8 +1124,8 @@ do_wait:
    executor->endOfOutput();
 
 #ifndef _WIN32
-   int status;
-   waitpid(executor->m_pid, &status, 0);
+   if (!childReaped)
+      waitpid(executor->m_pid, &status, 0);
    if (WIFEXITED(status))
       executor->m_exitCode = WEXITSTATUS(status);
    else
