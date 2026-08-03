@@ -116,6 +116,8 @@ MemFree(s);
 MemFree(arr);
 ```
 
+**Temporary buffers:** for a scratch buffer that should live on the stack when small but fall back to the heap when large, use `Buffer<T, BUFFER_SIZE>` (`nms_util.h`) instead of the hand-rolled `T local[N]; T *p = (len < N) ? local : MemAllocArrayNoInit<T>(len)` + manual `MemFree` pattern — no leak/double-free risk and no size-threshold off-by-one. Its inline storage is `alignas(T)`, so it is also the correct fix for unaligned-access/SIGBUS bugs on strict-alignment CPUs (SPARC, older ARM/MIPS): `memcpy` bytes from an arbitrary stream/wire offset into the `Buffer`, do all `T`-typed work there, and `memcpy` back — never `reinterpret_cast<T*>` into a raw byte stream. Note `BUFFER_SIZE` is in bytes, `reserve()` does not initialize contents, and `operator T*()` makes it a drop-in `T*`.
+
 ### Cryptography
 
 | File | Description |
@@ -146,6 +148,8 @@ if (addr.isValid())
    // Use address
 }
 ```
+
+For members holding a MAC address or bridge ID, use a `MacAddress` object, not a raw `BYTE[MAC_ADDR_LENGTH]` array — it provides `isValid()`, `equals()`, `parse()`, `toString()`, `toJson()`, and eliminates `memset`/`memcmp`/`BinToStr` boilerplate and zero-MAC sentinels. When persisting to the database, `MacAddressNotation::FLAT_STRING` matches the old `BinToStr` flat-hex format, so on-disk round-trips are preserved when converting existing `BYTE[]` fields.
 
 ### NXCP Protocol
 
@@ -195,6 +199,8 @@ nxlog_write(NXLOG_WARNING, _T("Warning message"));
 
 ### JSON (jansson) Helpers
 
+Never `#include <jansson.h>` directly — include `nms_util.h`, which selects the correct (system or bundled) jansson copy and provides `json_t`.
+
 A family of typed convenience helpers wraps raw jansson access — prefer them over manual `json_object_get` + `json_is_*` + `json_*_value` chains. They give consistent default handling and one fewer place to forget a type check:
 
 - `json_object_get_string_t` (allocated `TCHAR*`, caller frees) / `json_object_get_string_utf8` (no-alloc view) / `json_object_get_string` (returns `String`)
@@ -223,6 +229,13 @@ See the full list near `json_object_get` in `include/nms_util.h`. When emitting 
 | `cc_ucs4.cpp` | UCS-4 conversion |
 | `cc_mb.cpp` | Multibyte conversion |
 | `iconv.cpp` | iconv wrapper |
+
+**Termination gotcha:** `wchar_to_utf8` / `ucs2_to_utf8` / `ucs4_to_utf8` / `mb_to_utf8` / `tchar_to_utf8` do **not** guarantee null termination when the destination buffer is too small — if conversion stops early because a multi-byte UTF-8 sequence doesn't fit, the buffer is left unterminated. Convert into `bufferSize - 1` and terminate via the return value:
+
+```cpp
+size_t bytes = tchar_to_utf8(value, -1, buffer, bufferSize - 1);
+buffer[bytes] = 0;
+```
 
 ### XML
 
@@ -282,6 +295,8 @@ public:
 Thread-safe classes:
 - `ObjectQueue<T>` - thread-safe by design
 - `ConditionQueue<T>` - thread-safe by design
+
+For trivial accessors to mutex-guarded members, use the `GetAttributeWithLock(attr, mutex)` / `SetAttributeWithLock` templates (`nms_util.h`) as header one-liners (copy under lock, return by value) instead of hand-written LockGuard getter bodies in the .cpp — established pattern: `DCObject` getters in `nms_dcoll.h`. Give the explicit template argument to convert derived types (`MutableString`/`StringBuffer` → `String`). Caveat: raw array members (`wchar_t[]`, `char[]`) can't go through the template — argument binding would construct the copy *outside* the lock; use a LockGuard one-liner (`{ LockGuard g(m_mutex); return String(m_arr); }`) for those.
 
 ## Related Components
 

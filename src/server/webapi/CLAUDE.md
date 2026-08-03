@@ -85,6 +85,11 @@ Do **not** translate incoming JSON into an `NXCPMessage` just to reuse `modifyFr
 
 The JSON interface is becoming the primary interface to the system; a JSON→NXCP shim would tie the REST API to NXCP encoding permanently. Most of `modifyFromMessageInternal` is "is field X present? apply it" — trivially preserved under JSON via `json_object_get(body, key) != nullptr` plus the jansson helpers (see [libnetxms](../../libnetxms/CLAUDE.md)). When emitting a GUID, use `guid.toJson()`.
 
+## Request Parsing Conventions
+
+- **Point-in-time values:** parse string values with `ParseTimestamp()` from libnetxms (`nms_util.h`) at the use site — it accepts ISO 8601, UNIX timestamps as strings, relative offsets (`[+|-]<number>[s|m|h|d]`), and `now`; 0 means parse failure → return 400. JSON integers are UNIX timestamps directly. Do not add new shared time-parse helpers to webapi headers.
+- **Content types:** `RouteBuilder` accepts `application/json` on every POST/PUT/PATCH route by default; `.acceptProtobuf()` / `.acceptImage()` only widen the accepted set. A binary-only route (protobuf, raw image body) must call `.acceptJson(false)`, otherwise it silently accepts a JSON-labeled body and the handler parses it blindly. Anything not accepted gets 415.
+
 ## API Documentation
 
 When changes are made to API endpoints (adding, modifying, or removing), the OpenAPI specification in `openapi.yaml` must also be updated to reflect those changes. This file serves as the authoritative API reference for external consumers.

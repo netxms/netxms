@@ -224,6 +224,8 @@ ExternalParameter = Custom.Metric : /path/to/script.sh
 EnableLocalDatabase = yes
 ```
 
+Configuration uses **hierarchical bracket sections**: `[Section/Subsection/Instance]`. The trailing path element is the instance identifier and can supply an object's name directly — e.g. `[ENTSOE/Zone/LV]` defines zone "LV" with no separate `Name =` key. Use one such block per instance (zone/database/target) for multi-instance subagent config. The legacy asterisk-prefixed `*Section` syntax is deprecated — do not use it in new subagent/config designs even though older subagents still show it.
+
 ## Debugging
 
 ```bash

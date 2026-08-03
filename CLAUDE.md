@@ -20,6 +20,10 @@ Do not introduce unnecessary abstraction layers or wrapper functions. Call exist
 
 Do not promote a value to a `g_*` global or a config-template field just to surface it to a single one-shot caller — read it into a local variable instead. Globals and template entries are long-lived surface area that only pay off when many callers need the value or it must persist across the run.
 
+When designing APIs: do not pair a value argument with a boolean that means "ignore that argument" — split into separate, well-named methods instead. Do not thread a parameter through call sites when the receiving object can derive the value from its own state. When a downstream consumer needs a value not on the object it receives, add a parameter to the API signature rather than adding a setter and mutating a throwaway copy.
+
+When replacing an in-tree mechanism (loader, registration scheme, plugin format), convert every in-tree user and delete all legacy machinery (old loader, macros, config variables, build glue, DB rows via upgrade) in the same change set. Do not keep a transitional dual path — both paths live in the same tree and release, so a coexistence window only adds review surface and dead code.
+
 ## Component Documentation
 
 This monorepo has component-specific CLAUDE.md files:
@@ -144,6 +148,7 @@ mvn -f src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatfo
 ### Memory Management
 
 - Use `MemAlloc`, `MemFree`, `MemAllocStruct<T>()`, `MemAllocArray<T>()` instead of malloc/free
+- Use `MemCopyStringA` / `MemCopyStringW` / `MemCopyString` (in `nms_common.h`) instead of `strdup` / `wcsdup` / `_tcsdup` — they are nullptr-safe and their results are interchangeable with `MemFree`
 - Use smart pointers for complex ownership
 - Container classes (ObjectArray, HashMap) manage object ownership via `Ownership::True/False`
 
@@ -161,6 +166,8 @@ mvn -f src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatfo
 - `HashMap<T>` - Hash map with string keys
 - `StringMap` - String-to-string map
 - `ObjectQueue<T>` - Thread-safe queue
+
+Prefer NetXMS containers for object collections and ownership management. For maps of plain scalar values (e.g. `nodeId → double`), `std::map` is acceptable and preferred — `HashMap` stores heap-allocated pointers, which forces a pointless per-entry allocation for scalars. `#include <map>` explicitly; it is not pulled in by `nms_util.h`.
 
 ### Logging
 

@@ -13,13 +13,25 @@ class NXCORE_EXPORTABLE MyClass { ... };
 extern NXCORE_EXPORTABLE_VAR(int) g_myGlobal;
 ```
 
+When exporting a function for module use, also export the sibling functions declared alongside it in the same header group (unless clearly internal) — a module rarely calls exactly one function from a subsystem, and exporting the whole family up front avoids a churn of one-symbol export edits and rebuild/reinstall cycles later.
+
 ## String Handling
 
 Server code is always built in Unicode mode. Use `L"..."` string literals and wide-character functions (`wcsncmp`, `wcslen`, etc.) directly. Do **not** use `_T()` / `TCHAR` / `_tcsncmp` wrappers in new server code — those are remnants from older versions that supported non-Unicode builds. The `_T()` abstraction is only needed in agent code and shared libraries that may be built in either mode.
 
 For formatting into a `wchar_t *` buffer, use `nx_swprintf(buffer, size, L"...", ...)` rather than `swprintf()` / `_snwprintf()`: `%s` means `wchar_t*` on Windows but `char*` on glibc, and `nx_swprintf` normalizes `%s` to `wchar_t*` on both platforms. Same argument order as `swprintf`.
 
+**Opaque pass-through blobs stay UTF-8.** When a string member is an opaque blob the server only stores and forwards without processing (XML/JSON configuration blobs like `Node::m_chassisPlacementConf`), declare it as UTF-8 `char*`, not `wchar_t*` — this avoids wide↔UTF-8 conversion on every DB and NXCP round-trip. Load with `DBGetFieldUTF8`, bind with `DB_CTYPE_UTF8_STRING`, use `setFieldFromUtf8String` / `getFieldAsUtf8String` on NXCP, and emit to JSON with `json_string()` directly (no conversion).
+
 ## Server Core Conventions
+
+- **No encryption guards.** The server is always built with encryption enabled — do not wrap TLS/crypto-dependent code under `src/server/` in `#ifdef _WITH_ENCRYPTION` or "built without encryption" runtime checks. Those guards are only meaningful in agent code and in shared libraries (libnetxms) that can genuinely be built without OpenSSL.
+
+- **Cache hot-path config, refresh on change.** For a `config` DB variable read on a hot path, cache it in a file-scoped static loaded at init and refresh it from `OnConfigVariableChange` (`core/config.cpp`) — do not call `ConfigReadInt`/`ConfigReadStr` on every use. Add an `else if` prefix-match branch dispatching to a per-subsystem handler (mirrors the existing OTLP/Syslog/SNMP/WindowsEvents branches); the config cache is updated before the handler runs, so a fresh `ConfigReadInt` inside it returns the new value. This keeps the variable runtime-tunable (`need_server_restart=0`).
+
+- **Errors to clients are RCC codes, not strings.** When conveying an error or warning over NXCP, send a numeric `RCC_*` code — the client localizes it via `RCC.getText()`. Server-formed message strings cannot be translated client-side; keep messages generic (no node IDs baked in). Fatal errors go in `VID_RCC`; a non-fatal warning on a success response goes in a separate field (e.g. `VID_WARNING_RCC`). Adding a new RCC touches `include/nxcldefs.h`, the `RCC.java` mirror, and an `RCC_0NNN=` entry in `netxms-client-messages.properties`. To translate an agent `ERR_*` code, use `AgentErrorToRCC()` (libnxsrv) — don't hand-roll a switch. The inverse applies at *external* integration boundaries (OTLP export, webhooks): never emit internal numeric enum codes there — encode them as symbolic name strings (numeric identifiers like event/DCI/object IDs are fine as integers).
+
+- **Range scans use the parallel primitives.** Never probe a multi-host IP range in a serial per-IP loop. Use `ScanAddressRangeICMP` (`core/discovery.cpp`), `TCPScanAddressRange` (libnxagent), `SnmpScanAddressRange` (libnxsnmp), or the high-level `CheckRange` wrapper (handles zone proxies and well-known ports/communities, coupled to `NetworkDiscovery.ActiveDiscovery.*` config) with a callback. The callback fires once per (IP, protocol) detection — aggregate by IP in your context if you need per-host records.
 
 - **Console commands:** when adding or substantially rewriting a branch in `ProcessConsoleCommand()` (`core/console.cpp`, already >1000 lines), extract the logic into a dedicated `static void HandleXxxCommand(ServerConsole*, const wchar_t *arg)` defined earlier in the file. The branch body should be a one- or two-line call.
 
