@@ -56,6 +56,7 @@ import org.netxms.client.BackgroundTaskInfo;
 import org.netxms.client.DeviceConfigBackup;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -95,6 +96,8 @@ public class DeviceConfigBackupView extends ObjectView
    private final I18n i18n = LocalizationHelper.getI18n(DeviceConfigBackupView.class);
 
    private boolean componentRegistered;
+   private boolean contentAccessGranted = true;
+   private boolean accessWarningShown = false;
    private List<DeviceConfigBackup> backupList = new ArrayList<>();
    private Map<Long, DeviceConfigBackup> contentCache = new HashMap<>();
    private SortableTableViewer viewer;
@@ -302,7 +305,7 @@ public class DeviceConfigBackupView extends ObjectView
    private void fillContextMenu(IMenuManager manager)
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
-      if (!selection.isEmpty())
+      if (!selection.isEmpty() && contentAccessGranted)
       {
          manager.add(actionExportRunning);
          manager.add(actionExportStartup);
@@ -361,6 +364,7 @@ public class DeviceConfigBackupView extends ObjectView
       contentCache.clear();
       viewer.setInput(new Object[0]);
       clearContentTabs();
+      accessWarningShown = false;
       if (object != null)
          refresh();
    }
@@ -387,6 +391,8 @@ public class DeviceConfigBackupView extends ObjectView
          {
             final List<DeviceConfigBackup> backups = session.getDeviceConfigBackups(nodeId);
             Collections.sort(backups, (a, b) -> b.getTimestamp().compareTo(a.getTimestamp()));
+            AbstractObject object = session.findObjectById(nodeId);
+            final boolean contentAccess = (object != null) && ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_READ_DEVICE_CONFIG) != 0);
             runInUIThread(() -> {
                if (viewer.getControl().isDisposed() || (nodeId != getObjectId()))
                   return;
@@ -394,6 +400,12 @@ public class DeviceConfigBackupView extends ObjectView
                backupList.addAll(backups);
                contentCache.clear();
                viewer.setInput(backupList.toArray());
+               contentAccessGranted = contentAccess;
+               if (!contentAccess && !accessWarningShown)
+               {
+                  addMessage(MessageArea.WARNING, i18n.tr("You do not have permission to view backup content on this node"));
+                  accessWarningShown = true;
+               }
             });
          }
 
@@ -441,6 +453,12 @@ public class DeviceConfigBackupView extends ObjectView
     */
    private void loadAndDisplayBackup(final DeviceConfigBackup primary, final DeviceConfigBackup secondary)
    {
+      if (!contentAccessGranted)
+      {
+         clearContentTabs();
+         return;
+      }
+
       final long nodeId = getObjectId();
       final int activeTab = tabFolder.getSelectionIndex();
 

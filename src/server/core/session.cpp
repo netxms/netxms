@@ -21203,7 +21203,7 @@ void ClientSession::getLastDeviceConfigBackup(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (object != nullptr)
    {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ_DEVICE_CONFIG))
       {
          auto result = DevBackupGetLatestBackup(static_cast<Node&>(*object));
          if (result.first == DeviceBackupApiStatus::SUCCESS)
@@ -21218,6 +21218,7 @@ void ClientSession::getLastDeviceConfigBackup(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on reading device configuration backup");
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -21287,7 +21288,7 @@ void ClientSession::getDeviceConfigBackup(const NXCPMessage& request)
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE));
    if (node != nullptr)
    {
-      if (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      if (node->checkAccessRights(m_userId, OBJECT_ACCESS_READ_DEVICE_CONFIG))
       {
          int64_t backupId = request.getFieldAsInt64(VID_BACKUP_ID);
          auto result = DevBackupGetBackupById(*node, backupId);
@@ -21303,6 +21304,7 @@ void ClientSession::getDeviceConfigBackup(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), L"Access denied on reading device configuration backup");
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -21369,7 +21371,7 @@ void ClientSession::restoreDeviceConfig(const NXCPMessage& request)
          return;
       }
 
-      if (!sourceNode->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      if (!sourceNode->checkAccessRights(m_userId, OBJECT_ACCESS_READ_DEVICE_CONFIG))
       {
          writeAuditLog(AUDIT_OBJECTS, false, sourceNode->getId(), L"Access denied on reading device configuration backup for restore");
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
