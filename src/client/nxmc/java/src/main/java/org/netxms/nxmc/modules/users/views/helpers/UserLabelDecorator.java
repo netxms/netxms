@@ -44,7 +44,7 @@ public class UserLabelDecorator implements ILabelDecorator
       // Do not use provided image for composition - in web client it can be bound to another UI
       // session, and reading image data from it will fail once the owning session is closed.
       // Select matching image descriptor and create base image on the current display instead.
-      ImageDescriptor baseDescriptor = (element instanceof User) ? (((User)element).isServiceAccount() ? SharedIcons.SERVICE : SharedIcons.USER) : SharedIcons.GROUP;
+      ImageDescriptor baseDescriptor = (element instanceof User) ? SharedIcons.USER : SharedIcons.GROUP;
 
       int index = state - 1;
       Image[] decoratedImages = imageCache.get(baseDescriptor);
