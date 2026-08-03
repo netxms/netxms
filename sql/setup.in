@@ -357,6 +357,10 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Syslog.ParseUnknownSourceMessages','0','0',1,0,'B','Enable or disable parsing of syslog messages received from unknown sources.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Syslog.ResolverCacheTTL','300','300',1,0,'I','TTL in seconds for syslog hostname resolver cache. Caches DNS resolution results to avoid repeated lookups for the same hostname. Set to 0 to disable caching.','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Syslog.RetentionTime','90','90',1,0,'I','Retention time in days for stored syslog messages. All messages older than specified will be deleted by housekeeping process.','days');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Syslog.TLS.EnableListener','0','0',1,1,'B','Enable/disable built-in syslog over TLS (RFC 5425) listener.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Syslog.TLS.ListenPort','6514','6514',1,1,'I','TCP port used by built-in syslog over TLS listener.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Syslog.TLS.MinVersion','2','2',1,1,'C','Minimal version of TLS protocol accepted by built-in syslog over TLS listener.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Syslog.TLS.RequireClientCertificate','0','0',1,1,'B','Require valid client certificate on syslog over TLS connections. Connections without client certificate will be dropped.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.Agent.BaseSize','32','32',1,1,'I','Base size for agent connector thread pool','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.Agent.MaxSize','256','256',1,1,'I','Maximum size for agent connector thread pool','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ThreadPool.AIOperator.BaseSize','4','4',1,1,'I','Base size for AI operator thread pool.','');
@@ -404,6 +408,7 @@ INSERT INTO config_values (var_name,var_value) VALUES ('ReportingServer.Port','6
 INSERT INTO config_values (var_name,var_value) VALUES ('SNMP.Agent.ListenerPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('SNMP.Traps.ListenerPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('Syslog.ListenPort','65535');
+INSERT INTO config_values (var_name,var_value) VALUES ('Syslog.TLS.ListenPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('XMPP.Port','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('Server.AllowedCiphers','63');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultCacheMode','1','On');
@@ -494,6 +499,10 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.Min
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('SNMP.MinVersion','3','SNMPv3');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','0','IP, then hostname');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','1','Hostname, then IP');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.TLS.MinVersion','0','1.0');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.TLS.MinVersion','1','1.1');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.TLS.MinVersion','2','1.2');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.TLS.MinVersion','3','1.3');
 
 
 /**

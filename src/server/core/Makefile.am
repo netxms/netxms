@@ -33,7 +33,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			radius.cpp reporting.cpp resource.cpp rootobj.cpp sc_migration.cpp schedule.cpp script.cpp \
 			search_query.cpp sensor.cpp server_stats.cpp session.cpp skills.cpp \
 			snmp.cpp snmpd.cpp snmptrap.cpp snmptrapd.cpp ssh.cpp sshkeys.cpp stp.cpp \
-			subnet.cpp summary_email.cpp svg.cpp swpkg.cpp syncer.cpp syslogd.cpp template.cpp \
+			subnet.cpp summary_email.cpp svg.cpp swpkg.cpp syncer.cpp syslog_tls.cpp syslogd.cpp template.cpp \
 			tools.cpp topology_builder.cpp tracert.cpp traffic_connector.cpp traffic_hosts.cpp traffic_observer.cpp tunnel.cpp \
 			ua_notification_item.cpp uniroot.cpp userdb.cpp userdb_objects.cpp \
 			vnc.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \

@@ -271,6 +271,7 @@ sunos		SunOS subagent
 sync		Syncer messages
 
 syslog		Syslog server related messages
+syslog.tls	Syslog over TLS listener
 
 threads.*	Thread related
 threads.pool	Thread pool related

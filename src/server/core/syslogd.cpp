@@ -28,11 +28,6 @@
 #define DEBUG_TAG _T("syslog")
 
 /**
- * Max syslog message length
- */
-#define MAX_SYSLOG_MSG_LEN    8192
-
-/**
  * Queues
  */
 ObjectQueue<SyslogMessage> g_syslogProcessingQueue(1024, Ownership::False);
@@ -1419,6 +1414,9 @@ void StartSyslogServer()
 
    if (ConfigReadBoolean(_T("Syslog.EnableListener"), false))
       s_receiverThread = ThreadCreateEx(SyslogReceiver);
+
+   if (ConfigReadBoolean(_T("Syslog.TLS.EnableListener"), false))
+      StartSyslogTlsListener();
 }
 
 /**
@@ -1428,6 +1426,7 @@ void StopSyslogServer()
 {
    s_running = false;
    ThreadJoin(s_receiverThread);
+   StopSyslogTlsListener();
 
    // Stop processing thread
    g_syslogProcessingQueue.put(INVALID_POINTER_VALUE);

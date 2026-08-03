@@ -24,6 +24,37 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.16 to 70.17
+ */
+static bool H_UpgradeFromV16()
+{
+   CHK_EXEC(CreateConfigParam(L"Syslog.TLS.EnableListener", L"0",
+         L"Enable/disable built-in syslog over TLS (RFC 5425) listener.",
+         nullptr, 'B', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Syslog.TLS.ListenPort", L"6514",
+         L"TCP port used by built-in syslog over TLS listener.",
+         nullptr, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Syslog.TLS.MinVersion", L"2",
+         L"Minimal version of TLS protocol accepted by built-in syslog over TLS listener.",
+         nullptr, 'C', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Syslog.TLS.RequireClientCertificate", L"0",
+         L"Require valid client certificate on syslog over TLS connections. Connections without client certificate will be dropped.",
+         nullptr, 'B', true, true, false, false));
+
+   static const wchar_t *batch =
+      L"INSERT INTO config_values (var_name,var_value) VALUES ('Syslog.TLS.ListenPort','65535')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.TLS.MinVersion','0','1.0')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.TLS.MinVersion','1','1.1')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.TLS.MinVersion','2','1.2')\n"
+      L"INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.TLS.MinVersion','3','1.3')\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 70.15 to 70.16
  */
 static bool H_UpgradeFromV15()
@@ -636,6 +667,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 16, 70, 17, H_UpgradeFromV16 },
    { 15, 70, 16, H_UpgradeFromV15 },
    { 14, 70, 15, H_UpgradeFromV14 },
    { 13, 70, 14, H_UpgradeFromV13 },

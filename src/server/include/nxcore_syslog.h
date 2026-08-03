@@ -26,6 +26,11 @@
 #include <nxlog.h>
 
 /**
+ * Max syslog message length
+ */
+#define MAX_SYSLOG_MSG_LEN    8192
+
+/**
  * Syslog message
  */
 class SyslogMessage
@@ -135,6 +140,12 @@ public:
    const char *getMsgId() const { return m_msgId; }
    const char *getStructuredData() const { return m_structuredData; }
 };
+
+/**
+ * Syslog over TLS listener (syslog_tls.cpp)
+ */
+void StartSyslogTlsListener();
+void StopSyslogTlsListener();
 
 #endif   /* _nxcore_syslog_h_ */
 
