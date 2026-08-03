@@ -15089,6 +15089,54 @@ void Node::setSnmpUSMCredentials(const char *userName, const char *authPassword,
 }
 
 /**
+ * Set separate community string for SNMP trap reception (SNMP v1/v2c).
+ */
+void Node::setSnmpTrapCommunity(const char *community)
+{
+   lockProperties();
+   delete m_snmpTrapSecurity;
+   m_snmpTrapSecurity = new SNMP_SecurityContext(CHECK_NULL_EX_A(community));
+   m_snmpTrapVersion = SNMP_VERSION_2C;
+   m_lastSnmpTrapAuthFailureEventTime = 0;
+   setModified(MODIFY_NODE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Set separate SNMP v3 USM credentials for trap reception. Derived
+ * authentication/privacy keys are recalculated from the supplied passwords.
+ */
+void Node::setSnmpTrapUSMCredentials(const char *userName, const char *authPassword, const char *privPassword,
+         SNMP_AuthMethod authMethod, SNMP_EncryptionMethod privMethod)
+{
+   lockProperties();
+   delete m_snmpTrapSecurity;
+   m_snmpTrapSecurity = new SNMP_SecurityContext(CHECK_NULL_EX_A(userName), CHECK_NULL_EX_A(authPassword),
+            CHECK_NULL_EX_A(privPassword), authMethod, privMethod);
+   m_snmpTrapSecurity->recalculateKeys();
+   m_snmpTrapVersion = SNMP_VERSION_3;
+   m_lastSnmpTrapAuthFailureEventTime = 0;
+   setModified(MODIFY_NODE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Clear separate credentials for SNMP trap reception (revert to using polling credentials).
+ */
+void Node::clearSnmpTrapCredentials()
+{
+   lockProperties();
+   if (m_snmpTrapSecurity != nullptr)
+   {
+      delete m_snmpTrapSecurity;
+      m_snmpTrapSecurity = nullptr;
+      m_lastSnmpTrapAuthFailureEventTime = 0;
+      setModified(MODIFY_NODE_PROPERTIES);
+   }
+   unlockProperties();
+}
+
+/**
  * Check if compression allowed for agent
  */
 bool Node::isAgentCompressionAllowed()
