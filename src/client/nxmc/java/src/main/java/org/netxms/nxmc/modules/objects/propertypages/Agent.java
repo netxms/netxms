@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Group;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCompressionMode;
+import org.netxms.client.constants.AgentTlsMode;
 import org.netxms.client.constants.CertificateMappingMethod;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -65,6 +66,8 @@ public class Agent extends ObjectPropertyPage
    private Button radioAgentCompressionDisabled;
    private Combo certMappingMethod;
    private LabeledText certMappingData;
+   private Combo tlsMode;
+   private LabeledText tlsCertFingerprint;
 
    /**
     * Create new page.
@@ -214,6 +217,32 @@ public class Agent extends ObjectPropertyPage
          certMappingData.setText(node.getAgentCertificateMappingData());
       certMappingData.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
+      /* TLS connection */
+      Group tlsGroup = new Group(dialogArea, SWT.NONE);
+      tlsGroup.setText(i18n.tr("TLS connection"));
+      layout = new GridLayout();
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.numColumns = 2;
+      tlsGroup.setLayout(layout);
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.top = new FormAttachment(certificateMappingGroup, 0, SWT.BOTTOM);
+      tlsGroup.setLayoutData(fd);
+
+      tlsMode = WidgetHelper.createLabeledCombo(tlsGroup, SWT.DROP_DOWN | SWT.READ_ONLY, i18n.tr("Mode"),
+            new GridData(SWT.FILL, SWT.BOTTOM, false, false));
+      tlsMode.add(i18n.tr("Disabled"));
+      tlsMode.add(i18n.tr("Allowed"));
+      tlsMode.add(i18n.tr("Required"));
+      tlsMode.select(node.getAgentTlsMode().getValue());
+
+      tlsCertFingerprint = new LabeledText(tlsGroup, SWT.NONE);
+      tlsCertFingerprint.setLabel(i18n.tr("Pinned certificate fingerprint (clear field to reset pinning)"));
+      if (node.getAgentCertificateFingerprint() != null)
+         tlsCertFingerprint.setText(node.getAgentCertificateFingerprint());
+      tlsCertFingerprint.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+
       return dialogArea;
    }
 
@@ -260,6 +289,10 @@ public class Agent extends ObjectPropertyPage
                (agentTunnelOnly.getSelection() ? AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY : 0), 
             AbstractNode.NF_FORCE_ENCRYPTION | AbstractNode.NF_AGENT_OVER_TUNNEL_ONLY);
       md.setCertificateMapping(CertificateMappingMethod.getByValue(certMappingMethod.getSelectionIndex()), certMappingData.getText().trim());
+      md.setAgentTlsMode(AgentTlsMode.getByValue(tlsMode.getSelectionIndex()));
+      String fingerprint = tlsCertFingerprint.getText().trim();
+      if (!fingerprint.equalsIgnoreCase((node.getAgentCertificateFingerprint() != null) ? node.getAgentCertificateFingerprint() : ""))
+         md.setAgentCertificateFingerprint(fingerprint);
 
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Updating agent communication settings for node {0}", node.getObjectName()), null, messageArea) {
@@ -307,5 +340,7 @@ public class Agent extends ObjectPropertyPage
       agentSharedSecret.setText(""); //$NON-NLS-1$
       certMappingMethod.select(CertificateMappingMethod.COMMON_NAME.getValue());
       certMappingData.setText("");
+      tlsMode.select(AgentTlsMode.ALLOWED.getValue());
+      tlsCertFingerprint.setText("");
    }
 }

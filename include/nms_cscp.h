@@ -1796,6 +1796,8 @@ __PACK_END__
 #define VID_NETCONF_PROXY           ((uint32_t)1021)
 #define VID_NETCONF_PORT            ((uint32_t)1022)
 #define VID_MARKDOWN                ((uint32_t)1023)
+#define VID_AGENT_TLS_MODE          ((uint32_t)1024)
+#define VID_AGENT_CERT_FINGERPRINT  ((uint32_t)1025)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

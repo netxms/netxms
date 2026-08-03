@@ -8362,13 +8362,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
    {
       // Agent enforces TLS connections; record capability and retry through TLS tunnel
       nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::connectToAgent(%s [%u]): agent requires TLS connection, retrying through TLS tunnel"), m_name, m_id);
-      lockProperties();
-      if (!(m_capabilities & NC_HAS_TLS_TUNNEL))
-      {
-         m_capabilities |= NC_HAS_TLS_TUNNEL;
-         setModified(MODIFY_NODE_PROPERTIES);
-      }
-      unlockProperties();
+      updateTlsTunnelCapability(true);
 
       tunnel = establishReverseAgentTunnel(&legacyAllowed);
       if (tunnel != nullptr)
@@ -8385,14 +8379,7 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
       *socketError = connectSocketError;
    if (success)
    {
-      if (m_agentConnection->isTlsTunnelSupported() && !(m_capabilities & NC_HAS_TLS_TUNNEL))
-      {
-         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::connectToAgent(%s [%u]): agent supports TLS tunnel connections"), m_name, m_id);
-         lockProperties();
-         m_capabilities |= NC_HAS_TLS_TUNNEL;
-         setModified(MODIFY_NODE_PROPERTIES);
-         unlockProperties();
-      }
+      updateTlsTunnelCapability(m_agentConnection->isTlsTunnelSupported());
       uint32_t rcc = m_agentConnection->setServerId(g_serverId);
       if (rcc == ERR_SUCCESS)
       {
@@ -10218,6 +10205,16 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
    msg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
    msg->setField(VID_AGENT_CERT_SUBJECT, m_agentCertSubject);
+   msg->setField(VID_AGENT_TLS_MODE, static_cast<int16_t>(m_agentTlsMode));
+   if (m_agentCertFingerprintSet)
+   {
+      TCHAR fingerprint[SHA256_DIGEST_SIZE * 2 + 1];
+      msg->setField(VID_AGENT_CERT_FINGERPRINT, BinToStr(m_agentCertFingerprint, SHA256_DIGEST_SIZE, fingerprint));
+   }
+   else
+   {
+      msg->setField(VID_AGENT_CERT_FINGERPRINT, _T(""));
+   }
    msg->setFieldFromUtf8String(VID_SYSLOG_CODEPAGE, m_syslogCodepage);
    msg->setFieldFromUtf8String(VID_SNMP_CODEPAGE, m_snmpCodepage);
    msg->setField(VID_OSPF_ROUTER_ID, InetAddress(m_ospfRouterId));
@@ -10434,6 +10431,35 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
    // Change shared secret of native agent
    if (msg.isFieldExist(VID_SHARED_SECRET))
       msg.getFieldAsString(VID_SHARED_SECRET, m_agentSecret, MAX_SECRET_LENGTH);
+
+   // Change agent TLS connection mode
+   if (msg.isFieldExist(VID_AGENT_TLS_MODE))
+   {
+      int16_t mode = msg.getFieldAsInt16(VID_AGENT_TLS_MODE);
+      if ((mode < AGENT_TLS_MODE_DISABLED) || (mode > AGENT_TLS_MODE_REQUIRED))
+         return RCC_INVALID_ARGUMENT;
+      m_agentTlsMode = mode;
+   }
+
+   // Change or clear pinned agent certificate fingerprint
+   if (msg.isFieldExist(VID_AGENT_CERT_FINGERPRINT))
+   {
+      TCHAR fingerprintText[80];
+      msg.getFieldAsString(VID_AGENT_CERT_FINGERPRINT, fingerprintText, 80);
+      if (fingerprintText[0] != 0)
+      {
+         BYTE fingerprint[SHA256_DIGEST_SIZE];
+         if ((_tcslen(fingerprintText) != SHA256_DIGEST_SIZE * 2) || (StrToBin(fingerprintText, fingerprint, SHA256_DIGEST_SIZE) != SHA256_DIGEST_SIZE))
+            return RCC_INVALID_ARGUMENT;
+         memcpy(m_agentCertFingerprint, fingerprint, SHA256_DIGEST_SIZE);
+         m_agentCertFingerprintSet = true;
+      }
+      else
+      {
+         m_agentCertFingerprintSet = false;
+      }
+      memset(m_mismatchedCertFingerprint, 0, SHA256_DIGEST_SIZE);   // Re-arm mismatch reporting
+   }
 
    // Change SNMP protocol version
    if (msg.isFieldExist(VID_SNMP_VERSION))
@@ -10808,6 +10834,32 @@ static bool CertificateMappingMethodFromName(const char *name, CertificateMappin
    return true;
 }
 
+static const char *AgentTlsModeToName(int16_t mode)
+{
+   switch(mode)
+   {
+      case AGENT_TLS_MODE_DISABLED:
+         return "disabled";
+      case AGENT_TLS_MODE_REQUIRED:
+         return "required";
+      default:
+         return "allowed";
+   }
+}
+
+static bool AgentTlsModeFromName(const char *name, int16_t *mode)
+{
+   if (!stricmp(name, "disabled"))
+      *mode = AGENT_TLS_MODE_DISABLED;
+   else if (!stricmp(name, "allowed"))
+      *mode = AGENT_TLS_MODE_ALLOWED;
+   else if (!stricmp(name, "required"))
+      *mode = AGENT_TLS_MODE_REQUIRED;
+   else
+      return false;
+   return true;
+}
+
 /**
  * Apply SNMP credential fields (authName, authMethod, privMethod, authPassword,
  * privPassword) from a JSON object onto a security context in merge-patch fashion.
@@ -11056,6 +11108,36 @@ uint32_t Node::modifyJsonAgentConfig(json_t *agent)
       }
       UpdateAgentCertificateMappingIndex(self(), oldMappingData, m_agentCertMappingData);
       MemFree(oldMappingData);
+   }
+
+   value = json_object_get(agent, "tlsMode");
+   if (value != nullptr)
+   {
+      int16_t mode;
+      if (!json_is_string(value) || !AgentTlsModeFromName(json_string_value(value), &mode))
+         return RCC_INVALID_ARGUMENT;
+      m_agentTlsMode = mode;
+   }
+
+   value = json_object_get(agent, "certificateFingerprint");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value) && !json_is_null(value))
+         return RCC_INVALID_ARGUMENT;
+      const char *fingerprintText = json_is_string(value) ? json_string_value(value) : "";
+      if (*fingerprintText != 0)
+      {
+         BYTE fingerprint[SHA256_DIGEST_SIZE];
+         if ((strlen(fingerprintText) != SHA256_DIGEST_SIZE * 2) || (StrToBinA(fingerprintText, fingerprint, SHA256_DIGEST_SIZE) != SHA256_DIGEST_SIZE))
+            return RCC_INVALID_ARGUMENT;
+         memcpy(m_agentCertFingerprint, fingerprint, SHA256_DIGEST_SIZE);
+         m_agentCertFingerprintSet = true;
+      }
+      else
+      {
+         m_agentCertFingerprintSet = false;
+      }
+      memset(m_mismatchedCertFingerprint, 0, SHA256_DIGEST_SIZE);   // Re-arm mismatch reporting
    }
 
    uint32_t setFlags = 0, mask = 0;
@@ -11625,6 +11707,24 @@ void Node::writeOSPFDataToMessage(NXCPMessage *msg)
  * Create ready to use agent connection
  */
 /**
+ * Update TLS tunnel support capability flag from agent connection state
+ */
+void Node::updateTlsTunnelCapability(bool supported)
+{
+   if (supported == ((m_capabilities & NC_HAS_TLS_TUNNEL) != 0))
+      return;
+   nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::updateTlsTunnelCapability(%s [%u]): agent %s TLS tunnel connections"),
+         m_name, m_id, supported ? _T("supports") : _T("no longer supports"));
+   lockProperties();
+   if (supported)
+      m_capabilities |= NC_HAS_TLS_TUNNEL;
+   else
+      m_capabilities &= ~NC_HAS_TLS_TUNNEL;
+   setModified(MODIFY_NODE_PROPERTIES);
+   unlockProperties();
+}
+
+/**
  * Establish reverse (server-initiated) TLS tunnel to the node's agent if node settings allow it.
  * Returns tunnel or null pointer. Sets *legacyAllowed to false if fallback to legacy
  * connection should not be attempted.
@@ -11804,13 +11904,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
       {
          // Agent enforces TLS connections; record capability and retry through TLS tunnel
          nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::createAgentConnection(%s [%u]): agent requires TLS connection, retrying through TLS tunnel"), m_name, m_id);
-         lockProperties();
-         if (!(m_capabilities & NC_HAS_TLS_TUNNEL))
-         {
-            m_capabilities |= NC_HAS_TLS_TUNNEL;
-            setModified(MODIFY_NODE_PROPERTIES);
-         }
-         unlockProperties();
+         updateTlsTunnelCapability(true);
 
          tunnel = establishReverseAgentTunnel(&legacyAllowed);
          if (tunnel != nullptr)
@@ -11832,14 +11926,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
    if (conn != nullptr)
    {
       setLastAgentCommTime();
-      if (conn->isTlsTunnelSupported() && !(m_capabilities & NC_HAS_TLS_TUNNEL))
-      {
-         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::createAgentConnection(%s [%u]): agent supports TLS tunnel connections"), m_name, m_id);
-         lockProperties();
-         m_capabilities |= NC_HAS_TLS_TUNNEL;
-         setModified(MODIFY_NODE_PROPERTIES);
-         unlockProperties();
-      }
+      updateTlsTunnelCapability(conn->isTlsTunnelSupported());
    }
    nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): conn=%p"), m_name, m_id, conn.get());
    return conn;
@@ -15818,6 +15905,16 @@ json_t *Node::agentConfigToJson(bool includeSensitiveData)
    json_object_set_new(agent, "tunnelOnly", json_boolean((m_flags & NF_AGENT_OVER_TUNNEL_ONLY) != 0));
    json_object_set_new(agent, "certificateMappingMethod", json_string(CertificateMappingMethodToName(m_agentCertMappingMethod)));
    json_object_set_new(agent, "certificateMappingData", json_string_t(m_agentCertMappingData));
+   json_object_set_new(agent, "tlsMode", json_string(AgentTlsModeToName(m_agentTlsMode)));
+   if (m_agentCertFingerprintSet)
+   {
+      char fingerprint[SHA256_DIGEST_SIZE * 2 + 1];
+      json_object_set_new(agent, "certificateFingerprint", json_string(BinToStrA(m_agentCertFingerprint, SHA256_DIGEST_SIZE, fingerprint)));
+   }
+   else
+   {
+      json_object_set_new(agent, "certificateFingerprint", json_string(""));
+   }
    if (includeSensitiveData)
       json_object_set_new(agent, "sharedSecret", json_string_t(m_agentSecret));
    unlockProperties();

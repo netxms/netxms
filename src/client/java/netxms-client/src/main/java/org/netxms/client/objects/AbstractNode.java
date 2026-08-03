@@ -31,6 +31,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.AgentCompressionMode;
+import org.netxms.client.constants.AgentTlsMode;
 import org.netxms.client.constants.CertificateMappingMethod;
 import org.netxms.client.constants.DeviceBackupJobStatus;
 import org.netxms.client.constants.IcmpStatCollectionMode;
@@ -95,6 +96,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final long NC_HAS_SERVICE_MANAGER    = 0x0400000000L;
    public static final long NC_HAS_AGENT_LLDP         = 0x2000000000L;
    public static final long NC_IS_NETCONF             = 0x4000000000L;
+   public static final long NC_HAS_TLS_TUNNEL         = 0x8000000000L;
 
 	// Node flags
    public static final int NF_DISABLE_SMCLP_PROPERTIES  = 0x00004000;
@@ -236,6 +238,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected CertificateMappingMethod agentCertificateMappingMethod;
    protected String agentCertificateMappingData;
    protected String agentCertificateSubject;
+   protected AgentTlsMode agentTlsMode;
+   protected String agentCertificateFingerprint;
    protected String syslogCodepage;
    protected String snmpCodepage;
    protected InetAddress ospfRouterId;
@@ -377,6 +381,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       agentCertificateMappingMethod = CertificateMappingMethod.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CERT_MAPPING_METHOD));
       agentCertificateMappingData = msg.getFieldAsString(NXCPCodes.VID_CERT_MAPPING_DATA);
       agentCertificateSubject = msg.getFieldAsString(NXCPCodes.VID_AGENT_CERT_SUBJECT);
+      agentTlsMode = AgentTlsMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AGENT_TLS_MODE));
+      agentCertificateFingerprint = msg.getFieldAsString(NXCPCodes.VID_AGENT_CERT_FINGERPRINT);
       syslogCodepage = msg.getFieldAsString(NXCPCodes.VID_SYSLOG_CODEPAGE);
       snmpCodepage = msg.getFieldAsString(NXCPCodes.VID_SNMP_CODEPAGE);
       ospfRouterId = msg.getFieldAsInetAddress(NXCPCodes.VID_OSPF_ROUTER_ID);
@@ -1659,6 +1665,27 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    {
       return agentCertificateSubject;
    }
+
+   /**
+    * Get agent TLS connection mode.
+    *
+    * @return agent TLS connection mode
+    */
+   public AgentTlsMode getAgentTlsMode()
+   {
+      return agentTlsMode;
+   }
+
+   /**
+    * Get pinned agent certificate SHA-256 fingerprint.
+    *
+    * @return pinned agent certificate fingerprint or empty string if not pinned
+    */
+   public String getAgentCertificateFingerprint()
+   {
+      return agentCertificateFingerprint;
+   }
+
 
    /**
     * Get syslog codepage

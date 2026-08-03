@@ -93,6 +93,9 @@ public class TunnelListComparator extends ViewerComparator
          case TunnelManager.COL_STATE:
             result = (t1.isBound() ? 1 : 0) - (t2.isBound() ? 1 : 0);
             break;
+         case TunnelManager.COL_DIRECTION:
+            result = Boolean.compare(t1.isInbound(), t2.isInbound());
+            break;
          case TunnelManager.COL_SYSINFO:
             result = t1.getSystemInformation().compareToIgnoreCase(t2.getSystemInformation());
             break;

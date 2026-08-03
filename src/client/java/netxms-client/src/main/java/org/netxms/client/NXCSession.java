@@ -8290,6 +8290,16 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, data.getCertificateMappingData());
       }
 
+      if (data.getAgentTlsMode() != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_AGENT_TLS_MODE, data.getAgentTlsMode().getValue());
+      }
+
+      if (data.getAgentCertificateFingerprint() != null)
+      {
+         msg.setField(NXCPCodes.VID_AGENT_CERT_FINGERPRINT, data.getAgentCertificateFingerprint());
+      }
+
       if (data.getCategoryId() != null)
       {
          msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, data.getCategoryId());

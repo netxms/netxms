@@ -88,6 +88,8 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
             return t.getSerialNumber();
          case TunnelManager.COL_STATE:
             return t.isBound() ? "Bound" : "Unbound";
+         case TunnelManager.COL_DIRECTION:
+            return t.isInbound() ? "Inbound" : "Outbound";
          case TunnelManager.COL_SYSINFO:
             return t.getSystemInformation();
          case TunnelManager.COL_SYSNAME:

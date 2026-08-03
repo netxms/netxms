@@ -4636,6 +4636,13 @@ public:
    const uuid& getTunnelId() const { return m_tunnelId; }
    const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }
    int16_t getAgentTlsMode() const { return m_agentTlsMode; }
+   String getAgentCertificateFingerprint() const
+   {
+      if (!m_agentCertFingerprintSet)
+         return String();
+      TCHAR buffer[SHA256_DIGEST_SIZE * 2 + 1];
+      return String(BinToStr(m_agentCertFingerprint, SHA256_DIGEST_SIZE, buffer));
+   }
    CertificateMappingMethod getAgentCertificateMappingMethod() const { return m_agentCertMappingMethod; }
    const TCHAR *getAgentCertificateMappingData() const { return m_agentCertMappingData; }
    uint32_t getRequiredPollCount() const { return m_requiredPollCount; }
@@ -4803,6 +4810,7 @@ public:
    void getSmclpMetrics(StringSet *metrics) const;
 
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
+   void updateTlsTunnelCapability(bool supported);
    shared_ptr<AgentTunnel> establishReverseAgentTunnel(bool *legacyAllowed);
    shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);

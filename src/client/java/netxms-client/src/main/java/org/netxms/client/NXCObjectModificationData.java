@@ -34,6 +34,7 @@ import org.netxms.base.MacAddress;
 import org.netxms.base.NXCommon;
 import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.AgentTlsMode;
 import org.netxms.client.constants.AgentCompressionMode;
 import org.netxms.client.constants.CertificateMappingMethod;
 import org.netxms.client.constants.GeoLocationControlMode;
@@ -197,6 +198,8 @@ public class NXCObjectModificationData
    private Long modbusProxy;
    private CertificateMappingMethod certificateMappingMethod;
    private String certificateMappingData;
+   private AgentTlsMode agentTlsMode;
+   private String agentCertificateFingerprint;
    private Integer categoryId;
    private GeoLocationControlMode geoLocationControlMode;
    private long[] geoAreas;
@@ -2442,6 +2445,47 @@ public class NXCObjectModificationData
    {
       return certificateMappingData;
    }
+
+   /**
+    * Set agent TLS connection mode.
+    *
+    * @param agentTlsMode new agent TLS connection mode
+    */
+   public void setAgentTlsMode(AgentTlsMode agentTlsMode)
+   {
+      this.agentTlsMode = agentTlsMode;
+   }
+
+   /**
+    * Get agent TLS connection mode.
+    *
+    * @return agent TLS connection mode
+    */
+   public AgentTlsMode getAgentTlsMode()
+   {
+      return agentTlsMode;
+   }
+
+   /**
+    * Set pinned agent certificate SHA-256 fingerprint. Use empty string to clear pinned fingerprint.
+    *
+    * @param agentCertificateFingerprint new fingerprint as hex string or empty string to clear
+    */
+   public void setAgentCertificateFingerprint(String agentCertificateFingerprint)
+   {
+      this.agentCertificateFingerprint = agentCertificateFingerprint;
+   }
+
+   /**
+    * Get pinned agent certificate SHA-256 fingerprint.
+    *
+    * @return pinned agent certificate fingerprint
+    */
+   public String getAgentCertificateFingerprint()
+   {
+      return agentCertificateFingerprint;
+   }
+
 
    /**
     * Get category ID.

@@ -50,6 +50,7 @@ public class AgentTunnel
    private boolean snmpTrapProxy;
    private boolean userAgentInstalled;
    private boolean syslogProxy;
+   private boolean inbound;
 
    /**
     * Create from NXCP message
@@ -80,6 +81,17 @@ public class AgentTunnel
       syslogProxy = msg.getFieldAsBoolean(baseId + 18);
       connectionTime = msg.getFieldAsDate(baseId + 22);
       serialNumber = msg.getFieldAsString(baseId + 23);
+      inbound = (msg.findField(baseId + 24) != null) ? msg.getFieldAsBoolean(baseId + 24) : true;
+   }
+
+   /**
+    * Check if tunnel is inbound (established by agent). Outbound tunnels are established by server.
+    *
+    * @return true if tunnel is inbound
+    */
+   public boolean isInbound()
+   {
+      return inbound;
    }
 
    /**

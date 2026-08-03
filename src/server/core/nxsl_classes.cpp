@@ -3486,6 +3486,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(node->getAgentCertificateSubject());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("agentCertificateFingerprint"))
+   {
+      value = vm->createValue(node->getAgentCertificateFingerprint());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("agentId"))
    {
       TCHAR buffer[64];
@@ -3506,6 +3510,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
       {
          value = vm->createValue();
       }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("agentTlsMode"))
+   {
+      value = vm->createValue(static_cast<int32_t>(node->getAgentTlsMode()));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("agentVersion"))
    {
@@ -6066,6 +6074,10 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const NXSL_Identifier
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hostname"))
    {
       value = vm->createValue(tunnel->getHostname());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("inbound"))
+   {
+      value = vm->createValue(tunnel->isInbound());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hardwareId"))
    {
