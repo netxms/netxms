@@ -4684,6 +4684,9 @@ public:
    void setSnmpVersion(SNMP_Version version);
    void setSnmpCommunity(const char *community);
    void setSnmpUSMCredentials(const char *userName, const char *authPassword, const char *privPassword, SNMP_AuthMethod authMethod, SNMP_EncryptionMethod privMethod);
+   void setSnmpTrapCommunity(const char *community);
+   void setSnmpTrapUSMCredentials(const char *userName, const char *authPassword, const char *privPassword, SNMP_AuthMethod authMethod, SNMP_EncryptionMethod privMethod);
+   void clearSnmpTrapCredentials();
    void setSshCredentials(const TCHAR *login, const TCHAR *password);
    void setVncPassword(const TCHAR *password);
    void changeIPAddress(const InetAddress& ipAddr);
