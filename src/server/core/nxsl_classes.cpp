@@ -6016,7 +6016,8 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const NXSL_Identifier
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hardwareId"))
    {
-      value = vm->createValue(tunnel->getHostname());
+      TCHAR buffer[HARDWARE_ID_LENGTH * 2 + 1];
+      value = vm->createValue(BinToStr(tunnel->getHardwareId().value(), HARDWARE_ID_LENGTH, buffer));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
    {
