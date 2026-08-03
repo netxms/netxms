@@ -75,6 +75,22 @@ public:
 shared_ptr<AgentTunnel> GetTunnelForNode(uint32_t nodeId);
 
 /**
+ * Register outbound tunnel established by node. Returns effective tunnel for the node - either
+ * given tunnel or already registered one (in that case given tunnel is shut down).
+ */
+shared_ptr<AgentTunnel> RegisterOutboundTunnel(const shared_ptr<OutboundAgentTunnel>& tunnel);
+
+/**
+ * Unregister outbound tunnel (used as tunnel close callback)
+ */
+void UnregisterOutboundTunnel(OutboundAgentTunnel *tunnel);
+
+/**
+ * Setup TLS context for outbound agent tunnel (presents server certificate to agent if available)
+ */
+bool SetupAgentTunnelTlsContext(SSL_CTX *context);
+
+/**
  * Tunnel capability filter
  */
 enum class TunnelCapabilityFilter

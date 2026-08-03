@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxcore_agent_tunnel.h>
 #include <nxcrypto.h>
 #include <nxstat.h>
 #include <openssl/x509v3.h>
@@ -738,6 +739,26 @@ bool SetupServerTlsContext(SSL_CTX *context)
    SSL_CTX_use_certificate(context, s_serverCertificate);
    SSL_CTX_use_PrivateKey(context, s_serverCertificateKey);
    SSL_CTX_set_verify(context, SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE, nullptr);
+   return true;
+}
+
+/**
+ * Setup TLS context for outbound agent tunnel. Presents server certificate for optional validation
+ * by agent; agent certificate is verified by fingerprint pinning, not against trusted roots.
+ */
+bool SetupAgentTunnelTlsContext(SSL_CTX *context)
+{
+   if ((s_serverCertificate == nullptr) || (s_serverCertificateKey == nullptr))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("SetupAgentTunnelTlsContext: server certificate not loaded, connecting without client certificate"));
+      return true;
+   }
+
+   if ((SSL_CTX_use_certificate(context, s_serverCertificate) != 1) || (SSL_CTX_use_PrivateKey(context, s_serverCertificateKey) != 1))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("SetupAgentTunnelTlsContext: cannot set server certificate"));
+      return false;
+   }
    return true;
 }
 

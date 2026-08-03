@@ -1539,6 +1539,29 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
+      EVENT_AGENT_TLS_CERT_PINNED, 'SYS_AGENT_TLS_CERT_PINNED', '8f72a4f5-321c-42f4-857f-bfc8808beadc',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Agent TLS certificate fingerprint %<fingerprint> pinned',
+      'Generated when agent certificate fingerprint is stored on first TLS tunnel connection to the agent.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) fingerprint - Agent certificate SHA-256 fingerprint' CONCAT CRLF CONCAT
+      '   2) ipAddress - Agent IP address'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_AGENT_TLS_CERT_MISMATCH, 'SYS_AGENT_TLS_CERT_MISMATCH', '912d4c2c-a8f6-4830-8fd9-a48dbbe85907',
+      EVENT_SEVERITY_MAJOR, 1,
+      'Agent TLS certificate fingerprint mismatch (expected %<expectedFingerprint>, actual %<actualFingerprint>)',
+      'Generated when agent certificate does not match fingerprint pinned on the node during TLS tunnel establishment.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) expectedFingerprint - Pinned agent certificate SHA-256 fingerprint' CONCAT CRLF CONCAT
+      '   2) actualFingerprint - Actual agent certificate SHA-256 fingerprint' CONCAT CRLF CONCAT
+      '   3) ipAddress - Agent IP address'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
       EVENT_DUPLICATE_MAC_ADDRESS, 'SYS_DUPLICATE_MAC_ADDRESS', 'c19fbb37-98c9-43a5-90f2-7a54ba9116fa',
       EVENT_SEVERITY_MAJOR, 1,
       'Duplicate MAC address found (%1 on %2)',

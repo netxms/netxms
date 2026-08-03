@@ -567,6 +567,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 21, m_certificateSubject);
    msg->setFieldFromTime(baseId + 22, m_startTime);
    msg->setField(baseId + 23, m_serialNumber);
+   msg->setField(baseId + 24, isInbound());
 }
 
 /**
@@ -919,6 +920,9 @@ void OutboundAgentTunnel::onSetupComplete()
  */
 void OutboundAgentTunnel::onTunnelClose()
 {
+   if (m_closeCallback != nullptr)
+      m_closeCallback(this);
+
    s_outboundTunnelListLock.lock();
    s_outboundTunnels.remove(m_id);
    s_outboundTunnelListLock.unlock();
@@ -960,7 +964,7 @@ void OutboundAgentTunnel::keepaliveTimer(const shared_ptr<OutboundAgentTunnel>& 
  */
 shared_ptr<OutboundAgentTunnel> OutboundAgentTunnel::establish(const InetAddress& addr, uint16_t port, uint32_t nodeId, int32_t zoneUIN,
          const BYTE *expectedFingerprint, BYTE *actualFingerprint, AgentTunnelEstablishmentStatus *status,
-         bool (*tlsContextSetup)(SSL_CTX*))
+         bool (*tlsContextSetup)(SSL_CTX*), std::function<void(OutboundAgentTunnel*)> closeCallback)
 {
    TCHAR peerName[64];
    addr.toString(peerName);
@@ -1091,6 +1095,7 @@ shared_ptr<OutboundAgentTunnel> OutboundAgentTunnel::establish(const InetAddress
 
    shared_ptr<OutboundAgentTunnel> tunnel = shared_ptr<OutboundAgentTunnel>(new OutboundAgentTunnel(context, ssl, s, addr, nodeId, zoneUIN, AcquireOutboundTunnelPoller()));
    tunnel->m_self = tunnel;
+   tunnel->m_closeCallback = closeCallback;
 
    s_outboundTunnelListLock.lock();
    s_outboundTunnels.set(tunnel->getId(), tunnel);

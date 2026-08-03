@@ -4215,6 +4215,11 @@ protected:
    char m_snmpCodepage[16];
    uuid m_agentId;
    TCHAR *m_agentCertSubject;
+   int16_t m_agentTlsMode;
+   bool m_agentCertFingerprintSet;
+   BYTE m_agentCertFingerprint[SHA256_DIGEST_SIZE];
+   BYTE m_mismatchedCertFingerprint[SHA256_DIGEST_SIZE];  // Last reported mismatched fingerprint (for event dampening, not persisted)
+   Mutex m_reverseTunnelLock;   // Serializes reverse agent tunnel establishment
    TCHAR m_agentVersion[MAX_AGENT_VERSION_LEN];
    TCHAR m_platformName[MAX_PLATFORM_NAME_LEN];
    TCHAR m_agentPlatformName[MAX_PLATFORM_NAME_LEN];
@@ -4630,6 +4635,7 @@ public:
    SharedString getPrimaryHostName() const { return GetAttributeWithLock(m_primaryHostName, m_mutexProperties); }
    const uuid& getTunnelId() const { return m_tunnelId; }
    const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }
+   int16_t getAgentTlsMode() const { return m_agentTlsMode; }
    CertificateMappingMethod getAgentCertificateMappingMethod() const { return m_agentCertMappingMethod; }
    const TCHAR *getAgentCertificateMappingData() const { return m_agentCertMappingData; }
    uint32_t getRequiredPollCount() const { return m_requiredPollCount; }
@@ -4797,6 +4803,7 @@ public:
    void getSmclpMetrics(StringSet *metrics) const;
 
    shared_ptr<AgentConnectionEx> createAgentConnection(bool sendServerId = false);
+   shared_ptr<AgentTunnel> establishReverseAgentTunnel(bool *legacyAllowed);
    shared_ptr<AgentConnectionEx> getAgentConnection(bool forcePrimary = false);
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
    SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr, bool pollerMessageOnFailure = false, uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr);

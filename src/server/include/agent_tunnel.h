@@ -231,6 +231,7 @@ class LIBNXSRV_EXPORTABLE OutboundAgentTunnel : public AgentTunnel
 {
 private:
    Condition m_setupCondition;
+   std::function<void(OutboundAgentTunnel*)> m_closeCallback;
 
    OutboundAgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
             BackgroundSocketPollerHandle *socketPoller);
@@ -249,10 +250,11 @@ public:
     * available. If expectedFingerprint is not null it is checked against the peer certificate
     * and mismatch fails the establishment. Optional tlsContextSetup callback can be used to
     * additionally configure TLS context (client certificate, minimal TLS version, etc.).
+    * Optional closeCallback is called when tunnel is closed (before tunnel channels shutdown).
     */
    static shared_ptr<OutboundAgentTunnel> establish(const InetAddress& addr, uint16_t port, uint32_t nodeId, int32_t zoneUIN,
             const BYTE *expectedFingerprint, BYTE *actualFingerprint, AgentTunnelEstablishmentStatus *status,
-            bool (*tlsContextSetup)(SSL_CTX*) = nullptr);
+            bool (*tlsContextSetup)(SSL_CTX*) = nullptr, std::function<void(OutboundAgentTunnel*)> closeCallback = nullptr);
 
    virtual bool isInbound() const override { return false; }
 };

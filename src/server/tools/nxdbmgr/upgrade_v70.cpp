@@ -24,6 +24,42 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.15 to 70.16
+ */
+static bool H_UpgradeFromV15()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE nodes ADD agent_tls_mode char(1)\n"
+      L"ALTER TABLE nodes ADD agent_cert_fingerprint varchar(64)\n"
+      L"UPDATE nodes SET agent_tls_mode='1'\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"nodes", L"agent_tls_mode"));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_TLS_CERT_PINNED, L"SYS_AGENT_TLS_CERT_PINNED",
+         EVENT_SEVERITY_NORMAL, EF_LOG, L"8f72a4f5-321c-42f4-857f-bfc8808beadc",
+         L"Agent TLS certificate fingerprint %<fingerprint> pinned",
+         L"Generated when agent certificate fingerprint is stored on first TLS tunnel connection to the agent.\r\n"
+         L"Parameters:\r\n"
+         L"   1) fingerprint - Agent certificate SHA-256 fingerprint\r\n"
+         L"   2) ipAddress - Agent IP address"
+      ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_TLS_CERT_MISMATCH, L"SYS_AGENT_TLS_CERT_MISMATCH",
+         EVENT_SEVERITY_MAJOR, EF_LOG, L"912d4c2c-a8f6-4830-8fd9-a48dbbe85907",
+         L"Agent TLS certificate fingerprint mismatch (expected %<expectedFingerprint>, actual %<actualFingerprint>)",
+         L"Generated when agent certificate does not match fingerprint pinned on the node during TLS tunnel establishment.\r\n"
+         L"Parameters:\r\n"
+         L"   1) expectedFingerprint - Pinned agent certificate SHA-256 fingerprint\r\n"
+         L"   2) actualFingerprint - Actual agent certificate SHA-256 fingerprint\r\n"
+         L"   3) ipAddress - Agent IP address"
+      ));
+
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 70.14 to 70.15
  */
 static bool H_UpgradeFromV14()
@@ -600,6 +636,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 70, 16, H_UpgradeFromV15 },
    { 14, 70, 15, H_UpgradeFromV14 },
    { 13, 70, 14, H_UpgradeFromV13 },
    { 12, 70, 13, H_UpgradeFromV12 },

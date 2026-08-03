@@ -213,13 +213,10 @@
 #define EVENT_STARTUP_CONFIG_CHANGED                159
 #define EVENT_DEVICE_REPLACED                       160
 #define EVENT_NODE_DELETED                          161
-#define EVENT_NETCONF_UNREACHABLE                   182
-#define EVENT_NETCONF_OK                            183
-#define EVENT_CLUSTER_DELETED                        162
-#define EVENT_SENSOR_DELETED                         163
-#define EVENT_ACCESSPOINT_DELETED                    164
-#define EVENT_OBJECT_DELETED                         165
-
+#define EVENT_CLUSTER_DELETED                       162
+#define EVENT_SENSOR_DELETED                        163
+#define EVENT_ACCESSPOINT_DELETED                   164
+#define EVENT_OBJECT_DELETED                        165
 #define EVENT_MAC_CONNECTED                         166
 #define EVENT_MAC_DISCONNECTED                      167
 #define EVENT_MAC_MOVED                             168
@@ -236,6 +233,10 @@
 #define EVENT_TRAFFIC_OBSERVER_RECOVERED            179
 #define EVENT_OBSERVATION_POINT_STATE_CHANGED       180
 #define EVENT_TRAFFIC_SYNC_FAILED                   181
+#define EVENT_NETCONF_UNREACHABLE                   182
+#define EVENT_NETCONF_OK                            183
+#define EVENT_AGENT_TLS_CERT_PINNED                 184
+#define EVENT_AGENT_TLS_CERT_MISMATCH               185
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

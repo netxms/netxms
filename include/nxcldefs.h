@@ -256,6 +256,14 @@
 #define NC_SSH_COMMAND_CHANNEL     _ULL(0x1000000000)  /* Set if SSH command channel can be established */
 #define NC_HAS_AGENT_LLDP          _ULL(0x2000000000)  /* Agent exposes LLDP.Neighbors table (lldpd) */
 #define NC_IS_NETCONF              _ULL(0x4000000000)  /* Node supports NETCONF protocol */
+#define NC_HAS_TLS_TUNNEL          _ULL(0x8000000000)  /* Agent supports inbound TLS tunnel connections */
+
+/**
+ * Agent TLS connection mode for node
+ */
+#define AGENT_TLS_MODE_DISABLED  0
+#define AGENT_TLS_MODE_ALLOWED   1
+#define AGENT_TLS_MODE_REQUIRED  2
 
 /**
  * Node flags

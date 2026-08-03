@@ -145,6 +145,9 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_lastWindowsEventId = 0;
    m_lastAgentPushRequestId = 0;
    m_agentCertSubject = nullptr;
+   m_agentTlsMode = AGENT_TLS_MODE_ALLOWED;
+   m_agentCertFingerprintSet = false;
+   memset(m_mismatchedCertFingerprint, 0, SHA256_DIGEST_SIZE);
    m_agentCertMappingMethod = MAP_CERTIFICATE_BY_CN;
    m_agentCertMappingData = nullptr;
    m_agentVersion[0] = 0;
@@ -290,6 +293,9 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_lastWindowsEventId = 0;
    m_lastAgentPushRequestId = 0;
    m_agentCertSubject = nullptr;
+   m_agentTlsMode = AGENT_TLS_MODE_ALLOWED;
+   m_agentCertFingerprintSet = false;
+   memset(m_mismatchedCertFingerprint, 0, SHA256_DIGEST_SIZE);
    m_agentCertMappingMethod = MAP_CERTIFICATE_BY_CN;
    m_agentCertMappingData = nullptr;
    m_agentVersion[0] = 0;
@@ -461,7 +467,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
       _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id,vnc_password,vnc_port,")
       _T("vnc_proxy,path_check_reason,path_check_node_id,path_check_iface_id,expected_capabilities,last_events,decommission_time,")
-      _T("eip_address,trap_snmp_version,trap_community,trap_usm_auth_password,trap_usm_priv_password,trap_usm_methods,agent_platform_name,stp_bridge_id,netconf_proxy,netconf_port,fail_time_netconf FROM nodes WHERE id=?"));
+      _T("eip_address,trap_snmp_version,trap_community,trap_usm_auth_password,trap_usm_priv_password,trap_usm_methods,agent_platform_name,stp_bridge_id,netconf_proxy,netconf_port,fail_time_netconf,")
+      _T("agent_tls_mode,agent_cert_fingerprint FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -543,6 +550,13 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
    m_netconfProxy = DBGetFieldUInt32(hResult, 0, 100);
    m_netconfPort = DBGetFieldUInt16(hResult, 0, 101);
    m_failTimeNetconf = DBGetFieldLong(hResult, 0, 102);
+
+   m_agentTlsMode = DBGetFieldInt16(hResult, 0, 103);
+   if ((m_agentTlsMode < AGENT_TLS_MODE_DISABLED) || (m_agentTlsMode > AGENT_TLS_MODE_REQUIRED))
+      m_agentTlsMode = AGENT_TLS_MODE_ALLOWED;
+   TCHAR fingerprintText[80];
+   DBGetField(hResult, 0, 104, fingerprintText, 80);
+   m_agentCertFingerprintSet = (StrToBin(fingerprintText, m_agentCertFingerprint, SHA256_DIGEST_SIZE) == SHA256_DIGEST_SIZE);
    m_savedDownSince = m_downSince = DBGetFieldLong(hResult, 0, 22);
    m_bootTime = DBGetFieldLong(hResult, 0, 23);
 
@@ -1133,7 +1147,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          L"modbus_unit_id", L"vnc_password", L"vnc_port", L"vnc_proxy", L"path_check_reason", L"path_check_node_id",
          L"path_check_iface_id", L"expected_capabilities", L"last_events", L"decommission_time",
          L"trap_snmp_version", L"trap_community", L"trap_usm_auth_password", L"trap_usm_priv_password", L"trap_usm_methods",
-         L"eip_address", L"agent_platform_name", L"stp_bridge_id", L"netconf_proxy", L"netconf_port", L"fail_time_netconf", nullptr
+         L"eip_address", L"agent_platform_name", L"stp_bridge_id", L"netconf_proxy", L"netconf_port", L"fail_time_netconf",
+         L"agent_tls_mode", L"agent_cert_fingerprint", nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"nodes", L"id", m_id, columns);
@@ -1306,7 +1321,13 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 101, DB_SQLTYPE_INTEGER, m_netconfProxy);
          DBBind(hStmt, 102, DB_SQLTYPE_INTEGER, m_netconfPort);
          DBBind(hStmt, 103, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_failTimeNetconf));
-         DBBind(hStmt, 104, DB_SQLTYPE_INTEGER, m_id);
+         TCHAR agentTlsMode[16], agentCertFingerprint[SHA256_DIGEST_SIZE * 2 + 1];
+         DBBind(hStmt, 104, DB_SQLTYPE_VARCHAR, IntegerToString(m_agentTlsMode, agentTlsMode), DB_BIND_STATIC, 1);
+         if (m_agentCertFingerprintSet)
+            DBBind(hStmt, 105, DB_SQLTYPE_VARCHAR, BinToStr(m_agentCertFingerprint, SHA256_DIGEST_SIZE, agentCertFingerprint), DB_BIND_STATIC);
+         else
+            DBBind(hStmt, 105, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+         DBBind(hStmt, 106, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -8257,6 +8278,19 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
 
    // Check if tunnel is available
    shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
+   bool legacyAllowed = true;
+   if (tunnel == nullptr)
+      tunnel = establishReverseAgentTunnel(&legacyAllowed);
+   if ((tunnel == nullptr) && !legacyAllowed)
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::connectToAgent(%s [%u]): TLS connection required but tunnel cannot be established"), m_name, m_id);
+      if (error != nullptr)
+         *error = ERR_CONNECT_FAILED;
+      if (socketError != nullptr)
+         *socketError = 0;
+      m_lastAgentConnectAttempt = time(nullptr);
+      return false;
+   }
    if ((tunnel == nullptr) && ((!m_ipAddress.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && m_ipAddress.isLoopback())) || (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)))
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): %s and there are no active tunnels"), m_name, m_id,
@@ -8322,9 +8356,43 @@ bool Node::connectToAgent(uint32_t *error, uint32_t *socketError, bool *newConne
    m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
    m_agentConnection->setConnectionTimeout(g_agentConnectionTimeout);
    nxlog_debug_tag(DEBUG_TAG_AGENT, 7, _T("Node::connectToAgent(%s [%u]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
-   bool success = m_agentConnection->connect(g_serverKey, error, socketError, g_serverId);
+   uint32_t connectError = 0, connectSocketError = 0;
+   bool success = m_agentConnection->connect(g_serverKey, &connectError, &connectSocketError, g_serverId);
+   if (!success && (connectError == ERR_TLS_REQUIRED) && (tunnel == nullptr) && (m_agentTlsMode != AGENT_TLS_MODE_DISABLED))
+   {
+      // Agent enforces TLS connections; record capability and retry through TLS tunnel
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::connectToAgent(%s [%u]): agent requires TLS connection, retrying through TLS tunnel"), m_name, m_id);
+      lockProperties();
+      if (!(m_capabilities & NC_HAS_TLS_TUNNEL))
+      {
+         m_capabilities |= NC_HAS_TLS_TUNNEL;
+         setModified(MODIFY_NODE_PROPERTIES);
+      }
+      unlockProperties();
+
+      tunnel = establishReverseAgentTunnel(&legacyAllowed);
+      if (tunnel != nullptr)
+      {
+         m_agentConnection->disconnect();
+         m_agentConnection->setTunnel(tunnel);
+         m_agentConnection->setProxyNodeId(0);
+         success = m_agentConnection->connect(g_serverKey, &connectError, &connectSocketError, g_serverId);
+      }
+   }
+   if (error != nullptr)
+      *error = connectError;
+   if (socketError != nullptr)
+      *socketError = connectSocketError;
    if (success)
    {
+      if (m_agentConnection->isTlsTunnelSupported() && !(m_capabilities & NC_HAS_TLS_TUNNEL))
+      {
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::connectToAgent(%s [%u]): agent supports TLS tunnel connections"), m_name, m_id);
+         lockProperties();
+         m_capabilities |= NC_HAS_TLS_TUNNEL;
+         setModified(MODIFY_NODE_PROPERTIES);
+         unlockProperties();
+      }
       uint32_t rcc = m_agentConnection->setServerId(g_serverId);
       if (rcc == ERR_SUCCESS)
       {
@@ -11556,6 +11624,113 @@ void Node::writeOSPFDataToMessage(NXCPMessage *msg)
 /**
  * Create ready to use agent connection
  */
+/**
+ * Establish reverse (server-initiated) TLS tunnel to the node's agent if node settings allow it.
+ * Returns tunnel or null pointer. Sets *legacyAllowed to false if fallback to legacy
+ * connection should not be attempted.
+ */
+shared_ptr<AgentTunnel> Node::establishReverseAgentTunnel(bool *legacyAllowed)
+{
+   *legacyAllowed = (m_agentTlsMode != AGENT_TLS_MODE_REQUIRED);
+
+   if (m_agentTlsMode == AGENT_TLS_MODE_DISABLED)
+      return shared_ptr<AgentTunnel>();
+
+   if ((m_agentTlsMode == AGENT_TLS_MODE_ALLOWED) && !(m_capabilities & NC_HAS_TLS_TUNNEL))
+      return shared_ptr<AgentTunnel>();
+
+   if (m_flags & NF_AGENT_OVER_TUNNEL_ONLY)
+      return shared_ptr<AgentTunnel>();  // Direct connections to agent are disabled
+
+   if (getEffectiveAgentProxy() != 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::establishReverseAgentTunnel(%s [%u]): TLS tunnel connections through agent proxy are not supported"), m_name, m_id);
+      return shared_ptr<AgentTunnel>();
+   }
+
+   InetAddress addr = m_ipAddress;
+   if ((m_capabilities & NC_IS_LOCAL_MGMT) && (g_mgmtAgentAddress[0] != 0))
+      addr = InetAddress::resolveHostName(g_mgmtAgentAddress);
+   if (!addr.isValidUnicast() && !((m_capabilities & NC_IS_LOCAL_MGMT) && addr.isLoopback()))
+      return shared_ptr<AgentTunnel>();
+
+   // Serialize tunnel establishment per node
+   LockGuard lockGuard(m_reverseTunnelLock);
+
+   shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(m_id);
+   if (tunnel != nullptr)
+      return tunnel;  // Tunnel was established concurrently
+
+   BYTE expectedFingerprint[SHA256_DIGEST_SIZE];
+   lockProperties();
+   bool checkFingerprint = m_agentCertFingerprintSet;
+   if (checkFingerprint)
+      memcpy(expectedFingerprint, m_agentCertFingerprint, SHA256_DIGEST_SIZE);
+   unlockProperties();
+
+   BYTE actualFingerprint[SHA256_DIGEST_SIZE];
+   AgentTunnelEstablishmentStatus status;
+   shared_ptr<OutboundAgentTunnel> newTunnel = OutboundAgentTunnel::establish(addr, m_agentPort, m_id, m_zoneUIN,
+         checkFingerprint ? expectedFingerprint : nullptr, actualFingerprint, &status, SetupAgentTunnelTlsContext, UnregisterOutboundTunnel);
+   if (newTunnel == nullptr)
+   {
+      if (status == AgentTunnelEstablishmentStatus::CERTIFICATE_MISMATCH)
+      {
+         *legacyAllowed = false;  // Possible MITM, do not fall back to legacy connection
+         TCHAR expectedText[SHA256_DIGEST_SIZE * 2 + 1], actualText[SHA256_DIGEST_SIZE * 2 + 1];
+         BinToStr(expectedFingerprint, SHA256_DIGEST_SIZE, expectedText);
+         BinToStr(actualFingerprint, SHA256_DIGEST_SIZE, actualText);
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 3, _T("Node::establishReverseAgentTunnel(%s [%u]): agent certificate fingerprint mismatch (expected %s, actual %s)"),
+               m_name, m_id, expectedText, actualText);
+
+         // Report each mismatched certificate only once to avoid event flooding on connection retries
+         lockProperties();
+         bool reportMismatch = memcmp(m_mismatchedCertFingerprint, actualFingerprint, SHA256_DIGEST_SIZE) != 0;
+         if (reportMismatch)
+            memcpy(m_mismatchedCertFingerprint, actualFingerprint, SHA256_DIGEST_SIZE);
+         unlockProperties();
+         if (reportMismatch)
+         {
+            EventBuilder(EVENT_AGENT_TLS_CERT_MISMATCH, m_id)
+               .param(_T("expectedFingerprint"), expectedText)
+               .param(_T("actualFingerprint"), actualText)
+               .param(_T("ipAddress"), addr)
+               .post();
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::establishReverseAgentTunnel(%s [%u]): cannot establish TLS tunnel (status=%d)"),
+               m_name, m_id, static_cast<int>(status));
+      }
+      return shared_ptr<AgentTunnel>();
+   }
+
+   lockProperties();
+   memset(m_mismatchedCertFingerprint, 0, SHA256_DIGEST_SIZE);   // Re-arm mismatch reporting
+   unlockProperties();
+
+   if (!checkFingerprint)
+   {
+      // Pin agent certificate fingerprint on first successful TLS connection
+      lockProperties();
+      memcpy(m_agentCertFingerprint, actualFingerprint, SHA256_DIGEST_SIZE);
+      m_agentCertFingerprintSet = true;
+      setModified(MODIFY_NODE_PROPERTIES);
+      unlockProperties();
+
+      TCHAR fingerprintText[SHA256_DIGEST_SIZE * 2 + 1];
+      BinToStr(actualFingerprint, SHA256_DIGEST_SIZE, fingerprintText);
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::establishReverseAgentTunnel(%s [%u]): agent certificate fingerprint %s pinned"), m_name, m_id, fingerprintText);
+      EventBuilder(EVENT_AGENT_TLS_CERT_PINNED, m_id)
+         .param(_T("fingerprint"), fingerprintText)
+         .param(_T("ipAddress"), addr)
+         .post();
+   }
+
+   return RegisterOutboundTunnel(newTunnel);
+}
+
 shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
 {
    if (!(m_capabilities & NC_IS_NATIVE_AGENT) ||
@@ -11576,11 +11751,20 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
       return shared_ptr<AgentConnectionEx>();
    }
 
+   bool legacyAllowed = true;
+   if (tunnel == nullptr)
+      tunnel = establishReverseAgentTunnel(&legacyAllowed);
+
    shared_ptr<AgentConnectionEx> conn;
    if (tunnel != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): using agent tunnel"), m_name, m_id);
       conn = make_shared<AgentConnectionEx>(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
+   }
+   else if (!legacyAllowed)
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, _T("Node::createAgentConnection(%s [%u]): TLS connection required but tunnel cannot be established"), m_name, m_id);
+      return shared_ptr<AgentConnectionEx>();
    }
    else
    {
@@ -11615,14 +11799,47 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
    uint32_t errorCode, socketErrorCode;
    if (!conn->connect(g_serverKey, &errorCode, &socketErrorCode, sendServerId ? g_serverId : 0))
    {
-      wchar_t errorText[256];
-      nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): connect failed, error = \"%d %s\", socket error = \"%s\""),
-         m_name, m_id, errorCode, AgentErrorCodeToText(errorCode), GetSocketErrorText(socketErrorCode, errorText, 256));
       conn.reset();
+      if ((errorCode == ERR_TLS_REQUIRED) && (tunnel == nullptr) && (m_agentTlsMode != AGENT_TLS_MODE_DISABLED))
+      {
+         // Agent enforces TLS connections; record capability and retry through TLS tunnel
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::createAgentConnection(%s [%u]): agent requires TLS connection, retrying through TLS tunnel"), m_name, m_id);
+         lockProperties();
+         if (!(m_capabilities & NC_HAS_TLS_TUNNEL))
+         {
+            m_capabilities |= NC_HAS_TLS_TUNNEL;
+            setModified(MODIFY_NODE_PROPERTIES);
+         }
+         unlockProperties();
+
+         tunnel = establishReverseAgentTunnel(&legacyAllowed);
+         if (tunnel != nullptr)
+         {
+            conn = make_shared<AgentConnectionEx>(m_id, tunnel, m_agentSecret, isAgentCompressionAllowed());
+            conn->setCommandTimeout(g_agentCommandTimeout);
+            conn->setConnectionTimeout(g_agentConnectionTimeout);
+            if (!conn->connect(g_serverKey, &errorCode, &socketErrorCode, sendServerId ? g_serverId : 0))
+               conn.reset();
+         }
+      }
+      if (conn == nullptr)
+      {
+         wchar_t errorText[256];
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): connect failed, error = \"%d %s\", socket error = \"%s\""),
+            m_name, m_id, errorCode, AgentErrorCodeToText(errorCode), GetSocketErrorText(socketErrorCode, errorText, 256));
+      }
    }
-   else
+   if (conn != nullptr)
    {
       setLastAgentCommTime();
+      if (conn->isTlsTunnelSupported() && !(m_capabilities & NC_HAS_TLS_TUNNEL))
+      {
+         nxlog_debug_tag(DEBUG_TAG_AGENT, 4, _T("Node::createAgentConnection(%s [%u]): agent supports TLS tunnel connections"), m_name, m_id);
+         lockProperties();
+         m_capabilities |= NC_HAS_TLS_TUNNEL;
+         setModified(MODIFY_NODE_PROPERTIES);
+         unlockProperties();
+      }
    }
    nxlog_debug_tag(DEBUG_TAG_AGENT, 6, _T("Node::createAgentConnection(%s [%u]): conn=%p"), m_name, m_id, conn.get());
    return conn;

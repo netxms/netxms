@@ -37,8 +37,8 @@ static Mutex s_certificateMappingsLock;
 /**
  * Tunnel registration
  */
-static SharedHashMap<uint32_t, InboundAgentTunnel> s_tunnels;   // All tunnels indexed by tunnel ID
-static SharedHashMap<uint32_t, InboundAgentTunnel> s_boundTunnels;
+static SharedHashMap<uint32_t, AgentTunnel> s_tunnels;   // All tunnels indexed by tunnel ID
+static SharedHashMap<uint32_t, AgentTunnel> s_boundTunnels;   // Bound tunnels (inbound and outbound) indexed by node ID
 static SharedObjectArray<InboundAgentTunnel> s_unboundTunnels(16, 16);
 static Mutex s_tunnelListLock(MutexType::FAST);
 static VolatileCounter s_activeSetupCalls = 0;  // Number of tunnel setup calls currently running
@@ -85,11 +85,13 @@ static void ExecuteTunnelHookScript(const shared_ptr<AgentTunnel>& tunnel)
  */
 static void RegisterTunnel(const shared_ptr<InboundAgentTunnel>& tunnel)
 {
+   shared_ptr<AgentTunnel> replacedTunnel;
    s_tunnelListLock.lock();
    s_tunnels.set(tunnel->getId(), tunnel);
    if (tunnel->isBound())
    {
-      tunnel->setReplacedTunnel(s_boundTunnels.getShared(tunnel->getNodeId()));
+      replacedTunnel = s_boundTunnels.getShared(tunnel->getNodeId());
+      tunnel->setReplacedTunnel(replacedTunnel);
       s_boundTunnels.set(tunnel->getNodeId(), tunnel);
    }
    else
@@ -97,15 +99,24 @@ static void RegisterTunnel(const shared_ptr<InboundAgentTunnel>& tunnel)
       s_unboundTunnels.add(tunnel);
    }
    s_tunnelListLock.unlock();
+
+   // Agent-initiated tunnel takes precedence over server-initiated one
+   if ((replacedTunnel != nullptr) && !replacedTunnel->isInbound())
+      replacedTunnel->shutdown();
 }
 
 /**
  * Unregister tunnel
  */
-static void UnregisterTunnel(InboundAgentTunnel *tunnel)
+static void UnregisterTunnel(AgentTunnel *tunnel)
 {
-   tunnel->debugPrintf(4, _T("Tunnel unregistered"));
    s_tunnelListLock.lock();
+   if (s_tunnels.get(tunnel->getId()) == nullptr)
+   {
+      s_tunnelListLock.unlock();
+      return;  // already unregistered
+   }
+   tunnel->debugPrintf(4, _T("Tunnel unregistered"));
    if (tunnel->isBound())
    {
       EventBuilder(EVENT_TUNNEL_CLOSED, tunnel->getNodeId())
@@ -122,7 +133,7 @@ static void UnregisterTunnel(InboundAgentTunnel *tunnel)
       // Check that current tunnel for node is tunnel being unregistered
       // New tunnel could be established while old one still finishing
       // outstanding requests
-      InboundAgentTunnel *registeredTunnel = s_boundTunnels.get(tunnel->getNodeId());
+      AgentTunnel *registeredTunnel = s_boundTunnels.get(tunnel->getNodeId());
       if ((registeredTunnel != nullptr) && (registeredTunnel->getId() == tunnel->getId()))
          s_boundTunnels.remove(tunnel->getNodeId());
    }
@@ -148,6 +159,70 @@ shared_ptr<AgentTunnel> GetTunnelForNode(uint32_t nodeId)
    s_tunnelListLock.lock();
    shared_ptr<AgentTunnel> tunnel = s_boundTunnels.getShared(nodeId);
    s_tunnelListLock.unlock();
+   return tunnel;
+}
+
+/**
+ * Unregister outbound tunnel (used as tunnel close callback)
+ */
+void UnregisterOutboundTunnel(OutboundAgentTunnel *tunnel)
+{
+   UnregisterTunnel(tunnel);
+}
+
+/**
+ * Register outbound tunnel established by node. Returns effective tunnel for the node - either
+ * given tunnel or already registered one (in that case given tunnel is shut down).
+ */
+shared_ptr<AgentTunnel> RegisterOutboundTunnel(const shared_ptr<OutboundAgentTunnel>& tunnel)
+{
+   s_tunnelListLock.lock();
+   shared_ptr<AgentTunnel> existing = s_boundTunnels.getShared(tunnel->getNodeId());
+   if (existing == nullptr)
+   {
+      s_tunnels.set(tunnel->getId(), tunnel);
+      s_boundTunnels.set(tunnel->getNodeId(), tunnel);
+   }
+   s_tunnelListLock.unlock();
+
+   if (existing != nullptr)
+   {
+      // Another tunnel (likely agent-initiated) was registered for this node while establishing - keep it
+      tunnel->debugPrintf(4, _T("Tunnel for node %u already registered, dropping new outbound tunnel"), tunnel->getNodeId());
+      tunnel->shutdown();
+      return existing;
+   }
+
+   if (tunnel->getState() == AGENT_TUNNEL_SHUTDOWN)
+   {
+      // Tunnel was closed between establishment and registration
+      UnregisterTunnel(tunnel.get());
+      return shared_ptr<AgentTunnel>();
+   }
+
+   tunnel->debugPrintf(3, _T("Outbound tunnel registered for node %u"), tunnel->getNodeId());
+
+   EventBuilder(EVENT_TUNNEL_OPEN, tunnel->getNodeId())
+      .param(_T("tunnelId"), tunnel->getId())
+      .param(_T("ipAddress"), tunnel->getAddress())
+      .param(_T("systemName"), tunnel->getSystemName())
+      .param(_T("hostName"), tunnel->getHostname())
+      .param(_T("platformName"), tunnel->getPlatformName())
+      .param(_T("systemInfo"), tunnel->getSystemInfo())
+      .param(_T("agentVersion"), tunnel->getAgentVersion())
+      .param(_T("agentId"), tunnel->getAgentId())
+      .post();
+
+   auto msg = new NXCPMessage(CMD_AGENT_TUNNEL_UPDATE, 0);
+   tunnel->fillMessage(msg, VID_ELEMENT_LIST_BASE);
+   msg->setField(VID_NOTIFICATION_CODE, NX_NOTIFY_AGENT_TUNNEL_OPEN);
+   ThreadPoolExecute(g_clientThreadPool,
+      [msg] () -> void
+      {
+         NotifyClientSessions(*msg, NXC_CHANNEL_AGENT_TUNNELS);
+         delete msg;
+      });
+
    return tunnel;
 }
 
@@ -259,14 +334,14 @@ void ShowAgentTunnels(CONSOLE_CTX console)
 
    ConsolePrintf(console,
             _T("\n\x1b[1mBOUND TUNNELS\x1b[0m\n")
-            _T(" ID  | Node ID | EP  | Chan. | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
-            _T("-----+---------+-----+-------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
-   for(const shared_ptr<InboundAgentTunnel>& t : s_boundTunnels)
+            _T(" ID  | Node ID | Dir | EP  | Chan. | Peer IP Address          | System Name              | Hostname                 | Platform Name    | Agent Version | Agent Build Tag\n")
+            _T("-----+---------+-----+-----+-------+--------------------------+--------------------------+--------------------------+------------------+---------------+--------------------------\n"));
+   for(const shared_ptr<AgentTunnel>& t : s_boundTunnels)
    {
       TCHAR ipAddrBuffer[64];
-      ConsolePrintf(console, _T("%4d | %7u | %-3s | %5d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
-               t->isExtProvCertificate() ? _T("YES") : _T("NO"), t->getChannelCount(), t->getAddress().toString(ipAddrBuffer), t->getSystemName(),
-               t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
+      ConsolePrintf(console, _T("%4d | %7u | %-3s | %-3s | %5d | %-24s | %-24s | %-24s | %-16s | %-13s | %s\n"), t->getId(), t->getNodeId(),
+               t->isInbound() ? _T("IN") : _T("OUT"), t->isExtProvCertificate() ? _T("YES") : _T("NO"), t->getChannelCount(),
+               t->getAddress().toString(ipAddrBuffer), t->getSystemName(), t->getHostname(), t->getPlatformName(), t->getAgentVersion(), t->getAgentBuildTag());
    }
 
    ConsolePrintf(console,
@@ -1406,11 +1481,11 @@ void RenewAgentCertificates(const shared_ptr<ScheduledTaskParameters>& parameter
    auto it = s_boundTunnels.begin();
    while(it.hasNext())
    {
-      shared_ptr<InboundAgentTunnel> t = it.next();
-      if (!t->isExtProvCertificate() && (t->getCertificateExpirationTime() > 0) &&
+      shared_ptr<AgentTunnel> t = it.next();
+      if (t->isInbound() && !t->isExtProvCertificate() && (t->getCertificateExpirationTime() > 0) &&
           ((t->getCertificateExpirationTime() - now <= 2592000) || (now - t->getCertificateIssueTime() >= reissueInterval))) // 30 days
       {
-         processingList.add(t);
+         processingList.add(static_pointer_cast<InboundAgentTunnel>(t));
       }
    }
    s_tunnelListLock.unlock();
@@ -1452,18 +1527,31 @@ int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels)
    }
    else
    {
-      s_tunnelListLock.lock();
-      auto it = boundTunnels ? s_boundTunnels.begin() : s_unboundTunnels.begin();
-      while (it.hasNext())
+      auto matchFilter = [filter] (const AgentTunnel& t) -> bool
       {
-         shared_ptr<AgentTunnel> t = it.next();
-         if ((filter == TunnelCapabilityFilter::AGENT_PROXY && t->isAgentProxy()) ||
-             (filter == TunnelCapabilityFilter::SNMP_PROXY && t->isSnmpProxy()) ||
-             (filter == TunnelCapabilityFilter::SNMP_TRAP_PROXY && t->isSnmpTrapProxy()) ||
-             (filter == TunnelCapabilityFilter::SYSLOG_PROXY && t->isSyslogProxy()) ||
-             (filter == TunnelCapabilityFilter::USER_AGENT && t->isUserAgentInstalled()))
+         return (filter == TunnelCapabilityFilter::AGENT_PROXY && t.isAgentProxy()) ||
+                (filter == TunnelCapabilityFilter::SNMP_PROXY && t.isSnmpProxy()) ||
+                (filter == TunnelCapabilityFilter::SNMP_TRAP_PROXY && t.isSnmpTrapProxy()) ||
+                (filter == TunnelCapabilityFilter::SYSLOG_PROXY && t.isSyslogProxy()) ||
+                (filter == TunnelCapabilityFilter::USER_AGENT && t.isUserAgentInstalled());
+      };
+
+      s_tunnelListLock.lock();
+      if (boundTunnels)
+      {
+         auto it = s_boundTunnels.begin();
+         while (it.hasNext())
          {
-            count++;
+            if (matchFilter(*it.next()))
+               count++;
+         }
+      }
+      else
+      {
+         for (int i = 0; i < s_unboundTunnels.size(); i++)
+         {
+            if (matchFilter(*s_unboundTunnels.get(i)))
+               count++;
          }
       }
       s_tunnelListLock.unlock();
