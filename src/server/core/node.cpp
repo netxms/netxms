@@ -6917,10 +6917,10 @@ bool Node::confPollSnmp()
       unlockProperties();
 
       uint32_t type;
-      BYTE data[120];
+      BYTE data[MAX_LLDP_ID_LEN];
       uint32_t dataLen;
       if ((SnmpGetEx(pTransport, LLDP_OID(_T("1.3.1.0"), lldpV2MIB), nullptr, 0, &type, sizeof(uint32_t), 0, nullptr) == SNMP_ERR_SUCCESS) &&
-          (SnmpGetEx(pTransport, LLDP_OID(_T("1.3.2.0"), lldpV2MIB), nullptr, 0, data, 120, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
+          (SnmpGetEx(pTransport, LLDP_OID(_T("1.3.2.0"), lldpV2MIB), nullptr, 0, data, MAX_LLDP_ID_LEN, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
       {
          String lldpId = BuildLldpId(type, data, dataLen);
          lockProperties();
@@ -14218,7 +14218,7 @@ bool Node::getLldpLocalPortInfo(uint32_t localPortNumber, LLDP_LOCAL_PORT_INFO *
  */
 void Node::showLLDPInfo(ServerConsole *console) const
 {
-   TCHAR buffer[256];
+   TCHAR buffer[LLDP_ID_TEXT_BUFFER_SIZE];
 
    lockProperties();
    console->printf(_T("\x1b[1m*\x1b[0m Node LLDP ID: %s\n\n"), m_lldpNodeId);
@@ -14231,7 +14231,7 @@ void Node::showLLDPInfo(ServerConsole *console) const
       {
          LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
          console->printf(_T("   %4u | %7u | %2u | %3d | %-24s | %s\n"), port->portNumber, port->ifIndex,
-                  port->localIdSubtype, (int)port->localIdLen, BinToStr(port->localId, port->localIdLen, buffer), port->ifDescr);
+                  port->localIdSubtype, (int)port->localIdLen, BinToStr(port->localId, MIN(port->localIdLen, MAX_LLDP_ID_TEXT_LEN), buffer), port->ifDescr);
       }
    }
    else
