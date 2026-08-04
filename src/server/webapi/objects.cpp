@@ -42,6 +42,7 @@ json_t *CreateObjectSummary(const NetObj& object)
    json_object_set_new(jsonObject, "ipAddress", a.isValid() ? a.toJson() : json_null());
    json_object_set_new(jsonObject, "isInMaintenanceMode", json_boolean(object.isInMaintenanceMode()));
    json_object_set_new(jsonObject, "isMaintenanceApplicable", json_boolean(object.isMaintenanceApplicable()));
+   json_object_set_new(jsonObject, "isMaintenanceScheduled", json_boolean(object.isMaintenanceScheduled()));
    return jsonObject;
 }
 
@@ -948,6 +949,50 @@ int H_ObjectSetMaintenance(Context *context)
    {
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("H_ObjectSetMaintenance: empty request"));
       return 400;
+   }
+
+   json_t *scheduleField = json_object_get(request, "schedule");
+   if (scheduleField != nullptr)
+   {
+      if (!json_is_string(scheduleField) || (*json_string_value(scheduleField) == 0))
+      {
+         context->setErrorResponse("Invalid schedule format");
+         return 400;
+      }
+
+      int64_t duration = json_object_get_int64(request, "duration", 0);
+      if ((duration <= 0) || (duration > 0x7FFFFFFF))
+      {
+         context->setErrorResponse("Valid maintenance duration in minutes is required for recurring maintenance schedule");
+         return 400;
+      }
+
+      wchar_t schedule[256];
+      size_t chars = utf8_to_wchar(json_string_value(scheduleField), -1, schedule, 255);
+      schedule[chars] = 0;
+
+      wchar_t comments[256] = L"";
+      json_t *jsonComments = json_object_get(request, "comments");
+      if (json_is_string(jsonComments))
+      {
+         chars = utf8_to_wchar(json_string_value(jsonComments), -1, comments, 255);
+         comments[chars] = 0;
+      }
+
+      wchar_t durationText[32];
+      IntegerToString(static_cast<uint32_t>(duration), durationText);
+      uint32_t rcc = AddRecurrentScheduledTask(L"Maintenance.Enter", schedule, durationText, nullptr, context->getUserId(), objectId, context->getSystemAccessRights(), comments);
+      if (rcc == RCC_ACCESS_DENIED)
+         return 403;
+      if (rcc != RCC_SUCCESS)
+      {
+         context->setErrorResponse("Database failure");
+         return 500;
+      }
+
+      context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Recurring maintenance for object %s scheduled at \"%s\" for %u minutes",
+               object->getName(), schedule, static_cast<uint32_t>(duration));
+      return 204;
    }
 
    json_t *startTimeField = json_object_get(request, "startTime");

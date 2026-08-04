@@ -146,6 +146,7 @@ public abstract class AbstractObject
 	protected boolean isDeleted = false;
 	protected boolean isHidden = false;
 	protected boolean inMaintenanceMode = false;
+   protected boolean maintenanceScheduled = false;
    protected int maintenanceInitiatorId = 0;
 	protected long primaryZoneProxyId = 0;
    protected long backupZoneProxyId = 0;
@@ -242,6 +243,7 @@ public abstract class AbstractObject
 		isHidden = msg.getFieldAsBoolean(NXCPCodes.VID_IS_HIDDEN);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
 		inMaintenanceMode = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_MODE);
+      maintenanceScheduled = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_SCHEDULED);
       maintenanceInitiatorId = msg.getFieldAsInt32(NXCPCodes.VID_MAINTENANCE_INITIATOR);
 		primaryZoneProxyId = msg.getFieldAsInt64(NXCPCodes.VID_PRIMARY_ZONE_PROXY_ID);
       backupZoneProxyId = msg.getFieldAsInt64(NXCPCodes.VID_BACKUP_ZONE_PROXY_ID);
@@ -1329,6 +1331,16 @@ public abstract class AbstractObject
    public boolean isInMaintenanceMode()
    {
       return inMaintenanceMode;
+   }
+
+   /**
+    * Check if this object has pending scheduled maintenance (calculated by the server from scheduled maintenance tasks).
+    *
+    * @return true if this object has pending scheduled maintenance
+    */
+   public boolean isMaintenanceScheduled()
+   {
+      return maintenanceScheduled;
    }
 
    /**

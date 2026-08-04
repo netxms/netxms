@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,6 +82,8 @@ public class ObjectLabelDecorator implements ILabelDecorator
          decoration.append(" (").append(object.getChildCount()).append(')');
       if (object.isInMaintenanceMode())
          decoration.append(" [Maintenance]");
+      if (object.isMaintenanceScheduled())
+         decoration.append(" [Maintenance scheduled]");
       else if ((object instanceof AbstractNode) && ((AbstractNode)object).isDecommissioned())
          decoration.append(" [Decommissioned]");
       return (decoration.length() > 0) ? text + decoration.toString() : null;

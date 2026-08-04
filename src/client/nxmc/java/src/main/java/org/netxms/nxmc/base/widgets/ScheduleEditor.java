@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.client.ScheduledTask;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
@@ -42,7 +41,7 @@ public class ScheduleEditor extends Composite
    private Button radioOneTimeSchedule;
    private Button radioRecurrent;
    private DateTimeSelector execDateSelector;
-   private Text textSchedule; 
+   private RecurrenceEditor recurrenceEditor;
 
 	/**
 	 * @param parent
@@ -65,7 +64,7 @@ public class ScheduleEditor extends Composite
          public void widgetSelected(SelectionEvent e)
          {
             execDateSelector.setEnabled(radioOneTimeSchedule.getSelection());
-            textSchedule.setEnabled(radioRecurrent.getSelection());
+            recurrenceEditor.setEnabled(radioRecurrent.getSelection());
          }
       };
 
@@ -73,7 +72,7 @@ public class ScheduleEditor extends Composite
       radioOneTimeSchedule.setText(i18n.tr("One time execution"));
       radioOneTimeSchedule.setSelection(true);
       radioOneTimeSchedule.addSelectionListener(listener);
-      
+
       execDateSelector = new DateTimeSelector(this, SWT.NONE);
       execDateSelector.setValue(new Date());
 
@@ -81,14 +80,16 @@ public class ScheduleEditor extends Composite
       radioRecurrent.setText(i18n.tr("Recurrent"));
       radioRecurrent.setSelection(false);
       radioRecurrent.addSelectionListener(listener);
-
-      textSchedule = new Text(this, SWT.BORDER);
-      textSchedule.setTextLimit(255);
-      textSchedule.setText("");
       GridData gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      radioRecurrent.setLayoutData(gd);
+
+      recurrenceEditor = new RecurrenceEditor(this, SWT.NONE);
+      gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      textSchedule.setLayoutData(gd);
+      recurrenceEditor.setLayoutData(gd);
+      recurrenceEditor.setEnabled(false);
 	}
 
    /**
@@ -103,12 +104,12 @@ public class ScheduleEditor extends Composite
       if (enabled)
 	   {
          execDateSelector.setEnabled(radioOneTimeSchedule.getSelection());
-         textSchedule.setEnabled(radioRecurrent.getSelection());
+         recurrenceEditor.setEnabled(radioRecurrent.getSelection());
 	   }
-	   else 
+	   else
 	   {
          execDateSelector.setEnabled(false);
-         textSchedule.setEnabled(false);
+         recurrenceEditor.setEnabled(false);
 	   }
 	}
 
@@ -119,7 +120,7 @@ public class ScheduleEditor extends Composite
     */
    public ScheduledTask getSchedule()
    {
-      return new ScheduledTask("Dummy", radioRecurrent.getSelection() ? textSchedule.getText() : "", "", "", execDateSelector.getValue(), 0, 0); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      return new ScheduledTask("Dummy", radioRecurrent.getSelection() ? recurrenceEditor.getSchedule() : "", "", "", execDateSelector.getValue(), 0, 0); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
    }
 
    /**
@@ -132,17 +133,18 @@ public class ScheduleEditor extends Composite
       if (scheduledTask.getSchedule().isEmpty())
       {
          radioOneTimeSchedule.setSelection(true);
-         textSchedule.setEnabled(false); 
+         radioRecurrent.setSelection(false);
+         recurrenceEditor.setEnabled(false);
          execDateSelector.setEnabled(true);
-         execDateSelector.setValue(scheduledTask.getExecutionTime());        
+         execDateSelector.setValue(scheduledTask.getExecutionTime());
       }
       else
       {
          radioOneTimeSchedule.setSelection(false);
          radioRecurrent.setSelection(true);
-         textSchedule.setEnabled(true);
+         recurrenceEditor.setSchedule(scheduledTask.getSchedule());
+         recurrenceEditor.setEnabled(true);
          execDateSelector.setEnabled(false);
-         textSchedule.setText(scheduledTask.getSchedule());
       }
    }
 }

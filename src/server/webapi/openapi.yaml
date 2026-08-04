@@ -5945,6 +5945,10 @@ paths:
           * startTime only - schedule maintenance entry, leave manually;
           * endTime only - schedule maintenance exit; combined with "maintenance": true the object
             enters maintenance immediately and leaves at endTime.
+        If "schedule" is provided, a recurring maintenance window is scheduled instead: a recurrent
+        scheduled task enters maintenance mode each time the cron expression matches, and maintenance
+        mode is left automatically after "duration" minutes (required in this form). Other time fields
+        are ignored in this form.
         Scheduling requires the "schedule object maintenance" system access right.
       parameters:
         - name: object-id
@@ -5975,6 +5979,12 @@ paths:
                     - type: integer
                     - type: string
                   description: Scheduled maintenance end time - UNIX timestamp, ISO 8601 string, or relative time ("+2h")
+                schedule:
+                  type: string
+                  description: Cron expression for recurring maintenance window start ("minute hour day-of-month month day-of-week", e.g. "0 2 * * 0")
+                duration:
+                  type: integer
+                  description: Recurring maintenance window duration in minutes (required together with "schedule")
       responses:
         '204':
           description: Maintenance mode changed or scheduled successfully
@@ -13494,6 +13504,9 @@ components:
         isMaintenanceApplicable:
           type: boolean
           description: true if object can be placed into maintenance mode
+        isMaintenanceScheduled:
+          type: boolean
+          description: true if object has pending scheduled maintenance
         name:
           type: string
           description: Object name

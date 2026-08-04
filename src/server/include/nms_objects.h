@@ -1441,6 +1441,7 @@ protected:
    uint64_t m_maintenanceEventId;
    time_t m_maintenanceStartTime;
    uint32_t m_maintenanceInitiator;
+   bool m_maintenanceScheduled;  // Object has pending scheduled maintenance task (calculated at runtime, not persisted)
    VolatileCounter m_modified;
    bool m_isDeleted;
    bool m_isDeleteInitiated;
@@ -1639,6 +1640,8 @@ public:
    virtual void leaveMaintenanceMode(uint32_t userId);
    void updateMaintenanceEventId(uint64_t eventId);
    virtual bool isMaintenanceApplicable() const { return false; }
+   bool isMaintenanceScheduled() const { return m_maintenanceScheduled; }
+   void setMaintenanceScheduled(bool scheduled);
 
    void fillMessage(NXCPMessage *msg, uint32_t userId, bool full = true);
    uint32_t modifyFromMessage(const NXCPMessage& msg, ClientSession *session);

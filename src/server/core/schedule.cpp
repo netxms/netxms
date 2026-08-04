@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <set>
 
 #define DEBUG_TAG _T("scheduler")
 
@@ -73,6 +74,63 @@ static void DeleteScheduledTaskFromDB(uint64_t id)
  * Callback definition for missing task handlers
  */
 static SchedulerCallback s_missingTaskHandler(MissingTaskHandler, 0);
+
+/**
+ * Object IDs currently marked as having scheduled maintenance (protects both the set and indicator updates)
+ */
+static std::set<uint32_t> s_maintenanceScheduledObjects;
+static Mutex s_maintenanceScheduledLock;
+
+/**
+ * Recalculate "maintenance scheduled" indicators on objects. Indicator is set for objects
+ * with pending "Maintenance.Enter" tasks (recurrent and not yet executed one-time tasks,
+ * except disabled ones). Must be called after any change to scheduled task configuration,
+ * without task list locks held.
+ */
+static void UpdateMaintenanceScheduleIndicators()
+{
+   std::set<uint32_t> objects;
+
+   s_oneTimeTaskLock.lock();
+   for(int i = 0; i < s_oneTimeTasks.size(); i++)
+   {
+      ScheduledTask *task = s_oneTimeTasks.get(i);
+      if (!wcscmp(task->getTaskHandlerId(), L"Maintenance.Enter") && !task->isDisabled() && !task->isCompleted())
+         objects.insert(task->getObjectId());
+   }
+   s_oneTimeTaskLock.unlock();
+
+   s_recurrentTaskLock.lock();
+   for(int i = 0; i < s_recurrentTasks.size(); i++)
+   {
+      ScheduledTask *task = s_recurrentTasks.get(i);
+      if (!wcscmp(task->getTaskHandlerId(), L"Maintenance.Enter") && !task->isDisabled())
+         objects.insert(task->getObjectId());
+   }
+   s_recurrentTaskLock.unlock();
+
+   s_maintenanceScheduledLock.lock();
+   for(uint32_t objectId : objects)
+   {
+      if (s_maintenanceScheduledObjects.count(objectId) == 0)
+      {
+         shared_ptr<NetObj> object = FindObjectById(objectId);
+         if (object != nullptr)
+            object->setMaintenanceScheduled(true);
+      }
+   }
+   for(uint32_t objectId : s_maintenanceScheduledObjects)
+   {
+      if (objects.count(objectId) == 0)
+      {
+         shared_ptr<NetObj> object = FindObjectById(objectId);
+         if (object != nullptr)
+            object->setMaintenanceScheduled(false);
+      }
+   }
+   s_maintenanceScheduledObjects = std::move(objects);
+   s_maintenanceScheduledLock.unlock();
+}
 
 /**
  * Constructor for scheduled task transient data
@@ -316,6 +374,8 @@ void ScheduledTask::run(SchedulerCallback *callback)
          }
       }
       s_oneTimeTaskLock.unlock();
+
+      UpdateMaintenanceScheduleIndicators();
    }
 }
 
@@ -489,6 +549,7 @@ uint32_t NXCORE_EXPORTABLE AddRecurrentScheduledTask(const TCHAR *taskHandlerId,
    s_recurrentTasks.add(task);
    s_recurrentTaskLock.unlock();
 
+   UpdateMaintenanceScheduleIndicators();
    return RCC_SUCCESS;
 }
 
@@ -562,6 +623,7 @@ uint32_t NXCORE_EXPORTABLE AddOneTimeScheduledTask(const TCHAR *taskHandlerId, t
    s_oneTimeTaskLock.unlock();
    s_wakeupCondition.set();
 
+   UpdateMaintenanceScheduleIndicators();
    return RCC_SUCCESS;
 }
 
@@ -672,6 +734,8 @@ uint32_t NXCORE_EXPORTABLE UpdateRecurrentScheduledTask(uint64_t id, const TCHAR
       }
    }
 
+   if (found)
+      UpdateMaintenanceScheduleIndicators();
    return rcc;
 }
 
@@ -783,7 +847,10 @@ uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *
    }
 
    if (found)
+   {
       s_wakeupCondition.set();
+      UpdateMaintenanceScheduleIndicators();
+   }
    return rcc;
 }
 
@@ -867,6 +934,7 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint6
    if (rcc == RCC_SUCCESS)
    {
       DeleteScheduledTaskFromDB(id);
+      UpdateMaintenanceScheduleIndicators();
       nxlog_debug_tag(DEBUG_TAG, 5, _T("DeleteScheduledTask: task [") UINT64_FMT _T("] removed"), id);
    }
    else
@@ -973,6 +1041,8 @@ bool NXCORE_EXPORTABLE DeleteScheduledTaskByHandlerId(const TCHAR *taskHandlerId
       DeleteScheduledTaskFromDB(deleteList.get(i));
    }
 
+   if (!deleteList.isEmpty())
+      UpdateMaintenanceScheduleIndicators();
    return !deleteList.isEmpty();
 }
 
@@ -1023,6 +1093,8 @@ int NXCORE_EXPORTABLE DeleteScheduledTasksByKey(const TCHAR *taskKey)
       DeleteScheduledTaskFromDB(deleteList.get(i));
    }
 
+   if (!deleteList.isEmpty())
+      UpdateMaintenanceScheduleIndicators();
    return deleteList.size();
 }
 
@@ -1074,6 +1146,8 @@ int NXCORE_EXPORTABLE DeleteScheduledTasksByObjectId(uint32_t objectId, bool all
       DeleteScheduledTaskFromDB(deleteList.get(i));
    }
 
+   if (!deleteList.isEmpty())
+      UpdateMaintenanceScheduleIndicators();
    return deleteList.size();
 }
 
@@ -1524,6 +1598,8 @@ void InitializeTaskScheduler()
    }
    DBConnectionPoolReleaseConnection(hdb);
    s_oneTimeTasks.sort(ScheduledTaskComparator);
+
+   UpdateMaintenanceScheduleIndicators();
 
    s_oneTimeEventThread = ThreadCreateEx(AdHocScheduler);
    s_cronSchedulerThread = ThreadCreateEx(RecurrentScheduler);

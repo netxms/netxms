@@ -196,13 +196,24 @@ public class MaintenanceMenuManager extends MenuManager
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(Object o : objects)
-            {               
+            {
                if (o instanceof AbstractObject)
                {
-                  ScheduledTask taskStart = new ScheduledTask("Maintenance.Enter", "", "", dialog.getComments(), dialog.getStartTime(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId());
-                  ScheduledTask taskEnd = new ScheduledTask("Maintenance.Leave", "", "", dialog.getComments(), dialog.getEndTime(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId());
-                  session.addScheduledTask(taskStart);
-                  session.addScheduledTask(taskEnd);
+                  if (dialog.isRecurring())
+                  {
+                     // Single recurrent "enter" task; maintenance window duration in minutes is passed as task's
+                     // persistent data and server schedules automatic maintenance exit at window end
+                     ScheduledTask task = new ScheduledTask("Maintenance.Enter", dialog.getSchedule(), Integer.toString(dialog.getDuration()),
+                           dialog.getComments(), new Date(), 0, ((AbstractObject)o).getObjectId());
+                     session.addScheduledTask(task);
+                  }
+                  else
+                  {
+                     ScheduledTask taskStart = new ScheduledTask("Maintenance.Enter", "", "", dialog.getComments(), dialog.getStartTime(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId());
+                     ScheduledTask taskEnd = new ScheduledTask("Maintenance.Leave", "", "", dialog.getComments(), dialog.getEndTime(), ScheduledTask.SYSTEM, ((AbstractObject)o).getObjectId());
+                     session.addScheduledTask(taskStart);
+                     session.addScheduledTask(taskEnd);
+                  }
                }
             }
          }

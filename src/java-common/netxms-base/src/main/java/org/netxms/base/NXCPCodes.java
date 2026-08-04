@@ -1603,6 +1603,7 @@ public class NXCPCodes
    public static final long VID_AGENT_TLS_MODE = 1024;
    public static final long VID_AGENT_CERT_FINGERPRINT = 1025;
    public static final long VID_SINGLE_USE = 1026;
+   public static final long VID_MAINTENANCE_SCHEDULED = 1027;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;

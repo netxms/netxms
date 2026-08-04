@@ -78,6 +78,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_maintenanceEventId = 0;
    m_maintenanceStartTime = 0;
    m_maintenanceInitiator = 0;
+   m_maintenanceScheduled = false;
    m_inheritAccessRights = true;
    m_trustedObjects = nullptr;
    m_pollRequestor = nullptr;
@@ -1810,6 +1811,7 @@ void NetObj::fillMessageLockedEssential(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_IS_DELETED, m_isDeleted);
    msg->setField(VID_IS_HIDDEN, m_isHidden);
    msg->setField(VID_MAINTENANCE_MODE, m_maintenanceEventId != 0);
+   msg->setField(VID_MAINTENANCE_SCHEDULED, m_maintenanceScheduled);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_IMAGE, m_mapImage);
    msg->setField(VID_DRILL_DOWN_OBJECT_ID, m_drilldownObjectId);
@@ -3760,6 +3762,20 @@ void NetObj::leaveMaintenanceMode(uint32_t userId)
 }
 
 /**
+ * Update "maintenance scheduled" indicator (calculated from pending scheduled maintenance tasks)
+ */
+void NetObj::setMaintenanceScheduled(bool scheduled)
+{
+   lockProperties();
+   if (m_maintenanceScheduled != scheduled)
+   {
+      m_maintenanceScheduled = scheduled;
+      setModified(MODIFY_RUNTIME);
+   }
+   unlockProperties();
+}
+
+/**
  * Update maintenance event ID (used after monitoring state reset to match regenerated event)
  */
 void NetObj::updateMaintenanceEventId(uint64_t eventId)
@@ -3837,6 +3853,7 @@ json_t *NetObj::toJson(bool includeSensitiveData)
    json_object_set_new(root, "statusThresholds", json_integer_array(m_statusThresholds, 4));
    json_object_set_new(root, "maintenanceEventId", json_integer(m_maintenanceEventId));
    json_object_set_new(root, "maintenanceInitiator", json_integer(m_maintenanceInitiator));
+   json_object_set_new(root, "isMaintenanceScheduled", json_boolean(m_maintenanceScheduled));
    json_object_set_new(root, "mapImage", m_mapImage.toJson());
    json_object_set_new(root, "geoLocation", m_geoLocation.toJson());
    json_object_set_new(root, "postalAddress", m_postalAddress.toJson());

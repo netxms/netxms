@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,14 +72,12 @@ public class ObjectState extends TableElement
       if (object.isInMaintenanceMode())
       {
          addPair(i18n.tr("Status"), StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" (maintenance)"));
-         AbstractUserObject user = session.findUserDBObjectById(object.getMaintenanceInitiatorId(), new Runnable() {
-            @Override
-            public void run()
-            {
-               getDisplay().asyncExec(() -> onObjectChange()); // will cause refresh of table content
-            }
-         });
+         AbstractUserObject user = session.findUserDBObjectById(object.getMaintenanceInitiatorId(), () -> getDisplay().asyncExec(() -> onObjectChange()));
          addPair(i18n.tr("Maintenance initiator"), (user != null) ? user.getName() : "[" + object.getMaintenanceInitiatorId() + "]");
+      }
+      else if (object.isMaintenanceScheduled())
+      {
+         addPair(i18n.tr("Status"), StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" ( maintenance is scheduled)"));
       }
 		else
       {
