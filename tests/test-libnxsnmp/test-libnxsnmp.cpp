@@ -13,23 +13,51 @@ static uint32_t s_sysLocation[] = { 1, 3, 6, 1, 2, 1, 1, 6, 0 };
 static SNMP_ObjectId s_oidSysLocation(s_sysLocation, sizeof(s_sysLocation) / sizeof(uint32_t));
 static uint32_t s_system[] = { 1, 3, 6, 1, 2, 1, 1 };
 static SNMP_ObjectId s_oidSystem(s_system, sizeof(s_system) / sizeof(uint32_t));
+static uint32_t s_longOid[] = { 1, 3, 6, 1, 4, 1, 7562, 84, 748, 256, 12345, 11, 0 };
 
 /**
  * Test OID conversion
  */
 static void TestOidConversion()
 {
-   TCHAR text[256];
+   wchar_t textW[256], smallTextW[16];
+   char textA[256], smallTextA[16];
    uint32_t bin[256];
 
-   StartTest(_T("SNMPConvertOIDToText"));
-   SnmpConvertOIDToText(9, s_sysDescription, text, 256);
-   AssertTrue(!_tcscmp(text, _T("1.3.6.1.2.1.1.1.0")));
+   StartTest(_T("SNMPConvertOIDToTextW"));
+   SnmpConvertOIDToTextW(9, s_sysDescription, textW, 256);
+   AssertTrue(!wcscmp(textW, L"1.3.6.1.2.1.1.1.0"));
    EndTest();
 
-   StartTest(_T("SNMPConvertOIDToText - handling high bit set"));
-   SnmpConvertOIDToText(9, s_unsignedTest, text, 256);
-   AssertTrue(!_tcscmp(text, _T("1.3.6.1.2.1.1.2164260864.0")));
+   StartTest(_T("SNMPConvertOIDToTextW - handling high bit set"));
+   SnmpConvertOIDToTextW(9, s_unsignedTest, textW, 256);
+   AssertTrue(!wcscmp(textW, L"1.3.6.1.2.1.1.2164260864.0"));
+   EndTest();
+
+   StartTest(_T("SNMPConvertOIDToTextW - truncation"));
+   SnmpConvertOIDToTextW(14, s_longOid, smallTextW, 16);
+   AssertTrue(!wcscmp(smallTextW, L"1.3.6.1.4.1.756"));
+   SecureZeroMemory(smallTextW, sizeof(smallTextW));
+   SnmpConvertOIDToTextW(14, s_longOid, smallTextW, 13);
+   AssertTrue(!wcscmp(smallTextW, L"1.3.6.1.4.1."));
+   EndTest();
+
+   StartTest(_T("SNMPConvertOIDToTextA"));
+   SnmpConvertOIDToTextA(9, s_sysDescription, textA, 256);
+   AssertTrue(!strcmp(textA, "1.3.6.1.2.1.1.1.0"));
+   EndTest();
+
+   StartTest(_T("SNMPConvertOIDToTextA - handling high bit set"));
+   SnmpConvertOIDToTextA(9, s_unsignedTest, textA, 256);
+   AssertTrue(!strcmp(textA, "1.3.6.1.2.1.1.2164260864.0"));
+   EndTest();
+
+   StartTest(_T("SNMPConvertOIDToTextA - truncation"));
+   SnmpConvertOIDToTextA(14, s_longOid, smallTextA, 16);
+   AssertTrue(!strcmp(smallTextA, "1.3.6.1.4.1.756"));
+   SecureZeroMemory(smallTextW, sizeof(smallTextA));
+   SnmpConvertOIDToTextA(14, s_longOid, smallTextA, 13);
+   AssertTrue(!strcmp(smallTextA, "1.3.6.1.4.1."));
    EndTest();
 
    StartTest(_T("SNMPParseOID"));

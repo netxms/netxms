@@ -8411,14 +8411,14 @@ DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version v
          const SNMP_ObjectId& oid = varbind->getName();
          if (oid.length() <= oidLen)
             return SNMP_ERR_SUCCESS;
-         TCHAR buffer[256];
-         SnmpConvertOIDToText(oid.length() - oidLen, &(oid.value()[oidLen]), buffer, 256);
+         TCHAR buffer[MAX_INSTANCE_LEN];
+         SnmpConvertOIDToText(oid.length() - oidLen, &(oid.value()[oidLen]), buffer, MAX_INSTANCE_LEN);
 
          const TCHAR *key = (buffer[0] == _T('.')) ? &buffer[1] : buffer;
 
-         TCHAR value[256] = _T("");
+         TCHAR value[MAX_INSTANCE_LEN] = _T("");
          bool convert = false;
-         varbind->getValueAsPrintableString(value, 256, &convert);
+         varbind->getValueAsPrintableString(value, MAX_INSTANCE_LEN, &convert);
          oidSuffixes->set(key, (value[0] != 0) ? value : key);
          return SNMP_ERR_SUCCESS;
       });

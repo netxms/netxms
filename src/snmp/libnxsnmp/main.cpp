@@ -27,7 +27,7 @@
  * Convert OID element to string. Returns pointer to character following last digit.
  */
 template <typename T>
-static inline T *OIDElementToString(uint32_t value, T *dest)
+static inline T *OIDElementToString(uint32_t value, T *dest, T *eol)
 {
    T *p = dest;
    T buffer[64];
@@ -40,7 +40,7 @@ static inline T *OIDElementToString(uint32_t value, T *dest)
    } while(value > 0);
 
    t--;
-   while(t >= buffer)
+   while((t >= buffer) && (p < eol))
       *p++ = *t--;
    return p;
 }
@@ -51,12 +51,12 @@ static inline T *OIDElementToString(uint32_t value, T *dest)
 wchar_t LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToTextW(size_t length, const uint32_t *value, wchar_t *buffer, size_t bufferSize)
 {
    wchar_t *p = buffer;
-   size_t count = 0;
-   for(size_t i = 0; (i < length) && (count < bufferSize); i++)
+   wchar_t *eol = p + bufferSize - 1;  // Points to last character in buffer
+   for(size_t i = 0; (i < length) && (p < eol); i++)
    {
       if (i > 0)
          *p++ = '.';
-      p = OIDElementToString(value[i], p);
+      p = OIDElementToString(value[i], p, eol);
    }
    *p = 0;
 	return buffer;
@@ -68,12 +68,12 @@ wchar_t LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToTextW(size_t length, const uint32_
 char LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToTextA(size_t length, const uint32_t *value, char *buffer, size_t bufferSize)
 {
    char *p = buffer;
-   size_t count = 0;
-   for(size_t i = 0; (i < length) && (count < bufferSize); i++)
+   char *eol = p + bufferSize - 1;  // Points to last character in buffer
+   for(size_t i = 0; (i < length) && (p < eol); i++)
    {
       if (i > 0)
          *p++ = '.';
-      p = OIDElementToString(value[i], p);
+      p = OIDElementToString(value[i], p, eol);
    }
    *p = 0;
    return buffer;
