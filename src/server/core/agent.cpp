@@ -28,6 +28,7 @@
  * Externals
  */
 void EnqueueSNMPTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine);
+bool IsTrapCredentialValidationEnabled(const shared_ptr<Node>& node);
 TrapCredentialCheckResult ValidateTrapCredentials(SNMP_PDU *pdu, SNMP_SecurityContext *securityContext);
 void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, uint32_t nodeId, time_t timestamp, const char *msg, int msgLen);
 void QueueWindowsEvent(WindowsEvent *event);
@@ -571,6 +572,12 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          {
             debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): received PDU of type %d"), pdu->getCommand());
             TrapCredentialCheckResult credCheck = (sctx != nullptr) ? ValidateTrapCredentials(pdu, sctx) : TrapCredentialCheckResult::OK;
+            if ((credCheck != TrapCredentialCheckResult::OK) && !IsTrapCredentialValidationEnabled(originNode))
+            {
+               wchar_t buffer[64];
+               debugPrintf(6, L"AgentConnectionEx::onSnmpTrap(): SNMP credential validation failed for trap from %s, but credential check is disabled", originSenderIP.toString(buffer));
+               credCheck = TrapCredentialCheckResult::OK;
+            }
             if (credCheck != TrapCredentialCheckResult::OK)
             {
                wchar_t buffer[64];

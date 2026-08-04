@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.18 to 70.19
+ */
+static bool H_UpgradeFromV18()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 36)
+   {
+      CHK_EXEC(CreateConfigParam(L"SNMP.Traps.ValidateCredentials", L"1",
+         L"Validate credentials (community string or SNMPv3 user name) of incoming SNMP traps against node credentials and drop traps that fail validation. Can be overridden per node with custom attribute SysConfig:SNMP.Traps.ValidateCredentials.",
+         nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 36));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 70.17 to 70.18
  */
 static bool H_UpgradeFromV17()
@@ -685,6 +701,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 18, 70, 19, H_UpgradeFromV18 },
    { 17, 70, 18, H_UpgradeFromV17 },
    { 16, 70, 17, H_UpgradeFromV16 },
    { 15, 70, 16, H_UpgradeFromV15 },

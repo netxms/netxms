@@ -25,11 +25,24 @@
 #include <nxtools.h>
 
 /**
- * Upgrade from 62.35 to 70.0
+ * Upgrade from 62.36 to 70.0
+ */
+static bool H_UpgradeFromV36()
+{
+   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 62.35 to 62.36
  */
 static bool H_UpgradeFromV35()
 {
-   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   CHK_EXEC(CreateConfigParam(L"SNMP.Traps.ValidateCredentials", L"1",
+      L"Validate credentials (community string or SNMPv3 user name) of incoming SNMP traps against node credentials and drop traps that fail validation. Can be overridden per node with custom attribute SysConfig:SNMP.Traps.ValidateCredentials.",
+      nullptr, 'B', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(36));
    return true;
 }
 
@@ -1241,7 +1254,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 35, 70,  0, H_UpgradeFromV35 },
+   { 36, 70,  0, H_UpgradeFromV36 },
+   { 35, 62, 36, H_UpgradeFromV35 },
    { 34, 62, 35, H_UpgradeFromV34 },
    { 33, 62, 34, H_UpgradeFromV33 },
    { 32, 62, 33, H_UpgradeFromV32 },
