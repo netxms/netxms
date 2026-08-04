@@ -51,9 +51,12 @@ public:
    time_t getCreationTime() const { return m_creationTime; }
    uint32_t getUserId() const { return m_userId; }
    const TCHAR *getText() const { return m_text; }
+   bool isAiGenerated() const { return m_aiGenerated; }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase() const;
+
+   json_t *toJson() const;
 };
 
 /**
@@ -77,10 +80,10 @@ private:
    time_t m_closeTime;
 
    IntegerArray<uint32_t> m_linkedAlarms;
-   Mutex m_mutex;
+   mutable Mutex m_mutex;
 
-   void lock() { m_mutex.lock(); }
-   void unlock() { m_mutex.unlock(); }
+   void lock() const { m_mutex.lock(); }
+   void unlock() const { m_mutex.unlock(); }
 
    void logActivity(int activityType, uint32_t userId, const TCHAR *oldValue, const TCHAR *newValue, const TCHAR *details);
 
@@ -126,7 +129,7 @@ public:
    void fillMessage(NXCPMessage *msg) const;
    void fillSummaryMessage(NXCPMessage *msg, uint32_t baseId) const;
 
-   json_t *toJson() const;
+   json_t *toJson(bool includeComments = false) const;
 };
 
 /**
@@ -145,6 +148,7 @@ uint32_t NXCORE_EXPORTABLE CreateIncident(uint32_t sourceObjectId, const TCHAR *
 uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg);
 shared_ptr<Incident> NXCORE_EXPORTABLE FindIncidentById(uint32_t incidentId);
 shared_ptr<Incident> NXCORE_EXPORTABLE FindIncidentByAlarmId(uint32_t alarmId);
+shared_ptr<Incident> NXCORE_EXPORTABLE LoadIncidentById(uint32_t incidentId);
 
 uint32_t NXCORE_EXPORTABLE ChangeIncidentState(uint32_t incidentId, int newState, uint32_t userId, const TCHAR *comment = nullptr);
 uint32_t NXCORE_EXPORTABLE AssignIncident(uint32_t incidentId, uint32_t userId, uint32_t assignedBy);
@@ -159,6 +163,15 @@ uint32_t NXCORE_EXPORTABLE AddIncidentComment(uint32_t incidentId, const TCHAR *
 uint32_t NXCORE_EXPORTABLE GetIncidentActivity(uint32_t incidentId, NXCPMessage *msg);
 
 void SendIncidentsToClient(uint32_t objectId, uint32_t requestId, ClientSession *session);
+
+/**
+ * JSON representations for REST API. All of them read from the database, so closed incidents
+ * (which are not kept in memory) are visible as well.
+ */
+json_t NXCORE_EXPORTABLE *GetIncidentSummariesAsJson(uint32_t userId, uint32_t objectId,
+   const IntegerArray<int32_t> *states, time_t from, time_t to, int limit);
+json_t NXCORE_EXPORTABLE *GetIncidentCommentsAsJson(uint32_t incidentId);
+json_t NXCORE_EXPORTABLE *GetIncidentActivityAsJson(uint32_t incidentId);
 
 /**
  * Scheduled task handler for delayed incident creation

@@ -131,6 +131,16 @@ int H_ImageLibraryData(Context *context);
 int H_ImageLibraryCreate(Context *context);
 int H_ImageLibraryUpdate(Context *context);
 int H_ImageLibraryDelete(Context *context);
+int H_Incidents(Context *context);
+int H_IncidentCreate(Context *context);
+int H_IncidentDetails(Context *context);
+int H_IncidentUpdate(Context *context);
+int H_IncidentChangeState(Context *context);
+int H_IncidentAssign(Context *context);
+int H_IncidentAddComment(Context *context);
+int H_IncidentLinkAlarm(Context *context);
+int H_IncidentUnlinkAlarm(Context *context);
+int H_IncidentActivity(Context *context);
 int H_FindMacAddress(Context *context);
 int H_GrafanaGetAlarms(Context *context);
 int H_GrafanaGetSummaryTable(Context *context);
@@ -399,6 +409,32 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/alarms/:alarm-id/terminate")
       .POST(H_AlarmTerminate)
+      .build();
+   RouteBuilder("v1/incidents")
+      .GET(H_Incidents)
+      .POST(H_IncidentCreate)
+      .build();
+   RouteBuilder("v1/incidents/:incident-id")
+      .GET(H_IncidentDetails)
+      .PUT(H_IncidentUpdate)
+      .build();
+   RouteBuilder("v1/incidents/:incident-id/state")
+      .POST(H_IncidentChangeState)
+      .build();
+   RouteBuilder("v1/incidents/:incident-id/assign")
+      .POST(H_IncidentAssign)
+      .build();
+   RouteBuilder("v1/incidents/:incident-id/comments")
+      .POST(H_IncidentAddComment)
+      .build();
+   RouteBuilder("v1/incidents/:incident-id/alarms")
+      .POST(H_IncidentLinkAlarm)
+      .build();
+   RouteBuilder("v1/incidents/:incident-id/alarms/:alarm-id")
+      .DELETE(H_IncidentUnlinkAlarm)
+      .build();
+   RouteBuilder("v1/incidents/:incident-id/activity")
+      .GET(H_IncidentActivity)
       .build();
    RouteBuilder("v1/asset-management-schema")
       .GET(H_AssetManagementSchema)

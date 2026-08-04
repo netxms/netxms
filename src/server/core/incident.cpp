@@ -173,6 +173,24 @@ bool IncidentComment::saveToDatabase() const
    return success;
 }
 
+/**
+ * Create JSON representation
+ */
+json_t *IncidentComment::toJson() const
+{
+   wchar_t userName[MAX_USER_NAME];
+
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "incidentId", json_integer(m_incidentId));
+   json_object_set_new(root, "userId", json_integer(m_userId));
+   json_object_set_new(root, "userName", json_string_t(ResolveUserId(m_userId, userName, true)));
+   json_object_set_new(root, "creationTime", json_time_string(m_creationTime));
+   json_object_set_new(root, "text", json_string_t(CHECK_NULL_EX(m_text)));
+   json_object_set_new(root, "aiGenerated", json_boolean(m_aiGenerated));
+   return root;
+}
+
 /*** Incident implementation ***/
 
 /**
@@ -707,25 +725,49 @@ void Incident::fillSummaryMessage(NXCPMessage *msg, uint32_t baseId) const
 }
 
 /**
+ * Create JSON value from nullable text database field, or JSON null if it is empty
+ */
+static inline json_t *OptionalFieldToJson(DB_RESULT hResult, int row, int col)
+{
+   String value = DBGetFieldAsString(hResult, row, col);
+   return value.isEmpty() ? json_null() : json_string_t(value.cstr());
+}
+
+/**
  * Create JSON representation
  */
-json_t *Incident::toJson() const
+json_t *Incident::toJson(bool includeComments) const
 {
+   // User IDs are always reported together with resolved user names, including ID 0 used as
+   // "unassigned" / "created by event processing rule" sentinel - it resolves to built-in
+   // "system" account, and interpreting the sentinel is left to the client.
+   wchar_t userName[MAX_USER_NAME];
+
+   // Serialization is done under lock, because title can be replaced and linked alarm
+   // list can be modified concurrently. Comments are read outside of it to avoid holding
+   // incident lock for the duration of a database query.
+   lock();
+
    json_t *root = json_object();
    json_object_set_new(root, "id", json_integer(m_id));
-   json_object_set_new(root, "creationTime", json_integer(m_creationTime));
-   json_object_set_new(root, "lastChangeTime", json_integer(m_lastChangeTime));
+   json_object_set_new(root, "creationTime", json_time_string(m_creationTime));
+   json_object_set_new(root, "lastChangeTime", json_time_string(m_lastChangeTime));
    json_object_set_new(root, "state", json_integer(m_state));
    json_object_set_new(root, "stateName", json_string_t(GetIncidentStateName(m_state)));
    json_object_set_new(root, "assignedUserId", json_integer(m_assignedUserId));
-   json_object_set_new(root, "title", json_string_t(m_title));
+   json_object_set_new(root, "assignedUserName", json_string_t(ResolveUserId(m_assignedUserId, userName, true)));
+   json_object_set_new(root, "title", json_string_t(CHECK_NULL_EX(m_title)));
    json_object_set_new(root, "sourceAlarmId", json_integer(m_sourceAlarmId));
    json_object_set_new(root, "sourceObjectId", json_integer(m_sourceObjectId));
+   json_object_set_new(root, "sourceObjectName", json_string_t(GetObjectName(m_sourceObjectId, L"")));
    json_object_set_new(root, "createdByUser", json_integer(m_createdByUser));
+   json_object_set_new(root, "createdByUserName", json_string_t(ResolveUserId(m_createdByUser, userName, true)));
    json_object_set_new(root, "resolvedByUser", json_integer(m_resolvedByUser));
+   json_object_set_new(root, "resolvedByUserName", json_string_t(ResolveUserId(m_resolvedByUser, userName, true)));
    json_object_set_new(root, "closedByUser", json_integer(m_closedByUser));
-   json_object_set_new(root, "resolveTime", json_integer(m_resolveTime));
-   json_object_set_new(root, "closeTime", json_integer(m_closeTime));
+   json_object_set_new(root, "closedByUserName", json_string_t(ResolveUserId(m_closedByUser, userName, true)));
+   json_object_set_new(root, "resolveTime", json_time_string(m_resolveTime));
+   json_object_set_new(root, "closeTime", json_time_string(m_closeTime));
 
    json_t *alarms = json_array();
    for (int i = 0; i < m_linkedAlarms.size(); i++)
@@ -733,6 +775,12 @@ json_t *Incident::toJson() const
       json_array_append_new(alarms, json_integer(m_linkedAlarms.get(i)));
    }
    json_object_set_new(root, "linkedAlarms", alarms);
+   json_object_set_new(root, "alarmCount", json_integer(m_linkedAlarms.size()));
+
+   unlock();
+
+   if (includeComments)
+      json_object_set_new(root, "comments", GetIncidentCommentsAsJson(m_id));
 
    return root;
 }
@@ -845,19 +893,17 @@ uint32_t NXCORE_EXPORTABLE CreateIncident(uint32_t sourceObjectId, const TCHAR *
 }
 
 /**
- * Get incident details
+ * Load incident by ID. Returns in-memory instance for active incidents, and reads from
+ * database for closed ones (those are dropped from memory). Returns nullptr if incident
+ * does not exist at all.
  */
-uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg)
+shared_ptr<Incident> NXCORE_EXPORTABLE LoadIncidentById(uint32_t incidentId)
 {
    s_incidents.lock();
    shared_ptr<Incident> incident = s_incidents.get(incidentId);
    s_incidents.unlock();
-
    if (incident != nullptr)
-   {
-      incident->fillMessage(msg);
-      return RCC_SUCCESS;
-   }
+      return incident;
 
    // Check in database for closed incidents
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -872,18 +918,27 @@ uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         Incident dbIncident(hResult, 0);
-         dbIncident.loadLinkedAlarms(hdb);
-         dbIncident.fillMessage(msg);
-         DBFreeResult(hResult);
-         DBConnectionPoolReleaseConnection(hdb);
-         return RCC_SUCCESS;
+         incident = make_shared<Incident>(hResult, 0);
+         incident->loadLinkedAlarms(hdb);
       }
       DBFreeResult(hResult);
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-   return RCC_INVALID_INCIDENT_ID;
+   return incident;
+}
+
+/**
+ * Get incident details
+ */
+uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg)
+{
+   shared_ptr<Incident> incident = LoadIncidentById(incidentId);
+   if (incident == nullptr)
+      return RCC_INVALID_INCIDENT_ID;
+
+   incident->fillMessage(msg);
+   return RCC_SUCCESS;
 }
 
 /**
@@ -1150,6 +1205,160 @@ void SendIncidentsToClient(uint32_t objectId, uint32_t requestId, ClientSession 
 
    msg.setField(VID_RCC, RCC_SUCCESS);
    session->sendMessage(msg);
+}
+
+/**
+ * Get incident comments as JSON array, oldest first
+ */
+json_t NXCORE_EXPORTABLE *GetIncidentCommentsAsJson(uint32_t incidentId)
+{
+   json_t *output = json_array();
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   wchar_t query[256];
+   nx_swprintf(query, 256,
+      L"SELECT id,incident_id,creation_time,user_id,comment_text,ai_generated FROM incident_comments WHERE incident_id=%u ORDER BY creation_time,id",
+      incidentId);
+
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for (int i = 0; i < count; i++)
+      {
+         IncidentComment comment(hResult, i);
+         json_array_append_new(output, comment.toJson());
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return output;
+}
+
+/**
+ * Get incident activity log as JSON array, newest first
+ */
+json_t NXCORE_EXPORTABLE *GetIncidentActivityAsJson(uint32_t incidentId)
+{
+   json_t *output = json_array();
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   wchar_t query[512];
+   nx_swprintf(query, 512,
+      L"SELECT id,incident_id,timestamp,user_id,activity_type,old_value,new_value,details "
+      L"FROM incident_activity_log WHERE incident_id=%u ORDER BY timestamp DESC,id DESC",
+      incidentId);
+
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for (int i = 0; i < count; i++)
+      {
+         uint32_t userId = DBGetFieldUInt32(hResult, i, 3);
+         wchar_t userName[MAX_USER_NAME];
+
+         json_t *entry = json_object();
+         json_object_set_new(entry, "id", json_integer(DBGetFieldUInt32(hResult, i, 0)));
+         json_object_set_new(entry, "incidentId", json_integer(DBGetFieldUInt32(hResult, i, 1)));
+         json_object_set_new(entry, "timestamp", json_time_string(DBGetFieldTime(hResult, i, 2)));
+         json_object_set_new(entry, "userId", json_integer(userId));
+         json_object_set_new(entry, "userName", json_string_t(ResolveUserId(userId, userName, true)));
+         json_object_set_new(entry, "activityType", json_integer(DBGetFieldInt32(hResult, i, 4)));
+         json_object_set_new(entry, "oldValue", OptionalFieldToJson(hResult, i, 5));
+         json_object_set_new(entry, "newValue", OptionalFieldToJson(hResult, i, 6));
+         json_object_set_new(entry, "details", OptionalFieldToJson(hResult, i, 7));
+         json_array_append_new(output, entry);
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return output;
+}
+
+/**
+ * Get incident summaries as JSON array, newest first. Reads from database, so closed
+ * incidents (which are not kept in memory) are included. Only incidents on source objects
+ * readable by given user are returned.
+ *
+ * Row limit is applied after access check rather than as SQL LIMIT, because inaccessible
+ * rows would otherwise consume the limit and the endpoint would return fewer summaries
+ * than requested (same approach as connection history endpoint). Result set is read
+ * unbuffered so that fetching stops once the limit is reached - unlike alarms, closed
+ * incidents accumulate indefinitely and must not be materialized in full.
+ */
+json_t NXCORE_EXPORTABLE *GetIncidentSummariesAsJson(uint32_t userId, uint32_t objectId,
+   const IntegerArray<int32_t> *states, time_t from, time_t to, int limit)
+{
+   if (limit <= 0)
+      limit = INT_MAX;
+
+   StringBuffer query(
+      L"SELECT i.id,i.creation_time,i.last_change_time,i.state,i.assigned_user_id,i.title,i.source_object_id,"
+      L"(SELECT COUNT(*) FROM incident_alarms a WHERE a.incident_id=i.id) FROM incidents i WHERE 1=1");
+
+   if (objectId != 0)
+      query.appendFormattedString(L" AND i.source_object_id=%u", objectId);
+
+   if ((states != nullptr) && !states->isEmpty())
+   {
+      query.append(L" AND i.state IN (");
+      for (int i = 0; i < states->size(); i++)
+      {
+         if (i > 0)
+            query.append(L',');
+         query.appendFormattedString(L"%d", states->get(i));
+      }
+      query.append(L')');
+   }
+
+   if (from != 0)
+      query.appendFormattedString(L" AND i.creation_time>=" INT64_FMT, static_cast<int64_t>(from));
+   if (to != 0)
+      query.appendFormattedString(L" AND i.creation_time<=" INT64_FMT, static_cast<int64_t>(to));
+
+   query.append(L" ORDER BY i.id DESC");
+
+   json_t *output = json_array();
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, query.cstr());
+   if (hResult != nullptr)
+   {
+      while ((json_array_size(output) < static_cast<size_t>(limit)) && DBFetch(hResult))
+      {
+         uint32_t sourceObjectId = DBGetFieldUInt32(hResult, 6);
+         shared_ptr<NetObj> object = FindObjectById(sourceObjectId);
+         if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            continue;
+
+         uint32_t assignedUserId = DBGetFieldUInt32(hResult, 4);
+         int state = DBGetFieldInt32(hResult, 3);
+         wchar_t title[256], userName[MAX_USER_NAME];
+
+         json_t *summary = json_object();
+         json_object_set_new(summary, "id", json_integer(DBGetFieldUInt32(hResult, 0)));
+         json_object_set_new(summary, "state", json_integer(state));
+         json_object_set_new(summary, "stateName", json_string_t(GetIncidentStateName(state)));
+         json_object_set_new(summary, "title", json_string_t(DBGetField(hResult, 5, title, 256)));
+         json_object_set_new(summary, "sourceObjectId", json_integer(sourceObjectId));
+         json_object_set_new(summary, "sourceObjectName", json_string_t(object->getName()));
+         json_object_set_new(summary, "assignedUserId", json_integer(assignedUserId));
+         json_object_set_new(summary, "assignedUserName", json_string_t(ResolveUserId(assignedUserId, userName, true)));
+         json_object_set_new(summary, "alarmCount", json_integer(DBGetFieldInt32(hResult, 7)));
+         json_object_set_new(summary, "creationTime", json_time_string(DBGetFieldTime(hResult, 1)));
+         json_object_set_new(summary, "lastChangeTime", json_time_string(DBGetFieldTime(hResult, 2)));
+         json_array_append_new(output, summary);
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+   return output;
 }
 
 /**
