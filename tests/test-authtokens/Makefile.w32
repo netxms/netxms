@@ -1,0 +1,14 @@
+#
+# Makefile.w32 - test-authtokens (authentication token unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = test-authtokens
+SOURCES = test-authtokens.cpp authtokens.cpp
+# authtokens.cpp includes netxms-webapi.h, which pulls in <microhttpd.h>
+TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/tests/include -I$(MICROHTTPD_ROOT)/include -DNXCORE_EXPORTS
+TOOL_LIBS = -lnxsrv -lnxsnmp -lnxsl -lnxdb -lnxagent -lnetxms -lnxjansson
+
+vpath %.cpp $(TOPDIR)/src/server/core
+
+include $(TOPDIR)/build/tool-common.mk

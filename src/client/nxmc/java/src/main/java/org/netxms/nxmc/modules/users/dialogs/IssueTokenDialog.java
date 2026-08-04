@@ -48,6 +48,16 @@ import org.xnap.commons.i18n.I18n;
  */
 public class IssueTokenDialog extends Dialog
 {
+   /**
+    * Latest expiration time server accepts for a persistent token - it is stored in a 32-bit database column.
+    */
+   private static final long MAX_EXPIRATION_TIME = 0x7FFFFFFFL;
+
+   /**
+    * Longest description server accepts - it is stored in a fixed size database column.
+    */
+   private static final int MAX_DESCRIPTION_LENGTH = 127;
+
    private I18n i18n = LocalizationHelper.getI18n(IssueTokenDialog.class);
 
    private int userId;
@@ -98,6 +108,7 @@ public class IssueTokenDialog extends Dialog
 
       description = new LabeledText(dialogArea, SWT.NONE);
       description.setLabel(i18n.tr("Description"));
+      description.setTextLimit(MAX_DESCRIPTION_LENGTH);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -143,9 +154,22 @@ public class IssueTokenDialog extends Dialog
    @Override
    protected void okPressed()
    {
+      final long expiration = expirationTime.getValue().getTime() / 1000;
+      final long validFor = expiration - System.currentTimeMillis() / 1000;
+      if (validFor <= 0)
+      {
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Expiration time must be in the future"));
+         return;
+      }
+      if (expiration > MAX_EXPIRATION_TIME)
+      {
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Expiration time cannot be later than 2038-01-19"));
+         return;
+      }
+
       final NXCSession session = Registry.getSession();
       final String d = description.getText().trim();
-      final int v = (int)((expirationTime.getValue().getTime() - System.currentTimeMillis()) / 1000);
+      final int v = (int)validFor;
       new Job("Issuing authentication token", null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

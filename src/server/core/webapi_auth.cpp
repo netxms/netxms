@@ -73,17 +73,25 @@ void CheckPendingLoginRequests(const shared_ptr<ScheduledTaskParameters>& parame
 }
 
 /**
- * Complete login
+ * Complete login. Returns false if access token cannot be issued (user was deleted after
+ * authentication had started), in which case response document is left untouched.
  */
-static inline void CompleteLogin(json_t *response, const LoginRequest& loginRequest)
+static inline bool CompleteLogin(json_t *response, const LoginRequest& loginRequest)
 {
-   UserAuthenticationToken token = IssueAuthenticationToken(loginRequest.userId, AUTH_TOKEN_VALIDITY_TIME, AuthenticationTokenType::EPHEMERAL, _T("Web access token"))->token;
+   shared_ptr<AuthenticationTokenDescriptor> descriptor = IssueAuthenticationToken(loginRequest.userId, AUTH_TOKEN_VALIDITY_TIME, AuthenticationTokenType::EPHEMERAL, L"Web access token");
+   if (descriptor == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, L"Cannot issue web access token for user [%u]", loginRequest.userId);
+      return false;
+   }
+
    char encodedToken[64];
-   json_object_set_new(response, "token", json_string(token.toStringA(encodedToken)));
+   json_object_set_new(response, "token", json_string(descriptor->token.toStringA(encodedToken)));
    json_object_set_new(response, "userId", json_integer(loginRequest.userId));
    json_object_set_new(response, "systemAccessRights", json_integer(loginRequest.systemAccessRights));
    json_object_set_new(response, "changePassword", json_boolean(loginRequest.changePassword));
    json_object_set_new(response, "graceLogins", json_integer(loginRequest.graceLogins));
+   return true;
 }
 
 /**
@@ -111,8 +119,7 @@ static int Process2FAResponse(Context *context)
       if (Validate2FAResponse(loginRequest->token, userResponse, loginRequest->userId, nullptr, nullptr))
       {
          nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Two-factor authentication user response validation successful"));
-         CompleteLogin(response, *loginRequest);
-         responseCode = 201;
+         responseCode = CompleteLogin(response, *loginRequest) ? 201 : 500;
       }
       else
       {
@@ -251,10 +258,16 @@ int H_Login(Context *context)
          {
             Decrease2FAGraceLogins(loginRequest.userId);
             nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Two-factor authentication enforcement active but not configured, allowing grace login (%d remaining)"), graceLogins - 1);
-            CompleteLogin(response, loginRequest);
-            json_object_set_new(response, "twoFASetupRequired", json_true());
-            json_object_set_new(response, "twoFAGraceLogins", json_integer(graceLogins - 1));
-            responseCode = 201;
+            if (CompleteLogin(response, loginRequest))
+            {
+               json_object_set_new(response, "twoFASetupRequired", json_true());
+               json_object_set_new(response, "twoFAGraceLogins", json_integer(graceLogins - 1));
+               responseCode = 201;
+            }
+            else
+            {
+               responseCode = 500;
+            }
          }
          else
          {
@@ -266,8 +279,7 @@ int H_Login(Context *context)
       else
       {
          nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Two-factor authentication is not required (not configured)"));
-         CompleteLogin(response, loginRequest);
-         responseCode = 201;
+         responseCode = CompleteLogin(response, loginRequest) ? 201 : 500;
       }
    }
    else

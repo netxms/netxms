@@ -170,7 +170,7 @@ TESTS_DIRS = \
     tests/agent/unit/entsoe \
     tests/agent/unit/openmeteo
 ifeq ($(BUILD_SERVER),1)
-TESTS_DIRS += tests/test-libnxsrv
+TESTS_DIRS += tests/test-libnxsrv tests/test-authtokens
 endif
 endif
 
@@ -272,6 +272,9 @@ $(TESTS_DIRS): $(LIBS)
 
 # test-libnxsrv links libnxsrv, which belongs to the server tier
 tests/test-libnxsrv: src/server/libnxsrv
+
+# test-authtokens compiles server core sources and links libnxsrv
+tests/test-authtokens: src/server/libnxsrv
 
 # ATM subsystem links the agent, server and core import libraries, so it is
 # built after every in-tree tier it depends on.

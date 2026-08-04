@@ -2567,17 +2567,20 @@ uint32_t ClientSession::authenticateUserByToken(const NXCPMessage& request, Logi
    if (!token.isNull())
    {
       uint32_t userId;
-      bool serviceToken;
-      if (ValidateAuthenticationToken(token, &userId, &serviceToken))
+      AuthenticationTokenType tokenType = AuthenticationTokenType::EPHEMERAL;
+      if (ConsumeAuthenticationToken(token, &userId, &tokenType))
       {
+         if (tokenType == AuthenticationTokenType::SINGLE_USE)
+            debugPrintf(5, L"Single-use authentication token consumed");
+
          if (ResolveUserId(userId, loginInfo->loginName) != nullptr)
          {
             debugPrintf(5, _T("Authentication token is valid, login name %s"), loginInfo->loginName);
             rcc = AuthenticateUser(loginInfo->loginName, nullptr, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights,
                   &loginInfo->changePassword, &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, true, &loginInfo->graceLogins);
 
-            // Cancel "close other session" if authenticated with service token
-            if (serviceToken)
+            // Cancel "close other session" if authenticated with handoff token
+            if ((tokenType == AuthenticationTokenType::SERVICE) || (tokenType == AuthenticationTokenType::SINGLE_USE))
                loginInfo->closeOtherSessions = false;
          }
          else
@@ -3012,9 +3015,13 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
       writeAuditLog(AUDIT_SECURITY, true, 0, _T("User \"%s\" logged in (language: %s; client info: %s)"), m_loginInfo->loginName, m_language, m_clientInfo);
 
-      // Issue authentication token that client can use for re-login without re-authentication
+      // Issue authentication token that client can use for re-login without re-authentication.
+      // Absence of the token is not fatal for the session - client will have to re-authenticate.
       shared_ptr<AuthenticationTokenDescriptor> td = IssueAuthenticationToken(m_userId, 300);
-      response->setField(VID_AUTH_TOKEN, td->token.toString());
+      if (td != nullptr)
+         response->setField(VID_AUTH_TOKEN, td->token.toString());
+      else
+         debugPrintf(4, _T("Cannot issue reconnect authentication token for user [%u]"), m_userId);
 
       if (m_loginInfo->closeOtherSessions)
       {
@@ -3047,25 +3054,72 @@ void ClientSession::issueAuthToken(const NXCPMessage& request)
    if ((userId == m_userId) || checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_USERS))
    {
       bool persistent = request.getFieldAsBoolean(VID_PERSISTENT);
-      TCHAR description[128] = _T("");
-      request.getFieldAsString(VID_DESCRIPTION, description, 128);
-      shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, request.getFieldAsUInt32(VID_VALIDITY_TIME),
-         persistent ? AuthenticationTokenType::PERSISTENT : AuthenticationTokenType::EPHEMERAL, description);
-      token->fillMessage(&response, VID_ELEMENT_LIST_BASE);
-      response.setField(VID_RCC, RCC_SUCCESS);
+      bool singleUse = request.getFieldAsBoolean(VID_SINGLE_USE);
+      uint32_t validityTime = request.getFieldAsUInt32(VID_VALIDITY_TIME);
+      wchar_t *description = request.getFieldAsString(VID_DESCRIPTION);
 
-      // Do not write audit log for ephemeral tokens for current user,
-      // because management console request them often to implement reconnects
-      if (userId != m_userId)
+      uint32_t rcc;
+      if (persistent && singleUse)
       {
-         TCHAR buffer[MAX_USER_NAME];
-         writeAuditLog(AUDIT_SECURITY, true, 0, _T("Issued %s authentication token for user %s [%u] (description: %s)"),
-            persistent ? _T("persistent") : _T("ephemeral"), ResolveUserId(userId, buffer, true), userId, description);
+         // Single-use tokens are kept in memory only and cannot be persistent
+         debugPrintf(4, L"issueAuthToken: rejected request for user [%u] (single-use token cannot be persistent)", userId);
+         rcc = RCC_INVALID_ARGUMENT;
       }
-      else if (persistent)
+      else if (validityTime == 0)
       {
-         writeAuditLog(AUDIT_SECURITY, true, 0, _T("Issued persistent authentication token for itself (description: %s)"), description);
+         // Token with zero validity time expires at the moment it is issued and can never authenticate
+         debugPrintf(4, L"issueAuthToken: rejected request for user [%u] (validity time is zero)", userId);
+         rcc = RCC_INVALID_ARGUMENT;
       }
+      else if (persistent && (static_cast<int64_t>(time(nullptr)) + validityTime > MAX_PERSISTENT_TOKEN_EXPIRATION_TIME))
+      {
+         // Such token would be stored with truncated expiration time and become unusable after server restart
+         debugPrintf(4, L"issueAuthToken: rejected request for user [%u] (persistent token expiration time is beyond 2038-01-19T03:14:07Z)", userId);
+         rcc = RCC_INVALID_ARGUMENT;
+      }
+      else if ((description != nullptr) && (wcslen(description) >= MAX_TOKEN_DESCRIPTION_LENGTH))
+      {
+         // Description of a persistent token is stored in a fixed size database column, and an
+         // oversized value would fail the INSERT, leaving a token that disappears on server restart.
+         // Memory-only tokens hold the description in the descriptor until they expire, so the same
+         // limit keeps a client from parking arbitrary amounts of data on the server.
+         debugPrintf(4, L"issueAuthToken: rejected request for user [%u] (description is longer than %d characters)", userId, MAX_TOKEN_DESCRIPTION_LENGTH - 1);
+         rcc = RCC_INVALID_ARGUMENT;
+      }
+      else
+      {
+         AuthenticationTokenType type = persistent ? AuthenticationTokenType::PERSISTENT :
+            (singleUse ? AuthenticationTokenType::SINGLE_USE : AuthenticationTokenType::EPHEMERAL);
+         shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, validityTime, type, CHECK_NULL_EX(description), 0);
+         if (token != nullptr)
+         {
+            token->fillMessage(&response, VID_ELEMENT_LIST_BASE);
+            rcc = RCC_SUCCESS;
+
+            const wchar_t *tokenTypeName = AuthenticationTokenTypeName(type);
+
+            // Do not write audit log for ordinary ephemeral tokens for current user,
+            // because management console request them often to implement reconnects.
+            // Single-use tokens are handoff credentials and are always audited.
+            if (userId != m_userId)
+            {
+               TCHAR buffer[MAX_USER_NAME];
+               writeAuditLog(AUDIT_SECURITY, true, 0, L"Issued %s authentication token for user %s [%u] (description: %s)",
+                  tokenTypeName, ResolveUserId(userId, buffer, true), userId, CHECK_NULL_EX(description));
+            }
+            else if (persistent || singleUse)
+            {
+               writeAuditLog(AUDIT_SECURITY, true, 0, L"Issued %s authentication token for itself (description: %s)", tokenTypeName, CHECK_NULL_EX(description));
+            }
+         }
+         else
+         {
+            // Token cannot be issued for a group or for an unknown user
+            rcc = RCC_INVALID_USER_ID;
+         }
+      }
+      MemFree(description);
+      response.setField(VID_RCC, rcc);
    }
    else
    {
@@ -4191,8 +4245,6 @@ void ClientSession::enableAnonymousObjectAccess(const NXCPMessage& request)
          uint32_t uid = ResolveUserName(_T("anonymous"));
          if (uid != INVALID_UID)
          {
-            object->setUserAccess(uid, OBJECT_ACCESS_READ);
-
             bool validToken = false;
 
             TCHAR tokenText[64];
@@ -4214,9 +4266,21 @@ void ClientSession::enableAnonymousObjectAccess(const NXCPMessage& request)
                StringBuffer description(L"Anonymous access token for object \"");
                description.append(object->getName());
                description.append(L"\"");
-               IssueAuthenticationToken(uid, 3650 * 86400, AuthenticationTokenType::PERSISTENT, description)->token.toString(tokenText);
+               shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(uid, 3650 * 86400, AuthenticationTokenType::PERSISTENT, description);
+               if (token == nullptr)
+               {
+                  debugPrintf(4, L"Cannot enable anonymous access for object \"%s\" [%u] (access token cannot be issued)", object->getName(), object->getId());
+                  response.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
+                  sendMessage(response);
+                  return;
+               }
+               token->token.toString(tokenText);
                object->setCustomAttribute(L"$anonymousAccessToken", tokenText, StateChange::CLEAR);
             }
+
+            // Access rights are granted only after a usable token is available, so that a failed
+            // request does not leave the object readable by anonymous user
+            object->setUserAccess(uid, OBJECT_ACCESS_READ);
 
             debugPrintf(4, L"Enabled anonymous access for object \"%s\" [%u]", object->getName(), object->getId());
             writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Enabled anonymous access");
