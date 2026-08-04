@@ -455,6 +455,17 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
 }
 
 /**
+ * Check if credential validation for incoming SNMP traps is enabled. Controlled by global
+ * configuration variable SNMP.Traps.ValidateCredentials, overridable per node with custom
+ * attribute SysConfig:SNMP.Traps.ValidateCredentials.
+ */
+bool IsTrapCredentialValidationEnabled(const shared_ptr<Node>& node)
+{
+   bool enabled = ConfigReadBoolean(L"SNMP.Traps.ValidateCredentials", true);
+   return (node != nullptr) ? node->getCustomAttributeAsBoolean(L"SysConfig:SNMP.Traps.ValidateCredentials", enabled) : enabled;
+}
+
+/**
  * Validate SNMP trap credentials against expected security context.
  * For v1/v2c: checks community string match.
  * For v3: checks that PDU security level is not lower than expected and username matches.
@@ -703,10 +714,19 @@ static void ReceiverThread()
             InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
             TrapCredentialCheckResult credCheck = ValidateTrapCredentials(pdu, transport->getSecurityContext());
+            shared_ptr<Node> sourceNode;
+            if (credCheck != TrapCredentialCheckResult::OK)
+            {
+               sourceNode = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
+               if (!IsTrapCredentialValidationEnabled(sourceNode))
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPTrapReceiver: SNMP credential validation failed for trap from %s, but credential check is disabled", sourceAddr.toString().cstr());
+                  credCheck = TrapCredentialCheckResult::OK;
+               }
+            }
             if (credCheck != TrapCredentialCheckResult::OK)
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("SNMPTrapReceiver: SNMP credential validation failed for trap from %s, dropping"), (const TCHAR *)sourceAddr.toString());
-               shared_ptr<Node> sourceNode = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
                if (sourceNode != nullptr)
                   sourceNode->reportSnmpTrapAuthFailure(credCheck, *pdu, sourceAddr);
             }
