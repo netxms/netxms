@@ -8,6 +8,8 @@ tags:
     description: User authentication and session management
   - name: Alarms
     description: Alarm management operations
+  - name: Incidents
+    description: Incident management operations
   - name: Objects
     description: Object management and queries
   - name: Data Collection
@@ -1728,6 +1730,387 @@ paths:
         - BearerAuth: []
       tags:
         - Alarms
+  /v1/incidents:
+    get:
+      operationId: listIncidents
+      summary: List Incidents
+      description: >
+        Retrieve incident summaries, newest first. Reads from the database, so closed incidents
+        are included as well. Only incidents whose source object is readable by the caller are
+        returned.
+      parameters:
+        - name: objectId
+          in: query
+          description: Return only incidents created on given source object (0 or absent for all objects).
+          schema:
+            type: integer
+        - name: state
+          in: query
+          description: Comma-separated list of incident states to include (absent for all states).
+          example: '0,1,2'
+          schema:
+            type: string
+        - name: from
+          in: query
+          description: Return only incidents created at or after this point in time.
+          schema:
+            type: string
+        - name: to
+          in: query
+          description: Return only incidents created at or before this point in time.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of incidents to return (default 1000, maximum 10000).
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful retrieval of incidents.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IncidentSummary'
+        '400':
+          description: Invalid filter parameters
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
+    post:
+      operationId: createIncident
+      summary: Create Incident
+      description: >
+        Create new incident on given source object. If sourceAlarmId is provided, that alarm is
+        linked to the new incident. An alarm can belong to one incident only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentCreate'
+      responses:
+        '201':
+          description: Incident created.
+          headers:
+            Location:
+              description: URL of created incident.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '400':
+          description: Invalid request (missing source object or empty title)
+        '401':
+          description: Unauthorized
+        '403':
+          description: >
+            User does not have "Manage incidents" access to source object, or no read access
+            to source alarm
+        '404':
+          description: Source object or source alarm does not exist
+        '409':
+          description: Source alarm is already linked to another incident
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
+  /v1/incidents/{incident-id}:
+    get:
+      operationId: getIncident
+      summary: Get Incident Details
+      description: Retrieve full incident details, including linked alarm IDs and comments.
+      parameters:
+        - name: incident-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful retrieval of incident.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to incident's source object
+        '404':
+          description: Incident with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
+    put:
+      operationId: updateIncident
+      summary: Update Incident
+      description: Update incident. Title is the only mutable field.
+      parameters:
+        - name: incident-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentUpdate'
+      responses:
+        '200':
+          description: Incident updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '400':
+          description: Invalid request (empty title)
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have "Manage incidents" access to incident's source object
+        '404':
+          description: Incident with given ID does not exist
+        '409':
+          description: Incident is closed and cannot be modified
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
+  /v1/incidents/{incident-id}/state:
+    post:
+      operationId: changeIncidentState
+      summary: Change Incident State
+      description: >
+        Change incident state. Moving to RESOLVED resolves all linked alarms, moving to CLOSED
+        terminates them. CLOSED is terminal - no further changes are accepted. Moving to BLOCKED
+        requires a comment.
+      parameters:
+        - name: incident-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentStateChange'
+      responses:
+        '200':
+          description: Incident state changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '400':
+          description: Invalid state value, or comment missing for BLOCKED state
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have "Manage incidents" access to incident's source object
+        '404':
+          description: Incident with given ID does not exist
+        '409':
+          description: Incident is closed and cannot be modified
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
+  /v1/incidents/{incident-id}/assign:
+    post:
+      operationId: assignIncident
+      summary: Assign Incident
+      description: Assign incident to a user. User ID 0 clears the assignment.
+      parameters:
+        - name: incident-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentAssign'
+      responses:
+        '200':
+          description: Incident assigned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '400':
+          description: Missing or unknown user ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have "Manage incidents" access to incident's source object
+        '404':
+          description: Incident with given ID does not exist
+        '409':
+          description: Incident is closed and cannot be modified
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
+  /v1/incidents/{incident-id}/comments:
+    post:
+      operationId: addIncidentComment
+      summary: Add Incident Comment
+      description: Add comment to incident. Incident comments cannot be updated or deleted.
+      parameters:
+        - name: incident-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentCommentCreate'
+      responses:
+        '201':
+          description: Comment added.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '400':
+          description: Comment text is empty
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have "Manage incidents" access to incident's source object
+        '404':
+          description: Incident with given ID does not exist
+        '409':
+          description: Incident is closed and cannot be modified
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
+  /v1/incidents/{incident-id}/alarms:
+    post:
+      operationId: linkAlarmToIncident
+      summary: Link Alarm To Incident
+      description: Link an alarm to incident. An alarm can belong to one incident only.
+      parameters:
+        - name: incident-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncidentAlarmLink'
+      responses:
+        '200':
+          description: Alarm linked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '400':
+          description: Missing or invalid alarm ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: >
+            User does not have "Manage incidents" access to incident's source object, or no
+            read access to the alarm
+        '404':
+          description: Incident or alarm with given ID does not exist
+        '409':
+          description: Incident is closed, or alarm is already linked to another incident
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
+  /v1/incidents/{incident-id}/alarms/{alarm-id}:
+    delete:
+      operationId: unlinkAlarmFromIncident
+      summary: Unlink Alarm From Incident
+      description: >
+        Unlink an alarm from incident. Unlike most DELETE endpoints this one answers with the
+        updated incident, so that all incident mutations behave consistently.
+      parameters:
+        - name: incident-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: alarm-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Alarm unlinked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incident'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have "Manage incidents" access to incident's source object
+        '404':
+          description: Incident with given ID does not exist
+        '409':
+          description: Incident is closed and cannot be modified
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
+  /v1/incidents/{incident-id}/activity:
+    get:
+      operationId: getIncidentActivity
+      summary: Get Incident Activity Log
+      description: Retrieve incident activity log, newest first.
+      parameters:
+        - name: incident-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful retrieval of activity log.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IncidentActivityEntry'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to incident's source object
+        '404':
+          description: Incident with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Incidents
   /v1/asset-management-schema:
     get:
       operationId: getAssetManagementSchema
@@ -10682,6 +11065,227 @@ components:
           type: string
           nullable: true
           description: Alarm category name, or null if the category no longer exists
+    IncidentSummary:
+      type: object
+      description: Incident summary as returned by incident list endpoint
+      properties:
+        id:
+          type: integer
+          description: Unique incident identifier.
+        state:
+          type: integer
+          description: 'Incident state: 0 open, 1 in progress, 2 blocked, 3 resolved, 4 closed.'
+        stateName:
+          type: string
+          description: Human-readable incident state name.
+        title:
+          type: string
+          description: Incident title (up to 255 characters).
+        sourceObjectId:
+          type: integer
+          description: ID of object the incident was created on.
+        sourceObjectName:
+          type: string
+          description: Name of the source object.
+        assignedUserId:
+          type: integer
+          description: ID of user the incident is assigned to, or 0 when unassigned.
+        assignedUserName:
+          type: string
+          description: >
+            Login name of assigned user. Unassigned incidents must be detected by testing
+            assignedUserId for 0, not by matching on this name - user ID 0 resolves to the
+            built-in "system" account.
+        alarmCount:
+          type: integer
+          description: Number of alarms linked to the incident.
+        creationTime:
+          type: string
+          format: date-time
+          description: Incident creation time.
+        lastChangeTime:
+          type: string
+          format: date-time
+          description: Time of last incident change.
+    Incident:
+      allOf:
+        - $ref: '#/components/schemas/IncidentSummary'
+        - type: object
+          description: Full incident details
+          properties:
+            sourceAlarmId:
+              type: integer
+              description: ID of alarm the incident was created from, or 0 if created manually.
+            createdByUser:
+              type: integer
+              description: ID of user who created the incident, or 0 when created by event processing rule.
+            createdByUserName:
+              type: string
+              description: >
+                Login name of creating user. Resolves to the built-in "system" account when the
+                incident was created by an event processing rule.
+            resolvedByUser:
+              type: integer
+              description: ID of user who resolved the incident, or 0 if not resolved yet.
+            resolvedByUserName:
+              type: string
+              description: Login name of resolving user. Meaningful only when resolvedByUser is not 0.
+            resolveTime:
+              type: string
+              format: date-time
+              nullable: true
+              description: Time the incident was resolved, or null if not resolved yet.
+            closedByUser:
+              type: integer
+              description: ID of user who closed the incident, or 0 if not closed yet.
+            closedByUserName:
+              type: string
+              description: Login name of closing user. Meaningful only when closedByUser is not 0.
+            closeTime:
+              type: string
+              format: date-time
+              nullable: true
+              description: Time the incident was closed, or null if not closed yet.
+            linkedAlarms:
+              type: array
+              description: IDs of alarms linked to the incident.
+              items:
+                type: integer
+            comments:
+              type: array
+              description: Incident comments, oldest first.
+              items:
+                $ref: '#/components/schemas/IncidentComment'
+    IncidentComment:
+      type: object
+      description: Incident comment. Comments can only be added, not updated or deleted.
+      properties:
+        id:
+          type: integer
+          description: Unique comment identifier.
+        incidentId:
+          type: integer
+          description: ID of incident the comment belongs to.
+        userId:
+          type: integer
+          description: ID of user who added the comment, or 0 for comments added by the server itself.
+        userName:
+          type: string
+          description: >
+            Login name of user who added the comment. Comments added by the server itself
+            (AI analysis, event processing rules) carry user ID 0 and resolve to the built-in
+            "system" account; use aiGenerated to identify AI-authored comments.
+        creationTime:
+          type: string
+          format: date-time
+          description: Comment creation time.
+        text:
+          type: string
+          description: Comment text.
+        aiGenerated:
+          type: boolean
+          description: True if the comment was generated by AI analysis.
+    IncidentActivityEntry:
+      type: object
+      description: Entry in incident activity log
+      properties:
+        id:
+          type: integer
+          description: Unique activity entry identifier.
+        incidentId:
+          type: integer
+          description: ID of incident the entry belongs to.
+        timestamp:
+          type: string
+          format: date-time
+          description: Time the activity was recorded.
+        userId:
+          type: integer
+          description: ID of user who performed the action, or 0 if performed by the server itself.
+        userName:
+          type: string
+          description: >
+            Login name of user who performed the action. Actions performed by the server itself
+            (for example, incident creation by an event processing rule) carry user ID 0 and
+            resolve to the built-in "system" account.
+        activityType:
+          type: integer
+          description: >
+            Activity type: 0 created, 1 state change, 2 assigned, 3 alarm linked,
+            4 alarm unlinked, 5 comment added, 6 updated.
+        oldValue:
+          type: string
+          nullable: true
+          description: Value before the change, if applicable.
+        newValue:
+          type: string
+          nullable: true
+          description: Value after the change, if applicable.
+        details:
+          type: string
+          nullable: true
+          description: Additional details, if any.
+    IncidentCreate:
+      type: object
+      required:
+        - sourceObjectId
+        - title
+      properties:
+        sourceObjectId:
+          type: integer
+          description: ID of object to create the incident on.
+        title:
+          type: string
+          description: Incident title (cannot be empty, truncated to 255 characters).
+        initialComment:
+          type: string
+          description: Optional comment added to the new incident.
+        sourceAlarmId:
+          type: integer
+          description: Optional ID of alarm to create the incident from and link to it.
+    IncidentUpdate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          description: New incident title (cannot be empty, truncated to 255 characters).
+    IncidentStateChange:
+      type: object
+      required:
+        - state
+      properties:
+        state:
+          type: integer
+          description: 'New incident state: 0 open, 1 in progress, 2 blocked, 3 resolved, 4 closed.'
+        comment:
+          type: string
+          description: Comment describing the change. Required when new state is 2 (blocked).
+    IncidentAssign:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: integer
+          description: ID of user to assign the incident to, or 0 to clear the assignment.
+    IncidentCommentCreate:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: Comment text (cannot be empty).
+    IncidentAlarmLink:
+      type: object
+      required:
+        - alarmId
+      properties:
+        alarmId:
+          type: integer
+          description: ID of alarm to link to the incident.
     User:
       type: object
       description: User account
