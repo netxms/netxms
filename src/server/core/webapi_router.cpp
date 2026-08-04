@@ -290,7 +290,7 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       }
 
       time_t tokenExpiresAt = 0;
-      if (!ValidateAuthenticationToken(token, &userId, nullptr, AUTH_TOKEN_VALIDITY_TIME, &tokenExpiresAt, &tokenMaxExpiresAt /* updates outer scope var */))
+      if (!ValidateAuthenticationToken(token, &userId, AUTH_TOKEN_VALIDITY_TIME, &tokenExpiresAt, &tokenMaxExpiresAt /* updates outer scope var */))
       {
          char masked[32];
          MaskToken(encodedToken, masked, sizeof(masked));

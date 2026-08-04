@@ -620,13 +620,33 @@ unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(
 unique_ptr<ObjectArray<UserDatabaseObject>> NXCORE_EXPORTABLE FindUserDBObjects(const StructArray<ResponsibleUser>& ids);
 NXSL_Value *GetUserDBObjectForNXSL(uint32_t id, NXSL_VM *vm);
 
+const wchar_t NXCORE_EXPORTABLE *AuthenticationTokenTypeName(AuthenticationTokenType type);
+
+/**
+ * Issue authentication token. Returns nullptr if token cannot be issued for given user.
+ */
 shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor,
    AuthenticationTokenType type = AuthenticationTokenType::EPHEMERAL, const wchar_t *description = nullptr, uint32_t maxLifetime = 0);
 void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& token);
 uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t userId = 0);
 void NXCORE_EXPORTABLE RevokeAuthenticationTokensForUser(uint32_t userId);
-bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken = nullptr,
+
+/**
+ * Validate authentication token. Never consumes the token, and always rejects single-use tokens -
+ * those can only be spent by ConsumeAuthenticationToken().
+ */
+bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId,
    uint32_t validFor = 0, time_t *expiresAt = nullptr, time_t *maxExpiresAt = nullptr);
+
+/**
+ * Validate authentication token and consume it if it is single-use. This is the single designated spend
+ * point for single-use tokens and must be called from client session login only.
+ *
+ * Deliberately not marked as NXCORE_EXPORTABLE: the only caller lives in the same shared library, and
+ * leaving the decoration off keeps the spend primitive out of reach of server modules.
+ */
+bool ConsumeAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId,
+   AuthenticationTokenType *tokenType = nullptr);
 void AuthenticationTokensToMessage(uint32_t userId, NXCPMessage *msg);
 json_t NXCORE_EXPORTABLE *AuthenticationTokensToJson(uint32_t userId);
 

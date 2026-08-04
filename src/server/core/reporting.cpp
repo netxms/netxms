@@ -362,6 +362,24 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
          s_fileRequestLock.unlock();
          break;
       case CMD_RS_EXECUTE_REPORT:
+         // Issue authentication token for reporting server (valid for 5 minutes). User could have been
+         // deleted while the session is still open, in which case no token can be issued for it. Token is
+         // issued before data view preparation so that this failure path has nothing to clean up.
+         {
+            shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(session->getUserId(), 300, AuthenticationTokenType::SERVICE);
+            if (token == nullptr)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 3, L"Cannot execute report %s (cannot issue authentication token for user [%u])",
+                  request->getFieldAsGUID(VID_REPORT_DEFINITION).toString().cstr(), session->getUserId());
+               // Reported as invalid user ID rather than by returning nullptr, which the caller
+               // translates into RCC_COMM_FAILURE - the reporting server connection is intact here
+               auto response = new NXCPMessage(CMD_REQUEST_COMPLETED, originalId);
+               response->setField(VID_RCC, RCC_INVALID_USER_ID);
+               return response;
+            }
+            request->setField(VID_AUTH_TOKEN, token->token.toString());
+         }
+
          if (IsDataViewRequired(request->getFieldAsGUID(VID_REPORT_DEFINITION)) && PrepareReportingDataView(session->getUserId(), viewName))
          {
             request->setField(VID_VIEW_NAME, viewName);
@@ -370,17 +388,18 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("Data view is not required or cannot be prepared for report %s"), request->getFieldAsGUID(VID_REPORT_DEFINITION).toString().cstr());
          }
-
-         // Issue authentication token for reporting server (valid for 5 minutes)
-         request->setField(VID_AUTH_TOKEN, IssueAuthenticationToken(session->getUserId(), 300, AuthenticationTokenType::SERVICE)->token.toString());
          break;
    }
 
    NXCPMessage *reply = nullptr;
    if (s_connector->sendMessage(request))
    {
-      reply = s_connector->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 600000);
+      reply = s_connector->waitForMessage(CMD_REQUEST_COMPLETED, rqId, 600000);
    }
+
+   // Restore original message ID, so that a response built by the caller after this function
+   // returns nullptr is matched with the client request instead of carrying the internal ID
+   request->setId(originalId);
 
    if (reply != nullptr)
    {
@@ -413,15 +432,24 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
    uuid reportId = jobConfig.getValueAsUUID(L"/reportId");
    nxlog_debug_tag(DEBUG_TAG, 3, L"Preparing execution of report %s (%s)", reportId.toString().cstr(), parameters->m_comments);
 
+   // Issue authentication token for reporting server (valid for 5 minutes). User could have been
+   // deleted after the task was scheduled, in which case no token can be issued for it. Token is
+   // issued before data view preparation so that this failure path has nothing to clean up.
+   shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(parameters->m_userId, 300, AuthenticationTokenType::SERVICE);
+   if (token == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, L"Cannot execute scheduled report \"%s\" (cannot issue authentication token for user [%u])",
+         parameters->m_comments, parameters->m_userId);
+      return;
+   }
+   request.setField(VID_AUTH_TOKEN, token->token.toString());
+
    // Prepare data view if needed
    wchar_t viewName[MAX_OBJECT_NAME] = L"";
    if (IsDataViewRequired(reportId) && PrepareReportingDataView(parameters->m_userId, viewName))
       request.setField(VID_VIEW_NAME, viewName);
    else
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Data view is not required or cannot be prepared for report %s"), reportId.toString().cstr());
-
-   // Issue authentication token for reporting server (valid for 5 minutes)
-   request.setField(VID_AUTH_TOKEN, IssueAuthenticationToken(parameters->m_userId, 300, AuthenticationTokenType::SERVICE)->token.toString());
 
    if (s_connector->sendMessage(&request))
    {

@@ -2804,23 +2804,60 @@ public class NXCSession
     * Request new authentication token from server.
     *
     * @param persistent true to request persistent token
-    * @param validFor token validity time in seconds
-    * @param description optional token description (can be null)
+    * @param validFor token validity time in seconds; must be greater than 0. For a persistent token the resulting expiration
+    *           time must not be later than 2038-01-19T03:14:07Z, because server stores it in a 32-bit database column.
+    * @param description optional token description (can be null); limited to 127 characters, because server stores a persistent
+    *           token in a fixed size database column and applies the same limit to all token types
     * @param userId user ID to issue token for (0 to indicate currently logged in user)
-    * @return token ID for persistent tokens or 0 for ephemeral
+    * @return issued authentication token, including its clear-text value
     * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws NXCException if NetXMS server returns an error or operation was timed out (INVALID_ARGUMENT if validity time or
+    *            description is out of range, INVALID_USER_ID if token cannot be issued for given user)
     */
    public AuthenticationToken requestAuthenticationToken(boolean persistent, int validFor, String description, int userId) throws IOException, NXCException
+   {
+      return requestAuthenticationToken(persistent, validFor, description, userId, false);
+   }
+
+   /**
+    * Request new authentication token from server.
+    *
+    * @param persistent true to request persistent token
+    * @param validFor token validity time in seconds; must be greater than 0. For a persistent token the resulting expiration
+    *           time must not be later than 2038-01-19T03:14:07Z, because server stores it in a 32-bit database column.
+    * @param description optional token description (can be null); limited to 127 characters, because server stores a persistent
+    *           token in a fixed size database column and applies the same limit to all token types
+    * @param userId user ID to issue token for (0 to indicate currently logged in user)
+    * @param singleUse true to request single-use token, which is destroyed by the login it authenticates. Cannot be combined with
+    *           persistent token request.
+    * @return issued authentication token, including its clear-text value
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out (INVALID_ARGUMENT if validity time or
+    *            description is out of range or single-use token is requested together with persistent one, INVALID_USER_ID if
+    *            token cannot be issued for given user, NOT_IMPLEMENTED if single-use token was requested from a server that does
+    *            not support them)
+    */
+   public AuthenticationToken requestAuthenticationToken(boolean persistent, int validFor, String description, int userId,
+         boolean singleUse) throws IOException, NXCException
    {
       NXCPMessage request = newMessage(NXCPCodes.CMD_REQUEST_AUTH_TOKEN);
       request.setField(NXCPCodes.VID_PERSISTENT, persistent);
       request.setFieldInt32(NXCPCodes.VID_VALIDITY_TIME, validFor);
       request.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
       request.setField(NXCPCodes.VID_DESCRIPTION, description);
+      request.setField(NXCPCodes.VID_SINGLE_USE, singleUse);
       sendMessage(request);
       NXCPMessage response = waitForRCC(request.getMessageId());
-      return new AuthenticationToken(response, NXCPCodes.VID_ELEMENT_LIST_BASE);
+      AuthenticationToken token = new AuthenticationToken(response, NXCPCodes.VID_ELEMENT_LIST_BASE);
+
+      // Server not supporting single-use tokens ignores the request and issues an ordinary reusable token,
+      // which would silently break the one-shot guarantee expected by the caller
+      if (singleUse && !token.isSingleUse())
+      {
+         logger.warn("Server issued reusable token in response to single-use token request");
+         throw new NXCException(RCC.NOT_IMPLEMENTED);
+      }
+      return token;
    }
 
    /**
@@ -2855,7 +2892,7 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
       long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       List<AuthenticationToken> tokens = new ArrayList<>(count);
-      for(int i = 0; i < count; i++)
+      for(int i = 0; i < count; i++, fieldId += 10)
          tokens.add(new AuthenticationToken(response, fieldId));
       return tokens;
    }
