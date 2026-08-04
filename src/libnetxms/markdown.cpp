@@ -20,6 +20,7 @@
 **
 **/
 
+#include "libnetxms.h"
 #include <nxmarkdown.h>
 #include <string>
 #include <vector>
@@ -652,6 +653,134 @@ public:
    virtual void linkEnd(const char *url, size_t urlLen, bool urlSameAsText) override
    {
       m_out.push_back('>');
+   }
+};
+
+/**
+ * ANSI SGR escape sequences used by terminal renderer. Styles not representable as console
+ * attributes on Windows (italic, underline, strikethrough) are silently ignored by
+ * WriteToTerminal there; color and bold work on all supported platforms.
+ */
+#define SGR_BOLD_ON        "\x1b[1m"
+#define SGR_BOLD_OFF       "\x1b[22m"
+#define SGR_ITALIC_ON      "\x1b[3m"
+#define SGR_ITALIC_OFF     "\x1b[23m"
+#define SGR_UNDERLINE_ON   "\x1b[4m"
+#define SGR_UNDERLINE_OFF  "\x1b[24m"
+#define SGR_STRIKE_ON      "\x1b[9m"
+#define SGR_STRIKE_OFF     "\x1b[29m"
+#define SGR_GREEN          "\x1b[32m"
+#define SGR_CYAN           "\x1b[36m"
+#define SGR_DEFAULT_FG     "\x1b[39m"
+
+/**
+ * Terminal renderer - text styled with ANSI SGR sequences for output via WriteToTerminal
+ */
+class TerminalRenderer : public TextStyleRenderer
+{
+private:
+   bool m_inQuote;
+
+protected:
+   virtual void appendEscaped(const char *s, size_t len) override
+   {
+      // Drop ESC characters so markdown input cannot inject its own escape sequences
+      for(size_t i = 0; i < len; i++)
+         if (s[i] != 0x1B)
+            m_out.push_back(s[i]);
+   }
+
+public:
+   TerminalRenderer() : TextStyleRenderer()
+   {
+      m_inQuote = false;
+   }
+
+   virtual void softBreak() override
+   {
+      m_out.push_back('\n');
+      if (m_inQuote)
+         m_out.append("> ");
+   }
+   virtual void headingStart(int level) override
+   {
+      blockSeparator();
+      m_out.append(SGR_BOLD_ON);
+      if (level <= 2)
+         m_out.append(SGR_UNDERLINE_ON);
+   }
+   virtual void headingEnd(int level) override
+   {
+      if (level <= 2)
+         m_out.append(SGR_UNDERLINE_OFF);
+      m_out.append(SGR_BOLD_OFF);
+   }
+   virtual void blockquoteStart() override
+   {
+      blockSeparator();
+      m_out.append(SGR_GREEN "> ");
+      m_inQuote = true;
+   }
+   virtual void blockquoteEnd() override
+   {
+      m_out.append(SGR_DEFAULT_FG);
+      m_inQuote = false;
+   }
+   virtual void codeBlockStart(const char *lang, size_t langLen) override
+   {
+      blockSeparator();
+      m_out.append(SGR_CYAN);
+   }
+   virtual void codeBlockLine(const char *s, size_t len) override
+   {
+      m_out.append("   ");
+      appendEscaped(s, len);
+      m_out.push_back('\n');
+   }
+   virtual void codeBlockEnd() override
+   {
+      // Remove trailing newline of last code line so following block separation is uniform
+      if (!m_out.empty() && (m_out[m_out.length() - 1] == '\n'))
+         m_out.resize(m_out.length() - 1);
+      m_out.append(SGR_DEFAULT_FG);
+   }
+   virtual void boldStart() override { m_out.append(SGR_BOLD_ON); }
+   virtual void boldEnd() override { m_out.append(SGR_BOLD_OFF); }
+   virtual void italicStart() override { m_out.append(SGR_ITALIC_ON); }
+   virtual void italicEnd() override { m_out.append(SGR_ITALIC_OFF); }
+   virtual void strikeStart() override { m_out.append(SGR_STRIKE_ON); }
+   virtual void strikeEnd() override { m_out.append(SGR_STRIKE_OFF); }
+   virtual void codeSpan(const char *s, size_t len) override
+   {
+      m_out.append(SGR_CYAN);
+      appendEscaped(s, len);
+      m_out.append(SGR_DEFAULT_FG);
+   }
+   virtual void linkStart(const char *url, size_t urlLen) override
+   {
+      m_out.append(SGR_UNDERLINE_ON);
+   }
+   virtual void linkEnd(const char *url, size_t urlLen, bool urlSameAsText) override
+   {
+      m_out.append(SGR_UNDERLINE_OFF);
+      if (!urlSameAsText && (urlLen > 0))
+      {
+         m_out.append(" (" SGR_CYAN);
+         appendEscaped(url, urlLen);
+         m_out.append(SGR_DEFAULT_FG ")");
+      }
+   }
+   virtual void tableCellStart(bool header, int column, TableCellAlignment alignment) override
+   {
+      TextStyleRenderer::tableCellStart(header, column, alignment);
+      if (header)
+         m_out.append(SGR_BOLD_ON);   // Inside cell capture; does not affect padding width
+   }
+   virtual void tableCellEnd(bool header, int column) override
+   {
+      if (header)
+         m_out.append(SGR_BOLD_OFF);
+      TextStyleRenderer::tableCellEnd(header, column);
    }
 };
 
@@ -1567,7 +1696,7 @@ static char *Convert(const char *markdown, MarkdownRenderer& renderer)
 /**
  * Convert markdown to plain text (strip all markup)
  */
-char LIBNXSRV_EXPORTABLE *MarkdownToPlainText(const char *markdown)
+char LIBNETXMS_EXPORTABLE *MarkdownToPlainText(const char *markdown)
 {
    PlainTextRenderer renderer;
    return Convert(markdown, renderer);
@@ -1576,7 +1705,7 @@ char LIBNXSRV_EXPORTABLE *MarkdownToPlainText(const char *markdown)
 /**
  * Convert markdown to HTML in given dialect
  */
-char LIBNXSRV_EXPORTABLE *MarkdownToHTML(const char *markdown, MarkdownHTMLDialect dialect)
+char LIBNETXMS_EXPORTABLE *MarkdownToHTML(const char *markdown, MarkdownHTMLDialect dialect)
 {
    if (dialect == MarkdownHTMLDialect::TELEGRAM)
    {
@@ -1590,8 +1719,17 @@ char LIBNXSRV_EXPORTABLE *MarkdownToHTML(const char *markdown, MarkdownHTMLDiale
 /**
  * Convert markdown to Slack mrkdwn format
  */
-char LIBNXSRV_EXPORTABLE *MarkdownToSlackText(const char *markdown)
+char LIBNETXMS_EXPORTABLE *MarkdownToSlackText(const char *markdown)
 {
    SlackTextRenderer renderer;
+   return Convert(markdown, renderer);
+}
+
+/**
+ * Convert markdown to text styled with ANSI SGR escape sequences for terminal output
+ */
+char LIBNETXMS_EXPORTABLE *MarkdownToTerminal(const char *markdown)
+{
+   TerminalRenderer renderer;
    return Convert(markdown, renderer);
 }

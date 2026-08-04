@@ -53,7 +53,6 @@ serverinclude_HEADERS = \
 	nxcore_websvc.h \
 	nxcore_winperf.h \
 	nxdbmgr_tools.h \
-	nxmarkdown.h \
 	nxmodule.h \
 	nxsrvapi.h \
 	pdsdrv.h \

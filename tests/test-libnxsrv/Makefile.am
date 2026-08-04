@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_PROGRAMS = test-libnxsrv
-test_libnxsrv_SOURCES = markdown.cpp test-libnxsrv.cpp
+test_libnxsrv_SOURCES = test-libnxsrv.cpp
 test_libnxsrv_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I../include -I@top_srcdir@/build
 test_libnxsrv_LDFLAGS = @EXEC_LDFLAGS@
 test_libnxsrv_LDADD = \

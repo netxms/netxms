@@ -56,6 +56,13 @@ static void CheckSlack(const char *input, const char *expected)
    MemFree(r);
 }
 
+static void CheckTerminal(const char *input, const char *expected)
+{
+   char *r = MarkdownToTerminal(input);
+   AssertEquals(r, expected);
+   MemFree(r);
+}
+
 /**
  * Test markdown conversion functions
  */
@@ -222,6 +229,22 @@ void TestMarkdown()
    CheckPlain("```\na | b\n---|---\n```", "a | b\n---|---");
    EndTest();
 
+   StartTest(_T("Markdown - terminal output"));
+   CheckTerminal("Hello **world**!", "Hello \x1b[1mworld\x1b[22m!");
+   CheckTerminal("*emph* and _also_", "\x1b[3memph\x1b[23m and \x1b[3malso\x1b[23m");
+   CheckTerminal("~~gone~~", "\x1b[9mgone\x1b[29m");
+   CheckTerminal("run `nxdbmgr check` now", "run \x1b[36mnxdbmgr check\x1b[39m now");
+   CheckTerminal("# Title\n\nBody text", "\x1b[1m\x1b[4mTitle\x1b[24m\x1b[22m\n\nBody text");
+   CheckTerminal("### Sub\n\nBody", "\x1b[1mSub\x1b[22m\n\nBody");
+   CheckTerminal("See [docs](https://netxms.org) now", "See \x1b[4mdocs\x1b[24m (\x1b[36mhttps://netxms.org\x1b[39m) now");
+   CheckTerminal("[https://netxms.org](https://netxms.org)", "\x1b[4mhttps://netxms.org\x1b[24m");
+   CheckTerminal("```\nline1\nline2\n```", "\x1b[36m   line1\n   line2\x1b[39m");
+   CheckTerminal("> quoted line\n> second", "\x1b[32m> quoted line\n> second\x1b[39m");
+   CheckTerminal("- one\n- two", "\xE2\x80\xA2 one\n\xE2\x80\xA2 two");
+   CheckTerminal("a | b\n---|---\n1 | 2", "\x1b[1ma\x1b[22m | \x1b[1mb\x1b[22m\n--+--\n1 | 2");
+   CheckTerminal("evil \x1b[31mred", "evil [31mred");   // ESC characters in input must be dropped
+   EndTest();
+
    StartTest(_T("Markdown - degenerate input"));
    CheckPlain("", "");
    CheckTelegram("", "");
@@ -229,6 +252,8 @@ void TestMarkdown()
    CheckTelegram(nullptr, "");
    CheckGeneric(nullptr, "");
    CheckSlack(nullptr, "");
+   CheckTerminal(nullptr, "");
+   CheckTerminal("", "");
    CheckPlain("line one\r\nline two\r\n", "line one\nline two");
    EndTest();
 
@@ -260,5 +285,14 @@ void TestMarkdown()
          "- httpd not responding\n"
          "\n"
          "See runbook (https://wiki.local/rb) for details.");
+   CheckTerminal(input,
+         "\x1b[1m\x1b[4mNode status\x1b[24m\x1b[22m\n"
+         "\n"
+         "Node \x1b[1mweb-1\x1b[22m is \x1b[3mdegraded\x1b[23m:\n"
+         "\n"
+         "\xE2\x80\xA2 CPU usage > 90%\n"
+         "\xE2\x80\xA2 \x1b[36mhttpd\x1b[39m not responding\n"
+         "\n"
+         "See \x1b[4mrunbook\x1b[24m (\x1b[36mhttps://wiki.local/rb\x1b[39m) for details.");
    EndTest();
 }

@@ -9,6 +9,7 @@ SOURCES = \
 	crypto.cpp \
 	gauge64.cpp \
 	geolocation.cpp \
+	markdown.cpp \
 	mempool.cpp \
 	nxcp.cpp \
 	proc.cpp \

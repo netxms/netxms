@@ -3316,6 +3316,9 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 		case 37:	// white (gray) foreground
 			attr = (currAttr & BG_MASK) | 0x07;
 			break;
+		case 39:	// default foreground
+			attr = (currAttr & BG_MASK) | 0x07;
+			break;
 		case 40:	// black background
 			attr = (currAttr & FG_MASK);
 			break;
@@ -3339,6 +3342,9 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 			break;
 		case 47:	// white (gray) background
 			attr = (currAttr & FG_MASK) | 0x70;
+			break;
+		case 49:	// default background
+			attr = (currAttr & FG_MASK);
 			break;
 		default:
 			break;

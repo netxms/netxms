@@ -37,6 +37,7 @@ void TestRSA();
 void TestMD4();
 void TestDES();
 void TestDESCBC();
+void TestMarkdown();
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
 /**
@@ -3721,6 +3722,7 @@ int main(int argc, char *argv[])
    TestMD4();
    TestDES();
    TestDESCBC();
+   TestMarkdown();
 
    if (debug)
       nxlog_set_debug_level(9);

@@ -45,6 +45,7 @@ SOURCES = \
 	log.cpp \
 	lz4.c \
 	macaddr.cpp \
+	markdown.cpp \
 	md4.cpp \
 	md5.cpp \
 	memmem.cpp \

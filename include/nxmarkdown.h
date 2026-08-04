@@ -26,14 +26,6 @@
 #include <nms_common.h>
 #include <nms_util.h>
 
-#ifndef LIBNXSRV_EXPORTABLE
-#ifdef LIBNXSRV_EXPORTS
-#define LIBNXSRV_EXPORTABLE __EXPORT
-#else
-#define LIBNXSRV_EXPORTABLE __IMPORT
-#endif
-#endif
-
 /**
  * Target dialect for markdown to HTML conversion
  */
@@ -48,11 +40,15 @@ enum class MarkdownHTMLDialect
  * CommonMark subset (bold, italic, strikethrough, inline code, links, headings, lists with one
  * nesting level, fenced code blocks, blockquotes, horizontal rules) with GFM tables;
  * unrecognized syntax is passed through as literal text. Formats without native table support
- * (plain text, Telegram, Slack) get tables laid out as text with aligned columns. Returned
- * string is allocated with MemAlloc and should be freed by the caller.
+ * (plain text, Telegram, Slack, terminal) get tables laid out as text with aligned columns.
+ * MarkdownToTerminal produces text styled with ANSI SGR escape sequences, intended for output
+ * via WriteToTerminal which maps the sequences to console attributes on Windows and strips them
+ * when output is redirected. Returned string is allocated with MemAlloc and should be freed by
+ * the caller.
  */
-char LIBNXSRV_EXPORTABLE *MarkdownToPlainText(const char *markdown);
-char LIBNXSRV_EXPORTABLE *MarkdownToHTML(const char *markdown, MarkdownHTMLDialect dialect);
-char LIBNXSRV_EXPORTABLE *MarkdownToSlackText(const char *markdown);
+char LIBNETXMS_EXPORTABLE *MarkdownToPlainText(const char *markdown);
+char LIBNETXMS_EXPORTABLE *MarkdownToHTML(const char *markdown, MarkdownHTMLDialect dialect);
+char LIBNETXMS_EXPORTABLE *MarkdownToSlackText(const char *markdown);
+char LIBNETXMS_EXPORTABLE *MarkdownToTerminal(const char *markdown);
 
 #endif   /* _nxmarkdown_h_ */

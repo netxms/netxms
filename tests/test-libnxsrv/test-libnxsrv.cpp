@@ -10,8 +10,6 @@
 
 NETXMS_EXECUTABLE_HEADER(test-libnxsrv)
 
-void TestMarkdown();
-
 /**
  * NObject subclass exposing protected members for testing
  */
@@ -1538,6 +1536,5 @@ int main(int argc, char *argv[])
    TestDriverVlans();
    TestDriverArpCache();
    TestDriverDefaults();
-   TestMarkdown();
    return 0;
 }

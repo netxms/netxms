@@ -4,7 +4,7 @@
 #
 
 TOOL = test-libnxsrv
-SOURCES = markdown.cpp test-libnxsrv.cpp
+SOURCES = test-libnxsrv.cpp
 TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/tests/include
 TOOL_LIBS = -lnxsrv -lnxsnmp -lnxsl -lnxdb -lnxagent -lnetxms -lnxjansson
 

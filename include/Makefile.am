@@ -42,6 +42,7 @@ include_HEADERS = \
 	nxjson.h \
 	nxlibcurl.h \
 	nxlog.h \
+	nxmarkdown.h \
 	nxlpapi.h \
 	nxmbapi.h \
 	nxnet.h \
