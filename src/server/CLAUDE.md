@@ -15,6 +15,8 @@ extern NXCORE_EXPORTABLE_VAR(int) g_myGlobal;
 
 When exporting a function for module use, also export the sibling functions declared alongside it in the same header group (unless clearly internal) — a module rarely calls exactly one function from a subsystem, and exporting the whole family up front avoids a churn of one-symbol export edits and rebuild/reinstall cycles later.
 
+The converse also matters: a missing `NXCORE_EXPORTABLE` on a function declared in a server header can be deliberate. Leaving it off keeps the symbol reachable only from within core, which is how a security-sensitive primitive is restricted to a single call site — the linker enforces the rule instead of a comment. `ConsumeAuthenticationToken()` (`include/nms_users.h`) is the reference case: it is the sole spend point for single-use authentication tokens and is undecorated on purpose. Before adding the decoration to an undecorated declaration, check for a comment explaining why it is absent.
+
 ## String Handling
 
 Server code is always built in Unicode mode. Use `L"..."` string literals and wide-character functions (`wcsncmp`, `wcslen`, etc.) directly. Do **not** use `_T()` / `TCHAR` / `_tcsncmp` wrappers in new server code — those are remnants from older versions that supported non-Unicode builds. The `_T()` abstraction is only needed in agent code and shared libraries that may be built in either mode.
@@ -261,6 +263,7 @@ nxlog_debug_tag(_T("session"), level, ...)    # Client sessions
 
 - SSH Interactive Sessions: `doc/SSH_Interactive_Sessions_Design.md`
 - AI Incident Management: `doc/AI_Incident_Management_Integration_Design.md`
+- Single-Use Authentication Tokens: `doc/Single_Use_Authentication_Tokens.md`
 
 ## Related Components
 

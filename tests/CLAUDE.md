@@ -27,10 +27,11 @@ column below.
 | `test-libnxsnmp/` | SNMP library tests | via `@TEST_MODULES@` |
 | `test-libnxsl/` | NXSL interpreter tests | via `@TEST_MODULES@` |
 | `test-libnxsrv/` | Server library tests (NObject hierarchy, drivers, mock SNMP transport, …) | via `@TEST_MODULES@` |
+| `test-authtokens/` | Authentication token tests — compiles the real `src/server/core/authtokens.cpp` and stubs four core symbols; covers the validate/consume split and the single-use claim race | via `@TEST_MODULES@` |
 | `test-ncd-webhook/` | Webhook notification-channel driver tests | via `@TEST_MODULES@` |
 | `agent/unit/*` | Per-subagent unit tests: `entsoe`, `openmeteo`, `linux-cpu-usage-collector` | via `@AGENT_UNIT_TESTS@` |
 | `ha/` | `ha-node-sim` + Python `harness.py` — adversarial HA lease-manager harness (issue #3364). Compiles the real `src/server/core/halease.cpp` against a shared DB. | via `@TEST_MODULES@` |
-| `integration/` | Java/Maven integration tests (`EppScriptTest`, NXSL resource scripts) against a running server | Maven (separate) |
+| `integration/` | Java/Maven integration tests (`EppScriptTest`, `SingleUseTokenTest`, NXSL resource scripts) against a running server | Maven (separate) |
 | `nx-2488/` | Manual web-service caching repro (SQL patch, NXSL scripts, trivial web server) | manual (not in build) |
 | `tools/` | Standalone Python helpers: `otlp-log-sender`, `otlp-mock-collector` (for OTLP ingestion testing, issue #3292) | manual (not in build) |
 
@@ -118,6 +119,15 @@ Makefile alone is not enough:
 4. Create `tests/<name>/Makefile.w32` (see "Windows build" above) and add the
    directory to `TESTS_DIRS` in the top-level `Makefile.w32`.
 5. Add a `call :RunTest <binary>` line to `suite/netxms-test-suite.cmd`.
+
+A test that compiles a **server core** source directly instead of linking a
+library needs two extra flags in both Makefiles, and missing either one breaks
+only the Windows build: `-DNXCORE_EXPORTS`, without which `NXCORE_EXPORTABLE`
+expands to `__declspec(dllimport)` (`src/server/include/nms_core.h`) and
+defining those symbols is a hard error on MinGW; and `@MICROHTTPD_CPPFLAGS@` /
+`-I$(MICROHTTPD_ROOT)/include` if the source reaches `netxms-webapi.h`, which
+includes `<microhttpd.h>`. Link `libnxsrv` for `ServerConsole` and stub only the
+few remaining core symbols. `test-authtokens/` is the reference example.
 
 For a **new test case in an existing binary**: add the `Test*()` function (new
 `.cpp` if substantial, listed in that dir's `_SOURCES`), declare it in the

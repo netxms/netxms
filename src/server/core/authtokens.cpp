@@ -117,13 +117,33 @@ void LoadAuthenticationTokens()
 }
 
 /**
+ * Get display name for authentication token type
+ */
+const wchar_t NXCORE_EXPORTABLE *AuthenticationTokenTypeName(AuthenticationTokenType type)
+{
+   switch(type)
+   {
+      case AuthenticationTokenType::PERSISTENT:
+         return L"persistent";
+      case AuthenticationTokenType::SERVICE:
+         return L"service";
+      case AuthenticationTokenType::SINGLE_USE:
+         return L"single-use";
+      default:
+         return L"ephemeral";
+   }
+}
+
+/**
  * Issue authentication token
  *
  * @param userId User ID for this token
  * @param validFor Initial validity period in seconds
- * @param type Token type (ephemeral, persistent, or service)
+ * @param type Token type (ephemeral, persistent, service, or single-use)
  * @param description Optional description
  * @param maxLifetime Maximum absolute lifetime in seconds (0 = use configured default for ephemeral, no limit for persistent)
+ * @return descriptor of the issued token, or nullptr if the token cannot be issued (user ID refers to a group or to an
+ *         unknown user, or a persistent token would be issued already expired). Callers must check the returned pointer.
  */
 shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationToken(uint32_t userId, uint32_t validFor, AuthenticationTokenType type, const wchar_t *description, uint32_t maxLifetime)
 {
@@ -142,6 +162,24 @@ shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationT
    }
 
    auto descriptor = make_shared<AuthenticationTokenDescriptor>(userId, validFor, type, description, effectiveMaxLifetime);
+
+   // Expiration time of a persistent token is stored in 32-bit database column and is clamped to
+   // MAX_PERSISTENT_TOKEN_EXPIRATION_TIME, so past that point any persistent token would be issued
+   // already expired. Check the constructed descriptor instead of the clock, so that clamping and
+   // validation always see the same issuing time. Both request handlers reject an out of range
+   // expiration time before reaching this point, so only internal callers can be clamped here.
+   if (type == AuthenticationTokenType::PERSISTENT)
+   {
+      if (static_cast<int64_t>(descriptor->issuingTime) + validFor > MAX_PERSISTENT_TOKEN_EXPIRATION_TIME)
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Expiration time of persistent authentication token for user %s [%u] clamped to 2038-01-19T03:14:07Z", userName, userId);
+
+      if (descriptor->expirationTime <= descriptor->issuingTime)
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Cannot issue persistent authentication token for user %s [%u]: token would be already expired", userName, userId);
+         return shared_ptr<AuthenticationTokenDescriptor>();
+      }
+   }
+
    s_tokens.set(descriptor->hash, descriptor);
 
    if (type == AuthenticationTokenType::PERSISTENT)
@@ -174,7 +212,7 @@ shared_ptr<AuthenticationTokenDescriptor> NXCORE_EXPORTABLE IssueAuthenticationT
    else
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("New %s authentication token issued for user %s [%u]"),
-         (type == AuthenticationTokenType::SERVICE) ? L"service" : L"ephemeral", userName, userId);
+         AuthenticationTokenTypeName(type), userName, userId);
    }
 
    return descriptor;
@@ -202,7 +240,7 @@ void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& 
    {
       s_tokens.remove(hash);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" was revoked"), token.toMaskedString().cstr());
-      if (descriptor->persistent)
+      if (descriptor->type == AuthenticationTokenType::PERSISTENT)
          DeleteAuthenticationTokenFromDB(descriptor->tokenId);
    }
 }
@@ -212,6 +250,11 @@ void NXCORE_EXPORTABLE RevokeAuthenticationToken(const UserAuthenticationToken& 
  */
 uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t userId)
 {
+   // Only persistent tokens are assigned an ID; ephemeral and service tokens all carry 0, so
+   // a lookup by ID 0 would match an arbitrary one of them instead of the intended token
+   if (tokenId == 0)
+      return RCC_INVALID_TOKEN_ID;
+
    shared_ptr<AuthenticationTokenDescriptor> descriptor = s_tokens.findElement(
       [tokenId] (const UserAuthenticationTokenHash& key, const AuthenticationTokenDescriptor& descriptor) -> bool
       {
@@ -225,7 +268,7 @@ uint32_t NXCORE_EXPORTABLE RevokeAuthenticationToken(uint32_t tokenId, uint32_t 
 
    s_tokens.remove(descriptor->hash);
    nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token [%u] was revoked"), tokenId);
-   if (descriptor->persistent)
+   if (descriptor->type == AuthenticationTokenType::PERSISTENT)
       DeleteAuthenticationTokenFromDB(tokenId);
    return RCC_SUCCESS;
 }
@@ -249,24 +292,26 @@ void NXCORE_EXPORTABLE RevokeAuthenticationTokensForUser(uint32_t userId)
       AuthenticationTokenDescriptor *d = tokensToRevoke.get(i);
       s_tokens.remove(d->hash);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Revoked authentication token [%u] for deleted user [%u]"), d->tokenId, userId);
-      if (d->persistent)
+      if (d->type == AuthenticationTokenType::PERSISTENT)
          DeleteAuthenticationTokenFromDB(d->tokenId);
    }
 }
 
 /**
- * Authenticate user with token. If validFor is non-zero, token expiration time will be set to current time + provided value,
- * but not exceeding the maximum expiration time (absolute token lifetime cap).
+ * Common implementation for authentication token validation and consumption. If validFor is non-zero, token expiration time
+ * will be set to current time + provided value, but not exceeding the maximum expiration time (absolute token lifetime cap).
  *
  * @param token Authentication token to validate
+ * @param consuming true if called from the designated spend point, in which case a single-use token is accepted and destroyed
  * @param userId Output: user ID associated with the token
- * @param serviceToken Output: true if this is a service token
+ * @param tokenType Output: type of the token
  * @param validFor If non-zero, extend token expiration by this many seconds
  * @param expiresAt Output: token expiration time (for warning header calculation)
  * @param maxExpiresAt Output: maximum token expiration time (0 if no limit)
  * @return true if token is valid
  */
-bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, bool *serviceToken, uint32_t validFor, time_t *expiresAt, time_t *maxExpiresAt)
+static bool ProcessAuthenticationToken(const UserAuthenticationToken& token, bool consuming, uint32_t *userId,
+   AuthenticationTokenType *tokenType, uint32_t validFor, time_t *expiresAt, time_t *maxExpiresAt)
 {
    UserAuthenticationTokenHash hash;
    CalculateSHA256Hash(token.value(), USER_AUTHENTICATION_TOKEN_LENGTH, hash);
@@ -283,7 +328,7 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
    {
       s_tokens.remove(hash);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token [%u] \"%s\" has reached maximum lifetime"), descriptor->tokenId, token.toMaskedString().cstr());
-      if (descriptor->persistent)
+      if (descriptor->type == AuthenticationTokenType::PERSISTENT)
          DeleteAuthenticationTokenFromDB(descriptor->tokenId);
       return false;
    }
@@ -292,10 +337,32 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
    {
       s_tokens.remove(hash);
       nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token [%u] \"%s\" has expired"), descriptor->tokenId, token.toMaskedString().cstr());
-      if (descriptor->persistent)
+      if (descriptor->type == AuthenticationTokenType::PERSISTENT)
          DeleteAuthenticationTokenFromDB(descriptor->tokenId);
       return false;
    }
+
+   if (descriptor->type == AuthenticationTokenType::SINGLE_USE)
+   {
+      if (!consuming)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Single-use authentication token [%u] \"%s\" presented outside of login entry point",
+            descriptor->tokenId, token.toMaskedString().cstr());
+         return false;
+      }
+
+      // Token is burnt as soon as it is claimed, even if the login it was claimed for subsequently fails -
+      // a one-shot credential that survives a failed attempt would be a retry oracle.
+      if (InterlockedIncrement(&descriptor->claimed) != 1)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"Single-use authentication token [%u] \"%s\" was already consumed",
+            descriptor->tokenId, token.toMaskedString().cstr());
+         return false;
+      }
+      s_tokens.remove(hash);
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Single-use authentication token [%u] \"%s\" consumed", descriptor->tokenId, token.toMaskedString().cstr());
+   }
+
    if (validFor > 0)
    {
       // Extend expiration time but do not exceed maximum expiration time (if set) and never shorten existing expiration
@@ -306,13 +373,34 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
          descriptor->expirationTime = newExpiration;
    }
    *userId = descriptor->userId;
-   if (serviceToken != nullptr)
-      *serviceToken = descriptor->service;
+   if (tokenType != nullptr)
+      *tokenType = descriptor->type;
    if (expiresAt != nullptr)
       *expiresAt = descriptor->expirationTime;
    if (maxExpiresAt != nullptr)
       *maxExpiresAt = descriptor->maxExpirationTime;
    return true;
+}
+
+/**
+ * Validate authentication token. Never consumes the token, and always rejects single-use tokens -
+ * those can only be spent by ConsumeAuthenticationToken().
+ */
+bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, uint32_t validFor, time_t *expiresAt, time_t *maxExpiresAt)
+{
+   return ProcessAuthenticationToken(token, false, userId, nullptr, validFor, expiresAt, maxExpiresAt);
+}
+
+/**
+ * Validate authentication token and consume it if it is single-use. This is the single designated spend
+ * point for single-use tokens and must be called from client session login only.
+ *
+ * Deliberately not marked as NXCORE_EXPORTABLE: the only caller lives in the same shared library, and
+ * leaving the decoration off keeps the spend primitive out of reach of server modules.
+ */
+bool ConsumeAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, AuthenticationTokenType *tokenType)
+{
+   return ProcessAuthenticationToken(token, true, userId, tokenType, 0, nullptr, nullptr);
 }
 
 /**
@@ -341,7 +429,7 @@ void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& pa
       AuthenticationTokenDescriptor *d = expiredTokens.get(i);
       const UserAuthenticationTokenHash& hash = d->hash;
       s_tokens.remove(hash);
-      if (d->persistent)
+      if (d->type == AuthenticationTokenType::PERSISTENT)
          DeleteAuthenticationTokenFromDB(d->tokenId);
    }
 }
@@ -388,18 +476,17 @@ json_t NXCORE_EXPORTABLE *AuthenticationTokensToJson(uint32_t userId)
  */
 void ShowAuthenticationTokens(ServerConsole *console)
 {
-   console->printf(_T(" %-10s | %s | %-32s | %-6s | %-24s | %s\n"), _T("ID"), _T("Flags"), _T("Token"), _T("UID"), _T("User name"), _T("Expires at"));
-   console->printf(_T("------------+-------+----------------------------------+--------+--------------------------+----------------------\n"));
+   console->printf(L" %-10s | %-10s | %-32s | %-6s | %-24s | %s\n", L"ID", L"Type", L"Token", L"UID", L"User name", L"Expires at");
+   console->printf(L"------------+------------+----------------------------------+--------+--------------------------+----------------------\n");
    s_tokens.forEach(
       [console] (const UserAuthenticationTokenHash& key, const shared_ptr<AuthenticationTokenDescriptor>& descriptor) -> EnumerationCallbackResult
       {
-         TCHAR userName[MAX_USER_NAME];
-         console->printf(_T(" %10u | %c%c%c   | %-32s | %6u | %-24s | %s\n"),
+         wchar_t userName[MAX_USER_NAME];
+         console->printf(L" %10u | %-10s | %-32s | %6u | %-24s | %s\n",
             descriptor->tokenId,
-            descriptor->persistent ? _T('P') : _T('-'), descriptor->service ? _T('S') : _T('-'),
-            descriptor->validClearText ? _T('V') : _T('-'),
-            descriptor->validClearText ? descriptor->token.toString().cstr() : _T("unavailable"),
-            descriptor->userId, ResolveUserId(descriptor->userId, userName),
+            AuthenticationTokenTypeName(descriptor->type),
+            descriptor->validClearText ? descriptor->token.toString().cstr() : L"unavailable",
+            descriptor->userId, ResolveUserId(descriptor->userId, userName, true),
             FormatTimestamp(descriptor->expirationTime).cstr());
          return _CONTINUE;
       });

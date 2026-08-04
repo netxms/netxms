@@ -31,13 +31,27 @@
 #define USER_AUTHENTICATION_TOKEN_LENGTH  20
 
 /**
+ * Latest expiration time that can be assigned to a persistent authentication token. Expiration time
+ * of a persistent token is stored in a 32-bit integer database column, so a token expiring beyond
+ * this point cannot be written back and read as issued.
+ */
+#define MAX_PERSISTENT_TOKEN_EXPIRATION_TIME  _LL(0x7FFFFFFF)
+
+/**
+ * Size of authentication token description buffer, including terminating null character.
+ * Matches width of auth_tokens.description database column.
+ */
+#define MAX_TOKEN_DESCRIPTION_LENGTH  128
+
+/**
  * Authentication token types
  */
 enum class AuthenticationTokenType
 {
    EPHEMERAL = 0,    // Not saved to database, usually short-lived
    PERSISTENT = 1,   // Saved to database, usually with long expiration time
-   SERVICE = 2       // Similar to ephemeral but will not trigger existing session disconnect
+   SERVICE = 2,      // Similar to ephemeral but will not trigger existing session disconnect
+   SINGLE_USE = 3    // Memory-only, destroyed by the login that spends it
 };
 
 /**
@@ -73,7 +87,7 @@ public:
    }
    String toString() const
    {
-      TCHAR buffer[64];
+      wchar_t buffer[64];
       return String(toString(buffer));
    }
 
@@ -81,9 +95,9 @@ public:
    {
       String full = toString();
       if (full.length() <= 8)
-         return String(_T("********"));
-      TCHAR buffer[64];
-      _sntprintf(buffer, 64, _T("%.4s****%.4s"), full.cstr(), full.cstr() + full.length() - 4);
+         return String(L"********");
+      wchar_t buffer[64];
+      nx_swprintf(buffer, 64, L"%.4s****%.4s", full.cstr(), full.cstr() + full.length() - 4);
       return String(buffer);
    }
 
@@ -109,12 +123,12 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
    UserAuthenticationTokenHash hash;
    uint32_t tokenId;
    uint32_t userId;
+   AuthenticationTokenType type;
    time_t issuingTime;
    time_t expirationTime;
    time_t maxExpirationTime;  // Absolute maximum expiration time (cannot be extended beyond this)
-   bool persistent;
-   bool service;
-   bool validClearText;
+   VolatileCounter claimed;   // Atomic claim guard for single-use tokens, 0 until consumed
+   bool validClearText;       // Clear-text value is known (false for tokens restored from database)
    String description;
 
    /**
@@ -122,30 +136,42 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
     *
     * @param uid User ID for this token
     * @param validFor Initial validity period in seconds
-    * @param type Token type (ephemeral, persistent, or service)
+    * @param _type Token type (ephemeral, persistent, service, or single-use)
     * @param _description Optional description
-    * @param maxLifetime Maximum absolute lifetime in seconds (0 = no limit, only for ephemeral/service tokens)
+    * @param maxLifetime Maximum absolute lifetime in seconds (0 = no limit, only for non-persistent tokens)
     */
-   AuthenticationTokenDescriptor(uint32_t uid, uint32_t validFor, AuthenticationTokenType type, const TCHAR *_description, uint32_t maxLifetime = 0) : description(_description)
+   AuthenticationTokenDescriptor(uint32_t uid, uint32_t validFor, AuthenticationTokenType _type, const wchar_t *_description, uint32_t maxLifetime = 0) : description(_description)
    {
       BYTE bytes[USER_AUTHENTICATION_TOKEN_LENGTH];
       GenerateRandomBytes(bytes, USER_AUTHENTICATION_TOKEN_LENGTH);
       token = UserAuthenticationToken(bytes);
       CalculateSHA256Hash(bytes, USER_AUTHENTICATION_TOKEN_LENGTH, hash);
-      tokenId = (type == AuthenticationTokenType::PERSISTENT) ? CreateUniqueId(IDG_AUTHTOKEN) : 0;
+      tokenId = (_type == AuthenticationTokenType::PERSISTENT) ? CreateUniqueId(IDG_AUTHTOKEN) : 0;
       userId = uid;
+      type = _type;
       issuingTime = time(nullptr);
       expirationTime = issuingTime + validFor;
       // For persistent tokens, max expiration is the original expiration (no refresh extension allowed)
-      // For ephemeral/service tokens, max expiration is configurable (0 = no limit)
-      if (type == AuthenticationTokenType::PERSISTENT)
+      // For other token types, max expiration is configurable (0 = no limit)
+      if (_type == AuthenticationTokenType::PERSISTENT)
+      {
+         // Clamp to what the database column can hold, so that the token is always stored
+         // and read back exactly as reported to the caller
+         if (expirationTime > MAX_PERSISTENT_TOKEN_EXPIRATION_TIME)
+            expirationTime = MAX_PERSISTENT_TOKEN_EXPIRATION_TIME;
          maxExpirationTime = expirationTime;
+      }
       else if (maxLifetime > 0)
+      {
          maxExpirationTime = issuingTime + maxLifetime;
+         // Token stops authenticating at the absolute cap, so reporting a later expiration
+         // time to the caller would promise validity the token will never have
+         if (expirationTime > maxExpirationTime)
+            expirationTime = maxExpirationTime;
+      }
       else
          maxExpirationTime = 0;  // No absolute limit
-      persistent = (type == AuthenticationTokenType::PERSISTENT);
-      service = (type == AuthenticationTokenType::SERVICE);
+      claimed = 0;
       validClearText = true;
    }
 
@@ -156,16 +182,16 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
    {
       tokenId = DBGetFieldUInt32(hResult, row, 0);
       userId = DBGetFieldUInt32(hResult, row, 1);
+      type = AuthenticationTokenType::PERSISTENT;
       issuingTime = static_cast<time_t>(DBGetFieldInt64(hResult, row, 2));
       expirationTime = static_cast<time_t>(DBGetFieldInt64(hResult, row, 3));
       maxExpirationTime = expirationTime;  // Persistent tokens cannot be extended beyond original expiration
 
-      TCHAR text[128];
+      wchar_t text[128];
       DBGetField(hResult, row, 5, text, 128);
       StrToBin(text, hash, SHA256_DIGEST_SIZE);
 
-      persistent = true;
-      service = false;
+      claimed = 0;
       validClearText = false;
    }
 
@@ -176,7 +202,7 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
    {
       msg->setField(baseId, tokenId);
       msg->setField(baseId + 1, userId);
-      msg->setField(baseId + 2, persistent);
+      msg->setField(baseId + 2, type == AuthenticationTokenType::PERSISTENT);
       msg->setField(baseId + 3, description);
       if (validClearText)
       {
@@ -184,20 +210,23 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       }
       msg->setFieldFromTime(baseId + 5, issuingTime);
       msg->setFieldFromTime(baseId + 6, expirationTime);
-      msg->setField(baseId + 7, service);
+      msg->setField(baseId + 7, type == AuthenticationTokenType::SERVICE);
+      msg->setField(baseId + 8, type == AuthenticationTokenType::SINGLE_USE);
    }
 
    /**
-    * Serialize to JSON. The clear-text token value is included only when it is
-    * available (i.e. immediately after the token was issued).
+    * Serialize to JSON. The clear-text token value is included for as long as the descriptor
+    * is held in memory, and is therefore returned by listings as well as by the issue response.
+    * Persistent tokens reloaded from the database after a restart no longer carry it.
     */
    json_t *toJson() const
    {
       json_t *root = json_object();
       json_object_set_new(root, "id", json_integer(tokenId));
       json_object_set_new(root, "userId", json_integer(userId));
-      json_object_set_new(root, "persistent", json_boolean(persistent));
-      json_object_set_new(root, "service", json_boolean(service));
+      json_object_set_new(root, "persistent", json_boolean(type == AuthenticationTokenType::PERSISTENT));
+      json_object_set_new(root, "service", json_boolean(type == AuthenticationTokenType::SERVICE));
+      json_object_set_new(root, "singleUse", json_boolean(type == AuthenticationTokenType::SINGLE_USE));
       json_object_set_new(root, "description", json_string_t(description.cstr()));
       json_object_set_new(root, "issuingTime", json_integer(static_cast<json_int_t>(issuingTime)));
       json_object_set_new(root, "expirationTime", json_integer(static_cast<json_int_t>(expirationTime)));

@@ -306,7 +306,8 @@ static bool CheckTokenAccess(Context *context, uint32_t userId)
 /**
  * Handler for GET /v1/users/:user-id/tokens
  * Returns the user's active authentication tokens. Clear-text token values are
- * never returned here (only at creation time).
+ * included only for tokens still held in memory; persistent tokens reloaded from
+ * the database after a restart no longer carry them.
  */
 int H_UserTokens(Context *context)
 {
@@ -328,8 +329,9 @@ int H_UserTokens(Context *context)
 /**
  * Handler for POST /v1/users/:user-id/tokens
  * Issues a new authentication token for the user. Body:
- * { "validFor": <seconds>, "persistent": bool, "description": "..." }.
- * The clear-text token value is returned only in this response.
+ * { "validFor": <seconds>, "persistent": bool, "singleUse": bool, "description": "..." }.
+ * The clear-text token value is returned in this response and, while the token is
+ * still held in memory, in subsequent listings.
  */
 int H_UserTokenCreate(Context *context)
 {
@@ -350,18 +352,45 @@ int H_UserTokenCreate(Context *context)
    }
 
    json_t *jsonValidFor = json_object_get(request, "validFor");
-   if (!json_is_integer(jsonValidFor) || (json_integer_value(jsonValidFor) <= 0))
+   json_int_t validityTime = json_is_integer(jsonValidFor) ? json_integer_value(jsonValidFor) : 0;
+   if ((validityTime <= 0) || (validityTime > UINT32_MAX))
    {
-      context->setErrorResponse("Field \"validFor\" is required and must be a positive number of seconds");
+      context->setErrorResponse("Field \"validFor\" is required and must be a number of seconds in range 1..4294967295");
       return 400;
    }
-   uint32_t validFor = static_cast<uint32_t>(json_integer_value(jsonValidFor));
+   uint32_t validFor = static_cast<uint32_t>(validityTime);
 
    bool persistent = json_object_get_boolean(request, "persistent", true);
-   wchar_t *description = json_object_get_string_t(request, "description", L"");
+   bool singleUse = json_object_get_boolean(request, "singleUse", false);
+   if (persistent && singleUse)
+   {
+      // Single-use tokens are kept in memory only and cannot be persistent. Note that
+      // "persistent" defaults to true, so a body containing only "singleUse" lands here.
+      context->setErrorResponse("Field \"singleUse\" requires \"persistent\" to be set to false");
+      return 400;
+   }
+   if (persistent && (static_cast<int64_t>(time(nullptr)) + validFor > MAX_PERSISTENT_TOKEN_EXPIRATION_TIME))
+   {
+      // Such token would be stored with truncated expiration time and become unusable after server restart
+      context->setErrorResponse("Field \"validFor\" is too large for a persistent token: expiration time must not be later than 2038-01-19T03:14:07Z");
+      return 400;
+   }
 
-   shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, validFor,
-      persistent ? AuthenticationTokenType::PERSISTENT : AuthenticationTokenType::EPHEMERAL, description);
+   wchar_t *description = json_object_get_string_t(request, "description", L"");
+   if (wcslen(description) >= MAX_TOKEN_DESCRIPTION_LENGTH)
+   {
+      // Description of a persistent token is stored in a fixed size database column, and an
+      // oversized value would fail the INSERT, leaving a token that disappears on server restart.
+      // Memory-only tokens hold the description in the descriptor until they expire, so the same
+      // limit keeps a client from parking arbitrary amounts of data on the server.
+      MemFree(description);
+      context->setErrorResponse("Field \"description\" is too long: maximum length is 127 characters");
+      return 400;
+   }
+
+   AuthenticationTokenType type = persistent ? AuthenticationTokenType::PERSISTENT :
+      (singleUse ? AuthenticationTokenType::SINGLE_USE : AuthenticationTokenType::EPHEMERAL);
+   shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, validFor, type, description, 0);
    MemFree(description);
    if (token == nullptr)
    {
@@ -370,7 +399,7 @@ int H_UserTokenCreate(Context *context)
    }
 
    context->writeAuditLog(AUDIT_SECURITY, true, 0, L"Issued %s authentication token [%u] for user [%u]",
-      persistent ? L"persistent" : L"ephemeral", token->tokenId, userId);
+      AuthenticationTokenTypeName(type), token->tokenId, userId);
 
    json_t *output = token->toJson();
    context->setResponseData(output);

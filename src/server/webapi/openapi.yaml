@@ -3389,6 +3389,11 @@ paths:
                   errorCode:
                     type: integer
                     description: Error code that can provide additional information on login failure reasons.
+        '500':
+          description: |
+            Internal error - credentials were accepted but the access token could not be issued
+            (for example, the user account was deleted while authentication was in progress).
+            No token is returned and the login has to be repeated.
       security: []
       tags:
         - Authentication
@@ -9578,9 +9583,11 @@ paths:
       summary: List user authentication tokens
       description: |
         List active authentication tokens issued for the user. The clear-text token
-        value is never returned here — it is only available in the response to the
-        create operation. A user may list their own tokens; listing another user's
-        tokens requires MANAGE_USERS access right.
+        value is included for tokens still held in memory, which covers live ephemeral
+        tokens (including unspent single-use ones) and persistent tokens issued since
+        the last server restart. Persistent tokens reloaded from the database no longer
+        carry it. A user may list their own tokens; listing another user's tokens
+        requires MANAGE_USERS access right.
       parameters:
         - name: user-id
           in: path
@@ -9612,9 +9619,10 @@ paths:
       summary: Issue user authentication token
       description: |
         Issue a new authentication token for the user. The clear-text token value is
-        returned only in this response and cannot be retrieved afterwards. A user may
-        issue tokens for themselves; issuing tokens for another user requires
-        MANAGE_USERS access right.
+        returned in this response and, while the token is still held in memory, in
+        subsequent listings; persistent tokens reloaded from the database after a server
+        restart no longer carry it. A user may issue tokens for themselves; issuing
+        tokens for another user requires MANAGE_USERS access right.
       parameters:
         - name: user-id
           in: path
@@ -9636,7 +9644,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthenticationToken'
         '400':
-          description: Invalid user ID or missing/invalid validFor
+          description: |
+            Invalid user ID, missing/invalid validFor, singleUse requested together with
+            persistent (single-use tokens are memory-only and require "persistent": false),
+            a description longer than 127 characters, or a persistent token with an expiration
+            time beyond 2038-01-19T03:14:07Z (neither fits the database columns)
         '401':
           description: Unauthorized
         '403':
@@ -9654,6 +9666,11 @@ paths:
       description: |
         Revoke an authentication token belonging to the user. A user may revoke their
         own tokens; revoking another user's token requires MANAGE_USERS access right.
+
+        Only persistent tokens can be revoked this way, because only they are assigned an ID;
+        a token-id of 0 is rejected with 400. Ephemeral, service and single-use tokens are not
+        revocable individually - they expire, or, for a single-use token, are consumed by the
+        login that spends it.
       parameters:
         - name: user-id
           in: path
@@ -11615,7 +11632,9 @@ components:
       properties:
         id:
           type: integer
-          description: Token ID (0 for ephemeral tokens).
+          description: |
+            Token ID. Assigned only to persistent tokens; ephemeral, service and single-use tokens
+            are always reported with 0 and therefore cannot be revoked by ID.
         userId:
           type: integer
           description: ID of the user the token was issued for.
@@ -11625,6 +11644,13 @@ components:
         service:
           type: boolean
           description: True if this is a service token.
+        singleUse:
+          type: boolean
+          description: |
+            True if the token is single-use. Such a token is destroyed by the login that
+            spends it, so it authenticates exactly one session. It can only be spent on an
+            NXCP login (management console or other NXCP client) and is rejected with 401
+            if presented as a REST bearer credential.
         description:
           type: string
           description: Human-readable token description.
@@ -11636,7 +11662,11 @@ components:
           description: Token expiration time (UNIX timestamp, seconds).
         value:
           type: string
-          description: Clear-text token value. Present only in the response to the create operation; never returned when listing tokens.
+          description: |
+            Clear-text token value. Available only while the token is held in memory, which
+            covers the response to the create operation and any listing of still-live tokens
+            (ephemeral, service or unspent single-use). Persistent tokens reloaded from the
+            database after a server restart no longer carry it.
     AuthenticationTokenCreateInput:
       type: object
       description: Request body for issuing a new authentication token.
@@ -11645,14 +11675,44 @@ components:
       properties:
         validFor:
           type: integer
-          description: Validity period in seconds from now. Must be a positive value.
+          format: int64
+          minimum: 1
+          maximum: 4294967295
+          description: |
+            Validity period in seconds from now. For a persistent token the resulting expiration
+            time is additionally required to be not later than 2038-01-19T03:14:07Z, because it is
+            stored in a 32-bit database column; a longer period is rejected with 400.
+
+            A non-persistent token (ephemeral, service or single-use) is additionally bound by the
+            absolute lifetime cap "WebAPI.AuthTokenMaxLifetime" (24 hours by default). A longer
+            validity period is accepted but silently reduced to the cap, so the returned
+            expirationTime can be earlier than the requested one.
         persistent:
           type: boolean
           default: true
           description: True to issue a persistent (database-backed) token, false for an ephemeral one.
+        singleUse:
+          type: boolean
+          default: false
+          description: |
+            True to issue a single-use token, which is destroyed by the login that spends it
+            and therefore authenticates exactly one session. Intended for handing a session
+            over to another process (for example a launcher spawning the management console).
+
+            A single-use token can only be spent on an NXCP login; presenting it as a REST
+            bearer credential is rejected with 401 and does not consume it.
+
+            Single-use tokens are kept in memory only and do not survive a server restart, so
+            this option requires "persistent" to be false. Because "persistent" defaults to
+            true, a request body containing only "singleUse": true is rejected with 400 -
+            "persistent": false must be sent explicitly.
         description:
           type: string
-          description: Optional human-readable token description.
+          maxLength: 127
+          description: |
+            Optional human-readable token description, limited to 127 characters; a longer value
+            is rejected with 400. The limit is the width of the database column a persistent token
+            is stored in, and is applied to all token types.
     EventProcessingPolicy:
       type: object
       description: Event processing policy - an ordered list of rules plus a version for optimistic concurrency control

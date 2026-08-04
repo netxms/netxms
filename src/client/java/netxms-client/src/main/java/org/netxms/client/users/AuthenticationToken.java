@@ -33,6 +33,7 @@ public class AuthenticationToken
    private String value;
    private Date creationTime;
    private Date expirationTime;
+   private boolean singleUse;
 
    /**
     * Create token information object from NXCP message.
@@ -49,6 +50,7 @@ public class AuthenticationToken
       value = msg.getFieldAsString(baseId + 4);
       creationTime = msg.getFieldAsDate(baseId + 5);
       expirationTime = msg.getFieldAsDate(baseId + 6);
+      singleUse = msg.getFieldAsBoolean(baseId + 8);
    }
 
    /**
@@ -84,7 +86,9 @@ public class AuthenticationToken
    }
 
    /**
-    * Get token value. Normally it is available only for newly created tokens.
+    * Get token value. Available for as long as the server keeps the token in memory, which covers newly issued tokens and any
+    * live ephemeral, single-use or persistent token issued since the last server restart. Persistent tokens reloaded from the
+    * database no longer carry it.
     *
     * @return token value (can be null or empty string if unavailable)
     */
@@ -107,5 +111,16 @@ public class AuthenticationToken
    public Date getExpirationTime()
    {
       return expirationTime;
+   }
+
+   /**
+    * Check if this token is single-use. Such token is destroyed by the login it authenticates and cannot be presented as REST
+    * bearer credential.
+    *
+    * @return true if this token is single-use
+    */
+   public boolean isSingleUse()
+   {
+      return singleUse;
    }
 }
