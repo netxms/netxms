@@ -29,6 +29,19 @@ class Interface;
 class NetworkMap;
 
 /**
+ * Maximum length in bytes of LLDP ID (chassis ID or port ID) stored by server. IDs longer than that
+ * are truncated, so resulting text form ("type@" followed by hex string) always fits varchar(255) database column.
+ */
+#define MAX_LLDP_ID_LEN    120
+
+/**
+ * Maximum length in bytes of LLDP ID converted to text form for diagnostic messages and
+ * size of text buffer required for such conversion (BinToStr writes 2 * length + 1 characters).
+ */
+#define MAX_LLDP_ID_TEXT_LEN        255
+#define LLDP_ID_TEXT_BUFFER_SIZE    (MAX_LLDP_ID_TEXT_LEN * 2 + 1)
+
+/**
  * LLDP local port info
  */
 struct LLDP_LOCAL_PORT_INFO
