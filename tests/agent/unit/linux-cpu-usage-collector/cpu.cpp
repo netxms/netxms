@@ -41,7 +41,7 @@ void StartCpuUsageCollector()
    {
       nxlog_write(NXLOG_ERROR, _T("CPU Usage Collector extraneous initialization detected!"));
    }
-   assert(collector == nullptr);
+   AssertNull(collector);
    collector = new Collector();
 
    // start collector
@@ -104,7 +104,7 @@ static long TestCountRanges(const char *spec)
 void TestCpu()
 {
    StartTest(_T("CPU stats collector - single threaded work"));
-   assert(collector == nullptr);
+   AssertNull(collector);
    collector = new Collector();
 
    // We have to let it populate the tables with at least one delta value, otherwise it assers
@@ -133,10 +133,10 @@ void TestCpu()
    EndTest();
 
    StartTest(_T("CPU ranges files parser"));
-   assert(TestCountRanges("\n") == 0);
-   assert(TestCountRanges("0-7\n") == 8);
-   assert(TestCountRanges("0-7,12-15\n") == 12);
-   assert(TestCountRanges("0-7,12,15\n") == 10);
-   assert(TestCountRanges("0,1,2,3\n") == 4);
+   AssertTrue(TestCountRanges("\n") == 0);
+   AssertTrue(TestCountRanges("0-7\n") == 8);
+   AssertTrue(TestCountRanges("0-7,12-15\n") == 12);
+   AssertTrue(TestCountRanges("0-7,12,15\n") == 10);
+   AssertTrue(TestCountRanges("0,1,2,3\n") == 4);
    EndTest();
 }
