@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -86,9 +87,12 @@ public class YAxisRangeEditor extends Composite
       radioManual = new Button(group, SWT.RADIO);
       radioManual.setText(i18n.tr("Manual range"));
 
+      final String rangeInputHint = i18n.tr("Multiplier suffixes K, M, G, T (decimal) and Ki, Mi, Gi, Ti (binary) are supported");
+
       from = new LabeledText(group, SWT.NONE);
       from.setLabel(i18n.tr("From"));
       from.setText("0");
+      from.getTextControl().setToolTipText(rangeInputHint);
       gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.FILL;
@@ -98,6 +102,7 @@ public class YAxisRangeEditor extends Composite
       to = new LabeledText(group, SWT.NONE);
       to.setLabel(i18n.tr("To"));
       to.setText("100");
+      to.getTextControl().setToolTipText(rangeInputHint);
       gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.FILL;
@@ -139,7 +144,7 @@ public class YAxisRangeEditor extends Composite
          {
             try
             {
-               Double.parseDouble(((Text)e.widget).getText().trim());
+               DataFormatter.parseNumberWithSuffix(((Text)e.widget).getText());
                ((Text)e.widget).setBackground(null);
             }
             catch(NumberFormatException ex)
@@ -172,7 +177,7 @@ public class YAxisRangeEditor extends Composite
       {
          try
          {
-            Double.parseDouble(from.getText().trim());
+            DataFormatter.parseNumberWithSuffix(from.getText());
          }
          catch(NumberFormatException ex)
          {
@@ -180,7 +185,7 @@ public class YAxisRangeEditor extends Composite
          }
          try
          {
-            Double.parseDouble(to.getText().trim());
+            DataFormatter.parseNumberWithSuffix(to.getText());
          }
          catch(NumberFormatException ex)
          {
@@ -203,8 +208,8 @@ public class YAxisRangeEditor extends Composite
       radioAuto.setSelection(auto);
       checkYBase.setSelection((auto && modifyYBase));
       radioManual.setSelection(!auto);
-      from.setText(Double.toString(minY));
-      to.setText(Double.toString(maxY));
+      from.setText(DataFormatter.formatNumberWithSuffix(minY));
+      to.setText(DataFormatter.formatNumberWithSuffix(maxY));
       label.setText(labelText);
       onModeChange();
    }
@@ -232,7 +237,7 @@ public class YAxisRangeEditor extends Composite
    {
       try
       {
-         return Double.parseDouble(from.getText().trim());
+         return DataFormatter.parseNumberWithSuffix(from.getText());
       }
       catch(NumberFormatException e)
       {
@@ -247,7 +252,7 @@ public class YAxisRangeEditor extends Composite
    {
       try
       {
-         return Double.parseDouble(to.getText().trim());
+         return DataFormatter.parseNumberWithSuffix(to.getText());
       }
       catch(NumberFormatException e)
       {
@@ -278,8 +283,8 @@ public class YAxisRangeEditor extends Composite
       
       try
       {
-         Double.parseDouble(from.getText().trim());
-         Double.parseDouble(to.getText().trim());
+         DataFormatter.parseNumberWithSuffix(from.getText());
+         DataFormatter.parseNumberWithSuffix(to.getText());
          return true;
       }
       catch(NumberFormatException e)

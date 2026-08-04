@@ -334,6 +334,7 @@ public class DataFormatter
    private static final String[] SUFFIX = { "", "\u2009k", "\u2009M", "\u2009G", "\u2009T", "\u2009P" };
    private static final String[] BINARY_SUFFIX = { "", "\u2009Ki", "\u2009Mi", "\u2009Gi", "\u2009Ti", "\u2009Pi" };
    private static final String[] SUFFIX_SMALL = { "\u2009f", "\u2009p", "\u2009n", "\u2009\u03bc", "\u2009m", "" };
+   private static final char[] MULTIPLIER_CHARS = { 0, 'K', 'M', 'G', 'T', 'P' };
 
    private Value getValueWithMultipliers(String value)
    {
@@ -514,6 +515,136 @@ public class DataFormatter
       DecimalFormat df = new DecimalFormat();
       df.setMaximumFractionDigits(precision);
       return df.format((i < 0 ? value : (value / multipliers[i]))) + (i < 0 ? "" : suffix[i]);
+   }
+
+   /**
+    * Parse number with optional multiplier suffix. Supported suffixes are K, M, G, T, and P (case insensitive), optionally
+    * followed by "i" for binary multipliers (Ki = 1024, Mi = 1048576, and so on). Space between number and suffix is allowed.
+    *
+    * @param text text to parse
+    * @return parsed value
+    * @throws NumberFormatException if given text does not represent valid number
+    */
+   public static double parseNumberWithSuffix(String text) throws NumberFormatException
+   {
+      if (text == null)
+         throw new NumberFormatException("Input text is null");
+
+      String s = text.trim();
+      int length = s.length();
+      if (length == 0)
+         throw new NumberFormatException("Input text is empty");
+
+      boolean binary = false;
+      char ch = s.charAt(length - 1);
+      if ((ch == 'i') || (ch == 'I'))
+      {
+         binary = true;
+         length--;
+         if (length == 0)
+            throw new NumberFormatException("Input text does not contain number");
+         ch = s.charAt(length - 1);
+      }
+
+      int power;
+      switch(ch)
+      {
+         case 'K':
+         case 'k':
+            power = 1;
+            break;
+         case 'M':
+         case 'm':
+            power = 2;
+            break;
+         case 'G':
+         case 'g':
+            power = 3;
+            break;
+         case 'T':
+         case 't':
+            power = 4;
+            break;
+         case 'P':
+         case 'p':
+            power = 5;
+            break;
+         default:
+            power = 0;
+            break;
+      }
+
+      if (power == 0)
+      {
+         if (binary)
+            throw new NumberFormatException("Invalid multiplier suffix");
+         return Double.parseDouble(s);
+      }
+
+      double value = Double.parseDouble(s.substring(0, length - 1).trim());
+      return value * (binary ? BINARY_MULTIPLIERS[power] : DECIMAL_MULTIPLIERS[power]);
+   }
+
+   /**
+    * Format number for editing, using multiplier suffix if it can be done without precision loss. Produced text can be read back
+    * by <code>parseNumberWithSuffix</code>.
+    *
+    * @param value value to format
+    * @return formatted value
+    */
+   public static String formatNumberWithSuffix(double value)
+   {
+      if ((value == 0) || Double.isNaN(value) || Double.isInfinite(value))
+         return formatPlainNumber(value);
+
+      double absValue = Math.abs(value);
+
+      int d = largestMultiplierIndex(absValue, DECIMAL_MULTIPLIERS);
+      if ((d > 0) && (value % DECIMAL_MULTIPLIERS[d] == 0))
+         return formatPlainNumber(value / DECIMAL_MULTIPLIERS[d]) + MULTIPLIER_CHARS[d];
+
+      int b = largestMultiplierIndex(absValue, BINARY_MULTIPLIERS);
+      if ((b > 0) && (value % BINARY_MULTIPLIERS[b] == 0))
+         return formatPlainNumber(value / BINARY_MULTIPLIERS[b]) + MULTIPLIER_CHARS[b] + "i";
+
+      if (d > 0)
+      {
+         String text = formatPlainNumber(value / DECIMAL_MULTIPLIERS[d]) + MULTIPLIER_CHARS[d];
+         if (parseNumberWithSuffix(text) == value)
+            return text;
+      }
+
+      return formatPlainNumber(value);
+   }
+
+   /**
+    * Find largest multiplier not exceeding given value.
+    *
+    * @param absValue absolute value
+    * @param multipliers multiplier table
+    * @return index in multiplier table or 0 if value is smaller than any of multipliers
+    */
+   private static int largestMultiplierIndex(double absValue, double[] multipliers)
+   {
+      for(int i = multipliers.length - 1; i > 0; i--)
+      {
+         if (absValue >= multipliers[i])
+            return i;
+      }
+      return 0;
+   }
+
+   /**
+    * Format number without multiplier suffix, omitting fractional part for whole numbers.
+    *
+    * @param value value to format
+    * @return formatted value
+    */
+   private static String formatPlainNumber(double value)
+   {
+      if ((value == Math.rint(value)) && !Double.isInfinite(value) && (Math.abs(value) < 1e15))
+         return Long.toString((long)value);
+      return Double.toString(value);
    }
 
    /**

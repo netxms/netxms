@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -158,9 +159,12 @@ public class Gauge extends DashboardElementPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       expectedTextWidth.setLayoutData(gd);
 
+      final String valueInputHint = i18n.tr("Multiplier suffixes K, M, G, T (decimal) and Ki, Mi, Gi, Ti (binary) are supported");
+
 		minValue = new LabeledText(dialogArea, SWT.NONE);
       minValue.setLabel(i18n.tr("Minimum value"));
-		minValue.setText(Double.toString(config.getMinValue()));
+      minValue.setText(DataFormatter.formatNumberWithSuffix(config.getMinValue()));
+      minValue.getTextControl().setToolTipText(valueInputHint);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -168,7 +172,8 @@ public class Gauge extends DashboardElementPropertyPage
 
 		maxValue = new LabeledText(dialogArea, SWT.NONE);
       maxValue.setLabel(i18n.tr("Maximum value"));
-		maxValue.setText(Double.toString(config.getMaxValue()));
+      maxValue.setText(DataFormatter.formatNumberWithSuffix(config.getMaxValue()));
+      maxValue.getTextControl().setToolTipText(valueInputHint);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -176,7 +181,8 @@ public class Gauge extends DashboardElementPropertyPage
 
 		leftRedZone = new LabeledText(dialogArea, SWT.NONE);
       leftRedZone.setLabel(i18n.tr("Left red zone end"));
-		leftRedZone.setText(Double.toString(config.getLeftRedZone()));
+      leftRedZone.setText(DataFormatter.formatNumberWithSuffix(config.getLeftRedZone()));
+      leftRedZone.getTextControl().setToolTipText(valueInputHint);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -184,7 +190,8 @@ public class Gauge extends DashboardElementPropertyPage
 
 		leftYellowZone = new LabeledText(dialogArea, SWT.NONE);
       leftYellowZone.setLabel(i18n.tr("Left yellow zone end"));
-		leftYellowZone.setText(Double.toString(config.getLeftYellowZone()));
+      leftYellowZone.setText(DataFormatter.formatNumberWithSuffix(config.getLeftYellowZone()));
+      leftYellowZone.getTextControl().setToolTipText(valueInputHint);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -192,7 +199,8 @@ public class Gauge extends DashboardElementPropertyPage
 
 		rightYellowZone = new LabeledText(dialogArea, SWT.NONE);
       rightYellowZone.setLabel(i18n.tr("Right yellow zone start"));
-		rightYellowZone.setText(Double.toString(config.getRightYellowZone()));
+      rightYellowZone.setText(DataFormatter.formatNumberWithSuffix(config.getRightYellowZone()));
+      rightYellowZone.getTextControl().setToolTipText(valueInputHint);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -200,7 +208,8 @@ public class Gauge extends DashboardElementPropertyPage
 
 		rightRedZone = new LabeledText(dialogArea, SWT.NONE);
       rightRedZone.setLabel(i18n.tr("Right red zone start"));
-		rightRedZone.setText(Double.toString(config.getRightRedZone()));
+      rightRedZone.setText(DataFormatter.formatNumberWithSuffix(config.getRightRedZone()));
+      rightRedZone.getTextControl().setToolTipText(valueInputHint);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -279,12 +288,12 @@ public class Gauge extends DashboardElementPropertyPage
 		double min, max, ly, lr, ry, rr;
 		try
 		{
-			min = Double.parseDouble(minValue.getText().trim());
-			max = Double.parseDouble(maxValue.getText().trim());
-			ly = Double.parseDouble(leftYellowZone.getText().trim());
-			lr = Double.parseDouble(leftRedZone.getText().trim());
-			ry = Double.parseDouble(rightYellowZone.getText().trim());
-			rr = Double.parseDouble(rightRedZone.getText().trim());
+         min = DataFormatter.parseNumberWithSuffix(minValue.getText());
+         max = DataFormatter.parseNumberWithSuffix(maxValue.getText());
+         ly = DataFormatter.parseNumberWithSuffix(leftYellowZone.getText());
+         lr = DataFormatter.parseNumberWithSuffix(leftRedZone.getText());
+         ry = DataFormatter.parseNumberWithSuffix(rightYellowZone.getText());
+         rr = DataFormatter.parseNumberWithSuffix(rightRedZone.getText());
 		}
 		catch(NumberFormatException e)
 		{
