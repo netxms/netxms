@@ -24,10 +24,69 @@
 #include <nxcore_logs.h>
 
 /**
+ * Create log filter object from JSON document. Expected document format:
+ *
+ * {
+ *    "filters": [ { "column": "name", "type": "equals", ... }, ... ],
+ *    "orderBy": [ { "column": "name", "descending": true }, ... ]
+ * }
+ *
+ * Column names are validated against log definition, because they are inserted into generated SQL as is.
+ */
+LogFilter::LogFilter(json_t *json, LogHandle *log)
+{
+   m_valid = true;
+
+   json_t *filters = json_object_get(json, "filters");
+   m_numColumnFilters = json_is_array(filters) ? static_cast<int>(json_array_size(filters)) : 0;
+   m_columnFilters = MemAllocArray<ColumnFilter*>(m_numColumnFilters);
+   for(int i = 0; i < m_numColumnFilters; i++)
+   {
+      json_t *filter = json_array_get(filters, i);
+      String column = json_object_get_string(filter, "column", L"");
+      if (log->getColumnDefinition(column) == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_LOGS, 4, L"LogFilter: unknown filter column \"%s\"", column.cstr());
+         m_valid = false;
+         m_numColumnFilters = i;   // do not leave uninitialized elements behind
+         break;
+      }
+      m_columnFilters[i] = new ColumnFilter(filter, column, log);
+      if (!m_columnFilters[i]->isValid())
+      {
+         m_valid = false;
+         m_numColumnFilters = i + 1;
+         break;
+      }
+   }
+
+   json_t *orderingColumns = json_object_get(json, "orderBy");
+   m_numOrderingColumns = json_is_array(orderingColumns) ? static_cast<int>(json_array_size(orderingColumns)) : 0;
+   m_orderingColumns = MemAllocArray<OrderingColumn>(m_numOrderingColumns);
+   for(int i = 0; i < m_numOrderingColumns; i++)
+   {
+      json_t *orderingColumn = json_array_get(orderingColumns, i);
+      String column = json_object_get_string(orderingColumn, "column", L"");
+      const LOG_COLUMN *cd = log->getColumnDefinition(column);
+      if (cd == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_LOGS, 4, L"LogFilter: unknown ordering column \"%s\"", column.cstr());
+         m_valid = false;
+         m_numOrderingColumns = i;
+         break;
+      }
+      wcslcpy(m_orderingColumns[i].name, cd->name, MAX_COLUMN_NAME_LEN);
+      m_orderingColumns[i].descending = json_object_get_boolean(orderingColumn, "descending", false);
+   }
+}
+
+/**
  * Create log filter object from NXCP message
  */
 LogFilter::LogFilter(const NXCPMessage& msg, LogHandle *log)
 {
+   m_valid = true;
+
 	m_numColumnFilters = msg.getFieldAsInt32(VID_NUM_FILTERS);
 	m_columnFilters = MemAllocArray<ColumnFilter*>(m_numColumnFilters);
 	uint32_t fieldId = VID_COLUMN_FILTERS_BASE;

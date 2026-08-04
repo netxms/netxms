@@ -24,16 +24,141 @@
 #include <nxcore_logs.h>
 
 /**
+ * Filter type names as used in JSON representation. Element index is FILTER_* code.
+ */
+static const char *s_filterTypeNames[] = { "equals", "range", "set", "like", "less", "greater", "childOf", "relative", "currentPeriod", nullptr };
+
+/**
+ * Time unit names as used in JSON representation. Element index is TIME_UNIT_* code.
+ */
+static const char *s_timeUnitNames[] = { "minute", "hour", "day", "week", nullptr };
+
+/**
+ * Calendar period names as used in JSON representation. Element index is CALENDAR_PERIOD_* code.
+ */
+static const char *s_calendarPeriodNames[] = { "today", "yesterday", "thisWeek", "thisMonth", nullptr };
+
+/**
+ * Get code for given symbolic name from name table. Returns -1 if name is unknown or not set.
+ */
+static int CodeFromName(json_t *json, const char *tag, const char **names)
+{
+   const char *name = json_object_get_string_utf8(json, tag, nullptr);
+   if (name == nullptr)
+      return -1;
+   for(int i = 0; names[i] != nullptr; i++)
+      if (!stricmp(name, names[i]))
+         return i;
+   return -1;
+}
+
+/**
+ * Set filter column and read column type information from log definition
+ */
+void ColumnFilter::setColumn(const wchar_t *column, LogHandle *log)
+{
+   m_column = MemCopyStringW(column);
+   const LOG_COLUMN *cd = log->getColumnDefinition(m_column);
+   m_columnType = (cd != nullptr) ? cd->type : LC_TEXT;
+   m_columnFlags = (cd != nullptr) ? cd->flags : 0;
+}
+
+/**
+ * Read numeric filter value from JSON document. String values are interpreted as timestamps
+ * (accepting ISO 8601, UNIX timestamp, relative offset, or "now") and converted to the unit
+ * expected by the column.
+ */
+bool ColumnFilter::readNumericValue(json_t *json, const char *tag, int64_t *value)
+{
+   json_t *v = json_object_get(json, tag);
+   if (json_is_integer(v))
+   {
+      *value = json_integer_value(v);
+      return true;
+   }
+   if (json_is_string(v))
+   {
+      time_t t = ParseTimestamp(json_string_value(v));
+      if (t == 0)
+         return false;
+      *value = (m_columnType == LC_TIMESTAMP_MS) ? static_cast<int64_t>(t) * 1000 : static_cast<int64_t>(t);
+      return true;
+   }
+   return false;
+}
+
+/**
+ * Create column filter object from JSON document
+ */
+ColumnFilter::ColumnFilter(json_t *json, const wchar_t *column, LogHandle *log)
+{
+   setColumn(column, log);
+   m_varCount = 0;
+   m_negated = json_object_get_boolean(json, "negated", false);
+   m_valid = true;
+
+   m_type = CodeFromName(json, "type", s_filterTypeNames);
+   switch(m_type)
+   {
+      case FILTER_EQUALS:
+      case FILTER_LESS:
+      case FILTER_GREATER:
+      case FILTER_CHILDOF:
+         m_valid = readNumericValue(json, "value", &m_value.numericValue);
+         break;
+      case FILTER_RANGE:
+         m_valid = readNumericValue(json, "from", &m_value.range.start) && readNumericValue(json, "to", &m_value.range.end);
+         break;
+      case FILTER_LIKE:
+         m_value.like = json_object_get_string_w(json, "value", nullptr);
+         m_valid = (m_value.like != nullptr);
+         break;
+      case FILTER_RELATIVE:
+         m_value.relative.value = json_object_get_int32(json, "value", 0);
+         m_value.relative.unit = CodeFromName(json, "unit", s_timeUnitNames);
+         m_valid = (m_value.relative.value > 0) && (m_value.relative.unit != -1);
+         break;
+      case FILTER_CURRENT_PERIOD:
+         m_value.currentPeriod.period = CodeFromName(json, "period", s_calendarPeriodNames);
+         m_value.currentPeriod.tzOffset = json_object_get_int32(json, "timeZoneOffset", 0);
+         m_valid = (m_value.currentPeriod.period != -1);
+         break;
+      case FILTER_SET:
+         {
+            const char *operation = json_object_get_string_utf8(json, "operation", "and");
+            m_value.set.operation = stricmp(operation, "or") ? SET_OPERATION_AND : SET_OPERATION_OR;
+
+            json_t *elements = json_object_get(json, "filters");
+            m_value.set.count = json_is_array(elements) ? static_cast<int>(json_array_size(elements)) : 0;
+            m_value.set.filters = MemAllocArray<ColumnFilter*>(m_value.set.count);
+            for(int i = 0; i < m_value.set.count; i++)
+            {
+               ColumnFilter *filter = new ColumnFilter(json_array_get(elements, i), column, log);
+               m_value.set.filters[i] = filter;
+               if (!filter->isValid())
+                  m_valid = false;
+            }
+         }
+         break;
+      default:
+         nxlog_debug_tag(DEBUG_TAG_LOGS, 4, L"ColumnFilter: invalid or missing filter type for column \"%s\"", column);
+         m_valid = false;
+         break;
+   }
+
+   if (!m_valid)
+      nxlog_debug_tag(DEBUG_TAG_LOGS, 4, L"ColumnFilter: cannot create filter of type %d for column \"%s\"", m_type, column);
+}
+
+/**
  * Create column filter object from NXCP message
  */
 ColumnFilter::ColumnFilter(const NXCPMessage& msg, const wchar_t *column, uint32_t baseId, LogHandle *log)
 {
 	uint32_t fieldId;
 
-	m_column = MemCopyStringW(column);
-	const LOG_COLUMN *cd = log->getColumnDefinition(m_column);
-	m_columnType = (cd != nullptr) ? cd->type : LC_TEXT;
-	m_columnFlags = (cd != nullptr) ? cd->flags : 0;
+	setColumn(column, log);
+	m_valid = true;
 
 	m_type = msg.getFieldAsInt16(baseId);
 	switch(m_type)

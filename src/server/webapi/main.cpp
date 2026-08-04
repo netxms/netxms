@@ -141,6 +141,11 @@ int H_IncidentAddComment(Context *context);
 int H_IncidentLinkAlarm(Context *context);
 int H_IncidentUnlinkAlarm(Context *context);
 int H_IncidentActivity(Context *context);
+int H_Logs(Context *context);
+int H_LogDetails(Context *context);
+int H_LogQuery(Context *context);
+int H_LogQuerySql(Context *context);
+int H_LogRecord(Context *context);
 int H_FindMacAddress(Context *context);
 int H_GrafanaGetAlarms(Context *context);
 int H_GrafanaGetSummaryTable(Context *context);
@@ -573,6 +578,21 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/log-parsers/:parser-type")
       .GET(H_LogParser)
       .PUT(H_LogParserUpdate)
+      .build();
+   RouteBuilder("v1/logs")
+      .GET(H_Logs)
+      .build();
+   RouteBuilder("v1/logs/:log-name")
+      .GET(H_LogDetails)
+      .build();
+   RouteBuilder("v1/logs/:log-name/query")
+      .POST(H_LogQuery)
+      .build();
+   RouteBuilder("v1/logs/:log-name/query-sql")
+      .POST(H_LogQuerySql)
+      .build();
+   RouteBuilder("v1/logs/:log-name/records/:record-id")
+      .GET(H_LogRecord)
       .build();
    RouteBuilder("v1/grafana/infinity/alarms")
       .POST(H_GrafanaGetAlarms)

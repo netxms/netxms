@@ -520,6 +520,25 @@ const NXCORE_LOG NXCORE_EXPORTABLE *FindLogDefinition(const wchar_t *name)
 }
 
 /**
+ * Log column type names (element index is LC_* code)
+ */
+static const char *s_columnTypeNames[] =
+{
+   "text", "severity", "objectId", "userId", "eventCode", "timestamp", "integer", "alarmState",
+   "alarmHelpdeskState", "zoneUIN", "eventOrigin", "textDetails", "jsonDetails", "completionStatus",
+   "actionCode", "atmTransactionCode", "assetOperation", "deploymentStatus", "aiTaskStatus",
+   "macAddress", "connectionEvent", "timestamp", "aiOperatorExecutionStatus", "observationState"
+};
+
+/**
+ * Get symbolic name for log column type
+ */
+const char NXCORE_EXPORTABLE *LogColumnTypeName(int type)
+{
+   return ((type >= 0) && (type < static_cast<int>(sizeof(s_columnTypeNames) / sizeof(const char*)))) ? s_columnTypeNames[type] : "unknown";
+}
+
+/**
  * Enumerate all log definitions
  */
 void NXCORE_EXPORTABLE EnumerateLogDefinitions(std::function<void(const NXCORE_LOG*)> callback)

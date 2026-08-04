@@ -32,11 +32,47 @@ static inline bool IsDetailsColumn(int type)
 }
 
 /**
+ * Check if given column should not be visible to client at all
+ */
+static inline bool IsHiddenColumn(int type)
+{
+   return !IsZoningEnabled() && (type == LC_ZONE_UIN);
+}
+
+/**
  * Check if given column type should be ignored in query
  */
 static inline bool IsIgnoredColumn(int type)
 {
-   return IsDetailsColumn(type) || (!IsZoningEnabled() && (type == LC_ZONE_UIN));
+   return IsDetailsColumn(type) || IsHiddenColumn(type);
+}
+
+/**
+ * Append column to query column list, projecting TimescaleDB timestamptz columns as epoch values
+ */
+static void AppendQueryColumn(StringBuffer *columnList, const LOG_COLUMN& column)
+{
+   if ((column.flags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
+   {
+      if (column.type == LC_TIMESTAMP_MS)
+      {
+         // Millisecond timestamp column - project timestamptz as epoch milliseconds
+         columnList->append(L"timestamptz_to_ms(");
+         columnList->append(column.name);
+         columnList->append(L")");
+      }
+      else
+      {
+         // Project timestamptz as epoch seconds
+         columnList->append(L"date_part('epoch',");
+         columnList->append(column.name);
+         columnList->append(L")::int");
+      }
+   }
+   else
+   {
+      columnList->append(column.name);
+   }
 }
 
 /**
@@ -135,27 +171,7 @@ void LogHandle::buildQueryColumnList()
 		{
 			first = false;
 		}
-		if ((column->flags & LCF_TSDB_TIMESTAMPTZ) && (g_dbSyntax == DB_SYNTAX_TSDB))
-      {
-         if (column->type == LC_TIMESTAMP_MS)
-         {
-            // Millisecond timestamp column - project timestamptz as epoch milliseconds
-            m_queryColumns.append(L"timestamptz_to_ms(");
-            m_queryColumns.append(column->name);
-            m_queryColumns.append(L")");
-         }
-         else
-         {
-            // Project timestamptz as epoch seconds
-            m_queryColumns.append(L"date_part('epoch',");
-            m_queryColumns.append(column->name);
-            m_queryColumns.append(L")::int");
-         }
-      }
-		else
-		{
-		   m_queryColumns.append(column->name);
-		}
+		AppendQueryColumn(&m_queryColumns, *column);
 		column++;
 	}
 }
@@ -506,4 +522,187 @@ void LogHandle::getRecordDetails(int64_t recordId, NXCPMessage *msg)
       msg->setField(VID_RCC, RCC_DB_FAILURE);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Get column information as JSON array
+ */
+json_t *LogHandle::getColumnInfoAsJson() const
+{
+   json_t *columns = json_array();
+   for(int i = 0; m_log->columns[i].name != nullptr; i++)
+   {
+      const LOG_COLUMN& column = m_log->columns[i];
+      if (IsHiddenColumn(column.type))
+         continue;
+
+      json_t *json = json_object();
+      json_object_set_new(json, "name", json_string_w(column.name));
+      json_object_set_new(json, "description", json_string_w(column.description));
+      json_object_set_new(json, "type", json_string(LogColumnTypeName(column.type)));
+      json_object_set_new(json, "recordId", json_boolean((column.flags & LCF_RECORD_ID) != 0));
+      json_object_set_new(json, "detail", json_boolean(IsDetailsColumn(column.type)));
+      json_array_append_new(columns, json);
+   }
+   return columns;
+}
+
+/**
+ * Convert single value from query result to JSON according to column type
+ */
+static json_t *ColumnValueToJson(DB_RESULT hResult, int row, int column, const LOG_COLUMN& definition)
+{
+   switch(definition.type)
+   {
+      case LC_TIMESTAMP:
+         return json_time_string(static_cast<time_t>(DBGetFieldInt64(hResult, row, column)));
+      case LC_TIMESTAMP_MS:
+         return json_time_string_ms(DBGetFieldInt64(hResult, row, column));
+      case LC_ACTION_CODE:
+      case LC_AI_OP_EXEC_STATUS:
+      case LC_AI_TASK_STATUS:
+      case LC_ALARM_HD_STATE:
+      case LC_ALARM_STATE:
+      case LC_ASSET_OPERATION:
+      case LC_ATM_TXN_CODE:
+      case LC_COMPLETION_STATUS:
+      case LC_CONNECTION_EVENT:
+      case LC_DEPLOYMENT_STATUS:
+      case LC_EVENT_CODE:
+      case LC_EVENT_ORIGIN:
+      case LC_INTEGER:
+      case LC_OBJECT_ID:
+      case LC_OBSERVATION_STATE:
+      case LC_SEVERITY:
+      case LC_USER_ID:
+      case LC_ZONE_UIN:
+         return json_integer(DBGetFieldInt64(hResult, row, column));
+      case LC_JSON_DETAILS:
+         {
+            char *value = DBGetFieldUTF8(hResult, row, column, nullptr, 0);
+            if (value == nullptr)
+               return json_null();
+            json_t *json = json_loads(value, 0, nullptr);
+            if (json == nullptr)
+               json = json_string(value);   // not a valid JSON document - pass through as text
+            MemFree(value);
+            return json;
+         }
+      default:
+         {
+            wchar_t *value = DBGetField(hResult, row, column, nullptr, 0);
+            json_t *json = json_string_w(value);
+            MemFree(value);
+            return json;
+         }
+   }
+}
+
+/**
+ * Create JSON document for single record from query result. Column set must match the one
+ * used to build the query (detail columns are omitted from log queries).
+ */
+json_t *LogHandle::createRecordFromDBResult(DB_RESULT hResult, int row, bool includeDetailColumns)
+{
+   json_t *record = json_object();
+   int index = 0;
+   for(int i = 0; m_log->columns[i].name != nullptr; i++)
+   {
+      const LOG_COLUMN& column = m_log->columns[i];
+      if (includeDetailColumns ? IsHiddenColumn(column.type) : IsIgnoredColumn(column.type))
+         continue;
+
+      char name[MAX_COLUMN_NAME_LEN * 3];
+      wchar_to_utf8(column.name, -1, name, sizeof(name));
+      json_object_set_new(record, name, ColumnValueToJson(hResult, row, index++, column));
+   }
+   return record;
+}
+
+/**
+ * Build SQL query for given filter and page of records. Sets row count limit to cover
+ * requested page, so that records to be skipped are still selected by the query.
+ */
+StringBuffer LogHandle::buildPagedQuerySql(LogFilter *filter, int64_t offset, int64_t limit, uint32_t userId)
+{
+   m_rowCountLimit = static_cast<uint32_t>(offset + limit);
+   return buildQuerySql(filter, -1, userId);
+}
+
+/**
+ * Execute query and return requested page of records as JSON array. Returns nullptr on database failure.
+ */
+json_t *LogHandle::queryAsJson(LogFilter *filter, int64_t offset, int64_t limit, uint32_t userId)
+{
+   StringBuffer query = buildPagedQuerySql(filter, offset, limit, userId);
+   nxlog_debug_tag(DEBUG_TAG_LOGS, 4, L"LOG QUERY: %s", query.cstr());
+
+   int64_t startTime = GetCurrentTimeMs();
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, query);
+   json_t *records;
+   if (hResult != nullptr)
+   {
+      records = json_array();
+      int numRows = DBGetNumRows(hResult);
+      for(int i = static_cast<int>(offset); i < numRows; i++)
+         json_array_append_new(records, createRecordFromDBResult(hResult, i, false));
+      DBFreeResult(hResult);
+      nxlog_debug_tag(DEBUG_TAG_LOGS, 4, L"Log query successful, %d records returned in %d ms",
+               static_cast<int>(json_array_size(records)), static_cast<int>(GetCurrentTimeMs() - startTime));
+   }
+   else
+   {
+      records = nullptr;
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return records;
+}
+
+/**
+ * Get single log record, including detail columns, as JSON document
+ */
+uint32_t LogHandle::getRecordAsJson(int64_t recordId, json_t **record)
+{
+   StringBuffer query(L"SELECT ");
+   bool first = true;
+   for(int i = 0; m_log->columns[i].name != nullptr; i++)
+   {
+      if (IsHiddenColumn(m_log->columns[i].type))
+         continue;
+      if (!first)
+         query.append(L",");
+      else
+         first = false;
+      AppendQueryColumn(&query, m_log->columns[i]);
+   }
+   query.append(L" FROM ");
+   query.append(m_log->table);
+   query.append(L" WHERE ");
+   query.append(m_log->idColumn);
+   query.append(L"=");
+   query.append(recordId);
+
+   uint32_t rcc;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         *record = createRecordFromDBResult(hResult, 0, true);
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         rcc = RCC_NO_SUCH_RECORD;
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      rcc = RCC_DB_FAILURE;
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
 }

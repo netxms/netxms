@@ -70,6 +70,8 @@ tags:
     description: Asset management schema (asset attribute definitions)
   - name: Cloud Connectors
     description: Cloud connector information
+  - name: Logs
+    description: Server-side log discovery and querying
 paths:
   /:
     get:
@@ -7999,6 +8001,202 @@ paths:
         - BearerAuth: []
       tags:
         - Log Parsers
+  /v1/logs:
+    get:
+      operationId: getLogs
+      summary: Get available logs
+      description: |
+        Retrieve the list of logs that can be queried through the API. Only logs the
+        calling user has access to are returned. Logs contributed by server modules are
+        included.
+      responses:
+        '200':
+          description: Log list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogSummary'
+      security:
+        - BearerAuth: []
+      tags:
+        - Logs
+  /v1/logs/{log-name}:
+    parameters:
+      - name: log-name
+        in: path
+        required: true
+        description: Log name as returned by `GET /v1/logs` (case insensitive; the underlying database table name is also accepted).
+        schema:
+          type: string
+    get:
+      operationId: getLogDetails
+      summary: Get log schema
+      description: |
+        Retrieve log definition including the list of columns with their data types.
+        Columns marked with `detail` are not included in query results and are only
+        returned when reading a single record. Zone columns are omitted when zoning
+        is disabled.
+      responses:
+        '200':
+          description: Log definition retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogDetails'
+        '403':
+          description: Access denied (log has an access right requirement not held by the user)
+        '404':
+          description: Unknown log name
+      security:
+        - BearerAuth: []
+      tags:
+        - Logs
+  /v1/logs/{log-name}/query:
+    parameters:
+      - name: log-name
+        in: path
+        required: true
+        description: Log name as returned by `GET /v1/logs`.
+        schema:
+          type: string
+    post:
+      operationId: queryLog
+      summary: Query log
+      description: |
+        Execute a log query and return the requested page of records. Each request is
+        self-contained - there is no server-side query state to open or close.
+
+        All column filters are combined with AND; use a filter of type `set` to combine
+        conditions on the same column with OR. Filter and ordering column names are
+        validated against the log definition.
+
+        Numeric filter values for timestamp columns are UNIX timestamps (milliseconds
+        for columns of millisecond resolution). A string value is parsed as a timestamp
+        and accepts ISO 8601, a UNIX timestamp, a relative offset such as `-30m`, or `now`.
+
+        Records are returned as objects keyed by column name, with values typed according
+        to the column type: coded and integer columns as numbers, timestamps as ISO 8601
+        strings, everything else as strings. Detail columns are not included.
+
+        Paging is implemented by re-executing the query and skipping records, so a large
+        `offset` is expensive; `offset` + `limit` may not exceed 100000.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogQueryRequest'
+      responses:
+        '200':
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogQueryResult'
+        '400':
+          description: Missing request body, invalid filter definition, or invalid offset/limit
+        '403':
+          description: Access denied (log has an access right requirement not held by the user)
+        '404':
+          description: Unknown log name
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Logs
+  /v1/logs/{log-name}/query-sql:
+    parameters:
+      - name: log-name
+        in: path
+        required: true
+        description: Log name as returned by `GET /v1/logs`.
+        schema:
+          type: string
+    post:
+      operationId: getLogQuerySql
+      summary: Get SQL for log query
+      description: |
+        Build and return the SQL statement that `POST /v1/logs/{log-name}/query` would
+        execute for the same request body, without running it. Intended for troubleshooting
+        and for building reports outside of NetXMS.
+
+        The statement reflects the caller's object access constraints and includes the row
+        limit `offset` + `limit`, because paging is done by executing the statement as is
+        and then skipping the first `offset` records.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogQueryRequest'
+      responses:
+        '200':
+          description: SQL statement built successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  query:
+                    type: string
+                    description: SQL statement in the syntax of the server's database engine
+        '400':
+          description: Missing request body, invalid filter definition, or invalid offset/limit
+        '403':
+          description: Access denied (log has an access right requirement not held by the user)
+        '404':
+          description: Unknown log name
+      security:
+        - BearerAuth: []
+      tags:
+        - Logs
+  /v1/logs/{log-name}/records/{record-id}:
+    parameters:
+      - name: log-name
+        in: path
+        required: true
+        description: Log name as returned by `GET /v1/logs`.
+        schema:
+          type: string
+      - name: record-id
+        in: path
+        required: true
+        description: Value of the log's record ID column.
+        schema:
+          type: integer
+          format: int64
+    get:
+      operationId: getLogRecord
+      summary: Get single log record
+      description: |
+        Retrieve a single log record by its record ID, including detail columns that are
+        omitted from query results (such as event raw data or audit log old/new values).
+        Values of columns of type `jsonDetails` are returned as parsed JSON documents when
+        they contain valid JSON, and as strings otherwise.
+      responses:
+        '200':
+          description: Record retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                description: Log record as an object keyed by column name.
+        '400':
+          description: Invalid record ID
+        '403':
+          description: Access denied (log has an access right requirement not held by the user)
+        '404':
+          description: Unknown log name or record not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Logs
   /v1/snmp-mib:
     get:
       operationId: getMibRoot
@@ -10736,6 +10934,222 @@ components:
         providedByChatBot:
           type: boolean
           description: Whether the channel is provided by a chat bot (such channels cannot be modified, renamed, or deleted)
+    LogSummary:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Log name to be used in log API requests
+        description:
+          type: string
+          nullable: true
+          description: Human readable description of log content
+        recordIdColumn:
+          type: string
+          nullable: true
+          description: Name of the column holding the record ID used by the single record endpoint
+        objectIdColumn:
+          type: string
+          nullable: true
+          description: Name of the column referencing the related NetXMS object, if any
+    LogColumn:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Column name as used in filters, ordering, and record objects
+        description:
+          type: string
+          nullable: true
+          description: Human readable column name
+        type:
+          type: string
+          description: |
+            Column data type. Values `timestamp` are returned as ISO 8601 strings,
+            `text`, `textDetails`, and `macAddress` as strings, `jsonDetails` as a JSON
+            document, and all other types as integers. Coded types (`severity`, `objectId`,
+            `userId`, `eventCode`, `alarmState`, `alarmHelpdeskState`, `zoneUIN`,
+            `eventOrigin`, `completionStatus`, `actionCode`, `atmTransactionCode`,
+            `assetOperation`, `deploymentStatus`, `aiTaskStatus`, `connectionEvent`,
+            `aiOperatorExecutionStatus`, `observationState`) carry NetXMS internal codes.
+          enum:
+            - text
+            - severity
+            - objectId
+            - userId
+            - eventCode
+            - timestamp
+            - integer
+            - alarmState
+            - alarmHelpdeskState
+            - zoneUIN
+            - eventOrigin
+            - textDetails
+            - jsonDetails
+            - completionStatus
+            - actionCode
+            - atmTransactionCode
+            - assetOperation
+            - deploymentStatus
+            - aiTaskStatus
+            - macAddress
+            - connectionEvent
+            - aiOperatorExecutionStatus
+            - observationState
+            - unknown
+        recordId:
+          type: boolean
+          description: Set to true if this column is a sequential record ID
+        detail:
+          type: boolean
+          description: Set to true if this column is only returned when reading a single record
+    LogDetails:
+      allOf:
+        - $ref: '#/components/schemas/LogSummary'
+        - type: object
+          properties:
+            columns:
+              type: array
+              items:
+                $ref: '#/components/schemas/LogColumn'
+    LogColumnFilter:
+      type: object
+      required:
+        - type
+      properties:
+        column:
+          type: string
+          description: Column to filter on. Required for top level filters, ignored for filters nested in a `set`.
+        type:
+          type: string
+          description: |
+            Filter type. `equals`, `less`, `greater`, and `range` require numeric values;
+            `like` performs an SQL LIKE match (use `%` and `_` as wildcards, empty string
+            matches empty and NULL values); `childOf` matches objects below the given object;
+            `relative` matches a timestamp column within the last N units; `currentPeriod`
+            matches a timestamp column within a calendar period in the client's time zone;
+            `set` combines nested filters on the same column.
+          enum:
+            - equals
+            - range
+            - set
+            - like
+            - less
+            - greater
+            - childOf
+            - relative
+            - currentPeriod
+        negated:
+          type: boolean
+          default: false
+          description: Invert the condition
+        value:
+          oneOf:
+            - type: integer
+              format: int64
+            - type: string
+          description: |
+            Value for `equals`, `less`, `greater`, `childOf` (object ID), `like` (pattern),
+            and `relative` (number of units). String values on numeric columns are parsed as
+            timestamps.
+        from:
+          oneOf:
+            - type: integer
+              format: int64
+            - type: string
+          description: Lower bound (inclusive) for `range`
+        to:
+          oneOf:
+            - type: integer
+              format: int64
+            - type: string
+          description: Upper bound (inclusive) for `range`
+        unit:
+          type: string
+          description: Time unit for `relative`
+          enum:
+            - minute
+            - hour
+            - day
+            - week
+        period:
+          type: string
+          description: Calendar period for `currentPeriod`
+          enum:
+            - today
+            - yesterday
+            - thisWeek
+            - thisMonth
+        timeZoneOffset:
+          type: integer
+          description: Client UTC offset in seconds (east of UTC) used to resolve `currentPeriod` boundaries
+          default: 0
+        operation:
+          type: string
+          description: Operation used to combine nested filters of a `set`
+          enum:
+            - and
+            - or
+          default: and
+        filters:
+          type: array
+          description: Nested filters for `set`
+          items:
+            $ref: '#/components/schemas/LogColumnFilter'
+    LogQueryRequest:
+      type: object
+      properties:
+        filters:
+          type: array
+          description: Column filters combined with AND
+          items:
+            $ref: '#/components/schemas/LogColumnFilter'
+        orderBy:
+          type: array
+          description: Ordering columns, most significant first
+          items:
+            type: object
+            required:
+              - column
+            properties:
+              column:
+                type: string
+                description: Column to sort by
+              descending:
+                type: boolean
+                default: false
+                description: Sort in descending order
+        offset:
+          type: integer
+          format: int64
+          default: 0
+          description: Number of records to skip
+        limit:
+          type: integer
+          format: int64
+          default: 1000
+          description: Maximum number of records to return (1 to 10000; `offset` + `limit` may not exceed 100000)
+    LogQueryResult:
+      type: object
+      properties:
+        columns:
+          type: array
+          description: Log column definitions (includes detail columns, which are not present in records)
+          items:
+            $ref: '#/components/schemas/LogColumn'
+        offset:
+          type: integer
+          format: int64
+          description: Number of records skipped
+        count:
+          type: integer
+          description: Number of records returned
+        records:
+          type: array
+          description: Log records as objects keyed by column name
+          items:
+            type: object
+            additionalProperties: true
     LogParser:
       type: object
       properties:

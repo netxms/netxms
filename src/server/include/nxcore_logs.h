@@ -139,7 +139,7 @@ class LogHandle;
 /**
  * Column filter
  */
-class ColumnFilter
+class NXCORE_EXPORTABLE ColumnFilter
 {
 private:
    int m_varCount;   // Number of variables read from NXCP message during construction
@@ -148,6 +148,7 @@ private:
    int m_columnType;
    uint32_t m_columnFlags;
    bool m_negated;
+   bool m_valid;
 	union t_ColumnFilterValue
 	{
 		int64_t numericValue;   // numeric value for <, >, and = operations
@@ -175,11 +176,16 @@ private:
 		} currentPeriod;
 	} m_value;
 
+	void setColumn(const wchar_t *column, LogHandle *log);
+	bool readNumericValue(json_t *json, const char *tag, int64_t *value);
+
 public:
 	ColumnFilter(const NXCPMessage& msg, const wchar_t *column, uint32_t baseId, LogHandle *log);
+	ColumnFilter(json_t *json, const wchar_t *column, LogHandle *log);
 	~ColumnFilter();
 
 	int getVariableCount() const { return m_varCount; }
+	bool isValid() const { return m_valid; }
 
 	StringBuffer generateSql();
 };
@@ -187,17 +193,24 @@ public:
 /**
  * Log filter
  */
-class LogFilter
+class NXCORE_EXPORTABLE LogFilter
 {
 private:
    int m_numColumnFilters;
    ColumnFilter **m_columnFilters;
    int m_numOrderingColumns;
    OrderingColumn *m_orderingColumns;
+   bool m_valid;
 
 public:
    LogFilter(const NXCPMessage& msg, LogHandle *log);
+   LogFilter(json_t *json, LogHandle *log);
    ~LogFilter();
+
+   bool isValid() const
+   {
+      return m_valid;
+   }
 
    StringBuffer buildOrderClause();
 
@@ -220,7 +233,7 @@ public:
 /**
  * Log handle - object used to access log
  */
-class LogHandle
+class NXCORE_EXPORTABLE LogHandle
 {
 private:
    const NXCORE_LOG *m_log;
@@ -236,6 +249,7 @@ private:
    void deleteQueryResults();
    bool queryInternal(int64_t *rowCount, uint32_t userId);
    Table *createTable();
+   json_t *createRecordFromDBResult(DB_RESULT hResult, int row, bool includeDetailColumns);
 
 public:
    LogHandle(const NXCORE_LOG *log);
@@ -250,6 +264,11 @@ public:
    void getRecordDetails(int64_t recordId, NXCPMessage *msg);
    void getColumnInfo(NXCPMessage *msg);
    const LOG_COLUMN *getColumnDefinition(const TCHAR *name) const;
+
+   json_t *getColumnInfoAsJson() const;
+   StringBuffer buildPagedQuerySql(LogFilter *filter, int64_t offset, int64_t limit, uint32_t userId);
+   json_t *queryAsJson(LogFilter *filter, int64_t offset, int64_t limit, uint32_t userId);
+   uint32_t getRecordAsJson(int64_t recordId, json_t **record);
 };
 
 // API functions
@@ -259,5 +278,6 @@ void CloseAllLogsForSession(session_id_t sessionId);
 shared_ptr<LogHandle> AcquireLogHandleObject(ClientSession *session, int32_t logHandle);
 const NXCORE_LOG NXCORE_EXPORTABLE *FindLogDefinition(const wchar_t *name);
 void NXCORE_EXPORTABLE EnumerateLogDefinitions(std::function<void(const NXCORE_LOG*)> callback);
+const char NXCORE_EXPORTABLE *LogColumnTypeName(int type);
 
 #endif
