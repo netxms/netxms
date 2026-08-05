@@ -145,7 +145,6 @@ void ShutdownIncidentManager();
 
 uint32_t NXCORE_EXPORTABLE CreateIncident(uint32_t sourceObjectId, const TCHAR *title,
    const TCHAR *initialComment, uint32_t sourceAlarmId, uint32_t userId, uint32_t *incidentId);
-uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg);
 shared_ptr<Incident> NXCORE_EXPORTABLE FindIncidentById(uint32_t incidentId);
 shared_ptr<Incident> NXCORE_EXPORTABLE FindIncidentByAlarmId(uint32_t alarmId);
 shared_ptr<Incident> NXCORE_EXPORTABLE LoadIncidentById(uint32_t incidentId);

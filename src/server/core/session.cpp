@@ -7802,7 +7802,7 @@ void ClientSession::getIncidentDetails(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
-   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
@@ -7813,13 +7813,13 @@ void ClientSession::getIncidentDetails(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, incident->getSourceObjectId(), L"Access denied on reading incident [%u]", incidentId);
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      // Try to get from database (closed incident)
-      response.setField(VID_RCC, GetIncident(incidentId, &response));
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
    }
 
    sendMessage(response);
@@ -8058,7 +8058,7 @@ void ClientSession::getIncidentActivity(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t incidentId = request.getFieldAsUInt32(VID_INCIDENT_ID);
-   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident != nullptr)
    {
       shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
@@ -8068,13 +8068,13 @@ void ClientSession::getIncidentActivity(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, incident->getSourceObjectId(), L"Access denied on reading activity log for incident [%u]", incidentId);
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      // Try to get from database (closed incident)
-      response.setField(VID_RCC, GetIncidentActivity(incidentId, &response));
+      response.setField(VID_RCC, RCC_INVALID_INCIDENT_ID);
    }
 
    sendMessage(response);

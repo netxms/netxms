@@ -929,19 +929,6 @@ shared_ptr<Incident> NXCORE_EXPORTABLE LoadIncidentById(uint32_t incidentId)
 }
 
 /**
- * Get incident details
- */
-uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg)
-{
-   shared_ptr<Incident> incident = LoadIncidentById(incidentId);
-   if (incident == nullptr)
-      return RCC_INVALID_INCIDENT_ID;
-
-   incident->fillMessage(msg);
-   return RCC_SUCCESS;
-}
-
-/**
  * Find incident by ID (in-memory only, returns nullptr for closed incidents)
  */
 shared_ptr<Incident> NXCORE_EXPORTABLE FindIncidentById(uint32_t incidentId)
