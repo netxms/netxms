@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,8 @@ package org.netxms.nxmc.base.menus;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.window.Window;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
@@ -31,6 +30,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.users.dialogs.AuthenticationTokensDialog;
 import org.netxms.nxmc.modules.users.dialogs.ChangePasswordDialog;
 import org.xnap.commons.i18n.I18n;
 
@@ -42,6 +42,7 @@ public class UserMenuManager extends MenuManager
    private final I18n i18n = LocalizationHelper.getI18n(UserMenuManager.class);
 
    private Action actionChangePassword;
+   private Action actionAuthenticationTokens;
    private Action actionLogout;
 
    /**
@@ -52,13 +53,11 @@ public class UserMenuManager extends MenuManager
       super();
       createActions();
       setRemoveAllWhenShown(true);
-      addMenuListener(new IMenuListener() {
-         @Override
-         public void menuAboutToShow(IMenuManager manager)
-         {
-            add(actionChangePassword);
-            add(actionLogout);
-         }
+      addMenuListener((manager) -> {
+         manager.add(actionChangePassword);
+         manager.add(actionAuthenticationTokens);
+         manager.add(new Separator());
+         manager.add(actionLogout);
       });
    }
 
@@ -72,6 +71,14 @@ public class UserMenuManager extends MenuManager
          public void run()
          {
             changePassword();
+         }
+      };
+
+      actionAuthenticationTokens = new Action(i18n.tr("&Authentication tokens...")) {
+         @Override
+         public void run()
+         {
+            new AuthenticationTokensDialog(Registry.getMainWindow().getShell()).open();
          }
       };
 
@@ -93,13 +100,7 @@ public class UserMenuManager extends MenuManager
             protected void run(IProgressMonitor monitor) throws Exception
             {
                session.setUserPassword(session.getUserId(), dlg.getPassword(), dlg.getOldPassword());
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     window.addMessage(MessageArea.SUCCESS, "Password changed successfully");
-                  }
-               });
+               runInUIThread(() -> window.addMessage(MessageArea.SUCCESS, "Password changed successfully"));
             }
 
             @Override
