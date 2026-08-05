@@ -75,7 +75,7 @@ HALeaseManager::HALeaseManager(const uuid& nodeGuid, const wchar_t *nodeName, st
    m_dbTimeExpression = nullptr;
    m_thread = INVALID_THREAD_HANDLE;
    m_watchdogThread = INVALID_THREAD_HANDLE;
-   ZeroInit(m_status);
+   ZeroInit(&m_status);
    m_status.state = HALeaseState::INIT;
 }
 
