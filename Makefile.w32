@@ -92,6 +92,7 @@ CLIENT_DIRS =
 ifeq ($(BUILD_CLIENT),1)
 CLIENT_DIRS = \
     src/client/libnxclient \
+    src/client/nxai \
     src/client/nxalarm \
     src/client/nxevent \
     src/client/nxnotify \

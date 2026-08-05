@@ -1,28 +1,30 @@
-# nxai - NetXMS AI Assistant CLI
+# nxai - NetXMS AI Assistant client
 
-Interactive terminal chat client for NetXMS AI assistant.
+Command line client for NetXMS AI assistant. Communicates with the server via web API,
+so it does not require direct access to the NetXMS server port.
 
-## Installation
+## Building
+
+The tool is built together with other client components:
 
 ```bash
-cd src/client/nxai
-pip install .
-
-# Or install in development mode
-pip install -e .
-
-# With secure token storage (optional)
-pip install -e ".[secure]"
+./configure --prefix=/opt/netxms --with-client
+make
+make install
 ```
 
-## Quick Start
+Line editing, command history, and command completion in interactive mode require libedit
+(development package `libedit-dev` on Debian/Ubuntu, `libedit-devel` on RHEL/Fedora). If it
+is not available, the tool is built with simple line input instead.
+
+## Quick start
 
 ```bash
 # Connect to a server (will prompt for credentials)
-nxai --server netxms.example.com
+nxai -s netxms.example.com
 
-# Connect with username
-nxai --server netxms.example.com --user admin
+# Connect with user name
+nxai -s netxms.example.com -u admin
 
 # Use environment variables
 export NETXMS_SERVER=netxms.example.com
@@ -34,144 +36,150 @@ nxai
 ## Usage
 
 ```
-usage: nxai [-h] [-s HOST] [-u USER] [-p PASS] [-n NAME | -o ID | -i ID]
-            [--plain] [--no-verify-ssl] [--no-save-session] [--clear-session]
-            [-V]
+Usage: nxai [OPTIONS] [message]
 
-NetXMS AI Assistant CLI
+If message is given on command line or provided on standard input, it is sent to assistant
+and tool exits after printing response. Otherwise interactive session is started.
 
-options:
-  -h, --help            show this help message and exit
-  -s HOST, --server HOST
-                        NetXMS server hostname or URL
-  -u USER, --user USER  Username for authentication
-  -p PASS, --password PASS
-                        Password (use environment variable instead for security)
-  -n NAME, --node NAME  Node name for context
-  -o ID, --object ID    Object ID for context
-  -i ID, --incident ID  Incident ID for context
-  --plain               Force plain text output (no colors or formatting)
-  --no-verify-ssl       Disable SSL certificate verification
-  --no-save-session     Don't save session token for reuse
-  --clear-session       Clear saved session token and exit
-  -V, --version         show program's version number and exit
+Options:
+  -h, --help                Display this help message.
+  -i, --incident <id>       Set incident with given ID as conversation context.
+  -n, --node <name>         Set node with given name as conversation context.
+  -o, --object <id>         Set object with given ID as conversation context.
+  -p, --password <password> Password for authentication.
+  -s, --server <server>     Server host name or URL (for example netxms.local or
+                            https://netxms.local:8443).
+  -u, --user <user>         User name for authentication.
+  -V, --version             Display version information.
+      --clear-session       Delete saved session for server and exit.
+      --no-save-session     Do not save session token for reuse.
+      --no-verify-ssl       Do not verify server SSL certificate.
+      --plain               Force plain text output without colors and formatting.
 
-Environment variables: NETXMS_SERVER, NETXMS_USER, NETXMS_PASSWORD
+Environment variables NETXMS_SERVER, NETXMS_USER, and NETXMS_PASSWORD are used as
+defaults for options -s, -u, and -p.
 ```
 
-## Interactive Session
+## Non-interactive use
 
-Once connected, you can chat with the AI assistant:
+If a message is given on the command line or piped to standard input, the tool sends it,
+prints the response, and exits. Output is written as plain text without colors when it is
+redirected, so it can be processed by other tools.
+
+```bash
+nxai -n web-server-01 "why is CPU high on this node?"
+
+echo "summarize alarms for last hour" | nxai > report.txt
+```
+
+Questions asked by the assistant cannot be answered when standard input is not a terminal.
+In that case they are automatically declined and a warning is printed.
+
+## Interactive session
 
 ```
-$ nxai --server netxms.local --node web-server-01
-Using saved session for netxms.local
-Found: web-server-01 (ID: 123)
-Starting chat session...
+$ nxai -s netxms.local -n web-server-01
+Using saved session for https://netxms.local
+Conversation context set to web-server-01 [123]
 
-╭───────────────────────── Welcome ──────────────────────────╮
-│ NetXMS AI Assistant                                        │
-│                                                            │
-│ Type your questions or commands. Use /help for available   │
-│ commands.                                                  │
-╰────────────────────────────────────────────────────────────╯
+NetXMS AI Assistant
+Connected to https://netxms.local
+Type your questions or commands. Use /help for list of available commands.
 
 You> Why is CPU high on this node?
+- Executing get_dci_values...
 
->> Looking at web-server-01, I can see CPU utilization has been
-      above 90% for the last 15 minutes. The top processes are:
+CPU utilization on web-server-01 has been above 90% for the last 15 minutes.
+Top processes are:
 
-      | Process    | CPU % |
-      |------------|-------|
-      | java       | 45.2  |
-      | mysqld     | 32.1  |
+  Process    CPU %
+  java       45.2
+  mysqld     32.1
 
-      Would you like me to investigate the Java process further?
+Would you like me to investigate the Java process further?
 
 You> yes
-
->> ...
 ```
 
-## Slash Commands
+## Slash commands
 
 | Command | Description |
 |---------|-------------|
 | `/help` | Show available commands |
 | `/quit`, `/exit`, `/q` | Exit the chat |
 | `/clear` | Clear chat history |
-| `/object <name>` | Set object context |
-| `/incident <id>` | Set incident context |
-| `/status` | Show current session info |
+| `/object <name>` | Set object context (clears context if used without argument) |
+| `/incident <id>` | Set incident context (clears context if used without argument) |
+| `/status` | Show current session information |
 
-## Keyboard Shortcuts
+## Keyboard shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+C` | Cancel current request |
+| `Ctrl+C` | Cancel current request or input |
 | `Ctrl+D` | Exit the chat |
-| `Up/Down` | Navigate command history |
+| `Up`/`Down` | Navigate command history |
+| `Tab` | Complete slash command |
 
 ## Configuration
 
-Session tokens are stored in `~/.config/nxai/sessions.json` for automatic reconnection.
+Access token received from the server is stored in `~/.config/nxai/sessions.json` (in
+`%APPDATA%\nxai` on Windows) and reused by subsequent runs, so credentials have to be
+provided only once. File is created with access rights allowing access only for current
+user. Session can be deleted with
+
+```bash
+nxai -s netxms.example.com --clear-session
+```
 
 Command history is stored in `~/.config/nxai/history`.
 
-To clear a saved session:
-```bash
-nxai --server netxms.example.com --clear-session
-```
+## Conversation context
 
-## Context Binding
-
-You can bind the chat to a specific NetXMS object or incident for contextual awareness:
+Chat can be bound to a NetXMS object or incident, so that assistant has context for the
+conversation:
 
 ```bash
 # By node name
-nxai --server netxms.local --node web-server-01
+nxai -s netxms.local -n web-server-01
 
 # By object ID
-nxai --server netxms.local --object 123
+nxai -s netxms.local -o 123
 
 # By incident ID
-nxai --server netxms.local --incident 456
+nxai -s netxms.local -i 456
 ```
 
-You can also change context during a session:
+Context can also be changed during interactive session:
+
 ```
 You> /object database-server
-Context set to: database-server (ID: 789)
+Conversation context set to database-server [789]
 
 You> What's the status of this server?
 ```
 
 ## Troubleshooting
 
-### SSL Certificate Errors
+### SSL certificate errors
 
-If you're using a self-signed certificate:
+If server uses self-signed certificate:
+
 ```bash
-nxai --server netxms.local --no-verify-ssl
+nxai -s netxms.local --no-verify-ssl
 ```
 
-### Connection Issues
+### Connection issues
 
-1. Verify the server is running and WebAPI is enabled
-2. Check firewall rules allow access to the WebAPI port
-3. Try with explicit protocol: `nxai --server https://netxms.local:8443`
+1. Verify that server is running and web API is enabled
+2. Check that firewall rules allow access to web API port
+3. Try with explicit protocol and port: `nxai -s https://netxms.local:8443`
 
-### Authentication Fails
+### Authentication fails
 
-1. Verify username and password are correct
-2. Check if user has WebAPI access permissions
-3. Try clearing saved session: `nxai --server HOST --clear-session`
-
-## Requirements
-
-- Python 3.9+
-- NetXMS server with WebAPI enabled
-- AI assistant configured on the server
+1. Verify that user name and password are correct
+2. Check if user is allowed to access web API
+3. Try to delete saved session: `nxai -s netxms.local --clear-session`
 
 ## License
 

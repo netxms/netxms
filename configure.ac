@@ -162,6 +162,7 @@ SERVER_LIBS=""
 SERVER_TOOLS=""
 SERVER_INCLUDE=""
 NXADM_LIBS=""
+NXAI_LIBS=""
 NCDRV_MODULES=""
 NCDRV_LTLIBRARIES=""
 PDSDRV_DIRS=""
@@ -1053,7 +1054,7 @@ AC_ARG_WITH(dist,
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
-	CLIENT_COMPONENTS="java nxalarm nxevent nxmc nxnotify nxpush nxshell"
+	CLIENT_COMPONENTS="java nxai nxalarm nxevent nxmc nxnotify nxpush nxshell"
 	SERVER_COMPONENTS="nxreportd otlp webapi"
 	DIST_BUILD="yes"
 )
@@ -1268,7 +1269,7 @@ check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
 	MODULES="$MODULES client"
-	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxnotify"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxai nxalarm nxevent nxpush nxnotify"
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
 		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java nxshell"
@@ -2153,12 +2154,13 @@ fi
 # Checks for other libs.
 #--------------------------------------------------------------------
 
-if test "x$BUILD_SERVER" = "xyes" ; then
+if test "x$BUILD_SERVER" = "xyes" -o "x$BUILD_CLIENT" = "xyes" ; then
 	AC_CHECK_HEADER(histedit.h,HAVE_LIBEDIT=yes,HAVE_LIBEDIT=no)
 	if test "x$HAVE_LIBEDIT" = "xyes"; then
 		AC_CHECK_LIB(edit, history_winit, [
 			SERVER_LIBS="$SERVER_LIBS -ledit"
 			NXADM_LIBS="$NXADM_LIBS -ledit"
+			NXAI_LIBS="$NXAI_LIBS -ledit"
 	   		AC_DEFINE(HAVE_LIBEDIT, 1, Define to 1 if libedit is available)
 		], [ HAVE_LIBEDIT=no ])
 	fi
@@ -4491,6 +4493,7 @@ AC_SUBST(NETXMS_PREFIX)
 AC_SUBST(NETXMS_STATEDIR)
 AC_SUBST(NETXMS_SYSCONFDIR)
 AC_SUBST(NXADM_LIBS)
+AC_SUBST(NXAI_LIBS)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(ODBC_CPPFLAGS)
 AC_SUBST(ODBC_LDFLAGS)
@@ -4643,6 +4646,7 @@ AC_CONFIG_FILES([
 	src/client/java/Makefile
 	src/client/java/netxms-client/Makefile
 	src/client/libnxclient/Makefile
+	src/client/nxai/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxapisrv/Makefile
 	src/client/nxapisrv/java/Makefile
@@ -4885,11 +4889,6 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 	else
 		echo "MicroHTTPD support      : NO"
 	fi
-	if test "x${HAVE_LIBEDIT}" = "xyes"; then
-		echo "Editline support        : YES"
-	else
-		echo "Editline support        : NO"
-	fi
 	echo "Server components       : ${SERVER_COMPONENTS}"
 	echo "Fan-out data drivers    : ${PDSDRV_DIRS}"
 else
@@ -4902,6 +4901,11 @@ else
    echo "XMPP support            : NO"
 fi
 
+if test "x${HAVE_LIBEDIT}" = "xyes"; then
+	echo "Editline support        : YES"
+else
+	echo "Editline support        : NO"
+fi
 if test "x${HAVE_LIBJQ}" = "xyes"; then
 	echo "JQ support              : YES"
 else

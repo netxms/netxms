@@ -1,5 +1,6 @@
 Source tree layout for client components:
 
+nxai		Command line client for AI assistant
 nxalarm		Command line tool for managing alarms
 nxevent		Command line tool for sending events to server
 nxpush		Command line tool for pushing DCI data

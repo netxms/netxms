@@ -3353,9 +3353,74 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 	return attr;
 }
 
+/**
+ * Write wide character string to console with interpretation of ANSI color codes
+ */
+static void WriteToConsoleW(HANDLE out, const WCHAR *text)
+{
+   CONSOLE_SCREEN_BUFFER_INFO csbi;
+   GetConsoleScreenBufferInfo(out, &csbi);
+
+   const WCHAR *curr = text;
+   while(*curr != 0)
+   {
+      const WCHAR *esc = wcschr(curr, 27);   // Find ESC
+      if (esc != nullptr)
+      {
+         esc++;
+         if (*esc == L'[')
+         {
+            // write everything up to ESC char
+            DWORD chars;
+            WriteConsoleW(out, curr, static_cast<UINT32>(esc - curr - 1), &chars, nullptr);
+
+            esc++;
+
+            WCHAR code[64];
+            int pos = 0;
+            while((*esc != 0) && (*esc != L'm'))
+            {
+               if (*esc == L';')
+               {
+                  code[pos] = 0;
+                  csbi.wAttributes = ApplyTerminalAttribute(out, csbi.wAttributes, wcstol(code, nullptr, 10));
+                  pos = 0;
+               }
+               else
+               {
+                  if (pos < 63)
+                     code[pos++] = *esc;
+               }
+               esc++;
+            }
+            if (*esc == 0)
+               break;
+            if (pos > 0)
+            {
+               code[pos] = 0;
+               csbi.wAttributes = ApplyTerminalAttribute(out, csbi.wAttributes, wcstol(code, nullptr, 10));
+            }
+            esc++;
+         }
+         else
+         {
+            DWORD chars;
+            WriteConsoleW(out, curr, static_cast<UINT32>(esc - curr), &chars, nullptr);
+         }
+         curr = esc;
+      }
+      else
+      {
+         DWORD chars;
+         WriteConsoleW(out, curr, static_cast<UINT32>(wcslen(curr)), &chars, nullptr);
+         break;
+      }
+   }
+}
+
 #endif
 
-#ifdef UNICODE
+#if defined(UNICODE) || defined(_WIN32)
 
 /**
  * Write part of wide character string to output stream
@@ -3412,6 +3477,31 @@ static void WriteRedirectedTerminalOutputW(const WCHAR *text)
 #if !defined(UNICODE) || !defined(_WIN32)
 
 /**
+ * Write given number of bytes to standard output. Bytes are passed through unchanged even if stream is
+ * wide oriented (in that case stdio byte output functions cannot be used and data is written to underlying
+ * file descriptor).
+ */
+static void WriteBytesToStdout(const char *text, size_t length)
+{
+#ifndef _WIN32
+   if (fwide(stdout, 0) > 0)
+   {
+      fflush(stdout);
+      size_t offset = 0;
+      while(offset < length)
+      {
+         ssize_t bytes = write(fileno(stdout), text + offset, length - offset);
+         if (bytes <= 0)
+            break;
+         offset += bytes;
+      }
+      return;
+   }
+#endif
+   fwrite(text, 1, length, stdout);
+}
+
+/**
  * Write text with escape sequences to file
  */
 static void WriteRedirectedTerminalOutputA(const char *text)
@@ -3426,7 +3516,7 @@ static void WriteRedirectedTerminalOutputA(const char *text)
          if (*esc == '[')
          {
             // write everything up to ESC char
-            fwrite(curr, 1, esc - curr - 1, stdout);
+            WriteBytesToStdout(curr, esc - curr - 1);
             esc++;
             while((*esc != 0) && (*esc != 'm'))
                esc++;
@@ -3436,13 +3526,13 @@ static void WriteRedirectedTerminalOutputA(const char *text)
          }
          else
          {
-            fwrite(curr, 1, esc - curr, stdout);
+            WriteBytesToStdout(curr, esc - curr);
          }
          curr = esc;
       }
       else
       {
-         fputs(curr, stdout);
+         WriteBytesToStdout(curr, strlen(curr));
          break;
       }
    }
@@ -3465,69 +3555,18 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 #ifdef UNICODE
       WriteRedirectedTerminalOutputW(text);
 #else
-      WriteRedirectedTerminalOutput(text);
+      WriteRedirectedTerminalOutputA(text);
 #endif
       return;
    }
 
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	GetConsoleScreenBufferInfo(out, &csbi);
-
-	const TCHAR *curr = text;
-	while(*curr != 0)
-	{
-		const TCHAR *esc = _tcschr(curr, 27);	// Find ESC
-		if (esc != NULL)
-		{
-			esc++;
-			if (*esc == _T('['))
-			{
-				// write everything up to ESC char
-				DWORD chars;
-				WriteConsole(out, curr, (UINT32)(esc - curr - 1), &chars, NULL);
-
-				esc++;
-
-				TCHAR code[64];
-				int pos = 0;
-				while((*esc != 0) && (*esc != _T('m')))
-				{
-					if (*esc == _T(';'))
-					{
-						code[pos] = 0;
-						csbi.wAttributes = ApplyTerminalAttribute(out, csbi.wAttributes, _tcstol(code, NULL, 10));
-						pos = 0;
-					}
-					else
-					{
-						if (pos < 63)
-							code[pos++] = *esc;
-					}
-					esc++;
-				}
-            if (*esc == 0)
-               break;
-				if (pos > 0)
-				{
-					code[pos] = 0;
-					csbi.wAttributes = ApplyTerminalAttribute(out, csbi.wAttributes, _tcstol(code, NULL, 10));
-				}
-				esc++;
-			}
-			else
-			{
-				DWORD chars;
-				WriteConsole(out, curr, (UINT32)(esc - curr), &chars, nullptr);
-			}
-			curr = esc;
-		}
-		else
-		{
-			DWORD chars;
-			WriteConsole(out, curr, (UINT32)_tcslen(curr), &chars, nullptr);
-			break;
-		}
-	}
+#ifdef UNICODE
+   WriteToConsoleW(out, text);
+#else
+   WCHAR *wtext = WideStringFromMBString(text);
+   WriteToConsoleW(out, wtext);
+   MemFree(wtext);
+#endif
 #else
 #ifdef UNICODE
    if (isatty(fileno(stdout)))
@@ -3558,6 +3597,30 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
    else
       WriteRedirectedTerminalOutputA(text);
 #endif
+#endif
+}
+
+/**
+ * Write UTF-8 encoded text to terminal with support for ANSI color codes
+ */
+void LIBNETXMS_EXPORTABLE WriteToTerminalUtf8(const char *text)
+{
+#ifdef _WIN32
+   WCHAR *wtext = WideStringFromUTF8String(text);
+
+   HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+   DWORD mode;
+   if (GetConsoleMode(out, &mode))
+      WriteToConsoleW(out, wtext);
+   else
+      WriteRedirectedTerminalOutputW(wtext);   // Assume output is redirected
+
+   MemFree(wtext);
+#else
+   if (isatty(fileno(stdout)))
+      WriteBytesToStdout(text, strlen(text));
+   else
+      WriteRedirectedTerminalOutputA(text);
 #endif
 }
 

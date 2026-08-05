@@ -173,6 +173,7 @@ compile_commands.json
 /src/client/mcp/.classpath
 /src/client/mcp/.project
 /src/client/mcp/.settings
+/src/client/nxai/nxai
 /src/client/nxalarm/nxalarm
 /src/client/nxapisrv/java/.classpath
 /src/client/nxapisrv/java/.project

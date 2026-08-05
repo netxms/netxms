@@ -5802,6 +5802,7 @@ typedef void (*NxLogRotationHook)();
 void LIBNETXMS_EXPORTABLE nxlog_set_rotation_hook(NxLogRotationHook hook);
 
 void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text);
+void LIBNETXMS_EXPORTABLE WriteToTerminalUtf8(const char *text);
 void LIBNETXMS_EXPORTABLE WriteToTerminalEx(const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 1, 2)))

@@ -64,6 +64,7 @@ Source: "..\..\client\nxshell\java\target\nxshell-{#VersionString}.jar"; DestDir
 Source: "..\..\client\nxshell\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxshell
 ; Command line tools
 Source: "..\..\..\out\x64\Release\bin\libnxclient.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
+Source: "..\..\..\out\x64\Release\bin\nxai.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
 Source: "..\..\..\out\x64\Release\bin\nxalarm.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
 Source: "..\..\..\out\x64\Release\bin\nxevent.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
 Source: "..\..\..\out\x64\Release\bin\nxnotify.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline

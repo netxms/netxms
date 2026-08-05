@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxai (AI assistant client) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxai
+SOURCES = client.cpp nxai.cpp repl.cpp session.cpp
+TOOL_LIBS = -lnetxms -lnxjansson $(CURL_LIBS)
+
+include $(TOPDIR)/build/tool-common.mk
