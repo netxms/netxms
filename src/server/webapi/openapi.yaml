@@ -13591,9 +13591,6 @@ components:
         ipAddress:
           type: string
           description: (Node/Interface/Subnet) IP address. For a node it is the primary IP address used when no primary name is given.
-        ipNetMask:
-          type: integer
-          description: (Node) Network mask length in bits for the primary IP address.
         creationFlags:
           type: integer
           description: (Node) Bit mask controlling node creation (disable polling protocols, create unmanaged, etc.).
