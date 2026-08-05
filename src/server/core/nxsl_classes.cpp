@@ -1246,6 +1246,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    {
       value = vm->createValue(object->isInMaintenanceMode());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isMaintenanceScheduled"))
+   {
+      value = vm->createValue(object->isMaintenanceScheduled());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("maintenanceInitiator"))
    {
       value = vm->createValue(object->getMaintenanceInitiator());
