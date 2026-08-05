@@ -3421,6 +3421,21 @@ NXSL_METHOD_DEFINITION(Node, traceRoute)
 }
 
 /**
+ * Node::wakeUp() method
+ */
+NXSL_METHOD_DEFINITION(Node, wakeUp)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   *result = vm->createValue(static_cast<shared_ptr<Node>*>(object->getData())->get()->wakeUp() == RCC_SUCCESS);
+   return 0;
+}
+
+/**
  * NXSL class Node: constructor
  */
 NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
@@ -3483,6 +3498,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, setVNCPassword, 1);
    NXSL_REGISTER_METHOD(Node, traceL2Path, 1);
    NXSL_REGISTER_METHOD(Node, traceRoute, 1);
+   NXSL_REGISTER_METHOD(Node, wakeUp, 0);
 }
 
 /**
@@ -4347,6 +4363,21 @@ NXSL_METHOD_DEFINITION(Interface, setPollCountForStatusChange)
 }
 
 /**
+ * Interface::wakeUp() method
+ */
+NXSL_METHOD_DEFINITION(Interface, wakeUp)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CONTROL, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   *result = vm->createValue(static_cast<shared_ptr<Interface>*>(object->getData())->get()->wakeUp() == RCC_SUCCESS);
+   return 0;
+}
+
+/**
  * NXSL class Interface: constructor
  */
 NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
@@ -4362,6 +4393,7 @@ NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(Interface, setIncludeInIcmpPoll, 1);
    NXSL_REGISTER_METHOD(Interface, setPeer, 1);
    NXSL_REGISTER_METHOD(Interface, setPollCountForStatusChange, 1);
+   NXSL_REGISTER_METHOD(Interface, wakeUp, 0);
 }
 
 /**
