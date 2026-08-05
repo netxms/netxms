@@ -100,7 +100,7 @@ NewNodeData::NewNodeData(const InetAddress& ipAddress, const MacAddress& macAddr
  */
 NewNodeData::NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddress) : ipAddr(ipAddress)
 {
-   ipAddr.setMaskBits(msg.getFieldAsInt32(VID_IP_NETMASK));
+   ipAddr.setMaskBits(0);  // netmask for new node is always autodetected
    creationFlags = msg.getFieldAsUInt32(VID_CREATION_FLAGS);
    agentPort = msg.getFieldAsUInt16(VID_AGENT_PORT);
    snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);
@@ -137,7 +137,7 @@ NewNodeData::NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddress) :
  */
 NewNodeData::NewNodeData(json_t *json, const InetAddress& ipAddress) : ipAddr(ipAddress)
 {
-   ipAddr.setMaskBits(json_object_get_int32(json, "ipNetMask"));
+   ipAddr.setMaskBits(0);  // netmask for new node is always autodetected
    creationFlags = json_object_get_uint32(json, "creationFlags");
    agentPort = static_cast<uint16_t>(json_object_get_uint32(json, "agentPort", AGENT_LISTEN_PORT));
    snmpPort = static_cast<uint16_t>(json_object_get_uint32(json, "snmpPort", SNMP_DEFAULT_PORT));
@@ -290,7 +290,9 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData, uint32_
       node->checkSubnetBinding();
       if (newNodeData->ipAddr.isValidUnicast())
       {
-         node->createNewInterface(newNodeData->ipAddr, newNodeData->macAddr, true);
+         InetAddress ifaceAddr = newNodeData->ipAddr;
+         ifaceAddr.setMaskBits(0);  // autodetect, so pseudo-interface is created with synthetic mask
+         node->createNewInterface(ifaceAddr, newNodeData->macAddr, true);
       }
    }
 
