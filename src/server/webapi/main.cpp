@@ -214,6 +214,7 @@ int H_ObjectTools(Context *context);
 int H_ObjectToolDetails(Context *context);
 int H_ObjectToolsForObject(Context *context);
 int H_ObjectToolUpdate(Context *context);
+int H_ObjectWakeUp(Context *context);
 int H_ScheduledTaskCreate(Context *context);
 int H_ScheduledTaskDelete(Context *context);
 int H_ScheduledTaskDetails(Context *context);
@@ -778,6 +779,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/set-managed")
       .POST(H_ObjectSetManaged)
+      .build();
+   RouteBuilder("v1/objects/:object-id/wake-up")
+      .POST(H_ObjectWakeUp)
       .build();
    RouteBuilder("v1/objects/:object-id/status-explanation")
       .GET(H_ObjectStatusExplanation)

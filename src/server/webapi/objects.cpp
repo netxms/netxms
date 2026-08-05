@@ -1122,6 +1122,53 @@ int H_ObjectSetManaged(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/wake-up
+ */
+int H_ObjectWakeUp(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if ((object->getObjectClass() != OBJECT_NODE) && (object->getObjectClass() != OBJECT_INTERFACE))
+   {
+      context->setErrorResponse("Wake-on-LAN is supported only for nodes and interfaces");
+      return 400;
+   }
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_CONTROL))
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on sending Wake-on-LAN packet to object %s", object->getName());
+      return 403;
+   }
+
+   uint32_t rcc = (object->getObjectClass() == OBJECT_NODE) ? static_cast<Node&>(*object).wakeUp() : static_cast<Interface&>(*object).wakeUp();
+   if (rcc == RCC_SUCCESS)
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Wake-on-LAN packet sent to object %s", object->getName());
+      return 204;
+   }
+
+   context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Cannot send Wake-on-LAN packet to object %s", object->getName());
+   switch(rcc)
+   {
+      case RCC_NO_WOL_INTERFACES:
+         context->setErrorResponse("Node has no interface suitable for Wake-on-LAN");
+         return 400;
+      case RCC_NO_MAC_ADDRESS:
+         context->setErrorResponse("Interface has no MAC address or IPv4 address needed for Wake-on-LAN");
+         return 400;
+      default:
+         context->setErrorResponse("Cannot send Wake-on-LAN packet");
+         return 500;
+   }
+}
+
+/**
  * Handler for /v1/objects/:object-id/take-screenshot
  */
 int H_TakeScreenshot(Context *context)
