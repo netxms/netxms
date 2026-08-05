@@ -7497,8 +7497,10 @@ paths:
       description: |
         Execute a server-capable object tool on the specified object.
         Supported tool types: action (agent action), server-command, server-script,
-        snmp-table, agent-table, agent-list, ssh-command, url.
-        Client-only tool types (internal, command, file-download) are rejected with 400.
+        snmp-table, agent-table, agent-list, ssh-command, url. Tools of type "internal" are
+        supported only for "wakeup" subtype (sends Wake-on-LAN packet to node or interface).
+        Client-only tool types (command, file-download) and all other internal tool subtypes
+        are rejected with 400.
       tags:
         - Object Tools
       parameters:
@@ -7576,9 +7578,10 @@ paths:
             Invalid request. Possible reasons:
             - Invalid or missing tool-id
             - Missing or invalid objectId
-            - Tool type is client-only (internal, command, file-download)
+            - Tool type is client-only (command, file-download) or internal tool subtype other than "wakeup"
             - Tool is disabled
             - Incompatible object class for the tool type
+            - Wake-on-LAN requested for object other than node or interface, or node has no interface suitable for Wake-on-LAN
             - SSH command target has no owning node (standalone access point, sensor without gateway)
         '403':
           description: |

@@ -622,6 +622,47 @@ int H_ObjectToolDisable(Context *context)
 }
 
 /**
+ * Execute internal tool. Only "wakeup" subtype is implemented on server side, all other subtypes
+ * are implemented by the client and cannot be executed via REST API.
+ */
+static int ExecuteInternalTool(Context *context, const shared_ptr<NetObj>& object, const wchar_t *toolData, json_t *response)
+{
+   if ((toolData == nullptr) || wcsicmp(toolData, L"wakeup"))
+   {
+      context->setErrorResponse("This tool type can only be executed by the client");
+      return 400;
+   }
+
+   if ((object->getObjectClass() != OBJECT_NODE) && (object->getObjectClass() != OBJECT_INTERFACE))
+   {
+      context->setErrorResponse("Wake-on-LAN is supported only for nodes and interfaces");
+      return 400;
+   }
+
+   uint32_t rcc = (object->getObjectClass() == OBJECT_NODE) ? static_cast<Node&>(*object).wakeUp() : static_cast<Interface&>(*object).wakeUp();
+   if (rcc != RCC_SUCCESS)
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Cannot send Wake-on-LAN packet to object %s [%u]", object->getName(), object->getId());
+      switch(rcc)
+      {
+         case RCC_NO_WOL_INTERFACES:
+            context->setErrorResponse("Node has no interface suitable for Wake-on-LAN");
+            return 400;
+         case RCC_NO_MAC_ADDRESS:
+            context->setErrorResponse("Interface has no MAC address or IPv4 address needed for Wake-on-LAN");
+            return 400;
+         default:
+            context->setErrorResponse("Cannot send Wake-on-LAN packet");
+            return 500;
+      }
+   }
+
+   json_object_set_new(response, "type", json_string("none"));
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), L"Wake-on-LAN packet sent to object %s [%u]", object->getName(), object->getId());
+   return 200;
+}
+
+/**
  * Execute agent action tool
  */
 static int ExecuteAgentAction(Context *context, const shared_ptr<NetObj>& object, const TCHAR *toolData, uint32_t toolFlags, Alarm *alarm, const StringMap *inputFields, const StringList *maskedFields, json_t *response)
@@ -1265,10 +1306,10 @@ int H_ObjectToolExecute(Context *context)
       return 400;
    }
 
-   // Reject client-only tool types
+   // Reject client-only tool types. Tools of type "internal" are dispatched below - server side
+   // implementation exists only for "wakeup" subtype, all others are rejected there.
    switch(toolType)
    {
-      case TOOL_TYPE_INTERNAL:
       case TOOL_TYPE_COMMAND:
       case TOOL_TYPE_FILE_DOWNLOAD:
          MemFree(toolData);
@@ -1436,6 +1477,9 @@ int H_ObjectToolExecute(Context *context)
    int httpCode;
    switch(toolType)
    {
+      case TOOL_TYPE_INTERNAL:
+         httpCode = ExecuteInternalTool(context, object, toolData, response);
+         break;
       case TOOL_TYPE_ACTION:
          httpCode = ExecuteAgentAction(context, object, toolData, toolFlags, alarm, &inputFields, &maskedFields, response);
          break;
