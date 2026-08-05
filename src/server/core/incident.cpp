@@ -845,19 +845,17 @@ uint32_t NXCORE_EXPORTABLE CreateIncident(uint32_t sourceObjectId, const TCHAR *
 }
 
 /**
- * Get incident details
+ * Load incident by ID. Returns in-memory instance for active incidents, and reads from
+ * database for closed ones (those are dropped from memory). Returns nullptr if incident
+ * does not exist at all.
  */
-uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg)
+shared_ptr<Incident> NXCORE_EXPORTABLE LoadIncidentById(uint32_t incidentId)
 {
    s_incidents.lock();
    shared_ptr<Incident> incident = s_incidents.get(incidentId);
    s_incidents.unlock();
-
    if (incident != nullptr)
-   {
-      incident->fillMessage(msg);
-      return RCC_SUCCESS;
-   }
+      return incident;
 
    // Check in database for closed incidents
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -872,18 +870,14 @@ uint32_t NXCORE_EXPORTABLE GetIncident(uint32_t incidentId, NXCPMessage *msg)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         Incident dbIncident(hResult, 0);
-         dbIncident.loadLinkedAlarms(hdb);
-         dbIncident.fillMessage(msg);
-         DBFreeResult(hResult);
-         DBConnectionPoolReleaseConnection(hdb);
-         return RCC_SUCCESS;
+         incident = make_shared<Incident>(hResult, 0);
+         incident->loadLinkedAlarms(hdb);
       }
       DBFreeResult(hResult);
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-   return RCC_INVALID_INCIDENT_ID;
+   return incident;
 }
 
 /**
