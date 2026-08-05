@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco (former Airespace) wireless switches
-** Copyright (C) 2013-2024 Raden Solutions
+** Copyright (C) 2013-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -361,8 +361,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
    {
       if (response->getNumVariables() == 5)
       {
-         WirelessStationInfo *info = new WirelessStationInfo;
-         memset(info, 0, sizeof(WirelessStationInfo));
+         WirelessStationInfo *info = new WirelessStationInfo();
 
          var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
          TCHAR ipAddr[32];

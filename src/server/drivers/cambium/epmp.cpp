@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for Cambium devices
-** Copyright (C) 2020-2024 Raden Solutions
+** Copyright (C) 2020-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -517,8 +517,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
       return SNMP_ERR_SUCCESS;
    }
 
-   auto info = new WirelessStationInfo;
-   memset(info, 0, sizeof(WirelessStationInfo));
+   auto info = new WirelessStationInfo();
 
    TCHAR macAddrText[64];
    memcpy(info->macAddr, MacAddress::parse(var->getValueAsString(macAddrText, 64)).value(), MAC_ADDR_LENGTH);

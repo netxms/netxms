@@ -3,6 +3,7 @@
 %option bison-bridge
 %option never-interactive
 %option stack
+%option noyy_top_state
 
 %x COMMENT
 %x FEXPR

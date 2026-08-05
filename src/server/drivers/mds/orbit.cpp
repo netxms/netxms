@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Driver for GE MDS devices
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -217,7 +217,7 @@ static void AddLnRadioInterface(StructArray<RadioInterfaceInfo> *rifList, SNMP_T
       response->getVariable(2)->getValueAsString(frequency, 64);
 
       RadioInterfaceInfo *radio = rifList->addPlaceholder();
-      memset(radio, 0, sizeof(RadioInterfaceInfo));
+      ZeroInit(radio);
       response->getVariable(0)->getValueAsString(radio->name, 64);
       radio->index = ifIndex;
       radio->ifIndex = ifIndex;
@@ -253,7 +253,7 @@ static void AddWiFiRadioInterface(StructArray<RadioInterfaceInfo> *rifList, SNMP
       MacAddress bssid = response->getVariable(1)->getValueAsMACAddr();
 
       RadioInterfaceInfo *radio = rifList->addPlaceholder();
-      memset(radio, 0, sizeof(RadioInterfaceInfo));
+      ZeroInit(radio);
       response->getVariable(0)->getValueAsString(radio->name, 64);
       radio->index = ifIndex;
       radio->ifIndex = ifIndex;
@@ -322,8 +322,7 @@ static void AddLnRadioClient(SNMP_Transport *snmp, SNMP_Variable *v, ObjectArray
    if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
       return;
 
-   WirelessStationInfo *info = new WirelessStationInfo;
-   memset(info, 0, sizeof(WirelessStationInfo));
+   WirelessStationInfo *info = new WirelessStationInfo();
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
    info->rfIndex = oid.getElement(15);
    info->rssi = v->getValueAsInt();
@@ -346,8 +345,7 @@ static void AddWiFiRadioClient(SNMP_Transport *snmp, SNMP_Variable *v, ObjectArr
 {
    SNMP_ObjectId oid(v->getName());
 
-   WirelessStationInfo *info = new WirelessStationInfo;
-   memset(info, 0, sizeof(WirelessStationInfo));
+   WirelessStationInfo *info = new WirelessStationInfo();
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
    info->rfIndex = oid.getElement(15);
    info->rssi = v->getValueAsInt();

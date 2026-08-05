@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Driver for H3C (now HPE A-series) switches
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -336,8 +336,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
    {
       if (response->getNumVariables() == 3)
       {
-         auto ws = new WirelessStationInfo;
-         memset(ws, 0, sizeof(WirelessStationInfo));
+         auto ws = new WirelessStationInfo();
          response->getVariable(0)->getRawValue(ws->bssid, MAC_ADDR_LENGTH);
          for(int i = 0; i < MAC_ADDR_LENGTH; i++)
             ws->macAddr[i] = oid.getElement(i + 15);

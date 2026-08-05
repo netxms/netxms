@@ -2650,8 +2650,7 @@ shared_ptr<RoutingTable> AgentConnection::getRoutingTable(size_t limit)
       TCHAR *line = MemCopyString(data->get(i));
       TCHAR *pBuf = line;
 
-      ROUTE route;
-      memset(&route, 0, sizeof(route));
+      ROUTE route = {};
 
       // Destination address and mask
       TCHAR *pChar = _tcschr(pBuf, _T(' '));

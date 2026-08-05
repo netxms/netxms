@@ -447,8 +447,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *t
 
    if (ret == SNMP_ERR_SUCCESS)
    {
-      WirelessStationInfo *info = new WirelessStationInfo;
-      memset(info, 0, sizeof(WirelessStationInfo));
+      WirelessStationInfo *info = new WirelessStationInfo();
 
       var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
       info->ipAddr = ipAddr;
