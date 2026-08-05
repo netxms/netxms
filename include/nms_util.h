@@ -135,11 +135,22 @@ void LIBNETXMS_EXPORTABLE bswap_array_32(uint32_t *v, int len);
 /**
  * Initialize given object with all zeroes using memset
  * Fail at compile time if object is not of trivially copyable type
+ * or if an array is passed (which would silently zero only the first element)
  */
-template<typename T> static inline void ZeroInit(T& obj) noexcept
+template<typename T> static inline void ZeroInit(T *const& obj) noexcept
 {
    static_assert(std::is_trivially_copyable<T>::value, "ZeroInit() requires a trivially copyable type");
-   memset(static_cast<void*>(&obj), 0, sizeof(T));
+   memset(static_cast<void*>(obj), 0, sizeof(T));
+}
+
+/**
+ * Initialize given object array with all zeroes using memset
+ * Fail at compile time if object is not of trivially copyable type
+ */
+template<typename T> static inline void ZeroInit(T *obj, size_t count) noexcept
+{
+   static_assert(std::is_trivially_copyable<T>::value, "ZeroInit() requires a trivially copyable type");
+   memset(static_cast<void*>(obj), 0, sizeof(T) * count);
 }
 
 /**

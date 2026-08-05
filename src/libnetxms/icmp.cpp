@@ -1,6 +1,6 @@
 /* 
 ** libnetxms - Common NetXMS utility library
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -667,8 +667,7 @@ retry:
  */
 uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, uint32_t *rtt, uint32_t packetSize, bool dontFragment)
 {
-   PingRequest request;
-   ZeroInit(request);
+   PingRequest request = {};
    request.address = addr;
    request.packetSize = packetSize;
    request.dontFragment = dontFragment;
