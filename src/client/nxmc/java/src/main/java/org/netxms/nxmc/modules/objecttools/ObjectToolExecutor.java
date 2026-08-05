@@ -35,7 +35,6 @@ import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
 import org.netxms.client.constants.InputFieldType;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -53,7 +52,6 @@ import org.netxms.nxmc.modules.objecttools.views.MultiNodeCommandExecutor;
 import org.netxms.nxmc.modules.objecttools.views.ServerCommandResults;
 import org.netxms.nxmc.modules.objecttools.views.ServerScriptResults;
 import org.netxms.nxmc.modules.objecttools.views.TableToolResults;
-import org.netxms.nxmc.services.ObjectToolHandler;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.SandboxHelper;
@@ -69,32 +67,6 @@ public final class ObjectToolExecutor
     */
    private ObjectToolExecutor()
    {
-   }
-
-   /**
-    * Check if tool is allowed for execution on at least one object from set
-    *
-    * @param tool
-    * @param objects
-    * @return
-    */
-   public static boolean isToolAllowed(ObjectTool tool, Set<ObjectContext> objects)
-   {
-      if (tool.getToolType() != ObjectTool.TYPE_INTERNAL)
-         return true;
-
-      ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
-      if (handler != null)
-      {
-         for(ObjectContext n : objects)
-            if (n.isNode() && handler.canExecuteOnNode((AbstractNode)n.object, tool))
-               return true;
-         return false;
-      }
-      else
-      {
-         return false;
-      }
    }
 
    /**
@@ -129,20 +101,12 @@ public final class ObjectToolExecutor
          return;
       }
 
-      // Filter allowed and applicable nodes for execution
+      // Filter applicable nodes for execution
       I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
       final Set<ObjectContext> objects = new HashSet<ObjectContext>();
-      ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
-      if ((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || handler != null)
-      {
-         for(ObjectContext n : nodes)
-            if (((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || (n.isNode() && handler.canExecuteOnNode((AbstractNode)n.object, tool))) && tool.isApplicableForObject(n.object))
-               objects.add(n);
-      }
-      else
-      {
-         return;
-      }
+      for(ObjectContext n : nodes)
+         if (tool.isApplicableForObject(n.object))
+            objects.add(n);
 
       final List<String> maskedFields = new ArrayList<String>();
       final InputField[] fields = tool.getInputFields();
@@ -424,9 +388,6 @@ public final class ObjectToolExecutor
             break;
          case ObjectTool.TYPE_FILE_DOWNLOAD:
             executeFileDownload(node, tool, inputValues, viewPlacement);
-            break;
-         case ObjectTool.TYPE_INTERNAL:
-            executeInternalTool(node, tool, inputValues, viewPlacement);
             break;
          case ObjectTool.TYPE_LOCAL_COMMAND:
             executeLocalCommand(node, tool, inputValues, expandedToolData, viewPlacement);
@@ -770,24 +731,6 @@ public final class ObjectToolExecutor
          }
       };
       job.start();
-   }
-
-   /**
-    * @param node
-    * @param tool
-    */
-   private static void executeInternalTool(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, ViewPlacement viewPlacement)
-   {
-      I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
-      ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
-      if (handler != null)
-      {
-         handler.execute((AbstractNode)node.object, tool, inputValues, viewPlacement);
-      }
-      else
-      {
-         MessageDialogHelper.openError(Registry.getMainWindowShell(), i18n.tr("Error"), i18n.tr("Cannot execute object tool: handler not defined"));
-      }
    }
 
    /**

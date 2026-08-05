@@ -24,9 +24,11 @@
 #define _nxtools_h
 
 /**
- * Tool types
+ * Tool types.
+ * Value 0 is reserved: it was used by the "internal" tool type, whose only implementation
+ * was Wake-on-LAN. That tool is now a server script tool calling Node::wakeUp(). Value 0
+ * must not be reused - it may still be present in databases not yet upgraded.
  */
-#define TOOL_TYPE_INTERNAL          0
 #define TOOL_TYPE_ACTION            1
 #define TOOL_TYPE_SNMP_TABLE        2
 #define TOOL_TYPE_AGENT_LIST        3

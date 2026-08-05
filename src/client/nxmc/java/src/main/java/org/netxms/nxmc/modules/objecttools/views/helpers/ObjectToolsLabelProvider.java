@@ -82,16 +82,17 @@ public class ObjectToolsLabelProvider extends DecoratingLabelProvider implements
    }
 
    /**
-    * Get names of all tool types.
-    * 
-    * @return
+    * Get display names of tool types, indexed by tool type. Element 0 is null - type 0 is reserved
+    * (it was used by the removed "internal" tool type) and cannot be assigned to a tool.
+    *
+    * @return tool type display names indexed by tool type
     */
    public static String[] getToolTypeNames()
    {
       I18n i18n = LocalizationHelper.getI18n(ObjectToolsLabelProvider.class);
       return new String[]
       {
-         i18n.tr("Internal"),
+         null,
          i18n.tr("Agent Command"),
          i18n.tr("SNMP Table"),
          i18n.tr("Agent List"),
@@ -118,7 +119,6 @@ public class ObjectToolsLabelProvider extends DecoratingLabelProvider implements
    	 */
       public BaseLabelProvider()
    	{
-   		toolTypeImages[0] = ResourceManager.getImageDescriptor("icons/object-tools/internal_tool.gif").createImage();
          toolTypeImages[1] = ResourceManager.getImageDescriptor("icons/object-tools/terminal.png").createImage();
          toolTypeImages[2] = SharedIcons.PROPERTIES.createImage();
          toolTypeImages[3] = SharedIcons.PROPERTIES.createImage();
@@ -177,14 +177,9 @@ public class ObjectToolsLabelProvider extends DecoratingLabelProvider implements
             case ObjectToolsEditor.COLUMN_NAME:
                return tool.getName();
             case ObjectToolsEditor.COLUMN_TYPE:
-               try
-               {
-                  return toolTypeNames[tool.getToolType()];
-               }
-               catch(ArrayIndexOutOfBoundsException e)
-               {
-                  return "<unknown>";
-               }
+               int type = tool.getToolType();
+               String typeName = ((type >= 0) && (type < toolTypeNames.length)) ? toolTypeNames[type] : null;
+               return (typeName != null) ? typeName : "<unknown>";
             case ObjectToolsEditor.COLUMN_DESCRIPTION:
                return tool.getDescription();
          }
@@ -198,7 +193,10 @@ public class ObjectToolsLabelProvider extends DecoratingLabelProvider implements
       public void dispose()
       {
          for(Image i : toolTypeImages)
-            i.dispose();
+         {
+            if (i != null)
+               i.dispose();
+         }
          super.dispose();
       }
    }

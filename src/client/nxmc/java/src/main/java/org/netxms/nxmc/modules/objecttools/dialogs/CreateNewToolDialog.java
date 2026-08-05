@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objecttools.dialogs;
 
+import java.util.Arrays;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -41,7 +42,8 @@ public class CreateNewToolDialog extends Dialog
    
 	private int type;
 	private String name;
-	
+	private int[] selectableTypes;
+
 	private LabeledText textName;
 	private Combo comboType;
 	
@@ -88,8 +90,17 @@ public class CreateNewToolDialog extends Dialog
 		textName.setLayoutData(gd);
 
 		comboType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Tool type"), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      for(String s : ObjectToolsLabelProvider.getToolTypeNames())
-			comboType.add(s);
+      String[] typeNames = ObjectToolsLabelProvider.getToolTypeNames();
+      selectableTypes = new int[typeNames.length];
+      int selectableTypeCount = 0;
+      for(int i = 0; i < typeNames.length; i++)
+      {
+         if (typeNames[i] == null)
+            continue;   // reserved tool type that cannot be assigned
+         comboType.add(typeNames[i]);
+         selectableTypes[selectableTypeCount++] = i;
+      }
+      selectableTypes = Arrays.copyOf(selectableTypes, selectableTypeCount);
 		comboType.select(0);
 
 		return dialogArea;
@@ -102,7 +113,7 @@ public class CreateNewToolDialog extends Dialog
 	protected void okPressed()
 	{
 		name = textName.getText();
-		type = comboType.getSelectionIndex();
+		type = selectableTypes[comboType.getSelectionIndex()];
 		super.okPressed();
 	}
 

@@ -8963,7 +8963,7 @@ paths:
         Execute a server-capable object tool on the specified object.
         Supported tool types: action (agent action), server-command, server-script,
         snmp-table, agent-table, agent-list, ssh-command, url.
-        Client-only tool types (internal, command, file-download) are rejected with 400.
+        Client-only tool types (command, file-download) are rejected with 400.
       tags:
         - Object Tools
       parameters:
@@ -9041,7 +9041,7 @@ paths:
             Invalid request. Possible reasons:
             - Invalid or missing tool-id
             - Missing or invalid objectId
-            - Tool type is client-only (internal, command, file-download)
+            - Tool type is client-only (command, file-download)
             - Tool is disabled
             - Incompatible object class for the tool type
             - SSH command target has no owning node (standalone access point, sensor without gateway)
@@ -12617,7 +12617,6 @@ components:
     ObjectToolType:
       type: string
       enum:
-        - internal
         - action
         - snmp-table
         - agent-list

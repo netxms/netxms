@@ -231,7 +231,7 @@ public final class ObjectMenuFactory
       for(int i = 0; i < tools.length; i++)
       {
          boolean enabled = (tools[i].getFlags() & ObjectTool.DISABLED) == 0;
-         if (enabled && ObjectToolExecutor.isToolAllowed(tools[i], objects) && ObjectToolExecutor.isToolApplicable(tools[i], objects))
+         if (enabled && ObjectToolExecutor.isToolApplicable(tools[i], objects))
          {
             String[] path = tools[i].getName().split("\\-\\>");
 

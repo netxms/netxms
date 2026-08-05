@@ -1265,10 +1265,11 @@ int H_ObjectToolExecute(Context *context)
       return 400;
    }
 
-   // Reject client-only tool types
+   // Reject client-only tool types. Note that a tool of the removed "internal" type (0) can still
+   // exist in a database not yet upgraded - it falls through to the execution dispatch below and is
+   // rejected there as unsupported.
    switch(toolType)
    {
-      case TOOL_TYPE_INTERNAL:
       case TOOL_TYPE_COMMAND:
       case TOOL_TYPE_FILE_DOWNLOAD:
          MemFree(toolData);

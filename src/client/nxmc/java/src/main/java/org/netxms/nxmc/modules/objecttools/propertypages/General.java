@@ -136,9 +136,6 @@ public class General extends PropertyPage
 
 		switch(objectTool.getToolType())
 		{
-			case ObjectTool.TYPE_INTERNAL:
-				textData.setLabel(i18n.tr("Operation"));
-				break;
 			case ObjectTool.TYPE_LOCAL_COMMAND:
 				textData.setLabel(i18n.tr("Command"));
             createTCPTunnelGroup(dialogArea);

@@ -121,9 +121,7 @@ public class Commands extends OverviewPageElement
 
             final Set<ObjectContext> nodes = new HashSet<ObjectContext>(1);
             nodes.add(new ObjectContext((AbstractNode)getObject(), null, getObject().getObjectId()));
-            if (!ObjectToolExecutor.isToolAllowed(tool, nodes))
-               continue;
-		      
+
 		      final Action action = new Action(tool.getCommandDisplayName()) {
                @Override
                public void run()

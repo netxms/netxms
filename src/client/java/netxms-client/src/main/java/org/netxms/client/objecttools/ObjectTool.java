@@ -44,7 +44,9 @@ import org.slf4j.LoggerFactory;
  */
 public class ObjectTool implements ObjectAction
 {
-	public static final int TYPE_INTERNAL       = 0;
+	// Tool type 0 is reserved: it was used by the "internal" tool type, whose only implementation
+	// was Wake-on-LAN. That tool is now a server script tool calling Node::wakeUp(). Value 0 must
+	// not be reused - it may still be present in databases not yet upgraded.
 	public static final int TYPE_ACTION         = 1;
 	public static final int TYPE_SNMP_TABLE     = 2;
 	public static final int TYPE_AGENT_LIST     = 3;

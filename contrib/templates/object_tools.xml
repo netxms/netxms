@@ -11,6 +11,11 @@
 	<rules>
 	</rules>
 	<scripts>
+		<script id="30">
+			<guid>2f0e5c1b-7a44-4f38-9c2e-6b1d0a7e4c93</guid>
+			<name>Tools::WakeUpNode</name>
+			<code>return $node.wakeUp();&#x0D;&#x0A;</code>
+		</script>
 	</scripts>
 	<objectTools>
 		<objectTool id="1">
@@ -42,8 +47,8 @@
 		<objectTool id="3">
 			<name>&amp;Wakeup node</name>
 			<guid>74cc4d38-9239-7b4f-9905-7f7adc4d489a</guid>
-			<type>0</type>
-			<data>wakeup</data>
+			<type>8</type>
+			<data>Tools::WakeUpNode</data>
 			<description>Wakeup node using Wake-On-LAN magic packet</description>
 			<flags>8</flags>
 			<filter></filter>

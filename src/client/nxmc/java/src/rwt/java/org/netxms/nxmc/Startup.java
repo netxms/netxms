@@ -293,7 +293,6 @@ public class Startup implements EntryPoint, StartupParameters
 
       NXCSession session = Registry.getSession();
       MibCache.init(session, display);
-      ObjectToolsCache.init();
       ObjectToolsCache.attachSession(display, session);
       SummaryTablesCache.attachSession(display, session);
       GraphTemplateCache.attachSession(display, session);

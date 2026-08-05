@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.UUID;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -37,7 +36,6 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
-import org.netxms.nxmc.services.ObjectToolHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,35 +45,12 @@ import org.slf4j.LoggerFactory;
 public class ObjectToolsCache
 {
    private static Logger logger = LoggerFactory.getLogger(ObjectToolsCache.class);
-   private static Map<String, ObjectToolHandler> handlers = new HashMap<String, ObjectToolHandler>();
-   
+
    private Map<Long, ObjectTool> objectTools = new HashMap<Long, ObjectTool>();
    private Map<Long, ImageDescriptor> icons = new HashMap<Long, ImageDescriptor>();
    private Map<UUID, Image> iconImages = new HashMap<UUID, Image>();
    private Display display = null;
 	private NXCSession session = null;
-
-	/**
-	 * Initialize object tools cache. Should be called when connection with
-	 * the server already established.
-	 */
-	public static void init()
-	{
-		registerHandlers();
-	}
-
-	/**
-	 * Register object tool handlers
-	 */
-	private static void registerHandlers()
-	{
-      ServiceLoader<ObjectToolHandler> loader = ServiceLoader.load(ObjectToolHandler.class, ObjectToolsCache.class.getClassLoader());
-      for(ObjectToolHandler h : loader)
-      {
-         handlers.put(h.getId(), h);
-         logger.debug("Registered object tool handler for ID=\"" + h.getId() + "\"");
-      }
-	}
 
 	/**
 	 * @param session
@@ -326,14 +301,4 @@ public class ObjectToolsCache
       }
 	}
 	
-	/**
-	 * Find handler for "internal" tool
-	 * 
-	 * @param toolId
-	 * @return
-	 */
-	public static ObjectToolHandler findHandler(String toolId)
-	{
-		return handlers.get(toolId);
-	}
 }

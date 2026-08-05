@@ -24,6 +24,34 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.19 to 70.20
+ */
+static bool H_UpgradeFromV19()
+{
+   // "Internal" object tool type is removed. Its only implementation was Wake-on-LAN, which is now
+   // available as NXSL method Node::wakeUp() - convert out of the box tool to server script tool.
+   CHK_EXEC(CreateLibraryScript(30, L"2f0e5c1b-7a44-4f38-9c2e-6b1d0a7e4c93", L"Tools::WakeUpNode", L"return $node.wakeUp();\r\n"));
+   CHK_EXEC(SQLQuery(L"UPDATE object_tools SET tool_type=8,tool_data='Tools::WakeUpNode' WHERE guid='74cc4d38-9239-7b4f-9905-7f7adc4d489a' AND tool_type=0"));
+
+   // Any remaining tool of removed type cannot be executed - report it so administrator can convert or delete it
+   DB_RESULT hResult = SQLSelect(L"SELECT tool_id,tool_name FROM object_tools WHERE tool_type=0");
+   if (hResult == nullptr)
+      return false;
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      wchar_t name[MAX_DB_STRING];
+      DBGetField(hResult, i, 1, name, MAX_DB_STRING);
+      WriteToTerminalEx(L"WARNING: object tool [%u] \"%s\" uses removed \"internal\" type and will not be executable\n",
+            DBGetFieldULong(hResult, i, 0), name);
+   }
+   DBFreeResult(hResult);
+
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 70.18 to 70.19
  */
 static bool H_UpgradeFromV18()
@@ -701,6 +729,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 19, 70, 20, H_UpgradeFromV19 },
    { 18, 70, 19, H_UpgradeFromV18 },
    { 17, 70, 18, H_UpgradeFromV17 },
    { 16, 70, 17, H_UpgradeFromV16 },

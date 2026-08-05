@@ -196,8 +196,7 @@ public class Startup
          DataCollectionDisplayInfo.init();
          MaintenanceTimePeriods.init(session);
          MibCache.init(session, display);
-         ObjectToolsCache.init();
-         ObjectToolsCache.attachSession(display, session);
+            ObjectToolsCache.attachSession(display, session);
          SummaryTablesCache.attachSession(display, session);
          GraphTemplateCache.attachSession(display, session);
          LogDescriptorRegistry.attachSession(display, session);

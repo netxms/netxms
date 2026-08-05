@@ -28,6 +28,15 @@
 #include <nms_localization.h>
 
 /**
+ * Check if given object tool type is valid. Type 0 (former "internal" type) is reserved
+ * and no longer accepted - such tools can only come from a legacy export or an old client.
+ */
+static inline bool IsValidObjectToolType(int type)
+{
+   return (type >= TOOL_TYPE_ACTION) && (type <= TOOL_TYPE_SSH_COMMAND);
+}
+
+/**
  * Translate object class to applicable tool mask bit.
  * Returns 0 if class does not support object tools.
  */
@@ -1524,6 +1533,9 @@ uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg)
    TCHAR buffer[MAX_DB_STRING];
 
    int toolType = msg.getFieldAsUInt16(VID_TOOL_TYPE);
+   if (!IsValidObjectToolType(toolType))
+      return RCC_INVALID_ARGUMENT;
+
    uint32_t toolId = msg.getFieldAsUInt32(VID_TOOL_ID);
    uint32_t applicableClasses = msg.getFieldAsUInt32(VID_TOOL_APPLICABLE_CLASSES);
 
@@ -1791,6 +1803,13 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
       return ImportFailure(hdb, nullptr, context);
 
    int toolType = config->getSubEntryValueAsInt(_T("type"));
+   if (!IsValidObjectToolType(toolType))
+   {
+      DBRollback(hdb);
+      DBConnectionPoolReleaseConnection(hdb);
+      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Object tool %s has unsupported type %d"), guid, toolType);
+      return false;
+   }
 
    // Applicable object classes: pre-6.2 exports have no applicableClasses entry.
    // URL tools default to any class; everything else to Node.
@@ -1998,6 +2017,13 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
       return ImportFailure(hdb, nullptr, context);
 
    int toolType = json_object_get_int32(config, "type", 0);
+   if (!IsValidObjectToolType(toolType))
+   {
+      DBRollback(hdb);
+      DBConnectionPoolReleaseConnection(hdb);
+      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Object tool %s has unsupported type %d"), (const TCHAR *)guid, toolType);
+      return false;
+   }
 
    // Applicable object classes: pre-6.2 exports have no applicableClasses entry.
    // URL tools default to any class; everything else to Node.
@@ -2590,8 +2616,6 @@ static const char *ToolTypeToString(int type)
          return "command";
       case TOOL_TYPE_FILE_DOWNLOAD:
          return "file-download";
-      case TOOL_TYPE_INTERNAL:
-         return "internal";
       case TOOL_TYPE_SERVER_COMMAND:
          return "server-command";
       case TOOL_TYPE_SERVER_SCRIPT:
@@ -2622,8 +2646,6 @@ static const int ToolTypeFromString(const char *type)
       return TOOL_TYPE_COMMAND;
    if (!strcmp(type, "file-download"))
       return TOOL_TYPE_FILE_DOWNLOAD;
-   if (!strcmp(type, "internal"))
-      return TOOL_TYPE_INTERNAL;
    if (!strcmp(type, "server-command"))
       return TOOL_TYPE_SERVER_COMMAND;
    if (!strcmp(type, "server-script"))
