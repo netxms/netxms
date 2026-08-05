@@ -299,13 +299,16 @@ IEnumWbemClassObject *DoWMIQuery(WCHAR *ns, WCHAR *query, WMI_QUERY_CONTEXT *ctx
 	if ((hr != S_OK) && (hr != S_FALSE))
 		return NULL;
 
-	if (CoInitializeSecurity(NULL, -1, NULL, NULL,
-	                         RPC_C_AUTHN_LEVEL_PKT,
-	                         RPC_C_IMP_LEVEL_IMPERSONATE,
-	                         NULL, EOAC_NONE,	0) != S_OK)
+	// CoInitializeSecurity can only succeed once per process; RPC_E_TOO_LATE means
+	// security is already set (and still alive, since this thread holds a COM reference)
+	hr = CoInitializeSecurity(NULL, -1, NULL, NULL,
+	                          RPC_C_AUTHN_LEVEL_PKT,
+	                          RPC_C_IMP_LEVEL_IMPERSONATE,
+	                          NULL, EOAC_NONE, 0);
+	if ((hr != S_OK) && (hr != RPC_E_TOO_LATE))
 	{
 		CoUninitialize();
-      AgentWriteDebugLog(6, _T("WMI: call to CoInitializeSecurity failed"));
+      AgentWriteDebugLog(6, _T("WMI: call to CoInitializeSecurity failed (HRESULT 0x%08X)"), hr);
 		return NULL;
 	}
 
