@@ -53,12 +53,12 @@ protected:
 public:
    SingleValueMIBSubTree(const SNMP_ObjectId& baseOID, std::function<SNMP_Variable *(const SNMP_ObjectId&)> handler) : MIBSubTree(baseOID), m_handler(handler), m_elementOID(baseOID, 0) {}
 
-   virtual SNMP_Variable *get(const SNMP_ObjectId& oid)
+   virtual SNMP_Variable *get(const SNMP_ObjectId& oid) override
    {
       return (oid.compare(m_elementOID) == OID_EQUAL) ? m_handler(m_elementOID) : nullptr;
    }
 
-   virtual SNMP_Variable *getNext(const SNMP_ObjectId& oid)
+   virtual SNMP_Variable *getNext(const SNMP_ObjectId& oid) override
    {
       int result = oid.compare(m_baseOID);
       return ((result == OID_PRECEDING) || (result == OID_SHORTER) || (result == OID_EQUAL)) ? get(m_elementOID) : nullptr;

@@ -312,8 +312,7 @@ static void AddWirelessStation(SNMP_Variable *var, SNMP_Transport *snmp, ObjectA
    const SNMP_ObjectId& name = var->getName();
    uint32_t apIndex = name.getElement(name.length() - 1);
 
-   WirelessStationInfo *info = new WirelessStationInfo;
-   memset(info, 0, sizeof(WirelessStationInfo));
+   WirelessStationInfo *info = new WirelessStationInfo();
    info->ipAddr = InetAddress();
    info->vlan = 1;
    info->rfIndex = apIndex;

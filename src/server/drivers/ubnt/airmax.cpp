@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for Ubiquiti Networks devices
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -88,7 +88,7 @@ static uint32_t HandlerRadioInterfaceList(SNMP_Variable *var, SNMP_Transport *sn
    const SNMP_ObjectId &name = var->getName();
 
    RadioInterfaceInfo *radio = radios->addPlaceholder();
-   memset(radio, 0, sizeof(RadioInterfaceInfo));
+   ZeroInit(radio);
    radio->index = name.getElement(name.length() - 1);
    radio->ifIndex = var->getValueAsUInt();
 
@@ -210,8 +210,7 @@ static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *s
    for (int i = 0; i < MAC_ADDR_LENGTH; i++)
       mac[i] = oid.getElement(i + 13);
 
-   WirelessStationInfo *info = new WirelessStationInfo;
-   memset(info, 0, sizeof(WirelessStationInfo));
+   WirelessStationInfo *info = new WirelessStationInfo();
    memcpy(info->macAddr, mac, MAC_ADDR_LENGTH);
    info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
    info->vlan = 1;
