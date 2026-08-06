@@ -369,15 +369,6 @@ static void WindwsEventParserCallback(const LogParserCallbackData& data)
          for (const auto *p : *data.namedVariables)
             builder.param(p->key, p->value);
       }
-      else if (data.variables != nullptr)
-      {
-         TCHAR name[32];
-         for (int j = 0; j < data.variables->size(); j++)
-         {
-            _sntprintf(name, 32, _T("wevtVariable%d"), j + 1);
-            builder.param(name, data.variables->get(j));
-         }
-      }
 
       builder.post();
    }
