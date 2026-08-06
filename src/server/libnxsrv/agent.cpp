@@ -524,6 +524,7 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_tLastCommandTime = 0;
    m_requestId = 0;
 	m_connectionTimeout = 5000;	// 5 seconds
+   m_connectionRetries = 0;   // Single connect attempt by default
    m_commandTimeout = 5000;   // Default timeout 5 seconds
    m_recvTimeout = 420000; // 7 minutes
    m_isConnected = false;
@@ -597,19 +598,26 @@ shared_ptr<AbstractCommChannel> AgentConnection::createChannel()
    if (s_shutdownMode)
       return shared_ptr<AbstractCommChannel>();
 
-   SOCKET s = m_useProxy ?
-            ConnectToHost(m_proxyAddr, m_proxyPort, m_connectionTimeout) :
-            ConnectToHost(m_addr, m_port, m_connectionTimeout);
+   const InetAddress& addr = m_useProxy ? m_proxyAddr : m_addr;
+   uint16_t port = m_useProxy ? m_proxyPort : m_port;
 
-   // Connect to server
-   if (s == INVALID_SOCKET)
+   SOCKET s = INVALID_SOCKET;
+   for(uint32_t attempt = 0; attempt <= m_connectionRetries; attempt++)
    {
+      s = ConnectToHost(addr, port, m_connectionTimeout);
+      if (s != INVALID_SOCKET)
+         break;
+
       TCHAR buffer[64];
-      debugPrintf(5, _T("Cannot establish connection with agent at %s:%d"),
-               m_useProxy ? m_proxyAddr.toString(buffer) : m_addr.toString(buffer),
-               (int)(m_useProxy ? m_proxyPort : m_port));
-      return shared_ptr<AbstractCommChannel>();
+      debugPrintf(5, _T("Cannot establish connection with agent at %s:%u (attempt %u of %u)"),
+               addr.toString(buffer), port, attempt + 1, m_connectionRetries + 1);
+
+      if (s_shutdownMode)
+         return shared_ptr<AbstractCommChannel>();
    }
+
+   if (s == INVALID_SOCKET)
+      return shared_ptr<AbstractCommChannel>();
 
    // Select socket poller
    BackgroundSocketPollerHandle *sp = nullptr;

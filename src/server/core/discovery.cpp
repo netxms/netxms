@@ -182,6 +182,7 @@ static bool HostIsReachable(DiscoveredAddress *address, bool fullCheck)
 
       agentConnection->setCommandTimeout(g_agentCommandTimeout);
       agentConnection->setConnectionTimeout(g_agentConnectionTimeout);
+      agentConnection->setConnectionRetries(g_agentConnectionRetries);
       uint32_t rcc;
       uint16_t agentPort = AGENT_LISTEN_PORT;
       if (!agentConnection->connect(g_serverKey, &rcc))
@@ -1947,6 +1948,7 @@ static bool VerifyAgentProtocol(const InetAddress& addr, uint16_t port, const sh
    }
    conn->setCommandTimeout(g_agentCommandTimeout);
    conn->setConnectionTimeout(g_agentConnectionTimeout);
+   conn->setConnectionRetries(g_agentConnectionRetries);
 
    uint32_t rcc;
    bool connected = conn->connect(g_serverKey, &rcc);

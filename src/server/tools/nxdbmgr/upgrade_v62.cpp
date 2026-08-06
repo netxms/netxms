@@ -25,11 +25,24 @@
 #include <nxtools.h>
 
 /**
- * Upgrade from 62.36 to 70.0
+ * Upgrade from 62.37 to 70.0
+ */
+static bool H_UpgradeFromV37()
+{
+   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 62.36 to 62.37
  */
 static bool H_UpgradeFromV36()
 {
-   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   CHK_EXEC(CreateConfigParam(L"Agent.ConnectionRetries", L"0",
+      L"Number of additional attempts to establish connection with agent after initial attempt failed. Setting this to non-zero value together with reduced value of Agent.ConnectionTimeout allows faster detection of unreachable agents in networks with occasional packet loss.",
+      nullptr, 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(37));
    return true;
 }
 
@@ -1254,7 +1267,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 36, 70,  0, H_UpgradeFromV36 },
+   { 37, 70,  0, H_UpgradeFromV37 },
+   { 36, 62, 37, H_UpgradeFromV36 },
    { 35, 62, 36, H_UpgradeFromV35 },
    { 34, 62, 35, H_UpgradeFromV34 },
    { 33, 62, 34, H_UpgradeFromV33 },

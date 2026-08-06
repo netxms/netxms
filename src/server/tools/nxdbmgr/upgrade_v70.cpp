@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.20 to 70.21
+ */
+static bool H_UpgradeFromV20()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 37)
+   {
+      CHK_EXEC(CreateConfigParam(L"Agent.ConnectionRetries", L"0",
+         L"Number of additional attempts to establish connection with agent after initial attempt failed. Setting this to non-zero value together with reduced value of Agent.ConnectionTimeout allows faster detection of unreachable agents in networks with occasional packet loss.",
+         nullptr, 'I', true, false, false, false));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 37));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(21));
+   return true;
+}
+
+/**
  * Upgrade from 70.19 to 70.20
  */
 static bool H_UpgradeFromV19()
@@ -729,6 +746,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 20, 70, 21, H_UpgradeFromV20 },
    { 19, 70, 20, H_UpgradeFromV19 },
    { 18, 70, 19, H_UpgradeFromV18 },
    { 17, 70, 18, H_UpgradeFromV17 },
