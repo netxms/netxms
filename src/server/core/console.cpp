@@ -1176,13 +1176,13 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
                if (IsCommand(_T("ZONE"), szBuffer, 1))
                {
                   pArg = ExtractWord(pArg, szBuffer);
-                  proxyId = _tcstoul(szBuffer, nullptr, 0);
+                  zoneUIN = _tcstoul(szBuffer, nullptr, 0);
                   ExtractWord(pArg, szBuffer); // Extract next word if it is discovery
                }
                else if (IsCommand(_T("PROXY"), szBuffer, 1))
                {
                   pArg = ExtractWord(pArg, szBuffer);
-                  zoneUIN = _tcstol(szBuffer, nullptr, 0);
+                  proxyId = _tcstol(szBuffer, nullptr, 0);
                   ExtractWord(pArg, szBuffer);  // Extract next word if it is discovery
                }
                else if (IsCommand(_T("DISCOVERY"), szBuffer, 1))
