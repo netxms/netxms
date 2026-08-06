@@ -429,10 +429,22 @@ int64_t ConfigEntry::getSubEntryValueAsInt64(const TCHAR *name, int index, int64
    return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
 }
 
+/**
+ * Get sub-entry value as unsigned 64 bit integer
+ */
 uint64_t ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, uint64_t defaultValue) const
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
+}
+
+/**
+ * Get sub-entry value as double
+ */
+double ConfigEntry::getSubEntryValueAsDouble(const TCHAR *name, int index, double defaultValue) const
+{
+   const TCHAR *value = getSubEntryValue(name, index);
+   return (value != nullptr) ? _tcstod(value, nullptr) : defaultValue;
 }
 
 /**
