@@ -291,7 +291,7 @@ static NXCORE_LOG s_logs[] =
 	},
    { L"WindowsEventLog", L"win_event_log", L"id", L"node_id", SYSTEM_ACCESS_VIEW_SYSLOG,
       "Windows Event Log entries collected from monitored Windows hosts. Contains log name (System, Application, Security, etc.), "
-      "event source (application/service name), severity (1=Error, 2=Warning, 4=Info, 8=AuditSuccess, 16=AuditFailure), "
+      "event source (application/service name), severity (1=Error, 2=Warning, 4=Info, 8=AuditSuccess, 16=AuditFailure, 256=Critical), "
       "event code, message text, and raw event data. Useful for Windows system troubleshooting and security monitoring.",
       {
          { L"id", L"ID", LC_INTEGER, LCF_RECORD_ID },

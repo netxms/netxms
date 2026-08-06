@@ -152,7 +152,7 @@ static uint32_t ParseSeverityFilter(const wchar_t* severityFilter)
       {
          const TCHAR *p = parts.get(i);
          if (!_tcsicmp(p, _T("critical")))
-            severityMask |= 0x100;
+            severityMask |= EVENT_SEVERITY_CRITICAL;
          else if (!_tcsicmp(p, _T("error")))
             severityMask |= EVENTLOG_ERROR_TYPE;
          else if (!_tcsicmp(p, _T("warning")))
@@ -197,8 +197,8 @@ EventLogReader::EventLogReader(const TCHAR *name, Config *config, bool processOf
 
    path.append(L"SeverityFilter");
    const TCHAR *severityFilter = config->getValue(path);
-   m_severityFilter = (severityFilter != nullptr) ? ParseSeverityFilter(severityFilter) : 0xFF;
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("Using default severity filter 0x%02X for reader \"%s\""), m_severityFilter, m_name);
+   m_severityFilter = (severityFilter != nullptr) ? ParseSeverityFilter(severityFilter) : EVENT_SEVERITY_ALL;
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Using default severity filter 0x%03X for reader \"%s\""), m_severityFilter, m_name);
 
    path.shrink(14);
    path.append(L"Filter");
@@ -251,11 +251,11 @@ EventLogReader::EventLogReader(const TCHAR *name, Config *config, bool processOf
          }
          else
          {
-            filter.severity = 0xFF;
+            filter.severity = EVENT_SEVERITY_ALL;
          }
 
          m_filters.add(filter);
-         nxlog_debug_tag(DEBUG_TAG, 3, L"Added filter \"%s:%s:%u-%u:0x%02X\" for reader \"%s\"", filter.accept ? L"accept" : L"reject",
+         nxlog_debug_tag(DEBUG_TAG, 3, L"Added filter \"%s:%s:%u-%u:0x%03X\" for reader \"%s\"", filter.accept ? L"accept" : L"reject",
             (filter.source != nullptr) ? filter.source : L"*", filter.eventId.start, filter.eventId.end, filter.severity, m_name);
       }
    }
@@ -574,7 +574,7 @@ DWORD WINAPI EventLogReader::subscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION actio
       switch (values[2].ByteVal)
       {
          case WINEVENT_LEVEL_CRITICAL:
-            level = 0x0100;
+            level = EVENT_SEVERITY_CRITICAL;
             break;
          case WINEVENT_LEVEL_ERROR:
             level = EVENTLOG_ERROR_TYPE;

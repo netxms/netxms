@@ -44,6 +44,13 @@
 #define DEBUG_TAG _T("wineventsync")
 
 /**
+ * Severity mask bits. Bits 0 - 7 are the standard EVENTLOG_* event types, critical events
+ * have no EVENTLOG_* counterpart and are represented by an additional bit.
+ */
+#define EVENT_SEVERITY_CRITICAL  0x0100
+#define EVENT_SEVERITY_ALL       0x01FF
+
+/**
  * Event range
  */
 struct Range
