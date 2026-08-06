@@ -79,7 +79,7 @@ compile_commands.json
 /config.log
 /config.status
 /configure
-/contrib/mibs/netxms.mib
+/contrib/mibs/netxms.cmib
 /contrib/startup/debian/netxmsd
 /contrib/startup/debian/nxagentd
 /contrib/startup/hp-ux/netxmsd

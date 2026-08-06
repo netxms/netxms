@@ -585,7 +585,7 @@ stop_search:
                      _T("   init [<type>]        : Initialize database. If type is not provided it will be deduced from driver name.\n")
                      _T("   migrate <source>     : Migrate database from given source\n")
                      _T("   reset-monitoring     : Reset all monitoring state (alarms, thresholds, object status, DCI states)\n")
-                     _T("   reset-system-account : Unlock user \"system\" and reset it's password to default\n")
+                     _T("   reset-system-account : Unlock user \"system\" and set new random password\n")
                      _T("   set <name> <value>   : Set value of server configuration variable\n")
                      _T("   set-user-password <login> : Set password for the given user\n")
                      _T("   unlock               : Forced database unlock\n")
