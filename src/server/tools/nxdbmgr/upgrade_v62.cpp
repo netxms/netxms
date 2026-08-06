@@ -25,6 +25,47 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.37 to 62.38
+ */
+static bool H_UpgradeFromV37()
+{
+   // Configuration parameters were created by 61.x upgrade but were missing in initial database setup
+   CHK_EXEC(CreateConfigParam(L"Server.Security.2FA.EnforceForAll", L"0",
+      L"Enforce two-factor authentication for all users",
+      nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"Server.Security.2FA.GraceLoginCount", L"5",
+      L"Number of grace logins allowed for users who have not configured two-factor authentication when enforcement is active",
+      nullptr, 'I', true, false, false, false));
+
+   CHK_EXEC(SQLQuery(L"UPDATE config SET units='minutes' WHERE var_name='Server.Security.IntruderLockoutTime'"));
+
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, L"UPDATE event_cfg SET description=? WHERE event_code=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR,
+         L"Generated when table threshold is deactivated.\r\n"
+         L"Parameters:\r\n"
+         L"   1) dciName - Table DCI name\r\n"
+         L"   2) dciDescription - Table DCI description\r\n"
+         L"   3) dciId - Table DCI ID\r\n"
+         L"   4) row - Table row (-1 if threshold was deactivated because instance is missing)\r\n"
+         L"   5) instance - Instance\r\n"
+         L"   6) instanceMissing - Set to 1 if threshold was deactivated because instance is missing, 0 otherwise", DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, EVENT_TABLE_THRESHOLD_DEACTIVATED);
+      CHK_EXEC(SQLExecute(hStmt));
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(38));
+   return true;
+}
+
+/**
  * Upgrade from 62.36 to 62.37
  */
 static bool H_UpgradeFromV36()
@@ -1258,6 +1299,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 37, 62, 38, H_UpgradeFromV37 },
    { 36, 62, 37, H_UpgradeFromV36 },
    { 35, 62, 36, H_UpgradeFromV35 },
    { 34, 62, 35, H_UpgradeFromV34 },
