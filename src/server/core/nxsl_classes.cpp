@@ -1570,9 +1570,20 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, applyTemplate)
    if (!nxslTemplate->getClass()->instanceOf(g_nxslTemplateClass.getName()))
       return NXSL_ERR_BAD_CLASS;
 
-   static_cast<shared_ptr<Template>*>(nxslTemplate->getData())->get()->applyToTarget(thisObject);
+   Template *templateObject = static_cast<shared_ptr<Template>*>(nxslTemplate->getData())->get();
+   shared_ptr<Template> conflictingTemplate = templateObject->findExclusionGroupConflict(*thisObject);
+   if (conflictingTemplate != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 4, L"DataCollectionTarget::applyTemplate(): template \"%s\" [%u] not applied to %s \"%s\" [%u] - template \"%s\" [%u] from the same exclusion group \"%s\" already applied",
+            templateObject->getName(), templateObject->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId(),
+            conflictingTemplate->getName(), conflictingTemplate->getId(), templateObject->getExclusionGroup().cstr());
+      *result = vm->createValue(false);
+      return 0;
+   }
 
-   *result = vm->createValue();
+   templateObject->applyToTarget(thisObject);
+
+   *result = vm->createValue(true);
    return 0;
 }
 
@@ -5925,9 +5936,20 @@ NXSL_METHOD_DEFINITION(Template, applyTo)
    if (!nxslTarget->getClass()->instanceOf(_T("DataCollectionTarget")))
       return NXSL_ERR_BAD_CLASS;
 
-   thisObject->applyToTarget(*static_cast<shared_ptr<DataCollectionTarget>*>(nxslTarget->getData()));
+   const shared_ptr<DataCollectionTarget>& target = *static_cast<shared_ptr<DataCollectionTarget>*>(nxslTarget->getData());
+   shared_ptr<Template> conflictingTemplate = thisObject->findExclusionGroupConflict(*target);
+   if (conflictingTemplate != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 4, L"Template::applyTo(): template \"%s\" [%u] not applied to %s \"%s\" [%u] - template \"%s\" [%u] from the same exclusion group \"%s\" already applied",
+            thisObject->getName(), thisObject->getId(), target->getObjectClassName(), target->getName(), target->getId(),
+            conflictingTemplate->getName(), conflictingTemplate->getId(), thisObject->getExclusionGroup().cstr());
+      *result = vm->createValue(false);
+      return 0;
+   }
 
-   *result = vm->createValue();
+   thisObject->applyToTarget(target);
+
+   *result = vm->createValue(true);
    return 0;
 }
 

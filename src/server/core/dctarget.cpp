@@ -2583,6 +2583,19 @@ void DataCollectionTarget::applyTemplates()
 
          if (!templateObject->isDirectChild(m_id))
          {
+            // Check exclusion group - existing template wins during auto-apply
+            shared_ptr<Template> conflictingTemplate = templateObject->findExclusionGroupConflict(*this);
+            if (conflictingTemplate != nullptr)
+            {
+               SharedString exclusionGroup = templateObject->getExclusionGroup();
+               sendPollerMsg(_T("   Skipping template \"%s\" - template \"%s\" from the same exclusion group \"%s\" already applied\r\n"),
+                     templateObject->getName(), conflictingTemplate->getName(), exclusionGroup.cstr());
+               nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyTemplates(): skipping template \"%s\" [%u] for object \"%s\" [%u] - template \"%s\" [%u] from exclusion group \"%s\" already applied"),
+                     templateObject->getName(), templateObject->getId(), m_name, m_id, conflictingTemplate->getName(), conflictingTemplate->getId(), exclusionGroup.cstr());
+               delete cachedFilterVM;
+               continue;
+            }
+
             sendPollerMsg(_T("   Applying template \"%s\"\r\n"), templateObject->getName());
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyTemplates(): applying template \"%s\" [%u] to object \"%s\" [%u]"),
                   templateObject->getName(), templateObject->getId(), m_name, m_id);

@@ -2658,21 +2658,7 @@ uint32_t NXCORE_EXPORTABLE ChangeObjectBinding(const shared_ptr<NetObj>& parent,
       {
          // Check exclusion group
          Template &tmpl = static_cast<Template&>(*parent);
-         SharedString exclusionGroup = tmpl.getExclusionGroup();
-         shared_ptr<NetObj> conflictingTemplate;
-         if (!exclusionGroup.isEmpty())
-         {
-            unique_ptr<SharedObjectArray<NetObj>> parents = child->getParents(OBJECT_TEMPLATE);
-            for (int i = 0; i < parents->size(); i++)
-            {
-               Template *t = static_cast<Template*>(parents->get(i));
-               if ((t->getId() != parent->getId()) && t->getExclusionGroup().str().equals(exclusionGroup.str()))
-               {
-                  conflictingTemplate = parents->getShared(i);
-                  break;
-               }
-            }
-         }
+         shared_ptr<Template> conflictingTemplate = tmpl.findExclusionGroupConflict(*child);
 
          if ((conflictingTemplate != nullptr) && !forceApply)
          {
@@ -2692,7 +2678,7 @@ uint32_t NXCORE_EXPORTABLE ChangeObjectBinding(const shared_ptr<NetObj>& parent,
                   conflictingTemplate->getName(), conflictingTemplate->getId());
             NetObj::unlinkObjects(conflictingTemplate.get(), child.get());
             conflictingTemplate->calculateCompoundStatus();
-            static_cast<Template&>(*conflictingTemplate).queueRemoveFromTarget(child->getId(), true);
+            conflictingTemplate->queueRemoveFromTarget(child->getId(), true);
          }
          success = tmpl.applyToTarget(static_pointer_cast<DataCollectionTarget>(child));
          if (success)
