@@ -2470,10 +2470,10 @@ void DataCollectionTarget::removeTemplate(Template *templateObject, NetObj *poll
    unlinkObjects(templateObject, this);
    templateObject->queueRemoveFromTarget(m_id, true);
    EventBuilder(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode)
-      .param(_T("nodeId"), templateObject->getId(), EventBuilder::OBJECT_ID_FORMAT)
-      .param(_T("nodeName"), templateObject->getName())
-      .param(_T("templateId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-      .param(_T("templateName"), m_name)
+      .param(_T("nodeId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+      .param(_T("nodeName"), m_name)
+      .param(_T("templateId"), templateObject->getId(), EventBuilder::OBJECT_ID_FORMAT)
+      .param(_T("templateName"), templateObject->getName())
       .post();
 }
 
