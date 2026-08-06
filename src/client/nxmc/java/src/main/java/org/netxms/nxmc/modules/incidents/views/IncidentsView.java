@@ -66,6 +66,8 @@ public class IncidentsView extends View
    {
       manager.add(incidentList.getActionCreate());
       manager.add(new Separator());
+      manager.add(incidentList.getActionHideClosed());
+      manager.add(new Separator());
       manager.add(actionExportToCsv);
       super.fillLocalMenu(manager);
    }

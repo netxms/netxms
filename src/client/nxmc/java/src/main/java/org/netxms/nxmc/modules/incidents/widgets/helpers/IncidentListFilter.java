@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.incidents.widgets.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.IncidentState;
 import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
@@ -32,9 +33,14 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class IncidentListFilter extends ViewerFilter implements AbstractViewerFilter
 {
+   /** All states (bits 0-4) */
+   public static final int STATE_FILTER_ALL = 0x1F;
+   /** All states except closed */
+   public static final int STATE_FILTER_ACTIVE = STATE_FILTER_ALL & ~(1 << IncidentState.CLOSED.getValue());
+
    private NXCSession session;
    private String filterString = null;
-   private int stateFilter = 0x1F;  // All states by default (bits 0-4)
+   private int stateFilter = STATE_FILTER_ALL;
 
    /**
     * Create filter

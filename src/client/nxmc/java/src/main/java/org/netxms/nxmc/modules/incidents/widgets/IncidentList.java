@@ -45,6 +45,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.IncidentState;
 import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.users.User;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -84,9 +85,11 @@ public class IncidentList extends Composite
    private SessionListener sessionListener;
    private SortableTableViewer viewer;
    private IncidentListFilter filter;
+   private String configPrefix;
    private Map<Long, IncidentSummary> incidents = new HashMap<>();
 
    private Action actionCreate;
+   private Action actionHideClosed;
    private Action actionBlock;
    private Action actionInProgress;
    private Action actionResolve;
@@ -108,6 +111,7 @@ public class IncidentList extends Composite
       super(parent, style);
       this.view = view;
       this.session = Registry.getSession();
+      this.configPrefix = configPrefix;
 
       setLayout(new FillLayout());
 
@@ -129,6 +133,8 @@ public class IncidentList extends Composite
       viewer.setComparator(new IncidentComparator());
 
       filter = new IncidentListFilter();
+      filter.setStateFilter(PreferenceStore.getInstance().getAsBoolean(configPrefix + ".hideClosed", true) ?
+            IncidentListFilter.STATE_FILTER_ACTIVE : IncidentListFilter.STATE_FILTER_ALL);
       viewer.addFilter(filter);
 
       createActions();
@@ -243,6 +249,18 @@ public class IncidentList extends Composite
             addComment();
          }
       };
+
+      actionHideClosed = new Action(i18n.tr("&Hide closed incidents"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            boolean hideClosed = actionHideClosed.isChecked();
+            filter.setStateFilter(hideClosed ? IncidentListFilter.STATE_FILTER_ACTIVE : IncidentListFilter.STATE_FILTER_ALL);
+            viewer.refresh();
+            PreferenceStore.getInstance().set(configPrefix + ".hideClosed", hideClosed);
+         }
+      };
+      actionHideClosed.setChecked(filter.getStateFilter() == IncidentListFilter.STATE_FILTER_ACTIVE);
    }
 
    /**
@@ -273,6 +291,8 @@ public class IncidentList extends Composite
       manager.add(new Separator());
       manager.add(actionAssign);
       manager.add(actionAddComment);
+      manager.add(new Separator());
+      manager.add(actionHideClosed);
    }
 
    /**
@@ -584,6 +604,16 @@ public class IncidentList extends Composite
    public Action getActionCreate()
    {
       return actionCreate;
+   }
+
+   /**
+    * Get action for hiding closed incidents
+    *
+    * @return hide closed incidents action
+    */
+   public Action getActionHideClosed()
+   {
+      return actionHideClosed;
    }
 
    /**
