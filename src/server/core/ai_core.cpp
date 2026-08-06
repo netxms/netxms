@@ -2761,8 +2761,8 @@ bool InitAIAssistant()
             strlcpy(config.authToken, tokenUtf8, sizeof(config.authToken));
          }
 
-         config.temperature = entry->getSubEntryValueAsInt(_T("Temperature"), 0, -1);
-         config.topP = entry->getSubEntryValueAsInt(_T("TopP"), 0, -1);
+         config.temperature = entry->getSubEntryValueAsDouble(_T("Temperature"), 0, -1);
+         config.topP = entry->getSubEntryValueAsDouble(_T("TopP"), 0, -1);
          config.contextSize = entry->getSubEntryValueAsInt(_T("ContextSize"), 0, 32768);
          config.timeout = entry->getSubEntryValueAsInt(_T("Timeout"), 0, 180);
          config.verifySSL = entry->getSubEntryValueAsBoolean(_T("VerifySSL"), true);

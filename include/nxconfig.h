@@ -84,6 +84,7 @@ public:
 	uint32_t getSubEntryValueAsUInt(const TCHAR *name, int index = 0, uint32_t defaultValue = 0) const;
 	int64_t getSubEntryValueAsInt64(const TCHAR *name, int index = 0, int64_t defaultValue = 0) const;
 	uint64_t getSubEntryValueAsUInt64(const TCHAR *name, int index = 0, uint64_t defaultValue = 0) const;
+	double getSubEntryValueAsDouble(const TCHAR *name, int index = 0, double defaultValue = 0) const;
 	bool getSubEntryValueAsBoolean(const TCHAR *name, int index = 0, bool defaultValue = false) const;
 	uuid getSubEntryValueAsUUID(const TCHAR *name, int index = 0) const;
 
