@@ -165,6 +165,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	EVT_HANDLE pubMetadata = NULL;
 	BOOL success;
 	TCHAR publisherName[MAX_PATH];
+   LogParser *parser = static_cast<LogParser*>(userContext);
 
 	// Create render context for event values - we need provider name,
 	// event id, and severity level
@@ -207,11 +208,11 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 #else
 		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, values[0].StringVal, -1, publisherName, MAX_PATH, NULL, NULL);
 #endif
-      static_cast<LogParser*>(userContext)->trace(7, _T("Publisher name is %s"), publisherName);
+      parser->trace(7, _T("Publisher name is %s"), publisherName);
    }
 	else
 	{
-      static_cast<LogParser*>(userContext)->trace(7, _T("Unable to get publisher name from event"));
+      parser->trace(7, _T("Unable to get publisher name from event"));
 	}
 
 	// Event id
@@ -272,7 +273,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
    else
    {
       timestamp = time(NULL);
-      static_cast<LogParser*>(userContext)->trace(7, _T("Cannot get timestamp from event (values[5].Type == %d)"), values[5].Type);
+      parser->trace(7, _T("Cannot get timestamp from event (values[5].Type == %d)"), values[5].Type);
    }
 
 	// Open publisher metadata
@@ -322,16 +323,17 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	}
 
    StringList *variables = ExtractVariables(event);
+   // Parser's file name for event log is channel name prefixed with '*'
 #ifdef UNICODE
-   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, msg, variables, recordId, 0, timestamp);
+   parser->matchEvent(publisherName, eventId, level, msg, variables, recordId, 0, timestamp, &parser->getFileName()[1]);
 #else
 	char *mbmsg = MBStringFromWideString(msg);
-   static_cast<LogParser*>(userContext)->matchEvent(publisherName, eventId, level, mbmsg, variables, recordId, 0, timestamp);
+   parser->matchEvent(publisherName, eventId, level, mbmsg, variables, recordId, 0, timestamp, &parser->getFileName()[1]);
 	MemFree(mbmsg);
 #endif
    delete variables;
 
-   static_cast<LogParser*>(userContext)->saveLastProcessedRecordTimestamp(timestamp);
+   parser->saveLastProcessedRecordTimestamp(timestamp);
 
 cleanup:
 	if (pubMetadata != NULL)

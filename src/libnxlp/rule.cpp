@@ -253,8 +253,8 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t ev
 
       if (m_logName != nullptr)
       {
-         m_parser->trace(7, _T("  matching file name \"%s\" against pattern \"%s\""), logName, m_logName);
-         if (!MatchString(m_logName, logName, false))
+         m_parser->trace(7, _T("  matching file name \"%s\" against pattern \"%s\""), CHECK_NULL(logName), m_logName);
+         if ((logName == nullptr) || !MatchString(m_logName, logName, false))
          {
             m_parser->trace(7, _T("  file name: no match"));
             return false;
