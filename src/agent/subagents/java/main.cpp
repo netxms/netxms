@@ -283,8 +283,19 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
 
    nxlog_debug_tag(JAVA_AGENT_DEBUG_TAG, 1, _T("Using JVM %s"), s_jvmPath);
 
+   StringList jvmOptions;
+   if (s_jvmOptions != nullptr)
+   {
+      String::split(s_jvmOptions, _T("\n"), true,
+         [&jvmOptions] (const String& option)
+         {
+            if (!option.isEmpty())
+               jvmOptions.add(option.cstr());
+         });
+   }
+
    JNIEnv *env;
-   JavaBridgeError err = CreateJavaVM(s_jvmPath, _T("netxms-agent-") NETXMS_JAR_VERSION _T(".jar"), nullptr, s_userClasspath, nullptr, &env);
+   JavaBridgeError err = CreateJavaVM(s_jvmPath, _T("netxms-agent-") NETXMS_JAR_VERSION _T(".jar"), nullptr, s_userClasspath, &jvmOptions, &env);
    if (err != NXJAVA_SUCCESS)
    {
       nxlog_write_tag(NXLOG_ERROR, JAVA_AGENT_DEBUG_TAG, _T("Unable to load JVM: %s"), GetJavaBridgeErrorMessage(err));
