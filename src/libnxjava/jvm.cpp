@@ -23,6 +23,11 @@
 #include <netxms-version.h>
 
 /**
+ * Maximum number of options that can be passed to JVM (including class path)
+ */
+#define MAX_JVM_OPTIONS   128
+
+/**
  * JVM module
  */
 static HMODULE s_jvmModule = nullptr;
@@ -148,7 +153,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    classpath.append(JAVA_CLASSPATH_SEPARATOR);
    classpath.append(libdir);
 
-   JavaVMOption options[128];
+   JavaVMOption options[MAX_JVM_OPTIONS];
    memset(options, 0, sizeof(options));
 #ifdef UNICODE
    options[0].optionString = classpath.getUTF8String();
@@ -156,14 +161,18 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    options[0].optionString = MemCopyStringA(classpath);
 #endif
 
+   int optionCount = 1;   // class path is always set
    if (vmOptions != nullptr)
    {
-      for(int i = 0; i < vmOptions->size(); i++)
+      int count = MIN(vmOptions->size(), MAX_JVM_OPTIONS - 1);
+      if (count < vmOptions->size())
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_JAVA_RUNTIME, _T("JavaBridge: too many JVM options (%d), only first %d will be used"), vmOptions->size(), count);
+      for(int i = 0; i < count; i++)
       {
 #ifdef UNICODE
-         options[i + 1].optionString = UTF8StringFromWideString(vmOptions->get(i));
+         options[optionCount++].optionString = UTF8StringFromWideString(vmOptions->get(i));
 #else
-         options[i + 1].optionString = UTF8StringFromMBString(vmOptions->get(i));
+         options[optionCount++].optionString = UTF8StringFromMBString(vmOptions->get(i));
 #endif
       }
    }
@@ -171,7 +180,7 @@ JavaBridgeError LIBNXJAVA_EXPORTABLE CreateJavaVM(const TCHAR *jvmPath, const TC
    JavaVMInitArgs vmArgs;
    vmArgs.version = JNI_VERSION_1_8;
    vmArgs.options = options;
-   vmArgs.nOptions = (vmOptions != nullptr) ? vmOptions->size() + 1 : 1;
+   vmArgs.nOptions = optionCount;
    vmArgs.ignoreUnrecognized = JNI_TRUE;
 
    nxlog_debug_tag(DEBUG_TAG_JAVA_RUNTIME, 6, _T("JVM options:"));
