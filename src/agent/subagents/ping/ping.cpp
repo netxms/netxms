@@ -651,12 +651,12 @@ static bool SubagentInit(Config *config)
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("Icmp.AvgPingTime(*)"), H_PollResult, _T("A"), DCI_DT_UINT, _T("Average response time of ICMP ping to {instance} for last minute") },
-   { _T("Icmp.CumulativeMaxPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Cumulative maximum response time of ICMP ping to {instance}") },
-   { _T("Icmp.CumulativeMinPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Cumulative minimum response time of ICMP ping to {instance}") },
+   { _T("Icmp.CumulativeMaxPingTime(*)"), H_PollResult, _T("C"), DCI_DT_UINT, _T("Cumulative maximum response time of ICMP ping to {instance}") },
+   { _T("Icmp.CumulativeMinPingTime(*)"), H_PollResult, _T("c"), DCI_DT_UINT, _T("Cumulative minimum response time of ICMP ping to {instance}") },
    { _T("Icmp.Jitter(*)"), H_PollResult, _T("J"), DCI_DT_UINT, _T("Jitter of ICMP ping to {instance}") },
    { _T("Icmp.LastPingTime(*)"), H_PollResult, _T("L"), DCI_DT_UINT, _T("Response time of last ICMP ping to {instance}") },
    { _T("Icmp.MaxPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Maximum response time of ICMP ping to {instance} for last minute") },
-   { _T("Icmp.MinPingTime(*)"), H_PollResult, _T("M"), DCI_DT_UINT, _T("Minimum response time of ICMP ping to {instance} for last minute") },
+   { _T("Icmp.MinPingTime(*)"), H_PollResult, _T("m"), DCI_DT_UINT, _T("Minimum response time of ICMP ping to {instance} for last minute") },
    { _T("Icmp.MovingAvgJitter(*)"), H_PollResult, _T("j"), DCI_DT_UINT, _T("Moving average of jitter of ICMP ping to {instance}") },
    { _T("Icmp.MovingAvgPingTime(*)"), H_PollResult, _T("a"), DCI_DT_UINT, _T("Moving average of response time of ICMP ping to {instance}") },
    { _T("Icmp.PacketLoss(*)"), H_PollResult, _T("P"), DCI_DT_UINT, _T("Packet loss for ICMP ping to {instance} for last minute") },
