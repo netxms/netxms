@@ -110,7 +110,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                L"                    1 = Encrypt connection only if agent requires encryption;\n"
                L"                    2 = Encrypt connection if agent supports encryption;\n"
                L"                    3 = Force encrypted connection;\n"
-               L"                  Default value is 1.\n"
+               L"                  Default value is 2.\n"
                L"   -g fprint    : Expected SHA-256 fingerprint of agent's certificate (implies -A).\n"
                L"   -h           : Display help and exit.\n"
                L"   -K file      : Specify server's key file\n"
