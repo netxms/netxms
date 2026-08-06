@@ -1052,6 +1052,26 @@ NXSL_Value *Template::createNXSLObject(NXSL_VM *vm)
 }
 
 /**
+ * Find template already applied to given target that belongs to same exclusion group as this template.
+ * Returns nullptr if this template does not belong to any exclusion group or there is no conflict.
+ */
+shared_ptr<Template> Template::findExclusionGroupConflict(const NetObj& target) const
+{
+   SharedString exclusionGroup = getExclusionGroup();
+   if (exclusionGroup.isEmpty())
+      return shared_ptr<Template>();
+
+   unique_ptr<SharedObjectArray<NetObj>> parents = target.getParents(OBJECT_TEMPLATE);
+   for(int i = 0; i < parents->size(); i++)
+   {
+      Template *t = static_cast<Template*>(parents->get(i));
+      if ((t->getId() != m_id) && t->getExclusionGroup().str().equals(exclusionGroup.str()))
+         return static_pointer_cast<Template>(parents->getShared(i));
+   }
+   return shared_ptr<Template>();
+}
+
+/**
  * Perform automatic object binding
  */
 void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)
@@ -1102,25 +1122,14 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
          if (!isDirectChild(object->getId()))
          {
             // Check exclusion group - existing template wins during auto-apply
-            SharedString exclusionGroup = getExclusionGroup();
-            if (!exclusionGroup.isEmpty())
+            shared_ptr<Template> conflictingTemplate = findExclusionGroupConflict(*object);
+            if (conflictingTemplate != nullptr)
             {
-               bool conflict = false;
-               unique_ptr<SharedObjectArray<NetObj>> parents = object->getParents(OBJECT_TEMPLATE);
-               for (int j = 0; j < parents->size(); j++)
-               {
-                  Template *t = static_cast<Template*>(parents->get(j));
-                  if ((t->getId() != m_id) && t->getExclusionGroup().str().equals(exclusionGroup.str()))
-                  {
-                     sendPollerMsg(_T("   Skipping \"%s\" - template \"%s\" from the same exclusion group \"%s\" already applied\r\n"), object->getName(), t->getName(), exclusionGroup.cstr());
-                     nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): skipping binding of template \"%s\" [%u] to object \"%s\" [%u] - template \"%s\" [%u] from exclusion group \"%s\" already applied"),
-                           m_name, m_id, object->getName(), object->getId(), t->getName(), t->getId(), exclusionGroup.cstr());
-                     conflict = true;
-                     break;
-                  }
-               }
-               if (conflict)
-                  continue;
+               SharedString exclusionGroup = getExclusionGroup();
+               sendPollerMsg(_T("   Skipping \"%s\" - template \"%s\" from the same exclusion group \"%s\" already applied\r\n"), object->getName(), conflictingTemplate->getName(), exclusionGroup.cstr());
+               nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): skipping binding of template \"%s\" [%u] to object \"%s\" [%u] - template \"%s\" [%u] from exclusion group \"%s\" already applied"),
+                     m_name, m_id, object->getName(), object->getId(), conflictingTemplate->getName(), conflictingTemplate->getId(), exclusionGroup.cstr());
+               continue;
             }
 
             sendPollerMsg(_T("   Applying to \"%s\"\r\n"), object->getName());

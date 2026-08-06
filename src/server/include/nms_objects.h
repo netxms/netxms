@@ -2419,6 +2419,7 @@ public:
    void setRemoveDCIOnDelete(bool removeDCI) { m_removeDCIOnDelete = removeDCI; }
 
    SharedString getExclusionGroup() const { return GetAttributeWithLock(m_exclusionGroup, NetObj::m_mutexProperties); }
+   shared_ptr<Template> findExclusionGroupConflict(const NetObj& target) const;
 };
 
 /**
