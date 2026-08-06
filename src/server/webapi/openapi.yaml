@@ -5381,7 +5381,8 @@ paths:
           in: query
           schema:
             type: integer
-            description: Type of historical data (0=raw, 1=processed, 2=full table, 3=raw and processed)
+            default: 0
+            description: Type of historical data (0=processed, 1=raw, 2=raw and processed, 3=full table)
         - name: tier
           in: query
           schema:
