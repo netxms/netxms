@@ -10066,7 +10066,7 @@ NXSL_Value *NXSL_NetworkPathClass::getAttr(NXSL_Object *object, const NXSL_Ident
       return value;
 
    NXSL_VM *vm = object->vm();
-   auto path = static_cast<shared_ptr<NetworkPath>*>(object->getData())->get();
+   auto path = SharedObjectFromData<NetworkPath>(object);
 
    if (NXSL_COMPARE_ATTRIBUTE_NAME("hopCount"))
    {
