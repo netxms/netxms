@@ -687,6 +687,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       g_agentCommandTimeout = ConvertToUint32(value, 0);
    }
+   else if (!wcscmp(name, L"Agent.ConnectionRetries"))
+   {
+      g_agentConnectionRetries = ConvertToUint32(value, 0);
+   }
    else if (!wcscmp(name, L"Agent.ConnectionTimeout"))
    {
       g_agentConnectionTimeout = ConvertToUint32(value, 0);

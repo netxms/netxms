@@ -1172,6 +1172,7 @@ private:
    VolatileCounter m_requestId;
    uint32_t m_commandTimeout;
    uint32_t m_connectionTimeout;
+   uint32_t m_connectionRetries;
 	uint32_t m_recvTimeout;
    MsgWaitQueue m_messageWaitQueue;
    bool m_isConnected;
@@ -1350,8 +1351,10 @@ public:
 	         std::function<void (size_t)> downloadProgressCallback = nullptr,
 	         std::function<void (NXCPMessage*)> fileResendCallback = nullptr);
 
-   void setConnectionTimeout(uint32_t timeout) { m_connectionTimeout = MAX(timeout, 1000); }
+   void setConnectionTimeout(uint32_t timeout) { m_connectionTimeout = MAX(timeout, 100); }
 	uint32_t getConnectionTimeout() const { return m_connectionTimeout; }
+   void setConnectionRetries(uint32_t retries) { m_connectionRetries = MIN(retries, 100); }
+   uint32_t getConnectionRetries() const { return m_connectionRetries; }
    void setCommandTimeout(uint32_t timeout) { m_commandTimeout = MAX(timeout, 500); }
    uint32_t getCommandTimeout() const { return m_commandTimeout; }
    void setRecvTimeout(uint32_t timeout) { m_recvTimeout = MAX(timeout, 1800000); }

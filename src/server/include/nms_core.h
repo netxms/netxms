@@ -1872,6 +1872,7 @@ extern uint32_t g_auditFlags;
 extern time_t g_serverStartTime;
 extern uint32_t g_agentCommandTimeout;
 extern uint32_t g_agentConnectionTimeout;
+extern uint32_t g_agentConnectionRetries;
 extern uint32_t g_agentRestartWaitTime;
 extern uint32_t g_agentUploadBandwidthLimit;
 extern uint32_t g_thresholdRepeatInterval;

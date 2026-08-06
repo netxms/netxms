@@ -55,7 +55,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    int iEncryptionPolicy = ENCRYPTION_PREFERRED;
    uint16_t agentPort = AGENT_LISTEN_PORT, proxyPort = AGENT_LISTEN_PORT;
    wchar_t *secret = nullptr;
-   uint32_t dwTimeout = 5000, dwConnTimeout = 30000, dwError;
+   uint32_t dwTimeout = 5000, dwConnTimeout = 30000, connRetries = 0, dwError;
    wchar_t szProxy[MAX_OBJECT_NAME] = L"";
    wchar_t *proxySecret = nullptr;
    RSA_KEY serverKey = nullptr;
@@ -70,7 +70,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
 
    // Parse command line
    _topterr = 1;
-   char options[128] = "D:e:hK:O:p:s:S:vw:W:X:";
+   char options[128] = "D:e:hK:M:O:p:s:S:vw:W:X:";
    strlcat(options, tool->additionalOptions, 128);
 
    while ((ch = getoptW(tool->argc, wargv, options)) != -1)
@@ -90,6 +90,8 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
                L"   -h           : Display help and exit.\n"
                L"   -K file      : Specify server's key file\n"
                L"                  (default is %s).\n"
+               L"   -M count     : Number of additional connection attempts if connection cannot be\n"
+               L"                  established (default is 0).\n"
                L"   -O port      : Proxy agent's port number. Default is %d.\n"
                L"   -p port      : Agent's port number. Default is %d.\n"
                L"   -s secret    : Shared secret for agent authentication.\n"
@@ -176,6 +178,18 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          case 'K':
             wcslcpy(keyFile, optargW, MAX_PATH);
             break;
+         case 'M':   // Connection retries
+            i = wcstol(optargW, &eptr, 0);
+            if ((*eptr != 0) || (i < 0) || (i > 100))
+            {
+               WriteToTerminalEx(L"Invalid number of connection attempts \"%s\"\n", optargW);
+               start = false;
+            }
+            else
+            {
+               connRetries = static_cast<uint32_t>(i);
+            }
+            break;
          case 'X':   // Use proxy
             wcslcpy(szProxy, optargW, MAX_OBJECT_NAME);
             useProxy = true;
@@ -245,6 +259,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
          {
             auto conn = make_shared<AgentConnection>(addr, agentPort, secret);
             conn->setConnectionTimeout(dwConnTimeout);
+            conn->setConnectionRetries(connRetries);
             conn->setCommandTimeout(dwTimeout);
             conn->setEncryptionPolicy(iEncryptionPolicy);
             if (useProxy)

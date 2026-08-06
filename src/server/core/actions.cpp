@@ -384,6 +384,7 @@ static bool ExecuteRemoteAction(const TCHAR *target, const TCHAR *action)
          conn = make_shared<AgentConnection>(addr, AGENT_LISTEN_PORT, nullptr);
          conn->setCommandTimeout(g_agentCommandTimeout);
          conn->setConnectionTimeout(g_agentConnectionTimeout);
+         conn->setConnectionRetries(g_agentConnectionRetries);
          if (!conn->connect(g_serverKey))
             return false;
       }

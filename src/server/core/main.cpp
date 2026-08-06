@@ -219,6 +219,7 @@ RSA_KEY g_serverKey = nullptr;
 time_t g_serverStartTime = 0;
 uint32_t g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 uint32_t g_agentConnectionTimeout = 5000;  // Default timeout for establishing connection with agent
+uint32_t g_agentConnectionRetries = 0;  // Default number of retries for establishing connection with agent
 uint32_t g_agentRestartWaitTime = 0;   // Wait time for agent restart in seconds
 uint32_t g_agentUploadBandwidthLimit = 0;
 uint32_t g_thresholdRepeatInterval = 0;	// Disabled by default
@@ -734,6 +735,7 @@ static void LoadGlobalConfig()
    g_icmpPingTimeout = ConfigReadInt(_T("ICMP.PingTimeout"), 1500);
    g_agentCommandTimeout = ConfigReadInt(_T("Agent.CommandTimeout"), 4000);
    g_agentConnectionTimeout = ConfigReadInt(_T("Agent.ConnectionTimeout"), 5000);
+   g_agentConnectionRetries = ConfigReadInt(_T("Agent.ConnectionRetries"), 0);
    g_agentRestartWaitTime = ConfigReadInt(_T("Agent.RestartWaitTime"), 0);
    g_agentUploadBandwidthLimit = ConfigReadInt(_T("Agent.UploadBandwidthLimit"), 0);
    g_thresholdRepeatInterval = ConfigReadInt(_T("DataCollection.ThresholdRepeatInterval"), 0);
