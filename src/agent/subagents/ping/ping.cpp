@@ -550,7 +550,7 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 	         options++;
 	         Trim(ptr);
 	         Trim(options);
-	         dontFragment = (_tcsicmp(options, _T("DF")) != 0);
+	         dontFragment = (_tcsicmp(options, _T("DF")) == 0);
 	      }
 
 	      if (*ptr != 0)
