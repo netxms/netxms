@@ -565,7 +565,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("Oracle.ASM.DiskGroups(*)"), H_TagList, _T("^ASM_DISKGROUP/STATUS@(.*)$"), _T("List of ASM disk groups") },
+   { _T("Oracle.ASM.DiskGroups(*)"), H_TagList, _T("^ASM_DISKGROUP/STATE@(.*)$"), _T("List of ASM disk groups") },
    { _T("Oracle.Connections"), H_ConnectionsList, nullptr, _T("Oracle: configured database connections") },
    { _T("Oracle.DataFiles(*)"), H_TagList, _T("^DATAFILE/STATUS@(.*)$"), _T("List of data files") },
    { _T("Oracle.DataTags(*)"), H_TagList, _T("^(.*)$"), _T("List of Oracle data collection tags") },
