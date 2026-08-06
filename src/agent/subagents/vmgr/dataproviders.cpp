@@ -108,6 +108,20 @@ LONG H_GetUIntParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
          conn->unlockNodeInfo();
          break;
       }
+      case 'N': //CPU.Count
+      {
+         const virNodeInfo *nodeInfo = conn->getNodeInfoAndLock();
+         if(nodeInfo == nullptr)
+         {
+            result = SYSINFO_RC_UNSUPPORTED;
+         }
+         else
+         {
+            resultValue = nodeInfo->cpus;
+         }
+         conn->unlockNodeInfo();
+         break;
+      }
       default:
          result = SYSINFO_RC_ERROR;
    }
@@ -254,13 +268,16 @@ LONG H_GetVMInfoAsParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
             ret_uint64(pValue, (UINT64)info->memory * 1024);
             break;
          case 'P': //Memory.UsedPrec
-            ret_uint(pValue, (UINT32)(info->memory/(float)info->maxMem)*100);
+            ret_uint(pValue, (info->maxMem != 0) ? static_cast<uint32_t>(info->memory * 100 / info->maxMem) : 0);
             break;
          case 'M': //Memory.Max
             ret_uint64(pValue, (UINT64)info->maxMem * 1024);
             break;
          case 'C': //CPU.Time
-            ret_uint64(pValue, info->nrVirtCpu);
+            ret_uint64(pValue, static_cast<uint64_t>(info->cpuTime));
+            break;
+         case 'N': //CPU.Count
+            ret_uint(pValue, info->nrVirtCpu);
             break;
          default:
             result = SYSINFO_RC_ERROR;
@@ -353,7 +370,7 @@ static EnumerationCallbackResult FillVMData(const TCHAR *key, const NXvirDomain 
    value->set(0, virDomainGetID(*vm));
    value->set(1, key);
    value->set(2, conf.getValue(_T("/uuid"), _T("")));
-   StringBuffer os(conf.getValue(_T("/os/type"), _T("Unkonown")));
+   StringBuffer os(conf.getValue(_T("/os/type"), _T("Unknown")));
    ConfigEntry *entry = conf.getEntry(_T("/os/type"));
    if(entry != nullptr)
    {
@@ -365,16 +382,16 @@ static EnumerationCallbackResult FillVMData(const TCHAR *key, const NXvirDomain 
    const virDomainInfo *info = conn->getDomainInfoAndLock(key, vm);
    if (info != nullptr)
    {
-      value->set(3, info->state < 8 ? vmStateMapping[info->state] :  _T("Unkonown"));
+      value->set(3, info->state < 8 ? vmStateMapping[info->state] :  _T("Unknown"));
       value->set(6, (UINT64)info->memory * 1024);
       value->set(7, (UINT64)info->maxMem * 1024);
-      value->set(8, (UINT32)(info->memory/(float)info->maxMem)*100);
+      value->set(8, (info->maxMem != 0) ? static_cast<uint32_t>(info->memory * 100 / info->maxMem) : static_cast<uint32_t>(0));
       value->set(9, info->nrVirtCpu);
       value->set(10, static_cast<uint64_t>(info->cpuTime));
    }
    else
    {
-      value->set(3, _T("Unkonown"));
+      value->set(3, _T("Unknown"));
       value->set(6, 0);
       value->set(7, 0);
       value->set(8, 0);
@@ -387,7 +404,7 @@ static EnumerationCallbackResult FillVMData(const TCHAR *key, const NXvirDomain 
    if (virDomainGetAutostart(*vm, &autostart) == 0)
       value->set(5, autostart == 0 ? _T("No") : _T("Yes"));
    else
-      value->set(5, _T("Unkonown"));
+      value->set(5, _T("Unknown"));
 
    virDomainControlInfo cInfo;
    if (virDomainGetControlInfo(*vm, &cInfo,0) == 0)
@@ -398,7 +415,7 @@ static EnumerationCallbackResult FillVMData(const TCHAR *key, const NXvirDomain 
    }
    else
    {
-      value->set(11, _T("Unkonown"));
+      value->set(11, _T("Unknown"));
       value->set(12, _T(""));
       value->set(13, 0);
    }
