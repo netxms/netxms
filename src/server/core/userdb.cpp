@@ -1587,18 +1587,17 @@ void SendUserDBUpdate(uint16_t code, uint32_t id)
 static bool IsStringContainsSubsequence(const char *str, const char *sequence, size_t len)
 {
    size_t sequenceLen = strlen(sequence);
-	if ((sequenceLen < len) || (len > 255))
-		return false;
+   if ((sequenceLen < len) || (len > 255))
+      return false;
 
-	char subseq[256];
-	for(int i = 0; i < sequenceLen - len; i++)
-	{
-		strlcpy(subseq, &sequence[i], len + 1);
-		if (strstr(str, subseq) != nullptr)
-			return true;
-	}
-
-	return false;
+   char subseq[256];
+   for(int i = 0; i <= sequenceLen - len; i++)
+   {
+      strlcpy(subseq, &sequence[i], len + 1);
+      if (strstr(str, subseq) != nullptr)
+         return true;
+   }
+   return false;
 }
 
 /**
