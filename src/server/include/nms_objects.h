@@ -6175,6 +6175,7 @@ protected:
    void onChildStateChange();
 
    int getMostCriticalCheckStatus();
+   int getMostCriticalChildServiceState() const;
 
    void validateAutomaticObjectChecks();
    void validateAutomaticDCIChecks();
