@@ -342,9 +342,17 @@ public class Startup implements EntryPoint, StartupParameters
       Listener activityListener = (e) -> {
          activityTimestamp = System.currentTimeMillis();
       };
-      display.addFilter(SWT.MouseDown, activityListener);
-      display.addFilter(SWT.MouseDoubleClick, activityListener);
-      display.addFilter(SWT.KeyDown, activityListener);
+      // RWT transmits an event to the server only if some widget has a listener for it,
+      // so raw mouse/key events alone are not a reliable activity indicator (most user
+      // interaction arrives as Selection, Modify, etc.). Track every event type that
+      // reaches the server during normal interaction. Timer-driven view refreshes do
+      // not dispatch widget events and therefore do not count as activity.
+      int[] activityEvents = {
+         SWT.Collapse, SWT.DefaultSelection, SWT.Expand, SWT.FocusIn, SWT.KeyDown, SWT.MenuDetect,
+         SWT.Modify, SWT.MouseDoubleClick, SWT.MouseDown, SWT.MouseUp, SWT.Selection
+      };
+      for(int eventType : activityEvents)
+         display.addFilter(eventType, activityListener);
 
       final long inactivityTimeoutMs = inactivityTimeout * 1000L;
       Thread thread = new Thread(() -> {
