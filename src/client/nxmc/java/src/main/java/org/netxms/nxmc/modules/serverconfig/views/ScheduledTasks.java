@@ -49,6 +49,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.serverconfig.dialogs.ScheduledTaskEditDialog;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.ScheduledTaskComparator;
@@ -92,6 +93,7 @@ public class ScheduledTasks extends ConfigurationView
    private Action actionDisable;
    private Action actionEnable;
    private Action actionReschedule;
+   private Action actionGoToObject;
 
    /**
     * Create notification channels view
@@ -263,6 +265,19 @@ public class ScheduledTasks extends ConfigurationView
          }
       };
       addKeyBinding("M1+R", actionReschedule);
+
+      actionGoToObject = new Action(i18n.tr("&Go to object")) {
+         @Override
+         public void run()
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            if (selection.size() != 1)
+               return;
+            long objectId = ((ScheduledTask)selection.getFirstElement()).getObjectId();
+            if (objectId != 0)
+               MainWindow.switchToObject(objectId, 0);
+         }
+      };
    }
 
    /**
@@ -475,6 +490,8 @@ public class ScheduledTasks extends ConfigurationView
          {
             mgr.add(actionEdit);
          }
+         if (origin.getObjectId() != 0)
+            mgr.add(actionGoToObject);
       }
 
       boolean containDisabled = false;

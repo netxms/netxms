@@ -43,6 +43,7 @@ import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.TunnelListComparator;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.TunnelListLabelProvider;
@@ -93,6 +94,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
    private Action actionCreateNode;
    private Action actionBind;
    private Action actionUnbind;
+   private Action actionGoToObject;
    private Action actionHideNonProxy;
    private Action actionHideNonUA;
    private Action actionExportToCsv;
@@ -214,6 +216,19 @@ public class TunnelManager extends ConfigurationView implements SessionListener
          }
       };
 
+      actionGoToObject = new Action(i18n.tr("&Go to object")) {
+         @Override
+         public void run()
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            if (selection.size() != 1)
+               return;
+            AgentTunnel t = (AgentTunnel)selection.getFirstElement();
+            if (t.isBound())
+               MainWindow.switchToObject(t.getNodeId(), 0);
+         }
+      };
+
       actionHideNonProxy = new Action(i18n.tr("Hide tunnels without proxy function"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -263,15 +278,18 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       }
       else
       {
+         if (selection.size() == 1)
+            manager.add(actionGoToObject);
          for(Object o : selection.toList())
          {
             if (((AgentTunnel)o).isBound())
             {
                manager.add(actionUnbind);
-               manager.add(new Separator());
                break;
             }
          }
+         if (!manager.isEmpty())
+            manager.add(new Separator());
       }
       manager.add(actionHideNonProxy);
       manager.add(actionHideNonUA);

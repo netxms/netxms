@@ -43,6 +43,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.UserAgentNotificationComparator;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.UserAgentNotificationFilter;
@@ -70,6 +71,7 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
    private Action actionShowAllOneTime;
    private Action actionShowAllOneScheduled;
    private Action actionRecall;
+   private Action actionGoToObject;
    private NXCSession session;
 
    /**
@@ -162,6 +164,19 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
             recallMessage();
          }
       };
+
+      actionGoToObject = new Action(i18n.tr("&Go to object")) {
+         @Override
+         public void run()
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            if (selection.size() != 1)
+               return;
+            long[] objects = ((UserAgentNotification)selection.getFirstElement()).getObjects();
+            if (objects.length == 1)
+               MainWindow.switchToObject(objects[0], 0);
+         }
+      };
    }
 
 
@@ -220,6 +235,10 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
    protected void fillContextMenu(IMenuManager manager)
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if ((selection.size() == 1) && (((UserAgentNotification)selection.getFirstElement()).getObjects().length == 1))
+      {
+         manager.add(actionGoToObject);
+      }
       if ((selection.size() >= 1))
       {
          boolean recallIsActive = true;
