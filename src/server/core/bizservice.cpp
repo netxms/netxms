@@ -444,12 +444,12 @@ void BusinessService::changeState(int newState)
 }
 
 /**
- * Process state change of child service
+ * Returns most critical state of child business services
  */
-void BusinessService::onChildStateChange()
+int BusinessService::getMostCriticalChildServiceState() const
 {
-   readLockChildList();
    int mostCriticalState = STATUS_NORMAL;
+   readLockChildList();
    for(int i = 0; (i < getChildList().size()) && (mostCriticalState != STATUS_CRITICAL); i++)
    {
       NetObj *o = getChildList().get(i);
@@ -461,6 +461,23 @@ void BusinessService::onChildStateChange()
          mostCriticalState = state;
    }
    unlockChildList();
+   return mostCriticalState;
+}
+
+/**
+ * Process state change of child service
+ */
+void BusinessService::onChildStateChange()
+{
+   // Own checks are not re-executed here, but their last known statuses must be taken into account,
+   // otherwise recovery of a child service will clear state set by this service's own failed check
+   int mostCriticalState = getMostCriticalCheckStatus();
+   if (mostCriticalState != STATUS_CRITICAL)
+   {
+      int childState = getMostCriticalChildServiceState();
+      if (childState > mostCriticalState)
+         mostCriticalState = childState;
+   }
 
    changeState(mostCriticalState);
 }
@@ -521,18 +538,9 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
    // Include status of child services into calculation
    if (mostCriticalStatus != STATUS_CRITICAL)
    {
-      readLockChildList();
-      for(int i = 0; (i < getChildList().size()) && (mostCriticalStatus != STATUS_CRITICAL); i++)
-      {
-         NetObj *o = getChildList().get(i);
-         if (o->getObjectClass() != OBJECT_BUSINESSSERVICE)
-            continue;
-
-         int status = static_cast<BusinessService*>(o)->getServiceState();
-         if (status > mostCriticalStatus)
-            mostCriticalStatus = status;
-      }
-      unlockChildList();
+      int childStatus = getMostCriticalChildServiceState();
+      if (childStatus > mostCriticalStatus)
+         mostCriticalStatus = childStatus;
    }
 
    changeState(mostCriticalStatus);
