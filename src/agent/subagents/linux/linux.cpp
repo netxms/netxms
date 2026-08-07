@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2025 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -222,10 +222,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Net.Interface.BytesOut(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_BYTES_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_BYTESOUT },
    { _T("Net.Interface.Description(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_DESCRIPTION, DCI_DT_STRING, DCIDESC_NET_INTERFACE_DESCRIPTION },
    { _T("Net.Interface.InErrors(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_ERRORS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INERRORS },
-   { _T("Net.Interface.Link(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_LINK },
+   { _T("Net.Interface.Link(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_DEPRECATED, DCIDESC_NET_INTERFACE_LINK },
    { _T("Net.Interface.MaxSpeed(*)"), H_NetIfInfoSpeed, _T("M"), DCI_DT_UINT64, DCIDESC_NET_INTERFACE_MAXSPEED },
    { _T("Net.Interface.OutErrors(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_ERRORS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTERRORS },
    { _T("Net.Interface.InDrops(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_INDROPS },
+   { _T("Net.Interface.OperStatus(*)"), H_NetIfInfoFromIOCTL, (TCHAR *)IF_INFO_OPER_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_OPERSTATUS },
    { _T("Net.Interface.OutDrops(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_DROPS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_OUTDROPS },
    { _T("Net.Interface.PacketsIn(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_IN, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSIN },
    { _T("Net.Interface.PacketsOut(*)"), H_NetIfInfoFromProc, (TCHAR *)IF_INFO_PACKETS_OUT, DCI_DT_COUNTER32, DCIDESC_NET_INTERFACE_PACKETSOUT },
@@ -317,7 +318,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.CPU.Usage15.Idle"), H_CpuUsage, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE },
    { _T("System.CPU.Usage.Idle(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_1MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IDLE_EX },
    { _T("System.CPU.Usage5.Idle(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX },
-   { _T("System.CPU.Usage5.Idle5(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_5MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX },
    { _T("System.CPU.Usage15.Idle(*)"), H_CpuUsageEx, MAKE_CPU_USAGE_PARAM(INTERVAL_15MIN, CPU_USAGE_IDLE), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE_EX },
 
    /* iowait */
