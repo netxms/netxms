@@ -800,8 +800,8 @@ static void TestUnicodeCase()
    AssertEquals(nx_wcsupr(buffer), L"\x0421\x0420\x0415\x0414");
 
    // Case insensitive pattern matching (NXSL "ilike" operator)
-   AssertTrue(MatchString(L"*\x0441\x0440\x0435\x0434*", L"\x041F\x0421\x0440\x0435\x0434\x041F", false));
-   AssertFalse(MatchString(L"*\x0441\x0440\x0435\x0434*", L"\x041F\x0421\x0440\x0435\x0434\x041F", true));
+   AssertTrue(MatchStringW(L"*\x0441\x0440\x0435\x0434*", L"\x041F\x0421\x0440\x0435\x0434\x041F", false));
+   AssertFalse(MatchStringW(L"*\x0441\x0440\x0435\x0434*", L"\x041F\x0421\x0440\x0435\x0434\x041F", true));
 
    EndTest();
 
