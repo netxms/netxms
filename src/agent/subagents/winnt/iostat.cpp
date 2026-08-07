@@ -90,6 +90,14 @@ static BOOL GetDiskPerformanceData(UINT32 number, DISK_PERFORMANCE *perfdata)
 #define SAMPLES_PER_MINUTE 60
 
 /**
+ * Calculate delta between two readings of monotonic counter. Returns 0 if counter was reset or went backwards.
+ */
+static inline uint64_t CounterDelta(int64_t currentValue, int64_t lastValue)
+{
+   return (currentValue > lastValue) ? static_cast<uint64_t>(currentValue - lastValue) : 0;
+}
+
+/**
  * Performance data for single device
  */
 struct DiskPerfStats
@@ -126,19 +134,17 @@ struct DiskPerfStats
    {
       if (collectionFailures == 0)
       {
-         bytesRead[nextSample] = currentRawData.BytesRead.QuadPart - lastRawData.BytesRead.QuadPart;
-         bytesWritten[nextSample] = currentRawData.BytesWritten.QuadPart - lastRawData.BytesWritten.QuadPart;
-         readCount[nextSample] = currentRawData.ReadCount - lastRawData.ReadCount;
-         writeCount[nextSample] = currentRawData.WriteCount - lastRawData.WriteCount;
+         bytesRead[nextSample] = CounterDelta(currentRawData.BytesRead.QuadPart, lastRawData.BytesRead.QuadPart);
+         bytesWritten[nextSample] = CounterDelta(currentRawData.BytesWritten.QuadPart, lastRawData.BytesWritten.QuadPart);
+         readCount[nextSample] = static_cast<uint32_t>(CounterDelta(currentRawData.ReadCount, lastRawData.ReadCount));
+         writeCount[nextSample] = static_cast<uint32_t>(CounterDelta(currentRawData.WriteCount, lastRawData.WriteCount));
          queueDepth[nextSample] = currentRawData.QueueDepth;
          // Time in DISK_PERFORMANCE expressed in 100-nanosecond intervals
          // Use IdleTime to compute disk busy time (ReadTime + WriteTime can overlap on devices with concurrent I/O)
-         int64_t idleDelta = (currentRawData.IdleTime.QuadPart - lastRawData.IdleTime.QuadPart) / 10000;
-         if (idleDelta < 0)
-            idleDelta = 0;
+         uint64_t idleDelta = CounterDelta(currentRawData.IdleTime.QuadPart, lastRawData.IdleTime.QuadPart) / 10000;
          diskTime[nextSample] = (idleDelta < 1000) ? static_cast<uint32_t>(1000 - idleDelta) : 0;
-         readTime[nextSample] = static_cast<uint32_t>((currentRawData.ReadTime.QuadPart - lastRawData.ReadTime.QuadPart) / 10000);
-         writeTime[nextSample] = static_cast<uint32_t>((currentRawData.WriteTime.QuadPart - lastRawData.WriteTime.QuadPart) / 10000);
+         readTime[nextSample] = static_cast<uint32_t>(CounterDelta(currentRawData.ReadTime.QuadPart, lastRawData.ReadTime.QuadPart) / 10000);
+         writeTime[nextSample] = static_cast<uint32_t>(CounterDelta(currentRawData.WriteTime.QuadPart, lastRawData.WriteTime.QuadPart) / 10000);
          nextSample++;
          if (nextSample == SAMPLES_PER_MINUTE)
             nextSample = 0;
@@ -155,7 +161,6 @@ struct DiskPerfStats
  * Collected disk performance data
  */
 static HashMap<UINT32, DiskPerfStats> s_diskPerfStats(Ownership::True);
-static DiskPerfStats s_globalDiskPerfStats(0xFFFFFFFF);
 static win_mutex_t s_diskPerfStatsLock;
 
 /**
@@ -199,9 +204,6 @@ static void IOStatColector()
          AddDevicesForIOStatCollection();
       }
 
-      DISK_PERFORMANCE rawDataTotal;
-      memset(&rawDataTotal, 0, sizeof(rawDataTotal));
-
       LockMutex(&s_diskPerfStatsLock, INFINITE);
       auto it = s_diskPerfStats.begin();
       while (it.hasNext())
@@ -211,15 +213,6 @@ static void IOStatColector()
          if (GetDiskPerformanceData(ps->device, &rawData))
          {
             ps->update(rawData);
-
-            rawDataTotal.BytesRead.QuadPart += rawData.BytesRead.QuadPart;
-            rawDataTotal.BytesWritten.QuadPart += rawData.BytesWritten.QuadPart;
-            rawDataTotal.ReadCount += rawData.ReadCount;
-            rawDataTotal.WriteCount += rawData.WriteCount;
-            rawDataTotal.QueueDepth += rawData.QueueDepth;
-            rawDataTotal.ReadTime.QuadPart += rawData.ReadTime.QuadPart;
-            rawDataTotal.WriteTime.QuadPart += rawData.WriteTime.QuadPart;
-            rawDataTotal.IdleTime.QuadPart += rawData.IdleTime.QuadPart;
          }
          else
          {
@@ -232,9 +225,6 @@ static void IOStatColector()
             }
          }
       }
-
-      s_globalDiskPerfStats.update(rawDataTotal);
-
       UnlockMutex(&s_diskPerfStatsLock);
    }
 
@@ -276,42 +266,51 @@ template <typename T> double GetAverageValue(T *data)
 }
 
 /**
- * Get metric value
+ * Get metric value for single device. Caller must hold s_diskPerfStatsLock.
  */
-static LONG GetMetricValue(DiskPerfStats *ps, IOInfoType metric, TCHAR *value)
+static bool GetDeviceMetricValue(DiskPerfStats *ps, IOInfoType metric, double *value)
 {
-   LONG rc = SYSINFO_RC_SUCCESS;
    switch (metric)
    {
       case IOSTAT_DISK_QUEUE:
-         ret_double(value, GetAverageValue(ps->queueDepth));
+         *value = GetAverageValue(ps->queueDepth);
          break;
       case IOSTAT_IO_READ_TIME:
-         ret_double(value, GetAverageValue(ps->readTime) / 10); // milliseconds to %
+         *value = GetAverageValue(ps->readTime) / 10; // milliseconds to %
          break;
       case IOSTAT_IO_TIME:
-         ret_double(value, GetAverageValue(ps->diskTime) / 10); // milliseconds to %
+         *value = GetAverageValue(ps->diskTime) / 10; // milliseconds to %
          break;
       case IOSTAT_IO_WRITE_TIME:
-         ret_double(value, GetAverageValue(ps->writeTime) / 10); // milliseconds to %
+         *value = GetAverageValue(ps->writeTime) / 10; // milliseconds to %
          break;
       case IOSTAT_NUM_READS:
-         ret_double(value, GetAverageValue(ps->readCount));
+         *value = GetAverageValue(ps->readCount);
          break;
       case IOSTAT_NUM_SREADS:
-         ret_uint64(value, static_cast<UINT64>(GetAverageValue(ps->bytesRead)));
+         *value = GetAverageValue(ps->bytesRead);
          break;
       case IOSTAT_NUM_SWRITES:
-         ret_uint64(value, static_cast<UINT64>(GetAverageValue(ps->bytesWritten)));
+         *value = GetAverageValue(ps->bytesWritten);
          break;
       case IOSTAT_NUM_WRITES:
-         ret_double(value, GetAverageValue(ps->writeCount));
+         *value = GetAverageValue(ps->writeCount);
          break;
       default:
-         rc = SYSINFO_RC_UNSUPPORTED;
-         break;
+         return false;
    }
-   return rc;
+   return true;
+}
+
+/**
+ * Format metric value according to metric's data type
+ */
+static inline void RetMetricValue(TCHAR *buffer, IOInfoType metric, double value)
+{
+   if ((metric == IOSTAT_NUM_SREADS) || (metric == IOSTAT_NUM_SWRITES))
+      ret_uint64(buffer, static_cast<uint64_t>(value));
+   else
+      ret_double(buffer, value);
 }
 
 /**
@@ -328,12 +327,15 @@ LONG H_IoStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
    if (*eptr != 0)
       return SYSINFO_RC_UNSUPPORTED;
 
+   IOInfoType metric = CAST_FROM_POINTER(arg, IOInfoType);
+
+   double metricValue = 0;
    LockMutex(&s_diskPerfStatsLock, INFINITE);
    DiskPerfStats *ps = s_diskPerfStats.get(device);
    LONG rc;
    if (ps != nullptr)
    {
-      rc = GetMetricValue(ps, CAST_FROM_POINTER(arg, IOInfoType), value);
+      rc = GetDeviceMetricValue(ps, metric, &metricValue) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_UNSUPPORTED;
    }
    else
    {
@@ -341,6 +343,8 @@ LONG H_IoStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
    }
    UnlockMutex(&s_diskPerfStatsLock);
 
+   if (rc == SYSINFO_RC_SUCCESS)
+      RetMetricValue(value, metric, metricValue);
    return rc;
 }
 
@@ -350,37 +354,38 @@ LONG H_IoStats(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommS
 LONG H_IoStatsTotal(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    IOInfoType metric = CAST_FROM_POINTER(arg, IOInfoType);
-   if (metric == IOSTAT_IO_TIME || metric == IOSTAT_IO_READ_TIME || metric == IOSTAT_IO_WRITE_TIME)
+
+   // Summing percentages is not meaningful, so for time-based metrics report maximum across all disks
+   bool useMaximum = (metric == IOSTAT_IO_TIME) || (metric == IOSTAT_IO_READ_TIME) || (metric == IOSTAT_IO_WRITE_TIME);
+
+   double total = 0;
+   bool success = true;
+   LockMutex(&s_diskPerfStatsLock, INFINITE);
+   for (DiskPerfStats *ps : s_diskPerfStats)
    {
-      // For time-based metrics report maximum across all disks (summing percentages is not meaningful)
-      double maxValue = 0;
-      LockMutex(&s_diskPerfStatsLock, INFINITE);
-      for (DiskPerfStats *ps : s_diskPerfStats)
+      double v;
+      if (!GetDeviceMetricValue(ps, metric, &v))
       {
-         double v;
-         switch (metric)
-         {
-            case IOSTAT_IO_TIME:
-               v = GetAverageValue(ps->diskTime) / 10;
-               break;
-            case IOSTAT_IO_READ_TIME:
-               v = GetAverageValue(ps->readTime) / 10;
-               break;
-            case IOSTAT_IO_WRITE_TIME:
-               v = GetAverageValue(ps->writeTime) / 10;
-               break;
-            default:
-               v = 0;
-               break;
-         }
-         if (v > maxValue)
-            maxValue = v;
+         success = false;
+         break;
       }
-      UnlockMutex(&s_diskPerfStatsLock);
-      ret_double(value, maxValue);
-      return SYSINFO_RC_SUCCESS;
+      if (useMaximum)
+      {
+         if (v > total)
+            total = v;
+      }
+      else
+      {
+         total += v;
+      }
    }
-   return GetMetricValue(&s_globalDiskPerfStats, metric, value);
+   UnlockMutex(&s_diskPerfStatsLock);
+
+   if (!success)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   RetMetricValue(value, metric, total);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
