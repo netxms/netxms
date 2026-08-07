@@ -12,7 +12,6 @@ SUBDIRS = internal
 
 EXTRA_DIST = \
 	AGENT_EXTENSION_PROTOCOL.md \
-	Chat_Bots_Design.md \
 	CPP_DEVELOPER_GUIDE.md \
 	DBPasswordCommand.md \
 	doxygen.md \
