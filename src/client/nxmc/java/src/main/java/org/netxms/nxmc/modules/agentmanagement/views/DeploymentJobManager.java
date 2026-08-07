@@ -40,6 +40,7 @@ import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.DeploymentJobComparator;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.DeploymentJobFilter;
@@ -81,6 +82,7 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
    private SortableTableViewer viewer;
    private DeploymentJobFilter filter;
    private Action actionCancel;
+   private Action actionGoToObject;
    private Action actionHideInactive;
    private Action actionExportToCsv;
 
@@ -184,6 +186,17 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
          }
       };
 
+      actionGoToObject = new Action(i18n.tr("&Go to object")) {
+         @Override
+         public void run()
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            if (selection.size() != 1)
+               return;
+            MainWindow.switchToObject(((PackageDeploymentJob)selection.getFirstElement()).getNodeId(), 0);
+         }
+      };
+
       actionHideInactive = new Action(i18n.tr("&Hide inactive jobs"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -218,6 +231,11 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
    protected void fillContextMenu(IMenuManager manager)
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() == 1)
+      {
+         manager.add(actionGoToObject);
+         manager.add(new Separator());
+      }
       for(Object o : selection.toList())
       {
          if (!((PackageDeploymentJob)o).isFinished())
