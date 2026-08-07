@@ -754,6 +754,18 @@ public class WidgetHelper
       applyHiddenColumns(settings.getAsString(prefix + ".hiddenColumns", ""), columns);
 	}
 
+   /**
+    * Get ID of given table or tree column.
+    *
+    * @param column column object (may be null)
+    * @return column ID or -1 if column is null or has no ID assigned
+    */
+   private static int getColumnId(Item column)
+   {
+      Object id = (column != null) ? column.getData("ID") : null;
+      return (id instanceof Integer) ? (Integer)id : -1;
+   }
+
 	/**
 	 * Save settings for sortable table viewer
 	 * @param viewer Viewer
@@ -763,14 +775,15 @@ public class WidgetHelper
 	{
 		final Table table = viewer.getTable();
       saveColumnSettings(table, prefix);
-		TableColumn column = table.getSortColumn();
       PreferenceStore settings = PreferenceStore.getInstance();
-      settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1);
+      settings.set(prefix + ".sortColumn", getColumnId(table.getSortColumn()));
       settings.set(prefix + ".sortDirection", table.getSortDirection());
 	}
 
 	/**
-	 * Restore settings for sortable table viewer
+	 * Restore settings for sortable table viewer. Sort column and direction currently set on the table
+	 * (normally the ones declared by the view when creating columns) are used when nothing was saved.
+	 *
 	 * @param viewer Viewer
 	 * @param prefix Prefix for properties
 	 */
@@ -779,18 +792,12 @@ public class WidgetHelper
 		final Table table = viewer.getTable();
       restoreColumnSettings(table, prefix);
       PreferenceStore settings = PreferenceStore.getInstance();
-		try
-		{
-         table.setSortDirection(settings.getAsInteger(prefix + ".sortDirection", SWT.UP));
-         int column = settings.getAsInteger(prefix + ".sortColumn", 0);
-			if (column >= 0)
-			{
-				table.setSortColumn(viewer.getColumnById(column));
-			}
-		}
-		catch(NumberFormatException e)
-		{
-		}
+      table.setSortDirection(settings.getAsInteger(prefix + ".sortDirection", table.getSortDirection()));
+      int column = settings.getAsInteger(prefix + ".sortColumn", getColumnId(table.getSortColumn()));
+      if (column >= 0)
+      {
+         table.setSortColumn(viewer.getColumnById(column));
+      }
 	}
 
 	/**
@@ -802,14 +809,15 @@ public class WidgetHelper
 	{
 		final Tree tree = viewer.getTree();
       saveColumnSettings(tree, prefix);
-		TreeColumn column = tree.getSortColumn();
       PreferenceStore settings = PreferenceStore.getInstance();
-      settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1);
+      settings.set(prefix + ".sortColumn", getColumnId(tree.getSortColumn()));
       settings.set(prefix + ".sortDirection", tree.getSortDirection());
 	}
 
 	/**
-	 * Restore settings for sortable table viewer
+	 * Restore settings for sortable tree viewer. Sort column and direction currently set on the tree
+	 * (normally the ones declared by the view when creating columns) are used when nothing was saved.
+	 *
 	 * @param viewer Viewer
 	 * @param prefix Prefix for properties
 	 */
@@ -818,8 +826,8 @@ public class WidgetHelper
 		final Tree tree = viewer.getTree();
       restoreColumnSettings(tree, prefix);
       PreferenceStore settings = PreferenceStore.getInstance();
-      tree.setSortDirection(settings.getAsInteger(prefix + ".sortDirection", SWT.UP)); //$NON-NLS-1$
-      int column = settings.getAsInteger(prefix + ".sortColumn", 0); //$NON-NLS-1$
+      tree.setSortDirection(settings.getAsInteger(prefix + ".sortDirection", tree.getSortDirection()));
+      int column = settings.getAsInteger(prefix + ".sortColumn", getColumnId(tree.getSortColumn()));
       if (column >= 0)
 		{
          tree.setSortColumn(viewer.getColumnById(column));
