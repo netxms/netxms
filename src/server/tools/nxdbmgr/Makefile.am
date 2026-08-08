@@ -1,6 +1,6 @@
 bin_PROGRAMS = nxdbmgr
 nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp clear.cpp convert.cpp datacoll.cpp \
-		  export.cpp init.cpp migrate.cpp mm.cpp modules.cpp \
+		  export.cpp init.cpp migrate.cpp modules.cpp \
 		  resetadmin.cpp resetmonitoring.cpp stock_images.cpp tables.cpp tdata_convert.cpp unlock.cpp usermgmt.cpp \
 		  upgrade.cpp upgrade_online.cpp upgrade_v21.cpp \
                   upgrade_v22.cpp upgrade_v30.cpp upgrade_v31.cpp upgrade_v32.cpp \

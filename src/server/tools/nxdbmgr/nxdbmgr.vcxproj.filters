@@ -36,9 +36,6 @@
     <ClCompile Include="migrate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="nxdbmgr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

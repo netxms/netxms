@@ -359,7 +359,6 @@
     <ClCompile Include="export.cpp" />
     <ClCompile Include="init.cpp" />
     <ClCompile Include="migrate.cpp" />
-    <ClCompile Include="mm.cpp" />
     <ClCompile Include="modules.cpp" />
     <ClCompile Include="nxdbmgr.cpp" />
     <ClCompile Include="resetadmin.cpp" />
