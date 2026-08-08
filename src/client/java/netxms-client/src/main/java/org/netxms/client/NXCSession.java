@@ -2876,7 +2876,8 @@ public class NXCSession
    }
 
    /**
-    * Get list of active authentication tokens for given user.
+    * Get list of active authentication tokens for given user. Returned tokens do not carry clear-text value - server gives it out
+    * only in response to the request that issues a token.
     *
     * @param userId user ID to get token list for (0 to indicate currently logged in user)
     * @return list of tokens

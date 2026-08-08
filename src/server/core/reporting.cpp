@@ -378,6 +378,7 @@ NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession
                return response;
             }
             request->setField(VID_AUTH_TOKEN, token->token.toString());
+            token->wipeValue();
          }
 
          if (IsDataViewRequired(request->getFieldAsGUID(VID_REPORT_DEFINITION)) && PrepareReportingDataView(session->getUserId(), viewName))
@@ -443,6 +444,7 @@ void ExecuteReport(const shared_ptr<ScheduledTaskParameters>& parameters)
       return;
    }
    request.setField(VID_AUTH_TOKEN, token->token.toString());
+   token->wipeValue();
 
    // Prepare data view if needed
    wchar_t viewName[MAX_OBJECT_NAME] = L"";

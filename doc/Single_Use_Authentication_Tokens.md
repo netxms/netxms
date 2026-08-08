@@ -113,14 +113,16 @@ so nothing special is needed to reclaim the memory either.
 In the server console, `show authtokens` lists live tokens with a `Type` column naming the type:
 `ephemeral`, `persistent`, `service` or `single-use`. A single-use token disappears from the listing
 the moment it is consumed — which is the most direct way to confirm a handoff actually happened.
-(The `Token` column reads `unavailable` when the server does not hold the clear-text value, which is
-the case for persistent tokens read back from the database.)
+The `Token` column shows a masked form of the value (`abcd****wxyz`), enough to match a listing entry
+against a token someone is holding without disclosing it; it reads `unavailable` for persistent
+tokens read back from the database, whose value this server instance never saw.
 
-Until it is spent, a single-use token is also readable in full through the token listings —
-`GET /v1/users/{id}/tokens` over REST and `CMD_GET_AUTH_TOKENS` over NXCP — by the owning user and by
-anyone holding `MANAGE_USERS`. This is not specific to single-use: any token whose clear-text value
-the server still holds in memory is returned there. Being single-use bounds the replay of a *leaked*
-value; it does not restrict who may read that value from the server while the token is still live.
+The clear-text value itself is returned exactly once, by the response to the request that issued the
+token, and is dropped from the descriptor as soon as that response is built. Token listings —
+`GET /v1/users/{id}/tokens` over REST and `CMD_GET_AUTH_TOKENS` over NXCP — carry only the token
+attributes, so `MANAGE_USERS` grants the ability to issue, list and revoke another user's tokens, not
+to read the secret of one already issued. A lost token is revoked and re-issued; there is no recovery
+path.
 
 Everything else the feature does is logged under the existing `auth` debug tag. Level 4 covers the
 rejections an administrator would want to see: a single-use token presented somewhere other than the
