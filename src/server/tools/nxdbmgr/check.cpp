@@ -454,7 +454,7 @@ static void CheckMissingObjectProperties(const TCHAR *table, const TCHAR *classN
          TCHAR guidText[128];
          _sntprintf(query, 1024,
                _T("INSERT INTO object_properties (object_id,guid,name,")
-               _T("status,is_deleted,is_system,inherit_access_rights,")
+               _T("status,is_deleted,is_hidden,inherit_access_rights,")
                _T("last_modified,status_calc_alg,status_prop_alg,")
                _T("status_fixed_val,status_shift,status_translation,")
                _T("status_single_threshold,status_thresholds,location_type,")
