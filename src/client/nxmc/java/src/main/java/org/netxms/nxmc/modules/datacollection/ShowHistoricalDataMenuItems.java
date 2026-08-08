@@ -287,7 +287,7 @@ public class ShowHistoricalDataMenuItems
       ArrayList<ChartDciConfig> items = new ArrayList<ChartDciConfig>(selection.size());
       for(Object o : selection.toList())
       {
-         items.add(new ChartDciConfig((DciValue)o));
+         items.add(getConfigFromObject(o));
       }
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
