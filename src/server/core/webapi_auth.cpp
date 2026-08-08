@@ -87,6 +87,7 @@ static inline bool CompleteLogin(json_t *response, const LoginRequest& loginRequ
 
    char encodedToken[64];
    json_object_set_new(response, "token", json_string(descriptor->token.toStringA(encodedToken)));
+   descriptor->wipeValue();
    json_object_set_new(response, "userId", json_integer(loginRequest.userId));
    json_object_set_new(response, "systemAccessRights", json_integer(loginRequest.systemAccessRights));
    json_object_set_new(response, "changePassword", json_boolean(loginRequest.changePassword));

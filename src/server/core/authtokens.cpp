@@ -418,7 +418,7 @@ void CheckUserAuthenticationTokens(const shared_ptr<ScheduledTaskParameters>& pa
          if ((descriptor->expirationTime <= now) || maxExpired)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("User authentication token \"%s\" has expired%s"),
-               descriptor->token.toMaskedString().cstr(),
+               descriptor->maskedValueText(),
                maxExpired ? _T(" (max lifetime reached)") : _T(""));
             expiredTokens.add(descriptor);
          }
@@ -476,16 +476,16 @@ json_t NXCORE_EXPORTABLE *AuthenticationTokensToJson(uint32_t userId)
  */
 void ShowAuthenticationTokens(ServerConsole *console)
 {
-   console->printf(L" %-10s | %-10s | %-32s | %-6s | %-24s | %s\n", L"ID", L"Type", L"Token", L"UID", L"User name", L"Expires at");
-   console->printf(L"------------+------------+----------------------------------+--------+--------------------------+----------------------\n");
+   console->printf(L" %-10s | %-10s | %-12s | %-6s | %-24s | %s\n", L"ID", L"Type", L"Token", L"UID", L"User name", L"Expires at");
+   console->printf(L"------------+------------+--------------+--------+--------------------------+----------------------\n");
    s_tokens.forEach(
       [console] (const UserAuthenticationTokenHash& key, const shared_ptr<AuthenticationTokenDescriptor>& descriptor) -> EnumerationCallbackResult
       {
          wchar_t userName[MAX_USER_NAME];
-         console->printf(L" %10u | %-10s | %-32s | %6u | %-24s | %s\n",
+         console->printf(L" %10u | %-10s | %-12s | %6u | %-24s | %s\n",
             descriptor->tokenId,
             AuthenticationTokenTypeName(descriptor->type),
-            descriptor->validClearText ? descriptor->token.toString().cstr() : L"unavailable",
+            descriptor->maskedValueText(),
             descriptor->userId, ResolveUserId(descriptor->userId, userName, true),
             FormatTimestamp(descriptor->expirationTime).cstr());
          return _CONTINUE;

@@ -401,7 +401,10 @@ int H_UserTokenCreate(Context *context)
    context->writeAuditLog(AUDIT_SECURITY, true, 0, L"Issued %s authentication token [%u] for user [%u]",
       AuthenticationTokenTypeName(type), token->tokenId, userId);
 
-   json_t *output = token->toJson();
+   // Clear-text value is returned here and nowhere else, and is dropped from the
+   // descriptor as soon as it is copied into the response document
+   json_t *output = token->toIssueResponseJson();
+   token->wipeValue();
    context->setResponseData(output);
    json_decref(output);
    return 201;

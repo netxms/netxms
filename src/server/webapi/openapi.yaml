@@ -9823,12 +9823,10 @@ paths:
       operationId: listUserAuthTokens
       summary: List user authentication tokens
       description: |
-        List active authentication tokens issued for the user. The clear-text token
-        value is included for tokens still held in memory, which covers live ephemeral
-        tokens (including unspent single-use ones) and persistent tokens issued since
-        the last server restart. Persistent tokens reloaded from the database no longer
-        carry it. A user may list their own tokens; listing another user's tokens
-        requires MANAGE_USERS access right.
+        List active authentication tokens issued for the user. The clear-text token value
+        is never included - it is returned only by the response that issues the token.
+        A user may list their own tokens; listing another user's tokens requires
+        MANAGE_USERS access right.
       parameters:
         - name: user-id
           in: path
@@ -9860,10 +9858,10 @@ paths:
       summary: Issue user authentication token
       description: |
         Issue a new authentication token for the user. The clear-text token value is
-        returned in this response and, while the token is still held in memory, in
-        subsequent listings; persistent tokens reloaded from the database after a server
-        restart no longer carry it. A user may issue tokens for themselves; issuing
-        tokens for another user requires MANAGE_USERS access right.
+        returned in this response only - the server drops it as soon as the response is
+        built, so it cannot be read back from a listing and a lost token has to be revoked
+        and re-issued. A user may issue tokens for themselves; issuing tokens for another
+        user requires MANAGE_USERS access right.
       parameters:
         - name: user-id
           in: path
@@ -12120,10 +12118,9 @@ components:
         value:
           type: string
           description: |
-            Clear-text token value. Available only while the token is held in memory, which
-            covers the response to the create operation and any listing of still-live tokens
-            (ephemeral, service or unspent single-use). Persistent tokens reloaded from the
-            database after a server restart no longer carry it.
+            Clear-text token value. Returned only by the create operation, which is the single
+            point where the server gives it out; it is absent from token listings. A lost token
+            cannot be recovered and has to be revoked and re-issued.
     AuthenticationTokenCreateInput:
       type: object
       description: Request body for issuing a new authentication token.

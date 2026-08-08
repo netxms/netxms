@@ -471,9 +471,65 @@ static void TestSerializedTokenType()
       AssertTrue((json_is_true(json_object_get(json, "persistent")) != 0) == persistent);
       AssertTrue((json_is_true(json_object_get(json, "service")) != 0) == service);
       AssertTrue((json_is_true(json_object_get(json, "singleUse")) != 0) == singleUse);
-      AssertNotNull(json_object_get(json, "value"));
       json_decref(json);
    }
+
+   EndTest();
+}
+
+/**
+ * Clear-text value is given out only by the issue response serializers, and only until
+ * the issuing code drops it from the descriptor
+ */
+static void TestClearTextValueExposure()
+{
+   StartTest(_T("Clear-text token value is returned only by issue response"));
+
+   AuthenticationTokenDescriptor descriptor(TEST_USER_ID, 600, AuthenticationTokenType::EPHEMERAL, L"exposure test");
+   String value = descriptor.token.toString();
+
+   // Listing serializers never carry the value
+   NXCPMessage listMessage(CMD_REQUEST_COMPLETED, 1);
+   descriptor.fillMessage(&listMessage, VID_ELEMENT_LIST_BASE);
+   AssertFalse(listMessage.isFieldExist(VID_ELEMENT_LIST_BASE + 4));
+
+   json_t *listJson = descriptor.toJson();
+   AssertNull(json_object_get(listJson, "value"));
+   json_decref(listJson);
+
+   // Issue response serializers carry it
+   NXCPMessage issueMessage(CMD_REQUEST_COMPLETED, 1);
+   descriptor.fillIssueResponse(&issueMessage, VID_ELEMENT_LIST_BASE);
+   AssertEquals(issueMessage.getFieldAsSharedString(VID_ELEMENT_LIST_BASE + 4).cstr(), value.cstr());
+
+   char encodedValue[64];
+   descriptor.token.toStringA(encodedValue);
+   json_t *issueJson = descriptor.toIssueResponseJson();
+   AssertEquals(json_object_get_string_utf8(issueJson, "value", ""), encodedValue);
+   json_decref(issueJson);
+
+   // Masked form survives the wipe, and is what logs and console listing show
+   String maskedValue(descriptor.maskedValueText());
+   descriptor.wipeValue();
+   AssertTrue(descriptor.token.isNull());
+   AssertEquals(descriptor.maskedValueText(), maskedValue.cstr());
+
+   EndTest();
+}
+
+/**
+ * Token restored from the database has no clear-text value to show
+ */
+static void TestMaskedValueForRestoredToken()
+{
+   StartTest(_T("Masked value is unavailable for restored token"));
+
+   AuthenticationTokenDescriptor descriptor(TEST_USER_ID, 600, AuthenticationTokenType::EPHEMERAL, L"masking test");
+   AssertEquals(descriptor.maskedValueText(), descriptor.token.toMaskedString().cstr());
+
+   // Restored descriptors are built from a database record, which carries only the hash
+   descriptor.maskedValue[0] = 0;
+   AssertEquals(descriptor.maskedValueText(), L"unavailable");
 
    EndTest();
 }
@@ -501,6 +557,8 @@ int main(int argc, char *argv[])
    TestRevokeByTokenValue();
    TestTokenTypeNames();
    TestSerializedTokenType();
+   TestClearTextValueExposure();
+   TestMaskedValueForRestoredToken();
 
    return 0;
 }

@@ -3019,7 +3019,10 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
       // Absence of the token is not fatal for the session - client will have to re-authenticate.
       shared_ptr<AuthenticationTokenDescriptor> td = IssueAuthenticationToken(m_userId, 300);
       if (td != nullptr)
+      {
          response->setField(VID_AUTH_TOKEN, td->token.toString());
+         td->wipeValue();
+      }
       else
          debugPrintf(4, _T("Cannot issue reconnect authentication token for user [%u]"), m_userId);
 
@@ -3093,7 +3096,10 @@ void ClientSession::issueAuthToken(const NXCPMessage& request)
          shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, validityTime, type, CHECK_NULL_EX(description), 0);
          if (token != nullptr)
          {
-            token->fillMessage(&response, VID_ELEMENT_LIST_BASE);
+            // Clear-text value is returned here and nowhere else, and is dropped from the
+            // descriptor as soon as it is copied into the response
+            token->fillIssueResponse(&response, VID_ELEMENT_LIST_BASE);
+            token->wipeValue();
             rcc = RCC_SUCCESS;
 
             const wchar_t *tokenTypeName = AuthenticationTokenTypeName(type);
@@ -4275,6 +4281,7 @@ void ClientSession::enableAnonymousObjectAccess(const NXCPMessage& request)
                   return;
                }
                token->token.toString(tokenText);
+               token->wipeValue();
                object->setCustomAttribute(L"$anonymousAccessToken", tokenText, StateChange::CLEAR);
             }
 

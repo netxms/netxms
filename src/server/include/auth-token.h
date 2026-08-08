@@ -119,8 +119,9 @@ typedef BYTE UserAuthenticationTokenHash[SHA256_DIGEST_SIZE];
  */
 struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
 {
-   UserAuthenticationToken token;
+   UserAuthenticationToken token;  // Clear-text value, wiped by wipeValue() as soon as it is handed to the requestor
    UserAuthenticationTokenHash hash;
+   wchar_t maskedValue[16];   // Masked form of clear-text value, kept for logs and console listing (empty for tokens restored from database)
    uint32_t tokenId;
    uint32_t userId;
    AuthenticationTokenType type;
@@ -128,7 +129,6 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
    time_t expirationTime;
    time_t maxExpirationTime;  // Absolute maximum expiration time (cannot be extended beyond this)
    VolatileCounter claimed;   // Atomic claim guard for single-use tokens, 0 until consumed
-   bool validClearText;       // Clear-text value is known (false for tokens restored from database)
    String description;
 
    /**
@@ -146,6 +146,7 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       GenerateRandomBytes(bytes, USER_AUTHENTICATION_TOKEN_LENGTH);
       token = UserAuthenticationToken(bytes);
       CalculateSHA256Hash(bytes, USER_AUTHENTICATION_TOKEN_LENGTH, hash);
+      wcslcpy(maskedValue, token.toMaskedString().cstr(), sizeof(maskedValue) / sizeof(wchar_t));
       tokenId = (_type == AuthenticationTokenType::PERSISTENT) ? CreateUniqueId(IDG_AUTHTOKEN) : 0;
       userId = uid;
       type = _type;
@@ -172,7 +173,6 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       else
          maxExpirationTime = 0;  // No absolute limit
       claimed = 0;
-      validClearText = true;
    }
 
    /**
@@ -192,11 +192,31 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       StrToBin(text, hash, SHA256_DIGEST_SIZE);
 
       claimed = 0;
-      validClearText = false;
+      maskedValue[0] = 0;  // Clear-text value is not stored in the database and is unknown for restored tokens
    }
 
    /**
-    * Fill NXCP message
+    * Wipe clear-text token value. Called by the issuing code as soon as the value has been passed
+    * to the requestor - the hash is sufficient for all subsequent authentication, and the value is
+    * never returned again.
+    */
+   void wipeValue()
+   {
+      token = UserAuthenticationToken();
+   }
+
+   /**
+    * Get masked form of clear-text token value for logs and console output, or "unavailable"
+    * if the value was never known to this server instance.
+    */
+   const wchar_t *maskedValueText() const
+   {
+      return (maskedValue[0] != 0) ? maskedValue : L"unavailable";
+   }
+
+   /**
+    * Fill NXCP message with token attributes. Clear-text token value is not included - it is
+    * returned only by the response to the request that issued the token.
     */
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const
    {
@@ -204,10 +224,6 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       msg->setField(baseId + 1, userId);
       msg->setField(baseId + 2, type == AuthenticationTokenType::PERSISTENT);
       msg->setField(baseId + 3, description);
-      if (validClearText)
-      {
-         msg->setField(baseId + 4, token.toString());
-      }
       msg->setFieldFromTime(baseId + 5, issuingTime);
       msg->setFieldFromTime(baseId + 6, expirationTime);
       msg->setField(baseId + 7, type == AuthenticationTokenType::SERVICE);
@@ -215,9 +231,18 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
    }
 
    /**
-    * Serialize to JSON. The clear-text token value is included for as long as the descriptor
-    * is held in memory, and is therefore returned by listings as well as by the issue response.
-    * Persistent tokens reloaded from the database after a restart no longer carry it.
+    * Fill NXCP message with token attributes and clear-text token value. Intended for the response
+    * to a token issue request, which is the only place where the value is given out.
+    */
+   void fillIssueResponse(NXCPMessage *msg, uint32_t baseId) const
+   {
+      fillMessage(msg, baseId);
+      msg->setField(baseId + 4, token.toString());
+   }
+
+   /**
+    * Serialize to JSON. Clear-text token value is not included - it is returned only by the
+    * response to the request that issued the token.
     */
    json_t *toJson() const
    {
@@ -230,8 +255,17 @@ struct NXCORE_EXPORTABLE AuthenticationTokenDescriptor
       json_object_set_new(root, "description", json_string_t(description.cstr()));
       json_object_set_new(root, "issuingTime", json_integer(static_cast<json_int_t>(issuingTime)));
       json_object_set_new(root, "expirationTime", json_integer(static_cast<json_int_t>(expirationTime)));
-      if (validClearText)
-         json_object_set_new(root, "value", json_string_t(token.toString().cstr()));
+      return root;
+   }
+
+   /**
+    * Serialize to JSON including clear-text token value. Intended for the response to a token
+    * issue request, which is the only place where the value is given out.
+    */
+   json_t *toIssueResponseJson() const
+   {
+      json_t *root = toJson();
+      json_object_set_new(root, "value", json_string_t(token.toString().cstr()));
       return root;
    }
 };

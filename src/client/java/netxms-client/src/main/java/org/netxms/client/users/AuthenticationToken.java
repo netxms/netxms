@@ -86,11 +86,11 @@ public class AuthenticationToken
    }
 
    /**
-    * Get token value. Available for as long as the server keeps the token in memory, which covers newly issued tokens and any
-    * live ephemeral, single-use or persistent token issued since the last server restart. Persistent tokens reloaded from the
-    * database no longer carry it.
+    * Get token value. Server returns it only in response to the request that issued the token, so it is available on the object
+    * returned by NXCSession.requestAuthenticationToken and never on objects read from token listings. A lost token cannot be
+    * recovered and has to be revoked and re-issued.
     *
-    * @return token value (can be null or empty string if unavailable)
+    * @return token value (null or empty string for tokens read from a listing)
     */
    public String getValue()
    {
