@@ -31,7 +31,7 @@
 					<interval></interval>
 					<retentionType>0</retentionType>
 					<retention></retention>
-					<systemTag>iface-inbound-bytes</systemTag>
+					<systemTag>iface-inbound-bits</systemTag>
 					<userTag></userTag>
 					<delta>2</delta>
 					<flags>0</flags>
@@ -62,7 +62,7 @@
 					<interval></interval>
 					<retentionType>0</retentionType>
 					<retention></retention>
-					<systemTag>iface-outbound-bytes</systemTag>
+					<systemTag>iface-outbound-bits</systemTag>
 					<userTag></userTag>
 					<delta>2</delta>
 					<flags>0</flags>
