@@ -4,6 +4,7 @@
 #include <nxsrvapi.h>
 #include <nddrv.h>
 #include <entity_mib.h>
+#include <nxforecast.h>
 #include <xml_to_json.h>
 #include <testtools.h>
 #include <netxms-version.h>
@@ -1503,6 +1504,275 @@ static void TestDriverDefaults()
 }
 
 /**
+ * Make time_t for local midnight of given date
+ */
+static time_t MakeDay(int year, int month, int day)
+{
+   struct tm t;
+   memset(&t, 0, sizeof(t));
+   t.tm_year = year - 1900;
+   t.tm_mon = month - 1;
+   t.tm_mday = day;
+   t.tm_isdst = -1;
+   return mktime(&t);
+}
+
+/**
+ * Thread-safe localtime
+ */
+static void LocalTime(time_t t, struct tm *result)
+{
+#if HAVE_LOCALTIME_R
+   localtime_r(&t, result);
+#elif defined(_WIN32)
+   localtime_s(result, &t);
+#else
+   *result = *localtime(&t);
+#endif
+}
+
+/**
+ * Get day of week for day given by its local midnight
+ */
+static int DayOfWeek(time_t day)
+{
+   struct tm t;
+   LocalTime(day + 43200, &t);
+   return t.tm_wday;
+}
+
+/**
+ * Get day of month for day given by its local midnight
+ */
+static int DayOfMonth(time_t day)
+{
+   struct tm t;
+   LocalTime(day + 43200, &t);
+   return t.tm_mday;
+}
+
+/**
+ * Build daily activity series of dayCount days ending the day before 2026-07-27
+ */
+static void BuildActivitySeries(StructArray<DailyActivitySample> *series, int dayCount, double (*value)(time_t day))
+{
+   series->clear();
+   time_t end = MakeDay(2026, 7, 27);   // exclusive
+   for(int i = dayCount; i >= 1; i--)
+   {
+      struct tm t;
+      LocalTime(end + 43200, &t);
+      t.tm_mday -= i;
+      t.tm_hour = 0;
+      t.tm_min = 0;
+      t.tm_sec = 0;
+      t.tm_isdst = -1;
+      DailyActivitySample s;
+      s.day = mktime(&t);
+      s.value = value(s.day);
+      series->add(&s);
+   }
+}
+
+static double ActivityFlatHundred(time_t day) { return 100.0; }
+static double ActivitySundayDip(time_t day) { return (DayOfWeek(day) == 0) ? 20.0 : 100.0; }
+static double ActivityPayday(time_t day) { return (DayOfMonth(day) == 25) ? 300.0 : 100.0; }
+static double ActivityStepTrend(time_t day) { return (day >= MakeDay(2026, 7, 13)) ? 150.0 : 100.0; }
+
+/**
+ * Adjustment hook halving every day's forecast
+ */
+class HalvingAdjustment : public ForecastAdjustment
+{
+public:
+   virtual double getFactor(time_t day) const override { return 0.5; }
+};
+
+/**
+ * Test holiday calendar
+ */
+static void TestHolidayCalendar()
+{
+   StartTest(_T("HolidayCalendar: list parsing"));
+   HolidayCalendar holidays;
+   AssertTrue(holidays.parse(L"12-25, 01-01, 2026-08-05"));
+   AssertFalse(holidays.isEmpty());
+   AssertFalse(holidays.parse(L"12-25,13-40"));   // malformed entry reported
+   AssertFalse(holidays.parse(L"12-25 01-01"));   // wrong separator must not pass as prefix match
+   AssertFalse(holidays.parse(L"12-25;01-01"));
+   AssertFalse(holidays.parse(L"02-30"));         // calendar-impossible dates
+   AssertFalse(holidays.parse(L"04-31"));
+   AssertFalse(holidays.parse(L"2027-02-29"));    // not a leap year
+   AssertTrue(holidays.parse(L"02-29,2028-02-29"));
+   AssertTrue(holidays.parse(L""));
+   AssertTrue(holidays.isEmpty());
+   EndTest();
+
+   StartTest(_T("HolidayCalendar: date matching"));
+   AssertTrue(holidays.parse(L"12-25,2026-08-05"));
+   struct tm d;
+   time_t noon = MakeDay(2026, 12, 25) + 43200;
+   LocalTime(noon, &d);
+   AssertTrue(holidays.contains(d));    // recurring
+   noon = MakeDay(2027, 12, 25) + 43200;
+   LocalTime(noon, &d);
+   AssertTrue(holidays.contains(d));    // recurring in any year
+   noon = MakeDay(2026, 8, 5) + 43200;
+   LocalTime(noon, &d);
+   AssertTrue(holidays.contains(d));    // one-off
+   noon = MakeDay(2027, 8, 5) + 43200;
+   LocalTime(noon, &d);
+   AssertFalse(holidays.contains(d));   // one-off bound to its year
+   noon = MakeDay(2026, 8, 6) + 43200;
+   LocalTime(noon, &d);
+   AssertFalse(holidays.contains(d));
+   EndTest();
+
+   StartTest(_T("HolidayCalendar: day of week parsing"));
+   AssertEquals(HolidayCalendar::parseDayOfWeek(L"Sunday"), 0);
+   AssertEquals(HolidayCalendar::parseDayOfWeek(L"mon"), 1);
+   AssertEquals(HolidayCalendar::parseDayOfWeek(L" Friday "), 5);
+   AssertEquals(HolidayCalendar::parseDayOfWeek(L"6"), 6);
+   AssertEquals(HolidayCalendar::parseDayOfWeek(L"noday"), -1);
+   AssertEquals(HolidayCalendar::parseDayOfWeek(L"7"), -1);
+   EndTest();
+}
+
+/**
+ * Test daily activity forecaster learning and threshold crossing prediction
+ */
+static void TestDailyActivityForecaster()
+{
+   time_t now = MakeDay(2026, 7, 27) + 6 * 3600;   // 2026-07-27 06:00 local (a Monday)
+   HolidayCalendar noHolidays;
+   StructArray<DailyActivitySample> series;
+
+   StartTest(_T("DailyActivityForecaster: flat activity"));
+   DailyActivityForecaster flat;
+   BuildActivitySeries(&series, 56, ActivityFlatHundred);
+   flat.learn(series, now);
+   AssertTrue(flat.isValid());
+   AssertTrue(flat.hasFactors());
+   AssertEquals(flat.getSampleCount(), 56);
+   AssertTrue(fabs(flat.getBaseline() - 100.0) < 0.01);
+   for(int d = 0; d < 7; d++)
+      AssertTrue(fabs(flat.getDowFactor(d) - 1.0) < 0.02);
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: threshold crossing prediction"));
+   // 450 units left at 06:00 with 100/day: crossing in ~4.5 days
+   time_t crossing = flat.predictThresholdCrossing(450.0, now, noHolidays);
+   AssertTrue(crossing != 0);
+   double daysLeft = static_cast<double>(crossing - now) / 86400.0;
+   AssertTrue((daysLeft > 4.0) && (daysLeft < 5.0));
+   AssertTrue(flat.predictThresholdCrossing(100.0, now, noHolidays) < flat.predictThresholdCrossing(600.0, now, noHolidays));
+   AssertEquals(flat.predictThresholdCrossing(0.0, now, noHolidays), now);      // already crossed
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: forecast horizon"));
+   // At 100/day from 06:00 the walk can accumulate at most 8975 within the 90-day horizon
+   AssertTrue(flat.predictThresholdCrossing(100.0 * 88, now, noHolidays) != 0);
+   AssertEquals(flat.predictThresholdCrossing(100.0 * 90, now, noHolidays), static_cast<time_t>(0));
+   AssertEquals(flat.predictThresholdCrossing(100.0 * 200, now, noHolidays), static_cast<time_t>(0));
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: negative samples ignored"));
+   DailyActivityForecaster glitch;
+   BuildActivitySeries(&series, 56, ActivityFlatHundred);
+   series.get(30)->value = -5000.0;   // e.g. counter reset seen as negative activity
+   glitch.learn(series, now);
+   AssertEquals(glitch.getSampleCount(), 55);
+   AssertTrue(fabs(glitch.getBaseline() - 100.0) < 0.01);
+   crossing = glitch.predictThresholdCrossing(450.0, now, noHolidays);
+   AssertTrue(crossing != 0);
+   daysLeft = static_cast<double>(crossing - now) / 86400.0;
+   AssertTrue((daysLeft > 4.0) && (daysLeft < 5.0));
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: day of week factors"));
+   DailyActivityForecaster dip;
+   BuildActivitySeries(&series, 56, ActivitySundayDip);
+   dip.learn(series, now);
+   AssertTrue(dip.getDowFactor(0) < 0.6);
+   AssertTrue(dip.getDowFactor(3) > dip.getDowFactor(0));
+   time_t sunday = MakeDay(2026, 8, 2);
+   time_t monday = MakeDay(2026, 8, 3);
+   AssertTrue(dip.dailyForecast(sunday, noHolidays) < 0.7 * dip.dailyForecast(monday, noHolidays));
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: day of month factors"));
+   DailyActivityForecaster payday;
+   BuildActivitySeries(&series, 168, ActivityPayday);
+   payday.learn(series, now);
+   AssertTrue(payday.getDomFactor(25) > 1.3);
+   AssertTrue(payday.getDomFactor(10) < 1.1);
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: day of month factors unbiased by trend"));
+   // A recent level shift must not push all DOM factors in the same direction:
+   // their sample-weighted mean stays 1.0
+   DailyActivityForecaster trend;
+   BuildActivitySeries(&series, 56, ActivityStepTrend);
+   trend.learn(series, now);
+   double factorSum = 0, weightSum = 0;
+   for(int d = 1; d <= 31; d++)
+   {
+      factorSum += trend.getDomFactor(d) * trend.getDomWeight(d);
+      weightSum += trend.getDomWeight(d);
+   }
+   AssertTrue(weightSum > 0);
+   AssertTrue(fabs(factorSum / weightSum - 1.0) < 0.001);
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: holiday substitution"));
+   HolidayCalendar holidays;
+   AssertTrue(holidays.parse(L"2026-08-05"));   // a Wednesday
+   // DOW factor substituted with reference day's (Sunday), DOM factor of the 5th still applies
+   double holidayForecast = dip.dailyForecast(MakeDay(2026, 8, 5), holidays);
+   double expected = dip.getBaseline() * dip.getDowFactor(0) * dip.getDomFactor(5);
+   AssertTrue(fabs(holidayForecast - expected) < 0.001);
+   AssertTrue(holidayForecast < 0.7 * dip.dailyForecast(MakeDay(2026, 8, 5), noHolidays));
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: adjustment hook"));
+   HalvingAdjustment halved;
+   AssertTrue(fabs(flat.dailyForecast(monday, noHolidays, &halved) - 50.0) < 0.01);
+   crossing = flat.predictThresholdCrossing(450.0, now, noHolidays, &halved);
+   AssertTrue(crossing != 0);
+   daysLeft = static_cast<double>(crossing - now) / 86400.0;
+   AssertTrue((daysLeft > 8.5) && (daysLeft < 9.5));   // half the activity, twice the time
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: custom configuration"));
+   DailyActivityForecasterConfig config;
+   config.horizonDays = 10;
+   DailyActivityForecaster shortHorizon(config);
+   BuildActivitySeries(&series, 56, ActivityFlatHundred);
+   shortHorizon.learn(series, now);
+   AssertEquals(shortHorizon.getConfig().horizonDays, 10);   // configuration survives learn()
+   AssertTrue(shortHorizon.predictThresholdCrossing(450.0, now, noHolidays) != 0);
+   AssertEquals(shortHorizon.predictThresholdCrossing(100.0 * 15, now, noHolidays), static_cast<time_t>(0));
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: cold start"));
+   DailyActivityForecaster cold;
+   BuildActivitySeries(&series, 3, ActivityFlatHundred);
+   cold.learn(series, now);
+   AssertFalse(cold.isValid());
+   AssertEquals(cold.predictThresholdCrossing(450.0, now, noHolidays), static_cast<time_t>(0));
+   DailyActivityForecaster shallow;
+   BuildActivitySeries(&series, 10, ActivitySundayDip);
+   shallow.learn(series, now);
+   AssertTrue(shallow.isValid());
+   AssertFalse(shallow.hasFactors());
+   AssertTrue(shallow.predictThresholdCrossing(450.0, now, noHolidays) != 0);
+   DailyActivityForecaster empty;
+   AssertFalse(empty.isValid());
+   AssertEquals(empty.predictThresholdCrossing(100.0, now, noHolidays), static_cast<time_t>(0));
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -1536,5 +1806,7 @@ int main(int argc, char *argv[])
    TestDriverVlans();
    TestDriverArpCache();
    TestDriverDefaults();
+   TestHolidayCalendar();
+   TestDailyActivityForecaster();
    return 0;
 }
