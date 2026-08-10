@@ -175,16 +175,13 @@ static int SelectResultType(int dataTypeLeft, int dataTypeRight, int operation)
       }
       else
       {
-         if (((dataTypeLeft >= NXSL_DT_UINT32) && (dataTypeRight < NXSL_DT_UINT32)) ||
-             ((dataTypeLeft < NXSL_DT_UINT32) && (dataTypeRight >= NXSL_DT_UINT32)))
-         {
-            // One operand signed, other unsigned, convert both to signed
-            if (dataTypeLeft >= NXSL_DT_UINT32)
-               dataTypeLeft -= 2;
-            else if (dataTypeRight >= NXSL_DT_UINT32)
-               dataTypeRight -= 2;
-         }
-         nType = std::max(dataTypeLeft, dataTypeRight);
+         // Integer operations are performed as signed 64 bit unless at least one operand
+         // is unsigned 64 bit - then entire operation stays in unsigned 64 bit domain.
+         // Modular 32 bit arithmetic is available via explicit int32()/uint32() casts.
+         if ((dataTypeLeft == NXSL_DT_UINT64) || (dataTypeRight == NXSL_DT_UINT64))
+            nType = NXSL_DT_UINT64;
+         else
+            nType = NXSL_DT_INT64;
       }
    }
    return nType;

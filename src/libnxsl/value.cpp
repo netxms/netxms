@@ -901,10 +901,12 @@ void NXSL_Value::increment()
       switch(m_dataType)
       {
          case NXSL_DT_INT32:
-            m_value.int32++;
+            m_value.int64 = static_cast<int64_t>(m_value.int32) + 1;
+            m_dataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_UINT32:
-            m_value.uint32++;
+            m_value.int64 = static_cast<int64_t>(m_value.uint32) + 1;
+            m_dataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_INT64:
             m_value.int64++;
@@ -932,10 +934,12 @@ void NXSL_Value::decrement()
       switch(m_dataType)
       {
          case NXSL_DT_INT32:
-            m_value.int32--;
+            m_value.int64 = static_cast<int64_t>(m_value.int32) - 1;
+            m_dataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_UINT32:
-            m_value.uint32--;
+            m_value.int64 = static_cast<int64_t>(m_value.uint32) - 1;
+            m_dataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_INT64:
             m_value.int64--;
@@ -966,11 +970,12 @@ void NXSL_Value::negate()
             m_value.int32 = m_value.int32 ? 0 : 1;
             break;
          case NXSL_DT_INT32:
-            m_value.int32 = -m_value.int32;
+            m_value.int64 = -static_cast<int64_t>(m_value.int32);
+            m_dataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_UINT32:
-            m_value.int32 = -((INT32)m_value.uint32);
-            m_dataType = NXSL_DT_INT32;
+            m_value.int64 = -static_cast<int64_t>(m_value.uint32);
+            m_dataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_INT64:
             m_value.int64 = -m_value.int64;
@@ -999,16 +1004,18 @@ void NXSL_Value::bitNot()
       switch(m_dataType)
       {
          case NXSL_DT_INT32:
-            m_value.int32 = ~m_value.int32;
+            m_value.int64 = ~static_cast<int64_t>(m_value.int32);
+            m_dataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_UINT32:
-            m_value.int32 = ~m_value.uint32;
+            m_value.int64 = ~static_cast<int64_t>(m_value.uint32);
+            m_dataType = NXSL_DT_INT64;
             break;
          case NXSL_DT_INT64:
             m_value.int64 = ~m_value.int64;
             break;
          case NXSL_DT_UINT64:
-            m_value.int64 = ~m_value.uint64;
+            m_value.uint64 = ~m_value.uint64;
             break;
          default:
             break;

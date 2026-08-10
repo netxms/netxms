@@ -79,4 +79,25 @@ assert(StandardDeviation(2, 4, 4, 4, 5, 5, 7, 9) == 2);
 
 assert((Round(Weierstrass(0.5, 7, 10), 4) .. "") == "1.9992");
 
+// Integer arithmetic is performed in 64 bit - no silent 32 bit overflow
+big = uint32(0xFFFFFFFF);
+assert(big > 0);
+assert(big + 1 == 0x100000000);
+assert(big * 2 == 0x1FFFFFFFE);
+assert(uint32(big + 1) == 0);  // explicit cast provides modular 32 bit arithmetic
+assert(2000000000 + 2000000000 == 4000000000);
+assert((1 << 40) == 0x10000000000);
+
+// Counter32-style delta produces negative value instead of silent wrap
+prev = uint32(0xFFFFFFFE);
+curr = uint32(2);
+delta = curr - prev;
+assert(delta == -4294967292);
+if (delta < 0)
+   delta = delta + 0x100000000;
+assert(delta == 4);
+
+// unsigned 64 bit domain retains modular arithmetic
+assert(0UL - 1 == 0xFFFFFFFFFFFFFFFFUL);
+
 return 0;
