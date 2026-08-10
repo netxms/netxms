@@ -2188,17 +2188,11 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_REQUEST_AI_ASSISTANT_COMMENT:
          requestAiAssistantComment(*request);
          break;
-      case CMD_GET_AI_ASSISTANT_FUNCTIONS:
-         getAiAssistantFunctions(*request);
-         break;
       case CMD_GET_AI_SKILLS_AND_FUNCTIONS:
          getAiSkillsAndFunctions(*request);
          break;
       case CMD_MODIFY_AI_DISABLED_LIST:
          modifyAiDisabledList(*request);
-         break;
-      case CMD_CALL_AI_ASSISTANT_FUNCTION:
-         callAiAssistantFunction(*request);
          break;
       case CMD_GET_AI_AGENT_TASKS:
          getAiAgentTasks(*request);
@@ -20496,24 +20490,6 @@ void ClientSession::requestAiAssistantComment(const NXCPMessage& request)
 }
 
 /**
- * Get list of AI assistant functions
- */
-void ClientSession::getAiAssistantFunctions(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (checkSystemAccessRights(SYSTEM_ACCESS_USE_AI_ASSISTANT))
-   {
-      FillAIAssistantFunctionListMessage(&response);
-      response.setField(VID_RCC, RCC_SUCCESS);
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   sendMessage(response);
-}
-
-/**
  * Get list of AI skills and functions (with disabled status)
  */
 void ClientSession::getAiSkillsAndFunctions(const NXCPMessage& request)
@@ -20562,46 +20538,6 @@ void ClientSession::modifyAiDisabledList(const NXCPMessage& request)
       {
          response.setField(VID_RCC, RCC_DB_FAILURE);
       }
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   sendMessage(response);
-}
-
-/**
- * Call AI assistant function
- */
-void ClientSession::callAiAssistantFunction(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   if (checkSystemAccessRights(SYSTEM_ACCESS_USE_AI_ASSISTANT))
-   {
-      char functionName[128];
-      request.getFieldAsUtf8String(VID_AI_FUNCTION_NAME, functionName, 128);
-
-      char *args = request.getFieldAsUtf8String(VID_ARGUMENTS);
-      if (args != nullptr)
-      {
-         json_t *arguments = json_loads(args, 0, nullptr);
-         if (arguments != nullptr)
-         {
-            response.setFieldFromUtf8String(VID_MESSAGE, CallGlobalAIAssistantFunction(functionName, arguments, m_userId).c_str());
-            response.setField(VID_RCC, RCC_SUCCESS);
-            json_decref(arguments);
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-         }
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
-      }
-      MemFree(args);
    }
    else
    {

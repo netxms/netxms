@@ -63,16 +63,6 @@ public class AiAssistantFunction
    }
 
    /**
-    * Get JSON schema for function parameters.
-    *
-    * @return JSON schema or null
-    */
-   public String getSchema()
-   {
-      return null;
-   }
-
-   /**
     * Check if this function is disabled by administrator.
     *
     * @return true if disabled

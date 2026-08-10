@@ -164,6 +164,85 @@ std::unordered_set<std::string> GetRegisteredSkillNames()
 }
 
 /**
+ * Collect functions from all registered skills not in the given disabled skills set
+ */
+void CollectSkillFunctions(std::vector<shared_ptr<AssistantFunction>>& functions, const std::unordered_set<std::string>& disabledSkills)
+{
+   LockGuard lockGuard(s_skillsMutex);
+   for(const auto& pair : s_skills)
+   {
+      if (disabledSkills.count(pair.first))
+         continue;
+      for(const AssistantFunction& function : pair.second->functions)
+         functions.push_back(make_shared<AssistantFunction>(function));
+   }
+}
+
+/**
+ * Find function by name across all registered skills, skipping disabled skills. Returns nullptr if not found.
+ */
+shared_ptr<AssistantFunction> FindSkillFunction(const char *name)
+{
+   auto disabledSkills = GetAIDisabledSkills();
+
+   LockGuard lockGuard(s_skillsMutex);
+   for(const auto& pair : s_skills)
+   {
+      if (disabledSkills.count(pair.first))
+         continue;
+      for(const AssistantFunction& function : pair.second->functions)
+      {
+         if (function.name == name)
+            return make_shared<AssistantFunction>(function);
+      }
+   }
+   return shared_ptr<AssistantFunction>();
+}
+
+/**
+ * Get skill prompt list for MCP clients (excluding disabled skills)
+ */
+json_t NXCORE_EXPORTABLE *GetMCPPromptsAsJson()
+{
+   auto disabledSkills = GetAIDisabledSkills();
+
+   json_t *prompts = json_array();
+   LockGuard lockGuard(s_skillsMutex);
+   for(const auto& pair : s_skills)
+   {
+      if (disabledSkills.count(pair.first))
+         continue;
+      const AssistantSkill& skill = *pair.second;
+      json_t *entry = json_object();
+      json_object_set_new(entry, "name", json_string(skill.name.c_str()));
+      json_object_set_new(entry, "description", json_string(skill.description.c_str()));
+      json_array_append_new(prompts, entry);
+   }
+   return prompts;
+}
+
+/**
+ * Get single skill prompt for MCP clients
+ */
+json_t NXCORE_EXPORTABLE *GetMCPPromptAsJson(const char *name)
+{
+   if (IsAISkillDisabled(name))
+      return nullptr;
+
+   LockGuard lockGuard(s_skillsMutex);
+   auto it = s_skills.find(name);
+   if (it == s_skills.end())
+      return nullptr;
+
+   const AssistantSkill& skill = *it->second;
+   json_t *entry = json_object();
+   json_object_set_new(entry, "name", json_string(skill.name.c_str()));
+   json_object_set_new(entry, "description", json_string(skill.description.c_str()));
+   json_object_set_new(entry, "prompt", json_string(skill.prompt.c_str()));
+   return entry;
+}
+
+/**
  * Fill NXCP message with registered skills list (including disabled status)
  */
 void FillAISkillListMessage(NXCPMessage *msg)

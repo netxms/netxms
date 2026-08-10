@@ -141,6 +141,7 @@ SERVER_DIRS = \
     src/server/wlcbridge \
     src/server/leef \
     src/server/jira \
+    src/server/mcp \
     src/server/redmine \
     src/server/oxidized \
     src/server/ntcb \

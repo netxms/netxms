@@ -1,0 +1,14 @@
+#
+# Makefile.w32 - mcp (native MCP endpoint module) for Windows/MinGW
+# Part of NetXMS project
+#
+# Registers the /mcp route on the common web API listener (microhttpd) and
+# exposes the server-side AI function/skill registry over MCP (stateless
+# streamable HTTP transport, one JSON-RPC message per POST).
+#
+
+MODULE = mcp
+SOURCES = $(wildcard *.cpp)
+MOD_LIBS = -lnxjansson $(MICROHTTPD_LIBS)
+
+include $(TOPDIR)/src/server/module-common.mk

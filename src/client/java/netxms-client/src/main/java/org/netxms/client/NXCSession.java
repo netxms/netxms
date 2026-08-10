@@ -17071,29 +17071,6 @@ public class NXCSession
    }
 
    /**
-    * Get list of available AI assistant functions.
-    *
-    * @return list of available AI assistant functions
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public List<AiAssistantFunction> getAiAssistantFunctions() throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_ASSISTANT_FUNCTIONS);
-      sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId());
-      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-      List<AiAssistantFunction> functions = new ArrayList<>(count);
-      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
-      for(int i = 0; i < count; i++)
-      {
-         functions.add(new AiAssistantFunction(response, fieldId));
-         fieldId += 10;
-      }
-      return functions;
-   }
-
-   /**
     * Get list of registered AI assistant skills and functions with disabled status.
     *
     * @return array with three lists: [0] skills, [1] functions, [2] extra disabled items
@@ -17173,25 +17150,6 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-   }
-
-   /**
-    * Call AI assistant function. Intended for use by MCP servers.
-    *
-    * @param name function name
-    * @param arguments function arguments in JSON format
-    * @return function return value
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public String callAiAssistantFunction(String name, String arguments) throws IOException, NXCException
-   {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CALL_AI_ASSISTANT_FUNCTION);
-      msg.setField(NXCPCodes.VID_AI_FUNCTION_NAME, name);
-      msg.setField(NXCPCodes.VID_ARGUMENTS, arguments);
-      sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
    }
 
    /**

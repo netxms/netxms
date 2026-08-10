@@ -235,6 +235,7 @@ enum CertificateOperation
 #define AUDIT_SYSCFG       _T("SYSCFG")
 #define AUDIT_CONSOLE      _T("CONSOLE")
 #define AUDIT_NETWORK      _T("NETWORK")
+#define AUDIT_AI           _T("AI")
 
 #define AUDIT_SYSTEM_SID   (-1)
 
@@ -995,10 +996,8 @@ private:
    void clearAiAssistantChat(const NXCPMessage& request);
    void deleteAiAssistantChat(const NXCPMessage& request);
    void requestAiAssistantComment(const NXCPMessage& request);
-   void getAiAssistantFunctions(const NXCPMessage& request);
    void getAiSkillsAndFunctions(const NXCPMessage& request);
    void modifyAiDisabledList(const NXCPMessage& request);
-   void callAiAssistantFunction(const NXCPMessage& request);
    void getAiAgentTasks(const NXCPMessage& request);
    void deleteAiAgentTask(const NXCPMessage& request);
    void addAiAgentTask(const NXCPMessage& request);

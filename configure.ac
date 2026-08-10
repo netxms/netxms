@@ -4765,6 +4765,7 @@ AC_CONFIG_FILES([
 	src/server/leef/Makefile
 	src/server/jira/Makefile
 	src/server/libnxsrv/Makefile
+	src/server/mcp/Makefile
 	src/server/netxmsd/Makefile
 	src/server/redmine/Makefile
 	src/server/ntcb/Makefile

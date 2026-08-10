@@ -494,8 +494,7 @@ public class NXCPCodes
    public static final int CMD_CLEAR_AI_ASSISTANT_CHAT = 0x01D9;
    public static final int CMD_LINK_NETWORK_MAP_NODES = 0x01DA;
    public static final int CMD_GET_DC_OBJECT = 0x01DB;
-   public static final int CMD_GET_AI_ASSISTANT_FUNCTIONS = 0x01DC;
-   public static final int CMD_CALL_AI_ASSISTANT_FUNCTION = 0x01DD;
+   // 0x01DC and 0x01DD are retired (former AI assistant function list/call, replaced by native MCP endpoint); do not reuse
    public static final int CMD_GET_AI_AGENT_TASKS = 0x01DE;
    public static final int CMD_DELETE_AI_AGENT_TASK = 0x01DF;
    public static final int CMD_ADD_AI_AGENT_TASK = 0x01E0;

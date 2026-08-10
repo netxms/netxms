@@ -679,8 +679,8 @@ __PACK_END__
 #define CMD_CLEAR_AI_ASSISTANT_CHAT       0x01D9
 #define CMD_LINK_NETWORK_MAP_NODES        0x01DA
 #define CMD_GET_DC_OBJECT                 0x01DB
-#define CMD_GET_AI_ASSISTANT_FUNCTIONS    0x01DC
-#define CMD_CALL_AI_ASSISTANT_FUNCTION    0x01DD
+// retired, can reuse: #define CMD_GET_AI_ASSISTANT_FUNCTIONS    0x01DC
+// retired, can reuse: #define CMD_CALL_AI_ASSISTANT_FUNCTION    0x01DD
 #define CMD_GET_AI_AGENT_TASKS            0x01DE
 #define CMD_DELETE_AI_AGENT_TASK          0x01DF
 #define CMD_ADD_AI_AGENT_TASK             0x01E0
