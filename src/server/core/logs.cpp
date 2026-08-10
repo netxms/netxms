@@ -213,16 +213,16 @@ static NXCORE_LOG s_logs[] =
          { nullptr, nullptr, 0, 0 }
       }
    },
-   { L"PackageDeploymentLog", L"package_deployment_log", L"record_id", nullptr, SYSTEM_ACCESS_MANAGE_PACKAGES,
+   { L"PackageDeploymentLog", L"package_deployment_log", L"job_id", nullptr, SYSTEM_ACCESS_MANAGE_PACKAGES,
       "Software package deployment log. Tracks package installations and updates on managed nodes including "
       "execution and completion times, target node, initiating user, deployment status (pending, running, completed, failed), "
       "failure reasons, and package details (name, version, type, platform).",
       {
-         { L"record_id", L"ID", LC_INTEGER, LCF_RECORD_ID },
+         { L"job_id", L"Job ID", LC_INTEGER, LCF_RECORD_ID },
          { L"execution_time", L"Execution time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
          { L"completion_time", L"Completion time", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
          { L"node_id", L"Node", LC_OBJECT_ID, 0 },
-         { L"user_id", L"Node", LC_USER_ID, 0 },
+         { L"user_id", L"User", LC_USER_ID, 0 },
          { L"status", L"Status", LC_DEPLOYMENT_STATUS, 0 },
          { L"failure_reason", L"Failure reason", LC_TEXT, 0 },
          { L"pkg_id", L"Package ID", LC_INTEGER, 0 },
