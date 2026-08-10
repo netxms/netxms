@@ -41,6 +41,7 @@ import org.netxms.client.objects.configs.ChassisPlacement;
 import org.netxms.client.objects.interfaces.HardwareEntity;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.objects.interfaces.ZoneMember;
+import org.netxms.client.snmp.SnmpAgentConfiguration;
 import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.client.topology.NetworkPathCheckResult;
 import org.netxms.client.topology.RadioInterface;
@@ -182,6 +183,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	protected String snmpOID;
    protected SnmpVersion snmpVersion;
 	protected int snmpPort;
+   protected List<SnmpAgentConfiguration> snmpAgents;
 	protected String snmpSysName;
    protected String snmpSysContact;
    protected String snmpSysLocation;
@@ -329,6 +331,11 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       {
          snmpTrapAuthName = null;
       }
+      int snmpAgentCount = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_AGENT_COUNT);
+      snmpAgents = new ArrayList<SnmpAgentConfiguration>(snmpAgentCount);
+      long snmpAgentFieldId = NXCPCodes.VID_SNMP_AGENT_LIST_BASE;
+      for(int i = 0; i < snmpAgentCount; i++, snmpAgentFieldId += 10)
+         snmpAgents.add(new SnmpAgentConfiguration(msg, snmpAgentFieldId));
 		systemDescription = msg.getFieldAsString(NXCPCodes.VID_SYS_DESCRIPTION);
 		snmpSysName = msg.getFieldAsString(NXCPCodes.VID_SYS_NAME);
       snmpSysContact = msg.getFieldAsString(NXCPCodes.VID_SYS_CONTACT);
@@ -734,6 +741,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	{
 		return snmpVersion;
 	}
+
+   /**
+    * Get configurations of additional SNMP agents on this node.
+    *
+    * @return list of additional SNMP agent configurations
+    */
+   public List<SnmpAgentConfiguration> getSnmpAgents()
+   {
+      return snmpAgents;
+   }
 
 	/**
 	 * @return the systemDescription

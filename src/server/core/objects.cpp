@@ -1522,6 +1522,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("network_map_links"), _T("map_id,link_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_seed_nodes"), _T("map_id,seed_node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("node_components"), _T("node_id,component_index"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("node_snmp_agents"), _T("node_id,name"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("object_containers"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("ospf_areas"), _T("node_id,area_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("ospf_neighbors"), _T("node_id,router_id,if_index,ip_address"), _T("*"), intColumns) &&

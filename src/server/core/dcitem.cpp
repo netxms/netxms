@@ -232,7 +232,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds) : DCObje
  *    all_rearmed_event,transformed_datatype,user_tag,thresholds_disable_end_time,snmp_context,
  *    anomaly_profile,anomaly_profile_timestamp,ai_hint,
  *    aggregation_disabled,hourly_retention,daily_retention,aggregation_watermark,
- *    mapping_table_id
+ *    mapping_table_id,snmp_agent_name
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
@@ -301,6 +301,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResul
    m_dailyRetention = DBGetFieldInt32(hResult, row, 49);
    m_aggregationWatermark = DBGetFieldInt64(hResult, row, 50);
    m_mappingTableId = DBGetFieldUInt32(hResult, row, 51);
+   m_snmpAgentName = DBGetFieldAsSharedString(hResult, row, 52);
 
    int effectivePollingInterval = getEffectivePollingInterval();
    m_startTime = (useStartupDelay && (effectivePollingInterval >= 10)) ? time(nullptr) + rand() % (effectivePollingInterval / 2) : 0;
@@ -599,7 +600,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
       L"transformed_datatype", L"user_tag", L"thresholds_disable_end_time", L"snmp_context",
       L"anomaly_profile", L"anomaly_profile_timestamp", L"ai_hint",
       L"aggregation_disabled", L"hourly_retention", L"daily_retention", L"aggregation_watermark",
-      L"mapping_table_id", nullptr
+      L"mapping_table_id", L"snmp_agent_name", nullptr
    };
 
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"items", L"item_id", m_id, columns);
@@ -668,7 +669,8 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, m_dailyRetention);
    DBBind(hStmt, 51, DB_SQLTYPE_BIGINT, m_aggregationWatermark);
    DBBind(hStmt, 52, DB_SQLTYPE_INTEGER, m_mappingTableId);
-   DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 53, DB_SQLTYPE_VARCHAR, m_snmpAgentName, DB_BIND_STATIC, MAX_OBJECT_NAME - 1);
+   DBBind(hStmt, 54, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -3069,6 +3071,7 @@ json_t *DCItem::createExportRecord() const
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "snmpVersion", json_integer(static_cast<int32_t>(m_snmpVersion)));
    json_object_set_new(root, "snmpContext", json_string_t(m_snmpContext));
+   json_object_set_new(root, "snmpAgentName", json_string_t(m_snmpAgentName));
    json_object_set_new(root, "instanceDiscoveryMethod", json_integer(m_instanceDiscoveryMethod));
    json_object_set_new(root, "instanceRetentionTime", json_integer(m_instanceRetentionTime));
    json_object_set_new(root, "comments", json_string_t(m_comments));

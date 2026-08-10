@@ -3375,6 +3375,15 @@ static void MaskNodeCredentials(NXCPMessage *msg, const NetObj& object, uint32_t
    msg->setField(VID_SNMP_TRAP_AUTH_OBJECT, mask);
    msg->setField(VID_SNMP_TRAP_AUTH_PASSWORD, mask);
    msg->setField(VID_SNMP_TRAP_PRIV_PASSWORD, mask);
+
+   int agentCount = msg->getFieldAsInt32(VID_SNMP_AGENT_COUNT);
+   uint32_t fieldId = VID_SNMP_AGENT_LIST_BASE;
+   for(int i = 0; i < agentCount; i++, fieldId += 10)
+   {
+      msg->setField(fieldId + 4, mask);
+      msg->setField(fieldId + 5, mask);
+      msg->setField(fieldId + 6, mask);
+   }
 }
 
 /**

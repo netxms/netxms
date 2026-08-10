@@ -220,6 +220,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 	m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
    m_snmpContext = src->m_snmpContext;
+   m_snmpAgentName = src->m_snmpAgentName;
 	m_doForcePoll = false;
 	m_pollingSessionId = -1;
    m_lastScriptErrorReport = 0;
@@ -340,6 +341,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_snmpPort = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
    m_snmpContext = config->getSubEntryValue(_T("snmpContext"));
+   m_snmpAgentName = config->getSubEntryValue(_T("snmpAgentName"));
    m_schedules = nullptr;
    m_lastScriptErrorReport = 0;
    m_comments = config->getSubEntryValue(_T("comments"));
@@ -435,6 +437,7 @@ DCObject::DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner, I
    m_snmpPort = static_cast<uint16_t>(json_object_get_int32(json, "snmpPort"));
    m_snmpVersion = static_cast<SNMP_Version>(json_object_get_int32(json, "snmpVersion", SNMP_VERSION_DEFAULT));
    m_snmpContext = json_object_get_string(json, "snmpContext", _T(""));
+   m_snmpAgentName = json_object_get_string(json, "snmpAgentName", _T(""));
    m_schedules = nullptr;
    m_lastScriptErrorReport = 0;
    m_comments = json_object_get_string(json, "comments", _T(""));
@@ -985,6 +988,7 @@ void DCObject::createMessage(NXCPMessage *msg)
 	msg->setField(VID_SNMP_PORT, m_snmpPort);
    msg->setField(VID_SNMP_VERSION, static_cast<int16_t>(m_snmpVersion));
    msg->setField(VID_SNMP_CONTEXT, m_snmpContext);
+   msg->setField(VID_SNMP_AGENT_NAME, m_snmpAgentName);
    msg->setField(VID_COMMENTS, m_comments);
    msg->setField(VID_PERFTAB_SETTINGS, m_perfTabSettings);
 	if (m_schedules != nullptr)
@@ -1031,6 +1035,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    m_snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);
    m_snmpVersion = msg.isFieldExist(VID_SNMP_VERSION) ? static_cast<SNMP_Version>(msg.getFieldAsInt16(VID_SNMP_VERSION)) : SNMP_VERSION_DEFAULT;
    m_snmpContext = msg.getFieldAsSharedString(VID_SNMP_CONTEXT);
+   m_snmpAgentName = msg.getFieldAsSharedString(VID_SNMP_AGENT_NAME);
 	m_perfTabSettings = msg.getFieldAsSharedString(VID_PERFTAB_SETTINGS);
 	m_comments = msg.getFieldAsSharedString(VID_COMMENTS);
 
@@ -1266,6 +1271,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
    m_snmpContext = src->m_snmpContext;
+   m_snmpAgentName = src->m_snmpAgentName;
    m_comments = src->m_comments;
    m_perfTabSettings = src->m_perfTabSettings;
 
@@ -1372,7 +1378,7 @@ int16_t DCObject::getAgentCacheMode()
    if (node == nullptr)
       return AGENT_CACHE_OFF;
 
-   if ((m_source == DS_SNMP_AGENT) && (node->getEffectiveSnmpProxy() == 0))
+   if ((m_source == DS_SNMP_AGENT) && ((node->getEffectiveSnmpProxy() == 0) || !m_snmpAgentName.isEmpty()))
       return AGENT_CACHE_OFF;
 
    if ((m_source == DS_MODBUS) && (node->getEffectiveModbusProxy() == 0))
@@ -1401,6 +1407,7 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext 
    m_snmpPort = static_cast<uint16_t>(config->getSubEntryValueAsInt(_T("snmpPort")));
    m_snmpVersion = static_cast<SNMP_Version>(config->getSubEntryValueAsInt(_T("snmpVersion"), 0, SNMP_VERSION_DEFAULT));
    m_snmpContext = config->getSubEntryValue(_T("snmpContext"));
+   m_snmpAgentName = config->getSubEntryValue(_T("snmpAgentName"));
    if (config->getSubEntryValueAsBoolean(_T("isDisabled")))
       m_status = ITEM_STATUS_DISABLED;
 
@@ -1815,6 +1822,7 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "snmpPort", json_integer(m_snmpPort));
    json_object_set_new(root, "snmpVersion", json_integer(m_snmpVersion));
    json_object_set_new(root, "snmpContext", json_string_w(m_snmpContext));
+   json_object_set_new(root, "snmpAgentName", json_string_w(m_snmpAgentName));
    json_object_set_new(root, "perfTabSettings", json_string_w(m_perfTabSettings));
    json_object_set_new(root, "transformationScript", json_string_w(m_transformationScriptSource));
    json_object_set_new(root, "comments", json_string_w(m_comments));
@@ -1874,6 +1882,7 @@ uint32_t DCObject::updateFromJSON(json_t *json, bool create)
        !UpdateSharedStringFromJson(json, "systemTag", &m_systemTag) ||
        !UpdateSharedStringFromJson(json, "userTag", &m_userTag) ||
        !UpdateSharedStringFromJson(json, "snmpContext", &m_snmpContext) ||
+       !UpdateSharedStringFromJson(json, "snmpAgentName", &m_snmpAgentName) ||
        !UpdateSharedStringFromJson(json, "perfTabSettings", &m_perfTabSettings) ||
        !UpdateSharedStringFromJson(json, "comments", &m_comments) ||
        !UpdateSharedStringFromJson(json, "instanceDiscoveryData", &m_instanceDiscoveryData) ||
@@ -2481,6 +2490,7 @@ void DCObject::updateFromImport(json_t *json, ImportContext *context)
    m_snmpPort = static_cast<uint16_t>(json_object_get_int32(json, "snmpPort"));
    m_snmpVersion = static_cast<SNMP_Version>(json_object_get_int32(json, "snmpVersion", SNMP_VERSION_DEFAULT));
    m_snmpContext = json_object_get_string(json, "snmpContext", _T(""));
+   m_snmpAgentName = json_object_get_string(json, "snmpAgentName", _T(""));
 
    json_t *isDisabledObj = json_object_get(json, "isDisabled");
    if (json_is_true(isDisabledObj))

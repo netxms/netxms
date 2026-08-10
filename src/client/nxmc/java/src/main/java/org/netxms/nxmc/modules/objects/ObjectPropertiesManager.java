@@ -76,6 +76,7 @@ import org.netxms.nxmc.modules.objects.propertypages.RackPassiveElements;
 import org.netxms.nxmc.modules.objects.propertypages.RackProperties;
 import org.netxms.nxmc.modules.objects.propertypages.ResponsibleUsers;
 import org.netxms.nxmc.modules.objects.propertypages.SNMP;
+import org.netxms.nxmc.modules.objects.propertypages.SNMPAgents;
 import org.netxms.nxmc.modules.objects.propertypages.SSH;
 import org.netxms.nxmc.modules.objects.propertypages.ObservationPointScope;
 import org.netxms.nxmc.modules.objects.propertypages.TrafficObserverConnection;
@@ -153,6 +154,7 @@ public class ObjectPropertiesManager
       pageClasses.add(TrafficObserverConnection.class);
       pageClasses.add(TrafficObserverSync.class);
       pageClasses.add(SNMP.class);
+      pageClasses.add(SNMPAgents.class);
       pageClasses.add(SSH.class);
       pageClasses.add(StatusCalculation.class);
       pageClasses.add(Syslog.class);

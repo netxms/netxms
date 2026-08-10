@@ -1800,6 +1800,11 @@ __PACK_END__
 #define VID_AGENT_CERT_FINGERPRINT  ((uint32_t)1025)
 #define VID_SINGLE_USE              ((uint32_t)1026)
 #define VID_MAINTENANCE_SCHEDULED   ((uint32_t)1027)
+#define VID_SNMP_AGENT_COUNT        ((uint32_t)1028)
+#define VID_SNMP_AGENT_NAME         ((uint32_t)1029)
+
+// Base value for additional SNMP agent list (10 fields per entry)
+#define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)
 
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)

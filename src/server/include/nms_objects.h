@@ -941,6 +941,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_RESOURCE_PROPERTIES  0x80000000
 #define MODIFY_TRAFFIC_OBSERVER_PROPERTIES 0x80000000
 #define MODIFY_OBSERVATION_POINT_PROPERTIES 0x80000000
+#define MODIFY_SNMP_AGENT_LIST      0x80000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -1353,6 +1354,7 @@ enum LoadStatementIndex
    LSI_ACCESS_POINT,
    LSI_AI_DATA,
    LSI_PORT_STOP_LIST,
+   LSI_NODE_SNMP_AGENTS,
    LSI_MAX_VALUE
 };
 
@@ -4157,6 +4159,52 @@ struct ReconciliationStatus
 };
 
 /**
+ * Additional SNMP agent on a node - defines alternative SNMP endpoint (different port,
+ * credentials, and optionally IP address) that can be referenced by name from data
+ * collection items and scripts.
+ */
+class NXCORE_EXPORTABLE AdditionalSnmpAgent
+{
+private:
+   wchar_t m_name[MAX_OBJECT_NAME];
+   InetAddress m_ipAddress;   // Invalid address = use node's primary IP address
+   uint16_t m_port;
+   SNMP_Version m_version;
+   SNMP_SecurityContext *m_securityContext;
+
+   void createSecurityContext(const char *authName, const char *authPassword, const char *privPassword, int usmMethods, const char *contextName);
+
+   AdditionalSnmpAgent()
+   {
+      m_name[0] = 0;
+      m_port = SNMP_DEFAULT_PORT;
+      m_version = SNMP_VERSION_2C;
+      m_securityContext = nullptr;
+   }
+
+public:
+   AdditionalSnmpAgent(DB_RESULT hResult, int row);
+   AdditionalSnmpAgent(const NXCPMessage& msg, uint32_t baseId);
+   AdditionalSnmpAgent(const AdditionalSnmpAgent& src);
+   ~AdditionalSnmpAgent()
+   {
+      delete m_securityContext;
+   }
+
+   const wchar_t *getName() const { return m_name; }
+   const InetAddress& getIpAddress() const { return m_ipAddress; }
+   uint16_t getPort() const { return m_port; }
+   SNMP_Version getSnmpVersion() const { return m_version; }
+   const SNMP_SecurityContext *getSecurityContext() const { return m_securityContext; }
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   bool saveToDatabase(DB_STATEMENT hStmt) const;
+   json_t *toJson(bool includeSensitiveData) const;
+
+   static AdditionalSnmpAgent *createFromJson(json_t *json, uint32_t *rcc);
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -4216,6 +4264,7 @@ protected:
    SNMP_SecurityContext *m_snmpSecurity;
    SNMP_SecurityContext *m_snmpTrapSecurity;  // Separate credentials for trap reception (null = use m_snmpSecurity)
    SNMP_Version m_snmpTrapVersion;            // Only used when m_snmpTrapSecurity != nullptr
+   ObjectArray<AdditionalSnmpAgent> m_additionalSnmpAgents;
    char m_snmpCodepage[16];
    uuid m_agentId;
    TCHAR *m_agentCertSubject;
@@ -4424,6 +4473,7 @@ protected:
    bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, TCHAR **value);
    void checkBridgeMib(SNMP_Transport *snmp);
    void checkIfXTable(SNMP_Transport *snmp);
+   SNMP_Transport *createSnmpTransportInternal(const InetAddress& targetAddr, uint16_t port, bool pollerMessageOnFailure, uint32_t *proxyNodeId, bool *proxyConnectionFailed);
    NetworkPathCheckResult checkNetworkPath(uint32_t requestId, const StatusPollProxyEvidence& proxyEvidence);
    NetworkPathCheckResult checkNetworkPathLayer2(uint32_t requestId, bool secondPass, const StatusPollProxyEvidence& proxyEvidence);
    NetworkPathCheckResult checkNetworkPathLayer3(uint32_t requestId, bool secondPass);
@@ -4773,10 +4823,10 @@ public:
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
    virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result) override;
 
-   DataCollectionError getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *metric, TCHAR *buffer, size_t size, int interpretRawValue, const TCHAR *context = nullptr);
-   DataCollectionError getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context = nullptr, bool addInstanceOidColumn = false);
-   DataCollectionError getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list, const TCHAR *context = nullptr);
-   DataCollectionError getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *baseOid, StringMap **values, const TCHAR *context = nullptr);
+   DataCollectionError getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *metric, TCHAR *buffer, size_t size, int interpretRawValue, const TCHAR *context = nullptr, const TCHAR *snmpAgentName = nullptr);
+   DataCollectionError getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context = nullptr, bool addInstanceOidColumn = false, const TCHAR *snmpAgentName = nullptr);
+   DataCollectionError getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list, const TCHAR *context = nullptr, const TCHAR *snmpAgentName = nullptr);
+   DataCollectionError getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *baseOid, StringMap **values, const TCHAR *context = nullptr, const TCHAR *snmpAgentName = nullptr);
    DataCollectionError getMetricFromAgent(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getMetricFromNetconf(const TCHAR *metric, TCHAR *buffer, size_t size);
    DataCollectionError getTableFromAgent(const TCHAR *metric, shared_ptr<Table> *table);
@@ -4823,8 +4873,12 @@ public:
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
    SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr, bool pollerMessageOnFailure = false, uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr);
    SNMP_Transport *createSnmpTransportForPoller(uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr) { return createSnmpTransport(0, SNMP_VERSION_DEFAULT, nullptr, nullptr, true, proxyNodeId, proxyConnectionFailed); }
+   SNMP_Transport *createSnmpTransportForAgent(const wchar_t *agentName, bool *agentNotFound = nullptr);
    SNMP_SecurityContext *getSnmpSecurityContext() const;
    SNMP_SecurityContext *getSnmpTrapSecurityContext() const;
+   AdditionalSnmpAgent *getAdditionalSnmpAgent(const wchar_t *name) const;
+   void getAdditionalSnmpAgentNames(StringList *names) const;
+   ObjectArray<SNMP_SecurityContext> *getAdditionalSnmpSecurityContexts() const;
    void reportSnmpTrapAuthFailure(TrapCredentialCheckResult reason, const SNMP_PDU& pdu, const InetAddress& sourceAddress);
 
    shared_ptr<SSHInteractiveChannel> openInteractiveSSHChannel(const wchar_t *login, const wchar_t *password, uint32_t keyId);

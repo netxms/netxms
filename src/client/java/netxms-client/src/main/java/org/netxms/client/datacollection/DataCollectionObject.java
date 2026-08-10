@@ -99,6 +99,7 @@ public abstract class DataCollectionObject
 	protected int snmpPort;
    protected SnmpVersion snmpVersion;
    protected String snmpContext;
+   protected String snmpAgentName;
 	protected ArrayList<String> schedules;
 	protected Object userData;
    protected String comments;
@@ -145,6 +146,7 @@ public abstract class DataCollectionObject
             ? SnmpVersion.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SNMP_VERSION))
             : SnmpVersion.DEFAULT;
       snmpContext = msg.getFieldAsString(NXCPCodes.VID_SNMP_CONTEXT);
+      snmpAgentName = msg.getFieldAsString(NXCPCodes.VID_SNMP_AGENT_NAME);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		instanceRetentionTime = msg.getFieldAsInt32(NXCPCodes.VID_INSTANCE_RETENTION);
 		
@@ -201,6 +203,7 @@ public abstract class DataCollectionObject
 		snmpPort = 0;
       snmpVersion = SnmpVersion.DEFAULT;
       snmpContext = "";
+      snmpAgentName = "";
 		schedules = new ArrayList<String>(0);
 		comments = "";
       instanceName = "";
@@ -270,6 +273,7 @@ public abstract class DataCollectionObject
 	   snmpPort = src.snmpPort;
       snmpVersion = src.snmpVersion;
       snmpContext = src.snmpContext;
+      snmpAgentName = src.snmpAgentName;
 	   schedules = new ArrayList<String>(src.schedules);
 	   userData = src.userData;
 	   comments = src.comments;
@@ -310,6 +314,7 @@ public abstract class DataCollectionObject
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
       msg.setFieldInt16(NXCPCodes.VID_SNMP_VERSION, snmpVersion.getValue());
       msg.setField(NXCPCodes.VID_SNMP_CONTEXT, snmpContext);
+      msg.setField(NXCPCodes.VID_SNMP_AGENT_NAME, snmpAgentName);
 		msg.setField(NXCPCodes.VID_COMMENTS, comments);
 		msg.setFieldInt32(NXCPCodes.VID_INSTANCE_RETENTION, instanceRetentionTime);
 
@@ -719,6 +724,26 @@ public abstract class DataCollectionObject
    public void setSnmpContext(String snmpContext)
    {
       this.snmpContext = snmpContext;
+   }
+
+   /**
+    * Get name of additional SNMP agent on the node used by this DCI.
+    *
+    * @return name of additional SNMP agent or empty string for node's primary agent
+    */
+   public String getSnmpAgentName()
+   {
+      return snmpAgentName;
+   }
+
+   /**
+    * Set name of additional SNMP agent on the node to be used by this DCI.
+    *
+    * @param snmpAgentName name of additional SNMP agent or empty string for node's primary agent
+    */
+   public void setSnmpAgentName(String snmpAgentName)
+   {
+      this.snmpAgentName = snmpAgentName;
    }
 
    /**

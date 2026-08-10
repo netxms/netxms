@@ -506,6 +506,34 @@ TrapCredentialCheckResult ValidateTrapCredentials(SNMP_PDU *pdu, SNMP_SecurityCo
 }
 
 /**
+ * Validate SNMP trap credentials against additional SNMP agents configured on the node.
+ * Only applicable to v1/v2c traps - SNMPv3 decryption and validation is bound to the node's
+ * primary (or trap-specific) security context. Returns true if community string of any
+ * additional agent matches the trap PDU.
+ */
+bool ValidateTrapCredentialsForAdditionalAgents(SNMP_PDU *pdu, const shared_ptr<Node>& node)
+{
+   if ((node == nullptr) || (pdu->getVersion() == SNMP_VERSION_3))
+      return false;
+
+   bool valid = false;
+   ObjectArray<SNMP_SecurityContext> *contexts = node->getAdditionalSnmpSecurityContexts();
+   for(int i = 0; i < contexts->size(); i++)
+   {
+      SNMP_SecurityContext *context = contexts->get(i);
+      if (context->getSecurityModel() == SNMP_SECURITY_MODEL_USM)
+         continue;
+      if (ValidateTrapCredentials(pdu, context) == TrapCredentialCheckResult::OK)
+      {
+         valid = true;
+         break;
+      }
+   }
+   delete contexts;
+   return valid;
+}
+
+/**
  * Create SNMP transport for receiver
  */
 static SNMP_Transport *CreateTransport(SOCKET hSocket)
@@ -718,7 +746,12 @@ static void ReceiverThread()
             if (credCheck != TrapCredentialCheckResult::OK)
             {
                sourceNode = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
-               if (!IsTrapCredentialValidationEnabled(sourceNode))
+               if (ValidateTrapCredentialsForAdditionalAgents(pdu, sourceNode))
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPTrapReceiver: trap from %s matched credentials of additional SNMP agent", sourceAddr.toString().cstr());
+                  credCheck = TrapCredentialCheckResult::OK;
+               }
+               else if (!IsTrapCredentialValidationEnabled(sourceNode))
                {
                   nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPTrapReceiver: SNMP credential validation failed for trap from %s, but credential check is disabled", sourceAddr.toString().cstr());
                   credCheck = TrapCredentialCheckResult::OK;

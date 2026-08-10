@@ -600,6 +600,24 @@ CREATE TABLE node_components
 ) TABLE_TYPE;
 
 /**
+ * Additional SNMP agents on nodes
+ */
+CREATE TABLE node_snmp_agents
+(
+  node_id integer not null,
+  name varchar(63) not null,
+  ip_addr varchar(48) null,
+  port integer not null,
+  snmp_version integer not null,
+  auth_name varchar(255) null,
+  auth_password varchar(255) null,
+  priv_password varchar(255) null,
+  usm_methods integer not null,
+  context_name varchar(255) null,
+  PRIMARY KEY(node_id,name)
+) TABLE_TYPE;
+
+/**
  * OSPF areas
  */
 CREATE TABLE ospf_areas
@@ -934,6 +952,7 @@ CREATE TABLE items
   snmp_port integer not null,
   snmp_version integer not null,
   snmp_context varchar(255),
+  snmp_agent_name varchar(63) null,
   datatype integer not null,
   transformed_datatype integer not null,
   polling_schedule_type char(1) not null,
@@ -1031,6 +1050,7 @@ CREATE TABLE dc_tables
   snmp_port integer not null,
   snmp_version integer not null,
   snmp_context varchar(255),
+  snmp_agent_name varchar(63) null,
   polling_schedule_type char(1) not null,
   polling_interval integer not null,
   polling_interval_src varchar(255) null,

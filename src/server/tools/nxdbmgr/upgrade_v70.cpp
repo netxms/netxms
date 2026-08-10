@@ -24,6 +24,30 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.22 to 70.23
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE node_snmp_agents ("
+      L"   node_id integer not null,"
+      L"   name varchar(63) not null,"
+      L"   ip_addr varchar(48) null,"
+      L"   port integer not null,"
+      L"   snmp_version integer not null,"
+      L"   auth_name varchar(255) null,"
+      L"   auth_password varchar(255) null,"
+      L"   priv_password varchar(255) null,"
+      L"   usm_methods integer not null,"
+      L"   context_name varchar(255) null,"
+      L"PRIMARY KEY(node_id,name))"));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE items ADD snmp_agent_name varchar(63)"));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE dc_tables ADD snmp_agent_name varchar(63)"));
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 70.21 to 70.22
  */
 static bool H_UpgradeFromV21()
@@ -791,6 +815,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 22, 70, 23, H_UpgradeFromV22 },
    { 21, 70, 22, H_UpgradeFromV21 },
    { 20, 70, 21, H_UpgradeFromV20 },
    { 19, 70, 20, H_UpgradeFromV19 },

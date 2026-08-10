@@ -228,6 +228,7 @@ import org.netxms.client.server.ServerConsoleListener;
 import org.netxms.client.server.ServerFile;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.client.snmp.MibCompilationLogEntry;
+import org.netxms.client.snmp.SnmpAgentConfiguration;
 import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.client.snmp.SnmpTrapLogRecord;
@@ -7747,6 +7748,17 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_SNMP_TRAP_USM_METHODS, trapMethods);
          if (data.getSnmpTrapVersion() != null)
             msg.setFieldInt16(NXCPCodes.VID_SNMP_TRAP_VERSION, data.getSnmpTrapVersion().getValue());
+      }
+
+      if (data.getSnmpAgents() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_SNMP_AGENT_COUNT, data.getSnmpAgents().size());
+         long snmpAgentFieldId = NXCPCodes.VID_SNMP_AGENT_LIST_BASE;
+         for(SnmpAgentConfiguration a : data.getSnmpAgents())
+         {
+            a.fillMessage(msg, snmpAgentFieldId);
+            snmpAgentFieldId += 10;
+         }
       }
 
       if (data.getSnmpProxy() != null)

@@ -107,11 +107,254 @@ static const TCHAR *HookScriptLoadErrorToText(ScriptVMFailureReason reason)
    }
 }
 
+static uint32_t ApplySnmpCredentialFields(json_t *json, SNMP_SecurityContext *security, bool *changed);
+
+/**
+ * Create security context of additional SNMP agent from separate credential fields
+ */
+void AdditionalSnmpAgent::createSecurityContext(const char *authName, const char *authPassword, const char *privPassword, int usmMethods, const char *contextName)
+{
+   if (m_version == SNMP_VERSION_3)
+   {
+      m_securityContext = new SNMP_SecurityContext(authName, authPassword, privPassword,
+         static_cast<SNMP_AuthMethod>(usmMethods & 0xFF), static_cast<SNMP_EncryptionMethod>(usmMethods >> 8));
+      m_securityContext->recalculateKeys();
+   }
+   else
+   {
+      // Create security context with V2C security model; USM fields are preserved but keys are not calculated
+      m_securityContext = new SNMP_SecurityContext(authName);
+      m_securityContext->setAuthMethod(static_cast<SNMP_AuthMethod>(usmMethods & 0xFF));
+      m_securityContext->setAuthPassword(authPassword);
+      m_securityContext->setPrivMethod(static_cast<SNMP_EncryptionMethod>(usmMethods >> 8));
+      m_securityContext->setPrivPassword(privPassword);
+   }
+   if ((contextName != nullptr) && (contextName[0] != 0))
+      m_securityContext->setContextName(contextName);
+}
+
+/**
+ * Create additional SNMP agent configuration from database record.
+ * Expected column order: name,ip_addr,port,snmp_version,auth_name,auth_password,priv_password,usm_methods,context_name
+ */
+AdditionalSnmpAgent::AdditionalSnmpAgent(DB_RESULT hResult, int row)
+{
+   DBGetField(hResult, row, 0, m_name, MAX_OBJECT_NAME);
+   m_ipAddress = DBGetFieldInetAddr(hResult, row, 1);
+   m_port = DBGetFieldUInt16(hResult, row, 2);
+   m_version = SNMP_VersionFromInt(DBGetFieldLong(hResult, row, 3));
+   char authName[256], authPassword[256], privPassword[256], contextName[256];
+   DBGetFieldA(hResult, row, 4, authName, 256);
+   DBGetFieldA(hResult, row, 5, authPassword, 256);
+   DBGetFieldA(hResult, row, 6, privPassword, 256);
+   int usmMethods = DBGetFieldLong(hResult, row, 7);
+   DBGetFieldA(hResult, row, 8, contextName, 256);
+   createSecurityContext(authName, authPassword, privPassword, usmMethods, contextName);
+}
+
+/**
+ * Create additional SNMP agent configuration from NXCP message
+ */
+AdditionalSnmpAgent::AdditionalSnmpAgent(const NXCPMessage& msg, uint32_t baseId)
+{
+   msg.getFieldAsString(baseId, m_name, MAX_OBJECT_NAME);
+   m_ipAddress = msg.isFieldExist(baseId + 1) ? msg.getFieldAsInetAddress(baseId + 1) : InetAddress();
+   m_port = msg.getFieldAsUInt16(baseId + 2);
+   m_version = SNMP_VersionFromInt(msg.getFieldAsInt16(baseId + 3));
+   char authName[256], authPassword[256], privPassword[256], contextName[256];
+   msg.getFieldAsMBString(baseId + 4, authName, 256);
+   msg.getFieldAsMBString(baseId + 5, authPassword, 256);
+   msg.getFieldAsMBString(baseId + 6, privPassword, 256);
+   int usmMethods = msg.getFieldAsUInt16(baseId + 7);
+   msg.getFieldAsMBString(baseId + 8, contextName, 256);
+   createSecurityContext(authName, authPassword, privPassword, usmMethods, contextName);
+}
+
+/**
+ * Copy constructor for additional SNMP agent configuration
+ */
+AdditionalSnmpAgent::AdditionalSnmpAgent(const AdditionalSnmpAgent& src) : m_ipAddress(src.m_ipAddress)
+{
+   wcscpy(m_name, src.m_name);
+   m_port = src.m_port;
+   m_version = src.m_version;
+   m_securityContext = new SNMP_SecurityContext(src.m_securityContext);
+}
+
+/**
+ * Create additional SNMP agent configuration from JSON document (WebAPI path).
+ * Returns nullptr and sets *rcc on validation failure.
+ */
+AdditionalSnmpAgent *AdditionalSnmpAgent::createFromJson(json_t *json, uint32_t *rcc)
+{
+   if (!json_is_object(json))
+   {
+      *rcc = RCC_INVALID_ARGUMENT;
+      return nullptr;
+   }
+
+   AdditionalSnmpAgent *agent = new AdditionalSnmpAgent();
+
+   json_t *value = json_object_get(json, "name");
+   if (json_is_string(value))
+   {
+      wchar_t name[MAX_OBJECT_NAME];
+      utf8_to_wchar(json_string_value(value), -1, name, MAX_OBJECT_NAME);
+      name[MAX_OBJECT_NAME - 1] = 0;
+      wcscpy(agent->m_name, name);
+   }
+   if (agent->m_name[0] == 0)
+   {
+      *rcc = RCC_INVALID_ARGUMENT;
+      delete agent;
+      return nullptr;
+   }
+
+   value = json_object_get(json, "address");
+   if (json_is_string(value))
+   {
+      agent->m_ipAddress = InetAddress::parse(json_string_value(value));
+      if (!agent->m_ipAddress.isValidUnicast())
+      {
+         *rcc = RCC_INVALID_ARGUMENT;
+         delete agent;
+         return nullptr;
+      }
+   }
+   else if ((value != nullptr) && !json_is_null(value))
+   {
+      *rcc = RCC_INVALID_ARGUMENT;
+      delete agent;
+      return nullptr;
+   }
+
+   value = json_object_get(json, "port");
+   if (json_is_integer(value))
+   {
+      json_int_t port = json_integer_value(value);
+      if ((port < 1) || (port > 65535))
+      {
+         *rcc = RCC_INVALID_ARGUMENT;
+         delete agent;
+         return nullptr;
+      }
+      agent->m_port = static_cast<uint16_t>(port);
+   }
+   else if (value != nullptr)
+   {
+      *rcc = RCC_INVALID_ARGUMENT;
+      delete agent;
+      return nullptr;
+   }
+
+   value = json_object_get(json, "version");
+   if (!json_is_string(value) || !SnmpVersionFromName(json_string_value(value), &agent->m_version))
+   {
+      *rcc = RCC_INVALID_ARGUMENT;
+      delete agent;
+      return nullptr;
+   }
+
+   agent->m_securityContext = new SNMP_SecurityContext();
+   agent->m_securityContext->setSecurityModel((agent->m_version == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+   bool changed = false;
+   uint32_t fieldStatus = ApplySnmpCredentialFields(json, agent->m_securityContext, &changed);
+   if (fieldStatus != RCC_SUCCESS)
+   {
+      *rcc = fieldStatus;
+      delete agent;
+      return nullptr;
+   }
+
+   value = json_object_get(json, "contextName");
+   if (json_is_string(value))
+   {
+      agent->m_securityContext->setContextName(json_string_value(value));
+   }
+   else if ((value != nullptr) && !json_is_null(value))
+   {
+      *rcc = RCC_INVALID_ARGUMENT;
+      delete agent;
+      return nullptr;
+   }
+
+   if (agent->m_version == SNMP_VERSION_3)
+      agent->m_securityContext->recalculateKeys();
+
+   return agent;
+}
+
+/**
+ * Fill NXCP message with additional SNMP agent configuration
+ */
+void AdditionalSnmpAgent::fillMessage(NXCPMessage *msg, uint32_t baseId) const
+{
+   msg->setField(baseId, m_name);
+   if (m_ipAddress.isValidUnicast())
+      msg->setField(baseId + 1, m_ipAddress);
+   msg->setField(baseId + 2, m_port);
+   msg->setField(baseId + 3, static_cast<int16_t>(m_version));
+   msg->setFieldFromMBString(baseId + 4, m_securityContext->getAuthName());
+   msg->setFieldFromMBString(baseId + 5, m_securityContext->getAuthPassword());
+   msg->setFieldFromMBString(baseId + 6, m_securityContext->getPrivPassword());
+   msg->setField(baseId + 7, static_cast<uint16_t>(m_securityContext->getAuthMethod() | (m_securityContext->getPrivMethod() << 8)));
+   msg->setFieldFromMBString(baseId + 8, CHECK_NULL_EX_A(m_securityContext->getContextName()));
+}
+
+/**
+ * Save additional SNMP agent configuration to database. Expects prepared INSERT statement
+ * with node_id already bound at index 1; binds indexes 2..10 and executes the statement.
+ */
+bool AdditionalSnmpAgent::saveToDatabase(DB_STATEMENT hStmt) const
+{
+   wchar_t ipAddr[64];
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress.isValidUnicast() ? m_ipAddress.toString(ipAddr) : nullptr, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_port);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_version));
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext->getAuthName()), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext->getAuthPassword()), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext->getPrivPassword()), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_securityContext->getAuthMethod() | (m_securityContext->getPrivMethod() << 8));
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, WideStringFromMBString(CHECK_NULL_EX_A(m_securityContext->getContextName())), DB_BIND_DYNAMIC);
+   return DBExecute(hStmt);
+}
+
+/**
+ * Serialize additional SNMP agent configuration to JSON
+ */
+json_t *AdditionalSnmpAgent::toJson(bool includeSensitiveData) const
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "name", json_string_t(m_name));
+   if (m_ipAddress.isValidUnicast())
+   {
+      wchar_t ipAddr[64];
+      json_object_set_new(json, "address", json_string_t(m_ipAddress.toString(ipAddr)));
+   }
+   else
+   {
+      json_object_set_new(json, "address", json_null());
+   }
+   json_object_set_new(json, "port", json_integer(m_port));
+   json_object_set_new(json, "version", json_string(SnmpVersionToName(m_version)));
+   json_object_set_new(json, "authName", json_string_a(m_securityContext->getAuthName()));
+   json_object_set_new(json, "authMethod", json_string(SnmpAuthMethodToName(m_securityContext->getAuthMethod())));
+   json_object_set_new(json, "privMethod", json_string(SnmpPrivMethodToName(m_securityContext->getPrivMethod())));
+   json_object_set_new(json, "contextName", json_string_a(CHECK_NULL_EX_A(m_securityContext->getContextName())));
+   if (includeSensitiveData)
+   {
+      json_object_set_new(json, "authPassword", json_string_a(m_securityContext->getAuthPassword()));
+      json_object_set_new(json, "privPassword", json_string_a(m_securityContext->getPrivPassword()));
+   }
+   return json;
+}
+
 /**
  * Node class default constructor
  */
 Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP),
-         m_routingTableMutex(MutexType::FAST), m_topologyMutex(MutexType::FAST)
+         m_additionalSnmpAgents(0, 8, Ownership::True), m_routingTableMutex(MutexType::FAST), m_topologyMutex(MutexType::FAST)
 {
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
@@ -249,7 +492,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
  * Create new node from new node data
  */
 Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP),
-         m_ipAddress(newNodeData->ipAddr), m_primaryHostName(newNodeData->ipAddr.toString()), m_routingTableMutex(MutexType::FAST), m_topologyMutex(MutexType::FAST),
+         m_ipAddress(newNodeData->ipAddr), m_primaryHostName(newNodeData->ipAddr.toString()), m_additionalSnmpAgents(0, 8, Ownership::True),
+         m_routingTableMutex(MutexType::FAST), m_topologyMutex(MutexType::FAST),
          m_sshLogin(newNodeData->sshLogin), m_sshPassword(newNodeData->sshPassword), m_vncPassword(newNodeData->vncPassword)
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
@@ -884,6 +1128,36 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
          nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, _T("Cannot load hardware information for node %s [%u]"), m_name, m_id);
    }
 
+   if (bResult)
+   {
+      // Load additional SNMP agents
+      hStmt = PrepareObjectLoadStatement(hdb, preparedStatements, LSI_NODE_SNMP_AGENTS,
+         L"SELECT name,ip_addr,port,snmp_version,auth_name,auth_password,priv_password,usm_methods,context_name FROM node_snmp_agents WHERE node_id=?");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
+         {
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+               m_additionalSnmpAgents.add(new AdditionalSnmpAgent(hResult, i));
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            bResult = false;
+         }
+      }
+      else
+      {
+         bResult = false;
+      }
+
+      if (!bResult)
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 3, L"Cannot load additional SNMP agent list for node %s [%u]", m_name, m_id);
+   }
+
    if (bResult && isOSPFSupported())
    {
       // Load OSPF areas
@@ -1414,6 +1688,30 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       unlockProperties();
    }
 
+   if (success && (m_modified & MODIFY_SNMP_AGENT_LIST))
+   {
+      success = executeQueryOnObject(hdb, L"DELETE FROM node_snmp_agents WHERE node_id=?");
+      lockProperties();
+      if (success && !m_additionalSnmpAgents.isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb,
+                  L"INSERT INTO node_snmp_agents (node_id,name,ip_addr,port,snmp_version,auth_name,auth_password,priv_password,usm_methods,context_name) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                  m_additionalSnmpAgents.size() > 1);
+         if (hStmt != nullptr)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; success && (i < m_additionalSnmpAgents.size()); i++)
+               success = m_additionalSnmpAgents.get(i)->saveToDatabase(hStmt);
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockProperties();
+   }
+
    if (success && (m_modified & MODIFY_OSPF_AREAS))
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM ospf_areas WHERE node_id=?"));
@@ -1637,6 +1935,8 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM ospf_areas WHERE node_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM ospf_neighbors WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, L"DELETE FROM node_snmp_agents WHERE node_id=?");
    return success;
 }
 
@@ -8217,10 +8517,10 @@ StringMap *Node::getInstanceList(DCObject *dco)
          node->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
          break;
       case IDM_SNMP_WALK_VALUES:
-         node->getListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instances, dco->getSnmpContext());
+         node->getListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instances, dco->getSnmpContext(), dco->getSnmpAgentName());
          break;
       case IDM_SNMP_WALK_OIDS:
-         node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap, dco->getSnmpContext());
+         node->getOIDSuffixListFromSNMP(dco->getSnmpPort(), dco->getSnmpVersion(), dco->getInstanceDiscoveryData(), &instanceMap, dco->getSnmpContext(), dco->getSnmpAgentName());
          break;
       case IDM_WEB_SERVICE:
          node->getListFromWebService(dco->getInstanceDiscoveryData(), &instances);
@@ -8445,9 +8745,10 @@ static inline char *ContextToUtf8(const wchar_t *context, char *buffer, size_t s
 /**
  * Get DCI value via SNMP. Buffer size should be at least 64 characters.
  */
-DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue, const TCHAR *context)
+DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue, const TCHAR *context, const TCHAR *snmpAgentName)
 {
-   if ((((m_state & NSF_SNMP_UNREACHABLE) || !(m_capabilities & NC_IS_SNMP)) && (port == 0)) ||
+   bool useAdditionalAgent = (snmpAgentName != nullptr) && (*snmpAgentName != 0);
+   if ((((m_state & NSF_SNMP_UNREACHABLE) || !(m_capabilities & NC_IS_SNMP)) && (port == 0) && !useAdditionalAgent) ||
        (m_state & DCSF_UNREACHABLE) ||
        (m_flags & NF_DISABLE_SNMP))
    {
@@ -8464,7 +8765,15 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
 
    uint32_t snmpResult;
    char contextUtf8[256];
-   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
+   bool agentNotFound = false;
+   SNMP_Transport *snmp = useAdditionalAgent ?
+      createSnmpTransportForAgent(snmpAgentName, &agentNotFound) :
+      createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
+   if (agentNotFound)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_SNMP _T(".error"), 7, _T("Node(%s)->getMetricFromSNMP(%s): additional SNMP agent \"%s\" is not configured"), m_name, name, snmpAgentName);
+      return DCE_NOT_SUPPORTED;
+   }
    if (snmp != nullptr)
    {
       if (interpretRawValue == SNMP_RAWTYPE_NONE)
@@ -8701,12 +9010,15 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
 /**
  * Get table from SNMP
  */
-DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context, bool addInstanceOidColumn)
+DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table, const TCHAR *context, bool addInstanceOidColumn, const TCHAR *snmpAgentName)
 {
    char contextUtf8[256];
-   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
+   bool agentNotFound = false;
+   SNMP_Transport *snmp = ((snmpAgentName != nullptr) && (*snmpAgentName != 0)) ?
+      createSnmpTransportForAgent(snmpAgentName, &agentNotFound) :
+      createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp == nullptr)
-      return DCE_COMM_ERROR;
+      return agentNotFound ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR;
 
    ObjectArray<SNMP_ObjectId> oidList(64, 64, Ownership::True);
    uint32_t rc = SnmpWalk(snmp, oid,
@@ -8756,13 +9068,16 @@ static uint32_t SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp
 /**
  * Get list of values from SNMP
  */
-DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list, const TCHAR *context)
+DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list, const TCHAR *context, const TCHAR *snmpAgentName)
 {
    *list = nullptr;
    char contextUtf8[256];
-   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
+   bool agentNotFound = false;
+   SNMP_Transport *snmp = ((snmpAgentName != nullptr) && (*snmpAgentName != 0)) ?
+      createSnmpTransportForAgent(snmpAgentName, &agentNotFound) :
+      createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp == nullptr)
-      return DCE_COMM_ERROR;
+      return agentNotFound ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR;
 
    *list = new StringList;
    uint32_t rc = SnmpWalk(snmp, oid, SNMPGetListCallback, *list);
@@ -8778,13 +9093,16 @@ DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, c
 /**
  * Get list of OID suffixes from SNMP
  */
-DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *baseOid, StringMap **values, const TCHAR *context)
+DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *baseOid, StringMap **values, const TCHAR *context, const TCHAR *snmpAgentName)
 {
    *values = nullptr;
    char contextUtf8[256];
-   SNMP_Transport *snmp = createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
+   bool agentNotFound = false;
+   SNMP_Transport *snmp = ((snmpAgentName != nullptr) && (*snmpAgentName != 0)) ?
+      createSnmpTransportForAgent(snmpAgentName, &agentNotFound) :
+      createSnmpTransport(port, version, ContextToUtf8(context, contextUtf8, sizeof(contextUtf8)));
    if (snmp == nullptr)
-      return DCE_COMM_ERROR;
+      return agentNotFound ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR;
 
    uint32_t baseOidBin[256];
    size_t baseOidLen = SnmpParseOID(baseOid, baseOidBin, 256);
@@ -10238,6 +10556,11 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
       msg->setFieldFromMBString(VID_SNMP_TRAP_PRIV_PASSWORD, m_snmpTrapSecurity->getPrivPassword());
       msg->setField(VID_SNMP_TRAP_USM_METHODS, static_cast<uint16_t>(static_cast<uint16_t>(m_snmpTrapSecurity->getAuthMethod()) | (static_cast<uint16_t>(m_snmpTrapSecurity->getPrivMethod()) << 8)));
    }
+
+   msg->setField(VID_SNMP_AGENT_COUNT, m_additionalSnmpAgents.size());
+   uint32_t snmpAgentFieldId = VID_SNMP_AGENT_LIST_BASE;
+   for(int i = 0; i < m_additionalSnmpAgents.size(); i++, snmpAgentFieldId += 10)
+      m_additionalSnmpAgents.get(i)->fillMessage(msg, snmpAgentFieldId);
 }
 
 /**
@@ -10539,9 +10862,39 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
       }
    }
 
+   // Replace list of additional SNMP agents
+   if (msg.isFieldExist(VID_SNMP_AGENT_COUNT))
+   {
+      int count = msg.getFieldAsInt32(VID_SNMP_AGENT_COUNT);
+      ObjectArray<AdditionalSnmpAgent> agents(count, 8, Ownership::True);
+      uint32_t fieldId = VID_SNMP_AGENT_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 10)
+      {
+         auto agent = new AdditionalSnmpAgent(msg, fieldId);
+         if (agent->getName()[0] == 0)
+         {
+            delete agent;
+            return RCC_INVALID_ARGUMENT;
+         }
+         for(int j = 0; j < agents.size(); j++)
+         {
+            if (!wcscmp(agents.get(j)->getName(), agent->getName()))
+            {
+               delete agent;
+               return RCC_INVALID_ARGUMENT;
+            }
+         }
+         agents.add(agent);
+      }
+      m_additionalSnmpAgents.clear();
+      for(int i = 0; i < agents.size(); i++)
+         m_additionalSnmpAgents.add(agents.get(i));
+      agents.setOwner(Ownership::False);
+   }
+
    // Reset SYS_SNMP_TRAP_AUTH_FAILURE rate-limit timer whenever SNMP credentials change,
    // so the next mismatched trap after a credentials update fires an event immediately.
-   if (msg.isFieldExist(VID_SNMP_VERSION) || msg.isFieldExist(VID_SNMP_AUTH_OBJECT) || msg.isFieldExist(VID_SNMP_TRAP_AUTH_OBJECT))
+   if (msg.isFieldExist(VID_SNMP_VERSION) || msg.isFieldExist(VID_SNMP_AUTH_OBJECT) || msg.isFieldExist(VID_SNMP_TRAP_AUTH_OBJECT) || msg.isFieldExist(VID_SNMP_AGENT_COUNT))
       m_lastSnmpTrapAuthFailureEventTime = 0;
 
    // Change EtherNet/IP port
@@ -11041,9 +11394,40 @@ uint32_t Node::modifyJsonSnmpConfig(json_t *snmp)
       }
    }
 
+   // Additional SNMP agents. JSON array fully replaces the existing list.
+   json_t *agents = json_object_get(snmp, "agents");
+   if (agents != nullptr)
+   {
+      if (!json_is_array(agents))
+         return RCC_INVALID_ARGUMENT;
+
+      ObjectArray<AdditionalSnmpAgent> newAgents(static_cast<int>(json_array_size(agents)), 8, Ownership::True);
+      size_t i;
+      json_t *element;
+      json_array_foreach(agents, i, element)
+      {
+         AdditionalSnmpAgent *agent = AdditionalSnmpAgent::createFromJson(element, &rcc);
+         if (agent == nullptr)
+            return rcc;
+         for(int j = 0; j < newAgents.size(); j++)
+         {
+            if (!wcscmp(newAgents.get(j)->getName(), agent->getName()))
+            {
+               delete agent;
+               return RCC_INVALID_ARGUMENT;
+            }
+         }
+         newAgents.add(agent);
+      }
+      m_additionalSnmpAgents.clear();
+      for(int j = 0; j < newAgents.size(); j++)
+         m_additionalSnmpAgents.add(newAgents.get(j));
+      newAgents.setOwner(Ownership::False);
+   }
+
    // Reset SYS_SNMP_TRAP_AUTH_FAILURE rate-limit timer whenever SNMP credentials change,
    // so the next mismatched trap after a credentials update fires an event immediately.
-   if (credentialsChanged || (trap != nullptr))
+   if (credentialsChanged || (trap != nullptr) || (agents != nullptr))
       m_lastSnmpTrapAuthFailureEventTime = 0;
 
    return RCC_SUCCESS;
@@ -12814,51 +13198,7 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
       return nullptr;
    }
 
-   SNMP_Transport *transport = nullptr;
-   uint32_t snmpProxy = getEffectiveSnmpProxy();
-   if (proxyNodeId != nullptr)
-      *proxyNodeId = snmpProxy;
-   if (snmpProxy == 0)
-   {
-      transport = new SNMP_UDPTransport();
-      static_cast<SNMP_UDPTransport*>(transport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_snmpPort);
-   }
-   else
-   {
-      shared_ptr<Node> proxyNode = (snmpProxy == m_id) ? self() : static_pointer_cast<Node>(g_idxNodeById.get(snmpProxy));
-      if (proxyNode != nullptr)
-      {
-         shared_ptr<AgentConnectionEx> conn = proxyNode->acquireProxyConnection(SNMP_PROXY);
-         if (conn != nullptr)
-         {
-            // Use loopback address if node is SNMP proxy for itself
-            transport = new SNMP_ProxyTransport(conn, (snmpProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, (port != 0) ? port : m_snmpPort);
-         }
-         else
-         {
-            if (proxyConnectionFailed != nullptr)
-               *proxyConnectionFailed = true;
-            if (pollerMessageOnFailure)
-            {
-               if (proxyNode->isDown())
-                  sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - SNMP proxy %s is down\r\n"), proxyNode->getName());
-               else if (proxyNode->isNativeAgent() && (proxyNode->getState() & NSF_AGENT_UNREACHABLE))
-                  sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - agent on SNMP proxy %s is unreachable\r\n"), proxyNode->getName());
-               else
-                  sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - cannot establish connection to SNMP proxy %s\r\n"), proxyNode->getName());
-            }
-            nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransport(%s [%u]): cannot acquire connection to SNMP proxy %s [%u]", m_name, m_id, proxyNode->getName(), snmpProxy);
-         }
-      }
-      else
-      {
-         if (proxyConnectionFailed != nullptr)
-            *proxyConnectionFailed = true;
-         if (pollerMessageOnFailure)
-            sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - SNMP proxy node [%u] does not exist\r\n"), snmpProxy);
-         nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransport(%s [%u]): SNMP proxy node [%u] does not exist", m_name, m_id, snmpProxy);
-      }
-   }
+   SNMP_Transport *transport = createSnmpTransportInternal(m_ipAddress, effectivePort, pollerMessageOnFailure, proxyNodeId, proxyConnectionFailed);
 
    // Set security
    if (transport != nullptr)
@@ -12914,6 +13254,142 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
 }
 
 /**
+ * Create SNMP transport to given address and port, either directly or through SNMP proxy.
+ * Common part of createSnmpTransport and createSnmpTransportForAgent; does not set version,
+ * security context, or codepage on the created transport.
+ */
+SNMP_Transport *Node::createSnmpTransportInternal(const InetAddress& targetAddr, uint16_t port, bool pollerMessageOnFailure, uint32_t *proxyNodeId, bool *proxyConnectionFailed)
+{
+   SNMP_Transport *transport = nullptr;
+   uint32_t snmpProxy = getEffectiveSnmpProxy();
+   if (proxyNodeId != nullptr)
+      *proxyNodeId = snmpProxy;
+   if (snmpProxy == 0)
+   {
+      transport = new SNMP_UDPTransport();
+      static_cast<SNMP_UDPTransport*>(transport)->createUDPTransport(targetAddr, port);
+   }
+   else
+   {
+      shared_ptr<Node> proxyNode = (snmpProxy == m_id) ? self() : static_pointer_cast<Node>(g_idxNodeById.get(snmpProxy));
+      if (proxyNode != nullptr)
+      {
+         shared_ptr<AgentConnectionEx> conn = proxyNode->acquireProxyConnection(SNMP_PROXY);
+         if (conn != nullptr)
+         {
+            // Use loopback address if node is SNMP proxy for itself (but not for additional agents on other addresses)
+            transport = new SNMP_ProxyTransport(conn, ((snmpProxy == m_id) && targetAddr.equals(m_ipAddress)) ? InetAddress::LOOPBACK : targetAddr, port);
+         }
+         else
+         {
+            if (proxyConnectionFailed != nullptr)
+               *proxyConnectionFailed = true;
+            if (pollerMessageOnFailure)
+            {
+               if (proxyNode->isDown())
+                  sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - SNMP proxy %s is down\r\n"), proxyNode->getName());
+               else if (proxyNode->isNativeAgent() && (proxyNode->getState() & NSF_AGENT_UNREACHABLE))
+                  sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - agent on SNMP proxy %s is unreachable\r\n"), proxyNode->getName());
+               else
+                  sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - cannot establish connection to SNMP proxy %s\r\n"), proxyNode->getName());
+            }
+            nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransport(%s [%u]): cannot acquire connection to SNMP proxy %s [%u]", m_name, m_id, proxyNode->getName(), snmpProxy);
+         }
+      }
+      else
+      {
+         if (proxyConnectionFailed != nullptr)
+            *proxyConnectionFailed = true;
+         if (pollerMessageOnFailure)
+            sendPollerMsg(POLLER_ERROR _T("   Cannot reach SNMP agent - SNMP proxy node [%u] does not exist\r\n"), snmpProxy);
+         nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransport(%s [%u]): SNMP proxy node [%u] does not exist", m_name, m_id, snmpProxy);
+      }
+   }
+   return transport;
+}
+
+/**
+ * Create SNMP transport for additional SNMP agent configured on this node, selected by name.
+ * If agentNotFound is not null, it is set to true when no agent with given name is configured
+ * (allowing the caller to distinguish configuration errors from communication failures).
+ */
+SNMP_Transport *Node::createSnmpTransportForAgent(const wchar_t *agentName, bool *agentNotFound)
+{
+   if (agentNotFound != nullptr)
+      *agentNotFound = false;
+
+   if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED) || (g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
+      return nullptr;
+
+   lockProperties();
+   const AdditionalSnmpAgent *agent = nullptr;
+   for(int i = 0; i < m_additionalSnmpAgents.size(); i++)
+   {
+      if (!wcscmp(m_additionalSnmpAgents.get(i)->getName(), agentName))
+      {
+         agent = m_additionalSnmpAgents.get(i);
+         break;
+      }
+   }
+   if (agent == nullptr)
+   {
+      unlockProperties();
+      if (agentNotFound != nullptr)
+         *agentNotFound = true;
+      nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransportForAgent(%s [%u]): additional SNMP agent \"%s\" is not configured", m_name, m_id, agentName);
+      return nullptr;
+   }
+   InetAddress targetAddr = agent->getIpAddress().isValidUnicast() ? agent->getIpAddress() : m_ipAddress;
+   uint16_t port = agent->getPort();
+   SNMP_Version version = agent->getSnmpVersion();
+   SNMP_SecurityContext *securityContext = new SNMP_SecurityContext(agent->getSecurityContext());
+   char codepage[16];
+   memcpy(codepage, m_snmpCodepage, sizeof(codepage));
+   unlockProperties();
+
+   SNMP_Version minVersion = SNMP_VersionFromInt(getCustomAttributeAsInt32(L"SysConfig:SNMP.MinVersion", static_cast<int32_t>(g_snmpMinVersion)));
+   if (version < minVersion)
+   {
+      nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransportForAgent(%s [%u]): SNMP version %d of agent \"%s\" is below minimum %d", m_name, m_id, version, agentName, minVersion);
+      delete securityContext;
+      return nullptr;
+   }
+
+   if (isPortBlocked(port, false))
+   {
+      nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransportForAgent(%s [%u]): port %u blocked by port stop list", m_name, m_id, port);
+      delete securityContext;
+      return nullptr;
+   }
+
+   SNMP_Transport *transport = createSnmpTransportInternal(targetAddr, port, false, nullptr, nullptr);
+   if (transport == nullptr)
+   {
+      delete securityContext;
+      return nullptr;
+   }
+
+   transport->setSnmpVersion(version);
+   if (codepage[0] != 0)
+      transport->setCodepage(codepage);
+   else if (g_snmpCodepage[0] != 0)
+      transport->setCodepage(g_snmpCodepage);
+
+   // For SNMP versions 1 and 2c context name is passed as community@context
+   const char *context = securityContext->getContextName();
+   if ((version < SNMP_VERSION_3) && (context != nullptr) && (context[0] != 0))
+   {
+      char fullCommunity[128];
+      snprintf(fullCommunity, 128, "%s@%s", securityContext->getCommunity(), context);
+      SNMP_SecurityContext *fullContext = new SNMP_SecurityContext(fullCommunity);
+      delete securityContext;
+      securityContext = fullContext;
+   }
+   transport->setSecurityContext(securityContext);
+   return transport;
+}
+
+/**
  * Get SNMP security context
  * ATTENTION: This method returns new copy of security context
  * which must be destroyed by the caller
@@ -12938,6 +13414,52 @@ SNMP_SecurityContext *Node::getSnmpTrapSecurityContext() const
    SNMP_SecurityContext *ctx = (m_snmpTrapSecurity != nullptr) ? new SNMP_SecurityContext(m_snmpTrapSecurity) : new SNMP_SecurityContext(m_snmpSecurity);
    unlockProperties();
    return ctx;
+}
+
+/**
+ * Get additional SNMP agent configuration by name.
+ * ATTENTION: This method returns new copy of agent configuration which must be destroyed
+ * by the caller. Returns nullptr if agent with given name is not configured.
+ */
+AdditionalSnmpAgent *Node::getAdditionalSnmpAgent(const wchar_t *name) const
+{
+   AdditionalSnmpAgent *agent = nullptr;
+   lockProperties();
+   for(int i = 0; i < m_additionalSnmpAgents.size(); i++)
+   {
+      if (!wcscmp(m_additionalSnmpAgents.get(i)->getName(), name))
+      {
+         agent = new AdditionalSnmpAgent(*m_additionalSnmpAgents.get(i));
+         break;
+      }
+   }
+   unlockProperties();
+   return agent;
+}
+
+/**
+ * Get names of all configured additional SNMP agents
+ */
+void Node::getAdditionalSnmpAgentNames(StringList *names) const
+{
+   lockProperties();
+   for(int i = 0; i < m_additionalSnmpAgents.size(); i++)
+      names->add(m_additionalSnmpAgents.get(i)->getName());
+   unlockProperties();
+}
+
+/**
+ * Get security contexts of all configured additional SNMP agents (for trap credential validation).
+ * ATTENTION: This method returns new copies of security contexts; caller owns the returned array.
+ */
+ObjectArray<SNMP_SecurityContext> *Node::getAdditionalSnmpSecurityContexts() const
+{
+   lockProperties();
+   auto contexts = new ObjectArray<SNMP_SecurityContext>(m_additionalSnmpAgents.size(), 8, Ownership::True);
+   for(int i = 0; i < m_additionalSnmpAgents.size(); i++)
+      contexts->add(new SNMP_SecurityContext(m_additionalSnmpAgents.get(i)->getSecurityContext()));
+   unlockProperties();
+   return contexts;
 }
 
 /**
@@ -15935,6 +16457,10 @@ json_t *Node::snmpConfigToJson(bool includeSensitiveData)
    {
       json_object_set_new(snmp, "trap", json_null());
    }
+   json_t *agents = json_array();
+   for(int i = 0; i < m_additionalSnmpAgents.size(); i++)
+      json_array_append_new(agents, m_additionalSnmpAgents.get(i)->toJson(includeSensitiveData));
+   json_object_set_new(snmp, "agents", agents);
    unlockProperties();
    return snmp;
 }

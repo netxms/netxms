@@ -2102,6 +2102,38 @@ NXSL_METHOD_DEFINITION(Node, createSNMPTransport)
 }
 
 /**
+ * Node::createSNMPTransportForAgent(name, failIfUnreachable) method - create SNMP transport
+ * for additional SNMP agent configured on the node, selected by name
+ */
+NXSL_METHOD_DEFINITION(Node, createSNMPTransportForAgent)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ_SNMP, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue();
+      return 0;
+   }
+
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   // If 2nd argument is provided and is true, check that node is reachable before creating SNMP transport
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   if ((argc <= 1) || argv[1]->isFalse() || ((node->getState() & DCSF_UNREACHABLE) == 0))
+   {
+      SNMP_Transport *t = node->createSnmpTransportForAgent(argv[0]->getValueAsCString());
+      *result = (t != nullptr) ? vm->createValue(vm->createObject(&g_nxslSnmpTransportClass, t)) : vm->createValue();
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Web service handle (combination of web service definition and node used for executing request)
  */
 typedef std::pair<shared_ptr<WebServiceDefinition>, shared_ptr<Node>> WebServiceHandle;
@@ -3491,6 +3523,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, callWebService, -1);
    NXSL_REGISTER_METHOD(Node, clearSNMPTrapCredentials, 0);
    NXSL_REGISTER_METHOD(Node, createSNMPTransport, -1);
+   NXSL_REGISTER_METHOD(Node, createSNMPTransportForAgent, -1);
    NXSL_REGISTER_METHOD(Node, enable8021xStatusPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableAgent, 1);
    NXSL_REGISTER_METHOD(Node, enableDiscoveryPolling, 1);
@@ -4099,6 +4132,12 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("serialNumber"))
    {
       value = vm->createValue(node->getSerialNumber());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpAgentNames"))
+   {
+      StringList names;
+      node->getAdditionalSnmpAgentNames(&names);
+      value = vm->createValue(new NXSL_Array(vm, names));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpOID"))
    {

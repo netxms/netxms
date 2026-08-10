@@ -13480,6 +13480,62 @@ components:
           description: Separate credentials for received SNMP traps. An object fully replaces them; null reverts to using the polling credentials.
           allOf:
             - $ref: '#/components/schemas/SnmpTrapCredentials'
+        agents:
+          type: array
+          description: |
+            Additional SNMP agents configured on the node, referenced by name from data
+            collection items. On PATCH the array fully replaces the existing list (it is
+            not merged element-wise); agent names must be unique within the node.
+          items:
+            $ref: '#/components/schemas/SnmpAgentConfig'
+    SnmpAgentConfig:
+      type: object
+      additionalProperties: false
+      required: [name, version]
+      description: |
+        Additional SNMP agent on a node - an alternative SNMP endpoint with its own port,
+        credentials, and optionally IP address. Credential passwords are returned only for
+        users holding modify or read-credentials access on the object.
+      properties:
+        name:
+          type: string
+          maxLength: 63
+          description: Agent name, unique within the node. Referenced from data collection items.
+        address:
+          type: string
+          nullable: true
+          description: IP address of the agent, or null to use the node's primary IP address.
+        port:
+          type: integer
+          description: SNMP UDP port (defaults to 161 when omitted on creation).
+        version:
+          type: string
+          enum: ['1', '2c', '3']
+          description: SNMP protocol version.
+        authName:
+          type: string
+          nullable: true
+          description: Community string for SNMP v1/v2c, or USM user name for SNMP v3.
+        authMethod:
+          type: string
+          enum: [NONE, MD5, SHA1, SHA224, SHA256, SHA384, SHA512]
+          description: SNMP v3 authentication method.
+        authPassword:
+          type: string
+          nullable: true
+          description: SNMP v3 authentication password (returned only with credential access).
+        privMethod:
+          type: string
+          enum: [NONE, DES, AES-128, AES-192, AES-256]
+          description: SNMP v3 privacy (encryption) method.
+        privPassword:
+          type: string
+          nullable: true
+          description: SNMP v3 privacy password (returned only with credential access).
+        contextName:
+          type: string
+          nullable: true
+          description: SNMP context name.
     SnmpTrapCredentials:
       type: object
       additionalProperties: false

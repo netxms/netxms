@@ -521,6 +521,7 @@ static void CheckNodes()
                   success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_components WHERE node_id=")).append(nodeId));
                   success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_areas WHERE node_id=")).append(nodeId));
                   success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_neighbors WHERE node_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_snmp_agents WHERE node_id=")).append(nodeId));
                   if (success && SQLQuery(StringBuffer(_T("DELETE FROM object_properties WHERE object_id=")).append(nodeId)))
                      g_dbCheckFixes++;
                }

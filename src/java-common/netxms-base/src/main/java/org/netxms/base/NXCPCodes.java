@@ -1603,8 +1603,11 @@ public class NXCPCodes
    public static final long VID_AGENT_CERT_FINGERPRINT = 1025;
    public static final long VID_SINGLE_USE = 1026;
    public static final long VID_MAINTENANCE_SCHEDULED = 1027;
+   public static final long VID_SNMP_AGENT_COUNT = 1028;
+   public static final long VID_SNMP_AGENT_NAME = 1029;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
+   public static final long VID_SNMP_AGENT_LIST_BASE = 0x79000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;
    public static final long VID_DISABLED_EXTRAS_BASE = 0x58000000L;
    public static final long VID_RESOURCE_TAG_LIST_BASE = 0x7D000000L;

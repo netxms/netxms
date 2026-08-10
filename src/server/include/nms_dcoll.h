@@ -373,6 +373,7 @@ protected:
 	uint16_t m_snmpPort;          // Custom SNMP port or 0 for node default
 	SNMP_Version m_snmpVersion;   // Custom SNMP version or SNMP_VERSION_DEFAULT for node default
 	SharedString m_snmpContext;   // Custom SNMP context or empty for node default
+	SharedString m_snmpAgentName; // Name of additional SNMP agent on the node or empty for node's primary agent
 	SharedString m_perfTabSettings;
 	SharedString m_transformationScriptSource;   // Transformation script (source code)
    shared_ptr<NXSL_Program> m_transformationScript;  // Compiled transformation script
@@ -475,6 +476,7 @@ public:
 	uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
    SharedString getSnmpContext() const { return GetAttributeWithLock(m_snmpContext, m_mutex); }
+   SharedString getSnmpAgentName() const { return GetAttributeWithLock(m_snmpAgentName, m_mutex); }
    SharedString getSystemTag() const { return m_systemTag; }
    bool isShowOnObjectTooltip() const { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
    bool isShowInObjectOverview() const { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }

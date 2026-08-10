@@ -53,6 +53,7 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
+import org.netxms.client.snmp.SnmpAgentConfiguration;
 import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.client.users.ResponsibleUser;
 
@@ -90,6 +91,7 @@ public class NXCObjectModificationData
    private String snmpTrapAuthPassword;
    private String snmpTrapPrivPassword;
    private boolean clearSnmpTrapCredentials;
+   private List<SnmpAgentConfiguration> snmpAgents;
    private Long snmpProxy;
    private Long mqttProxy;
    private Long icmpProxy;
@@ -593,6 +595,26 @@ public class NXCObjectModificationData
       this.snmpTrapAuthMethod = null;
       this.snmpTrapPrivMethod = null;
       this.snmpTrapVersion = null;
+   }
+
+   /**
+    * Set list of additional SNMP agents. Provided list fully replaces the existing one on the node.
+    *
+    * @param snmpAgents new list of additional SNMP agent configurations
+    */
+   public void setSnmpAgents(List<SnmpAgentConfiguration> snmpAgents)
+   {
+      this.snmpAgents = snmpAgents;
+   }
+
+   /**
+    * Get list of additional SNMP agents.
+    *
+    * @return list of additional SNMP agent configurations or null if not set
+    */
+   public List<SnmpAgentConfiguration> getSnmpAgents()
+   {
+      return snmpAgents;
    }
 
    /**

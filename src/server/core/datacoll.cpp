@@ -85,7 +85,7 @@ static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, wchar
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 			   {
 				   *error = static_cast<Node*>(dcTarget)->getMetricFromSNMP(dci.getSnmpPort(), dci.getSnmpVersion(), dci.getName(),
-                     buffer, MAX_RESULT_LENGTH, dci.isInterpretSnmpRawValue() ? (int)dci.getSnmpRawValueType() : SNMP_RAWTYPE_NONE, dci.getSnmpContext());
+                     buffer, MAX_RESULT_LENGTH, dci.isInterpretSnmpRawValue() ? (int)dci.getSnmpRawValueType() : SNMP_RAWTYPE_NONE, dci.getSnmpContext(), dci.getSnmpAgentName());
 			   }
 			   else
 			   {
@@ -291,7 +291,7 @@ static shared_ptr<Table> GetTableData(DataCollectionTarget *dcTarget, const DCTa
 			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
                *error = static_cast<Node*>(dcTarget)->getTableFromSNMP(table.getSnmpPort(), table.getSnmpVersion(), table.getName(), table.getColumns(), &result, table.getSnmpContext(),
-                  (table.getFlags() & DCF_ADD_INSTANCE_OID_COLUMN) != 0);
+                  (table.getFlags() & DCF_ADD_INSTANCE_OID_COLUMN) != 0, table.getSnmpAgentName());
             }
 			   else
             {

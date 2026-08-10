@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.datacollection.propertypages;
 
+import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -32,7 +33,11 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.snmp.SnmpAgentConfiguration;
 import org.netxms.client.snmp.SnmpVersion;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -61,6 +66,7 @@ public class SNMP extends AbstractDCIPropertyPage
 	private Button checkInterpretRawSnmpValue;
    private Combo snmpRawType;
    private Button checkUseMibEnumValues;
+   private Combo snmpAgentName;
    private Button checkUseCustomSnmpPort;
    private Spinner customSnmpPort;
    private Button checkUseCustomSnmpVersion;
@@ -122,6 +128,20 @@ public class SNMP extends AbstractDCIPropertyPage
          checkUseMibEnumValues.setEnabled(dco.getOrigin() == DataOrigin.SNMP);
       }
 
+      snmpAgentName = WidgetHelper.createLabeledCombo(pageArea, SWT.DROP_DOWN, i18n.tr("Additional SNMP agent (empty to use node's primary SNMP agent)"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      AbstractObject owner = Registry.getSession().findObjectById(dco.getNodeId());
+      if (owner instanceof AbstractNode)
+      {
+         List<SnmpAgentConfiguration> agents = ((AbstractNode)owner).getSnmpAgents();
+         if (agents != null)
+         {
+            for(SnmpAgentConfiguration a : agents)
+               snmpAgentName.add(a.getName());
+         }
+      }
+      snmpAgentName.setText(dco.getSnmpAgentName() != null ? dco.getSnmpAgentName() : "");
+      snmpAgentName.addModifyListener((e) -> onSnmpAgentNameChange());
+
       checkUseCustomSnmpPort = new Button(pageArea, SWT.CHECK);
       checkUseCustomSnmpPort.setText(i18n.tr("Use custom SNMP port:"));
       checkUseCustomSnmpPort.setSelection(dco.getSnmpPort() != 0);
@@ -174,8 +194,24 @@ public class SNMP extends AbstractDCIPropertyPage
 
       snmpContext = WidgetHelper.createLabeledText(pageArea, SWT.BORDER, 300, i18n.tr("SNMP context (empty to use node default)"), dco.getSnmpContext(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 
+      onSnmpAgentNameChange();
+
 		return pageArea;
 	}
+
+   /**
+    * Handler for SNMP agent name change. When additional agent is selected, its configuration
+    * fully defines the endpoint, so custom port/version/context controls are disabled.
+    */
+   private void onSnmpAgentNameChange()
+   {
+      boolean useAgent = !snmpAgentName.getText().trim().isEmpty();
+      checkUseCustomSnmpPort.setEnabled(!useAgent);
+      customSnmpPort.setEnabled(!useAgent && checkUseCustomSnmpPort.getSelection());
+      checkUseCustomSnmpVersion.setEnabled(!useAgent);
+      customSnmpVersion.setEnabled(!useAgent && checkUseCustomSnmpVersion.getSelection());
+      snmpContext.setEnabled(!useAgent);
+   }
 
    /**
     * Calculate selection index from SNMP version
@@ -248,6 +284,7 @@ public class SNMP extends AbstractDCIPropertyPage
          dco.setSnmpVersion(SnmpVersion.DEFAULT);
       }
       dco.setSnmpContext(snmpContext.getText().trim());
+      dco.setSnmpAgentName(snmpAgentName.getText().trim());
 		editor.modify();
 		
 		return true;
@@ -268,5 +305,6 @@ public class SNMP extends AbstractDCIPropertyPage
       checkUseCustomSnmpPort.setSelection(false);
       customSnmpPort.setSelection(161);
       snmpContext.setText("");
+      snmpAgentName.setText("");
 	}
 }
