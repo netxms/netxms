@@ -398,6 +398,7 @@
     <ClCompile Include="arp.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="entity_mib.cpp" />
+    <ClCompile Include="forecast.cpp" />
     <ClCompile Include="hdlink.cpp" />
     <ClCompile Include="hostmib.cpp" />
     <ClCompile Include="iflist.cpp" />

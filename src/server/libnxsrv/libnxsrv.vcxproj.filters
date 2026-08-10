@@ -24,6 +24,9 @@
     <ClCompile Include="apinfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="forecast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="hdlink.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
