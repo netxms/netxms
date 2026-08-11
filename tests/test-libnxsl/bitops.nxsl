@@ -50,6 +50,18 @@ assert((~(-2)) == 1);      // NOT -2 is 1
 assert((~15) == -16);      // NOT 15 is -16
 assert((~(-16)) == 15);    // NOT -16 is 15
 
+// Shift left (<<) and shift right (>>) tests
+assert((a << 2) == 48);      // 1100 << 2 = 110000 (48)
+assert((a >> 2) == 3);       // 1100 >> 2 = 0011 (3)
+assert((c << 1) == 14);      // 0111 << 1 = 1110 (14)
+assert((e >> 4) == 15);      // 11111111 >> 4 = 00001111 (15)
+assert((e >> 8) == 0);       // All bits shifted out
+assert((a << 0) == a);       // Shift by zero returns same value
+assert((a >> 0) == a);
+assert(((a << 3) >> 3) == a);  // Round trip
+assert((-16 >> 2) == -4);    // Right shift is arithmetic - sign is preserved
+assert((f >> 20) == -1);     // All bits set stays all bits set
+
 // Complex combinations
 assert(((a & b) | c) == 15);     // (8 | 7) = 15
 assert(((a | b) & c) == 6);      // (14 & 7) = 6
@@ -81,5 +93,7 @@ assert((16 ^ 16) == 0);    // Power of 2 XOR itself
 assert((1 | 2 & 4) == 1);  // & has higher precedence than |
 assert((1 ^ 2 | 4) == 7);  // ^ has higher precedence than |
 assert((~1 & 2) == 2);     // ~ has highest precedence
+assert((1 << 2 + 3) == 32); // + has higher precedence than <<
+assert((1 << 2 | 1) == 5);  // << has higher precedence than |
 
 return 0;

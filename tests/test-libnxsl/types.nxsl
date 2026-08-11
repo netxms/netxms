@@ -35,19 +35,32 @@ assert(typeof(i32 + 1) == "int64");
 assert(typeof(i32 * i32) == "int64");
 assert(typeof(-i32) == "int64");
 assert(typeof(~i32) == "int64");
+assert(typeof(i32 << 1) == "int64");
+assert(typeof(i32 >> 1) == "int64");
+assert(typeof(i64 >> 1) == "int64");
 
 u32 = uint32(3000000000);
 assert(typeof(u32) == "uint32");
 assert(typeof(u32 + 1) == "int64");
 assert(typeof(u32 - u32) == "int64");
+assert(typeof(u32 >> 1) == "int64");
+assert(typeof(~u32) == "int64");
 
 u64 = 1UL;
 assert(typeof(u64) == "uint64");
 assert(typeof(u64 + 1) == "uint64");
 assert(typeof(u64 * u32) == "uint64");
+assert(typeof(u64 >> 1) == "uint64");
+assert(typeof(~u64) == "uint64");
 assert(typeof(int64(u64) + 1) == "int64");
 
 i32++;
 assert(typeof(i32) == "int64");
+
+u32--;
+assert(typeof(u32) == "int64");
+
+u64--;
+assert(typeof(u64) == "uint64");
 
 return 0;

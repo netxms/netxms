@@ -87,6 +87,26 @@ assert(big * 2 == 0x1FFFFFFFE);
 assert(uint32(big + 1) == 0);  // explicit cast provides modular 32 bit arithmetic
 assert(2000000000 + 2000000000 == 4000000000);
 assert((1 << 40) == 0x10000000000);
+assert(((1 << 40) >> 20) == 0x100000);
+
+// Shifts also work in 64 bit domain; unsigned operand is widened, not reinterpreted as signed
+assert((uint32(0xFFFFFFFF) >> 1) == 2147483647);
+assert(typeof(uint32(0xFFFFFFFF) >> 1) == "int64");
+assert((uint32(0xFFFFFFFF) << 1) == 0x1FFFFFFFE);
+assert((~uint32(0)) == -1);
+
+// Increment, decrement and negation cross 32 bit boundaries without wrapping
+counter = 2147483647;
+counter++;
+assert(counter == 2147483648);
+counter = int32(-2147483648);
+counter--;
+assert(counter == -2147483649);
+counter = uint32(0);
+counter--;
+assert(counter == -1);
+assert(typeof(counter) == "int64");   // not modular wrap to 4294967295
+assert((-int32(-2147483648)) == 2147483648);
 
 // Counter32-style delta produces negative value instead of silent wrap
 prev = uint32(0xFFFFFFFE);
@@ -99,5 +119,14 @@ assert(delta == 4);
 
 // unsigned 64 bit domain retains modular arithmetic
 assert(0UL - 1 == 0xFFFFFFFFFFFFFFFFUL);
+counter = 0UL;
+counter--;
+assert(counter == 0xFFFFFFFFFFFFFFFFUL);
+assert(typeof(counter) == "uint64");
+assert((~(0UL)) == 0xFFFFFFFFFFFFFFFFUL);
+assert(typeof(~(0UL)) == "uint64");
+assert((0xFFFFFFFFFFFFFFFFUL >> 1) == 0x7FFFFFFFFFFFFFFFUL);   // logical shift, not arithmetic
+assert(typeof(0xFFFFFFFFFFFFFFFFUL >> 1) == "uint64");
+assert(((1UL << 63) >> 62) == 2);
 
 return 0;
