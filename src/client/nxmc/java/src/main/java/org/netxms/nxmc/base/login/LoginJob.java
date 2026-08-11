@@ -44,6 +44,9 @@ import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.ObjectCategory;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.services.LoginListener;
@@ -194,7 +197,17 @@ public class LoginJob implements IRunnableWithProgress
          monitor.setTaskName(i18n.tr("Synchronizing objects..."));
          PreferenceStore store = PreferenceStore.getInstance();
          boolean fullySync = store.getAsBoolean("Connect.FullObjectSync", false);
-         session.syncObjects(fullySync);
+         boolean backgroundSync = store.getAsBoolean("Connect.BackgroundObjectSync", false);
+         if (backgroundSync)
+         {
+            // Object categories are needed for image library preload below and for object icons, so they are always synchronized here
+            session.syncObjectCategories();
+            session.setObjectSyncPending();
+         }
+         else
+         {
+            session.syncObjects(fullySync);
+         }
          session.syncAssetManagementSchema();
          monitor.worked(1);
 
@@ -244,6 +257,9 @@ public class LoginJob implements IRunnableWithProgress
 
          setupSessionListener(session, display);
 
+         if (backgroundSync)
+            startBackgroundObjectSync(session, display, fullySync);
+
          logger.info("Creating keepalive timer");
          new KeepAliveTimer(session).start();
       }
@@ -262,8 +278,45 @@ public class LoginJob implements IRunnableWithProgress
    }
 
    /**
+    * Start object synchronization in background. Until it is completed, object browser will show "loading" placeholder instead of
+    * object tree.
+    *
+    * @param session client session
+    * @param display display object
+    * @param syncNodeComponents true to synchronize node components as well
+    */
+   private void startBackgroundObjectSync(final NXCSession session, final Display display, final boolean syncNodeComponents)
+   {
+      logger.info("Starting background object synchronization");
+      new Job(i18n.tr("Synchronizing objects"), null, null, display) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.syncObjects(syncNodeComponents);
+            logger.info("Background object synchronization completed");
+         }
+
+         @Override
+         protected void jobFailureHandler(Exception e)
+         {
+            runInUIThread(() -> {
+               MainWindow window = Registry.getMainWindow();
+               if (window != null)
+                  window.addMessage(MessageArea.ERROR, getErrorMessage() + ": " + e.getLocalizedMessage());
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot synchronize objects");
+         }
+      }.start();
+   }
+
+   /**
     * Setup session listener
-    * 
+    *
     * @param session
     * @param display
     */

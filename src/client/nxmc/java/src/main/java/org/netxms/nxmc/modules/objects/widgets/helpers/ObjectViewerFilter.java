@@ -33,6 +33,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.LoadingObject;
 import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.VPNConnector;
@@ -164,8 +165,11 @@ public class ObjectViewerFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
+      if (element instanceof LoadingObject)
+         return true; // Placeholder for objects not synchronized yet should always be visible
+
 	   if (!passMainFilters(element))
-	      return false;	   
+	      return false;
 
       if (objectList == null)
          return true;

@@ -61,6 +61,7 @@ public class ObjectsPreferences extends FieldEditorPreferencePage
    protected void createFieldEditors()
    {
       addField(new BooleanFieldEditor("ObjectsFullSync", i18n.tr("&Full object synchronization on startup"), getFieldEditorParent()));
+      addField(new BooleanFieldEditor("Connect.BackgroundObjectSync", i18n.tr("Synchronize objects in &background after login"), getFieldEditorParent()));
       addField(new BooleanFieldEditor("CustomAttributes.ShowHidden", "Show &hidden custom attributes", getFieldEditorParent()));
 
       Group filterGroup = new Group(getFieldEditorParent(), SWT.NONE);

@@ -442,6 +442,7 @@ public class NXCSession
    private Map<Integer, Zone> zoneList = new HashMap<Integer, Zone>();
    private Map<Integer, ObjectCategory> objectCategories = new HashMap<Integer, ObjectCategory>();
    private boolean objectsSynchronized = false;
+   private volatile boolean objectSyncPending = false;
    private Set<String> responsibleUserTags = new HashSet<String>();
 
    // Users
@@ -3901,6 +3902,7 @@ public class NXCSession
 
       waitForSync(syncObjects, commandTimeout * 10);
       objectsSynchronized = objectsSynchronized || syncNodeComponents;
+      objectSyncPending = false;
       sendNotification(new SessionNotification(SessionNotification.OBJECT_SYNC_COMPLETED));
       subscribe(CHANNEL_OBJECTS);
    }
@@ -13424,6 +13426,26 @@ public class NXCSession
    public boolean areObjectsSynchronized()
    {
       return objectsSynchronized;
+   }
+
+   /**
+    * Mark object synchronization as pending. Intended for clients that call {@link #syncObjects(boolean)} from background thread and
+    * have to indicate that object tree is not available yet. Pending state is reset automatically when object synchronization
+    * completes.
+    */
+   public void setObjectSyncPending()
+   {
+      objectSyncPending = true;
+   }
+
+   /**
+    * Check if object synchronization was started but not completed yet.
+    *
+    * @return true if object synchronization is pending
+    */
+   public boolean isObjectSyncPending()
+   {
+      return objectSyncPending;
    }
 
    /**

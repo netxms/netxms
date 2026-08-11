@@ -212,6 +212,35 @@ public class ObjectTree extends Composite
       objectTree.setComparator(new ObjectTreeComparator());
       filter = new ObjectViewerFilter(null, classFilter);
       objectTree.addFilter(filter);
+
+      // Add client library listener before setting input to make sure that completion of background object
+      // synchronization will not be missed
+      sessionListener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if ((n.getCode() == SessionNotification.OBJECT_DELETED) || (n.getCode() == SessionNotification.OBJECT_SYNC_COMPLETED))
+            {
+               synchronized(updatedObjects)
+               {
+                  updatedObjects.clear();
+                  fullRefresh = true;
+               }
+               refreshTimer.execute();
+            }
+            else if ((n.getCode() == SessionNotification.OBJECT_CHANGED) &&
+                ((classFilter == null) || classFilter.contains(((AbstractObject)n.getObject()).getObjectClass())))
+            {
+               synchronized(updatedObjects)
+               {
+                  updatedObjects.put(n.getSubCode(), (AbstractObject)n.getObject());
+               }
+               refreshTimer.execute();
+            }
+         }
+      };
+      session.addListener(sessionListener);
+
       objectTree.setInput(session);
 
       objectTree.addDoubleClickListener(new IDoubleClickListener() {
@@ -246,33 +275,6 @@ public class ObjectTree extends Composite
          fd.right = new FormAttachment(100, 0);
          filterText.setLayoutData(fd);
       }
-
-      // Add client library listener
-      sessionListener = new SessionListener() {
-         @Override
-         public void notificationHandler(SessionNotification n)
-         {
-            if (n.getCode() == SessionNotification.OBJECT_DELETED)
-            {
-               synchronized(updatedObjects)
-               {
-                  updatedObjects.clear();
-                  fullRefresh = true;
-               }
-               refreshTimer.execute();
-            }
-            else if ((n.getCode() == SessionNotification.OBJECT_CHANGED) &&
-                ((classFilter == null) || classFilter.contains(((AbstractObject)n.getObject()).getObjectClass())))
-            {
-               synchronized(updatedObjects)
-               {
-                  updatedObjects.put(n.getSubCode(), (AbstractObject)n.getObject());
-               }
-               refreshTimer.execute();
-            }
-         }
-      };
-      session.addListener(sessionListener);
 
       // Set dispose listener
       addDisposeListener(new DisposeListener() {

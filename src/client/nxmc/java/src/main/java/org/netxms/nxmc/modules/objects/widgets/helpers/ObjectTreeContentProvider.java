@@ -75,6 +75,8 @@ public class ObjectTreeContentProvider extends TreeNodeContentProvider
 	{
 		if (session != null)
 		{
+         if (session.isObjectSyncPending())
+            return new AbstractObject[] { new LoadingObject(-1, session) };
          if (objectFilter == null)
             return session.getTopLevelObjects(classFilter);
          if (classFilter == null)

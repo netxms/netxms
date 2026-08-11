@@ -65,6 +65,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.LoadingObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
@@ -566,6 +567,9 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    @Override
    protected void navigationSelectionChanged(IStructuredSelection selection)
    {
+      if (selection.getFirstElement() instanceof LoadingObject)
+         return; // Ignore selection of placeholder shown while objects are being synchronized
+
       super.navigationSelectionChanged(selection);
 
       if (selection.getFirstElement() instanceof AbstractObject)
