@@ -60,7 +60,7 @@ public class ObjectsPreferences extends FieldEditorPreferencePage
    @Override
    protected void createFieldEditors()
    {
-      addField(new BooleanFieldEditor("ObjectsFullSync", i18n.tr("&Full object synchronization on startup"), getFieldEditorParent()));
+      addField(new BooleanFieldEditor("Connect.FullObjectSync", i18n.tr("&Full object synchronization on startup"), getFieldEditorParent()));
       addField(new BooleanFieldEditor("Connect.BackgroundObjectSync", i18n.tr("Synchronize objects in &background after login"), getFieldEditorParent()));
       addField(new BooleanFieldEditor("CustomAttributes.ShowHidden", "Show &hidden custom attributes", getFieldEditorParent()));
 
@@ -69,21 +69,21 @@ public class ObjectsPreferences extends FieldEditorPreferencePage
       filterGroup.getParent().setLayout(new FillLayout());
       filterGroup.setLayout(new GridLayout());
 
-      useServerFilter = new BooleanFieldEditor("ObjectBrowser.useServerFilterSettings", i18n.tr("&Use server settings for object filter"), getSubFieldEditorParent(filterGroup));
+      useServerFilter = new BooleanFieldEditor("ObjectBrowser.UseServerFilterSettings", i18n.tr("&Use server settings for object filter"), getSubFieldEditorParent(filterGroup));
       addField(useServerFilter);
 
       autoApplyParent = getSubFieldEditorParent(filterGroup);
-      autoApply = new BooleanFieldEditor("ObjectBrowser.filterAutoApply", i18n.tr("&Apply filter automatically"), autoApplyParent);
+      autoApply = new BooleanFieldEditor("ObjectBrowser.AutoApplyFilter", i18n.tr("&Apply filter automatically"), autoApplyParent);
       addField(autoApply);
 
       delayParent = getSubFieldEditorParent(filterGroup);
-      delay = new StringFieldEditor("ObjectBrowser.filterDelay", i18n.tr("Filter &delay"), delayParent);
+      delay = new StringFieldEditor("ObjectBrowser.FilterDelay", i18n.tr("Filter &delay"), delayParent);
       addField(delay);
       delay.setEmptyStringAllowed(false);
       delay.setTextLimit(5);
 
       minLengthParent = getSubFieldEditorParent(filterGroup);
-      minLength = new StringFieldEditor("ObjectBrowser.filterMinLength", i18n.tr("Filter &minimal length"), minLengthParent);
+      minLength = new StringFieldEditor("ObjectBrowser.MinFilterStringLength", i18n.tr("Filter &minimal length"), minLengthParent);
       addField(minLength);
       minLength.setEmptyStringAllowed(false);
       minLength.setTextLimit(3);

@@ -111,7 +111,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    {
       super(LocalizationHelper.getI18n(PortView.class).tr("Ports"), ResourceManager.getImageDescriptor("icons/object-views/ports.png"), "objects.ports", false);
       PreferenceStore store = PreferenceStore.getInstance();
-      objectsFullySync = store.getAsBoolean("ObjectBrowser.FullSync", false);
+      objectsFullySync = store.getAsBoolean("Connect.FullObjectSync", false);
    }
 
    /**
