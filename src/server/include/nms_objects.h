@@ -4152,7 +4152,7 @@ protected:
    StructArray<RadioInterfaceInfo> *m_radioInterfaces;
    ObjectArray<WirelessStationInfo> *m_wirelessStations;
    MacAddress m_baseBridgeAddress;   // Bridge base address (dot1dBaseBridgeAddress in bridge MIB)
-   MacAddress m_stpBridgeId;   // Additional STP bridge ID reported by driver (e.g. MC-LAG/V-STP shared virtual bridge ID); invalid if none
+   MacAddress m_stpBridgeId;   // Additional STP bridge ID reported by driver (e.g. bridge ID shared by both members of MC-LAG/V-STP pair); invalid if none
    bool m_l1TopologyUsed;
    int m_topologyDepth;
    shared_ptr<NetworkMapObjectList> m_topology;
