@@ -11003,6 +11003,8 @@ components:
             `eventOrigin`, `completionStatus`, `actionCode`, `atmTransactionCode`,
             `assetOperation`, `deploymentStatus`, `aiTaskStatus`, `connectionEvent`,
             `aiOperatorExecutionStatus`, `observationState`) carry NetXMS internal codes.
+            Display names for `objectId` and `userId` values are provided by the
+            `resolvedValues` element of the query result.
           enum:
             - text
             - severity
@@ -11181,6 +11183,26 @@ components:
           items:
             type: object
             additionalProperties: true
+        resolvedValues:
+          $ref: '#/components/schemas/LogResolvedValues'
+    LogResolvedValues:
+      type: object
+      description: |
+        Display names for the coded IDs referenced by `records`, collected once per query
+        instead of being repeated on every record. IDs the caller has no read access to, and
+        IDs with no matching object or user, are omitted - client should display raw ID in
+        that case.
+      properties:
+        objects:
+          type: object
+          description: Object summaries for values of `objectId` columns, keyed by object ID
+          additionalProperties:
+            $ref: '#/components/schemas/ObjectSummary'
+        users:
+          type: object
+          description: Login names for values of `userId` columns, keyed by user ID
+          additionalProperties:
+            type: string
     LogParser:
       type: object
       properties:

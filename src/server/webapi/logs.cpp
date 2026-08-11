@@ -22,6 +22,7 @@
 
 #include "webapi.h"
 #include <nxcore_logs.h>
+#include <nms_users.h>
 
 /**
  * Default and maximum number of records returned by single query
@@ -120,6 +121,71 @@ static bool GetPagingParameters(json_t *request, int64_t *offset, int64_t *limit
 }
 
 /**
+ * Add display names for object and user ID columns referenced by query result. Names are
+ * collected into single lookup document instead of being attached to each record, so that
+ * ID referenced by many records is resolved and transferred only once. Objects that caller
+ * has no read access to, as well as unknown user IDs, are omitted from lookup document -
+ * client is expected to fall back to displaying raw ID in that case.
+ */
+static void AddResolvedValues(json_t *output, const NXCORE_LOG *log, json_t *records, uint32_t userId)
+{
+   json_t *objects = json_object();
+   json_t *users = json_object();
+   HashSet<uint32_t> processedObjects, processedUsers;
+
+   for(int i = 0; log->columns[i].name != nullptr; i++)
+   {
+      const LOG_COLUMN& column = log->columns[i];
+      if ((column.type != LC_OBJECT_ID) && (column.type != LC_USER_ID))
+         continue;
+
+      char columnName[MAX_COLUMN_NAME_LEN * 3];
+      wchar_to_utf8(column.name, -1, columnName, sizeof(columnName));
+
+      size_t index;
+      json_t *record;
+      json_array_foreach(records, index, record)
+      {
+         json_t *value = json_object_get(record, columnName);
+         if (!json_is_integer(value))
+            continue;
+
+         int64_t value64 = json_integer_value(value);
+         if (value64 < 0)
+            continue;   // INVALID_UID is stored as -1 in signed database columns
+         uint32_t id = static_cast<uint32_t>(value64);
+
+         char key[16];
+         snprintf(key, sizeof(key), "%u", id);
+
+         if (column.type == LC_OBJECT_ID)
+         {
+            if ((id == 0) || processedObjects.contains(id))
+               continue;   // 0 is "no object" marker
+            processedObjects.put(id);
+            shared_ptr<NetObj> object = FindObjectById(id);
+            if ((object != nullptr) && object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+               json_object_set_new(objects, key, CreateObjectSummary(*object));
+         }
+         else
+         {
+            if ((id == INVALID_UID) || processedUsers.contains(id))
+               continue;
+            processedUsers.put(id);
+            wchar_t userName[MAX_USER_NAME];
+            if (ResolveUserId(id, userName, false) != nullptr)
+               json_object_set_new(users, key, json_string_t(userName));
+         }
+      }
+   }
+
+   json_t *resolvedValues = json_object();
+   json_object_set_new(resolvedValues, "objects", objects);
+   json_object_set_new(resolvedValues, "users", users);
+   json_object_set_new(output, "resolvedValues", resolvedValues);
+}
+
+/**
  * Handler for POST /v1/logs/:log-name/query
  */
 int H_LogQuery(Context *context)
@@ -163,6 +229,7 @@ int H_LogQuery(Context *context)
    json_object_set_new(output, "offset", json_integer(offset));
    json_object_set_new(output, "count", json_integer(json_array_size(records)));
    json_object_set_new(output, "records", records);
+   AddResolvedValues(output, log, records, context->getUserId());
    context->setResponseData(output);
    json_decref(output);
    return 200;
