@@ -1578,6 +1578,7 @@ static double ActivityFlatHundred(time_t day) { return 100.0; }
 static double ActivitySundayDip(time_t day) { return (DayOfWeek(day) == 0) ? 20.0 : 100.0; }
 static double ActivityPayday(time_t day) { return (DayOfMonth(day) == 25) ? 300.0 : 100.0; }
 static double ActivityStepTrend(time_t day) { return (day >= MakeDay(2026, 7, 13)) ? 150.0 : 100.0; }
+static double ActivityStepDrop(time_t day) { return (day >= MakeDay(2026, 7, 13)) ? 100.0 : 150.0; }
 
 /**
  * Adjustment hook halving every day's forecast
@@ -1722,6 +1723,35 @@ static void TestDailyActivityForecaster()
    }
    AssertTrue(weightSum > 0);
    AssertTrue(fabs(factorSum / weightSum - 1.0) < 0.001);
+   EndTest();
+
+   StartTest(_T("DailyActivityForecaster: recency weighting"));
+   // Same step series: 42 days at 100 followed by 14 days at 150, so an
+   // unweighted mean would be 112.5 - the baseline must sit well above it
+   AssertTrue(trend.getBaseline() > 120.0);
+   AssertTrue(trend.getBaseline() < 150.0);
+
+   // Mirrored series (level drops instead of rising, unweighted mean 137.5)
+   DailyActivityForecaster decline;
+   BuildActivitySeries(&series, 56, ActivityStepDrop);
+   decline.learn(series, now);
+   AssertTrue(decline.getBaseline() < 130.0);
+   AssertTrue(decline.getBaseline() > 100.0);
+
+   // Half-life controls how fast older days are discounted: a very long one
+   // degenerates to the unweighted mean, a short one tracks the recent level
+   DailyActivityForecasterConfig fastConfig;
+   fastConfig.recencyHalfLifeDays = 3.0;
+   DailyActivityForecaster fast(fastConfig);
+   DailyActivityForecasterConfig slowConfig;
+   slowConfig.recencyHalfLifeDays = 1000.0;
+   DailyActivityForecaster slow(slowConfig);
+   BuildActivitySeries(&series, 56, ActivityStepTrend);
+   fast.learn(series, now);
+   slow.learn(series, now);
+   AssertTrue(fast.getBaseline() > trend.getBaseline());
+   AssertTrue(trend.getBaseline() > slow.getBaseline());
+   AssertTrue(fabs(slow.getBaseline() - 112.5) < 1.0);
    EndTest();
 
    StartTest(_T("DailyActivityForecaster: holiday substitution"));
