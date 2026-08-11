@@ -79,12 +79,17 @@ static uint32_t STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport
                   memcmp(designatedBridge, "\x00\x00\x00\x00\x00\x00\x00\x00", 8) &&
                   memcmp(designatedPort, "\x00\x00", 2))
          {
-            // Skip ports for which the local node itself is the designated bridge - such a port is the
-            // designated port for its own segment, not an uplink. Besides the standard dot1dBaseBridgeAddress
-            // this also covers the shared/virtual bridge ID used by MC-LAG / V-STP implementations (read via
-            // driver), which differs from dot1dBaseBridgeAddress and would otherwise resolve to the MC-LAG
-            // peer node and produce false inter-switch links on every downstream port.
-            if (node->matchBridgeId(&designatedBridge[2]))
+            // Designated port ID is two octets: port priority followed by port number. Port number occupies
+            // low 12 bits (802.1t; on legacy 802.1D devices priority takes the whole first octet and port
+            // number is below 256, so the same masking applies).
+            uint32_t designatedPortNumber = (static_cast<uint32_t>(designatedPort[0] & 0x0F) << 8) | designatedPort[1];
+
+            // Skip ports for which the local node itself is the designated bridge for its own port - such a
+            // port is the designated port for its own segment, not an uplink. Both halves of that test are
+            // required: bridge ID alone is not sufficient because MC-LAG / V-STP implementations share a
+            // single bridge ID across the pair (read via driver in addition to dot1dBaseBridgeAddress), and
+            // on the chassis that does not own that ID it also appears on genuine uplinks toward the peer.
+            if (node->matchBridgeId(&designatedBridge[2]) && (designatedPortNumber == oid[11]))
             {
                nxlog_debug_tag(DEBUG_TAG, 6, _T("Designated STP bridge for node %s [%u] port %u is the node itself"),
                      node->getName(), node->getId(), oid[11]);
@@ -105,7 +110,7 @@ static uint32_t STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport
                if (ifLocal != nullptr)
                {
                   nxlog_debug_tag(DEBUG_TAG, 6, _T("Found local port %s [%u] for node %s [%u]"), ifLocal->getName(), ifLocal->getId(), node->getName(), node->getId());
-                  shared_ptr<Interface> ifRemote = bridge->findBridgePort((uint32_t)designatedPort[1]);
+                  shared_ptr<Interface> ifRemote = bridge->findBridgePort(designatedPortNumber);
                   if (ifRemote != nullptr)
                   {
                      nxlog_debug_tag(DEBUG_TAG, 6, _T("Found remote port %s [%u] on node %s [%u]"), ifRemote->getName(), ifRemote->getId(), bridge->getName(), bridge->getId());
@@ -121,7 +126,7 @@ static uint32_t STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport
                   }
                   else
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Bridge port number %u is invalid for node %s [%u]"), (uint32_t)designatedPort[1], bridge->getName(), bridge->getId());
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Bridge port number %u is invalid for node %s [%u]"), designatedPortNumber, bridge->getName(), bridge->getId());
                   }
                }
                else

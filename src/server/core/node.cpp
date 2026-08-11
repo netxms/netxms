@@ -7835,9 +7835,9 @@ void Node::checkBridgeMib(SNMP_Transport *snmp)
    if ((SnmpGet(m_snmpVersion, snmp, { 1, 3, 6, 1, 2, 1, 17, 1, 1, 0 }, baseBridgeAddress, sizeof(baseBridgeAddress), SG_RAW_RESULT) == SNMP_ERR_SUCCESS) ||
        (SnmpGet(m_snmpVersion, snmp, { 1, 3, 6, 1, 2, 1, 17, 1, 2, 0 }, &portCount, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS))
    {
-      // Some devices (e.g. running MC-LAG / V-STP) use an additional shared/virtual bridge ID in STP
-      // that differs from dot1dBaseBridgeAddress. Read it via driver so STP topology can recognize
-      // the node's own designated ports and avoid false inter-switch links toward the MC-LAG peer.
+      // Devices running MC-LAG / V-STP use an additional bridge ID in STP that is shared by both members
+      // of the pair (normally the bridge MAC of one of them). Read it via driver so STP topology can
+      // recognize the node's own designated ports and avoid false inter-switch links toward the MC-LAG peer.
       NodeDeviceContext context(self(), snmp);
       MacAddress stpBridgeId = m_driver->getStpBridgeId(&context, this, m_driverData);
 

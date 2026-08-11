@@ -1327,10 +1327,11 @@ StructArray<BridgePort> *NetworkDeviceDriver::getBridgePorts(DeviceContext *cont
 
 /**
  * Get additional STP bridge ID used by the device in spanning tree protocol in addition to the
- * standard dot1dBaseBridgeAddress. Some devices (e.g. running MC-LAG / V-STP) advertise a shared
- * virtual bridge ID that differs from their per-chassis dot1dBaseBridgeAddress; reporting it here
- * allows the STP topology code to recognize the device's own designated ports and avoid creating
- * false inter-switch links toward the MC-LAG peer.
+ * standard dot1dBaseBridgeAddress. Devices running MC-LAG / V-STP act as a single logical bridge and
+ * share one bridge ID across the pair - usually the bridge MAC of one of the members, so on the member
+ * that does not own it the shared ID resolves to the peer node. Reporting it here allows the STP topology
+ * code to recognize the device's own designated ports and avoid creating false inter-switch links toward
+ * the MC-LAG peer.
  * Default implementation returns an invalid (empty) address, meaning the device uses only its
  * dot1dBaseBridgeAddress as STP bridge identifier.
  *
