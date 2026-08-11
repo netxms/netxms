@@ -70,7 +70,7 @@ public abstract class NodeSubObjectView extends ObjectView
    protected void createContent(Composite parent)
    {
       PreferenceStore coreStore = PreferenceStore.getInstance();
-      fullObjectSync = coreStore.getAsBoolean("ObjectBrowser.FullSync", false);
+      fullObjectSync = coreStore.getAsBoolean("Connect.FullObjectSync", false);
 
       // Create tab main area
       mainArea = new Composite(parent, SWT.NONE);

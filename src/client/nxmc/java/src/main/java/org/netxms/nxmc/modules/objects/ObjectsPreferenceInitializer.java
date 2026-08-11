@@ -32,12 +32,10 @@ public class ObjectsPreferenceInitializer implements PreferenceInitializer
    @Override
    public void initializeDefaultPreferences(PreferenceStore ps)
    {
-      ps.setDefault("ObjectBrowser.filterAutoApply", true);
-      ps.setDefault("ObjectBrowser.filterDelay", 300);
-      ps.setDefault("ObjectBrowser.filterMinLength", 1);
-      ps.setDefault("ObjectBrowser.showFilter", true);
-      ps.setDefault("ObjectBrowser.showStatusIndicator", false);
-      ps.setDefault("ObjectBrowser.useServerFilterSettings", true);
+      ps.setDefault("ObjectBrowser.AutoApplyFilter", true);
+      ps.setDefault("ObjectBrowser.FilterDelay", 300);
+      ps.setDefault("ObjectBrowser.MinFilterStringLength", 1);
+      ps.setDefault("ObjectBrowser.UseServerFilterSettings", true);
 
       ps.setDefault("ObjectStatusIndicator.showIcons", false);
       ps.setDefault("ObjectStatusIndicator.hideNormal", true);

@@ -138,7 +138,7 @@ public class ObjectTree extends Composite
       this.view = view;
 
       PreferenceStore store = PreferenceStore.getInstance();
-      objectsFullySync = store.getAsBoolean("ObjectBrowser.FullSync", false);
+      objectsFullySync = store.getAsBoolean("Connect.FullObjectSync", false);
 
       session = Registry.getSession();
       refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), this, new Runnable() {
