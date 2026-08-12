@@ -64,6 +64,19 @@ static void MaskToken(const char *token, char *masked, size_t size)
 }
 
 /**
+ * Check if request carries payload
+ */
+static bool RequestHasBody(MHD_Connection *connection)
+{
+   const char *transferEncoding = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_TRANSFER_ENCODING);
+   if ((transferEncoding != nullptr) && stricmp(transferEncoding, "identity"))
+      return true;   // Chunked or other non-identity transfer encoding - payload size is not known in advance
+
+   const char *contentLength = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_LENGTH);
+   return (contentLength != nullptr) && (strtoul(contentLength, nullptr, 10) > 0);
+}
+
+/**
  * Add route
  */
 void RouteBuilder::build()
@@ -227,10 +240,13 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
       return nullptr;
    }
 
-   // Check content type if content is expected
-   if ((methodId == Method::POST) || (methodId == Method::PUT) || (methodId == Method::PATCH))
+   // Check content type if content is expected. Action-style endpoints do not take request document,
+   // and most HTTP clients do not send content type header for requests without payload, so request
+   // without payload and without content type header is accepted as is.
+   const char *contentType = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE);
+   if (((methodId == Method::POST) || (methodId == Method::PUT) || (methodId == Method::PATCH)) &&
+       ((contentType != nullptr) || RequestHasBody(connection)))
    {
-      const char *contentType = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE);
       bool validContentType = curr->acceptJson && (contentType != nullptr) &&
          (!strcmp(contentType, "application/json") || !strncmp(contentType, "application/json;", 17));
       if (!validContentType && curr->acceptProtobuf)
