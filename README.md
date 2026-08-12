@@ -157,6 +157,20 @@ cd netxms/contrib/docker
 docker-compose up -d
 ```
 
+### Updating an Installed System Directly from Sources
+
+When you build in a prefix that already contains an installed NetXMS (for example `/usr/local`), always run
+
+```bash
+make -j$(nproc) install
+```
+
+instead of a bare `make` followed by a separate `make install`.
+
+NetXMS internal libraries (`libnetxms`, `libnxdb`, `libnxsrv`, and others) are parts of a single product and are always built together — binary compatibility between them is neither promised nor supported across builds. The linker on Linux searches the system library directories as well, so with a previous version installed under the same prefix it can pick up an already installed library instead of the one just built, and the link fails with undefined symbols. The `install` target builds and installs each directory before moving on to the next, so the freshly built libraries are already in place when the binaries that need them are linked.
+
+Alternatively, build into an empty target directory (`./configure --prefix=/path/to/empty/dir && make -j$(nproc) install`) and copy the resulting files to the runtime system.
+
 
 ## 📚 Documentation 
 
