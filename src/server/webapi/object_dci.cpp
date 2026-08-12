@@ -52,7 +52,7 @@ static shared_ptr<DataCollectionOwner> LoadDataCollectionOwner(Context *context,
 int H_DataCollectionConfigList(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<DataCollectionOwner> owner = LoadDataCollectionOwner(context, OBJECT_ACCESS_READ, &httpCode);
+   shared_ptr<DataCollectionOwner> owner = LoadDataCollectionOwner(context, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG, &httpCode);
    if (owner == nullptr)
       return httpCode;
 
@@ -72,7 +72,7 @@ int H_DataCollectionConfigList(Context *context)
 int H_DataCollectionConfigGet(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<DataCollectionOwner> owner = LoadDataCollectionOwner(context, OBJECT_ACCESS_READ, &httpCode);
+   shared_ptr<DataCollectionOwner> owner = LoadDataCollectionOwner(context, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG, &httpCode);
    if (owner == nullptr)
       return httpCode;
 

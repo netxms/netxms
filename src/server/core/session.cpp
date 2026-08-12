@@ -4723,7 +4723,7 @@ void ClientSession::openNodeDCIList(const NXCPMessage& request)
    {
       if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
          {
             success = true;
             response.setField(VID_RCC, RCC_SUCCESS);
@@ -4734,6 +4734,7 @@ void ClientSession::openNodeDCIList(const NXCPMessage& request)
          }
          else
          {
+            writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on reading data collection configuration for object %s", object->getName());
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
@@ -4768,7 +4769,7 @@ void ClientSession::closeNodeDCIList(const NXCPMessage& request)
    {
       if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
          {
             static_cast<DataCollectionOwner&>(*object).applyDCIChanges(false);
             if (!request.getFieldAsBoolean(VID_COMMIT_ONLY))
@@ -4806,7 +4807,7 @@ void ClientSession::getDCObject(const NXCPMessage& request)
    {
       if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
          {
             uint32_t itemId = request.getFieldAsUInt32(VID_DCI_ID);
             shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(itemId, m_userId);
@@ -5478,10 +5479,10 @@ void ClientSession::sendDCIThresholds(const NXCPMessage& request)
    shared_ptr<NetObj> delegateObject = FindObjectById(request.getFieldAsUInt32(VID_DELEGATE_OBJECT_ID));
    if (object != nullptr)
    {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG) ||
                (delegateObject != nullptr && delegateObject->isDelegate() &&
                delegateObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
-               object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ)))
+               object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ | OBJECT_ACCESS_READ_DC_CONFIG)))
       {
 			if (object->isDataCollectionTarget())
 			{
@@ -5510,6 +5511,7 @@ void ClientSession::sendDCIThresholds(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on reading data collection configuration for object %s", object->getName());
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -11538,7 +11540,7 @@ void ClientSession::getDCIScriptList(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
       {
          if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
@@ -11568,6 +11570,7 @@ void ClientSession::getDCIScriptList(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on reading data collection configuration for object %s", object->getName());
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
@@ -11712,8 +11715,9 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
          {
             if (object->getObjectClass() == OBJECT_TEMPLATE)
             {
-               if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+               if (!object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
                {
+                  writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on reading data collection configuration for object %s", object->getName());
                   response.setField(VID_RCC, RCC_ACCESS_DENIED);
                   break;
                }
@@ -12789,7 +12793,7 @@ void ClientSession::testDCITransformation(const NXCPMessage& request)
    {
       if (object->isDataCollectionTarget())
       {
-         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+         if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
          {
 				TCHAR *script = request.getFieldAsString(VID_SCRIPT);
 				if (script != nullptr)
@@ -12815,8 +12819,9 @@ void ClientSession::testDCITransformation(const NXCPMessage& request)
 	            msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
 				}
          }
-         else  // User doesn't have READ rights on object
+         else  // User doesn't have rights to read data collection configuration
          {
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), L"Access denied on reading data collection configuration for object %s", object->getName());
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }

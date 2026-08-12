@@ -59,6 +59,7 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
       new AccessBit(UserAccessRights.OBJECT_ACCESS_DOWNLOAD, 'N'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_UPLOAD, 'U'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_READ_DEVICE_CONFIG, 'b'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_READ_DC_CONFIG, 'd'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG, 'g'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_MANAGE_FILES, 'F'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_CONFIGURE_AGENT, 'c'),

@@ -249,7 +249,7 @@ std::string F_GetMetricDetails(json_t *arguments, uint32_t userId)
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
       return std::string("Object not found");
-   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
       return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
@@ -987,7 +987,7 @@ std::string F_GetThresholds(json_t *arguments, uint32_t userId)
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
       return std::string("Object not found");
-   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
       return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())
@@ -1033,7 +1033,7 @@ std::string F_GetObjectThresholds(json_t *arguments, uint32_t userId)
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
    if (object == nullptr)
       return std::string("Object not found");
-   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ | OBJECT_ACCESS_READ_DC_CONFIG))
       return std::string("Access denied");
 
    if (!object->isDataCollectionTarget())

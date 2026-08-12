@@ -5613,6 +5613,8 @@ paths:
         the object. This returns the DCI configuration, not collected values - use the
         `current-values` and `history` endpoints for data. Enumerations such as `origin`, `dataType`,
         `status` and threshold `function`/`condition` are returned as symbolic names.
+
+        Requires `OBJECT_ACCESS_READ` and `OBJECT_ACCESS_READ_DC_CONFIG` on the object.
       parameters:
         - name: object-id
           in: path
@@ -5690,7 +5692,10 @@ paths:
     get:
       operationId: getDataCollectionItem
       summary: Get data collection item definition
-      description: Retrieve the definition of a single data collection item.
+      description: |
+        Retrieve the definition of a single data collection item.
+
+        Requires `OBJECT_ACCESS_READ` and `OBJECT_ACCESS_READ_DC_CONFIG` on the object.
       parameters:
         - name: object-id
           in: path

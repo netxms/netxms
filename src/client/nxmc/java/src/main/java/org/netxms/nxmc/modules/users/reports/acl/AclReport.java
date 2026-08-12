@@ -855,6 +855,10 @@ public class AclReport extends AbstractAclReport
       cell.setCellStyle(headerStyle);
       cell.setCellValue("Read Device Configuration");
 
+      cell = headerRow.createCell(PermissionsSheetCells.READ_DC_CONFIG.ordinal());
+      cell.setCellStyle(headerStyle);
+      cell.setCellValue("Read Data Collection Configuration");
+
       sheet.setColumnWidth(PermissionsSheetCells.OBJECT_NAME.ordinal(), 20480);
       sheet.setColumnWidth(PermissionsSheetCells.USER_OR_GROUP_NAME.ordinal(), 4096);
 
@@ -894,6 +898,7 @@ public class AclReport extends AbstractAclReport
          createPermissionCell(row, PermissionsSheetCells.MANAGE_INCIDENTS, UserAccessRights.OBJECT_ACCESS_MANAGE_INCIDENTS, element);
          createPermissionCell(row, PermissionsSheetCells.UPLOAD_DEVICE_CONFIG, UserAccessRights.OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG, element);
          createPermissionCell(row, PermissionsSheetCells.READ_DEVICE_CONFIG, UserAccessRights.OBJECT_ACCESS_READ_DEVICE_CONFIG, element);
+         createPermissionCell(row, PermissionsSheetCells.READ_DC_CONFIG, UserAccessRights.OBJECT_ACCESS_READ_DC_CONFIG, element);
       }
    }
 }

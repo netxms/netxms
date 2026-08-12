@@ -24,6 +24,24 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.23 to 70.24
+ */
+static bool H_UpgradeFromV23()
+{
+   // Add OBJECT_ACCESS_READ_DC_CONFIG (0x40000000) to all ACL entries with READ access set
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE acl SET access_rights=access_rights+1073741824 WHERE (BITAND(access_rights, 1073741824)=0) AND (BITAND(access_rights, 1)<>0)"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE acl SET access_rights=access_rights+1073741824 WHERE ((access_rights & 1073741824)=0) AND ((access_rights & 1)<>0)"));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(24));
+   return true;
+}
+
+/**
  * Upgrade from 70.22 to 70.23
  */
 static bool H_UpgradeFromV22()
@@ -815,6 +833,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 23, 70, 24, H_UpgradeFromV23 },
    { 22, 70, 23, H_UpgradeFromV22 },
    { 21, 70, 22, H_UpgradeFromV21 },
    { 20, 70, 21, H_UpgradeFromV20 },

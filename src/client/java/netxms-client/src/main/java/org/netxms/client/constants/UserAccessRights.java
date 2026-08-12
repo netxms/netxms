@@ -115,4 +115,5 @@ public final class UserAccessRights
    public static final int OBJECT_ACCESS_QUERY_WEBSVC     = 0x08000000;
    public static final int OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG = 0x10000000;
    public static final int OBJECT_ACCESS_READ_DEVICE_CONFIG   = 0x20000000;
+   public static final int OBJECT_ACCESS_READ_DC_CONFIG       = 0x40000000;
 }

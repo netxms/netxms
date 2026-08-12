@@ -114,6 +114,7 @@ public class EffectiveRightsDialog extends Dialog
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_READ_SNMP, i18n.tr("Read SNMP data")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_READ_CREDENTIALS, i18n.tr("Read credentials")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_READ_DEVICE_CONFIG, i18n.tr("Read device configuration")));
+      rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_READ_DC_CONFIG, i18n.tr("Read data collection configuration")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_QUERY_WEBSVC, i18n.tr("Query web service")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_MODIFY, i18n.tr("Modify")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_EDIT_COMMENTS, i18n.tr("Edit comments")));
