@@ -288,7 +288,7 @@ int H_User2FABindingUpdate(Context *context)
    uint32_t rcc = ModifyUser2FAMethodBinding(userId, methodName, configuration);
    if (rcc == RCC_SUCCESS)
    {
-      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Two-factor authentication binding \"%s\" updated for user %u", methodName, userId);
+      context->writeAuditLog(AUDIT_SECURITY, true, 0, L"Two-factor authentication binding \"%s\" updated for user %u", methodName, userId);
       return 200;
    }
 
@@ -323,7 +323,7 @@ int H_User2FABindingDelete(Context *context)
    uint32_t rcc = DeleteUser2FAMethodBinding(userId, methodName);
    if (rcc == RCC_SUCCESS)
    {
-      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Two-factor authentication binding \"%s\" deleted for user %u", methodName, userId);
+      context->writeAuditLog(AUDIT_SECURITY, true, 0, L"Two-factor authentication binding \"%s\" deleted for user %u", methodName, userId);
       return 204;
    }
 
