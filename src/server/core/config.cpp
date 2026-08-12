@@ -1235,71 +1235,116 @@ bool NXCORE_EXPORTABLE ConfigReadByteArray(const wchar_t *variable, int *buffer,
 }
 
 /**
+ * Prepare statement for writing configuration variable value. Returned statement is ready for execution
+ * (all parameters are bound). If create is set to true, statement will also create variable if it does not exist yet.
+ */
+static DB_STATEMENT PrepareConfigWrite(DB_HANDLE hdb, const wchar_t *variable, const wchar_t *value, bool create, bool isVisible, bool needRestart)
+{
+   if (!create)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"UPDATE config SET var_value=? WHERE var_name=?");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+      }
+      return hStmt;
+   }
+
+   // Use single upsert statement if supported by database - separate existence check cannot distinguish
+   // between empty result set and query failure, and creates a race window between check and write
+   const wchar_t *query = nullptr;
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MYSQL:
+         query = L"INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE var_value=VALUES(var_value)";
+         break;
+      case DB_SYNTAX_ORACLE:
+         query = L"MERGE INTO config t USING (SELECT ? AS var_name,? AS var_value,? AS is_visible,? AS need_server_restart FROM dual) d ON (t.var_name=d.var_name)"
+                 L" WHEN MATCHED THEN UPDATE SET t.var_value=d.var_value"
+                 L" WHEN NOT MATCHED THEN INSERT (var_name,var_value,is_visible,need_server_restart) VALUES (d.var_name,d.var_value,d.is_visible,d.need_server_restart)";
+         break;
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
+         if (g_flags & AF_DB_SUPPORTS_MERGE)
+            query = L"INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?) ON CONFLICT (var_name) DO UPDATE SET var_value=excluded.var_value";
+         break;
+      default:
+         break;
+   }
+
+   if (query != nullptr)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, query);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, isVisible ? 1 : 0);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, needRestart ? 1 : 0);
+      }
+      return hStmt;
+   }
+
+   // Database does not support upsert - check for variable existence first
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config WHERE var_name=?");
+   if (hStmt == nullptr)
+      return nullptr;
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   DBFreeStatement(hStmt);
+   if (hResult == nullptr)  // Failed query should not be interpreted as non-existing variable
+      return nullptr;
+   bool varExists = (DBGetNumRows(hResult) > 0);
+   DBFreeResult(hResult);
+
+   if (varExists)
+   {
+      hStmt = DBPrepare(hdb, L"UPDATE config SET var_value=? WHERE var_name=?");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+      }
+   }
+   else
+   {
+      hStmt = DBPrepare(hdb, L"INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?)");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, isVisible ? 1 : 0);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, needRestart ? 1 : 0);
+      }
+   }
+   return hStmt;
+}
+
+/**
  * Write string value to configuration table
  */
-bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value, bool create, bool isVisible, bool needRestart)
+bool NXCORE_EXPORTABLE ConfigWriteStr(const wchar_t *variable, const wchar_t *value, bool create, bool isVisible, bool needRestart)
 {
-   if (_tcslen(variable) > 63)
+   if (wcslen(variable) > 63)
       return false;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   // Check for variable existence
-	DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config WHERE var_name=?");
-	if (hStmt == nullptr)
+   DB_STATEMENT hStmt = PrepareConfigWrite(hdb, variable, value, create, isVisible, needRestart);
+   bool success;
+   if (hStmt != nullptr)
    {
-      DBConnectionPoolReleaseConnection(hdb);
-		return false;
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
    }
-	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-	DB_RESULT hResult = DBSelectPrepared(hStmt);
-   bool bVarExist = false;
-   if (hResult != nullptr)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bVarExist = true;
-      DBFreeResult(hResult);
-   }
-	DBFreeStatement(hStmt);
-
-   // Don't create non-existing variable if creation flag not set
-   if (!create && !bVarExist)
-   {
-      DBConnectionPoolReleaseConnection(hdb);
-      return false;
-   }
-
-   // Create or update variable value
-   if (bVarExist)
-	{
-		hStmt = DBPrepare(hdb, L"UPDATE config SET var_value=? WHERE var_name=?");
-		if (hStmt == nullptr)
-      {
-         DBConnectionPoolReleaseConnection(hdb);
-			return false;
-      }
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
-		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-	}
    else
-	{
-		hStmt = DBPrepare(hdb, L"INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (?,?,?,?)");
-		if (hStmt == nullptr)
-      {
-         DBConnectionPoolReleaseConnection(hdb);
-			return false;
-      }
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(isVisible ? 1 : 0));
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(needRestart ? 1 : 0));
-	}
-   bool success = DBExecute(hStmt);
-	DBFreeStatement(hStmt);
+   {
+      success = false;
+   }
    DBConnectionPoolReleaseConnection(hdb);
-	if (success)
-		OnConfigVariableChange(false, variable, value);
-	return success;
+   if (success)
+      OnConfigVariableChange(false, variable, value);
+   return success;
 }
 
 /**
@@ -1421,67 +1466,33 @@ char NXCORE_EXPORTABLE *ConfigReadCLOBUTF8(const TCHAR *variable, const char *de
 /**
  * Write large string (clob) value to configuration table
  */
-bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *variable, const TCHAR *value, bool create)
+bool NXCORE_EXPORTABLE ConfigWriteCLOB(const wchar_t *variable, const wchar_t *value, bool create)
 {
-   if (_tcslen(variable) > 63)
+   if (wcslen(variable) > 63)
       return false;
+
+   static const wchar_t *columns[] = { L"var_value", nullptr };
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-   // Check for variable existence
-	DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config_clob WHERE var_name=?");
-	if (hStmt == nullptr)
+   DB_STATEMENT hStmt = create ?
+            DBPrepareMerge(hdb, L"config_clob", L"var_name", variable, columns) :
+            DBPrepare(hdb, L"UPDATE config_clob SET var_value=? WHERE var_name=?");
+   bool success;
+   if (hStmt != nullptr)
    {
-      DBConnectionPoolReleaseConnection(hdb);
-		return false;
+      DBBind(hStmt, 1, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+      success = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
    }
-	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-	DB_RESULT hResult = DBSelectPrepared(hStmt);
-   bool bVarExist = false;
-   if (hResult != nullptr)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bVarExist = true;
-      DBFreeResult(hResult);
-   }
-	DBFreeStatement(hStmt);
-
-   // Don't create non-existing variable if creation flag not set
-   if (!create && !bVarExist)
-   {
-      DBConnectionPoolReleaseConnection(hdb);
-      return false;
-   }
-
-   // Create or update variable value
-   if (bVarExist)
-	{
-		hStmt = DBPrepare(hdb, L"UPDATE config_clob SET var_value=? WHERE var_name=?");
-		if (hStmt == nullptr)
-      {
-         DBConnectionPoolReleaseConnection(hdb);
-			return false;
-      }
-		DBBind(hStmt, 1, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);
-		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-	}
    else
-	{
-		hStmt = DBPrepare(hdb, L"INSERT INTO config_clob (var_name,var_value) VALUES (?,?)");
-		if (hStmt == nullptr)
-      {
-         DBConnectionPoolReleaseConnection(hdb);
-			return false;
-      }
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-		DBBind(hStmt, 2, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);
-	}
-   bool success = DBExecute(hStmt) ? true : false;
-	DBFreeStatement(hStmt);
+   {
+      success = false;
+   }
    DBConnectionPoolReleaseConnection(hdb);
-	if (success)
-		OnConfigVariableChange(true, variable, value);
-	return success;
+   if (success)
+      OnConfigVariableChange(true, variable, value);
+   return success;
 }
 
 /**

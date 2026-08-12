@@ -113,19 +113,22 @@ bool LIBNXDBMGR_EXPORTABLE CreateTable(const TCHAR *pszQuery)
 }
 
 /**
- * Check if configuration variable exist
+ * Check if configuration variable exist. Sets *success to false if existence check itself failed,
+ * so that failed query will not be interpreted as non-existing variable.
  */
-static bool IsConfigurationVariableExist(const wchar_t *name)
+static bool IsConfigurationVariableExist(const wchar_t *name, bool *success)
 {
-   bool found = false;
    wchar_t query[256];
    _sntprintf(query, 256, L"SELECT var_value FROM config WHERE var_name='%s'", name);
    DB_RESULT hResult = DBSelect(g_dbHandle, query);
-   if (hResult != 0)
+   if (hResult == nullptr)
    {
-      found = (DBGetNumRows(hResult) > 0);
-      DBFreeResult(hResult);
+      *success = false;
+      return false;
    }
+   bool found = (DBGetNumRows(hResult) > 0);
+   DBFreeResult(hResult);
+   *success = true;
    return found;
 }
 
@@ -134,9 +137,14 @@ static bool IsConfigurationVariableExist(const wchar_t *name)
  */
 bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t *value, const wchar_t *description, const wchar_t *units, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate)
 {
+   bool checkStatus;
+   bool exists = IsConfigurationVariableExist(name, &checkStatus);
+   if (!checkStatus)
+      return false;
+
    bool success = true;
    wchar_t szQuery[3024];
-   if (!IsConfigurationVariableExist(name))
+   if (!exists)
    {
       int32_t major, minor;
       if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
@@ -163,12 +171,12 @@ bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t 
                     isPublic ? _T('Y') : _T('N'), dataType, (const TCHAR *)DBPrepareString(g_dbHandle, description, 255));
       success = SQLQuery(szQuery);
    }
-	else if (forceUpdate)
-	{
+   else if (forceUpdate)
+   {
       _sntprintf(szQuery, 3024, _T("UPDATE config SET var_value=%s WHERE var_name=%s"),
                  (const TCHAR *)DBPrepareString(g_dbHandle, value, 2000), (const TCHAR *)DBPrepareString(g_dbHandle, name, 63));
       success = SQLQuery(szQuery);
-	}
+   }
    return success;
 }
 
@@ -177,9 +185,14 @@ bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t 
  */
 bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const wchar_t *name, const wchar_t *value, bool isVisible, bool needRestart, bool forceUpdate)
 {
+   bool checkStatus;
+   bool exists = IsConfigurationVariableExist(name, &checkStatus);
+   if (!checkStatus)
+      return false;
+
    bool success = true;
    wchar_t szQuery[3024];
-   if (!IsConfigurationVariableExist(name))
+   if (!exists)
    {
       int32_t major, minor;
       if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
