@@ -276,6 +276,10 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr)
  */
 static std::pair<const TCHAR*, uint32_t> FindVendorByMacInternal(const MacAddress& macAddr)
 {
+   // Lookups below read up to 5 bytes from the address, so reject anything shorter than a full MAC
+   if (macAddr.length() != MAC_ADDR_LENGTH)
+      return std::pair<const TCHAR *, uint32_t>(nullptr, 0);
+
    uint32_t numBytes;
    oui24_t bytes;
    memcpy(bytes, macAddr.value(), 3);

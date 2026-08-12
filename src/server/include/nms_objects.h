@@ -6635,7 +6635,7 @@ void NXCORE_EXPORTABLE MacDbRemoveInterface(const Interface& iface);
 void NXCORE_EXPORTABLE MacDbRemoveObject(const MacAddress& macAddr, const uint32_t objectId);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const BYTE *macAddr);
 shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr);
-const TCHAR *FindVendorByMac(const MacAddress& macAddr);
+const TCHAR NXCORE_EXPORTABLE *FindVendorByMac(const MacAddress& macAddr);
 void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response);
 
 const wchar_t NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const wchar_t *defaultName);
