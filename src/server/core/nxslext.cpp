@@ -1018,11 +1018,11 @@ static int F_PostEventEx(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
             return NXSL_ERR_NOT_INTEGER;
 
          int value = argv[5]->getValueAsInt32();
-         if ((value >= 0) && (value <= 7))
+         if ((value >= 0) && (value <= 8))
             builder.origin(static_cast<EventOrigin>(value));
       }
 
-      vm->createValue(builder.post());
+      *result = vm->createValue(builder.post());
    }
    else
    {
