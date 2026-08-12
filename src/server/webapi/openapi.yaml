@@ -6256,6 +6256,117 @@ paths:
           description: Unable to build internal communication topology
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/arp-cache:
+    get:
+      operationId: getArpCache
+      summary: Get node ARP cache
+      description: >-
+        Read the ARP cache of the given node. Entries are resolved against the object database where possible -
+        the interface the entry was seen on and the node owning the IP address are reported by name when the
+        caller has read access to them. Returns an empty entry list with a null timestamp when the ARP cache has
+        never been collected for this node.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+        - name: forceRead
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: >-
+            Force a live read from the device instead of using the server's cached copy. A live read blocks for
+            the duration of the agent or SNMP request and may time out on an unreachable node.
+      responses:
+        '200':
+          description: ARP cache retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArpCache'
+        '400':
+          description: Invalid object ID or object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/routing-table:
+    get:
+      operationId: getRoutingTable
+      summary: Get node routing table
+      description: >-
+        Read the IP routing table of the given node. Returns an empty entry list with a null timestamp when the
+        routing table has never been collected for this node.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      responses:
+        '200':
+          description: Routing table retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutingTable'
+        '400':
+          description: Invalid object ID or object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/switch-forwarding-database:
+    get:
+      operationId: getSwitchForwardingDatabase
+      summary: Get switch forwarding database
+      description: >-
+        Read the switch forwarding database (FDB) of the given node. Applicable to bridge-capable nodes.
+        Returns an empty entry list with a null timestamp when the forwarding database has never been collected
+        for this node.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      responses:
+        '200':
+          description: Switch forwarding database retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwitchForwardingDatabase'
+        '400':
+          description: Invalid object ID or object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
   /v1/objects/{object-id}/status-explanation:
     get:
       operationId: getObjectStatusExplanation
@@ -10590,8 +10701,8 @@ components:
           type: integer
           description: IP address family
         address:
-          type: integer
-          description: IP address
+          type: string
+          description: IP address in text form. Omitted entirely for unset (AF_UNSPEC) addresses.
         prefixLength:
           type: integer
           description: IP address prefix length
@@ -13986,6 +14097,146 @@ components:
         flags:
           type: integer
           description: Link flags
+    ArpCache:
+      type: object
+      description: ARP cache of a node
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the cache was collected. Null when it has never been collected for this node.
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArpCacheEntry'
+    ArpCacheEntry:
+      type: object
+      description: Single ARP cache entry
+      properties:
+        ipAddress:
+          $ref: '#/components/schemas/InetAddress'
+        macAddress:
+          type: string
+          description: MAC address in colon-separated notation
+        vendor:
+          type: string
+          nullable: true
+          description: NIC vendor resolved from the OUI database. Null when the prefix is not known.
+        interfaceIndex:
+          type: integer
+          description: Interface index the entry was seen on (0 if unknown)
+        interfaceName:
+          type: string
+          nullable: true
+          description: Name of the matching interface object. Null when no interface object matches the index.
+        nodeId:
+          type: integer
+          description: >-
+            ID of the node owning this IP address, or 0 when no node matches or the caller has no read access
+            to it.
+        nodeName:
+          type: string
+          nullable: true
+          description: Name of the node owning this IP address. Null when nodeId is 0.
+    RoutingTable:
+      type: object
+      description: IP routing table of a node
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the table was collected. Null when it has never been collected for this node.
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/Route'
+    Route:
+      type: object
+      description: Single IP routing table entry
+      properties:
+        destination:
+          $ref: '#/components/schemas/InetAddress'
+        nextHop:
+          $ref: '#/components/schemas/InetAddress'
+        interfaceIndex:
+          type: integer
+          description: Outgoing interface index (0 if unknown)
+        interfaceName:
+          type: string
+          nullable: true
+          description: Name of the matching interface object. Null when no interface object matches the index.
+        type:
+          type: integer
+          description: "Route type, RFC1213 ipRouteType (1=other, 2=invalid, 3=direct, 4=indirect)"
+        typeText:
+          type: string
+          description: Textual representation of the route type
+        metric:
+          type: integer
+          description: Route metric
+        protocol:
+          type: integer
+          description: "Routing protocol, RFC1213 ipRouteProto (2=local, 8=RIP, 13=OSPF, 14=BGP, ...)"
+        protocolText:
+          type: string
+          description: Textual representation of the routing protocol
+    SwitchForwardingDatabase:
+      type: object
+      description: Switch forwarding database (FDB) of a node
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          description: >-
+            When the forwarding database was collected. Null when it has never been collected for this node.
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ForwardingDatabaseEntry'
+    ForwardingDatabaseEntry:
+      type: object
+      description: Single switch forwarding database entry
+      properties:
+        macAddress:
+          type: string
+          description: MAC address in colon-separated notation
+        vendor:
+          type: string
+          nullable: true
+          description: NIC vendor resolved from the OUI database. Null when the prefix is not known.
+        bridgePort:
+          type: integer
+          description: Bridge port number (0 if unknown)
+        interfaceIndex:
+          type: integer
+          description: Interface index (0 if unknown)
+        interfaceName:
+          type: string
+          nullable: true
+          description: >-
+            Name of the matching interface object. Members of an Ethernet or LAG parent interface are reported
+            under the parent's name. Null when no interface object matches the index.
+        vlanId:
+          type: integer
+          description: VLAN ID (0 if unknown)
+        nodeId:
+          type: integer
+          description: >-
+            ID of the node owning this MAC address, or 0 when no node matches or the caller has no read access
+            to it.
+        nodeName:
+          type: string
+          nullable: true
+          description: Name of the node owning this MAC address. Null when nodeId is 0.
+        type:
+          type: integer
+          description: "Entry type, dot1dTpFdbStatus (3=dynamic, 5=static, 6=secure)"
+        typeText:
+          type: string
+          description: Textual representation of the entry type
     ObjectQueryResult:
       type: object
       properties:

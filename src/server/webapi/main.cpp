@@ -279,6 +279,9 @@ int H_TopologyL2(Context *context);
 int H_TopologyIP(Context *context);
 int H_TopologyOSPF(Context *context);
 int H_TopologyInternal(Context *context);
+int H_ArpCache(Context *context);
+int H_RoutingTable(Context *context);
+int H_SwitchForwardingDatabase(Context *context);
 int H_Users(Context *context);
 int H_UserDetails(Context *context);
 int H_UserCreate(Context *context);
@@ -806,6 +809,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/topology/ospf")
       .GET(H_TopologyOSPF)
+      .build();
+   RouteBuilder("v1/objects/:object-id/arp-cache")
+      .GET(H_ArpCache)
+      .build();
+   RouteBuilder("v1/objects/:object-id/routing-table")
+      .GET(H_RoutingTable)
+      .build();
+   RouteBuilder("v1/objects/:object-id/switch-forwarding-database")
+      .GET(H_SwitchForwardingDatabase)
       .build();
    RouteBuilder("v1/objects/query")
       .POST(H_ObjectQuery)
