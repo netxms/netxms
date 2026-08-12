@@ -3894,15 +3894,29 @@ public class NXCSession
       syncObjectCategories();
 
       syncObjects.acquireUninterruptibly();
+      try
+      {
+         NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECTS);
+         msg.setField(NXCPCodes.VID_SYNC_NODE_COMPONENTS, syncNodeComponents);
+         sendMessage(msg);
+         waitForRCC(msg.getMessageId());
 
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECTS);
-      msg.setField(NXCPCodes.VID_SYNC_NODE_COMPONENTS, syncNodeComponents);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+         waitForSync(syncObjects, commandTimeout * 10);
+      }
+      catch(Exception e)
+      {
+         // Reset semaphore to initial state, so that next synchronization attempt will not be blocked.
+         // Simple release is not sufficient here because completion notification may still arrive later.
+         syncObjects.drainPermits();
+         syncObjects.release();
+         throw e;
+      }
+      finally
+      {
+         objectSyncPending = false;
+      }
 
-      waitForSync(syncObjects, commandTimeout * 10);
       objectsSynchronized = objectsSynchronized || syncNodeComponents;
-      objectSyncPending = false;
       sendNotification(new SessionNotification(SessionNotification.OBJECT_SYNC_COMPLETED));
       subscribe(CHANNEL_OBJECTS);
    }
@@ -13431,7 +13445,7 @@ public class NXCSession
    /**
     * Mark object synchronization as pending. Intended for clients that call {@link #syncObjects(boolean)} from background thread and
     * have to indicate that object tree is not available yet. Pending state is reset automatically when object synchronization
-    * completes.
+    * completes or fails.
     */
    public void setObjectSyncPending()
    {

@@ -71,6 +71,7 @@ public class LoginJob implements IRunnableWithProgress
    private Certificate certificate;
    private Signature signature;
    private String clientAddress;
+   private int objectSyncFailureMessageId = 0;
 
    /**
     * Create login job with specified credentials.
@@ -301,8 +302,13 @@ public class LoginJob implements IRunnableWithProgress
          {
             runInUIThread(() -> {
                MainWindow window = Registry.getMainWindow();
-               if (window != null)
-                  window.addMessage(MessageArea.ERROR, getErrorMessage() + ": " + e.getLocalizedMessage());
+               if (window == null)
+                  return;
+               objectSyncFailureMessageId = window.addMessage(MessageArea.ERROR, getErrorMessage() + ": " + e.getLocalizedMessage(),
+                     true, i18n.tr("Retry"), () -> {
+                        window.deleteMessage(objectSyncFailureMessageId);
+                        startBackgroundObjectSync(session, display, syncNodeComponents);
+                     });
             });
          }
 
