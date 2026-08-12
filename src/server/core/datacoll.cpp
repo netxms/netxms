@@ -442,6 +442,9 @@ static void ItemPoller()
 
    nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 1, _T("DCI poller thread started"));
 
+   WaitForServerStartupCompletion();
+   nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 4, _T("DCI poller thread activated"));
+
    uint32_t watchdogId = WatchdogAddThread(_T("Item Poller"), 10);
    GaugeData<uint32_t> queuingTime(ITEM_POLLING_INTERVAL, 300);
 
@@ -449,6 +452,7 @@ static void ItemPoller()
    {
       if (SleepAndCheckForShutdown(ITEM_POLLING_INTERVAL))
          break;      // Shutdown has arrived
+
       WatchdogNotify(watchdogId);
       nxlog_debug_tag(DEBUG_TAG_DC_POLLER, 8, _T("ItemPoller: wakeup"));
 
