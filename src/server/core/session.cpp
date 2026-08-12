@@ -19016,7 +19016,13 @@ void ClientSession::deleteUser2FABinding(const NXCPMessage& request)
    {
       TCHAR name[MAX_OBJECT_NAME];
       request.getFieldAsString(VID_2FA_RESPONSE, name, MAX_OBJECT_NAME);
-      response.setField(VID_RCC, DeleteUser2FAMethodBinding(userId, name));
+      uint32_t rcc = DeleteUser2FAMethodBinding(userId, name);
+      if (rcc == RCC_SUCCESS)
+      {
+         TCHAR buffer[MAX_USER_NAME];
+         writeAuditLog(AUDIT_SECURITY, true, 0, L"2FA method \"%s\" binding deleted for user \"%s\"", name, ResolveUserId(userId, buffer, true));
+      }
+      response.setField(VID_RCC, rcc);
    }
    else
    {
