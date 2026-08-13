@@ -120,6 +120,39 @@ AC_DEFUN([AC_LD_CHECK_OPTION],[
 		])
 ])
 
+# Check whether the C++ compiler can record the headers each object depends on.
+# Reported by nxdevcfg --depflags for hand written makefiles outside the automake
+# tree, which have no dependency tracking of their own. The output file and target
+# name have to be supplied by the makefile itself because they contain make
+# automatic variables, so only the flags that are the same for every object are
+# checked and reported here.
+# The generated file is tested for rather than the exit status alone, because some
+# compilers accept unknown options with a warning and produce nothing.
+AC_DEFUN([AC_CXX_CHECK_DEPFLAGS],[
+	AC_MSG_CHECKING(whether C++ compiler can generate header dependencies)
+	OLD_CXXFLAGS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -MMD -MP -MF conftest-dep.d -MT conftest-dep.lo"
+	rm -f conftest-dep.d
+	AC_LANG_PUSH([C++])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[
+			if test -s conftest-dep.d ; then
+				DEPFLAGS="-MMD -MP"
+				AC_MSG_RESULT(yes)
+			else
+				DEPFLAGS=""
+				AC_MSG_RESULT(no)
+			fi
+		],
+		[
+			DEPFLAGS=""
+			AC_MSG_RESULT(no)
+		])
+	AC_LANG_POP([C++])
+	rm -f conftest-dep.d
+	CXXFLAGS="$OLD_CXXFLAGS"
+])
+
 
 #--------------------------------------------------------------------
 # Initialize variables
@@ -1828,6 +1861,8 @@ if test "x$CXX" = "xCC" -o "x$CXX" = "xCC -std=c++11" ; then
 			])
 	fi
 fi
+
+AC_CXX_CHECK_DEPFLAGS
 
 AC_LANG_PUSH([C++])
 
@@ -5155,6 +5190,7 @@ echo "C++ compiler info       : ${COMPILER_VERSION}"
 echo "CPPFLAGS                : ${CPPFLAGS}"
 echo "CXXFLAGS                : ${CXXFLAGS}"
 echo "CFLAGS                  : ${CFLAGS}"
+echo "Dependency flags        : ${DEPFLAGS}"
 echo "LDFLAGS                 : ${LDFLAGS}"
 echo "LIBS                    : ${LIBS}"
 echo "Executable LDFLAGS      : ${EXEC_LDFLAGS}"
@@ -5281,6 +5317,7 @@ echo "#include <nms_common.h>" >> $FLAGS_CPP
 echo "const TCHAR *g_cppFlags = _T(\"${CPPFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_cFlags = _T(\"${CFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_cxxFlags = _T(\"${CXXFLAGS}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_depFlags = _T(\"${DEPFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_ldFlags = _T(\"${LDFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_execLdFlags = _T(\"${EXEC_LDFLAGS}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_libs = _T(\"${LIBS}\");" >> $FLAGS_CPP
