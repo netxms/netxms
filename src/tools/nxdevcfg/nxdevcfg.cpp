@@ -27,13 +27,14 @@
 
 NETXMS_EXECUTABLE_HEADER(nxdevcfg)
 
-#define VALID_OPTIONS "bcCdDeEijlLmoOpPStTuUX"
+#define VALID_OPTIONS "bcCdDeEijlLmMoOpPStTuUX"
 
 /**
  * Externals
  */
 extern const TCHAR *g_cFlags;
 extern const TCHAR *g_cxxFlags;
+extern const TCHAR *g_depFlags;
 extern const TCHAR *g_cppFlags;
 extern const TCHAR *g_ldFlags;
 extern const TCHAR *g_execLdFlags;
@@ -64,6 +65,7 @@ static void ShowHelp()
 	       "   -O, --cxx             C++ compiler\n"
 	       "   -X, --cxxflags        C++ compiler flags\n"
 	       "   -d, --datadir         Data directory\n"
+	       "   -M, --depflags        C++ compiler flags for header dependency generation\n"
 	       "   -e, --exec-ldflags    Linker flags (all except -l) for executables\n"
 	       "   -E, --exec-libs       Linker flags (only -l) for executables\n"
 	       "   -j, --ijansson-libs   Linker flags for using libjansson\n"
@@ -92,6 +94,7 @@ static void ShowHelp()
 	       "   -l  Linker flags (all except -l)\n"
 	       "   -L  Library directory\n"
 	       "   -m  Linker flags for using libmicrohttpd\n"
+	       "   -M  C++ compiler flags for header dependency generation\n"
 	       "   -o  C compiler\n"
 	       "   -O  C++ compiler\n"
 	       "   -p  Perl interpreter\n"
@@ -138,6 +141,7 @@ int main(int argc, char *argv[])
 		{ (char *)"cxx", 0, NULL, 'O' },
 		{ (char *)"cxxflags", 0, NULL, 'X' },
 		{ (char *)"datadir", 0, NULL, 'd' },
+		{ (char *)"depflags", 0, NULL, 'M' },
 		{ (char *)"exec-ldflags", 0, NULL, 'e' },
 		{ (char *)"exec-libs", 0, NULL, 'E' },
 		{ (char *)"jansson-libs", 0, NULL, 'j' },
@@ -212,6 +216,9 @@ int main(int argc, char *argv[])
 				return 0;
 			case 'm':
 				_tprintf(_T("%s\n"), g_microHttpdLibs);
+				return 0;
+			case 'M':
+				PrintFlags(g_depFlags);
 				return 0;
 			case 'o':
 				_tprintf(_T("%s\n"), g_cc);
