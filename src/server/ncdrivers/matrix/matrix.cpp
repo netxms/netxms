@@ -313,6 +313,48 @@ json_t *MatrixDriver::doRequest(const char *method, const char *url, json_t *pay
 }
 
 /**
+ * Build HTML formatted message body from optional subject and already formatted body text.
+ * Subject is plain text and is escaped, body text is inserted as is.
+ * Caller must MemFree() the result.
+ */
+static char *BuildFormattedBody(const char *subject, const char *htmlText)
+{
+   if ((subject == nullptr) || (*subject == 0))
+      return MemCopyStringA(htmlText);
+
+   static const char prefix[] = "<strong>";
+   static const char separator[] = "</strong><br/><br/>";
+
+   char *body = MemAllocStringA(strlen(subject) * 5 + strlen(htmlText) + sizeof(prefix) + sizeof(separator));
+   memcpy(body, prefix, sizeof(prefix) - 1);
+   char *p = body + sizeof(prefix) - 1;
+   for(const char *s = subject; *s != 0; s++)
+   {
+      switch(*s)
+      {
+         case '&':
+            memcpy(p, "&amp;", 5);
+            p += 5;
+            break;
+         case '<':
+            memcpy(p, "&lt;", 4);
+            p += 4;
+            break;
+         case '>':
+            memcpy(p, "&gt;", 4);
+            p += 4;
+            break;
+         default:
+            *p++ = *s;
+            break;
+      }
+   }
+   memcpy(p, separator, sizeof(separator) - 1);
+   strcpy(p + sizeof(separator) - 1, htmlText);
+   return body;
+}
+
+/**
  * Resolve room alias (e.g. #room:server) to room ID (!xxx:server).
  * Caller must MemFree() the result.
  */
@@ -444,12 +486,7 @@ int MatrixDriver::send(const NotificationContext& context)
    {
       // HTML formatted version rendered from markdown; plain text version above serves as fallback
       char *renderedBody = MarkdownToHTML(context.markdownBody, MarkdownHTMLDialect::GENERIC);
-      size_t htmlBufferSize = (hasSubject ? strlen(subject) + 32 : 0) + strlen(renderedBody) + 1;
-      char *htmlBody = MemAllocStringA(htmlBufferSize);
-      if (hasSubject)
-         snprintf(htmlBody, htmlBufferSize, "<strong>%s</strong><br/><br/>%s", subject, renderedBody);
-      else
-         strlcpy(htmlBody, renderedBody, htmlBufferSize);
+      char *htmlBody = BuildFormattedBody(subject, renderedBody);
       json_object_set_new(message, "format", json_string("org.matrix.custom.html"));
       json_object_set_new(message, "formatted_body", json_string(htmlBody));
       MemFree(htmlBody);
@@ -457,12 +494,8 @@ int MatrixDriver::send(const NotificationContext& context)
    }
    else if (m_htmlFormatting)
    {
-      // HTML formatted version
-      char *htmlBody = MemAllocStringA(bufferSize);
-      if (hasSubject)
-         snprintf(htmlBody, bufferSize, "<strong>%s</strong><br/><br/>%s", subject, bodyText);
-      else
-         strlcpy(htmlBody, bodyText, bufferSize);
+      // HTML formatted version (body is expected to contain HTML markup)
+      char *htmlBody = BuildFormattedBody(subject, bodyText);
       json_object_set_new(message, "format", json_string("org.matrix.custom.html"));
       json_object_set_new(message, "formatted_body", json_string(htmlBody));
       MemFree(htmlBody);

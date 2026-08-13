@@ -100,6 +100,19 @@ void TestMarkdown()
    CheckPlain("[https://netxms.org](https://netxms.org)", "https://netxms.org");
    EndTest();
 
+   StartTest(_T("Markdown - autolinks"));
+   CheckPlain("See <https://netxms.org> now", "See https://netxms.org now");
+   CheckGeneric("See <https://netxms.org> now", "<p>See <a href=\"https://netxms.org\">https://netxms.org</a> now</p>");
+   CheckTelegram("See <https://netxms.org> now", "See <a href=\"https://netxms.org\">https://netxms.org</a> now");
+   CheckSlack("See <https://netxms.org> now", "See <https://netxms.org|https://netxms.org> now");
+   CheckPlain("Mail <admin@example.com> now", "Mail admin@example.com now");
+   CheckGeneric("Mail <admin@example.com> now", "<p>Mail <a href=\"mailto:admin@example.com\">admin@example.com</a> now</p>");
+   // Angle brackets that are not autolinks stay literal text
+   CheckGeneric("Tag <b>bold</b>, <notaurl>, <a b>, <x@y>, <>",
+         "<p>Tag &lt;b&gt;bold&lt;/b&gt;, &lt;notaurl&gt;, &lt;a b&gt;, &lt;x@y&gt;, &lt;&gt;</p>");
+   CheckTelegram("Unclosed <https://x and text", "Unclosed &lt;https://x and text");
+   EndTest();
+
    StartTest(_T("Markdown - escaping"));
    CheckTelegram("5 < 6 & 7 > 2", "5 &lt; 6 &amp; 7 &gt; 2");
    CheckGeneric("5 < 6 & 7 > 2", "<p>5 &lt; 6 &amp; 7 &gt; 2</p>");
@@ -131,6 +144,19 @@ void TestMarkdown()
    CheckPlain("1. first\n2. second", "1. first\n2. second");
    CheckGeneric("- one\n- two", "<ul>\n<li>one</li>\n<li>two</li>\n</ul>");
    CheckGeneric("1. first\n2. second", "<ol>\n<li>first</li>\n<li>second</li>\n</ol>");
+   // Ordered list not starting from 1
+   CheckPlain("5. five\n6. six", "5. five\n6. six");
+   CheckGeneric("5. five\n6. six", "<ol start=\"5\">\n<li>five</li>\n<li>six</li>\n</ol>");
+   // Wrapped list items - continuation lines belong to preceding item
+   CheckPlain("- item one\n  continued here\n- next item", "- item one\n  continued here\n- next item");
+   CheckTelegram("- item one\n  continued here\n- next item",
+         "\xE2\x80\xA2 item one\n  continued here\n\xE2\x80\xA2 next item");
+   CheckGeneric("- item one\n  continued here\n- next item",
+         "<ul>\n<li>item one<br/>\ncontinued here</li>\n<li>next item</li>\n</ul>");
+   CheckPlain("1. first line\n   wrapped part\n2. second", "1. first line\n   wrapped part\n2. second");
+   CheckPlain("- one\n- two\n  - nested\n    nested wrap\n- three",
+         "- one\n- two\n   - nested\n     nested wrap\n- three");
+   CheckGeneric("- item\n  continued\n\nParagraph", "<ul>\n<li>item<br/>\ncontinued</li>\n</ul>\n<p>Paragraph</p>");
    EndTest();
 
    StartTest(_T("Markdown - code blocks"));

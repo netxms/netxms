@@ -62,7 +62,7 @@ public:
    virtual void paragraphEnd() = 0;
    virtual void headingStart(int level) = 0;
    virtual void headingEnd(int level) = 0;
-   virtual void listStart(bool ordered, int depth) = 0;
+   virtual void listStart(bool ordered, int firstNumber, int depth) = 0;
    virtual void listEnd(bool ordered, int depth) = 0;
    virtual void listItemStart(bool ordered, int number, int depth) = 0;
    virtual void listItemEnd(int depth) = 0;
@@ -204,10 +204,12 @@ private:
 
 protected:
    bool m_afterListStart;
+   size_t m_listIndent;   // Indent for continuation lines of current list item
 
    TextStyleRenderer()
    {
       m_afterListStart = false;
+      m_listIndent = 0;
       m_cellOutputStart = 0;
       m_cellWidth = 0;
       m_inTableCell = false;
@@ -229,6 +231,7 @@ protected:
    // Ensure blank line separation before a new top-level block
    void blockSeparator()
    {
+      m_listIndent = 0;
       if (m_out.empty())
          return;
       size_t n = m_out.find_last_not_of('\n');
@@ -277,6 +280,7 @@ public:
    virtual void softBreak() override
    {
       m_out.push_back('\n');
+      m_out.append(m_listIndent, ' ');
    }
 
    virtual void paragraphStart() override
@@ -288,7 +292,7 @@ public:
    {
    }
 
-   virtual void listStart(bool ordered, int depth) override
+   virtual void listStart(bool ordered, int firstNumber, int depth) override
    {
       if (depth == 0)
          blockSeparator();
@@ -308,16 +312,22 @@ public:
       m_afterListStart = false;
       for(int i = 0; i < depth; i++)
          m_out.append("   ");
+      size_t markerWidth;
       if (ordered)
       {
          char buffer[16];
          snprintf(buffer, sizeof(buffer), "%d. ", number);
          m_out.append(buffer);
+         markerWidth = strlen(buffer);
       }
       else
       {
-         m_out.append(bulletMarker());
+         const char *marker = bulletMarker();
+         size_t markerLen = strlen(marker);
+         m_out.append(marker, markerLen);
+         markerWidth = Utf8CharCount(marker, markerLen);
       }
+      m_listIndent = static_cast<size_t>(depth) * 3 + markerWidth;
    }
 
    virtual void listItemEnd(int depth) override
@@ -595,7 +605,7 @@ public:
 
    virtual void softBreak() override
    {
-      m_out.push_back('\n');
+      TextStyleRenderer::softBreak();
       if (m_inQuote)
          m_out.append("> ");
    }
@@ -698,7 +708,7 @@ public:
 
    virtual void softBreak() override
    {
-      m_out.push_back('\n');
+      TextStyleRenderer::softBreak();
       if (m_inQuote)
          m_out.append("> ");
    }
@@ -828,9 +838,22 @@ public:
       snprintf(buffer, sizeof(buffer), "</h%d>\n", level);
       m_out.append(buffer);
    }
-   virtual void listStart(bool ordered, int depth) override
+   virtual void listStart(bool ordered, int firstNumber, int depth) override
    {
-      m_out.append(ordered ? "<ol>\n" : "<ul>\n");
+      if (!ordered)
+      {
+         m_out.append("<ul>\n");
+      }
+      else if (firstNumber != 1)
+      {
+         char buffer[32];
+         snprintf(buffer, sizeof(buffer), "<ol start=\"%d\">\n", firstNumber);
+         m_out.append(buffer);
+      }
+      else
+      {
+         m_out.append("<ol>\n");
+      }
    }
    virtual void listEnd(bool ordered, int depth) override
    {
@@ -971,6 +994,44 @@ static ssize_t FindSequence(const char *s, size_t len, size_t from, const char *
 static inline bool IsEscapablePunctuation(char c)
 {
    return strchr("\\`*_{}[]()#+-.!<>~|\"'", c) != nullptr;
+}
+
+/**
+ * Check if text within angle brackets is an absolute URI (scheme of at least two characters
+ * followed by colon and at least one more character)
+ */
+static bool IsAutolinkURI(const char *s, size_t len)
+{
+   if (!isalpha(static_cast<unsigned char>(*s)))
+      return false;
+   size_t i = 1;
+   while((i < len) && (isalnum(static_cast<unsigned char>(s[i])) || (s[i] == '+') || (s[i] == '.') || (s[i] == '-')))
+      i++;
+   return (i >= 2) && (i <= 32) && (i + 1 < len) && (s[i] == ':');
+}
+
+/**
+ * Check if text within angle brackets is an e-mail address
+ */
+static bool IsAutolinkEmail(const char *s, size_t len)
+{
+   const char *at = static_cast<const char*>(memchr(s, '@', len));
+   if ((at == nullptr) || (at == s) || (at == &s[len - 1]))
+      return false;
+
+   const char *domain = at + 1;
+   size_t domainLen = len - (domain - s);
+   if (memchr(domain, '@', domainLen) != nullptr)
+      return false;
+
+   const char *dot = static_cast<const char*>(memchr(domain, '.', domainLen));
+   if ((dot == nullptr) || (dot == domain) || (dot == &s[len - 1]))
+      return false;
+
+   for(size_t i = 0; i < len; i++)
+      if ((s[i] == ':') || (s[i] == '/'))
+         return false;
+   return true;
 }
 
 /**
@@ -1148,6 +1209,36 @@ static void ParseInline(const char *s, size_t len, MarkdownRenderer& renderer)
             continue;
          }
          i += 2;
+         continue;
+      }
+
+      // Autolink <https://example.com> or <user@example.com>
+      if (c == '<')
+      {
+         size_t end = i + 1;
+         while((end < len) && (s[end] != '>') && (s[end] != '<') && (s[end] != ' ') && (s[end] != '\t'))
+            end++;
+         if ((end < len) && (s[end] == '>') && (end > i + 1))
+         {
+            const char *linkText = &s[i + 1];
+            size_t linkTextLen = end - i - 1;
+            std::string url;
+            if (IsAutolinkURI(linkText, linkTextLen))
+               url.assign(linkText, linkTextLen);
+            else if (IsAutolinkEmail(linkText, linkTextLen))
+               url.assign("mailto:").append(linkText, linkTextLen);
+            if (!url.empty())
+            {
+               flushText();
+               renderer.linkStart(url.c_str(), url.length());
+               renderer.text(linkText, linkTextLen);
+               renderer.linkEnd(url.c_str(), url.length(), true);   // link text already shows the target
+               i = end + 1;
+               textStart = i;
+               continue;
+            }
+         }
+         i++;
          continue;
       }
 
@@ -1356,7 +1447,7 @@ private:
          popList();
       while(static_cast<int>(m_lists.size()) < depth + 1)
       {
-         m_renderer.listStart(ordered, static_cast<int>(m_lists.size()));
+         m_renderer.listStart(ordered, number, static_cast<int>(m_lists.size()));
          ListLevel l;
          l.ordered = ordered;
          l.itemOpen = false;
@@ -1557,6 +1648,14 @@ void MarkdownParser::processLine(const char *line, size_t len)
          ParseInline(&p[start], rem - start, m_renderer);
          return;
       }
+   }
+
+   // Continuation line of current list item (list items are often wrapped across lines)
+   if (!m_lists.empty() && m_lists.back().itemOpen)
+   {
+      m_renderer.softBreak();
+      ParseInline(p, rem, m_renderer);
+      return;
    }
 
    // Regular paragraph text
