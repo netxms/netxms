@@ -168,6 +168,7 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
    @Override
    public void dispose()
    {
+      session.removeListener(this);
       modified = false;
       localChangeListener = null;
       super.dispose();

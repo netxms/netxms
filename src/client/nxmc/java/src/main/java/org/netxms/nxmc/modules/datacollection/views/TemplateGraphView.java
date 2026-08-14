@@ -110,6 +110,16 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
       session.addListener(this);
 	}
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(this);
+      super.dispose();
+   }
+
 	/**
 	 * Create actions
 	 */

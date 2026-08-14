@@ -796,6 +796,17 @@ public class ObjectFinder extends View
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      if (sessionListener != null)
+         session.removeListener(sessionListener);
+      super.dispose();
+   }
+
+   /**
     * Create actions
     */
    private void createActions()

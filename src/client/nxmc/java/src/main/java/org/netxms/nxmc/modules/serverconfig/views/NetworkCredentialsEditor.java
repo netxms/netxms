@@ -93,6 +93,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
    public static final int COLUMN_SSH_KEY = 2;
 
    private NXCSession session;
+   private SessionListener sessionListener;
 	private boolean modified = false;
 	private boolean bothModified = false;
    private boolean saveInProgress = false;
@@ -183,7 +184,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
          separator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		}
 
-		session.addListener(new SessionListener() {
+      sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -228,7 +229,8 @@ public class NetworkCredentialsEditor extends ConfigurationView
                });
             }
          }
-      });
+      };
+      session.addListener(sessionListener);
 
 		createSnmpCommunitySection();
       snmpPortList = createPortList(NetworkCredentials.SNMP_PORTS, "SNMP");
@@ -243,6 +245,17 @@ public class NetworkCredentialsEditor extends ConfigurationView
       // Load config
       loadConfiguration(NetworkCredentials.EVERYTHING, NetworkCredentials.ALL_ZONES);
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      if (sessionListener != null)
+         session.removeListener(sessionListener);
+      super.dispose();
+   }
 
 	/**
     * Load configuration from server

@@ -98,6 +98,17 @@ public class ContextPredefinedMapView extends PredefinedMapView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      if (clientListener != null)
+         session.removeListener(clientListener);
+      super.dispose();
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#saveZoom(org.netxms.client.objects.AbstractObject)
     */
    @Override
