@@ -70,13 +70,16 @@ static size_t s_throttlingLowWatermark = 50000;
  */
 bool ThrottleHousekeeper()
 {
+   if (s_throttlingHighWatermark == 0)
+      return !s_shutdown;
+
    size_t qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize());
    if (qsize < s_throttlingHighWatermark)
-      return true;
+      return !s_shutdown;
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper paused (queue size %d, high watermark %d, low watermark %d)"),
       static_cast<int>(qsize), static_cast<int>(s_throttlingHighWatermark), static_cast<int>(s_throttlingLowWatermark));
-   while((qsize >= s_throttlingLowWatermark) && !s_shutdown)
+   while((qsize > s_throttlingLowWatermark) && !s_shutdown)
    {
       s_wakeupCondition.wait(30000);
       qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize());
@@ -418,8 +421,8 @@ static void HouseKeeper()
       time_t cycleStartTime = time(nullptr);
       PostSystemEvent(EVENT_HOUSEKEEPER_STARTED, GetServerEventSourceId());
 
-      s_throttlingHighWatermark = ConfigReadInt(_T("Housekeeper.Throttle.HighWatermark"), 250000);
-      s_throttlingLowWatermark = ConfigReadInt(_T("Housekeeper.Throttle.LowWatermark"), 50000);
+      s_throttlingHighWatermark = ConfigReadULong(_T("Housekeeper.Throttle.HighWatermark"), 250000);
+      s_throttlingLowWatermark = ConfigReadULong(_T("Housekeeper.Throttle.LowWatermark"), 50000);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Throttling high watermark = %d, low watermark= %d"), static_cast<int>(s_throttlingHighWatermark), static_cast<int>(s_throttlingLowWatermark));
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
