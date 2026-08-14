@@ -688,6 +688,7 @@ public class PolicyListView extends ObjectView implements SessionListener
    @Override
    public void dispose()
    {
+      session.removeListener(this);
       applyPolicy();
       super.dispose();
    }
