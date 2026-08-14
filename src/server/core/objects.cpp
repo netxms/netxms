@@ -2362,18 +2362,26 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
 }
 
 /**
- * Returns true if object of given class can be event source
+ * Returns true if object of given class can be event source. This is a broader test than virtual method
+ * NetObj::isEventSource() - it also covers classes that never generate events on their own but still can
+ * own rows in event log and alarm table (like containers, that can be used as event source by scripts).
  */
 bool NXCORE_EXPORTABLE IsEventSource(int objectClass)
 {
-	return (objectClass == OBJECT_NODE) ||
-	       (objectClass == OBJECT_CIRCUIT) ||
-	       (objectClass == OBJECT_COLLECTOR) ||
+   return (objectClass == OBJECT_NODE) ||
+          (objectClass == OBJECT_ACCESSPOINT) ||
+          (objectClass == OBJECT_BUSINESSSERVICE) ||
+          (objectClass == OBJECT_CHASSIS) ||
+          (objectClass == OBJECT_CIRCUIT) ||
+          (objectClass == OBJECT_CLOUDDOMAIN) ||
+          (objectClass == OBJECT_CLUSTER) ||
+          (objectClass == OBJECT_COLLECTOR) ||
           (objectClass == OBJECT_CONTAINER) ||
-	       (objectClass == OBJECT_CLUSTER) ||
-			 (objectClass == OBJECT_MOBILEDEVICE) ||
-			 (objectClass == OBJECT_ACCESSPOINT) ||
-          (objectClass == OBJECT_SENSOR);
+          (objectClass == OBJECT_MOBILEDEVICE) ||
+          (objectClass == OBJECT_OBSERVATIONPOINT) ||
+          (objectClass == OBJECT_RESOURCE) ||
+          (objectClass == OBJECT_SENSOR) ||
+          (objectClass == OBJECT_TRAFFICOBSERVER);
 }
 
 /**

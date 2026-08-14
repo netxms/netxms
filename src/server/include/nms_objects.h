@@ -6407,6 +6407,7 @@ public:
    shared_ptr<const BusinessService> self() const { return static_pointer_cast<const BusinessService>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICE; }
+   virtual bool isEventSource() const override { return true; }
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;

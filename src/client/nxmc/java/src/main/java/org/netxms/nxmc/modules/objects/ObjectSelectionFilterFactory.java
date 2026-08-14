@@ -236,6 +236,39 @@ public class ObjectSelectionFilterFactory
    }
 
    /**
+    * Create filter for event source selection - it allows objects that can be a source of an event and possible parents of such
+    * objects.
+    *
+    * @return Class filter for event source selection
+    */
+   public Set<Integer> createEventSourceSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(21);
+      classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
+      classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
+      classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_CHASSIS);
+      classFilter.add(AbstractObject.OBJECT_CIRCUIT);
+      classFilter.add(AbstractObject.OBJECT_CLOUDDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_CLUSTER);
+      classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_CONTAINER);
+      classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
+      classFilter.add(AbstractObject.OBJECT_NETWORK);
+      classFilter.add(AbstractObject.OBJECT_NODE);
+      classFilter.add(AbstractObject.OBJECT_OBSERVATIONPOINT);
+      classFilter.add(AbstractObject.OBJECT_RACK);
+      classFilter.add(AbstractObject.OBJECT_RESOURCE);
+      classFilter.add(AbstractObject.OBJECT_SENSOR);
+      classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
+      classFilter.add(AbstractObject.OBJECT_SUBNET);
+      classFilter.add(AbstractObject.OBJECT_TRAFFICOBSERVER);
+      classFilter.add(AbstractObject.OBJECT_WIRELESSDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_ZONE);
+      return classFilter;
+   }
+
+   /**
     * Create filter for container selection
     * 
     * @return Class filter for container selection

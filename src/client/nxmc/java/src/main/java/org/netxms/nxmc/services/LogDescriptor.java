@@ -26,7 +26,6 @@ import org.netxms.client.log.LogFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.BusinessService;
-import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Sensor;
@@ -123,7 +122,7 @@ public class LogDescriptor
     */
    public boolean isApplicableForObject(AbstractObject object)
    {
-      return (filterColumn != null) && ((object instanceof DataCollectionTarget) || ObjectTool.isContainerObject(object));
+      return (filterColumn != null) && (object.isEventSource() || ObjectTool.isContainerObject(object));
    }
 
    /**

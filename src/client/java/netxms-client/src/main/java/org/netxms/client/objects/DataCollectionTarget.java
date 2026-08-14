@@ -98,6 +98,15 @@ public class DataCollectionTarget extends GenericObject
    }
 
    /**
+    * @see org.netxms.client.objects.AbstractObject#isEventSource()
+    */
+   @Override
+   public boolean isEventSource()
+   {
+      return true;
+   }
+
+   /**
     * @return the overviewDciData
     */
    public List<DciValue> getOverviewDciData()

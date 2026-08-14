@@ -25,7 +25,6 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
@@ -74,13 +73,7 @@ public final class LogDescriptorRegistry
             return new AiObservationLogViewer(viewTitle, "");
          }
       });
-      descriptors.add(new LogDescriptor("AlarmLog", i18n.tr("Alarms"), null, "source_object_id") {
-         @Override
-         public boolean isApplicableForObject(AbstractObject object)
-         {
-            return super.isApplicableForObject(object) || (object instanceof BusinessService); 
-         }
-      });
+      descriptors.add(new LogDescriptor("AlarmLog", i18n.tr("Alarms"), null, "source_object_id"));
       descriptors.add(new LogDescriptor("AssetChangeLog", i18n.tr("Asset Changes"), i18n.tr("Asset changes"), "linked_object_id"));
       descriptors.add(new LogDescriptor("AuditLog", i18n.tr("Audit"), null, "object_id") {
          @Override
@@ -96,13 +89,7 @@ public final class LogDescriptorRegistry
             return (object instanceof Node) && ((Node)object).isBridge();
          }
       });
-      descriptors.add(new LogDescriptor("EventLog", i18n.tr("Events"), null, "event_source") {
-         @Override
-         public boolean isApplicableForObject(AbstractObject object)
-         {
-            return super.isApplicableForObject(object) || (object instanceof BusinessService); 
-         }
-      });
+      descriptors.add(new LogDescriptor("EventLog", i18n.tr("Events"), null, "event_source"));
       descriptors.add(new LogDescriptor("MaintenanceJournal", i18n.tr("Maintenance Journal"), i18n.tr("Maintenance journal"), "object_id"));
       descriptors.add(new LogDescriptor("NotificationLog", i18n.tr("Notifications"), null, null) {
          @Override

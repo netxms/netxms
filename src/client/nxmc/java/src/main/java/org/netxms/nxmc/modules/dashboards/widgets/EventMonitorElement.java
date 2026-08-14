@@ -195,7 +195,11 @@ public class EventMonitorElement extends ElementWidget
             AbstractObject object = session.findObjectById(effectiveObjectId);
             if (object != null)
             {
-               filter.setColumnFilter("event_source", new ColumnFilter(isEventSource(object) ? ColumnFilterType.EQUALS : ColumnFilterType.CHILDOF, effectiveObjectId));
+               ColumnFilter objectFilter = new ColumnFilter();
+               objectFilter.setOperation(ColumnFilterSetOperation.OR);
+               objectFilter.addSubFilter(new ColumnFilter(ColumnFilterType.EQUALS, effectiveObjectId));
+               objectFilter.addSubFilter(new ColumnFilter(ColumnFilterType.CHILDOF, effectiveObjectId));
+               filter.setColumnFilter("event_source", objectFilter);
             }
          }
 
@@ -266,22 +270,6 @@ public class EventMonitorElement extends ElementWidget
       }
 
       return events;
-   }
-
-   /**
-    * Check if given object can be used as event source
-    *
-    * @param object object to check
-    * @return true if object can be used as event source
-    */
-   private static boolean isEventSource(AbstractObject object)
-   {
-      int objectClass = object.getObjectClass();
-      return (objectClass == AbstractObject.OBJECT_NODE) ||
-             (objectClass == AbstractObject.OBJECT_CLUSTER) ||
-             (objectClass == AbstractObject.OBJECT_MOBILEDEVICE) ||
-             (objectClass == AbstractObject.OBJECT_SENSOR) ||
-             (objectClass == AbstractObject.OBJECT_ACCESSPOINT);
    }
 
    /**

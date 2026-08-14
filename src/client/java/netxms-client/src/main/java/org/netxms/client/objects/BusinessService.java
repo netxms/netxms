@@ -63,6 +63,15 @@ public class BusinessService extends BaseBusinessService
    }
 
    /**
+    * @see org.netxms.client.objects.AbstractObject#isEventSource()
+    */
+   @Override
+   public boolean isEventSource()
+   {
+      return true;
+   }
+
+   /**
     * Get business service state.
     *
     * @return business service state

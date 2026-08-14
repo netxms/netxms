@@ -1044,6 +1044,16 @@ public abstract class AbstractObject
 	   return false;
 	}
 
+   /**
+    * If this method returns true object can be a source of an event. Default implementation always returns false.
+    *
+    * @return true if object can be a source of an event
+    */
+   public boolean isEventSource()
+   {
+      return false;
+   }
+
 	/**
 	 * @return the objectClass
 	 */

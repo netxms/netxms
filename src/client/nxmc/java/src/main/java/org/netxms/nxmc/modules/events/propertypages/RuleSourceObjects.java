@@ -258,7 +258,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 	 */
 	private void addSourceObject()
 	{
-      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell());
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createEventSourceSelectionFilter());
 		dlg.enableMultiSelection(true);
 		if (dlg.open() == Window.OK)
 		{
@@ -295,7 +295,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
     */
    private void addExclusionObject()
    {
-      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell());
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createEventSourceSelectionFilter());
       dlg.enableMultiSelection(true);
       if (dlg.open() == Window.OK)
       {

@@ -169,6 +169,16 @@ public class ObjectSelectionDialog extends Dialog
       return ObjectSelectionFilterFactory.getInstance().createDataCollectionTargetSelectionFilter();
    }
 
+   /**
+    * Create filter for event source selection
+    *
+    * @return Class filter for event source selection
+    */
+   public static Set<Integer> createEventSourceSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createEventSourceSelectionFilter();
+   }
+
 	/**
     * Create filter for container selection
     * 
