@@ -718,25 +718,26 @@ bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **sour
 /**
  * Throttle V5 data migration if needed. Returns false if shutdown time has arrived and migration process should be aborted.
  */
-static bool ThrottleV5DataMigration()
+static void ThrottleV5DataMigration()
 {
-   size_t throttlingHighWatermark = ConfigReadInt(_T("Housekeeper.Throttle.HighWatermark"), 250000);
-   size_t throttlingLowWatermark = ConfigReadInt(_T("Housekeeper.Throttle.LowWatermark"), 50000);
+   size_t throttlingHighWatermark = ConfigReadULong(_T("Housekeeper.Throttle.HighWatermark"), 250000);
+   if (throttlingHighWatermark == 0)
+      return;
 
    size_t qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize());
    if (qsize < throttlingHighWatermark)
-      return true;
+      return;
 
+   size_t throttlingLowWatermark = ConfigReadULong(_T("Housekeeper.Throttle.LowWatermark"), 50000);
    nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, _T("V5 data migration paused (queue size %d, high watermark %d, low watermark %d)"),
       static_cast<int>(qsize), static_cast<int>(throttlingHighWatermark), static_cast<int>(throttlingLowWatermark));
-   while((qsize >= throttlingLowWatermark) && !IsShutdownInProgress())
+   while((qsize > throttlingLowWatermark) && !IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(30))
          break;
       qsize = g_dbWriterQueue.size() + static_cast<size_t>(GetIDataWriterQueueSize());
    }
    nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, _T("V5 data migration resumed (queue size %d)"), static_cast<int>(qsize));
-   return !IsShutdownInProgress();
 }
 
 /**
@@ -830,8 +831,7 @@ static bool MigrateV5DataTable(DataCollectionTarget *target, DB_HANDLE hdb, bool
          return true;
       }
 
-      if (!ThrottleV5DataMigration())
-         break;
+      ThrottleV5DataMigration();
 
       lastItem = boundaryItem;
    }
