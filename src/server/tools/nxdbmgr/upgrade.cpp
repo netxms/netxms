@@ -187,6 +187,13 @@ void UpgradeDatabase()
 {
    WriteToTerminal(L"Upgrading database...\n");
 
+   // Stale TimescaleDB extension registration breaks DDL statements with error that does not indicate real cause
+   if (!ValidateTimescaleDBExtension() && !g_ignoreErrors)
+   {
+      WriteToTerminal(L"Database upgrade aborted\n");
+      return;
+   }
+
    // Get database format version
    int32_t major, minor;
 	if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
