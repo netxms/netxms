@@ -10476,7 +10476,7 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_RACK_ORIENTATION, static_cast<int16_t>(m_rackOrientation));
    msg->setField(VID_ICMP_COLLECTION_MODE, static_cast<int16_t>(m_icmpStatCollectionMode));
    msg->setFieldFromUtf8String(VID_CHASSIS_PLACEMENT, m_chassisPlacementConf);
-   if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != nullptr))
+   if (isIcmpStatCollectionEnabled() && (m_icmpStatCollectors != nullptr) && m_ipAddress.isValidUnicast())
    {
       IcmpStatCollector *collector = m_icmpStatCollectors->get(L"PRI");
       if (collector != nullptr)
