@@ -134,8 +134,9 @@ public class DataFormatter
    }
    
    /**
-    * Set multiplier usage flag
-    * 
+    * Set multiplier usage flag. Value <code>DciValue.MULTIPLIERS_NO</code> suppresses multipliers even if they are requested by
+    * format string.
+    *
     * @param useMultipliers the useMultipliers to set
     * @return this
     */
@@ -274,6 +275,9 @@ public class DataFormatter
                      i = end + 1;
                   }
                }
+
+               if (this.useMultipliers == DciValue.MULTIPLIERS_NO)
+                  useMultipliers = false;   // explicit "do not use multipliers" overrides format string
 
                int j;
                for(j = i; (j < format.length) && !Character.isLetter(format[j]); j++)

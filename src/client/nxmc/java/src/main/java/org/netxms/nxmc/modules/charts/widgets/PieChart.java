@@ -47,10 +47,12 @@ public class PieChart extends GenericComparisonChart
    private static final int MARK_TEXT_HEIGHT = 20;
    private static final int MARK_TEXT_WIDTH = 30;
    private static final int MARKS_OFFSET = 10;
+   private static final int MIN_BOX_SIZE = 20;
 
    private Font[] scaleFonts = null;
    private Font[] valueFonts = null;
-   
+   private Font fixedScaleFont = null;
+
    private boolean tooltipShown = false;
    private int centerX = 0;
    private int centerY = 0;
@@ -110,9 +112,17 @@ public class PieChart extends GenericComparisonChart
    {
       String fontName = chart.getConfiguration().getFontName();
 
-      scaleFonts = new Font[16];
-      for(int i = 0; i < scaleFonts.length; i++)
-         scaleFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.NORMAL);
+      int labelFontSize = chart.getConfiguration().getLabelFontSize();
+      if (labelFontSize > 0)
+      {
+         fixedScaleFont = new Font(getDisplay(), fontName, labelFontSize, SWT.NORMAL);
+      }
+      else
+      {
+         scaleFonts = new Font[16];
+         for(int i = 0; i < scaleFonts.length; i++)
+            scaleFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.NORMAL);
+      }
 
       valueFonts = new Font[16];
       for(int i = 0; i < valueFonts.length; i++)
@@ -125,6 +135,9 @@ public class PieChart extends GenericComparisonChart
    @Override
    protected void disposeFonts()
    {
+      if (fixedScaleFont != null)
+         fixedScaleFont.dispose();
+
       if (scaleFonts != null)
       {
          for(int i = 0; i < scaleFonts.length; i++)
@@ -144,7 +157,8 @@ public class PieChart extends GenericComparisonChart
    @Override
    protected void render(GC gc)
    {
-      final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "100%", MARK_TEXT_WIDTH, MARK_TEXT_HEIGHT); //$NON-NLS-1$
+      final Font markFont = (fixedScaleFont != null) ? fixedScaleFont :
+            WidgetHelper.getBestFittingFont(gc, scaleFonts, "100%", MARK_TEXT_WIDTH, MARK_TEXT_HEIGHT); //$NON-NLS-1$
       gc.setFont(markFont);
       Point markSize = gc.textExtent("100%");
 
@@ -179,6 +193,15 @@ public class PieChart extends GenericComparisonChart
       gc.setForeground(scaleColor);
 
       boxSize = Math.min(size.x - MARGIN_WIDTH * 2 - MARKS_OFFSET * 2 - markSize.x * 2, size.y - MARGIN_HEIGHT * 2 - MARKS_OFFSET * 2 - markSize.y * 2);
+      boolean drawMarks = (boxSize >= MIN_BOX_SIZE);
+      if (!drawMarks)
+      {
+         // Marks are too large for available space - draw pie without marks
+         boxSize = Math.min(size.x - MARGIN_WIDTH * 2, size.y - MARGIN_HEIGHT * 2);
+         if (boxSize <= 0)
+            return;
+      }
+
       int x = (size.x - boxSize) / 2;
       int y = (size.y - boxSize) / 2;
       centerX = x + boxSize / 2 + 1;
@@ -193,7 +216,7 @@ public class PieChart extends GenericComparisonChart
          gc.fillArc(x, y, boxSize, boxSize, startAngle, sectorSize);
 
          int pct = (int)(values[i] / total * 100.0);
-         if (pct > 0)
+         if (drawMarks && (pct > 0))
          {
             int centerAngle = startAngle + sectorSize / 2;
             Point l1 = positionOnArc(centerX, centerY, boxSize / 2 + MARKS_OFFSET, centerAngle);
@@ -222,10 +245,14 @@ public class PieChart extends GenericComparisonChart
 
       if (chart.getConfiguration().isShowTotal())
       {
-         String v = series.get(0).getDataFormatter().setFormatString(items.get(0).getDisplayFormat()).format(Double.toString(total),
-               DateFormatFactory.getTimeFormatter()); 
+         DataFormatter formatter = series.get(0).getDataFormatter().setFormatString(items.get(0).getDisplayFormat());
+         if (!chart.getConfiguration().isUseMultipliers())
+            formatter.setUseMultipliers(DciValue.MULTIPLIERS_NO);
+         // Pass total without fractional part when possible, so it is not displayed as "1500.0" when multipliers are disabled
+         String totalAsText = ((total == Math.rint(total)) && (Math.abs(total) < 1e15)) ? Long.toString((long)total) : Double.toString(total);
+         String v = formatter.format(totalAsText, DateFormatFactory.getTimeFormatter());
          int innerBoxSize = boxSize - boxSize / 6;
-         gc.setFont(WidgetHelper.getBestFittingFont(gc, valueFonts, "00000000", innerBoxSize, innerBoxSize));
+         gc.setFont(WidgetHelper.getBestFittingFont(gc, valueFonts, v, innerBoxSize, innerBoxSize));
          Point ext = gc.textExtent(v);
          if ((ext.x <= innerBoxSize) && (ext.y <= innerBoxSize))
          {

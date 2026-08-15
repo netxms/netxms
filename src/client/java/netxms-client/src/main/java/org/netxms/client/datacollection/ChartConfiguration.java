@@ -185,6 +185,9 @@ public class ChartConfiguration
    private int fontSize = 0;
 
    @Element(required = false)
+   private int labelFontSize = 0;
+
+   @Element(required = false)
    private int expectedTextWidth = 0;
 
    private Set<ChartConfigurationChangeListener> changeListeners = new HashSet<ChartConfigurationChangeListener>(0);
@@ -268,6 +271,7 @@ public class ChartConfiguration
       gaugeColorMode = src.gaugeColorMode;
       fontName = src.fontName;
       fontSize = src.fontSize;
+      labelFontSize = src.labelFontSize;
       expectedTextWidth = src.expectedTextWidth;
    }
 
@@ -1027,6 +1031,26 @@ public class ChartConfiguration
    public void setFontSize(int fontSize)
    {
       this.fontSize = fontSize;
+   }
+
+   /**
+    * Get font size for chart labels. Value 0 means that font size should be selected automatically.
+    *
+    * @return font size for chart labels
+    */
+   public int getLabelFontSize()
+   {
+      return labelFontSize;
+   }
+
+   /**
+    * Set font size for chart labels. Value 0 means that font size should be selected automatically.
+    *
+    * @param labelFontSize new font size for chart labels
+    */
+   public void setLabelFontSize(int labelFontSize)
+   {
+      this.labelFontSize = labelFontSize;
    }
 
    /**
