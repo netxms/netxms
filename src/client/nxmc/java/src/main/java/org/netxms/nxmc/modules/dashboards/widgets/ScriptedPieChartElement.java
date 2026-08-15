@@ -73,6 +73,8 @@ public class ScriptedPieChartElement extends ScriptedChartElement
       chartConfig.setTranslucent(elementConfig.isTranslucent());
       chartConfig.setDoughnutRendering(elementConfig.isDoughnutRendering());
       chartConfig.setShowTotal(elementConfig.isShowTotal());
+      chartConfig.setUseMultipliers(elementConfig.isUseMultipliers());
+      chartConfig.setLabelFontSize(elementConfig.getLabelFontSize());
 
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig, view);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());

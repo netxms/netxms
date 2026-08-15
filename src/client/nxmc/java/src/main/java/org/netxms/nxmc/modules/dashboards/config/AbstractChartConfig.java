@@ -52,6 +52,9 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
    @Element(required = false)
    private boolean translucent = false;
 
+   @Element(required = false)
+   private boolean useMultipliers = true;
+
 	@Element(required = false)
 	private int refreshRate = 30;
 
@@ -219,6 +222,22 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
    public void setTranslucent(boolean translucent)
    {
       this.translucent = translucent;
+   }
+
+   /**
+    * @return the useMultipliers
+    */
+   public boolean isUseMultipliers()
+   {
+      return useMultipliers;
+   }
+
+   /**
+    * @param useMultipliers the useMultipliers to set
+    */
+   public void setUseMultipliers(boolean useMultipliers)
+   {
+      this.useMultipliers = useMultipliers;
    }
 
    /**

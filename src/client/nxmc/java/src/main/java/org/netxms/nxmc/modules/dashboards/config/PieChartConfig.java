@@ -33,6 +33,9 @@ public class PieChartConfig extends AbstractChartConfig
    @Element(required = false)
    private boolean showTotal = false;
 
+   @Element(required = false)
+   private int labelFontSize = 0;
+
    /**
     * @return the doughnutRendering
     */
@@ -63,5 +66,25 @@ public class PieChartConfig extends AbstractChartConfig
    public void setShowTotal(boolean showTotal)
    {
       this.showTotal = showTotal;
+   }
+
+   /**
+    * Get font size for percentage labels. Value 0 means that font size should be selected automatically.
+    *
+    * @return font size for percentage labels
+    */
+   public int getLabelFontSize()
+   {
+      return labelFontSize;
+   }
+
+   /**
+    * Set font size for percentage labels. Value 0 means that font size should be selected automatically.
+    *
+    * @param labelFontSize new font size for percentage labels
+    */
+   public void setLabelFontSize(int labelFontSize)
+   {
+      this.labelFontSize = labelFontSize;
    }
 }

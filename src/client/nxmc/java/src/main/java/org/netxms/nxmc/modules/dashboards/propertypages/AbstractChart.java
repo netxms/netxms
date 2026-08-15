@@ -75,6 +75,7 @@ public class AbstractChart extends DashboardElementPropertyPage
    private Button checkShowPercentile;
    private Button checkInteractive;
    private LabeledSpinner lineWidth;
+   private LabeledSpinner labelFontSize;
    private YAxisRangeEditor yAxisRange;   
    private ObjectSelector drillDownObject;
 
@@ -173,16 +174,19 @@ public class AbstractChart extends DashboardElementPropertyPage
          checkExtendedLegend.setLayoutData(gd);
       }
 
-      if (config instanceof LineChartConfig)
+      if ((config instanceof LineChartConfig) || (config instanceof PieChartConfig) || (config instanceof ScriptedPieChartConfig))
       {
          checkUseMultipliers = new Button(optionsGroup, SWT.CHECK);
          checkUseMultipliers.setText(i18n.tr("Use &multipliers"));
-         checkUseMultipliers.setSelection(((LineChartConfig)config).isUseMultipliers());
+         checkUseMultipliers.setSelection(config.isUseMultipliers());
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          checkUseMultipliers.setLayoutData(gd);
+      }
 
+      if (config instanceof LineChartConfig)
+      {
          checkLogScale = new Button(optionsGroup, SWT.CHECK);
          checkLogScale.setText(i18n.tr("L&ogarithmic scale"));
          checkLogScale.setSelection(((LineChartConfig)config).isLogScaleEnabled());
@@ -264,6 +268,16 @@ public class AbstractChart extends DashboardElementPropertyPage
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          checkShowTotal.setLayoutData(gd);
+
+         labelFontSize = new LabeledSpinner(dialogArea, SWT.NONE);
+         labelFontSize.setLabel(i18n.tr("Percentage label font size (0 for autoscale)"));
+         labelFontSize.setRange(0, 72);
+         labelFontSize.setSelection((config instanceof PieChartConfig) ? ((PieChartConfig)config).getLabelFontSize() : ((ScriptedPieChartConfig)config).getLabelFontSize());
+         gd = new GridData();
+         gd.verticalAlignment = SWT.BOTTOM;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         labelFontSize.setLayoutData(gd);
       }
 
 		if (config instanceof LineChartConfig)
@@ -402,6 +416,9 @@ public class AbstractChart extends DashboardElementPropertyPage
 		config.setRefreshRate(refreshRate.getSelection());
       config.setTranslucent(checkTranslucent.getSelection());
 
+      if (checkUseMultipliers != null)
+         config.setUseMultipliers(checkUseMultipliers.getSelection());
+
       if (!(config instanceof GaugeConfig))
       {
          config.setExtendedLegend(checkExtendedLegend.getSelection());
@@ -411,11 +428,13 @@ public class AbstractChart extends DashboardElementPropertyPage
       {
          ((PieChartConfig)config).setDoughnutRendering(checkDoughnutRendering.getSelection());
          ((PieChartConfig)config).setShowTotal(checkShowTotal.getSelection());
+         ((PieChartConfig)config).setLabelFontSize(labelFontSize.getSelection());
       }
       else if (config instanceof ScriptedPieChartConfig)
       {
          ((ScriptedPieChartConfig)config).setDoughnutRendering(checkDoughnutRendering.getSelection());
          ((ScriptedPieChartConfig)config).setShowTotal(checkShowTotal.getSelection());
+         ((ScriptedPieChartConfig)config).setLabelFontSize(labelFontSize.getSelection());
       }
       else
       {
@@ -448,7 +467,6 @@ public class AbstractChart extends DashboardElementPropertyPage
 			((LineChartConfig)config).setTimeUnits(timeUnits.getSelectionIndex());
 			((LineChartConfig)config).setShowGrid(checkShowGrid.getSelection());
          ((LineChartConfig)config).setLogScaleEnabled(checkLogScale.getSelection());
-         ((LineChartConfig)config).setUseMultipliers(checkUseMultipliers.getSelection());
          ((LineChartConfig)config).setStacked(checkStacked.getSelection());
          ((LineChartConfig)config).setArea(checkAreaChart.getSelection());
          ((LineChartConfig)config).setShow95thPercentile(checkShowPercentile.getSelection());
