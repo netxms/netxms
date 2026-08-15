@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objects.views.elements;
 
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -132,7 +133,9 @@ public class Communications extends TableElement
             if (session.isZoningEnabled())
                addPair(i18n.tr("Zone UIN"), getZoneName(node.getZoneId()));
             addPair(i18n.tr("Primary host name"), node.getPrimaryName());
-            addPair(i18n.tr("Primary IP address"), node.getPrimaryIP().getHostAddress());
+            InetAddressEx primaryIP = node.getPrimaryIP();
+            addPair(i18n.tr("Primary IP address"),
+                  (primaryIP.isValidAddress() && !primaryIP.getAddress().isAnyLocalAddress()) ? primaryIP.getHostAddress() : i18n.tr("none"));
             if (node.getEtherNetIpAddress() != null)
                addPair(i18n.tr("EtherNet/IP address"), node.getEtherNetIpAddress().getHostAddress());
             if (node.isIcmpStatisticsCollected())
