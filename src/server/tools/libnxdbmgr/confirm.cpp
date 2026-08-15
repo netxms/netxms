@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -161,7 +161,13 @@ static bool GetYesNoInternal(bool allowBulk, const TCHAR *format, va_list args)
 #else
          fflush(stdout);
          TCHAR buffer[16];
-         _fgetts(buffer, 16, stdin);
+         if (_fgetts(buffer, 16, stdin) == nullptr)
+         {
+            if (allowBulk)
+               s_noForAll = true;
+            return false;
+         }
+
          Trim(buffer);
          if (allowBulk)
          {
