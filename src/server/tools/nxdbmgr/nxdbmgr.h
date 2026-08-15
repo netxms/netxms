@@ -59,6 +59,7 @@ void UnlockDatabase();
 
 bool ExecSQLBatch(const char *pszFile, bool showOutput);
 bool ValidateDatabase(bool allowLock = false);
+bool ValidateTimescaleDBExtension();
 
 bool SeedStockImages();
 const char *FindStockImageData(const wchar_t *guid);

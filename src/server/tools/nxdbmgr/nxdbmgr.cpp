@@ -250,6 +250,69 @@ bool ValidateDatabase(bool allowLock)
 }
 
 /**
+ * Report inability to use TimescaleDB extension registered within the database
+ */
+static void ReportUnusableTimescaleDBExtension(const char *version, const wchar_t *errorText)
+{
+   if (version[0] != 0)
+      WriteToTerminalEx(L"\x1b[31mTimescaleDB extension registered in this database as version %hs cannot be used (%s)\x1b[0m\n", version, errorText);
+   else
+      WriteToTerminalEx(L"\x1b[31mTimescaleDB extension registered in this database cannot be used (%s)\x1b[0m\n", errorText);
+   WriteToTerminal(
+         L"\x1b[31mMost likely TimescaleDB package was upgraded without updating extension within the database.\n"
+         L"Run \"ALTER EXTENSION timescaledb UPDATE\" as the first statement of \"psql -X\" session in every\n"
+         L"database that has this extension, then re-run nxdbmgr.\x1b[0m\n");
+}
+
+/**
+ * Check that TimescaleDB extension library matching version registered in database catalog is actually installed.
+ * If TimescaleDB package is upgraded without running "ALTER EXTENSION timescaledb UPDATE", database catalog still
+ * points to the old extension version while only new shared library is present. Depending on TimescaleDB version
+ * either all queries or only DDL statements will fail with an error that does not indicate real cause.
+ */
+bool ValidateTimescaleDBExtension()
+{
+   if (g_dbSyntax != DB_SYNTAX_TSDB)
+      return true;
+
+   wchar_t errorText[DBDRV_MAX_ERROR_TEXT];
+   DB_RESULT hResult = DBSelectEx(g_dbHandle,
+         L"SELECT e.extversion,n.nspname FROM pg_extension e INNER JOIN pg_namespace n ON n.oid=e.extnamespace WHERE e.extname='timescaledb'", errorText);
+   if (hResult == nullptr)
+   {
+      // Some TimescaleDB versions load extension library on any statement, so even catalog read may fail
+      ReportUnusableTimescaleDBExtension("", errorText);
+      return false;
+   }
+
+   char version[64] = "", schema[64] = "";
+   if (DBGetNumRows(hResult) > 0)
+   {
+      DBGetFieldA(hResult, 0, 0, version, sizeof(version));
+      DBGetFieldA(hResult, 0, 1, schema, sizeof(schema));
+   }
+   DBFreeResult(hResult);
+
+   if (version[0] == 0)
+   {
+      WriteToTerminal(L"\x1b[31mDatabase schema is in TimescaleDB format, but TimescaleDB extension is not installed in this database\x1b[0m\n");
+      return false;
+   }
+
+   // Reading pg_extension does not necessarily force loading of extension library, so call function implemented in it
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"SELECT \"%hs\".time_bucket(interval '1 hour', now())", schema);
+   hResult = DBSelectEx(g_dbHandle, query, errorText);
+   if (hResult == nullptr)
+   {
+      ReportUnusableTimescaleDBExtension(version, errorText);
+      return false;
+   }
+   DBFreeResult(hResult);
+   return true;
+}
+
+/**
  * Open database connection
  */
 DB_HANDLE ConnectToDatabase()

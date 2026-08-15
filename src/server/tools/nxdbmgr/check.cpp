@@ -1795,6 +1795,13 @@ void CheckDatabase()
    else
 	   _tprintf(_T("Checking database (%s collected data):\n"), g_checkData ? _T("including") : _T("excluding"));
 
+   // Stale TimescaleDB extension registration breaks DDL statements with error that does not indicate real cause
+   if (!ValidateTimescaleDBExtension() && !g_ignoreErrors)
+   {
+      _tprintf(_T("Database check aborted\n"));
+      return;
+   }
+
    // Get database format version
    int32_t major, minor;
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
