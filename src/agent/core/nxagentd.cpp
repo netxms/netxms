@@ -269,6 +269,7 @@ static TCHAR *m_pszMasterServerList = nullptr;
 static TCHAR *m_pszUpgradeServerList = nullptr;
 static TCHAR *m_pszSubagentList = nullptr;
 static TCHAR *s_externalMetrics = nullptr;
+static TCHAR *s_externalChecksConfig = nullptr;
 static TCHAR *s_backgroundExternalMetrics = nullptr;
 static TCHAR *s_externalMetricProviders = nullptr;
 static TCHAR *s_externalListsConfig = nullptr;
@@ -360,6 +361,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableTFTPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_TFTP_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EnableWatchdog"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_WATCHDOG, 0, &s_startupFlags, nullptr },
    { _T("EnableWebServiceProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_WEBSVC_PROXY, 0, &g_dwFlags, nullptr },
+   { _T("ExternalCheck"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalChecksConfig, nullptr },
+   { _T("ExternalCheckCacheTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalCheckCacheTimeout, nullptr },
+   { _T("ExternalCheckTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalCheckTimeout, nullptr },
    { _T("ExternalCommandTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalCommandTimeout, nullptr },
    { _T("ExternalList"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalListsConfig, nullptr },
    { _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, nullptr },
@@ -387,6 +391,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("UpgradeServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszUpgradeServerList, nullptr },
    { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_maxLogSize, nullptr },
    { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_maxCommSessions, nullptr },
+   { _T("NagiosPlugin"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalChecksConfig, nullptr },
    { _T("OfflineDataExpirationTime"), CT_LONG, 0, 0, 0, 0, &g_dcOfflineExpirationTime, nullptr },
    { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix, nullptr },
    { _T("RequireAuthentication"), CT_BOOLEAN_FLAG_32, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags, nullptr },
@@ -1426,6 +1431,22 @@ BOOL Initialize()
       MemFree(s_externalMetrics);
    }
 
+   // Parse external checks
+   if (s_externalChecksConfig != nullptr)
+   {
+      TCHAR *curr, *next;
+      for(curr = next = s_externalChecksConfig; next != nullptr && *curr != 0; curr = next + 1)
+      {
+         next = _tcschr(curr, _T('\n'));
+         if (next != nullptr)
+            *next = 0;
+         Trim(curr);
+         if (!AddExternalCheck(curr))
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external check \"%s\""), curr);
+      }
+      MemFree(s_externalChecksConfig);
+   }
+
    // Parse external lists
    if (s_externalListsConfig != nullptr)
    {
@@ -2454,6 +2475,7 @@ int main(int argc, char *argv[])
          // Calculate execution timeouts
          // Default value is in DefaultExecutionTimeout (old versions may use ExecTimeout)
          // Then individual timeouts can be set by ExternalCommandTimeout, ExternalMetricTimeout, and ExternalMetricProviderTimeout
+         // ExternalCheckTimeout falls back to ExternalMetricTimeout when not set
          if (s_defaultExecutionTimeout == 0)
             s_defaultExecutionTimeout = 5000;   // 5 seconds default
          if (g_externalCommandTimeout == 0)
@@ -2462,6 +2484,8 @@ int main(int argc, char *argv[])
             g_externalMetricTimeout = s_defaultExecutionTimeout;
          if (g_externalMetricProviderTimeout == 0)
             g_externalMetricProviderTimeout = s_defaultExecutionTimeout;
+         if (g_externalCheckTimeout == 0)
+            g_externalCheckTimeout = g_externalMetricTimeout;
 
          // try to guess executable path
 #ifdef _WIN32

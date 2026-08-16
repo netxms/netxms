@@ -51,6 +51,11 @@ LONG H_WindowsCertStoreList(const TCHAR *param, const TCHAR *arg, StringList *va
 LONG H_DataSenderQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DataReconciliation(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ExternalCheckList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ExternalCheckPerfData(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_ExternalCheckStatus(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ExternalCheckStatusText(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ExternalCheckValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ExternalMetric(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalMetricExitCode(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -572,6 +577,9 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.Version"), H_StringConstant, NETXMS_VERSION_STRING, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
    { _T("Agent.WebServiceProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_WEBSVC_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_WEBSVCPROXY_ISENABLED },
    { _T("EtherNetIP.Attribute(*)"), H_EtherNetIPAttribute, nullptr, DCI_DT_STRING, _T("Value of EtherNet/IP CIP attribute {instance}") },
+   { _T("ExternalCheck.Status(*)"), H_ExternalCheckStatus, nullptr, DCI_DT_INT, _T("External check {instance}: status code") },
+   { _T("ExternalCheck.StatusText(*)"), H_ExternalCheckStatusText, nullptr, DCI_DT_STRING, _T("External check {instance}: status text") },
+   { _T("ExternalCheck.Value(*)"), H_ExternalCheckValue, nullptr, DCI_DT_FLOAT, _T("External check {instance}: performance data value") },
    { _T("ExternalDataProvider.State(*)"), H_ExternalDataProviderState, nullptr, DCI_DT_INT, _T("State of external data provider {instance} (0 = disabled, 1 = enabled)") },
    { _T("File.Content(*)"), H_FileContent, nullptr, DCI_DT_STRING, _T("Content of file {instance}") },
    { _T("File.Count(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_COUNT, DCI_DT_UINT, DCIDESC_FILE_COUNT },
@@ -663,6 +671,7 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
    { _T("Agent.SupportedTables"), H_TableList, nullptr, _T("List of supported tables") },
    { _T("Agent.ThreadPools"), H_ThreadPoolList, nullptr, _T("List of agent thread pools") },
    { _T("EtherNetIP.ListIdentity(*)"), H_EtherNetIPListIdentity, nullptr, _T("EtherNet/IP device identity") },
+   { _T("ExternalCheck.Checks"), H_ExternalCheckList, nullptr, _T("Configured external checks") },
 #if WITH_MODBUS
    { _T("Modbus.DeviceIdentification(*)"), H_ModbusDeviceIdentification, nullptr, _T("Modbus device identification objects") },
 #endif
@@ -687,6 +696,7 @@ static NETXMS_SUBAGENT_TABLE s_standardTables[] =
    { _T("Agent.SubAgents"), H_SubAgentTable, nullptr, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
    { _T("Agent.ZoneConfigurations"), H_ZoneConfigurations, nullptr, _T("SERVER_ID"), DCTDESC_AGENT_ZONE_CONFIGURATIONS },
    { _T("Agent.ZoneProxies"), H_ZoneProxies, nullptr, _T("SERVER_ID,PROXY_ID"), DCTDESC_AGENT_ZONE_PROXIES },
+   { _T("ExternalCheck.PerfData(*)"), H_ExternalCheckPerfData, nullptr, _T("LABEL"), _T("External check {instance}: performance data") },
    { _T("PhysicalDisk.Devices"), H_PhysicalDiskTable, nullptr, _T("NAME"), DCTDESC_PHYSICALDISK_DEVICES },
 #ifdef _WIN32
    { _T("WindowsCertificateStore.Certificates(*)"), H_WindowsCertStoreTable, nullptr, _T("THUMBPRINT"), _T("Certificates in Windows certificate store {instance}") },

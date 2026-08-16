@@ -27,6 +27,7 @@ SOURCES = \
 	event.cpp \
 	exec.cpp \
 	extagent.cpp \
+	extcheck.cpp \
 	extdp.cpp \
 	extension.cpp \
 	extension_lifecycle.cpp \

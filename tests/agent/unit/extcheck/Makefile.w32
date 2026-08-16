@@ -1,0 +1,16 @@
+#
+# Makefile.w32 - test-unit-extcheck (external check / Nagios plugin unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+# The agent core source under test is compiled into the test binary rather than
+# linked from the built agent. It is located through vpath so its object lands
+# in this test's own object directory instead of the agent's.
+vpath %.cpp $(TOPDIR)/src/agent/core
+
+TOOL = test-unit-extcheck
+SOURCES = main.cpp extcheck.cpp
+TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include -I$(TOPDIR)/src/agent/core
+TOOL_LIBS = -lnxagent -lnetxms
+
+include $(TOPDIR)/build/tool-common.mk

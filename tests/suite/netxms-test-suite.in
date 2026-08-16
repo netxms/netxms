@@ -68,6 +68,12 @@ if [ -x $BINDIR/test-unit-entsoe ]; then
 	$BINDIR/test-unit-entsoe || exit 1
 fi
 
+if [ -x $BINDIR/test-unit-extcheck ]; then
+	echo ""
+	echo "********** test-unit-extcheck **********"
+	$BINDIR/test-unit-extcheck || exit 1
+fi
+
 if [ -x $BINDIR/test-unit-openmeteo ]; then
 	echo ""
 	echo "********** test-unit-openmeteo **********"

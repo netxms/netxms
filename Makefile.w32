@@ -170,6 +170,7 @@ TESTS_DIRS = \
     tests/test-libnxsl \
     tests/test-ncd-webhook \
     tests/agent/unit/entsoe \
+    tests/agent/unit/extcheck \
     tests/agent/unit/openmeteo
 ifeq ($(BUILD_SERVER),1)
 TESTS_DIRS += tests/test-libnxsrv tests/test-authtokens
