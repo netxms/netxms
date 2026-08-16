@@ -184,7 +184,7 @@ BUILD_STATIC_AGENT="no"
 BUILD_SDK="no"
 MODULES="libnetxms install"
 TEST_MODULES=""
-AGENT_UNIT_TESTS="entsoe openmeteo"
+AGENT_UNIT_TESTS="entsoe extcheck openmeteo"
 TOOLS=""
 STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
@@ -1121,7 +1121,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent test-authtokens test-libnxcc test-libnxsl test-libnxsnmp test-ncd-webhook"
-	AGENT_UNIT_TESTS="entsoe openmeteo linux-cpu-usage-collector"
+	AGENT_UNIT_TESTS="entsoe extcheck openmeteo linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python redis lldpd"
 	AGENT_DIRS="libnxtux nxsagent"
@@ -4965,6 +4965,7 @@ AC_CONFIG_FILES([
 	tests/agent/Makefile
 	tests/agent/unit/Makefile
 	tests/agent/unit/entsoe/Makefile
+	tests/agent/unit/extcheck/Makefile
 	tests/agent/unit/openmeteo/Makefile
 	tests/agent/unit/linux-cpu-usage-collector/Makefile
 	tests/config/Makefile

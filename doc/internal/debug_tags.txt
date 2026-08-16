@@ -77,6 +77,7 @@ event.forwarder	Event forwarding framework (server side)
 event.policy	Event processing policy
 event.proc	Event processor
 ext.provider	Agent external provider
+extcheck	Agent external checks (Nagios-compatible monitoring plugins)
 extension	Agent extensions (generic JSON-RPC protocol) — common
 extension.*	Agent extensions — per-extension (extension.<name>)
 exec		External function execution

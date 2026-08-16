@@ -39,6 +39,7 @@ call :RunTest test-authtokens || goto failure
 call :RunTest test-libnxsnmp || goto failure
 call :RunTest test-libnxsl .\tests\test-libnxsl || goto failure
 call :RunTest test-ncd-webhook || goto failure
+call :RunTest test-unit-extcheck || goto failure
 
 echo *** SUCCESS ***
 exit /b 0

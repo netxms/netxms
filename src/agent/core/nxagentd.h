@@ -180,6 +180,46 @@ struct ExternalTableDefinition
 bool IsParametrizedCommand(const TCHAR *command);
 
 /**
+ * Single performance data entry produced by Nagios-compatible monitoring plugin.
+ * All values are stored verbatim as printed by the plugin.
+ */
+struct PerfDataValue
+{
+   TCHAR *label;
+   TCHAR *value;     // Numeric value with UOM stripped
+   TCHAR *uom;
+   TCHAR *warning;   // Warning range in Nagios range syntax
+   TCHAR *critical;  // Critical range in Nagios range syntax
+   TCHAR *min;
+   TCHAR *max;
+
+   PerfDataValue(const TCHAR *l, const TCHAR *v, const TCHAR *u, const TCHAR *w, const TCHAR *c, const TCHAR *mn, const TCHAR *mx)
+   {
+      label = MemCopyString(l);
+      value = MemCopyString(v);
+      uom = MemCopyString(u);
+      warning = MemCopyString(w);
+      critical = MemCopyString(c);
+      min = MemCopyString(mn);
+      max = MemCopyString(mx);
+   }
+
+   ~PerfDataValue()
+   {
+      MemFree(label);
+      MemFree(value);
+      MemFree(uom);
+      MemFree(warning);
+      MemFree(critical);
+      MemFree(min);
+      MemFree(max);
+   }
+};
+
+int ParseNagiosPerfData(const TCHAR *text, ObjectArray<PerfDataValue> *values);
+void ParseNagiosPluginOutput(const StringList& output, StringBuffer *statusText, ObjectArray<PerfDataValue> *perfData);
+
+/**
  * External table definition
  */
 struct StructuredExtractorParameterDefinition
@@ -846,6 +886,7 @@ void AddTable(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, T
          bool (*filter)(const TCHAR*, const TCHAR*, AbstractCommSession*));
 bool AddExternalMetric(TCHAR *config, bool isList);
 bool AddBackgroundExternalMetric(TCHAR *config);
+bool AddExternalCheck(TCHAR *config);
 bool AddExternalTable(TCHAR *config);
 bool AddExternalTable(ConfigEntry *config);
 bool AddExternalStructuredDataProvider(ConfigEntry *config);
@@ -1016,6 +1057,8 @@ extern uint32_t g_maxCommSessions;
 extern uint32_t g_externalCommandTimeout;
 extern uint32_t g_externalMetricTimeout;
 extern uint32_t g_externalMetricProviderTimeout;
+extern uint32_t g_externalCheckTimeout;
+extern uint32_t g_externalCheckCacheTimeout;
 extern uint32_t g_snmpTimeout;
 extern uint16_t g_snmpTrapPort;
 extern uint32_t g_longRunningQueryThreshold;

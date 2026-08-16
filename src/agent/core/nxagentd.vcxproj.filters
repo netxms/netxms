@@ -49,6 +49,9 @@
     <ClCompile Include="extagent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="extcheck.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="extdp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
