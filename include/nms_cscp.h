@@ -399,7 +399,7 @@ __PACK_END__
 #define CMD_IMPORT_CONFIGURATION          0x00C1
 #define CMD_GET_TRAP_CFG_RO               0x00C2
 #define CMD_SNMP_REQUEST                  0x00C3
-#define CMD_GET_DCI_INFO                  0x00C4
+// unused: #define CMD_GET_DCI_INFO                  0x00C4
 #define CMD_GET_GRAPH_LIST                0x00C5
 #define CMD_SAVE_GRAPH                    0x00C6
 #define CMD_DELETE_GRAPH                  0x00C7

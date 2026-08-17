@@ -780,7 +780,6 @@ private:
    void getEPPScriptList(const NXCPMessage& request);
    void getSummaryTableScriptList(const NXCPMessage& request);
    void getScriptDependencies(const NXCPMessage& request);
-	void getDCIInfo(const NXCPMessage& request);
    void getPerfTabDCIList(const NXCPMessage& request);
    void exportConfiguration(const NXCPMessage& request);
    void importConfiguration(const NXCPMessage& request);

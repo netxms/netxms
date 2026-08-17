@@ -1478,9 +1478,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_RESOLVE_DCI_NAMES:
          resolveDCINames(*request);
          break;
-      case CMD_GET_DCI_INFO:
-         getDCIInfo(*request);
-         break;
       case CMD_GET_DCI_THRESHOLDS:
          sendDCIThresholds(*request);
          break;
@@ -12086,55 +12083,6 @@ void ClientSession::finalizeConfigurationImport(const char* content, uint32_t fl
       response->setField(VID_ERROR_TEXT, log->cstr());
    response->setField(VID_RCC, result);
    delete log;
-}
-
-/**
- * Get basic DCI info
- */
-void ClientSession::getDCIInfo(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
-   if (object != nullptr)
-   {
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
-      {
-         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
-         {
-            shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(request.getFieldAsUInt32(VID_DCI_ID), m_userId);
-				if ((dcObject != nullptr) && (dcObject->getType() == DCO_TYPE_ITEM))
-				{
-					response.setField(VID_TEMPLATE_ID, dcObject->getTemplateId());
-					response.setField(VID_RESOURCE_ID, dcObject->getResourceId());
-					response.setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(static_cast<DCItem&>(*dcObject).getDataType()));
-               response.setField(VID_TRANSFORMED_DATA_TYPE, static_cast<uint16_t>(static_cast<DCItem&>(*dcObject).getTransformedDataType()));
-					response.setField(VID_DCI_SOURCE_TYPE, static_cast<uint16_t>(static_cast<DCItem&>(*dcObject).getDataSource()));
-					response.setField(VID_NAME, dcObject->getName());
-					response.setField(VID_DESCRIPTION, dcObject->getDescription());
-	            response.setField(VID_RCC, RCC_SUCCESS);
-				}
-				else
-				{
-			      response.setField(VID_RCC, RCC_INVALID_DCI_ID);
-				}
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-         }
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      }
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-   }
-
-   sendMessage(response);
 }
 
 /**

@@ -219,7 +219,7 @@ public class NXCPCodes
 	public static final int CMD_IMPORT_CONFIGURATION = 0x00C1;
 	public static final int CMD_GET_TRAP_CFG_RO = 0x00C2;
 	public static final int CMD_SNMP_REQUEST = 0x00C3;
-	public static final int CMD_GET_DCI_INFO = 0x00C4;
+// unused:	public static final int CMD_GET_DCI_INFO = 0x00C4;
 	public static final int CMD_GET_GRAPH_LIST = 0x00C5;
 	public static final int CMD_SAVE_GRAPH = 0x00C6;
 	public static final int CMD_DELETE_GRAPH = 0x00C7;
