@@ -815,8 +815,13 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
     */
    private void addObjectMenu(String name, final Menu menu)
    {
-      if ((menu != null) && (menu.getItemCount() != 0))
+      if (menu == null)
+         return;
+
+      if (menu.getItemCount() != 0)
          createMenuToolItem(name, null, menu);
+      else
+         menu.dispose(); // Menu is not used and will be held by shell until it is disposed
    }
 
    /**
@@ -853,6 +858,16 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
             m.setLocation(pt.x, pt.y);
             m.setVisible(true);
          }
+      });
+
+      // Menu is owned by shell of parent control and will not be released until shell is disposed,
+      // so it has to be disposed explicitly together with owning toolbar item. Otherwise each menu bar
+      // update will leak menu objects and all elements referenced by them (including current object).
+      item.addDisposeListener((e) -> {
+         if (menuManager != null)
+            menuManager.dispose();
+         else if (!menu.isDisposed())
+            menu.dispose();
       });
    }
 
