@@ -180,7 +180,7 @@ public abstract class AbstractObject
    protected PollState[] pollStates = null;
    protected boolean partialObject;
 
-	@Internal private int effectiveRights = 0;
+	@Internal private long effectiveRights = 0;
 	@Internal private boolean effectiveRightsCached = false;
 
 	/**
@@ -322,7 +322,7 @@ public abstract class AbstractObject
 		count = msg.getFieldAsInt32(NXCPCodes.VID_ACL_SIZE);
 		for(i = 0, id = NXCPCodes.VID_ACL_USER_BASE, id2 = NXCPCodes.VID_ACL_RIGHTS_BASE; i < count; i++, id++, id2++)
 		{
-         accessList.add(new AccessListElement(msg.getFieldAsInt32(id), msg.getFieldAsInt32(id2)));
+         accessList.add(new AccessListElement(msg.getFieldAsInt32(id), msg.getFieldAsInt64(id2)));
 		}
 
 		// Module-specific data
@@ -1299,7 +1299,7 @@ public abstract class AbstractObject
     * 
     * @return effective user rights on this object
     */
-   public int getEffectiveRights()
+   public long getEffectiveRights()
    {
       if (effectiveRightsCached)
          return effectiveRights;

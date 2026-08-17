@@ -24,6 +24,37 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.24 to 70.25
+ */
+static bool H_UpgradeFromV24()
+{
+   // Widen object access rights storage to 64 bit
+   CHK_EXEC(ConvertColumnToInt64(L"acl", L"access_rights"));
+   CHK_EXEC(ConvertColumnToInt64(L"object_access_snapshot", L"access_rights"));
+
+   // Add OBJECT_ACCESS_EXECUTE_SCRIPT (0x80000000) to all ACL entries that allowed ad-hoc script execution before:
+   // entries with MODIFY access, or entries with READ or MODIFY access if Objects.ScriptExecution.RequireWriteAccess was disabled
+   wchar_t buffer[64];
+   DBMgrConfigReadStr(L"Objects.ScriptExecution.RequireWriteAccess", buffer, 64, L"true");
+   bool requireWriteAccess = !wcsicmp(buffer, L"true") || (wcstol(buffer, nullptr, 0) != 0);
+   uint32_t baseRights = requireWriteAccess ? 2 : 3;   // OBJECT_ACCESS_MODIFY : OBJECT_ACCESS_READ | OBJECT_ACCESS_MODIFY
+
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQueryFormatted(L"UPDATE acl SET access_rights=access_rights+2147483648 WHERE (BITAND(access_rights, 2147483648)=0) AND (BITAND(access_rights, %u)<>0)", baseRights));
+   }
+   else
+   {
+      CHK_EXEC(SQLQueryFormatted(L"UPDATE acl SET access_rights=access_rights+2147483648 WHERE ((access_rights & 2147483648)=0) AND ((access_rights & %u)<>0)", baseRights));
+   }
+
+   CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='Objects.ScriptExecution.RequireWriteAccess'"));
+
+   CHK_EXEC(SetMinorSchemaVersion(25));
+   return true;
+}
+
+/**
  * Upgrade from 70.23 to 70.24
  */
 static bool H_UpgradeFromV23()
@@ -833,6 +864,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 24, 70, 25, H_UpgradeFromV24 },
    { 23, 70, 24, H_UpgradeFromV23 },
    { 22, 70, 23, H_UpgradeFromV22 },
    { 21, 70, 22, H_UpgradeFromV21 },

@@ -66,7 +66,7 @@ public class AccessControl extends ObjectPropertyPage
    private I18n i18n = LocalizationHelper.getI18n(AccessControl.class);
 
    private SortableTableViewer userList;
-	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(11);
+	private HashMap<Long, Button> accessChecks = new HashMap<Long, Button>(32);
    private HashMap<Integer, AccessListElement> acl;
 	private Button checkInherit;
 	private NXCSession session;
@@ -222,6 +222,7 @@ public class AccessControl extends ObjectPropertyPage
       createAccessCheck(rights, i18n.tr("Delegated read"), UserAccessRights.OBJECT_ACCESS_DELEGATED_READ);
       createAccessCheck(rights, i18n.tr("Delete"), UserAccessRights.OBJECT_ACCESS_DELETE);
       createAccessCheck(rights, i18n.tr("Control"), UserAccessRights.OBJECT_ACCESS_CONTROL);
+      createAccessCheck(rights, i18n.tr("Execute scripts"), UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT);
       createAccessCheck(rights, i18n.tr("Send events"), UserAccessRights.OBJECT_ACCESS_SEND_EVENTS);
       createAccessCheck(rights, i18n.tr("View alarms"), UserAccessRights.OBJECT_ACCESS_READ_ALARMS);
       createAccessCheck(rights, i18n.tr("Update alarms"), UserAccessRights.OBJECT_ACCESS_UPDATE_ALARMS);
@@ -249,8 +250,9 @@ public class AccessControl extends ObjectPropertyPage
 				{
                AccessListElement element = (AccessListElement)selection.getFirstElement();
 
-               int rights = element.getAccessRights();
-               for(int i = 0, mask = 1; i < accessChecks.size(); i++, mask <<= 1)
+               long rights = element.getAccessRights();
+               long mask = 1;
+               for(int i = 0; i < accessChecks.size(); i++, mask <<= 1)
                {
                   Button check = accessChecks.get(mask);
                   if (check != null)
@@ -381,7 +383,7 @@ public class AccessControl extends ObjectPropertyPage
 	 * @param name Name of the access right
 	 * @param bitMask Bit mask for access right
 	 */
-	private void createAccessCheck(final Composite parent, final String name, final Integer bitMask)
+	private void createAccessCheck(final Composite parent, final String name, final Long bitMask)
 	{
       final Button check = new Button(parent, SWT.CHECK);
       check.setText(name);
@@ -392,7 +394,7 @@ public class AccessControl extends ObjectPropertyPage
 			{
 				IStructuredSelection sel = (IStructuredSelection)userList.getSelection();
 				AccessListElement element = (AccessListElement)sel.getFirstElement();
-				int rights = element.getAccessRights();
+				long rights = element.getAccessRights();
 				if (check.getSelection())
 					rights |= bitMask;
 				else

@@ -235,7 +235,7 @@ public class Graph extends PreferencePage
 				{
 					enableAllChecks(true);
 					AccessListElement element = (AccessListElement)sel.getFirstElement();
-					int rights = element.getAccessRights();
+					int rights = (int)element.getAccessRights();
 					for(int i = 0, mask = 1; i < 16; i++, mask <<= 1)
 					{
 						Button check = accessChecks.get(mask);
@@ -280,7 +280,7 @@ public class Graph extends PreferencePage
 			{
 				IStructuredSelection sel = userList.getStructuredSelection();
 				AccessListElement element = (AccessListElement)sel.getFirstElement();
-				int rights = element.getAccessRights();
+				int rights = (int)element.getAccessRights();
 				if (check.getSelection())
 					rights |= bitMask;
 				else

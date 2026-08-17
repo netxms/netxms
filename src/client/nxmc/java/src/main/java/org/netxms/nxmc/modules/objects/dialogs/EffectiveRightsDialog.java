@@ -61,7 +61,7 @@ public class EffectiveRightsDialog extends Dialog
    private UserSelector userSelector;
    private Table rightsTable;
    private List<RightDefinition> rightDefinitions;
-   private int currentEffectiveRights = 0;
+   private long currentEffectiveRights = 0;
    private Image checkImage;
    private Image uncheckImage;
 
@@ -70,10 +70,10 @@ public class EffectiveRightsDialog extends Dialog
     */
    private static class RightDefinition
    {
-      int mask;
+      long mask;
       String label;
 
-      RightDefinition(int mask, String label)
+      RightDefinition(long mask, String label)
       {
          this.mask = mask;
          this.label = label;
@@ -123,6 +123,7 @@ public class EffectiveRightsDialog extends Dialog
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_DELEGATED_READ, i18n.tr("Delegated read")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_DELETE, i18n.tr("Delete")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_CONTROL, i18n.tr("Control")));
+      rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT, i18n.tr("Execute scripts")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_SEND_EVENTS, i18n.tr("Send events")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_READ_ALARMS, i18n.tr("View alarms")));
       rightDefinitions.add(new RightDefinition(UserAccessRights.OBJECT_ACCESS_UPDATE_ALARMS, i18n.tr("Update alarms")));
@@ -257,7 +258,7 @@ public class EffectiveRightsDialog extends Dialog
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final int rights = session.getEffectiveRights(object.getObjectId(), userId);
+            final long rights = session.getEffectiveRights(object.getObjectId(), userId);
             runInUIThread(() -> {
                if (rightsTable.isDisposed())
                   return;

@@ -45,7 +45,7 @@ void AccessList::updateFromMessage(const NXCPMessage& msg)
          for(int j = 0; j < m_elements.size(); j++)
             if (m_elements.get(j)->userId == userId)    // Object already exist in list
             {
-               m_elements.get(j)->accessRights = msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i);
+               m_elements.get(j)->accessRights = msg.getFieldAsUInt64(VID_ACL_RIGHTS_BASE + i);
                found = true;
                marks[j] = 1;
                break;
@@ -55,7 +55,7 @@ void AccessList::updateFromMessage(const NXCPMessage& msg)
          {
             ACL_ELEMENT *e = m_elements.addPlaceholder();
             e->userId = userId;
-            e->accessRights = msg.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i);
+            e->accessRights = msg.getFieldAsUInt64(VID_ACL_RIGHTS_BASE + i);
          }
       }
 
@@ -92,7 +92,7 @@ void AccessList::updateFromJson(json_t *json)
       {
          ACL_ELEMENT *element = m_elements.addPlaceholder();
          element->userId = json_object_get_uint32(e, "userId", 0);
-         element->accessRights = json_object_get_uint32(e, "access", 0);
+         element->accessRights = json_object_get_uint64(e, "access", 0);
       }
    }
 }
@@ -100,7 +100,7 @@ void AccessList::updateFromJson(json_t *json)
 /**
  * Add element to list
  */
-bool AccessList::addElement(uint32_t userId, uint32_t accessRights, bool cached)
+bool AccessList::addElement(uint32_t userId, uint64_t accessRights, bool cached)
 {
    StructArray<ACL_ELEMENT>& list = cached ? m_cache : m_elements;
 
@@ -147,7 +147,7 @@ bool AccessList::deleteElement(uint32_t userId)
  * Returns true on success and stores access rights to specific location
  * If user doesn't have explicit rights or via group, returns false
  */
-bool AccessList::getUserRights(uint32_t userId, uint32_t *accessRights) const
+bool AccessList::getUserRights(uint32_t userId, uint64_t *accessRights) const
 {
    // We can safely read size without lock here. It is guaranteed (on architectures we support)
    // that 32 bit integer read will be atomic. So the only potential problem would be
@@ -198,7 +198,7 @@ bool AccessList::getUserRights(uint32_t userId, uint32_t *accessRights) const
  * Retrieve cached access rights for specific user object
  * Returns true on success and stores access rights to specific location
  */
-bool AccessList::getCachedUserRights(uint32_t userId, uint32_t *accessRights) const
+bool AccessList::getCachedUserRights(uint32_t userId, uint64_t *accessRights) const
 {
    // We can safely read size without lock here. It is guaranteed (on architectures we support)
    // that 32 bit integer read will be atomic. So the only potential problem would be
@@ -225,7 +225,7 @@ bool AccessList::getCachedUserRights(uint32_t userId, uint32_t *accessRights) co
 /**
  * Enumerate all elements
  */
-void AccessList::enumerateElements(void (*handler)(uint32_t, uint32_t, void *), void *context) const
+void AccessList::enumerateElements(void (*handler)(uint32_t, uint64_t, void *), void *context) const
 {
    m_mutex.lock();
    for(int i = 0; i < m_elements.size(); i++)

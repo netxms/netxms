@@ -5213,6 +5213,10 @@ paths:
     post:
       operationId: executeScript
       summary: Execute script within context of given object
+      description: |
+        Execute ad-hoc NXSL script provided in the request body within context of given object.
+
+        Requires `OBJECT_ACCESS_EXECUTE_SCRIPT` on the object.
       parameters:
         - name: object-id
           in: path

@@ -34,7 +34,7 @@ public class AccessListElement extends AbstractAccessListElement
 	 * @param userId user id
 	 * @param accessRights bit mask
 	 */
-   public AccessListElement(int userId, int accessRights)
+   public AccessListElement(int userId, long accessRights)
 	{
 		super(userId, accessRights);
       inherited = false;

@@ -2408,7 +2408,7 @@ struct CreateObjectAccessSnapshot_CallbackData
 static EnumerationCallbackResult CreateObjectAccessSnapshot_Callback(NetObj *object, void *arg)
 {
    CreateObjectAccessSnapshot_CallbackData *data = (CreateObjectAccessSnapshot_CallbackData *)arg;
-   uint32_t accessRights = object->getUserRights(data->userId);
+   uint64_t accessRights = object->getUserRights(data->userId);
    if (accessRights != 0)
    {
       ACL_ELEMENT e;
@@ -2447,7 +2447,7 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass)
             {
                auto e = accessList.get(i);
                DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e->userId);
-               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, e->accessRights);
+               DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, e->accessRights);
                success = DBExecute(hStmt);
             }
             DBFreeStatement(hStmt);

@@ -58,6 +58,7 @@ import org.netxms.client.ObjectFilter;
 import org.netxms.client.ObjectUrl;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Condition;
@@ -698,7 +699,8 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          item.dispose();
 
       addObjectToolBarItem(i18n.tr("Properties"), SharedIcons.IMG_PROPERTIES, () -> ObjectPropertiesManager.openObjectPropertiesDialog(object, getWindow().getShell(), getMessageArea()));
-      addObjectToolBarItem(i18n.tr("Execute script"), imageExecuteScript, () -> addMainView(new ScriptExecutorView(object.getObjectId(), object.getObjectId()), true, false));
+      if ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT) != 0)
+         addObjectToolBarItem(i18n.tr("Execute script"), imageExecuteScript, () -> addMainView(new ScriptExecutorView(object.getObjectId(), object.getObjectId()), true, false));
 
       if ((object instanceof Node) && ((Node)object).hasAgent())
       {

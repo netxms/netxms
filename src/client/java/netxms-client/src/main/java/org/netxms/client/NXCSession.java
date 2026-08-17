@@ -7650,7 +7650,7 @@ public class NXCSession
          for(AccessListElement e : acl)
          {
             msg.setFieldInt32(id1++, e.getUserId());
-            msg.setFieldInt32(id2++, e.getAccessRights());
+            msg.setFieldInt64(id2++, e.getAccessRights());
          }
       }
 
@@ -8651,7 +8651,7 @@ public class NXCSession
       return waitForRCC(msg.getMessageId()).getFieldAsString(NXCPCodes.VID_VALUE);
    }
 
-   public int getEffectiveRights(final long objectId) throws IOException, NXCException
+   public long getEffectiveRights(final long objectId) throws IOException, NXCException
    {
       return getEffectiveRights(objectId, userId);
    }
@@ -8666,13 +8666,13 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public int getEffectiveRights(final long objectId, final int userId) throws IOException, NXCException
+   public long getEffectiveRights(final long objectId, final int userId) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EFFECTIVE_RIGHTS);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
       msg.setFieldInt32(NXCPCodes.VID_USER_ID, userId);
       sendMessage(msg);
-      return waitForRCC(msg.getMessageId()).getFieldAsInt32(NXCPCodes.VID_EFFECTIVE_RIGHTS);
+      return waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_EFFECTIVE_RIGHTS);
    }
 
    /**

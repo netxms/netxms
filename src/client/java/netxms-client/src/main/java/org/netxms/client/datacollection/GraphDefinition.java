@@ -235,7 +235,7 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
       for(AccessListElement el : accessList)
       {
          msg.setFieldInt32(varId++, (int)el.getUserId());
-         msg.setFieldInt32(varId++, el.getAccessRights());
+         msg.setFieldInt32(varId++, (int)el.getAccessRights());
       }
    }
 

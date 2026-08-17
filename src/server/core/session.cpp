@@ -12861,7 +12861,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
    if (object != nullptr)
    {
       TCHAR *script = request.getFieldAsString(VID_SCRIPT);
-      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) || (!ConfigReadBoolean(_T("Objects.ScriptExecution.RequireWriteAccess"), true) && object->checkAccessRights(m_userId, OBJECT_ACCESS_READ)))
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_EXECUTE_SCRIPT))
       {
          if (script != nullptr)
          {
@@ -12907,7 +12907,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
             response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
          }
       }
-      else  // User doesn't have READ rights on object
+      else  // User doesn't have rights for ad-hoc script execution on object
       {
          writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script, 'T', _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
          response.setField(VID_RCC, RCC_ACCESS_DENIED);

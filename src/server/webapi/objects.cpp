@@ -761,8 +761,7 @@ int H_ObjectExecuteScript(Context *context)
       return 400;
    }
 
-   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_MODIFY) &&
-       !(!ConfigReadBoolean(_T("Objects.ScriptExecution.RequireWriteAccess"), true) && object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ)))
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_EXECUTE_SCRIPT))
    {
       context->writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script.get(), 'T', _T("Access denied on ad-hoc script execution for object %s [%u]"), object->getName(), object->getId());
       return 403;

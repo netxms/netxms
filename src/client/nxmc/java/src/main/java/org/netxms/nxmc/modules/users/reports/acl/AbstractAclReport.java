@@ -167,7 +167,7 @@ public abstract class AbstractAclReport
     * @param accessBit access bit to test
     * @param element access list element
     */
-   protected void createPermissionCell(XSSFRow row, PermissionsSheetCells cellId, int accessBit, ObjectAccess element)
+   protected void createPermissionCell(XSSFRow row, PermissionsSheetCells cellId, long accessBit, ObjectAccess element)
    {
       row.createCell(cellId.ordinal()).setCellValue(((element.accessRights & accessBit) != 0) ? i18n.tr("YES") : i18n.tr("NO"));
    }
@@ -222,9 +222,9 @@ public abstract class AbstractAclReport
       public int userId;
       public String userName;
       public boolean inheritAccessRights;
-      public int accessRights;
+      public long accessRights;
 
-      public ObjectAccess(String name, boolean inheritAccessRights, int userId, int accessRights)
+      public ObjectAccess(String name, boolean inheritAccessRights, int userId, long accessRights)
       {
          this.name = name;
          this.inheritAccessRights = inheritAccessRights;

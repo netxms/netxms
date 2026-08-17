@@ -867,7 +867,8 @@ public class ObjectContextMenuManager extends MenuManager
             }
             add(new Separator());
          }
-         add(actionExecuteScript);
+         if ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT) != 0)
+            add(actionExecuteScript);
       }
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;

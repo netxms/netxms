@@ -68,7 +68,8 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
       new AccessBit(UserAccessRights.OBJECT_ACCESS_EDIT_MNT_JOURNAL, 'J'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_MANAGE_POLICIES, 'Y'),
       new AccessBit(UserAccessRights.OBJECT_ACCESS_MANAGE_INCIDENTS, 'i'),
-      new AccessBit(UserAccessRights.OBJECT_ACCESS_QUERY_WEBSVC, 'q')
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_QUERY_WEBSVC, 'q'),
+      new AccessBit(UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT, 'X')
    };
 
    private final NXCSession session = Registry.getSession();
@@ -137,10 +138,10 @@ public class AccessListLabelProvider extends LabelProvider implements ITableLabe
     */
    private static class AccessBit
    {
-      int mask;
+      long mask;
       char symbol;
 
-      AccessBit(int mask, char symbol)
+      AccessBit(long mask, char symbol)
       {
          this.mask = mask;
          this.symbol = symbol;

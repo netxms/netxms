@@ -1727,7 +1727,7 @@ bool NetObj::loadACLFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements)
 
    int count = DBGetNumRows(hResult);
    for(int i = 0; i < count; i++)
-      m_accessList.addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1), false);
+      m_accessList.addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldUInt64(hResult, i, 1), false);
    DBFreeResult(hResult);
 
    return true;
@@ -1769,10 +1769,10 @@ bool NetObj::loadPortStopListFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStateme
 /**
  * Handler for ACL elements enumeration
  */
-static void EnumerationHandler(uint32_t userId, uint32_t accessRights, std::pair<uint32_t, DB_HANDLE> *context)
+static void EnumerationHandler(uint32_t userId, uint64_t accessRights, std::pair<uint32_t, DB_HANDLE> *context)
 {
    TCHAR query[256];
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO acl (object_id,user_id,access_rights) VALUES (%u,%u,%u)"),
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO acl (object_id,user_id,access_rights) VALUES (%u,%u,") UINT64_FMT _T(")"),
             context->first, userId, accessRights);
    DBQuery(context->second, query);
 }
@@ -2483,13 +2483,13 @@ void NetObj::postModify()
  *
  * @param userId user object ID
  */
-uint32_t NetObj::getUserRights(uint32_t userId) const
+uint64_t NetObj::getUserRights(uint32_t userId) const
 {
-   uint32_t rights;
+   uint64_t rights;
 
    // System always has all rights to any object
    if (userId == 0)
-      return 0xFFFFFFFF;
+      return 0xFFFFFFFFFFFFFFFFULL;
 
    // Check if have direct right assignment
    bool hasDirectRights = m_accessList.getUserRights(userId, &rights);
@@ -2515,16 +2515,16 @@ uint32_t NetObj::getUserRights(uint32_t userId) const
  * @param requiredRights bit mask of requested right
  * @return true if user has all rights specified in requested rights bit mask
  */
-bool NetObj::checkAccessRights(uint32_t userId, uint32_t requiredRights) const
+bool NetObj::checkAccessRights(uint32_t userId, uint64_t requiredRights) const
 {
-   uint32_t effectiveRights = getUserRights(userId);
+   uint64_t effectiveRights = getUserRights(userId);
    return (effectiveRights & requiredRights) == requiredRights;
 }
 
 /**
  * Set directly assigned user access rights to current object
  */
-void NetObj::setUserAccess(uint32_t userId, uint32_t accessRights)
+void NetObj::setUserAccess(uint32_t userId, uint64_t accessRights)
 {
    if (m_accessList.addElement(userId, accessRights, false))
    {

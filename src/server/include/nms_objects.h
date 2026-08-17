@@ -1249,7 +1249,7 @@ public:
 struct ACL_ELEMENT
 {
    uint32_t userId;
-   uint32_t accessRights;
+   uint64_t accessRights;
 };
 
 /**
@@ -1267,7 +1267,7 @@ public:
 
    void updateFromMessage(const NXCPMessage& msg);
    void updateFromJson(json_t *json);
-   bool addElement(uint32_t userId, uint32_t accessRights, bool cache);
+   bool addElement(uint32_t userId, uint64_t accessRights, bool cache);
    bool deleteElement(uint32_t userId);
 
    void deleteAll()
@@ -1285,13 +1285,13 @@ public:
       m_mutex.unlock();
    }
 
-   bool getUserRights(uint32_t userId, uint32_t *accessRights) const;
-   bool getCachedUserRights(uint32_t userId, uint32_t *accessRights) const;
+   bool getUserRights(uint32_t userId, uint64_t *accessRights) const;
+   bool getCachedUserRights(uint32_t userId, uint64_t *accessRights) const;
 
-   void enumerateElements(void(*handler)(uint32_t, uint32_t, void*), void *context) const;
-   template<typename C> void enumerateElements(void(*handler)(uint32_t, uint32_t, C*), C *context) const
+   void enumerateElements(void(*handler)(uint32_t, uint64_t, void*), void *context) const;
+   template<typename C> void enumerateElements(void(*handler)(uint32_t, uint64_t, C*), C *context) const
    {
-      enumerateElements(reinterpret_cast<void(*)(uint32_t, uint32_t, void*)>(handler), context);
+      enumerateElements(reinterpret_cast<void(*)(uint32_t, uint64_t, void*)>(handler), context);
    }
 
    void fillMessage(NXCPMessage *msg) const;
@@ -1661,9 +1661,9 @@ public:
 
    json_t *buildStatusExplanation();
 
-   uint32_t getUserRights(uint32_t userId) const;
-   bool checkAccessRights(uint32_t userId, uint32_t requiredRights) const;
-   void setUserAccess(uint32_t userId, uint32_t accessRights);
+   uint64_t getUserRights(uint32_t userId) const;
+   bool checkAccessRights(uint32_t userId, uint64_t requiredRights) const;
+   void setUserAccess(uint32_t userId, uint64_t accessRights);
    void dropUserAccess(uint32_t userId);
    void clearInheritedAccessCache();
    void clearOwnInheritedAccessCache() { m_accessList.clearCache(); }

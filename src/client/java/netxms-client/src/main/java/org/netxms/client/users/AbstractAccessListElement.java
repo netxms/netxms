@@ -25,7 +25,7 @@ package org.netxms.client.users;
 public abstract class AbstractAccessListElement
 {
    protected int userId;
-	protected int accessRights;
+	protected long accessRights;
 
 	/**
 	 * Create new ACL element with given user ID and rights
@@ -33,7 +33,7 @@ public abstract class AbstractAccessListElement
 	 * @param userId user id
 	 * @param accessRights bit mask
 	 */
-   public AbstractAccessListElement(int userId, int accessRights)
+   public AbstractAccessListElement(int userId, long accessRights)
 	{
 		this.userId = userId;
 		this.accessRights = accessRights;
@@ -61,7 +61,7 @@ public abstract class AbstractAccessListElement
 	/**
 	 * @param accessRights the accessRights to set
 	 */
-	public void setAccessRights(int accessRights)
+	public void setAccessRights(long accessRights)
 	{
 		this.accessRights = accessRights;
 	}
@@ -69,7 +69,7 @@ public abstract class AbstractAccessListElement
 	/**
 	 * @return the accessRights
 	 */
-	public int getAccessRights()
+	public long getAccessRights()
 	{
 		return accessRights;
 	}
@@ -105,6 +105,6 @@ public abstract class AbstractAccessListElement
 	@Override
 	public int hashCode()
 	{
-      return (accessRights << 16) & userId;
+      return (int)((accessRights << 16) & userId);
 	}
 }

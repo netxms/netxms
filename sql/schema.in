@@ -913,7 +913,7 @@ CREATE TABLE acl
 (
   object_id integer not null,
   user_id integer not null,
-  access_rights integer not null,
+  access_rights SQL_INT64 not null,
   PRIMARY KEY(object_id,user_id)
 ) TABLE_TYPE;
 
@@ -2899,7 +2899,7 @@ CREATE TABLE object_access_snapshot
 (
    user_id integer not null,
    object_id integer not null,
-   access_rights integer not null,
+   access_rights SQL_INT64 not null,
    PRIMARY KEY(user_id,object_id)
 ) TABLE_TYPE;
 
