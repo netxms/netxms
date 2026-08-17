@@ -573,6 +573,17 @@ static void FreeEnvironmentBlock(char **block)
 }
 
 /**
+ * Detect address sanitizer instrumentation
+ */
+#if defined(__SANITIZE_ADDRESS__)
+#define ASAN_BUILD 1
+#elif defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define ASAN_BUILD 1
+#endif
+#endif
+
+/**
  * Arguments for process entry
  */
 struct ProcessEntryArgs
@@ -621,6 +632,21 @@ static int ProcessEntry(void *argsp)
          _exit(127);
       }
    }
+
+#ifdef ASAN_BUILD
+   // Do not pass sanitizer variables set by nx-run-asan-binary into spawned commands -
+   // preloaded LeakSanitizer would alter their exit code and discard buffered stdout
+   char *sanitizedEnv[1024];
+   char **sourceEnv = (args->envp != nullptr) ? args->envp : environ;
+   int ecount = 0;
+   for(int i = 0; (sourceEnv[i] != nullptr) && (ecount < 1023); i++)
+   {
+      if ((strncmp(sourceEnv[i], "LD_PRELOAD=", 11) != 0) && (strncmp(sourceEnv[i], "ASAN_OPTIONS=", 13) != 0))
+         sanitizedEnv[ecount++] = sourceEnv[i];
+   }
+   sanitizedEnv[ecount] = nullptr;
+   args->envp = sanitizedEnv;
+#endif
 
 #if USE_VFORK
    pthread_sigmask(SIG_SETMASK, &args->oldmask, nullptr);
