@@ -3830,21 +3830,26 @@ void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& req
             DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
 
             DB_RESULT hResult = DBSelectPrepared(stmt);
-            if (hResult != nullptr)
+            if (hResult == nullptr)
             {
-               DBGetField(hResult, 0, 0, defValue, MAX_CONFIG_VALUE_LENGTH);
-               DBFreeResult(hResult);
+               response.setField(VID_RCC, RCC_DB_FAILURE);
+               break;
+            }
 
-               if (ConfigWriteStr(varName, defValue, false))
-               {
-                  response.setField(VID_RCC, RCC_SUCCESS);
-                  writeAuditLog(AUDIT_SYSCFG, true, 0, L"Server configuration variable %s reset to default value", varName);
-               }
-               else
-               {
-                  response.setField(VID_RCC, RCC_DB_FAILURE);
-                  break;
-               }
+            if (DBGetNumRows(hResult) == 0)
+            {
+               DBFreeResult(hResult);
+               response.setField(VID_RCC, RCC_UNKNOWN_CONFIG_VARIABLE);
+               break;
+            }
+
+            DBGetField(hResult, 0, 0, defValue, MAX_CONFIG_VALUE_LENGTH);
+            DBFreeResult(hResult);
+
+            if (ConfigWriteStr(varName, defValue, false))
+            {
+               response.setField(VID_RCC, RCC_SUCCESS);
+               writeAuditLog(AUDIT_SYSCFG, true, 0, L"Server configuration variable %s reset to default value", varName);
             }
             else
             {

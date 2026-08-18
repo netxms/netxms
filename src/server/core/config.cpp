@@ -1235,6 +1235,27 @@ bool NXCORE_EXPORTABLE ConfigReadByteArray(const wchar_t *variable, int *buffer,
 }
 
 /**
+ * Check if configuration variable exists in given table. Sets *exists to indicate variable presence.
+ * Returns false if existence check query failed - failed query should not be interpreted as non-existing variable.
+ */
+static bool ConfigVariableExists(DB_HANDLE hdb, const wchar_t *table, const wchar_t *variable, bool *exists)
+{
+   wchar_t query[256];
+   nx_swprintf(query, 256, L"SELECT var_name FROM %s WHERE var_name=?", table);
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt == nullptr)
+      return false;
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   DBFreeStatement(hStmt);
+   if (hResult == nullptr)
+      return false;
+   *exists = (DBGetNumRows(hResult) > 0);
+   DBFreeResult(hResult);
+   return true;
+}
+
+/**
  * Prepare statement for writing configuration variable value. Returned statement is ready for execution
  * (all parameters are bound). If create is set to true, statement will also create variable if it does not exist yet.
  */
@@ -1242,6 +1263,11 @@ static DB_STATEMENT PrepareConfigWrite(DB_HANDLE hdb, const wchar_t *variable, c
 {
    if (!create)
    {
+      // UPDATE matching no rows is reported as successful execution, so existence has to be checked explicitly
+      bool varExists;
+      if (!ConfigVariableExists(hdb, L"config", variable, &varExists) || !varExists)
+         return nullptr;
+
       DB_STATEMENT hStmt = DBPrepare(hdb, L"UPDATE config SET var_value=? WHERE var_name=?");
       if (hStmt != nullptr)
       {
@@ -1287,17 +1313,11 @@ static DB_STATEMENT PrepareConfigWrite(DB_HANDLE hdb, const wchar_t *variable, c
    }
 
    // Database does not support upsert - check for variable existence first
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM config WHERE var_name=?");
-   if (hStmt == nullptr)
+   bool varExists;
+   if (!ConfigVariableExists(hdb, L"config", variable, &varExists))
       return nullptr;
-   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, variable, DB_BIND_STATIC);
-   DB_RESULT hResult = DBSelectPrepared(hStmt);
-   DBFreeStatement(hStmt);
-   if (hResult == nullptr)  // Failed query should not be interpreted as non-existing variable
-      return nullptr;
-   bool varExists = (DBGetNumRows(hResult) > 0);
-   DBFreeResult(hResult);
 
+   DB_STATEMENT hStmt;
    if (varExists)
    {
       hStmt = DBPrepare(hdb, L"UPDATE config SET var_value=? WHERE var_name=?");
@@ -1474,9 +1494,18 @@ bool NXCORE_EXPORTABLE ConfigWriteCLOB(const wchar_t *variable, const wchar_t *v
    static const wchar_t *columns[] = { L"var_value", nullptr };
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = create ?
-            DBPrepareMerge(hdb, L"config_clob", L"var_name", variable, columns) :
-            DBPrepare(hdb, L"UPDATE config_clob SET var_value=? WHERE var_name=?");
+   DB_STATEMENT hStmt;
+   if (create)
+   {
+      hStmt = DBPrepareMerge(hdb, L"config_clob", L"var_name", variable, columns);
+   }
+   else
+   {
+      // UPDATE matching no rows is reported as successful execution, so existence has to be checked explicitly
+      bool varExists;
+      hStmt = (ConfigVariableExists(hdb, L"config_clob", variable, &varExists) && varExists) ?
+               DBPrepare(hdb, L"UPDATE config_clob SET var_value=? WHERE var_name=?") : nullptr;
+   }
    bool success;
    if (hStmt != nullptr)
    {
