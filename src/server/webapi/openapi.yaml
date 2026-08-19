@@ -13452,11 +13452,14 @@ components:
       type: object
       readOnly: true
       description: |
-        Access rights the calling user effectively has on the object - rights assigned
-        directly plus those inherited from parent objects. Same set of rights NXCP clients
-        obtain with CMD_GET_EFFECTIVE_RIGHTS. Every right is always present as separate
-        boolean attribute. Value is specific to the calling user rather than part of the
-        object's stored state, and is ignored if present in a request body.
+        Access rights the calling user effectively has on the object. Rights assigned
+        directly on the object, including those granted through a group the user belongs to,
+        replace rights inherited from parent objects rather than adding to them - inherited
+        rights apply only when the object has no access control entry matching the user.
+        Same set of rights NXCP clients obtain with CMD_GET_EFFECTIVE_RIGHTS. Every right is
+        always present as separate boolean attribute. Value is specific to the calling user
+        rather than part of the object's stored state, and is ignored if present in a
+        request body.
       properties:
         read:
           type: boolean
@@ -13484,7 +13487,10 @@ components:
           description: Send events on behalf of the object
         control:
           type: boolean
-          description: Control object (management status, agent restart, and similar operations)
+          description: >-
+            Execute control operations on the object - agent commands, wake-on-LAN,
+            object tools, SSH commands, and TCP proxy. Does not cover changing management
+            status, which requires "modify".
         terminateAlarms:
           type: boolean
           description: Terminate and resolve alarms associated with the object
@@ -13529,7 +13535,9 @@ components:
           description: Manage list of users responsible for the object
         delegatedRead:
           type: boolean
-          description: Read objects delegated to the object's responsible users
+          description: >-
+            Read the object indirectly when it is reached through a dashboard or network map
+            the user is allowed to read, without holding "read" on the object itself
         managePolicies:
           type: boolean
           description: Manage agent policies (template objects only)
