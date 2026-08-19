@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.netxms.client.datacollection.ColumnDefinition;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.helpers.ColumnPreviewLabelProvider;
@@ -55,7 +56,7 @@ public class CreateSnmpTableDciDialog extends Dialog
    private I18n i18n = LocalizationHelper.getI18n(CreateSnmpTableDciDialog.class);
 
    private LabeledText textDescription;
-   private LabeledText textInterval;
+   private LabeledDurationInput textInterval;
    private LabeledText textRetention;
    private TableViewer columnViewer;
 
@@ -125,10 +126,10 @@ public class CreateSnmpTableDciDialog extends Dialog
       layout.marginWidth = 0;
       optionsGroup.setLayout(layout);
 
-      textInterval = new LabeledText(optionsGroup, SWT.NONE);
-      textInterval.setLabel(i18n.tr("Polling interval (seconds)"));
-      textInterval.setText("60"); //$NON-NLS-1$
-      textInterval.getTextControl().setTextLimit(5);
+      textInterval = new LabeledDurationInput(optionsGroup, SWT.NONE);
+      textInterval.setLabel(i18n.tr("Polling interval"));
+      textInterval.setRange(1, 10000);
+      textInterval.setValue(60);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -193,17 +194,9 @@ public class CreateSnmpTableDciDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      try
-      {
-         pollingInterval = Integer.parseInt(textInterval.getText());
-         if ((pollingInterval < 1) || (pollingInterval > 10000))
-            throw new NumberFormatException();
-      }
-      catch(NumberFormatException e)
-      {
-         MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Please enter polling interval as integer in range 1 .. 10000"));
+      if (!textInterval.validate())
          return;
-      }
+      pollingInterval = textInterval.getValue();
 
       try
       {

@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -48,7 +49,7 @@ public class ObjectDetailsQuery extends DashboardElementPropertyPage
    private ScriptEditor query;
    private ObjectSelector rootObject;
    private LabeledText orderingProperties;
-   private LabeledSpinner refreshInterval;
+   private LabeledDurationInput refreshInterval;
    private LabeledSpinner recordLimit;
 
    /**
@@ -141,10 +142,10 @@ public class ObjectDetailsQuery extends DashboardElementPropertyPage
       orderingProperties.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
       orderingProperties.setText(config.getOrderingPropertiesAsText());
 
-      refreshInterval = new LabeledSpinner(dialogArea, SWT.NONE);
-      refreshInterval.setLabel(i18n.tr("Refresh interval (seconds)"));
+      refreshInterval = new LabeledDurationInput(dialogArea, SWT.NONE);
+      refreshInterval.setLabel(i18n.tr("Refresh interval"));
       refreshInterval.setRange(1, 100000);
-      refreshInterval.setSelection(config.getRefreshRate());
+      refreshInterval.setValue(config.getRefreshRate());
       refreshInterval.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
       
       recordLimit = new LabeledSpinner(dialogArea, SWT.NONE);
@@ -162,10 +163,13 @@ public class ObjectDetailsQuery extends DashboardElementPropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
    {
+      if (!refreshInterval.validate())
+         return false;
+
       title.updateConfiguration(config);
       config.setQuery(query.getText());
       config.setRootObjectId(rootObject.getObjectId());
-      config.setRefreshRate(refreshInterval.getSelection());
+      config.setRefreshRate(refreshInterval.getValue());
       config.setOrderingProperties(orderingProperties.getText().trim());
       config.setRecordLimit(recordLimit.getSelection());
       return true;

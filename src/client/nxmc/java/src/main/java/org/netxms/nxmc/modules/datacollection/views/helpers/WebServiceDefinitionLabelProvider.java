@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.base.Duration;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.nxmc.modules.datacollection.views.WebServiceManager;
 
@@ -58,9 +59,9 @@ public class WebServiceDefinitionLabelProvider extends LabelProvider implements 
          case WebServiceManager.COLUMN_NAME:
             return d.getName();
          case WebServiceManager.COLUMN_RETENTION_TIME:
-            return Integer.toString(d.getCacheRetentionTime());
+            return Duration.format(d.getCacheRetentionTime());
          case WebServiceManager.COLUMN_TIMEOUT:
-            return Integer.toString(d.getRequestTimeout());
+            return Duration.format(d.getRequestTimeout());
          case WebServiceManager.COLUMN_URL:
             return d.getUrl();
       }

@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -41,7 +42,7 @@ public class CreateSnmpDciDialog extends Dialog
    private I18n i18n = LocalizationHelper.getI18n(CreateSnmpDciDialog.class);
    
 	private LabeledText textDescription;
-	private LabeledText textInterval;
+   private LabeledDurationInput textInterval;
 	private LabeledText textRetention;
 	private Combo deltaCalculationSelector;
 
@@ -100,10 +101,10 @@ public class CreateSnmpDciDialog extends Dialog
 		layout.marginWidth = 0;
 		optionsGroup.setLayout(layout);
 		
-		textInterval = new LabeledText(optionsGroup, SWT.NONE);
-		textInterval.setLabel(i18n.tr("Polling pollingInterval (seconds)"));
-		textInterval.setText("60"); //$NON-NLS-1$
-		textInterval.getTextControl().setTextLimit(5);
+      textInterval = new LabeledDurationInput(optionsGroup, SWT.NONE);
+      textInterval.setLabel(i18n.tr("Polling interval"));
+      textInterval.setRange(2, 10000);
+      textInterval.setValue(60);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -167,17 +168,10 @@ public class CreateSnmpDciDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		try
-		{
-			pollingInterval = Integer.parseInt(textInterval.getText());
-			if ((pollingInterval < 2) || (pollingInterval > 10000))
-				throw new NumberFormatException();
-		}
-		catch(NumberFormatException e)
-		{
-			MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Please enter polling pollingInterval as integer in range 2 .. 10000"));
-		}
-		
+      if (!textInterval.validate())
+         return;
+      pollingInterval = textInterval.getValue();
+
 		try
 		{
 			retentionTime = Integer.parseInt(textRetention.getText());

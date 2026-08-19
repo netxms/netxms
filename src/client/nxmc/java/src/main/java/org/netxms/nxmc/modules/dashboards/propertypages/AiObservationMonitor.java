@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.AiObservationMonitorConfig;
@@ -45,7 +46,7 @@ public class AiObservationMonitor extends DashboardElementPropertyPage
    private ObjectSelector objectSelector;
    private LabeledSpinner spinnerInstanceId;
    private LabeledSpinner spinnerMaxRecords;
-   private LabeledSpinner spinnerRefreshInterval;
+   private LabeledDurationInput refreshInterval;
    private Button checkNewOnly;
 
    /**
@@ -124,11 +125,11 @@ public class AiObservationMonitor extends DashboardElementPropertyPage
       spinnerMaxRecords.setSelection(config.getMaxRecords());
       spinnerMaxRecords.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      spinnerRefreshInterval = new LabeledSpinner(dialogArea, SWT.NONE);
-      spinnerRefreshInterval.setLabel(i18n.tr("Refresh interval (seconds)"));
-      spinnerRefreshInterval.setRange(5, 3600);
-      spinnerRefreshInterval.setSelection(config.getRefreshInterval());
-      spinnerRefreshInterval.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      refreshInterval = new LabeledDurationInput(dialogArea, SWT.NONE);
+      refreshInterval.setLabel(i18n.tr("Refresh interval"));
+      refreshInterval.setRange(5, 3600);
+      refreshInterval.setValue(config.getRefreshInterval());
+      refreshInterval.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       checkNewOnly = new Button(dialogArea, SWT.CHECK);
       checkNewOnly.setText(i18n.tr("Show only &new observations"));
@@ -144,11 +145,14 @@ public class AiObservationMonitor extends DashboardElementPropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
    {
+      if (!refreshInterval.validate())
+         return false;
+
       title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
       config.setInstanceId(spinnerInstanceId.getSelection());
       config.setMaxRecords(spinnerMaxRecords.getSelection());
-      config.setRefreshInterval(spinnerRefreshInterval.getSelection());
+      config.setRefreshInterval(refreshInterval.getValue());
       config.setNewOnly(checkNewOnly.getSelection());
       return true;
    }

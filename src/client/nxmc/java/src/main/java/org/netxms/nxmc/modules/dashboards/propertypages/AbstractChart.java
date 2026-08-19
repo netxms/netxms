@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.AbstractChartConfig;
@@ -57,7 +58,7 @@ public class AbstractChart extends DashboardElementPropertyPage
    private TitleConfigurator title;
 	private Spinner timeRange;
 	private Combo timeUnits;
-	private LabeledSpinner refreshRate;
+   private LabeledDurationInput refreshRate;
 	private Combo legendPosition;
 	private Button checkShowLegend;
    private Button checkExtendedLegend;
@@ -333,10 +334,10 @@ public class AbstractChart extends DashboardElementPropertyPage
       gd.grabExcessHorizontalSpace = true;
       rateAndWidthArea.setLayoutData(gd);
 
-		refreshRate = new LabeledSpinner(rateAndWidthArea, SWT.NONE);
-      refreshRate.setLabel(i18n.tr("Refresh interval (seconds)"));
-		refreshRate.setRange(1, 10000);
-      refreshRate.setSelection(config.getRefreshRate());
+      refreshRate = new LabeledDurationInput(rateAndWidthArea, SWT.NONE);
+      refreshRate.setLabel(i18n.tr("Refresh interval"));
+      refreshRate.setRange(1, 10000);
+      refreshRate.setValue(config.getRefreshRate());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
@@ -410,10 +411,13 @@ public class AbstractChart extends DashboardElementPropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
    {
+      if (!refreshRate.validate())
+         return false;
+
       title.updateConfiguration(config);
 		config.setLegendPosition(1 << legendPosition.getSelectionIndex());
 		config.setShowLegend(checkShowLegend.getSelection());
-		config.setRefreshRate(refreshRate.getSelection());
+      config.setRefreshRate(refreshRate.getValue());
       config.setTranslucent(checkTranslucent.getSelection());
 
       if (checkUseMultipliers != null)

@@ -62,7 +62,7 @@ import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.JsonViewer;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
-import org.netxms.nxmc.base.widgets.LabeledSpinner;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.base.widgets.RoundedLabel;
@@ -93,7 +93,7 @@ public class WebServiceQueryView extends AdHocObjectView
    private Combo authType;
    private LabeledText login;
    private PasswordInputField password;
-   private LabeledSpinner timeout;
+   private LabeledDurationInput timeout;
    private Button checkVerifyCert;
    private Button checkVerifyHost;
    private Button checkFollowLocation;
@@ -209,10 +209,10 @@ public class WebServiceQueryView extends AdHocObjectView
       optionsAreaLayout.marginWidth = 0;
       optionsArea.setLayout(optionsAreaLayout);
 
-      timeout = new LabeledSpinner(optionsArea, SWT.NONE);
-      timeout.setLabel(i18n.tr("Request timeout (seconds)"));
+      timeout = new LabeledDurationInput(optionsArea, SWT.NONE);
+      timeout.setLabel(i18n.tr("Request timeout"));
       timeout.setRange(0, 300);
-      timeout.setSelection(0);
+      timeout.setValue(0);
       timeout.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 
       Group options = new Group(optionsArea, SWT.NONE);
@@ -514,7 +514,7 @@ public class WebServiceQueryView extends AdHocObjectView
       authType.select(d.getAuthenticationType().getValue());
       login.setText(safeString(d.getLogin()));
       password.setText(safeString(d.getPassword()));
-      timeout.setSelection(d.getRequestTimeout());
+      timeout.setValue(d.getRequestTimeout());
       checkVerifyCert.setSelection(d.isVerifyCertificate());
       checkVerifyHost.setSelection(d.isVerifyHost());
       checkFollowLocation.setSelection(d.isFollowLocation());
@@ -540,7 +540,7 @@ public class WebServiceQueryView extends AdHocObjectView
       d.setAuthenticationType(WebServiceAuthType.getByValue(authType.getSelectionIndex()));
       d.setLogin(login.getText().trim());
       d.setPassword(password.getText());
-      d.setRequestTimeout(timeout.getSelection());
+      d.setRequestTimeout(timeout.getValue());
       d.setVerifyCertificate(checkVerifyCert.getSelection());
       d.setVerifyHost(checkVerifyHost.getSelection());
       d.setFollowLocation(checkFollowLocation.getSelection());
@@ -560,6 +560,9 @@ public class WebServiceQueryView extends AdHocObjectView
          MessageDialogHelper.openWarning(getWindow().getShell(), i18n.tr("Warning"), i18n.tr("URL cannot be empty"));
          return;
       }
+
+      if (!timeout.validate())
+         return;
 
       final long nodeId = getObjectId();
       final WebServiceDefinition request = buildRequest(null);

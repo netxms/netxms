@@ -54,7 +54,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.AgentPolicy;
-import org.netxms.nxmc.base.widgets.LabeledSpinner;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
@@ -104,7 +104,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private Button customColorSchemaCheckbox;
    private Button closeOnDeactivateCheckbox;
    private Combo windowPositioning;
-   private LabeledSpinner notificationTimeout;
+   private LabeledDurationInput notificationTimeout;
    private Action addSubMenuAction;
    private Action addItemAction;
    private Action deleteAction;
@@ -239,7 +239,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       windowPositioning.add("Bottom - Right");
       windowPositioning.select(0);
 
-      notificationTimeout = new LabeledSpinner(windowBehaviorGroup, SWT.NONE);
+      notificationTimeout = new LabeledDurationInput(windowBehaviorGroup, SWT.NONE);
       notificationTimeout.setLabel("Notification timeout");
       notificationTimeout.setRange(0, 3600);
       notificationTimeout.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
@@ -301,7 +301,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       welcomeMessageText.getTextControl().addModifyListener(textModifyListener);
       tooltipMessageText.getTextControl().addModifyListener(textModifyListener);
       desktopWallpaperFile.getTextControl().addModifyListener(textModifyListener);
-      notificationTimeout.getSpinnerControl().addModifyListener(textModifyListener);
+      notificationTimeout.addModifyListener(textModifyListener);
 
       customColorSchemaCheckbox.addSelectionListener(new SelectionListener() {
          @Override
@@ -703,7 +703,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
 
       closeOnDeactivateCheckbox.setSelection(policyData.closeOnDeactivate);
       windowPositioning.select(windowPositionIndexFromValue(policyData.mainWindowPosition));
-      notificationTimeout.setSelection((policyData.notificationTimeout != null) ? policyData.notificationTimeout / 1000 : 0);
+      notificationTimeout.setValue((policyData.notificationTimeout != null) ? policyData.notificationTimeout / 1000 : 0);
 
       viewer.setInput(new Object[] { policyData.menu });
    }
@@ -736,7 +736,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
 
       policyData.closeOnDeactivate = closeOnDeactivateCheckbox.getSelection();
       policyData.mainWindowPosition = WINDOW_POSITION_CODES[windowPositioning.getSelectionIndex()];
-      int timeout = notificationTimeout.getSelection();
+      int timeout = notificationTimeout.getValue();
       policyData.notificationTimeout = (timeout > 0) ? timeout * 1000 : null;
 
       try

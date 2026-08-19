@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.base.Duration;
 import org.netxms.client.datacollection.NetconfQueryDefinition;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.NetconfQueryManager;
@@ -60,7 +61,7 @@ public class NetconfQueryLabelProvider extends LabelProvider implements ITableLa
          case NetconfQueryManager.COLUMN_FILTER_TYPE:
             return getFilterTypeName(d.getFilterType());
          case NetconfQueryManager.COLUMN_RETENTION_TIME:
-            return Integer.toString(d.getCacheRetentionTime());
+            return Duration.format(d.getCacheRetentionTime());
          case NetconfQueryManager.COLUMN_TIMEOUT:
             return Integer.toString(d.getRequestTimeout());
          case NetconfQueryManager.COLUMN_DESCRIPTION:

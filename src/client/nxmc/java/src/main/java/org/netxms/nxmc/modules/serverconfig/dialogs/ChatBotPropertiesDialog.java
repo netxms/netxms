@@ -46,7 +46,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.LabeledSpinner;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -67,7 +67,7 @@ public class ChatBotPropertiesDialog extends Dialog
    private LabeledText textDescription;
    private LabeledText textConfiguration;
    private LabeledText textProviderSlot;
-   private LabeledSpinner spinnerIdleTimeout;
+   private LabeledDurationInput idleTimeout;
    private Combo comboDriverName;
    private SortableTableViewer mappingViewer;
    private Map<String, Integer> userMappings = new LinkedHashMap<String, Integer>();
@@ -149,13 +149,13 @@ public class ChatBotPropertiesDialog extends Dialog
       gd.horizontalSpan = 2;
       textDescription.setLayoutData(gd);
 
-      spinnerIdleTimeout = new LabeledSpinner(dialogArea, SWT.NONE);
-      spinnerIdleTimeout.setLabel(i18n.tr("Session idle timeout (seconds)"));
-      spinnerIdleTimeout.setRange(60, 86400);
+      idleTimeout = new LabeledDurationInput(dialogArea, SWT.NONE);
+      idleTimeout.setLabel(i18n.tr("Session idle timeout"));
+      idleTimeout.setRange(60, 86400);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      spinnerIdleTimeout.setLayoutData(gd);
+      idleTimeout.setLayoutData(gd);
 
       textProviderSlot = new LabeledText(dialogArea, SWT.NONE);
       textProviderSlot.setLabel(i18n.tr("AI provider slot (empty for default)"));
@@ -184,12 +184,12 @@ public class ChatBotPropertiesDialog extends Dialog
          textDescription.setText(bot.getDescription());
          textConfiguration.setText(bot.getConfiguration());
          textProviderSlot.setText(bot.getProviderSlot());
-         spinnerIdleTimeout.setSelection((bot.getIdleTimeout() > 0) ? bot.getIdleTimeout() : 1800);
+         idleTimeout.setValue((bot.getIdleTimeout() > 0) ? bot.getIdleTimeout() : 1800);
          userMappings.putAll(bot.getUserMappings());
       }
       else
       {
-         spinnerIdleTimeout.setSelection(1800);
+         idleTimeout.setValue(1800);
       }
       mappingViewer.setInput(userMappings.entrySet().toArray());
 
@@ -414,6 +414,9 @@ public class ChatBotPropertiesDialog extends Dialog
          return;
       }
 
+      if (!idleTimeout.validate())
+         return;
+
       if (bot == null)
       {
          bot = new ChatBot();
@@ -423,7 +426,7 @@ public class ChatBotPropertiesDialog extends Dialog
       bot.setDescription(textDescription.getText());
       bot.setDriverName(comboDriverName.getItem(comboDriverName.getSelectionIndex()));
       bot.setConfiguration(textConfiguration.getText());
-      bot.setIdleTimeout(spinnerIdleTimeout.getSelection());
+      bot.setIdleTimeout(idleTimeout.getValue());
       bot.setProviderSlot(textProviderSlot.getText().trim());
       bot.setUserMappings(new LinkedHashMap<String, Integer>(userMappings));
       super.okPressed();

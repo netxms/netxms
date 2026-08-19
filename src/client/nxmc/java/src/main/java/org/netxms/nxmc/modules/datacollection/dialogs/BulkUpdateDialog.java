@@ -64,7 +64,7 @@ public class BulkUpdateDialog extends Dialog
       String[] pollingModes = {i18n.tr("No change"), i18n.tr("Fixed intervals (default)"), i18n.tr("Fixed intervals (custom)"), i18n.tr("Custom schedule")};
       BulkDciUpdateElementUI pollingMode = new BulkDciUpdateElementUI(i18n.tr("Polling mode"), NXCPCodes.VID_POLLING_SCHEDULE_TYPE, pollingModes);
       elements.add(pollingMode);
-      elements.add(new BulkDciUpdateElementUI(i18n.tr("Polling interval (seconds)"), NXCPCodes.VID_POLLING_INTERVAL, null, new BulkDciUpdateElementUI.EditModeSelector() {
+      elements.add(new BulkDciUpdateElementUI(i18n.tr("Polling interval (e.g. 90, 5m, 2h)"), NXCPCodes.VID_POLLING_INTERVAL, null, new BulkDciUpdateElementUI.EditModeSelector() {
          @Override
          public boolean isEditable()
          {

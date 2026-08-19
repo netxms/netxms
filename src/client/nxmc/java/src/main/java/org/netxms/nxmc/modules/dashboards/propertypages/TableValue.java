@@ -31,7 +31,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -39,6 +38,7 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.TableValueConfig;
@@ -59,7 +59,7 @@ public class TableValue extends DashboardElementPropertyPage
 	private DciSelector dciSelector;
    private DciTemplateSelectionWidget templateDciWidget;
    private TitleConfigurator title;
-	private Spinner refreshRate;
+   private LabeledDurationInput refreshRate;
 	private Combo sortColumn;
 	private Button sortDirectionAscending;
    private Button sortDirectionDescending;
@@ -225,8 +225,11 @@ public class TableValue extends DashboardElementPropertyPage
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-      refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, i18n.tr("Refresh interval (seconds)"), 1, 10000, gd);
-		refreshRate.setSelection(config.getRefreshRate());
+      refreshRate = new LabeledDurationInput(dialogArea, SWT.NONE);
+      refreshRate.setLabel(i18n.tr("Refresh interval"));
+      refreshRate.setRange(1, 10000);
+      refreshRate.setValue(config.getRefreshRate());
+      refreshRate.setLayoutData(gd);
 
 		return dialogArea;
 	}
@@ -237,11 +240,14 @@ public class TableValue extends DashboardElementPropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
 	{
+      if (!refreshRate.validate())
+         return false;
+
       title.updateConfiguration(config);
 		config.setObjectId(dciSelector.getNodeId());
 		config.setDciId(dciSelector.getDciId());
       config.applyTemplateConfig(templateDciWidget.getConfig());
-		config.setRefreshRate(refreshRate.getSelection());
+      config.setRefreshRate(refreshRate.getValue());
 		config.setSortColumn(sortColumn.getText());
 		config.setSortDirection(sortDirectionAscending.getSelection() ? SWT.UP : SWT.DOWN);
 		return true;

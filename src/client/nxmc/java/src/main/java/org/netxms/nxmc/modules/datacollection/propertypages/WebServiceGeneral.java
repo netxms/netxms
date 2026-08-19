@@ -30,7 +30,7 @@ import org.netxms.client.constants.HttpRequestMethod;
 import org.netxms.client.constants.WebServiceAuthType;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
-import org.netxms.nxmc.base.widgets.LabeledSpinner;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -57,8 +57,8 @@ public class WebServiceGeneral extends PropertyPage
    private Combo authType;
    private LabeledText login;
    private PasswordInputField password;
-   private LabeledSpinner retentionTime;
-   private LabeledSpinner timeout;
+   private LabeledDurationInput retentionTime;
+   private LabeledDurationInput timeout;
    private LabeledText description;
 
    /**
@@ -186,19 +186,19 @@ public class WebServiceGeneral extends PropertyPage
       layout = new GridLayout();
       groupOptions.setLayout(layout);
 
-      retentionTime = new LabeledSpinner(groupOptions, SWT.NONE);
+      retentionTime = new LabeledDurationInput(groupOptions, SWT.NONE);
       retentionTime.setLabel(i18n.tr("Cache retention time"));
       retentionTime.setRange(0, 3600);
-      retentionTime.setSelection(definition.getCacheRetentionTime());
+      retentionTime.setValue(definition.getCacheRetentionTime());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       retentionTime.setLayoutData(gd);
 
-      timeout = new LabeledSpinner(groupOptions, SWT.NONE);
+      timeout = new LabeledDurationInput(groupOptions, SWT.NONE);
       timeout.setLabel(i18n.tr("Request timeout"));
       timeout.setRange(0, 300);
-      timeout.setSelection(definition.getRequestTimeout());
+      timeout.setValue(definition.getRequestTimeout());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -269,6 +269,11 @@ public class WebServiceGeneral extends PropertyPage
          return false;
       }
 
+      boolean inputValid = retentionTime.validate();
+      inputValid = timeout.validate() && inputValid;
+      if (!inputValid)
+         return false;
+
       definition.setName(svcName);
       definition.setUrl(url.getText().trim());
       definition.setHttpRequestMethod(HttpRequestMethod.getByValue(httpMethod.getSelectionIndex()));
@@ -280,8 +285,8 @@ public class WebServiceGeneral extends PropertyPage
       definition.setAuthenticationType(WebServiceAuthType.getByValue(authType.getSelectionIndex()));
       definition.setLogin(login.getText().trim());
       definition.setPassword(password.getText());
-      definition.setCacheRetentionTime(retentionTime.getSelection());
-      definition.setRequestTimeout(timeout.getSelection());
+      definition.setCacheRetentionTime(retentionTime.getValue());
+      definition.setRequestTimeout(timeout.getValue());
       definition.setDescription(description.getText());
       return true;
    }

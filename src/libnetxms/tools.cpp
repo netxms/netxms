@@ -1173,59 +1173,81 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts)
 }
 
 /**
- * Parse time duration string with optional unit suffix. Recognized suffixes (case-insensitive):
- * s (seconds), m (minutes), h (hours), d (days), w (weeks). Without a suffix the value is
- * interpreted as seconds. Leading and trailing whitespace is ignored. Returns defaultValue if
- * the string is empty, does not start with a number, or uses an unrecognized suffix.
+ * Parse time duration string written as a sequence of <number><unit> groups (for example "2h 30m").
+ * Recognized units (case-insensitive): s (seconds), m (minutes), h (hours), d (days), w (weeks).
+ * Only the first character of the unit is significant, so spelled out units ("2 hours 30 minutes")
+ * are accepted as well. Number without unit is interpreted as seconds. Whitespace between number
+ * and unit and between groups is ignored. Returns defaultValue if the string is empty, does not
+ * start with a number, or uses an unrecognized unit.
  */
 uint64_t LIBNETXMS_EXPORTABLE ParseDuration(const TCHAR *str, uint64_t defaultValue)
 {
    if (str == nullptr)
       return defaultValue;
 
+   uint64_t duration = 0;
+   bool groupFound = false;
    const TCHAR *p = str;
-   while ((*p == _T(' ')) || (*p == _T('\t')))
-      p++;
-   if (*p == 0)
-      return defaultValue;
-
-   TCHAR *eptr;
-   uint64_t value = _tcstoull(p, &eptr, 10);
-   if (eptr == p)
-      return defaultValue;   // no leading number
-
-   while ((*eptr == _T(' ')) || (*eptr == _T('\t')))
-      eptr++;
-
-   uint64_t multiplier;
-   switch(*eptr)
+   while(*p != 0)
    {
-      case 0:
-      case 's':
-      case 'S':
-         multiplier = 1;
+      while((*p == _T(' ')) || (*p == _T('\t')))
+         p++;
+      if (*p == 0)
          break;
-      case 'm':
-      case 'M':
-         multiplier = 60;
-         break;
-      case 'h':
-      case 'H':
-         multiplier = 3600;
-         break;
-      case 'd':
-      case 'D':
-         multiplier = 86400;
-         break;
-      case 'w':
-      case 'W':
-         multiplier = 604800;
-         break;
-      default:
-         return defaultValue;   // unrecognized suffix
+
+      if ((*p < _T('0')) || (*p > _T('9')))
+         return defaultValue;   // no number
+
+      TCHAR *eptr;
+      uint64_t value = _tcstoull(p, &eptr, 10);
+
+      while((*eptr == _T(' ')) || (*eptr == _T('\t')))
+         eptr++;
+
+      uint64_t multiplier;
+      switch(*eptr)
+      {
+         case 0:
+            multiplier = 1;
+            break;
+         case 's':
+         case 'S':
+            multiplier = 1;
+            eptr++;
+            break;
+         case 'm':
+         case 'M':
+            multiplier = 60;
+            eptr++;
+            break;
+         case 'h':
+         case 'H':
+            multiplier = 3600;
+            eptr++;
+            break;
+         case 'd':
+         case 'D':
+            multiplier = 86400;
+            eptr++;
+            break;
+         case 'w':
+         case 'W':
+            multiplier = 604800;
+            eptr++;
+            break;
+         default:
+            return defaultValue;   // unrecognized unit
+      }
+
+      while(_istalpha(*eptr))
+         eptr++;   // skip the rest of spelled out unit name
+
+      duration += value * multiplier;
+      groupFound = true;
+      p = eptr;
    }
 
-   return value * multiplier;
+   return groupFound ? duration : defaultValue;
 }
 
 /**

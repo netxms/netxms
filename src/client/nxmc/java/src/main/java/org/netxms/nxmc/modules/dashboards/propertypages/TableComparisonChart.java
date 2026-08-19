@@ -26,9 +26,9 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.TableBarChartConfig;
@@ -50,7 +50,7 @@ public class TableComparisonChart extends DashboardElementPropertyPage
 
 	private TableComparisonChartConfig config;
    private TitleConfigurator title;
-	private Spinner refreshRate;
+   private LabeledDurationInput refreshRate;
 	private Combo legendPosition;
 	private Button checkShowLegend;
    private Button checkExtendedLegend;
@@ -192,8 +192,11 @@ public class TableComparisonChart extends DashboardElementPropertyPage
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, i18n.tr("Refresh interval (seconds)"), 1, 10000, gd);
-		refreshRate.setSelection(config.getRefreshRate());
+      refreshRate = new LabeledDurationInput(dialogArea, SWT.NONE);
+      refreshRate.setLabel(i18n.tr("Refresh interval"));
+      refreshRate.setRange(1, 10000);
+      refreshRate.setValue(config.getRefreshRate());
+      refreshRate.setLayoutData(gd);
 
       if (!(config instanceof TablePieChartConfig))
       {
@@ -246,9 +249,12 @@ public class TableComparisonChart extends DashboardElementPropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
 	{
+      if (!refreshRate.validate())
+         return false;
+
       title.updateConfiguration(config);
 		config.setLegendPosition(1 << legendPosition.getSelectionIndex());
-		config.setRefreshRate(refreshRate.getSelection());
+      config.setRefreshRate(refreshRate.getValue());
 		config.setShowLegend(checkShowLegend.getSelection());
       config.setExtendedLegend(checkExtendedLegend.getSelection());
 		config.setTranslucent(checkTranslucent.getSelection());	

@@ -32,7 +32,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.TrafficObserver;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.LabeledSpinner;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -48,7 +48,7 @@ public class TrafficObserverSync extends ObjectPropertyPage
 
    private TrafficObserver observer;
    private Button enableHostAliasSync;
-   private LabeledSpinner syncInterval;
+   private LabeledDurationInput syncInterval;
 
    /**
     * Create new page.
@@ -116,10 +116,10 @@ public class TrafficObserverSync extends ObjectPropertyPage
       enableHostAliasSync.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       enableHostAliasSync.addListener(SWT.Selection, (e) -> syncInterval.setEnabled(enableHostAliasSync.getSelection()));
 
-      syncInterval = new LabeledSpinner(dialogArea, SWT.NONE);
-      syncInterval.setLabel(i18n.tr("Synchronization interval (seconds)"));
+      syncInterval = new LabeledDurationInput(dialogArea, SWT.NONE);
+      syncInterval.setLabel(i18n.tr("Synchronization interval"));
       syncInterval.setRange(60, 86400);
-      syncInterval.setSelection(interval);
+      syncInterval.setValue(interval);
       syncInterval.setEnabled(enabled);
       syncInterval.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 
@@ -160,10 +160,13 @@ public class TrafficObserverSync extends ObjectPropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
    {
+      if (!syncInterval.validate())
+         return false;
+
       JsonObject config = parseSyncConfig(observer.getSyncConfig());
       JsonObject hostAliases = new JsonObject();
       hostAliases.addProperty("enabled", enableHostAliasSync.getSelection());
-      hostAliases.addProperty("interval", syncInterval.getSelection());
+      hostAliases.addProperty("interval", syncInterval.getValue());
       config.add("hostAliases", hostAliases);
 
       final NXCObjectModificationData md = new NXCObjectModificationData(observer.getObjectId());

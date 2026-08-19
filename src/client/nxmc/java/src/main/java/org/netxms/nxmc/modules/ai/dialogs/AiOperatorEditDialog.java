@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.ai.AiOperator;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -47,8 +48,8 @@ public class AiOperatorEditDialog extends Dialog
    private LabeledText textDescription;
    private LabeledText textScopeFilter;
    private LabeledText textModelSlot;
-   private LabeledSpinner spinnerMinInterval;
-   private LabeledSpinner spinnerMaxInterval;
+   private LabeledDurationInput minInterval;
+   private LabeledDurationInput maxInterval;
    private LabeledSpinner spinnerTokenBudget;
    private LabeledSpinner spinnerRetentionDays;
    private LabeledSpinner spinnerMaxRecords;
@@ -133,17 +134,17 @@ public class AiOperatorEditDialog extends Dialog
       gd.widthHint = 500;
       textPersonaPrompt.setLayoutData(gd);
 
-      spinnerMinInterval = new LabeledSpinner(dialogArea, SWT.NONE);
-      spinnerMinInterval.setLabel(i18n.tr("Minimum interval (seconds)"));
-      spinnerMinInterval.setRange(60, 604800);
-      spinnerMinInterval.setSelection(operator.getMinInterval());
-      spinnerMinInterval.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      minInterval = new LabeledDurationInput(dialogArea, SWT.NONE);
+      minInterval.setLabel(i18n.tr("Minimum interval"));
+      minInterval.setRange(60, 604800);
+      minInterval.setValue(operator.getMinInterval());
+      minInterval.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      spinnerMaxInterval = new LabeledSpinner(dialogArea, SWT.NONE);
-      spinnerMaxInterval.setLabel(i18n.tr("Maximum interval (seconds)"));
-      spinnerMaxInterval.setRange(60, 604800);
-      spinnerMaxInterval.setSelection(operator.getMaxInterval());
-      spinnerMaxInterval.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      maxInterval = new LabeledDurationInput(dialogArea, SWT.NONE);
+      maxInterval.setLabel(i18n.tr("Maximum interval"));
+      maxInterval.setRange(60, 604800);
+      maxInterval.setValue(operator.getMaxInterval());
+      maxInterval.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       spinnerTokenBudget = new LabeledSpinner(dialogArea, SWT.NONE);
       spinnerTokenBudget.setLabel(i18n.tr("Daily token budget (0 = unlimited)"));
@@ -191,9 +192,10 @@ public class AiOperatorEditDialog extends Dialog
          return;
       }
 
-      int minInterval = spinnerMinInterval.getSelection();
-      int maxInterval = spinnerMaxInterval.getSelection();
-      if (maxInterval < minInterval)
+      if (!minInterval.validate() || !maxInterval.validate())
+         return;
+
+      if (maxInterval.getValue() < minInterval.getValue())
       {
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Maximum interval cannot be less than minimum interval"));
          return;
@@ -203,8 +205,8 @@ public class AiOperatorEditDialog extends Dialog
       operator.setDescription(textDescription.getText().trim());
       operator.setScopeFilter(textScopeFilter.getText().trim());
       operator.setModelSlot(textModelSlot.getText().trim());
-      operator.setMinInterval(minInterval);
-      operator.setMaxInterval(maxInterval);
+      operator.setMinInterval(minInterval.getValue());
+      operator.setMaxInterval(maxInterval.getValue());
       operator.setDailyTokenBudget(spinnerTokenBudget.getSelection());
       operator.setPersonaPrompt(textPersonaPrompt.getText().trim());
       operator.setObservationRetentionDays(spinnerRetentionDays.getSelection());

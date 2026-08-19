@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
-import org.netxms.nxmc.base.widgets.LabeledSpinner;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
@@ -45,7 +45,7 @@ public class RuleIncident extends RuleBasePropertyPage
    private Button checkCreateIncident;
    private Button checkAIAnalysis;
    private Composite incidentOptionsGroup;
-   private LabeledSpinner incidentDelay;
+   private LabeledDurationInput incidentDelay;
    private LabeledText incidentTitle;
    private LabeledText incidentDescription;
    private Composite incidentAIAnalysisGroup;
@@ -117,10 +117,10 @@ public class RuleIncident extends RuleBasePropertyPage
       layout.marginWidth = 0;
       incidentOptionsGroup.setLayout(layout);
 
-      incidentDelay = new LabeledSpinner(incidentOptionsGroup, SWT.NONE);
-      incidentDelay.setLabel(i18n.tr("Creation delay (seconds, 0 for immediate)"));
+      incidentDelay = new LabeledDurationInput(incidentOptionsGroup, SWT.NONE);
+      incidentDelay.setLabel(i18n.tr("Creation delay (0 for immediate)"));
       incidentDelay.setRange(0, 99999);
-      incidentDelay.setSelection(rule.getIncidentDelay());
+      incidentDelay.setValue(rule.getIncidentDelay());
 
       incidentTitle = new LabeledText(incidentOptionsGroup, SWT.NONE);
       incidentTitle.setLabel(i18n.tr("Title (leave empty to use alarm message)"));
@@ -185,7 +185,9 @@ public class RuleIncident extends RuleBasePropertyPage
    {
       if (checkCreateIncident.getSelection())
       {
-         rule.setIncidentDelay(incidentDelay.getSelection());
+         if (!incidentDelay.validate())
+            return false;
+         rule.setIncidentDelay(incidentDelay.getValue());
          rule.setIncidentTitle(incidentTitle.getText().trim());
          rule.setIncidentDescription(incidentDescription.getText());
          rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.CREATE_INCIDENT);

@@ -1762,7 +1762,7 @@ void DCObject::updateTimeIntervalsInternal()
    if (!m_pollingIntervalSrc.isEmpty())
    {
       StringBuffer exp = m_owner.lock()->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instanceName, nullptr, nullptr);
-      m_pollingInterval = _tcstol(exp, nullptr, 10);
+      m_pollingInterval = static_cast<int32_t>(MIN(ParseDuration(exp, 0), static_cast<uint64_t>(INT32_MAX)));
    }
    else
    {

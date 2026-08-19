@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.netxms.client.datacollection.NetconfQueryDefinition;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -46,7 +47,7 @@ public class NetconfQueryGeneral extends PropertyPage
    private Combo datastore;
    private Combo filterType;
    private LabeledText filter;
-   private LabeledSpinner retentionTime;
+   private LabeledDurationInput retentionTime;
    private LabeledSpinner timeout;
    private LabeledText description;
 
@@ -124,10 +125,10 @@ public class NetconfQueryGeneral extends PropertyPage
       layout.makeColumnsEqualWidth = true;
       groupOptions.setLayout(layout);
 
-      retentionTime = new LabeledSpinner(groupOptions, SWT.NONE);
-      retentionTime.setLabel(i18n.tr("Cache retention time (seconds)"));
+      retentionTime = new LabeledDurationInput(groupOptions, SWT.NONE);
+      retentionTime.setLabel(i18n.tr("Cache retention time"));
       retentionTime.setRange(0, 86400);
-      retentionTime.setSelection(definition.getCacheRetentionTime());
+      retentionTime.setValue(definition.getCacheRetentionTime());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -175,11 +176,14 @@ public class NetconfQueryGeneral extends PropertyPage
          return false;
       }
 
+      if (!retentionTime.validate())
+         return false;
+
       definition.setName(queryName);
       definition.setDatastore(datastore.getSelectionIndex());
       definition.setFilterType(filterType.getSelectionIndex());
       definition.setFilter(filter.getText().trim());
-      definition.setCacheRetentionTime(retentionTime.getSelection());
+      definition.setCacheRetentionTime(retentionTime.getValue());
       definition.setRequestTimeout(timeout.getSelection());
       definition.setDescription(description.getText());
       return true;

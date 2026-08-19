@@ -46,7 +46,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.InetAddressListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
@@ -55,6 +54,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.ImageHyperlink;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.Section;
@@ -96,11 +96,11 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
    private Button checkEnableTCPProbing;
    private Button checkUseSnmpTraps;
    private Button checkUseSyslog;
-   private Spinner passiveDiscoveryInterval;
+   private LabeledDurationInput passiveDiscoveryInterval;
    private Label activeDiscoveryScheduleLabel;
    private Button radioActiveDiscoveryInterval;
    private Button radioActiveDiscoverySchedule;
-   private Spinner activeDiscoveryInterval;
+   private LabeledDurationInput activeDiscoveryInterval;
    private LabeledText activeDiscoverySchedule;
    private Button checkFilterRange;
    private Button checkFilterProtocols;
@@ -444,20 +444,19 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
-      passiveDiscoveryInterval = WidgetHelper.createLabeledSpinner(clientArea, SWT.BORDER, i18n.tr("Passive discovery interval"), 0, 0xffffff, gd);
+      passiveDiscoveryInterval = new LabeledDurationInput(clientArea, SWT.NONE);
+      passiveDiscoveryInterval.setLabel(i18n.tr("Passive discovery interval"));
+      passiveDiscoveryInterval.setRange(0, 0xffffff);
+      passiveDiscoveryInterval.setLayoutData(gd);
       passiveDiscoveryInterval.setBackground(clientArea.getBackground());
-      passiveDiscoveryInterval.getParent().setBackground(clientArea.getBackground());
       passiveDiscoveryInterval.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {
-            try
+            if (passiveDiscoveryInterval.validate())
             {
-               config.setPassiveDiscoveryPollInterval(Integer.parseInt(passiveDiscoveryInterval.getText()));
+               config.setPassiveDiscoveryPollInterval(passiveDiscoveryInterval.getValue());
                setModified();
-            }
-            catch(NumberFormatException ex)
-            {
             }
          }
       });
@@ -476,8 +475,8 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
             setModified();
             if (radioActiveDiscoveryInterval.getSelection())
             {
-               config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));
-               activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval() == 0 ? NetworkDiscoveryConfig.DEFAULT_ACTIVE_INTERVAL : config.getActiveDiscoveryPollInterval());
+               config.setActiveDiscoveryPollInterval(activeDiscoveryInterval.getValue());
+               activeDiscoveryInterval.setValue(config.getActiveDiscoveryPollInterval() == 0 ? NetworkDiscoveryConfig.DEFAULT_ACTIVE_INTERVAL : config.getActiveDiscoveryPollInterval());
                activeDiscoverySchedule.setEnabled(false);
                activeDiscoveryInterval.setEnabled(true);
             }
@@ -513,15 +512,20 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
 
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
-      activeDiscoveryInterval = WidgetHelper.createLabeledSpinner(clientArea, SWT.BORDER, i18n.tr("Active discovery interval"), 0, 0xffffff, gd);
+      activeDiscoveryInterval = new LabeledDurationInput(clientArea, SWT.NONE);
+      activeDiscoveryInterval.setLabel(i18n.tr("Active discovery interval"));
+      activeDiscoveryInterval.setRange(0, 0xffffff);
+      activeDiscoveryInterval.setLayoutData(gd);
       activeDiscoveryInterval.setBackground(clientArea.getBackground());
-      activeDiscoveryInterval.getParent().setBackground(clientArea.getBackground());
       activeDiscoveryInterval.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {
-            config.setActiveDiscoveryPollInterval(Integer.parseInt(activeDiscoveryInterval.getText()));
-            setModified();
+            if (activeDiscoveryInterval.validate())
+            {
+               config.setActiveDiscoveryPollInterval(activeDiscoveryInterval.getValue());
+               setModified();
+            }
          }
       });
 
@@ -1055,7 +1059,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
       checkUseSyslog.setSelection(config.isUseSyslog());
 
-      passiveDiscoveryInterval.setSelection(config.getPassiveDiscoveryPollInterval());
+      passiveDiscoveryInterval.setValue(config.getPassiveDiscoveryPollInterval());
       if(config.getActiveDiscoveryPollInterval() != 0)
       {
          radioActiveDiscoveryInterval.setSelection(true);
@@ -1064,7 +1068,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       {
          radioActiveDiscoverySchedule.setSelection(true);
       }
-      activeDiscoveryInterval.setSelection(config.getActiveDiscoveryPollInterval());
+      activeDiscoveryInterval.setValue(config.getActiveDiscoveryPollInterval());
       activeDiscoverySchedule.setText(config.getActiveDiscoveryPollSchedule());
       enableActiveDiscovery(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE || config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
       enablePassiveDiscovery(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE || config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);

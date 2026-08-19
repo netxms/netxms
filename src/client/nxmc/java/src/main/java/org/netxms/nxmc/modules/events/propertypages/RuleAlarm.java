@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmCategorySelector;
@@ -38,7 +39,6 @@ import org.netxms.nxmc.modules.events.widgets.EventSelector;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptSelector;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
-import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -66,7 +66,7 @@ public class RuleAlarm extends RuleBasePropertyPage
 	private LabeledText alarmMessage;
 	private LabeledText alarmKeyCreate;
    private Combo alarmSeverity;
-	private LabeledText alarmTimeout;
+   private LabeledDurationInput alarmTimeout;
 	private AlarmCategorySelector alarmCategory;
 	private EventSelector timeoutEvent;
 	private ScriptSelector rcaScript;
@@ -216,10 +216,9 @@ public class RuleAlarm extends RuleBasePropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		alarmSeverity.setLayoutData(gd);
 
-		alarmTimeout = new LabeledText(alarmCreationSubgroup, SWT.NONE);
+      alarmTimeout = new LabeledDurationInput(alarmCreationSubgroup, SWT.NONE);
       alarmTimeout.setLabel(i18n.tr("Alarm timeout"));
-		alarmTimeout.getTextControl().setTextLimit(5);
-		alarmTimeout.setText(Integer.toString(rule.getAlarmTimeout()));
+      alarmTimeout.setValue(rule.getAlarmTimeout());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -345,21 +344,9 @@ public class RuleAlarm extends RuleBasePropertyPage
 		switch(alarmAction)
 		{
 			case ALARM_CREATE:
-				try
-				{
-					int t = Integer.parseInt(alarmTimeout.getText());
-					if (t < 0)
-					{
-                  MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please enter valid timeout value (must be 0 or positive integer)"));
-						return false;
-					}
-					rule.setAlarmTimeout(t);
-				}
-				catch(NumberFormatException e)
-				{
-               MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please enter valid timeout value (must be 0 or positive integer)"));
-					return false;
-				}
+            if (!alarmTimeout.validate())
+               return false;
+            rule.setAlarmTimeout(alarmTimeout.getValue());
 				rule.setAlarmMessage(alarmMessage.getText());
 				rule.setAlarmKey(alarmKeyCreate.getText());
 				rule.setAlarmSeverity(Severity.getByValue(alarmSeverity.getSelectionIndex()));

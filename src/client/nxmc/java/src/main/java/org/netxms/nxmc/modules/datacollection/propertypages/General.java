@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.base.Duration;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
@@ -127,7 +128,6 @@ public class General extends AbstractDCIPropertyPage
    private Button scheduleFixed;
    private Button scheduleAdvanced;
    private Composite pollingIntervalComposite;
-   private Label pollingIntervalLabel;
    private Hyperlink scheduleLink;
    private Button storageDefault;
    private Button storageFixed;
@@ -333,7 +333,7 @@ public class General extends AbstractDCIPropertyPage
       };
 
       scheduleDefault = new Button(groupPolling, SWT.RADIO);
-      scheduleDefault.setText(String.format("Server default interval (%d seconds)", session.getDefaultDciPollingInterval()));
+      scheduleDefault.setText(i18n.tr("Server default interval ({0})", Duration.format(session.getDefaultDciPollingInterval())));
       scheduleDefault.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_DEFAULT);
       scheduleDefault.addSelectionListener(pollingButtons);
       gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
@@ -351,18 +351,13 @@ public class General extends AbstractDCIPropertyPage
       layout.marginHeight = 0;
       layout.marginWidth = 0;
       layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
-      layout.numColumns = 2;
       pollingIntervalComposite.setLayout(layout);
       pollingInterval = new Text(pollingIntervalComposite, SWT.BORDER);
       pollingInterval.setText(dco.getPollingInterval() != null ? dco.getPollingInterval() : "");
+      pollingInterval.setToolTipText(i18n.tr("Interval in seconds or with unit suffix: s, m, h, d, w (for example 90, 5m, 2h 30m)"));
       pollingInterval.setEnabled((dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dco.getOrigin() != DataOrigin.PUSH) && (dco.getOrigin() != DataOrigin.OTLP));
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       pollingInterval.setLayoutData(gd);
-      pollingIntervalLabel = new Label(pollingIntervalComposite, SWT.NONE);
-      pollingIntervalLabel.setText("seconds");
-      gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
-      gd.horizontalIndent = WidgetHelper.OUTER_SPACING;
-      pollingIntervalLabel.setLayoutData(gd);
 
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
@@ -512,7 +507,6 @@ public class General extends AbstractDCIPropertyPage
       scheduleFixed.setEnabled(enableSchedule);
       scheduleAdvanced.setEnabled(enableSchedule);
       pollingInterval.setEnabled(enableSchedule);
-      pollingIntervalLabel.setEnabled(enableSchedule);
       scheduleLink.setEnabled(enableSchedule);
 
       metricSelector.setSelectioEnabled(

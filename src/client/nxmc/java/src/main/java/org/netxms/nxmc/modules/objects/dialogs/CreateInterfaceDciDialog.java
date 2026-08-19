@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.helpers.InterfaceDciInfo;
@@ -76,7 +77,7 @@ public class CreateInterfaceDciDialog extends Dialog
 	private Interface object;
 	private InterfaceDciForm[] forms = new InterfaceDciForm[names.length];
    private Combo pollingScheduleTypeSelector;
-   private LabeledText textInterval;
+   private LabeledDurationInput textInterval;
    private Combo retentionTypeSelector;
    private LabeledText textRetention;
 
@@ -189,10 +190,10 @@ public class CreateInterfaceDciDialog extends Dialog
          }
       });
 
-      textInterval = new LabeledText(optionsGroup, SWT.NONE);
-      textInterval.setLabel(i18n.tr("Custom polling interval (seconds)"));
-      textInterval.setText(Integer.toString(settings.getAsInteger("CreateInterfaceDciDialog.pollingInterval", 60)));
-      textInterval.getTextControl().setTextLimit(5);
+      textInterval = new LabeledDurationInput(optionsGroup, SWT.NONE);
+      textInterval.setLabel(i18n.tr("Custom polling interval"));
+      textInterval.setRange(2, 10000);
+      textInterval.setValue(settings.getAsInteger("CreateInterfaceDciDialog.pollingInterval", 60));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -221,18 +222,15 @@ public class CreateInterfaceDciDialog extends Dialog
       final PreferenceStore settings = PreferenceStore.getInstance();
 
       pollingScheduleType = pollingScheduleTypeSelector.getSelectionIndex();
-      try
+      if (pollingScheduleType == DataCollectionObject.POLLING_SCHEDULE_CUSTOM)
       {
-         pollingInterval = Integer.parseInt(textInterval.getText());
-         if ((pollingInterval < 2) || (pollingInterval > 10000))
-            throw new NumberFormatException();
+         if (!textInterval.validate())
+            return;
+         pollingInterval = textInterval.getValue();
       }
-      catch(NumberFormatException e)
+      else
       {
-         if (pollingScheduleType == DataCollectionObject.POLLING_SCHEDULE_CUSTOM)
-            MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Please enter polling pollingInterval as integer in range 2 .. 10000"));
-         else
-            pollingInterval = 60;
+         pollingInterval = 60;
       }
 
       retentionType = retentionTypeSelector.getSelectionIndex();

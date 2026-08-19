@@ -1576,12 +1576,22 @@ static void TestParseDuration()
    AssertEquals(ParseDuration(_T(" 2 h "), 99), static_cast<uint64_t>(7200));
    AssertEquals(ParseDuration(_T("2 minutes"), 99), static_cast<uint64_t>(120));
 
+   // Multiple groups
+   AssertEquals(ParseDuration(_T("2h 30m"), 99), static_cast<uint64_t>(9000));
+   AssertEquals(ParseDuration(_T("2h30m"), 99), static_cast<uint64_t>(9000));
+   AssertEquals(ParseDuration(_T("1w 2d 3h 4m 5s"), 99), static_cast<uint64_t>(788645));
+   AssertEquals(ParseDuration(_T("1 hour 30 minutes"), 99), static_cast<uint64_t>(5400));
+   AssertEquals(ParseDuration(_T("1m 30"), 99), static_cast<uint64_t>(90));
+
    // Invalid input returns the default value
    AssertEquals(ParseDuration(nullptr, 7), static_cast<uint64_t>(7));
    AssertEquals(ParseDuration(_T(""), 7), static_cast<uint64_t>(7));
    AssertEquals(ParseDuration(_T("   "), 7), static_cast<uint64_t>(7));
    AssertEquals(ParseDuration(_T("abc"), 7), static_cast<uint64_t>(7));
    AssertEquals(ParseDuration(_T("10x"), 7), static_cast<uint64_t>(7));
+   AssertEquals(ParseDuration(_T("2h x"), 7), static_cast<uint64_t>(7));
+   AssertEquals(ParseDuration(_T("2h 30x"), 7), static_cast<uint64_t>(7));
+   AssertEquals(ParseDuration(_T("-5"), 7), static_cast<uint64_t>(7));
 
    EndTest();
 }

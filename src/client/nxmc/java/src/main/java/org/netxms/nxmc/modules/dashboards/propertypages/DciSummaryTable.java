@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
@@ -67,7 +68,7 @@ public class DciSummaryTable extends DashboardElementPropertyPage
    private TitleConfigurator title;
 	private ObjectSelector objectSelector;
 	private SummaryTableSelector tableSelector;
-	private Spinner refreshInterval;
+   private LabeledDurationInput refreshInterval;
    private Spinner numRowsShow;
 	private SortableTableViewer sortTables;
 	private Button buttonAdd;
@@ -159,8 +160,11 @@ public class DciSummaryTable extends DashboardElementPropertyPage
       gd.verticalAlignment = SWT.TOP;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      refreshInterval = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, i18n.tr("Refresh interval"), 0, 10000, gd);
-      refreshInterval.setSelection(config.getRefreshInterval());
+      refreshInterval = new LabeledDurationInput(dialogArea, SWT.NONE);
+      refreshInterval.setLabel(i18n.tr("Refresh interval"));
+      refreshInterval.setRange(0, 10000);
+      refreshInterval.setValue(config.getRefreshInterval());
+      refreshInterval.setLayoutData(gd);
 
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
@@ -425,10 +429,13 @@ public class DciSummaryTable extends DashboardElementPropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
 	{
+      if (!refreshInterval.validate())
+         return false;
+
       title.updateConfiguration(config);
 		config.setBaseObjectId(objectSelector.getObjectId());
 		config.setTableId(tableSelector.getTableId());
-		config.setRefreshInterval(refreshInterval.getSelection());
+      config.setRefreshInterval(refreshInterval.getValue());
       config.setNumRowShown(numRowsShow.getSelection());
       config.setSortingColumnList(currSortingList);
 		return true;
