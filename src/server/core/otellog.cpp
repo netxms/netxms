@@ -290,24 +290,16 @@ static void OtelLogParserCallback(const LogParserCallbackData& data)
          .origin(EventOrigin::OPENTELEMETRY)
          .originTimestamp(data.logRecordTimestamp)
          .tag(data.eventTag)
-         .params(pmap);
-
-      if (data.eventTag != nullptr)
-         builder.param(L"eventTag", data.eventTag);
-
-      if (data.source != nullptr)
-         builder.param(L"otelService", data.source);
-      if (data.logName != nullptr)
-         builder.param(L"otelScope", data.logName);
-      builder.param(L"otelSeverityNumber", data.windowsEventId);
-      builder.param(L"otelSeverity", data.severity);
-      builder.param(L"repeatCount", data.repeatCount);
+         .params(pmap)
+         .param(L"otelService", CHECK_NULL_EX(data.source))
+         .param(L"otelScope", CHECK_NULL_EX(data.logName))
+         .param(L"otelSeverityNumber", data.windowsEventId)
+         .param(L"otelSeverity", data.severity)
+         .param(L"repeatCount", data.repeatCount)
+         .param(L"message", CHECK_NULL_EX(data.originalText));
 
       if (data.namedVariables != nullptr)
-      {
-         for (const auto *p : *data.namedVariables)
-            builder.param(p->key, p->value);
-      }
+         builder.params(*data.namedVariables);
 
       builder.post();
    }
@@ -477,7 +469,7 @@ static void OtelLogProcessingThread()
          // syslog convention. Passing the raw value would make SEVERITY_NORMAL (0) fail
          // the mask check for every rule, even rules without a <severity> filter.
          s_parser->matchEvent(record->serviceName, static_cast<uint32_t>(record->severityNumber), 1 << record->mappedSeverity,
-            record->body, nullptr, 0, record->nodeId, static_cast<time_t>(record->originTimestamp / 1000), record->scopeName,
+            CHECK_NULL_EX(record->body), nullptr, 0, record->nodeId, static_cast<time_t>(record->originTimestamp / 1000), record->scopeName,
             &writeToDatabase, &record->attributes);
       }
       s_parserLock.unlock();
