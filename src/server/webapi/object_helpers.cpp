@@ -99,6 +99,9 @@ int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const
       auditLabel, object->getName(), object->getId());
    json_decref(oldSnapshot);
 
+   // Audit log entry is already serialized at this point, so effective rights added below
+   // are not recorded as part of object's new state
+   AddEffectiveRights(newSnapshot, *object, context->getUserId());
    context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
    return 200;

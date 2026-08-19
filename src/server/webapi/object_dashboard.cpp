@@ -128,6 +128,7 @@ int H_ObjectDashboardUpdate(Context *context)
       L"Modified dashboard content of object %s [%u]", object->getName(), object->getId());
    json_decref(oldSnapshot);
 
+   AddEffectiveRights(newSnapshot, *object, context->getUserId());
    context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
    return 200;

@@ -13448,6 +13448,112 @@ components:
           description: Map links. On update this fully replaces the link layout.
           items:
             $ref: '#/components/schemas/NetworkMapLink'
+    EffectiveRights:
+      type: object
+      readOnly: true
+      description: |
+        Access rights the calling user effectively has on the object - rights assigned
+        directly plus those inherited from parent objects. Same set of rights NXCP clients
+        obtain with CMD_GET_EFFECTIVE_RIGHTS. Every right is always present as separate
+        boolean attribute. Value is specific to the calling user rather than part of the
+        object's stored state, and is ignored if present in a request body.
+      properties:
+        read:
+          type: boolean
+          description: Read object (see it in object listings and read its basic attributes)
+        modify:
+          type: boolean
+          description: Modify object configuration
+        createChildObjects:
+          type: boolean
+          description: Create child objects
+        delete:
+          type: boolean
+          description: Delete object
+        viewAlarms:
+          type: boolean
+          description: View alarms associated with the object
+        accessControl:
+          type: boolean
+          description: Read and modify object's access control list
+        updateAlarms:
+          type: boolean
+          description: Acknowledge and update alarms associated with the object
+        sendEvents:
+          type: boolean
+          description: Send events on behalf of the object
+        control:
+          type: boolean
+          description: Control object (management status, agent restart, and similar operations)
+        terminateAlarms:
+          type: boolean
+          description: Terminate and resolve alarms associated with the object
+        pushData:
+          type: boolean
+          description: Push data collection values to the object
+        createHelpdeskTicket:
+          type: boolean
+          description: Create helpdesk tickets from alarms associated with the object
+        downloadFiles:
+          type: boolean
+          description: Download files from the node
+        uploadFiles:
+          type: boolean
+          description: Upload files to the node
+        manageFiles:
+          type: boolean
+          description: Manage files on the node (rename, move, delete)
+        controlMaintenanceMode:
+          type: boolean
+          description: Enter and leave maintenance mode
+        readAgentData:
+          type: boolean
+          description: Read data provided by NetXMS agent
+        readSnmpData:
+          type: boolean
+          description: Read data provided via SNMP
+        takeScreenshot:
+          type: boolean
+          description: Take screenshot on the node
+        editMaintenanceJournal:
+          type: boolean
+          description: Create and edit maintenance journal entries
+        configureAgent:
+          type: boolean
+          description: Change agent configuration on the node
+        editComments:
+          type: boolean
+          description: Edit object comments
+        manageResponsibleUsers:
+          type: boolean
+          description: Manage list of users responsible for the object
+        delegatedRead:
+          type: boolean
+          description: Read objects delegated to the object's responsible users
+        managePolicies:
+          type: boolean
+          description: Manage agent policies (template objects only)
+        manageIncidents:
+          type: boolean
+          description: Manage incidents associated with the object
+        readCredentials:
+          type: boolean
+          description: Read object's credentials (SNMP communities, agent secrets, and similar)
+        queryWebService:
+          type: boolean
+          description: Query web services defined on the node
+        uploadDeviceConfig:
+          type: boolean
+          description: Upload configuration to network device
+        readDeviceConfig:
+          type: boolean
+          description: Read configuration of network device
+        readDataCollectionConfig:
+          type: boolean
+          description: Read data collection configuration
+        executeScript:
+          type: boolean
+          description: Execute ad-hoc scripts in the context of the object
     ObjectAccessRights:
       type: object
       description: Object access control list and the flag controlling inheritance of access rights from parent objects.
@@ -13463,10 +13569,14 @@ components:
             properties:
               userId:
                 type: integer
-                description: User or group ID. Group IDs have the high bit (0x80000000) set.
+                description: User or group ID. Group IDs have the group flag bit (0x40000000) set.
               access:
                 type: integer
-                description: Bit mask of access rights granted to the user or group on this object.
+                description: |
+                  Bit mask of access rights granted to the user or group on this object.
+                  Attribute is 64 bit wide since schema version 70.25, although only low
+                  32 bits are allocated so far - bit 31 (0x80000000) is a valid access bit
+                  (execute script), not a flag.
     CustomAttribute:
       type: object
       description: A single custom attribute as embedded in an object document and returned by the custom-attributes sub-resource.
@@ -13997,6 +14107,8 @@ components:
           description: Custom attributes defined on the object (including those inherited from parent objects).
           items:
             $ref: '#/components/schemas/CustomAttribute'
+        effectiveRights:
+          $ref: '#/components/schemas/EffectiveRights'
         guid:
           type: string
           format: uuid
@@ -14267,6 +14379,13 @@ components:
           description: Object category ID
         class:
           $ref: '#/components/schemas/ObjectClass'
+        effectiveRights:
+          allOf:
+            - $ref: '#/components/schemas/EffectiveRights'
+          description: |
+            Access rights the calling user effectively has on this object. Present in
+            object listing, sub-tree, search and query responses; absent where an object
+            summary is embedded into another resource (alarms, log records, topology).
         guid:
           type: string
           format: uuid

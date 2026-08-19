@@ -47,6 +47,73 @@ json_t *CreateObjectSummary(const NetObj& object)
 }
 
 /**
+ * Object access rights as reported in JSON documents
+ */
+static struct
+{
+   uint64_t bit;
+   const char *name;
+} s_accessRights[] =
+{
+   { OBJECT_ACCESS_READ, "read" },
+   { OBJECT_ACCESS_MODIFY, "modify" },
+   { OBJECT_ACCESS_CREATE, "createChildObjects" },
+   { OBJECT_ACCESS_DELETE, "delete" },
+   { OBJECT_ACCESS_READ_ALARMS, "viewAlarms" },
+   { OBJECT_ACCESS_ACL, "accessControl" },
+   { OBJECT_ACCESS_UPDATE_ALARMS, "updateAlarms" },
+   { OBJECT_ACCESS_SEND_EVENTS, "sendEvents" },
+   { OBJECT_ACCESS_CONTROL, "control" },
+   { OBJECT_ACCESS_TERM_ALARMS, "terminateAlarms" },
+   { OBJECT_ACCESS_PUSH_DATA, "pushData" },
+   { OBJECT_ACCESS_CREATE_ISSUE, "createHelpdeskTicket" },
+   { OBJECT_ACCESS_DOWNLOAD, "downloadFiles" },
+   { OBJECT_ACCESS_UPLOAD, "uploadFiles" },
+   { OBJECT_ACCESS_MANAGE_FILES, "manageFiles" },
+   { OBJECT_ACCESS_MAINTENANCE, "controlMaintenanceMode" },
+   { OBJECT_ACCESS_READ_AGENT, "readAgentData" },
+   { OBJECT_ACCESS_READ_SNMP, "readSnmpData" },
+   { OBJECT_ACCESS_SCREENSHOT, "takeScreenshot" },
+   { OBJECT_ACCESS_WRITE_MJOURNAL, "editMaintenanceJournal" },
+   { OBJECT_ACCESS_CONFIGURE_AGENT, "configureAgent" },
+   { OBJECT_ACCESS_EDIT_COMMENTS, "editComments" },
+   { OBJECT_ACCESS_EDIT_RESP_USERS, "manageResponsibleUsers" },
+   { OBJECT_ACCESS_DELEGATED_READ, "delegatedRead" },
+   { OBJECT_ACCESS_MANAGE_POLICIES, "managePolicies" },
+   { OBJECT_ACCESS_MANAGE_INCIDENTS, "manageIncidents" },
+   { OBJECT_ACCESS_READ_CREDENTIALS, "readCredentials" },
+   { OBJECT_ACCESS_QUERY_WEBSVC, "queryWebService" },
+   { OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG, "uploadDeviceConfig" },
+   { OBJECT_ACCESS_READ_DEVICE_CONFIG, "readDeviceConfig" },
+   { OBJECT_ACCESS_READ_DC_CONFIG, "readDataCollectionConfig" },
+   { OBJECT_ACCESS_EXECUTE_SCRIPT, "executeScript" },
+   { 0, nullptr }
+};
+
+/**
+ * Add effective access rights of given user on given object to object's JSON document.
+ * Each right is reported as separate boolean attribute.
+ */
+void AddEffectiveRights(json_t *json, const NetObj& object, uint32_t userId)
+{
+   uint64_t rights = object.getUserRights(userId);
+   json_t *effectiveRights = json_object();
+   for(int i = 0; s_accessRights[i].name != nullptr; i++)
+      json_object_set_new(effectiveRights, s_accessRights[i].name, json_boolean((rights & s_accessRights[i].bit) != 0));
+   json_object_set_new(json, "effectiveRights", effectiveRights);
+}
+
+/**
+ * Create object summary JSON document with effective access rights for given user
+ */
+json_t *CreateObjectSummary(const NetObj& object, uint32_t userId)
+{
+   json_t *jsonObject = CreateObjectSummary(object);
+   AddEffectiveRights(jsonObject, object, userId);
+   return jsonObject;
+}
+
+/**
  * Handler for /v1/objects/search
  */
 int H_ObjectSearch(Context *context)
@@ -119,7 +186,7 @@ int H_ObjectSearch(Context *context)
    json_t *output = json_array();
    for(int i = 0; i < objects->size(); i++)
    {
-      json_array_append_new(output, CreateObjectSummary(*objects->get(i)));
+      json_array_append_new(output, CreateObjectSummary(*objects->get(i), context->getUserId()));
    }
 
    context->setResponseData(output);
@@ -167,7 +234,7 @@ int H_ObjectQuery(Context *context)
    {
       ObjectQueryResult *r = objects->get(i);
       json_t *e = json_object();
-      json_object_set_new(e, "object", CreateObjectSummary(*r->object));
+      json_object_set_new(e, "object", CreateObjectSummary(*r->object, context->getUserId()));
       json_object_set_new(e, "fields", r->values->toJson());
       json_array_append_new(output, e);
    }
@@ -200,7 +267,7 @@ int H_Objects(Context *context)
    json_t *output = json_array();
    for(int i = 0; i < objects->size(); i++)
    {
-      json_array_append_new(output, CreateObjectSummary(*objects->get(i)));
+      json_array_append_new(output, CreateObjectSummary(*objects->get(i), context->getUserId()));
    }
 
    context->setResponseData(output);
@@ -268,6 +335,7 @@ int H_ObjectCreate(Context *context)
    context->setResponseHeader(L"Location", location);
 
    json_t *output = object->toJson(true);
+   AddEffectiveRights(output, *object, context->getUserId());
    context->setResponseData(output);
    json_decref(output);
    return 201;
@@ -292,6 +360,7 @@ int H_ObjectDetails(Context *context)
    uint32_t userId = context->getUserId();
    bool includeSensitiveData = object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS);
    json_t *output = object->toJson(includeSensitiveData);
+   AddEffectiveRights(output, *object, userId);
    context->setResponseData(output);
    json_decref(output);
    return 200;
@@ -390,7 +459,7 @@ static json_t *BuildNestedObjectTree(const shared_ptr<NetObj>& object, uint32_t 
          }
       }
 
-      json_t *childObject = CreateObjectSummary(*child);
+      json_t *childObject = CreateObjectSummary(*child, userId);
 
       json_t *nestedChildren = BuildNestedObjectTree(children->getShared(i), userId, classFilter, visited, maxDepth, currentDepth + 1);
       if (json_array_size(nestedChildren) > 0)
@@ -501,7 +570,9 @@ int H_ObjectChildren(Context *context)
          continue;
 
       bool includeSensitiveData = child->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || child->checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS);
-      json_array_append_new(output, child->toJson(includeSensitiveData));
+      json_t *childObject = child->toJson(includeSensitiveData);
+      AddEffectiveRights(childObject, *child, userId);
+      json_array_append_new(output, childObject);
    }
 
    context->setResponseData(output);

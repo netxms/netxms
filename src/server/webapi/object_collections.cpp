@@ -457,6 +457,7 @@ int H_ObjectDashboards(Context *context)
       L"Associated dashboards of object %s [%u] changed", object->getName(), object->getId());
    json_decref(oldSnapshot);
 
+   AddEffectiveRights(newSnapshot, *object, context->getUserId());
    context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
    return 200;
@@ -510,6 +511,7 @@ int H_ObjectTrustedObjects(Context *context)
       L"Trusted objects of object %s [%u] changed", object->getName(), object->getId());
    json_decref(oldSnapshot);
 
+   AddEffectiveRights(newSnapshot, *object, context->getUserId());
    context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
    return 200;
@@ -775,6 +777,7 @@ int H_ObjectBindChild(Context *context)
       return BindingErrorResponse(context, rcc, *parent, *child, conflictingTemplateName);
 
    json_t *output = child->toJson(true);
+   AddEffectiveRights(output, *child, context->getUserId());
    context->setResponseData(output);
    json_decref(output);
    return 200;

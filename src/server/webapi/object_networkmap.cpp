@@ -134,6 +134,7 @@ int H_ObjectNetworkMapUpdate(Context *context)
       L"Modified network map content of object %s [%u]", object->getName(), object->getId());
    json_decref(oldSnapshot);
 
+   AddEffectiveRights(newSnapshot, *object, context->getUserId());
    context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
    return 200;

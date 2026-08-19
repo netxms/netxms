@@ -283,6 +283,7 @@ int H_ObjectAutoBindUpdate(Context *context)
       L"Modified auto-bind configuration of object %s [%u]", object->getName(), object->getId());
    json_decref(oldSnapshot);
 
+   AddEffectiveRights(newSnapshot, *object, context->getUserId());
    context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
    return 200;

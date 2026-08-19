@@ -53,7 +53,8 @@ int H_FindMacAddress(Context *context)
          continue;
 
       json_t *json = json_object();
-      info->fillJson(json, context->getUserId(), includeObject, CreateObjectSummary);
+      info->fillJson(json, context->getUserId(), includeObject,
+         [] (const NetObj& object) -> json_t* { return CreateObjectSummary(object); });
       json_array_append_new(output, json);
       count++;
    }
