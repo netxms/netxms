@@ -41,10 +41,9 @@ bool NXSL_UserSecurityContext::validateAccess(int subsystem, uint64_t requiredAc
          if (object == nullptr)
             return false;
          const NetObj *netObj = static_cast<const NetObj*>(object);
-         if (netObj->checkAccessRights(m_userId, static_cast<uint32_t>(requiredAccess)))
+         if (netObj->checkAccessRights(m_userId, requiredAccess))
             return true;
-         nxlog_debug_tag(L"nxsl.security", 4, L"Access denied: user %u, object %s [%u], required access 0x%08x",
-            m_userId, netObj->getName(), netObj->getId(), static_cast<uint32_t>(requiredAccess));
+         nxlog_debug_tag(L"nxsl.security", 4, L"Access denied: user %u, object %s [%u], required access 0x" UINT64X_FMT(L"016"), m_userId, netObj->getName(), netObj->getId(), requiredAccess);
          return false;
       }
       case NXSL_AC_SYSTEM:
