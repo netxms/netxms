@@ -27,6 +27,11 @@
 #define DEBUG_TAG_DC_SCHEDULER   _T("dc.scheduler")
 
 /**
+ * Marker for unparseable duration returned by ParseDuration
+ */
+#define INVALID_DURATION         _ULL(0xFFFFFFFFFFFFFFFF)
+
+/**
  * Queue storage class migration (defined in sc_migration.cpp)
  */
 uint32_t QueueStorageClassMigration(uint32_t dciId, char dciType, DCObjectStorageClass oldClass, DCObjectStorageClass newClass);
@@ -1762,7 +1767,14 @@ void DCObject::updateTimeIntervalsInternal()
    if (!m_pollingIntervalSrc.isEmpty())
    {
       StringBuffer exp = m_owner.lock()->expandText(m_pollingIntervalSrc, nullptr, nullptr, createDescriptorInternal(), nullptr, nullptr, m_instanceName, nullptr, nullptr);
-      m_pollingInterval = static_cast<int32_t>(MIN(ParseDuration(exp, 0), static_cast<uint64_t>(INT32_MAX)));
+      uint64_t interval = ParseDuration(exp, INVALID_DURATION);
+      if (interval == INVALID_DURATION)
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DC_CONFIG, _T("Cannot parse polling interval \"%s\" for DCI %s [%u] on object %s [%u], DCI will be polled with minimal possible interval"),
+                  exp.cstr(), m_name.cstr(), m_id, getOwnerName(), getOwnerId());
+         interval = 0;
+      }
+      m_pollingInterval = static_cast<int32_t>(MIN(interval, static_cast<uint64_t>(INT32_MAX)));
    }
    else
    {
