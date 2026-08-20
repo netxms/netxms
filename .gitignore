@@ -363,6 +363,9 @@ venv/
 # ralphex progress logs
 .ralphex/progress/
 
+# revmux per-round task directories and run archives
+.revmux/tasks/
+
  **/.claude/settings.local.json
 
 nxmc.logfile_IS_UNDEFINED
