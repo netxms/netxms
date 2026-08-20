@@ -1497,7 +1497,7 @@ static void RecurrentScheduler()
          if (task->isDisabled() || task->isRunning())
             continue;
 
-         if (MatchSchedule(task->getSchedule(), nullptr, &currLocal, now))
+         if (MatchSchedule(task->getSchedule(), &currLocal, now))
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("RecurrentScheduler: starting scheduled task [") UINT64_FMT _T("] with handler \"%s\" (schedule \"%s\")"),
                      task->getId(), task->getTaskHandlerId().cstr(), task->getSchedule().cstr());
@@ -1514,7 +1514,10 @@ static void RecurrentScheduler()
       }
       s_recurrentTaskLock.unlock();
       WatchdogStartSleep(watchdogId);
-   } while(!SleepAndCheckForShutdown(60)); //sleep 1 minute
+      // Sleep until beginning of next minute. Fixed 60 second sleep would drift forward by the time spent
+      // on task scan, and sooner or later cause a minute to be skipped entirely, so schedules matching that
+      // minute would not fire at all.
+   } while(!SleepAndCheckForShutdown(static_cast<uint32_t>(60 - (time(nullptr) % 60))));
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Recurrent scheduler stopped"));
 }
 

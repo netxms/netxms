@@ -1657,9 +1657,9 @@ void ActiveDiscoveryPoller()
 #else
             struct tm *ltm = localtime(&now);
 #endif
-            if (!MatchSchedule(schedule, nullptr, ltm, now))
+            if (!MatchSchedule(schedule, ltm, now))
             {
-               sleepTime = 60000;
+               sleepTime = static_cast<uint32_t>(60 - (now % 60)) * 1000;   // wake up at the beginning of next minute
                continue;
             }
          }
@@ -1691,7 +1691,7 @@ void ActiveDiscoveryPoller()
       s_activeDiscoveryStateLock.unlock();
 
       interval = ConfigReadInt(_T("NetworkDiscovery.ActiveDiscovery.Interval"), 7200);
-      sleepTime = (interval > 0) ? interval * 1000 : 60000;
+      sleepTime = (interval > 0) ? interval * 1000 : static_cast<uint32_t>(60 - (time(nullptr) % 60)) * 1000;
    }
 
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 2, _T("Active discovery thread terminated"));

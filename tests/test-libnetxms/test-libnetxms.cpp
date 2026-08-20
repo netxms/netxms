@@ -38,6 +38,9 @@ void TestMD4();
 void TestDES();
 void TestDESCBC();
 void TestMarkdown();
+void TestScheduleFields();
+void TestScheduleDayOfWeek();
+void TestScheduleSeconds();
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
 /**
@@ -3733,6 +3736,9 @@ int main(int argc, char *argv[])
    TestDES();
    TestDESCBC();
    TestMarkdown();
+   TestScheduleFields();
+   TestScheduleDayOfWeek();
+   TestScheduleSeconds();
 
    if (debug)
       nxlog_set_debug_level(9);

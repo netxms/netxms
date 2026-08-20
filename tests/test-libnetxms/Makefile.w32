@@ -14,6 +14,7 @@ SOURCES = \
 	nxcp.cpp \
 	proc.cpp \
 	queue.cpp \
+	schedule.cpp \
 	test-libnetxms.cpp \
 	threads.cpp \
 	tp.cpp
