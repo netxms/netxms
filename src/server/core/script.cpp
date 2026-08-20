@@ -73,7 +73,7 @@ bool NXSL_ReadOnlySecurityContext::validateAccess(int subsystem, uint64_t requir
       return true;
    const NetObj *netObj = static_cast<const NetObj*>(object);
    nxlog_debug_tag(L"nxsl.security", 7, L"Read-only script access denied: object %s [%u], required access 0x" UINT64X_FMT(L"016"),
-      (netObj != nullptr) ? netObj->getName() : L"(null)", (netObj != nullptr) ? netObj->getId() : 0, static_cast<uint32_t>(requiredAccess));
+      (netObj != nullptr) ? netObj->getName() : L"(null)", (netObj != nullptr) ? netObj->getId() : 0, requiredAccess);
    return false;
 }
 
@@ -729,7 +729,7 @@ void ImportScript(json_t *script, bool overwrite, ImportContext *context)
 
    // Get GUID
    uuid guid = json_object_get_uuid(script, "guid");
-   
+
    if (guid.isNull())
    {
       guid = uuid::generate();
