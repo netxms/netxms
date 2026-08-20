@@ -327,11 +327,12 @@ int H_ObjectResponsibleUsers(Context *context)
 /**
  * Handler for PUT /v1/objects/:object-id/responsible-users/:user-id
  * Upserts the tag for a single responsible user. Body: { "tag": "..." }.
+ * Requires modify access or OBJECT_ACCESS_EDIT_RESP_USERS.
  */
 int H_ObjectResponsibleUserUpdate(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, OBJECT_ACCESS_EDIT_RESP_USERS, &httpCode);
    if (object == nullptr)
       return httpCode;
 
@@ -381,11 +382,12 @@ int H_ObjectResponsibleUserUpdate(Context *context)
 /**
  * Handler for DELETE /v1/objects/:object-id/responsible-users/:user-id
  * Removes a single responsible user. Idempotent (no error if user not responsible).
+ * Requires modify access or OBJECT_ACCESS_EDIT_RESP_USERS.
  */
 int H_ObjectResponsibleUserDelete(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, OBJECT_ACCESS_EDIT_RESP_USERS, &httpCode);
    if (object == nullptr)
       return httpCode;
 
@@ -755,15 +757,40 @@ static shared_ptr<NetObj> LoadChildForBinding(Context *context, int *httpCode)
 }
 
 /**
+ * Load the parent object addressed by URL placeholder "object-id" and check that
+ * the caller has modify access on it. Read access is sufficient for a template,
+ * so that an operator allowed to use a shared template but not to edit it can
+ * still apply it. On failure returns nullptr and writes the matching HTTP status
+ * code (400 / 403 / 404) to *httpCode.
+ */
+static shared_ptr<NetObj> LoadParentForBinding(Context *context, int *httpCode)
+{
+   shared_ptr<NetObj> parent = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, OBJECT_ACCESS_READ, httpCode);
+   if (parent == nullptr)
+      return parent;
+
+   if (!parent->checkAccessRights(context->getUserId(), OBJECT_ACCESS_MODIFY) && (parent->getObjectClass() != OBJECT_TEMPLATE))
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, parent->getId(),
+         L"Access denied on modification of object %s [%u]", parent->getName(), parent->getId());
+      *httpCode = 403;
+      return shared_ptr<NetObj>();
+   }
+
+   return parent;
+}
+
+/**
  * Handler for PUT /v1/objects/:object-id/children/:child-id
  * Binds the child object to the object addressed by the URL as its parent. Query
  * parameter "force=true" overrides a template exclusion group conflict. Requires
- * modify access on both the parent and the child object.
+ * modify access on the child object, and modify access on the parent object
+ * (read access is sufficient if the parent is a template).
  */
 int H_ObjectBindChild(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> parent = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   shared_ptr<NetObj> parent = LoadParentForBinding(context, &httpCode);
    if (parent == nullptr)
       return httpCode;
 
@@ -788,12 +815,13 @@ int H_ObjectBindChild(Context *context)
  * Unbinds the child object from the object addressed by the URL. Query parameter
  * "remove-dci=true" removes data collection items created from a template when a
  * template is unbound from a data collection target. Requires modify access on
- * both the parent and the child object.
+ * the child object, and modify access on the parent object (read access is
+ * sufficient if the parent is a template).
  */
 int H_ObjectUnbindChild(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> parent = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   shared_ptr<NetObj> parent = LoadParentForBinding(context, &httpCode);
    if (parent == nullptr)
       return httpCode;
 
