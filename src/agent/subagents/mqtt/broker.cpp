@@ -197,8 +197,9 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
                _tcscpy(tmp, name);
                _tcscat(tmp, _T(".dataType"));
                int dataType = TextToDataType(metricRoot->getSubEntryValue(tmp, 0 , _T("")));
+               String baseName = name.endsWith(_T("(*)")) ? name.substring(0, name.length() - 3) : name;
 
-               metricDefenitions->set(e->getName(), e->getValue());
+               metricDefenitions->set(baseName, e->getValue());
 
                NETXMS_SUBAGENT_PARAM p;
                memset(&p, 0, sizeof(NETXMS_SUBAGENT_PARAM));
@@ -244,8 +245,9 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
                _tcscpy(tmp, name);
                _tcscat(tmp, _T(".description"));
                const TCHAR *description = metricRoot->getSubEntryValue(tmp, 0 , _T(""));
+               String baseName = name.endsWith(_T("(*)")) ? name.substring(0, name.length() - 3) : name;
 
-               listDefenitions->set(e->getName(), e->getValue());
+               listDefenitions->set(baseName, e->getValue());
 
                NETXMS_SUBAGENT_LIST l;
                memset(&l, 0, sizeof(NETXMS_SUBAGENT_LIST));

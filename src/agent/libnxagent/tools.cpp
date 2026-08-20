@@ -309,3 +309,61 @@ int LIBNXAGENT_EXPORTABLE TextToDataType(const TCHAR *name)
 
    return -1;
 }
+
+/**
+ * Substitute $1 .. $9 placeholders in command template with arguments of given metric
+ */
+String LIBNXAGENT_EXPORTABLE SubstituteCommandArguments(const TCHAR *cmdTemplate, const TCHAR *metric)
+{
+   StringBuffer cmdLine;
+   cmdLine.setAllocationStep(1024);
+
+   for (const TCHAR *sptr = cmdTemplate; *sptr != 0; sptr++)
+   {
+      if (*sptr == _T('$'))
+      {
+         sptr++;
+         if (*sptr == 0)
+            break;   // Single $ character at the end of line
+         if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
+         {
+            TCHAR buffer[1024];
+            if (AgentGetParameterArg(metric, *sptr - '0', buffer, 1024))
+            {
+               cmdLine.append(buffer);
+            }
+         }
+         else
+         {
+            cmdLine.append(*sptr);
+         }
+      }
+      else
+      {
+         cmdLine.append(*sptr);
+      }
+   }
+   return cmdLine;
+}
+
+/**
+ * Check if command is parameterized (contains $1, $2, etc.)
+ */
+bool LIBNXAGENT_EXPORTABLE IsParametrizedCommand(const TCHAR *command)
+{
+   bool isParameterized = false;
+   while (true)
+   {
+      const TCHAR *p = _tcschr(command, _T('$'));
+      if (p == nullptr)
+         break;
+      p++;
+      if ((*p >= '1') && (*p <= '9'))
+      {
+         isParameterized = true;
+         break;
+      }
+      command = p;
+   }
+   return isParameterized;
+}
