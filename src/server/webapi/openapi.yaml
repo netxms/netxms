@@ -13452,14 +13452,17 @@ components:
       type: object
       readOnly: true
       description: |
-        Access rights the calling user effectively has on the object. Rights assigned
-        directly on the object, including those granted through a group the user belongs to,
-        replace rights inherited from parent objects rather than adding to them - inherited
-        rights apply only when the object has no access control entry matching the user.
-        Same set of rights NXCP clients obtain with CMD_GET_EFFECTIVE_RIGHTS. Every right is
-        always present as separate boolean attribute. Value is specific to the calling user
-        rather than part of the object's stored state, and is ignored if present in a
-        request body.
+        Access rights the calling user effectively has on the object. Rights are resolved at
+        the object in this order: if an access control entry names the user directly, that
+        entry alone is used; otherwise the entries for all groups the user belongs to are
+        combined; otherwise, if the object is set to inherit, the effective rights resolved
+        independently on each parent object are combined. An entry granting no rights still
+        counts as a match: a user entry granting nothing suppresses both groups and parents,
+        while a group entry granting nothing suppresses only parents and the other matching
+        groups are still combined. This is the same set of rights NXCP clients obtain with
+        CMD_GET_EFFECTIVE_RIGHTS. Every right is always present as separate boolean attribute.
+        Value is specific to the calling user rather than part of the object's stored state,
+        and is ignored if present in a request body.
       properties:
         read:
           type: boolean
@@ -13568,7 +13571,12 @@ components:
       properties:
         inheritAccessRights:
           type: boolean
-          description: When true, effective rights include those inherited from parent objects in addition to the directly assigned rights below.
+          description: |
+            When true, rights are inherited from parent objects for users that no entry in the
+            list below matches, either directly or through one of their groups, and are combined
+            across all parents. Inherited rights do not add to directly assigned rights - a
+            matching entry below replaces them entirely, even when it grants nothing.
+            See EffectiveRights for the full resolution order.
         accessList:
           type: array
           description: Directly assigned access control entries. On update this is a full replacement of the object's own access list.
@@ -13580,6 +13588,7 @@ components:
                 description: User or group ID. Group IDs have the group flag bit (0x40000000) set.
               access:
                 type: integer
+                format: int64
                 description: |
                   Bit mask of access rights granted to the user or group on this object.
                   Attribute is 64 bit wide since schema version 70.25, although only low

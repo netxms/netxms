@@ -3223,8 +3223,11 @@ components:
           format: int64
         accessRights:
           type: integer
+          format: int64
           description: |
-            Bit flags:
+            Bit flags. Attribute is 64 bit wide since schema version 70.25. All 32 low bits
+            are allocated, including bit 31 (0x80000000) for EXECUTE_SCRIPT.
+
             - 0x00000001: READ
             - 0x00000002: MODIFY
             - 0x00000004: CREATE
@@ -3251,6 +3254,12 @@ components:
             - 0x00800000: DELEGATED_READ
             - 0x01000000: MANAGE_POLICIES
             - 0x02000000: MANAGE_INCIDENTS
+            - 0x04000000: READ_CREDENTIALS
+            - 0x08000000: QUERY_WEBSVC
+            - 0x10000000: UPLOAD_DEVICE_CONFIG
+            - 0x20000000: READ_DEVICE_CONFIG
+            - 0x40000000: READ_DC_CONFIG
+            - 0x80000000: EXECUTE_SCRIPT
 
     CustomAttribute:
       type: object
