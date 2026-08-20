@@ -161,8 +161,7 @@ bool AccessList::getUserRights(uint32_t userId, uint64_t *accessRights) const
 
    m_mutex.lock();
    int size = m_elements.size();
-   ACL_ELEMENT *elements = static_cast<ACL_ELEMENT*>(MemAllocLocal(sizeof(ACL_ELEMENT) * size));
-   memcpy(elements, m_elements.getBuffer(), sizeof(ACL_ELEMENT) * size);
+   Buffer<ACL_ELEMENT, 128> elements(m_elements.getBuffer(), m_elements.size());
    m_mutex.unlock();
 
    bool found = false;
@@ -190,7 +189,6 @@ bool AccessList::getUserRights(uint32_t userId, uint64_t *accessRights) const
          }
    }
 
-   MemFreeLocal(elements);
    return found;
 }
 
