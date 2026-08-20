@@ -148,16 +148,26 @@ LONG Topic::retrieveData(const TCHAR *metricName, TCHAR *buffer, size_t bufferLe
    LockGuard lockGuard(m_mutex);
 
    LONG rc = SYSINFO_RC_UNKNOWN;
-   const TCHAR *query = m_parameters->get(metricName);
+   const TCHAR *bracket = _tcschr(metricName, _T('('));
+   String baseName = (bracket != nullptr) ? String(metricName, bracket - metricName) : String(metricName);
+   const TCHAR *query = m_parameters->get(baseName);
    if (query != nullptr)
    {
-      rc = m_dataExtractor->getMetric(query, buffer, MAX_RESULT_LENGTH);
+      if ((bracket != nullptr) && IsParametrizedCommand(query))
+      {
+         String expandedQuery = SubstituteCommandArguments(query, metricName);
+         rc = m_dataExtractor->getMetric(expandedQuery, buffer, bufferLen);
+      }
+      else
+      {
+         rc = m_dataExtractor->getMetric(query, buffer, bufferLen);
+      }
    }
    else if (MatchString(m_genericParamName, metricName, false))
    {
       TCHAR query[1024];
       AgentGetParameterArg(metricName, 1, query, 1024);
-      rc = m_dataExtractor->getMetric(query, buffer, MAX_RESULT_LENGTH);
+      rc = m_dataExtractor->getMetric(query, buffer, bufferLen);
    }
 
    return rc;
@@ -171,10 +181,20 @@ LONG Topic::retrieveListData(const TCHAR *metricName, StringList *buffer)
    LockGuard lockGuard(m_mutex);
 
    LONG rc = SYSINFO_RC_UNKNOWN;
-   const TCHAR *query = m_lists->get(metricName);
+   const TCHAR *bracket = _tcschr(metricName, _T('('));
+   String baseName = (bracket != nullptr) ? String(metricName, bracket - metricName) : String(metricName);
+   const TCHAR *query = m_lists->get(baseName);
    if (query != nullptr)
    {
-      rc = m_dataExtractor->getList(query, buffer);
+      if ((bracket != nullptr) && IsParametrizedCommand(query))
+      {
+         String expandedQuery = SubstituteCommandArguments(query, metricName);
+         rc = m_dataExtractor->getList(expandedQuery, buffer);
+      }
+      else
+      {
+         rc = m_dataExtractor->getList(query, buffer);
+      }
    }
    else if (MatchString(m_genericParamName, metricName, false))
    {

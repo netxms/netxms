@@ -178,8 +178,6 @@ struct ExternalTableDefinition
    }
 };
 
-bool IsParametrizedCommand(const TCHAR *command);
-
 /**
  * Single performance data entry produced by Nagios-compatible monitoring plugin.
  * All values are stored verbatim as printed by the plugin.
@@ -959,8 +957,6 @@ void ExecuteAction(const TCHAR *name, const StringList& args);
 void ExecuteAction(const NXCPMessage& request, NXCPMessage *response, const shared_ptr<AbstractCommSession>& session);
 
 bool WaitForProcess(const TCHAR *name);
-
-String SubstituteCommandArguments(const TCHAR *cmdTemplate, const TCHAR *param);
 
 uint32_t UpgradeAgent(const TCHAR *pkgFile, bool allowDowngrade);
 

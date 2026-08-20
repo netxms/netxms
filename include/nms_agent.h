@@ -1489,6 +1489,9 @@ void LIBNXAGENT_EXPORTABLE TCPScanAddressRange(const InetAddress& from, const In
 
 int LIBNXAGENT_EXPORTABLE TextToDataType(const TCHAR *name);
 
+String LIBNXAGENT_EXPORTABLE SubstituteCommandArguments(const TCHAR *cmdTemplate, const TCHAR *metric);
+bool LIBNXAGENT_EXPORTABLE IsParametrizedCommand(const TCHAR *command);
+
 #if WITH_MODBUS
 typedef struct _modbus modbus_t;
 bool LIBNXAGENT_EXPORTABLE ModbusCheckConnection(const InetAddress& addr, uint16_t port, int32_t unitId);
