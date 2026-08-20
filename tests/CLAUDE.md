@@ -29,7 +29,7 @@ column below.
 | `test-libnxsrv/` | Server library tests (NObject hierarchy, drivers, mock SNMP transport, …) | via `@TEST_MODULES@` |
 | `test-authtokens/` | Authentication token tests — compiles the real `src/server/core/authtokens.cpp` and stubs four core symbols; covers the validate/consume split and the single-use claim race | via `@TEST_MODULES@` |
 | `test-ncd-webhook/` | Webhook notification-channel driver tests | via `@TEST_MODULES@` |
-| `agent/unit/*` | Per-subagent unit tests: `entsoe`, `openmeteo`, `linux-cpu-usage-collector` | via `@AGENT_UNIT_TESTS@` |
+| `agent/unit/*` | Per-subagent unit tests: `entsoe`, `extcheck`, `weather`, `linux-cpu-usage-collector` | via `@AGENT_UNIT_TESTS@` |
 | `ha/` | `ha-node-sim` + Python `harness.py` — adversarial HA lease-manager harness (issue #3364). Compiles the real `src/server/core/halease.cpp` against a shared DB. | via `@TEST_MODULES@` |
 | `integration/` | Java/Maven integration tests (`EppScriptTest`, `SingleUseTokenTest`, NXSL resource scripts) against a running server | Maven (separate) |
 | `nx-2488/` | Manual web-service caching repro (SQL patch, NXSL scripts, trivial web server) | manual (not in build) |

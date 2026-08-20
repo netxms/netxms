@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - weather subagent for Windows/MinGW
+# Part of NetXMS project
+#
+
+SUBAGENT = weather
+SOURCES = main.cpp util.cpp httpclient.cpp openmeteo.cpp metno.cpp location.cpp
+SA_LIBS = -lnxjansson $(CURL_LIBS) $(SSL_LIBS)
+
+include $(TOPDIR)/src/agent/subagents/subagent-common.mk

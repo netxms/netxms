@@ -44,7 +44,7 @@ call :RunTest test-libnxsrv || goto failure
 call :RunTest test-ncd-webhook || goto failure
 call :RunTest test-unit-entsoe || goto failure
 call :RunTest test-unit-extcheck || goto failure
-call :RunTest test-unit-openmeteo || goto failure
+call :RunTest test-unit-weather || goto failure
 
 echo *** SUCCESS ***
 exit /b 0

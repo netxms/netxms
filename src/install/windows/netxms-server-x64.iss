@@ -136,7 +136,6 @@ Source: "..\..\..\out\x64\Release\bin\logwatch.nsm"; DestDir: "{app}\bin"; Flags
 Source: "..\..\..\out\x64\Release\bin\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\out\x64\Release\bin\openmeteo.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
@@ -145,6 +144,7 @@ Source: "..\..\..\out\x64\Release\bin\sms.nsm"; DestDir: "{app}\bin"; Flags: ign
 Source: "..\..\..\out\x64\Release\bin\ssh.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\x64\Release\bin\tuxedo.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\weather.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\wineventsync.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
