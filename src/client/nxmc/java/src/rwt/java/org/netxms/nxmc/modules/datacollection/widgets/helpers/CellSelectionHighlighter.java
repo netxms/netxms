@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
  */
 package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
+import java.util.Set;
 import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.internal.theme.CssColor;
 import org.eclipse.rap.rwt.internal.theme.SimpleSelector;
 import org.eclipse.rap.rwt.internal.theme.ThemeUtil;
@@ -35,6 +37,8 @@ public class CellSelectionHighlighter
     */
    public CellSelectionHighlighter(SortableTableViewer viewer, CellSelectionManager manager)
    {
+      // Theme variant "cellselect" disables highlighting of selected rows, so that only selected cells are highlighted
+      viewer.getTable().setData(RWT.CUSTOM_VARIANT, "cellselect");
    }
 
    /**
@@ -46,11 +50,25 @@ public class CellSelectionHighlighter
    }
 
    /**
+    * Called by selection manager when set of selected cells is changed.
+    *
+    * @param added cells added to selection
+    * @param removed cells removed from selection
+    */
+   protected void selectionChanged(Set<ViewerCell> added, Set<ViewerCell> removed)
+   {
+      for(ViewerCell cell : removed)
+         unmarkCell(cell);
+      for(ViewerCell cell : added)
+         markCell(cell);
+   }
+
+   /**
     * @param cell
     */
    protected void markCell(ViewerCell cell)
    {
-      if (cell == null)
+      if ((cell == null) || cell.getItem().isDisposed())
          return;
 
       cell.setBackground(getCellColor(true));

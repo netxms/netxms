@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
+import java.util.Set;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
@@ -109,22 +110,36 @@ public class CellSelectionHighlighter
 	protected void focusCellChanged(ViewerCell newCell, ViewerCell oldCell)
 	{
 		// Redraw new area
-		if (newCell != null)
-		{
-			Rectangle rect = newCell.getBounds();
-			int x = newCell.getColumnIndex() == 0 ? 0 : rect.x;
-			int width = newCell.getColumnIndex() == 0 ? rect.x + rect.width : rect.width;
-			// 1 is a fix for Linux-GTK
-			newCell.getControl().redraw(x, rect.y - 1, width, rect.height + 1, true);
-		}
+      redrawCell(newCell);
+      redrawCell(oldCell);
+	}
 
-		if (oldCell != null)
-		{
-			Rectangle rect = oldCell.getBounds();
-			int x = oldCell.getColumnIndex() == 0 ? 0 : rect.x;
-			int width = oldCell.getColumnIndex() == 0 ? rect.x + rect.width : rect.width;
-			// 1 is a fix for Linux-GTK
-			oldCell.getControl().redraw(x, rect.y - 1, width, rect.height + 1, true);
-		}
-	}	
+   /**
+    * Called by selection manager when set of selected cells is changed.
+    *
+    * @param added cells added to selection
+    * @param removed cells removed from selection
+    */
+   protected void selectionChanged(Set<ViewerCell> added, Set<ViewerCell> removed)
+   {
+      if (!viewer.getTable().isDisposed())
+         viewer.getTable().redraw();
+   }
+
+   /**
+    * Redraw area occupied by given cell.
+    *
+    * @param cell cell to redraw (can be null)
+    */
+   private static void redrawCell(ViewerCell cell)
+   {
+      if ((cell == null) || cell.getItem().isDisposed() || cell.getControl().isDisposed())
+         return;
+
+      Rectangle rect = cell.getBounds();
+      int x = cell.getColumnIndex() == 0 ? 0 : rect.x;
+      int width = cell.getColumnIndex() == 0 ? rect.x + rect.width : rect.width;
+      // 1 is a fix for Linux-GTK
+      cell.getControl().redraw(x, rect.y - 1, width, rect.height + 1, true);
+   }
 }
