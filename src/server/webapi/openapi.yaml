@@ -2667,6 +2667,9 @@ paths:
         left untouched, and explicit `null` clears the field. Returns the updated object
         in the same shape as `GET /v1/objects/{object-id}`. Class-specific property groups
         (snmp, agent, polling, etc.) are exposed as separate sub-resources.
+
+        Requires modify access to the object. A user holding only the "edit comments" access
+        right may send a patch document containing `comments` as its only property.
       parameters:
         - name: object-id
           in: path
@@ -2742,7 +2745,10 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have modify access to the object (or to the peer interface)
+          description: >-
+            User does not have modify access to the object (or to the peer interface), or holds
+            only the "edit comments" right and the patch document changes properties other than
+            comments
         '404':
           description: Object with given ID does not exist
       security:
@@ -3608,6 +3614,7 @@ paths:
         Set the tag for a single responsible user or group. If the user is not yet
         responsible for the object it is added; otherwise its tag is updated. The user
         or group must exist. An absent or null tag is treated as an empty string.
+        Requires modify access to the object or the "edit responsible users" access right.
       parameters:
         - name: object-id
           in: path
@@ -3648,7 +3655,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have modify access to the object
+          description: User does not have modify or "edit responsible users" access to the object
         '404':
           description: Object with given ID does not exist
       security:
@@ -3660,7 +3667,8 @@ paths:
       summary: Remove a responsible user
       description: |
         Remove a user or group from the object's responsible users. Idempotent — removing
-        a user that is not responsible still returns 204.
+        a user that is not responsible still returns 204. Requires modify access to the
+        object or the "edit responsible users" access right.
       parameters:
         - name: object-id
           in: path
@@ -3681,7 +3689,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have modify access to the object
+          description: User does not have modify or "edit responsible users" access to the object
         '404':
           description: Object with given ID does not exist
       security:
@@ -3985,7 +3993,7 @@ paths:
     put:
       operationId: bindObjectChild
       summary: Bind child object to parent
-      description: Bind the object identified by child-id to the object identified by object-id as a parent. When the parent is a template the template is applied to the child. Requires modify access to both the parent and the child object.
+      description: Bind the object identified by child-id to the object identified by object-id as a parent. When the parent is a template the template is applied to the child. Requires modify access to the child object, and modify access to the parent object except for a template parent, where read access is sufficient.
       parameters:
         - name: object-id
           in: path
@@ -4017,7 +4025,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have modify access to parent or child object
+          description: User does not have required access to parent or child object
         '404':
           description: Parent or child object with given ID does not exist
         '409':
@@ -4031,7 +4039,7 @@ paths:
     delete:
       operationId: unbindObjectChild
       summary: Unbind child object from parent
-      description: Unbind the object identified by child-id from the object identified by object-id. Requires modify access to both the parent and the child object.
+      description: Unbind the object identified by child-id from the object identified by object-id. Requires modify access to the child object, and modify access to the parent object except for a template parent, where read access is sufficient.
       parameters:
         - name: object-id
           in: path
@@ -4059,7 +4067,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have modify access to parent or child object
+          description: User does not have required access to parent or child object
         '404':
           description: Parent or child object with given ID does not exist
       security:

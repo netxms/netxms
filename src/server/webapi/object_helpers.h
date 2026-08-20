@@ -30,12 +30,25 @@
 #include "webapi.h"
 
 /**
+ * Load object by URL placeholder "object-id" and check that the caller has either
+ * all rights from `requiredRights` or all rights from `alternativeRights` (used
+ * where a dedicated right grants a specific operation in place of full modify
+ * access). Returns the object on success. On failure returns nullptr and writes
+ * the corresponding HTTP status code to *httpCode (400 / 403 / 404). A denied
+ * OBJECT_ACCESS_MODIFY request is recorded in the audit log.
+ */
+shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights, uint32_t alternativeRights, int *httpCode);
+
+/**
  * Load object by URL placeholder "object-id" and check the given access rights.
  * Returns the object on success. On failure returns nullptr and writes the
  * corresponding HTTP status code to *httpCode (400 / 403 / 404). A denied
  * OBJECT_ACCESS_MODIFY request is recorded in the audit log.
  */
-shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights, int *httpCode);
+static inline shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights, int *httpCode)
+{
+   return LoadObjectForModify(context, requiredRights, requiredRights, httpCode);
+}
 
 /**
  * Apply a JSON merge-patch document to the object, write an audit log entry, and

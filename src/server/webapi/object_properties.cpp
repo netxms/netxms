@@ -29,13 +29,40 @@
 /**
  * Handler for PATCH /v1/objects/:object-id - common NetObj scalars.
  * Accepts a JSON merge-patch body. Returns the full updated object on success.
+ * Requires modify access, except that a caller holding OBJECT_ACCESS_EDIT_COMMENTS
+ * may patch object comments (mirrors NXCP command CMD_UPDATE_OBJECT_COMMENTS).
  */
 int H_ObjectPropertiesUpdate(Context *context)
 {
    int httpCode = 0;
-   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, OBJECT_ACCESS_EDIT_COMMENTS, &httpCode);
    if (object == nullptr)
       return httpCode;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_MODIFY))
+   {
+      // Caller was admitted by OBJECT_ACCESS_EDIT_COMMENTS - only comments can be changed
+      json_t *request = context->getRequestDocument();
+      if ((request == nullptr) || !json_is_object(request))
+      {
+         context->setErrorResponse("Request body must be a JSON object");
+         return 400;
+      }
+
+      const char *key;
+      json_t *value;
+      json_object_foreach(request, key, value)
+      {
+         if (strcmp(key, "comments"))
+         {
+            context->writeAuditLog(AUDIT_OBJECTS, false, object->getId(),
+               L"Access denied on modification of object %s [%u]", object->getName(), object->getId());
+            context->setErrorResponse("Only object comments can be modified with granted access rights");
+            return 403;
+         }
+      }
+   }
+
    return ApplyJsonPatch(context, object.get(), nullptr, L"Modified properties of object %s [%u]");
 }
 
