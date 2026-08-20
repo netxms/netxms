@@ -1,5 +1,5 @@
 /*
-** NetXMS Open-Meteo weather subagent
+** NetXMS weather subagent
 ** Copyright (C) 2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -16,130 +16,57 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: adapter.cpp
-** Open-Meteo API client and JSON parsing (the only Open-Meteo-aware code).
+** File: openmeteo.cpp
+** Open-Meteo provider adapter.
 **
 **/
 
-#include "openmeteo.h"
-#include <netxms-version.h>
-#include <nxlibcurl.h>
+#include "weather.h"
 #include <math.h>
 
+// Free (non-commercial) hosts. A commercial subscription serves the same
+// protocol from "customer-" prefixed hosts and requires an apikey parameter.
+#define OPENMETEO_FORECAST_URL            "https://api.open-meteo.com/v1/forecast"
+#define OPENMETEO_ENSEMBLE_URL            "https://ensemble-api.open-meteo.com/v1/ensemble"
+#define OPENMETEO_FORECAST_URL_CUSTOMER   "https://customer-api.open-meteo.com/v1/forecast"
+#define OPENMETEO_ENSEMBLE_URL_CUSTOMER   "https://customer-ensemble-api.open-meteo.com/v1/ensemble"
+
+// Variable set requested for both current conditions and hourly forecast.
+#define OPENMETEO_VARIABLES   "temperature_2m,relative_humidity_2m,cloud_cover,wind_speed_10m,precipitation,shortwave_radiation,direct_radiation"
+
 /**
- * Format a canonical location key from coordinates.
+ * Constructor
  */
-void FormatLocationKey(double latitude, double longitude, char *buffer)
+OpenMeteoProvider::OpenMeteoProvider(const char *apiKey, const char *ensembleModel)
 {
-   snprintf(buffer, MAX_LOC_KEY, "%.4f,%.4f", latitude, longitude);
+   strlcpy(m_apiKey, apiKey, sizeof(m_apiKey));
+   strlcpy(m_ensembleModel, ensembleModel, sizeof(m_ensembleModel));
 }
 
 /**
- * Parse a "lat,lon" pair. Returns true only when the whole string is two
- * comma-separated numbers within valid ranges, so location names (which never
- * take this shape) fall through to catalog lookup.
+ * Build URL for the combined current conditions + hourly forecast request.
  */
-bool ParseLatLon(const TCHAR *str, double *latitude, double *longitude)
+void OpenMeteoProvider::buildForecastUrl(double latitude, double longitude, int forecastDays, char *url, size_t size) const
 {
-   if ((str == nullptr) || (*str == 0))
-      return false;
-
-   TCHAR *end;
-   double lat = _tcstod(str, &end);
-   if (end == str)
-      return false;
-   while((*end == ' ') || (*end == '\t'))
-      end++;
-   if (*end != _T(','))
-      return false;
-   const TCHAR *p = end + 1;
-   double lon = _tcstod(p, &end);
-   if (end == p)
-      return false;
-   while((*end == ' ') || (*end == '\t'))
-      end++;
-   if (*end != 0)
-      return false;
-
-   if ((lat < -90.0) || (lat > 90.0) || (lon < -180.0) || (lon > 180.0))
-      return false;
-
-   *latitude = lat;
-   *longitude = lon;
-   return true;
+   int pos = snprintf(url, size,
+      "%s?latitude=%.4f&longitude=%.4f&current=%s&hourly=%s&forecast_days=%d&timeformat=unixtime&timezone=GMT",
+      (m_apiKey[0] != 0) ? OPENMETEO_FORECAST_URL_CUSTOMER : OPENMETEO_FORECAST_URL,
+      latitude, longitude, OPENMETEO_VARIABLES, OPENMETEO_VARIABLES, forecastDays);
+   if ((m_apiKey[0] != 0) && (pos > 0) && (static_cast<size_t>(pos) < size))
+      snprintf(&url[pos], size - pos, "&apikey=%s", m_apiKey);
 }
 
 /**
- * cURL write callback: accumulate response into a ByteStream.
+ * Build URL for the ensemble spread request.
  */
-static size_t CurlWriteFunction(char *ptr, size_t size, size_t nmemb, ByteStream *data)
+void OpenMeteoProvider::buildEnsembleUrl(double latitude, double longitude, int forecastDays, char *url, size_t size) const
 {
-   size_t bytes = size * nmemb;
-   data->write(ptr, bytes);
-   return bytes;
-}
-
-/**
- * Execute an API GET request.
- */
-bool OpenMeteoClient::get(const char *url, ByteStream *response, long *httpCode) const
-{
-   *httpCode = 0;
-
-   CURL *curl = curl_easy_init();
-   if (curl == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("curl_easy_init() failed"));
-      return false;
-   }
-
-   char errorText[CURL_ERROR_SIZE];
-   errorText[0] = 0;
-   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
-#if HAVE_DECL_CURLOPT_NOSIGNAL
-   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, static_cast<long>(1));
-#endif
-#if HAVE_DECL_CURLOPT_PROTOCOLS_STR
-   curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "https");
-#else
-   curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
-#endif
-   curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<long>(m_timeout));
-   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, static_cast<long>(1));
-   curl_easy_setopt(curl, CURLOPT_MAXREDIRS, static_cast<long>(4));
-   curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
-   curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
-   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(1));
-   curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, static_cast<long>(2));
-   EnableLibCURLUnexpectedEOFWorkaround(curl);
-
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWriteFunction);
-   curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
-
-   bool success = false;
-   if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
-   {
-      CURLcode rc = curl_easy_perform(curl);
-      if (rc == CURLE_OK)
-      {
-         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, httpCode);
-         if ((*httpCode >= 200) && (*httpCode <= 299))
-         {
-            response->write('\0');
-            success = true;
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("HTTP response code %03ld for [%hs]"), *httpCode, url);
-         }
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("curl_easy_perform() failed (%hs)"), errorText);
-      }
-   }
-   curl_easy_cleanup(curl);
-   return success;
+   int pos = snprintf(url, size,
+      "%s?latitude=%.4f&longitude=%.4f&hourly=shortwave_radiation,temperature_2m&models=%s&forecast_days=%d&timeformat=unixtime&timezone=GMT",
+      (m_apiKey[0] != 0) ? OPENMETEO_ENSEMBLE_URL_CUSTOMER : OPENMETEO_ENSEMBLE_URL,
+      latitude, longitude, m_ensembleModel, forecastDays);
+   if ((m_apiKey[0] != 0) && (pos > 0) && (static_cast<size_t>(pos) < size))
+      snprintf(&url[pos], size - pos, "&apikey=%s", m_apiKey);
 }
 
 /**
@@ -177,15 +104,16 @@ static bool IsErrorDocument(json_t *root)
 /**
  * Parse a /v1/forecast response into a current snapshot and an hourly forecast
  * curve (a single request carries both). Either output may be left null if the
- * corresponding block is absent; returns false only on unusable input.
+ * corresponding block is absent; returns false only on unusable input. The
+ * horizon is applied server side, so forecastDays is not used here.
  */
-bool ParseForecastResponse(const char *json, size_t len, WeatherSnapshot **current, ForecastCurve **forecast)
+bool OpenMeteoProvider::parseForecastResponse(const char *data, size_t len, int forecastDays, WeatherSnapshot **current, ForecastCurve **forecast) const
 {
    *current = nullptr;
    *forecast = nullptr;
 
    json_error_t error;
-   json_t *root = json_loadb(json, len, 0, &error);
+   json_t *root = json_loadb(data, len, 0, &error);
    if (root == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot parse forecast response (%hs at line %d)"), error.text, error.line);
@@ -209,6 +137,7 @@ bool ParseForecastResponse(const char *json, size_t len, WeatherSnapshot **curre
       s->directRadiation = JsonNumberOrNaN(cur, "direct_radiation");
       s->windSpeed = JsonNumberOrNaN(cur, "wind_speed_10m");
       s->relativeHumidity = JsonNumberOrNaN(cur, "relative_humidity_2m");
+      s->precipitation = JsonNumberOrNaN(cur, "precipitation");
       *current = s;
    }
 
@@ -225,6 +154,7 @@ bool ParseForecastResponse(const char *json, size_t len, WeatherSnapshot **curre
          json_t *direct = json_object_get(hourly, "direct_radiation");
          json_t *wind = json_object_get(hourly, "wind_speed_10m");
          json_t *humidity = json_object_get(hourly, "relative_humidity_2m");
+         json_t *precipitation = json_object_get(hourly, "precipitation");
 
          ForecastCurve *curve = new ForecastCurve();
          size_t count = json_array_size(timeArray);
@@ -241,6 +171,7 @@ bool ParseForecastResponse(const char *json, size_t len, WeatherSnapshot **curre
             p.directRadiation = ArrayValueOrNaN(direct, i);
             p.windSpeed = ArrayValueOrNaN(wind, i);
             p.relativeHumidity = ArrayValueOrNaN(humidity, i);
+            p.precipitation = ArrayValueOrNaN(precipitation, i);
             curve->points.add(&p);
          }
          if (curve->points.size() > 0)
@@ -316,10 +247,10 @@ struct SpreadAccumulator
  * Parse an /v1/ensemble response into a per-hour spread (min/mean/max) of solar
  * irradiance and temperature across all ensemble members.
  */
-EnsembleCurve *ParseEnsembleResponse(const char *json, size_t len)
+EnsembleCurve *OpenMeteoProvider::parseEnsembleResponse(const char *data, size_t len) const
 {
    json_error_t error;
-   json_t *root = json_loadb(json, len, 0, &error);
+   json_t *root = json_loadb(data, len, 0, &error);
    if (root == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot parse ensemble response (%hs at line %d)"), error.text, error.line);

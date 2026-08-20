@@ -1,18 +1,18 @@
-SUBAGENT = openmeteo
+SUBAGENT = weather
 
-pkglib_LTLIBRARIES = openmeteo.la
-openmeteo_la_SOURCES = main.cpp adapter.cpp location.cpp
-openmeteo_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
-openmeteo_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-openmeteo_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
+pkglib_LTLIBRARIES = weather.la
+weather_la_SOURCES = main.cpp util.cpp httpclient.cpp openmeteo.cpp metno.cpp location.cpp
+weather_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
+weather_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
+weather_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
 if USE_INTERNAL_JANSSON
-openmeteo_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+weather_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
-openmeteo_la_LIBADD += -ljansson
+weather_la_LIBADD += -ljansson
 endif
 
-EXTRA_DIST = openmeteo.h README.md
+EXTRA_DIST = weather.h README.md
 
 if !STATIC_BUILD
 install-exec-hook:

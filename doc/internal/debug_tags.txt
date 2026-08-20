@@ -174,8 +174,6 @@ nxsl.ssh	NXSL SSH session operations
 
 nxcp.streamcomp	NXCP stream compression
 
-openmeteo	Open-Meteo weather subagent
-
 otel.log	OpenTelemetry log processing (server side)
 otlp		OTLP receiver module
 otlp.export	OTLP event forwarder (events exported as OTLP logs)
@@ -291,6 +289,7 @@ useragent	User support application (server side)
 userdb		User database (server side)
 
 watchdog	Server watchdog
+weather	Weather subagent (Open-Meteo, MET Norway)
 webapi.objtools	WebAPI object tool execution and streaming
 webapi.tls	WebAPI TLS reverse proxy (reproxy)
 websvc		Web services

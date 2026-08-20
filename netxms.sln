@@ -161,7 +161,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxcproxy", "src\nxcproxy\nx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "netsvc", "src\agent\subagents\netsvc\netsvc.vcxproj", "{17C5C5F3-3F13-47F4-8606-1EC9B5416DB2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "openmeteo", "src\agent\subagents\openmeteo\openmeteo.vcxproj", "{41365EE5-5024-4AF3-B0CD-CC0008F8BBC3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "weather", "src\agent\subagents\weather\weather.vcxproj", "{41365EE5-5024-4AF3-B0CD-CC0008F8BBC3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "entsoe", "src\agent\subagents\entsoe\entsoe.vcxproj", "{CA4156A7-DDAB-408F-80AD-7D8EE6402215}"
 EndProject

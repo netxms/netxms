@@ -40,7 +40,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{41365EE5-5024-4AF3-B0CD-CC0008F8BBC3}</ProjectGuid>
-    <RootNamespace>openmeteo</RootNamespace>
+    <RootNamespace>weather</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -374,9 +374,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="adapter.cpp" />
+    <ClCompile Include="httpclient.cpp" />
     <ClCompile Include="location.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="metno.cpp" />
+    <ClCompile Include="openmeteo.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\nms_agent.h" />
@@ -384,7 +387,7 @@
     <ClInclude Include="..\..\..\..\include\nms_threads.h" />
     <ClInclude Include="..\..\..\..\include\nms_util.h" />
     <ClInclude Include="..\..\..\..\include\nxlog.h" />
-    <ClInclude Include="openmeteo.h" />
+    <ClInclude Include="weather.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\jansson\jansson.vcxproj">

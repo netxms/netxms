@@ -184,7 +184,7 @@ BUILD_STATIC_AGENT="no"
 BUILD_SDK="no"
 MODULES="libnetxms install"
 TEST_MODULES=""
-AGENT_UNIT_TESTS="entsoe extcheck openmeteo"
+AGENT_UNIT_TESTS="entsoe extcheck weather"
 TOOLS=""
 STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
@@ -1121,7 +1121,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="agent test-authtokens test-libnxcc test-libnxsl test-libnxsnmp test-ncd-webhook"
-	AGENT_UNIT_TESTS="entsoe extcheck openmeteo linux-cpu-usage-collector"
+	AGENT_UNIT_TESTS="entsoe extcheck weather linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb ssh vmgr xen asterisk python redis lldpd"
 	AGENT_DIRS="libnxtux nxsagent"
@@ -4764,7 +4764,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/netsvc/Makefile
 	src/agent/subagents/opcua/Makefile
 	src/agent/subagents/openbsd/Makefile
-	src/agent/subagents/openmeteo/Makefile
 	src/agent/subagents/oracle/Makefile
 	src/agent/subagents/pgsql/Makefile
 	src/agent/subagents/ping/Makefile
@@ -4780,6 +4779,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ubntlw/Makefile
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/vmgr/Makefile
+	src/agent/subagents/weather/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
@@ -4966,7 +4966,7 @@ AC_CONFIG_FILES([
 	tests/agent/unit/Makefile
 	tests/agent/unit/entsoe/Makefile
 	tests/agent/unit/extcheck/Makefile
-	tests/agent/unit/openmeteo/Makefile
+	tests/agent/unit/weather/Makefile
 	tests/agent/unit/linux-cpu-usage-collector/Makefile
 	tests/config/Makefile
 	tests/include/Makefile

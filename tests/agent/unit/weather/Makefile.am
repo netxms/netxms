@@ -1,0 +1,24 @@
+# Copyright (C) 2026 NetXMS Team <bugs@netxms.org>
+#
+# This file is free software; as a special exception the author gives
+# unlimited permission to copy and/or distribute it, with or without
+# modifications, as long as this notice is preserved.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+bin_PROGRAMS = test-unit-weather
+test_unit_weather_SOURCES = main.cpp \
+	@top_srcdir@/src/agent/subagents/weather/util.cpp \
+	@top_srcdir@/src/agent/subagents/weather/openmeteo.cpp \
+	@top_srcdir@/src/agent/subagents/weather/metno.cpp
+test_unit_weather_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/tests/include -I@top_srcdir@/build -I@top_srcdir@/src/agent/subagents/weather
+test_unit_weather_LDFLAGS = @EXEC_LDFLAGS@
+test_unit_weather_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
+
+if USE_INTERNAL_JANSSON
+test_unit_weather_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+test_unit_weather_LDADD += -ljansson
+endif
