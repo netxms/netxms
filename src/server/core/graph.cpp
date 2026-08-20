@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2024 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -445,8 +445,7 @@ uint32_t SaveGraph(const NXCPMessage& request, uint32_t userId, uint32_t *assign
             StructArray<GRAPH_ACL_ENTRY> *acl = LoadGraphACL(hdb, graphId);
             if ((acl != nullptr) && (acl->size() > 0))
             {
-               uint32_t *users = static_cast<uint32_t*>(MemAllocLocal(acl->size() * sizeof(uint32_t)));
-               uint32_t *accessRights = static_cast<uint32_t*>(MemAllocLocal(acl->size() * sizeof(uint32_t)));
+               Buffer<uint32_t, 256> users(acl->size()), accessRights(acl->size());
 
                for(int j = 0; j < acl->size(); j++)
                {
@@ -456,9 +455,6 @@ uint32_t SaveGraph(const NXCPMessage& request, uint32_t userId, uint32_t *assign
                update.setField(fieldId++, acl->size());
                update.setFieldFromInt32Array(fieldId++, acl->size(), users);
                update.setFieldFromInt32Array(fieldId++, acl->size(), accessRights);
-
-               MemFreeLocal(pdwUsers);
-               MemFreeLocal(pdwRights);
             }
             else
             {
