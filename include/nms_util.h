@@ -5591,7 +5591,8 @@ WCHAR LIBNETXMS_EXPORTABLE *TrimW(WCHAR *str);
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings, bool mergeSeparators = false);
 int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime);
 bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime, bool checkSeconds);
-bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currTime, time_t now);
+bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, struct tm *currTime, time_t now);
+bool LIBNETXMS_EXPORTABLE MatchScheduleWithSeconds(const TCHAR *schedule, bool *withSeconds, struct tm *currTime, time_t now);
 
 BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
 BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);

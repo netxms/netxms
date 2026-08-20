@@ -899,7 +899,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
                bool withSeconds = false;
 
                String schedule = expandSchedule(m_schedules->get(i));
-               if (MatchSchedule(schedule, &withSeconds, &tmCurrLocal, currTime))
+               if (MatchScheduleWithSeconds(schedule, &withSeconds, &tmCurrLocal, currTime))
                {
                   if (withSeconds || (currTime - m_tLastCheck >= 60) || (tmCurrLocal.tm_min != tmLastLocal.tm_min))
                   {

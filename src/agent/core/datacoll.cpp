@@ -220,7 +220,7 @@ public:
          for (int i = 0; i < m_schedules.size(); i++)
          {
             bool withSeconds = false;
-            if (MatchSchedule(m_schedules.get(i), &withSeconds, &tmCurrLocal, now))
+            if (MatchScheduleWithSeconds(m_schedules.get(i), &withSeconds, &tmCurrLocal, now))
             {
                if (withSeconds || (now - m_tLastCheck >= 60) || (tmCurrLocal.tm_min != tmLastLocal.tm_min))
                {

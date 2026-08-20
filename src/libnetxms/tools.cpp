@@ -2759,51 +2759,78 @@ check_step:
 }
 
 /**
- * Match schedule to current time
+ * Match all schedule fields except seconds (minute, hour, day of month, month, day of week) to given time.
+ * Returns pointer to seconds field within schedule (which will point to empty string if schedule does not
+ * have seconds field), or nullptr if schedule does not match.
  */
-bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currTime, time_t now)
+static const TCHAR *MatchScheduleFieldsExceptSeconds(const TCHAR *schedule, struct tm *currTime, time_t now)
 {
-   TCHAR szValue[256];
+   TCHAR value[256];
 
    // Minute
-   const TCHAR *pszCurr = ExtractWord(schedule, szValue);
-   if (!MatchScheduleElement(szValue, currTime->tm_min, 59, currTime, now, false))
-      return false;
+   const TCHAR *curr = ExtractWord(schedule, value);
+   if (!MatchScheduleElement(value, currTime->tm_min, 59, currTime, now, false))
+      return nullptr;
 
    // Hour
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, currTime->tm_hour, 23, currTime, now, false))
-      return false;
+   curr = ExtractWord(curr, value);
+   if (!MatchScheduleElement(value, currTime->tm_hour, 23, currTime, now, false))
+      return nullptr;
 
    // Day of month
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, currTime->tm_mday, GetLastMonthDay(currTime), currTime, now, false))
-      return false;
+   curr = ExtractWord(curr, value);
+   if (!MatchScheduleElement(value, currTime->tm_mday, GetLastMonthDay(currTime), currTime, now, false))
+      return nullptr;
 
    // Month
-   pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, currTime->tm_mon + 1, 12, currTime, now, false))
+   curr = ExtractWord(curr, value);
+   if (!MatchScheduleElement(value, currTime->tm_mon + 1, 12, currTime, now, false))
+      return nullptr;
+
+   // Day of week. Value 7 is accepted as an alias for Sunday in addition to 0, so on Sunday pattern is
+   // matched against both. Pattern cannot be tested twice in a row because MatchScheduleElement modifies
+   // it in place, so a pristine copy is kept for the second attempt.
+   curr = ExtractWord(curr, value);
+   TCHAR dayOfWeekValue[256];
+   _tcscpy(dayOfWeekValue, value);
+   if (!MatchScheduleElement(value, currTime->tm_wday, 6, currTime, now, false) &&
+       ((currTime->tm_wday != 0) || !MatchScheduleElement(dayOfWeekValue, 7, 6, currTime, now, false)))
+      return nullptr;
+
+   return curr;
+}
+
+/**
+ * Match schedule to current time with minute resolution. Seconds field, if present in schedule, is ignored.
+ * This function is intended for consumers that evaluate schedules once per minute - for them seconds field
+ * cannot be honored, and matching it would prevent schedule from ever firing.
+ */
+bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, struct tm *currTime, time_t now)
+{
+   return MatchScheduleFieldsExceptSeconds(schedule, currTime, now) != nullptr;
+}
+
+/**
+ * Match schedule to current time with second resolution. If schedule contains seconds field, it is matched
+ * against current second and *withSeconds is set to true. This function is intended for consumers that
+ * evaluate schedules once per second. Note that *withSeconds is left unchanged if schedule is rejected by
+ * one of the preceding fields - it is only meaningful when schedule matches.
+ */
+bool LIBNETXMS_EXPORTABLE MatchScheduleWithSeconds(const TCHAR *schedule, bool *withSeconds, struct tm *currTime, time_t now)
+{
+   const TCHAR *secondsField = MatchScheduleFieldsExceptSeconds(schedule, currTime, now);
+   if (secondsField == nullptr)
       return false;
 
-   // Day of week
-   pszCurr = ExtractWord(pszCurr, szValue);
-   for(int i = 0; szValue[i] != 0; i++)
-      if (szValue[i] == _T('7'))
-         szValue[i] = _T('0');
-   if (!MatchScheduleElement(szValue, currTime->tm_wday, 6, currTime, now, false))
-      return false;
+   TCHAR value[256];
+   value[0] = 0;
+   ExtractWord(secondsField, value);
+   if (value[0] == 0)
+      return true;
 
-   // Seconds
-   szValue[0] = _T('\0');
-   ExtractWord(pszCurr, szValue);
-   if (szValue[0] != _T('\0'))
-   {
-      if (withSeconds != nullptr)
-         *withSeconds = true;
-      return MatchScheduleElement(szValue, currTime->tm_sec, 59, currTime, now, true);
-   }
-
-   return true;
+   if (withSeconds != nullptr)
+      *withSeconds = true;
+   return MatchScheduleElement(value, currTime->tm_sec, 59, currTime, now, true);
 }
 
 /**
