@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017-2025 Raden Solutions
+ ** Copyright (C) 2017-2026 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *event)
    m_lists = nullptr;
    m_dataExtractor = nullptr;
    m_parseAsText = false;
+   m_truncationReported = false;
 }
 
 /**
@@ -49,6 +50,7 @@ Topic::Topic(const char *pattern)
    m_lists = nullptr;
    m_dataExtractor = nullptr;
    m_parseAsText = false;
+   m_truncationReported = false;
 }
 
 /**
@@ -65,8 +67,9 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *name, bool parseAsText)
    m_lists = nullptr;
    m_dataExtractor = new StructuredDataExtractor(pattern);
    m_parseAsText = parseAsText;
-   _tcsncpy(m_genericParamName, name, MAX_PARAM_NAME);
-   _tcsncat(m_genericParamName, _T("(*)"), MAX_PARAM_NAME);
+   m_truncationReported = false;
+   _tcslcpy(m_genericParamName, name, MAX_PARAM_NAME);
+   _tcslcat(m_genericParamName, _T("(*)"), MAX_PARAM_NAME);
 }
 
 /**
@@ -98,9 +101,33 @@ void Topic::processMessage(const char *topic, const char *msg)
    }
    else
    {
+      size_t msgLen = strlen(msg);
       m_mutex.lock();
       strlcpy(m_lastName, topic, MAX_DB_STRING);
-      strlcpy(m_lastValue, msg, MAX_RESULT_LENGTH);
+      if (msgLen < MAX_RESULT_LENGTH)
+      {
+         memcpy(m_lastValue, msg, msgLen + 1);
+      }
+      else
+      {
+         // Message is longer than maximum metric value length - truncate it at UTF-8 character boundary
+         size_t len = MAX_RESULT_LENGTH - 1;
+         while ((len > 0) && ((static_cast<unsigned char>(msg[len]) & 0xC0) == 0x80))
+            len--;
+         memcpy(m_lastValue, msg, len);
+         m_lastValue[len] = 0;
+         if (!m_truncationReported)
+         {
+            m_truncationReported = true;
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Message payload on topic \"%hs\" truncated from %u to %u bytes (maximum metric value length is %d bytes) - use structured data extractors to access complete payload"),
+                     topic, static_cast<uint32_t>(msgLen), static_cast<uint32_t>(len), MAX_RESULT_LENGTH - 1);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Message payload on topic \"%hs\" truncated from %u to %u bytes"),
+                     topic, static_cast<uint32_t>(msgLen), static_cast<uint32_t>(len));
+         }
+      }
       m_timestamp = time(nullptr);
       if (m_dataExtractor != nullptr)
       {
@@ -111,7 +138,7 @@ void Topic::processMessage(const char *topic, const char *msg)
 #else
          strlcpy(buffer, topic, 512);
 #endif
-         m_dataExtractor->updateContent(msg, strlen(msg), m_parseAsText, buffer);
+         m_dataExtractor->updateContent(msg, msgLen, m_parseAsText, buffer);
       }
       m_mutex.unlock();
    }

@@ -47,6 +47,7 @@ private:
    StringMap *m_lists;
    StructuredDataExtractor *m_dataExtractor;
    bool m_parseAsText;
+   bool m_truncationReported;
    Mutex m_mutex;
 
 public:
