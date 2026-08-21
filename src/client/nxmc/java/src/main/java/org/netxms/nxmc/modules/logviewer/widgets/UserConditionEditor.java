@@ -18,11 +18,14 @@
  */
 package org.netxms.nxmc.modules.logviewer.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
+import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.widgets.UserSelector;
@@ -63,6 +66,12 @@ public class UserConditionEditor extends ConditionEditor
 	{
       userSelector = new UserSelector(this, SWT.NONE, new SelectorConfigurator().setShowLabel(false));
       userSelector.setBackground(getBackground());
+      userSelector.setMultiSelectionHandler((users) -> {
+         List<ColumnFilter> filters = new ArrayList<ColumnFilter>(users.size());
+         for(AbstractUserObject u : users)
+            filters.add(createFilter(u.getId()));
+         getColumnFilterEditor().addConditions(filters);
+      });
       GridData gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;
       gd.horizontalAlignment = SWT.FILL;
@@ -82,8 +91,19 @@ public class UserConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-      ColumnFilter filter = new ColumnFilter(ColumnFilterType.EQUALS, userSelector.getUserId());
-		filter.setNegated(getSelectedOperation() == 1);
-		return filter;
+      return createFilter(userSelector.getUserId());
 	}
+
+   /**
+    * Create filter for given user using currently selected operation.
+    *
+    * @param userId user ID
+    * @return filter for given user
+    */
+   private ColumnFilter createFilter(long userId)
+   {
+      ColumnFilter filter = new ColumnFilter(ColumnFilterType.EQUALS, userId);
+      filter.setNegated(getSelectedOperation() == 1);
+      return filter;
+   }
 }

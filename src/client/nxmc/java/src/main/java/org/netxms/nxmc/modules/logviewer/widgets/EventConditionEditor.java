@@ -18,10 +18,13 @@
  */
 package org.netxms.nxmc.modules.logviewer.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.ColumnFilterType;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.nxmc.base.widgets.helpers.SelectorConfigurator;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -63,6 +66,12 @@ public class EventConditionEditor extends ConditionEditor
 	{
       eventSelector = new EventSelector(this, SWT.NONE, new SelectorConfigurator().setShowLabel(false));
       eventSelector.setBackground(getBackground());
+      eventSelector.setMultiSelectionHandler((events) -> {
+         List<ColumnFilter> filters = new ArrayList<ColumnFilter>(events.size());
+         for(EventTemplate e : events)
+            filters.add(createFilter(e.getCode()));
+         getColumnFilterEditor().addConditions(filters);
+      });
       GridData gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;
       gd.horizontalAlignment = SWT.FILL;
@@ -82,8 +91,19 @@ public class EventConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-      ColumnFilter filter = new ColumnFilter(ColumnFilterType.EQUALS, eventSelector.getEventCode());
-		filter.setNegated(getSelectedOperation() == 1);
-		return filter;
+      return createFilter(eventSelector.getEventCode());
 	}
+
+   /**
+    * Create filter for given event code using currently selected operation.
+    *
+    * @param eventCode event code
+    * @return filter for given event code
+    */
+   private ColumnFilter createFilter(long eventCode)
+   {
+      ColumnFilter filter = new ColumnFilter(ColumnFilterType.EQUALS, eventCode);
+      filter.setNegated(getSelectedOperation() == 1);
+      return filter;
+   }
 }

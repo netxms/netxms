@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.logviewer.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
@@ -64,6 +66,12 @@ public class ObjectConditionEditor extends ConditionEditor
 	{
       objectSelector = new ObjectSelector(this, SWT.NONE, new SelectorConfigurator().setShowLabel(false));
       objectSelector.setObjectClass(AbstractObject.class);
+      objectSelector.setMultiSelectionHandler((objects) -> {
+         List<ColumnFilter> filters = new ArrayList<ColumnFilter>(objects.size());
+         for(AbstractObject o : objects)
+            filters.add(createFilter(o.getObjectId()));
+         getColumnFilterEditor().addConditions(filters);
+      });
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -94,9 +102,20 @@ public class ObjectConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		int op = getSelectedOperation();
-      ColumnFilter filter = new ColumnFilter(((op == 2) || (op == 3)) ? ColumnFilterType.CHILDOF : ColumnFilterType.EQUALS, objectSelector.getObjectId());
-		filter.setNegated((op == 1) || (op == 3));
-		return filter;
+      return createFilter(objectSelector.getObjectId());
 	}
+
+   /**
+    * Create filter for given object using currently selected operation.
+    *
+    * @param objectId object ID
+    * @return filter for given object
+    */
+   private ColumnFilter createFilter(long objectId)
+   {
+      int op = getSelectedOperation();
+      ColumnFilter filter = new ColumnFilter(((op == 2) || (op == 3)) ? ColumnFilterType.CHILDOF : ColumnFilterType.EQUALS, objectId);
+      filter.setNegated((op == 1) || (op == 3));
+      return filter;
+   }
 }

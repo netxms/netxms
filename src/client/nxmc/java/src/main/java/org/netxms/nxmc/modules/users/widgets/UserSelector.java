@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.modules.users.widgets;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -43,6 +46,7 @@ public class UserSelector extends AbstractSelector
    private int userId = -1;
    private Image imageUser;
    private Image imageGroup;
+   private Consumer<List<AbstractUserObject>> multiSelectionHandler = null;
 
    /**
     * Create user selector.
@@ -87,7 +91,7 @@ public class UserSelector extends AbstractSelector
    protected void selectionButtonHandler()
    {
       UserSelectionDialog dlg = new UserSelectionDialog(getShell(), null);
-      dlg.enableMultiSelection(false);
+      dlg.enableMultiSelection(multiSelectionHandler != null);
       if (dlg.open() == Window.OK)
       {
          long prevUserId = userId;
@@ -106,7 +110,20 @@ public class UserSelector extends AbstractSelector
          }
          if (prevUserId != userId)
             fireModifyListeners();
+         if ((multiSelectionHandler != null) && (users.length > 1))
+            multiSelectionHandler.accept(Arrays.asList(users).subList(1, users.length));
       }
+   }
+
+   /**
+    * Set handler for multiple selection. If handler is set, selection dialog will allow selection of more than one user. First
+    * selected user becomes this selector's value, and all remaining ones are passed to the handler.
+    *
+    * @param multiSelectionHandler handler for users selected in addition to the first one, or null to disable multiple selection
+    */
+   public void setMultiSelectionHandler(Consumer<List<AbstractUserObject>> multiSelectionHandler)
+   {
+      this.multiSelectionHandler = multiSelectionHandler;
    }
 
    /**

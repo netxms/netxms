@@ -47,9 +47,19 @@ public abstract class ConditionEditor extends Composite
 	 */
    protected ConditionEditor(Composite parent)
 	{
-		super(parent, SWT.NONE);		
+		super(parent, SWT.NONE);
       setBackground(parent.getBackground());
 	}
+
+   /**
+    * Get column filter editor this condition editor belongs to.
+    *
+    * @return owning column filter editor
+    */
+   protected ColumnFilterEditor getColumnFilterEditor()
+   {
+      return (ColumnFilterEditor)getParent();
+   }
 
 	/**
 	 * Initialize editor
