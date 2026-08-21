@@ -1,74 +1,53 @@
 package org.netxms.nxmc.modules.networkmaps.views.helpers;
 
-import java.io.File;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.ImageTransfer;
-import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
+import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ExtendedGraphViewer;
 import org.slf4j.Logger;
 
+/**
+ * Helper for capturing network map image in web client. RAP images are immutable and cannot be used as drawing target, so map content
+ * cannot be rendered into server side image buffer. Instead, currently rendered map is captured on client side from the browser DOM
+ * (via {@code domtoimage} helper), same way as it is done for geographical maps, charts, and dashboards. As a consequence only visible
+ * part of the map is captured.
+ */
 public class MapImageManipulationHelper
 {
-
    /**
-    * Save map image to file
+    * Save map image to file. Shell and logger are unused in web client (capture and download are browser driven), and file name is used
+    * as suggested download name, defaulting to "map.png" when null.
+    *
+    * @return true when the request was dispatched to the client
     */
    public static boolean saveMapImageToFile(Shell shell, ExtendedGraphViewer viewer, Logger logger, String fileName)
    {
-      return saveImageToFile(shell, viewer.takeSnapshot(), logger, fileName);
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor == null)
+         return false;
+      StringBuilder js = new StringBuilder();
+      js.append("RWTUtil_widgetToImage('");
+      js.append(WidgetUtil.getId(viewer.getControl()));
+      js.append("', 'div', '");
+      js.append((fileName != null) ? fileName : "map.png");
+      js.append("');");
+      executor.execute(js.toString());
+      return true;
    }
 
    /**
-    * Save an already-captured snapshot using the RAP download handler. The
-    * caller hands over ownership of {@code image}; this method disposes it.
+    * Copy map image to clipboard using browser's clipboard API.
     */
-   public static boolean saveImageToFile(Shell shell, Image image, Logger logger, String fileName)
-   {
-      if (image == null)
-         return false;
-      try
-      {
-         ImageLoader loader = new ImageLoader();
-         loader.data = new ImageData[] { image.getImageData() };
-         File tempFile = File.createTempFile("MapImage_" + image.hashCode(), "_" + System.currentTimeMillis());
-         loader.save(tempFile.getAbsolutePath(), SWT.IMAGE_PNG);
-         DownloadServiceHandler.addDownload(tempFile.getName(), "map.png", tempFile, "image/png");
-         DownloadServiceHandler.startDownload(tempFile.getName());
-         return true;
-      }
-      catch(Exception e)
-      {
-         logger.error("Exception in saveImageToFile", e);
-         return false;
-      }
-      finally
-      {
-         image.dispose();
-      }
-   }
-
    public static void copyMapImageToClipboard(ExtendedGraphViewer viewer)
    {
-      copyImageToClipboard(viewer.getControl().getDisplay(), viewer.takeSnapshot());
-   }
-
-   /**
-    * Push an already-captured snapshot onto the system clipboard. The caller
-    * hands over ownership of {@code image}; the helper does not dispose it.
-    */
-   public static void copyImageToClipboard(Display display, Image image)
-   {
-      if (image == null)
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor == null)
          return;
-      ImageTransfer imageTransfer = ImageTransfer.getInstance();
-      final Clipboard clipboard = new Clipboard(display);
-      clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+      StringBuilder js = new StringBuilder();
+      js.append("RWTUtil_widgetToClipboard('");
+      js.append(WidgetUtil.getId(viewer.getControl()));
+      js.append("', 'div');");
+      executor.execute(js.toString());
    }
 }
