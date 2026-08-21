@@ -27,7 +27,7 @@
  * rights. Returns the rack on success. On failure returns nullptr and writes the
  * corresponding HTTP status code to *httpCode (400 if the object is not a rack).
  */
-static shared_ptr<Rack> LoadRackForModify(Context *context, uint32_t requiredRights, int *httpCode)
+static shared_ptr<Rack> LoadRackForModify(Context *context, uint64_t requiredRights, int *httpCode)
 {
    shared_ptr<NetObj> object = LoadObjectForModify(context, requiredRights, httpCode);
    if (object == nullptr)

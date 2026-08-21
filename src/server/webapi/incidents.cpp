@@ -28,7 +28,7 @@
  * Get incident referenced by :incident-id placeholder. Sets response code and returns nullptr
  * if incident cannot be accessed.
  */
-static shared_ptr<Incident> IncidentFromRequest(Context *context, uint32_t objectAccess, int *responseCode)
+static shared_ptr<Incident> IncidentFromRequest(Context *context, uint64_t objectAccess, int *responseCode)
 {
    uint32_t incidentId = context->getPlaceholderValueAsUInt32(L"incident-id");
    if (incidentId == 0)

@@ -31,7 +31,7 @@
 /**
  * Find node by name or ID and check access rights
  */
-static shared_ptr<Node> FindAndValidateNode(json_t *arguments, uint32_t userId, uint32_t accessRights, std::string *errorMessage)
+static shared_ptr<Node> FindAndValidateNode(json_t *arguments, uint32_t userId, uint64_t accessRights, std::string *errorMessage)
 {
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectByNameOrId(arguments, "object", OBJECT_NODE));
    if (node == nullptr)

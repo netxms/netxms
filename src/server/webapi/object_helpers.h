@@ -37,7 +37,7 @@
  * the corresponding HTTP status code to *httpCode (400 / 403 / 404). A denied
  * OBJECT_ACCESS_MODIFY request is recorded in the audit log.
  */
-shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights, uint32_t alternativeRights, int *httpCode);
+shared_ptr<NetObj> LoadObjectForModify(Context *context, uint64_t requiredRights, uint64_t alternativeRights, int *httpCode);
 
 /**
  * Load object by URL placeholder "object-id" and check the given access rights.
@@ -45,7 +45,7 @@ shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights
  * corresponding HTTP status code to *httpCode (400 / 403 / 404). A denied
  * OBJECT_ACCESS_MODIFY request is recorded in the audit log.
  */
-static inline shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights, int *httpCode)
+static inline shared_ptr<NetObj> LoadObjectForModify(Context *context, uint64_t requiredRights, int *httpCode)
 {
    return LoadObjectForModify(context, requiredRights, requiredRights, httpCode);
 }

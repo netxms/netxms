@@ -123,7 +123,7 @@ enum class AlarmAccessResult
 /**
  * Check whether given user is allowed to perform an operation on alarm with given required object access rights.
  */
-static AlarmAccessResult CheckAlarmAccess(uint32_t alarmId, uint32_t userId, uint64_t systemAccessRights, uint32_t requiredObjectAccess)
+static AlarmAccessResult CheckAlarmAccess(uint32_t alarmId, uint32_t userId, uint64_t systemAccessRights, uint64_t requiredObjectAccess)
 {
    Alarm *alarm = FindAlarmById(alarmId);   // returns a copy that must be deleted by caller
    if (alarm == nullptr)
@@ -167,7 +167,7 @@ static std::string PerformAlarmAction(json_t *arguments, uint32_t userId, AlarmA
    }
    bool includeSubordinates = json_object_get_boolean(arguments, "include_subordinates", true);
 
-   uint32_t requiredObjectAccess = (action == AlarmAction::TERMINATE) ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS;
+   uint64_t requiredObjectAccess = (action == AlarmAction::TERMINATE) ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS;
    uint64_t systemAccessRights = GetEffectiveSystemRights(userId);
 
    json_t *results = json_array();

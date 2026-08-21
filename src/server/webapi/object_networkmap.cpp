@@ -46,7 +46,7 @@ static const char *s_mapContentKeys[] =
  * access rights. On failure returns nullptr and writes the matching HTTP status
  * code to *httpCode (400 if the object is not a network map).
  */
-static shared_ptr<NetObj> LoadNetworkMapForModify(Context *context, uint32_t requiredRights, int *httpCode)
+static shared_ptr<NetObj> LoadNetworkMapForModify(Context *context, uint64_t requiredRights, int *httpCode)
 {
    shared_ptr<NetObj> object = LoadObjectForModify(context, requiredRights, httpCode);
    if (object == nullptr)

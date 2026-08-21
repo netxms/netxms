@@ -39,7 +39,7 @@ static const char *s_dashboardContentKeys[] = { "numColumns", "displayPriority",
  * and check the given access rights. On failure returns nullptr and writes the
  * matching HTTP status code to *httpCode (400 if the object is not a dashboard).
  */
-static shared_ptr<NetObj> LoadDashboardForModify(Context *context, uint32_t requiredRights, int *httpCode)
+static shared_ptr<NetObj> LoadDashboardForModify(Context *context, uint64_t requiredRights, int *httpCode)
 {
    shared_ptr<NetObj> object = LoadObjectForModify(context, requiredRights, httpCode);
    if (object == nullptr)

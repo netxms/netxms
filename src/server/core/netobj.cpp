@@ -3268,7 +3268,7 @@ int NetObj::getParentsCount(int typeFilter) const
 /**
  * Check if this object has at least one parent accessible by given user
  */
-bool NetObj::hasAccessibleParents(uint32_t userId, uint32_t requiredRights) const
+bool NetObj::hasAccessibleParents(uint32_t userId, uint64_t requiredRights) const
 {
    bool result = false;
    readLockParentList();

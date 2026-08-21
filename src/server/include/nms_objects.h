@@ -1701,7 +1701,7 @@ public:
    int getParentsCount(int typeFilter = -1) const;
    int getChildrenCount(int typeFilter = -1) const;
    int getChildrenCount(std::function<bool (const NetObj&)> filter) const;
-   bool hasAccessibleParents(uint32_t userId, uint32_t requiredRights = OBJECT_ACCESS_READ) const;
+   bool hasAccessibleParents(uint32_t userId, uint64_t requiredRights = OBJECT_ACCESS_READ) const;
 
    shared_ptr<NetObj> findChildObject(const TCHAR *name, int typeFilter) const;
    shared_ptr<Node> findChildNode(const InetAddress& addr) const;

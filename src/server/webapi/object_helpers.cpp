@@ -28,7 +28,7 @@
  * on it. On any failure returns nullptr and writes the matching HTTP status code
  * (400 / 403 / 404) to *httpCode. A denied modify request is recorded in the audit log.
  */
-shared_ptr<NetObj> LoadObjectForModify(Context *context, uint32_t requiredRights, uint32_t alternativeRights, int *httpCode)
+shared_ptr<NetObj> LoadObjectForModify(Context *context, uint64_t requiredRights, uint64_t alternativeRights, int *httpCode)
 {
    uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
    if (objectId == 0)

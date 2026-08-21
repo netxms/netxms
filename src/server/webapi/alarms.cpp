@@ -80,7 +80,7 @@ int H_Alarms(Context *context)
 /**
  * Get alarm from request
  */
-static Alarm *AlarmFromRequest(Context *context, uint32_t objectAccess, int *responseCode)
+static Alarm *AlarmFromRequest(Context *context, uint64_t objectAccess, int *responseCode)
 {
    uint32_t alarmId = context->getPlaceholderValueAsUInt32(_T("alarm-id"));
    if (alarmId == 0)

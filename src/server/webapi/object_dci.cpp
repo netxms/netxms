@@ -29,7 +29,7 @@
  * (data collection target or template) and that the caller has the given access rights. On failure
  * returns nullptr and writes the matching HTTP status code to *httpCode.
  */
-static shared_ptr<DataCollectionOwner> LoadDataCollectionOwner(Context *context, uint32_t requiredRights, int *httpCode)
+static shared_ptr<DataCollectionOwner> LoadDataCollectionOwner(Context *context, uint64_t requiredRights, int *httpCode)
 {
    shared_ptr<NetObj> object = LoadObjectForModify(context, requiredRights, httpCode);
    if (object == nullptr)

@@ -585,7 +585,7 @@ static json_t *BuildLayout(json_t *arguments, int numColumns, StringBuffer& note
  * Resolve dashboard from arguments, enforcing object class and access rights.
  * On failure, sets errorOut and returns nullptr.
  */
-static shared_ptr<Dashboard> ResolveDashboard(json_t *arguments, uint32_t userId, uint32_t requiredAccess, std::string *errorOut)
+static shared_ptr<Dashboard> ResolveDashboard(json_t *arguments, uint32_t userId, uint64_t requiredAccess, std::string *errorOut)
 {
    shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "dashboard", OBJECT_DASHBOARD);
    if (object == nullptr)

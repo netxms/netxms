@@ -170,7 +170,7 @@ int H_ObjectCustomAttributeDelete(Context *context)
  * rights. Returns the asset on success. On failure returns nullptr and writes the
  * corresponding HTTP status code to *httpCode (400 if the object is not an asset).
  */
-static shared_ptr<Asset> LoadAssetForModify(Context *context, uint32_t requiredRights, int *httpCode)
+static shared_ptr<Asset> LoadAssetForModify(Context *context, uint64_t requiredRights, int *httpCode)
 {
    shared_ptr<NetObj> object = LoadObjectForModify(context, requiredRights, httpCode);
    if (object == nullptr)
