@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -251,15 +252,8 @@ public class AccessControl extends ObjectPropertyPage
                AccessListElement element = (AccessListElement)selection.getFirstElement();
 
                long rights = element.getAccessRights();
-               long mask = 1;
-               for(int i = 0; i < accessChecks.size(); i++, mask <<= 1)
-               {
-                  Button check = accessChecks.get(mask);
-                  if (check != null)
-                  {
-                     check.setSelection((rights & mask) == mask);
-                  }
-               }
+               for(Entry<Long, Button> e : accessChecks.entrySet())
+                  e.getValue().setSelection((rights & e.getKey()) == e.getKey().longValue());
 
                enableAllChecks(!element.isInherited());
 				}

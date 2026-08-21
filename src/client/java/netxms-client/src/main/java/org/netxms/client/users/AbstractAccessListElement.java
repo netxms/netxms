@@ -105,6 +105,6 @@ public abstract class AbstractAccessListElement
 	@Override
 	public int hashCode()
 	{
-      return (int)((accessRights << 16) & userId);
+      return userId * 31 + Long.hashCode(accessRights);
 	}
 }
