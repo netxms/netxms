@@ -95,6 +95,7 @@ int H_AssetAttributeDetails(Context *context);
 int H_AssetAttributeCreate(Context *context);
 int H_AssetAttributeUpdate(Context *context);
 int H_AssetAttributeDelete(Context *context);
+int H_BusinessServiceAvailability(Context *context);
 int H_CloudConnectors(Context *context);
 int H_GetConnectionHistory(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
@@ -165,6 +166,7 @@ int H_ObjectAgentGet(Context *context);
 int H_ObjectAgentUpdate(Context *context);
 int H_ObjectAutoBindUpdate(Context *context);
 int H_ObjectCreate(Context *context);
+int H_ObjectDelete(Context *context);
 int H_ObjectAccessRights(Context *context);
 int H_ObjectAccessRightsUpdate(Context *context);
 int H_ObjectDashboard(Context *context);
@@ -652,6 +654,10 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id")
       .GET(H_ObjectDetails)
       .PATCH(H_ObjectPropertiesUpdate)
+      .DELETE(H_ObjectDelete)
+      .build();
+   RouteBuilder("v1/objects/:object-id/availability")
+      .GET(H_BusinessServiceAvailability)
       .build();
    RouteBuilder("v1/objects/:object-id/rack-layout")
       .GET(H_RackLayout)
