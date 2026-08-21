@@ -12,18 +12,23 @@ model specification's v1 slot set, plus the signal tags the internal (estimation
 needs — environmental and thermal covariates that are not EED data points themselves but
 are inputs to the D1 estimation methodology.
 
-**Naming principle:** the interpretation vocabulary is generic infrastructure, not a
-Green DC-branded namespace. A physical signal is what it is with or without the Green DC
-modules — ambient temperature is ambient temperature — so signal tags carry no project
-prefix and are usable by any consumer (dashboards, maps, other engines). Only the slots
-whose meaning *is* the EED Annex II reporting semantics ("IT equipment energy inside the
-reporting boundary") carry the `eed.` prefix, because the standard defines them, not
-physics. This diverges from the `greendc.*` identifiers sketched in the two draft specs
-(data model spec §3.2, KPI doc §5.1); those documents should be aligned to this
-vocabulary at taxonomy freeze.
+**Naming principles:**
 
-An optional qualifier suffix separated by `/` disambiguates per-feed meters bound at one
-object (`power.feed/A`), per data model spec §3.3.
+1. The interpretation vocabulary is generic infrastructure, not a Green DC-branded
+   namespace. A physical signal is what it is with or without the Green DC modules —
+   ambient temperature is ambient temperature — so signal tags carry no project prefix
+   and are usable by any consumer (dashboards, maps, other engines). Only the slots
+   whose meaning *is* the EED Annex II reporting semantics ("IT equipment energy inside
+   the reporting boundary") carry the `eed.` prefix, because the standard defines them,
+   not physics. This diverges from the `greendc.*` identifiers sketched in the two draft
+   specs (data model spec §3.2, KPI doc §5.1); those documents should be aligned to this
+   vocabulary at taxonomy freeze.
+2. Well-known system tags use a **uniform dotted style**, with each separator having
+   exactly one meaning: dot = hierarchy level (`env.temp.ambient`), hyphen = word break
+   inside a single level (e.g. a future `env.temp.wet-bulb`), slash = binding qualifier
+   (`power.feed/A`, per data model spec §3.3). Dotted hierarchy is already the house
+   style for metric names (`System.CPU.Usage`) and debug tags; the pre-existing
+   hyphenated interface tags are migrated to it (§6.5).
 
 ---
 
@@ -141,15 +146,39 @@ the counter slot *or* the gauge slot for a given flow, never both for the same m
   / carbon strand, which has its own document; a `carbon.` tag group (e.g.
   `carbon.intensity`) is anticipated but deliberately not defined here.
 
-### 6.5 Vocabulary governance and client support
+### 6.5 Migration of existing well-known tags
+
+The pre-existing hyphenated interface tags are renamed to the dotted style so the
+well-known vocabulary is uniform (separate change set with its own DB upgrade):
+
+| Current | New |
+|---|---|
+| `iface-inbound-bits` | `iface.inbound.bits` |
+| `iface-inbound-bytes` | `iface.inbound.bytes` |
+| `iface-inbound-util` | `iface.inbound.util` |
+| `iface-outbound-bits` | `iface.outbound.bits` |
+| `iface-outbound-bytes` | `iface.outbound.bytes` |
+| `iface-outbound-util` | `iface.outbound.util` |
+| `iface-speed` | `iface.speed` |
+
+Migration scope:
+
+- Server literals: interface DCI lookup in `session.cpp`, prefix matches in
+  `dcitem.cpp`, network map link data source resolution in `netmap.cpp`.
+- Client literals: the well-known tag list in `OtherOptions.java` and tag assignment in
+  `CreateInterfaceDciAction.java`.
+- DB upgrade rewriting existing `system_tag` values (items and template items).
+- Template import normalizes old-style `iface-*` tags to the dotted form, so previously
+  exported templates keep their auto-link and performance-view behavior.
+- User-authored references to the literal old strings (NXSL scripts, map link configs,
+  dashboard filters) cannot be migrated automatically — release-notes item.
+
+### 6.6 Vocabulary governance and client support
 
 - The vocabulary is controlled by the versioned slot taxonomy, not by a reserved
   prefix: binding-time validation (known tag, level legality, unit compatibility,
   cardinality) applies to every tag listed in the taxonomy, per spec §3.3. Tags outside
   the taxonomy remain ordinary free-form system tags, as today.
-- Existing well-known system tags (`iface-inbound-bits`, …) use a hyphenated flat style;
-  the dotted hierarchy here groups related signals. Both styles coexist in the same
-  property.
 - The management console's DCI property page keeps a fixed list of well-known tags
   (`OtherOptions.java`); the Green DC vocabulary should come from the versioned taxonomy
   rather than extending that hard-coded array.
