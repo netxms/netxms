@@ -61,9 +61,13 @@ LONG H_SystemTimeISO8601UTC(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Ab
    time_t t = time(nullptr);
    struct tm utcTime;
 #if HAVE_GMTIME_R
-   gmtime_r(&t, &utcTime);
+   if (gmtime_r(&t, &utcTime) == nullptr)
+      return SYSINFO_RC_ERROR;
 #else
-   memcpy(&utcTime, gmtime(&t), sizeof(struct tm));
+   struct tm *p = gmtime(&t);
+   if (p == nullptr)
+      return SYSINFO_RC_ERROR;
+   memcpy(&utcTime, p, sizeof(struct tm));
 #endif
    _tcsftime(value, MAX_RESULT_LENGTH, _T("%Y-%m-%dT%H:%M:%SZ"), &utcTime);
    return SYSINFO_RC_SUCCESS;
@@ -77,9 +81,13 @@ LONG H_SystemTimeISO8601Local(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, 
    time_t t = time(nullptr);
    struct tm localTime;
 #if HAVE_LOCALTIME_R
-   localtime_r(&t, &localTime);
+   if (localtime_r(&t, &localTime) == nullptr)
+      return SYSINFO_RC_ERROR;
 #else
-   memcpy(&localTime, localtime(&t), sizeof(struct tm));
+   struct tm *p = localtime(&t);
+   if (p == nullptr)
+      return SYSINFO_RC_ERROR;
+   memcpy(&localTime, p, sizeof(struct tm));
 #endif
    _tcsftime(value, MAX_RESULT_LENGTH, _T("%Y-%m-%dT%H:%M:%S"), &localTime);
    GetSystemTimeZone(&value[19], MAX_RESULT_LENGTH - 19, false, true);
