@@ -339,6 +339,84 @@ static void TestPDUEncoding()
 }
 
 /**
+ * Find byte sequence in buffer
+ */
+static bool ContainsBytes(const BYTE *buffer, size_t size, const BYTE *pattern, size_t patternSize)
+{
+   for(size_t i = 0; i + patternSize <= size; i++)
+      if (!memcmp(&buffer[i], pattern, patternSize))
+         return true;
+   return false;
+}
+
+/**
+ * Test SNMPv1 trap encoding (enterprise field and time-stamp type as defined in RFC 1157 / RFC 2576)
+ */
+static void TestV1TrapEncoding()
+{
+   StartTest(_T("SNMPv1 trap encoding/decoding"));
+
+   SNMP_SecurityContext securityContext("public");
+
+   // Enterprise specific trap E.0.N: enterprise = E, specific trap = N, time-stamp as TimeTicks
+   SNMP_ObjectId trapId({ 1, 3, 6, 1, 4, 1, 57163, 1, 0, 2 });
+   SNMP_PDU pdu(SNMP_TRAP, SNMP_VERSION_1, trapId, 12345, 1);
+   pdu.bindVariable(new SNMP_Variable({ 1, 3, 6, 1, 4, 1, 57163, 1, 1, 3, 0 }));
+
+   SNMP_PDUBuffer encodedPDU;
+   size_t size = pdu.encode(&encodedPDU, &securityContext);
+   AssertTrue(size > 0);
+
+   static const BYTE enterprise[] = { 0x06, 0x09, 0x2B, 0x06, 0x01, 0x04, 0x01, 0x83, 0xBE, 0x4B, 0x01, 0x40 };  // OID .1.3.6.1.4.1.57163.1 followed by IpAddress tag
+   AssertTrue(ContainsBytes(encodedPDU, size, enterprise, sizeof(enterprise)));
+   static const BYTE trapTypes[] = { 0x02, 0x01, 0x06, 0x02, 0x01, 0x02, 0x43, 0x02, 0x30, 0x39 };  // generic 6, specific 2, TimeTicks 12345
+   AssertTrue(ContainsBytes(encodedPDU, size, trapTypes, sizeof(trapTypes)));
+
+   SNMP_PDU pdu2;
+   AssertTrue(pdu2.parse(encodedPDU, size, &securityContext, false));
+   AssertEquals(pdu2.getCommand(), SNMP_TRAP);
+   AssertEquals(pdu2.getVersion(), SNMP_VERSION_1);
+   AssertEquals(pdu2.getTrapType(), 6);
+   AssertEquals(pdu2.getSpecificTrapType(), 2);
+   AssertTrue(pdu2.getTrapId().equals(trapId));
+   AssertEquals(pdu2.getNumVariables(), 1);
+
+   // Enterprise specific trap without zero before last sub-identifier: enterprise = OID without last sub-identifier
+   SNMP_ObjectId trapId2({ 1, 3, 6, 1, 4, 1, 57163, 7 });
+   SNMP_PDU pdu3(SNMP_TRAP, SNMP_VERSION_1, trapId2, 1, 2);
+   size = pdu3.encode(&encodedPDU, &securityContext);
+   AssertTrue(size > 0);
+   static const BYTE enterprise2[] = { 0x06, 0x08, 0x2B, 0x06, 0x01, 0x04, 0x01, 0x83, 0xBE, 0x4B, 0x40 };  // OID .1.3.6.1.4.1.57163 followed by IpAddress tag
+   AssertTrue(ContainsBytes(encodedPDU, size, enterprise2, sizeof(enterprise2)));
+   static const BYTE trapTypes2[] = { 0x02, 0x01, 0x06, 0x02, 0x01, 0x07, 0x43 };  // generic 6, specific 7, TimeTicks tag
+   AssertTrue(ContainsBytes(encodedPDU, size, trapTypes2, sizeof(trapTypes2)));
+
+   // Standard trap (linkDown, snmpTraps.3): enterprise = snmpTraps, generic trap = 2, specific trap = 0
+   SNMP_ObjectId linkDown({ 1, 3, 6, 1, 6, 3, 1, 1, 5, 3 });
+   SNMP_PDU pdu4(SNMP_TRAP, SNMP_VERSION_1, linkDown, 1, 3);
+   size = pdu4.encode(&encodedPDU, &securityContext);
+   AssertTrue(size > 0);
+   static const BYTE snmpTraps[] = { 0x06, 0x08, 0x2B, 0x06, 0x01, 0x06, 0x03, 0x01, 0x01, 0x05, 0x40 };  // .1.3.6.1.6.3.1.1.5 followed by IpAddress tag
+   AssertTrue(ContainsBytes(encodedPDU, size, snmpTraps, sizeof(snmpTraps)));
+   static const BYTE trapTypes3[] = { 0x02, 0x01, 0x02, 0x02, 0x01, 0x00, 0x43 };  // generic 2, specific 0, TimeTicks tag
+   AssertTrue(ContainsBytes(encodedPDU, size, trapTypes3, sizeof(trapTypes3)));
+
+   SNMP_PDU pdu5;
+   AssertTrue(pdu5.parse(encodedPDU, size, &securityContext, false));
+   AssertEquals(pdu5.getTrapType(), 2);
+   AssertEquals(pdu5.getSpecificTrapType(), 0);
+   AssertTrue(pdu5.getTrapId().equals(linkDown));
+
+   // Copy of trap PDU must preserve V1 header fields
+   SNMP_PDU copy(pdu);
+   size = copy.encode(&encodedPDU, &securityContext);
+   AssertTrue(size > 0);
+   AssertTrue(ContainsBytes(encodedPDU, size, trapTypes, sizeof(trapTypes)));
+
+   EndTest();
+}
+
+/**
  * Test SNMPv3 privacy. Number of bound variables is varied so that encoded PDU
  * size hits both exact block multiples and sizes requiring padding.
  */
@@ -385,6 +463,7 @@ int main(int argc, char *argv[])
    TestOidClass();
    TestVariableClass();
    TestPDUEncoding();
+   TestV1TrapEncoding();
    TestPDUPrivacy(SNMP_ENCRYPT_DES, _T("SNMPv3 privacy (DES)"));
    TestPDUPrivacy(SNMP_ENCRYPT_AES_128, _T("SNMPv3 privacy (AES-128)"));
    return 0;

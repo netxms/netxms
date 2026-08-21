@@ -132,7 +132,7 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_Object
    m_reportable = true;
    m_securityModel = (m_version == SNMP_VERSION_1) ? SNMP_SECURITY_MODEL_V1 : ((m_version == SNMP_VERSION_2C) ? SNMP_SECURITY_MODEL_V2C : SNMP_SECURITY_MODEL_USM);
    m_dwAgentAddr = 0;
-   m_timestamp = 0;
+   m_timestamp = sysUpTime;   // Used by V1 TRAP PDU header, V2 carries uptime as first varbind
    m_signatureOffset = 0;
 
    setTrapId(trapId);
@@ -170,8 +170,8 @@ SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 1
    m_authObject = MemCopyStringA(src.m_authObject);
 	m_reportable = src.m_reportable;
    m_securityModel = src.m_securityModel;
-   m_dwAgentAddr = 0;
-   m_timestamp = 0;
+   m_dwAgentAddr = src.m_dwAgentAddr;
+   m_timestamp = src.m_timestamp;
    m_signatureOffset = src.m_signatureOffset;
 
    for(int i = 0; i < src.m_variables.size(); i++)
@@ -380,13 +380,13 @@ bool SNMP_PDU::parseTrapPDU(const BYTE *pData, size_t pduLength)
       }
    }
 
-   // Timestamp
+   // Timestamp (INTEGER is accepted in addition to TimeTicks for compatibility with older NetXMS senders)
    if (bResult)
    {
       bResult = false;
       if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
       {
-         if ((dwType == ASN_TIMETICKS) &&
+         if (((dwType == ASN_TIMETICKS) || (dwType == ASN_INTEGER)) &&
              BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_timestamp))
          {
             pduLength -= dwLength + idLength;
@@ -944,8 +944,15 @@ size_t SNMP_PDU::encode(SNMP_PDUBuffer *outBuffer, SNMP_SecurityContext *securit
       switch(pduType)
       {
          case ASN_TRAP_V1_PDU:
+         {
+            // Enterprise field is derived from trap OID as defined in RFC 2576 section 3.2: for standard traps
+            // it is snmpTraps (trap OID without last sub-identifier), for enterprise specific traps trailing ".0.N"
+            // (or ".N" if next-to-last sub-identifier is not zero) is removed. Specific trap type carries N.
+            size_t enterpriseLength = m_trapId.length();
+            if (enterpriseLength >= 2)
+               enterpriseLength -= ((m_trapType == 6) && (m_trapId.value()[enterpriseLength - 2] == 0)) ? 2 : 1;
             bytes = BER_Encode(ASN_OBJECT_ID, reinterpret_cast<const BYTE*>(m_trapId.value()),
-                                 m_trapId.length() * sizeof(uint32_t),
+                                 enterpriseLength * sizeof(uint32_t),
                                  currPos, bufferSize - pduSize);
             pduSize += bytes;
             currPos += bytes;
@@ -967,11 +974,12 @@ size_t SNMP_PDU::encode(SNMP_PDUBuffer *outBuffer, SNMP_SecurityContext *securit
             pduSize += bytes;
             currPos += bytes;
 
-            bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_timestamp, sizeof(uint32_t),
+            bytes = BER_Encode(ASN_TIMETICKS, (BYTE *)&m_timestamp, sizeof(uint32_t),
                                  currPos, bufferSize - pduSize);
             pduSize += bytes;
             currPos += bytes;
             break;
+         }
          default:
             bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_requestId, sizeof(uint32_t),
                                  currPos, bufferSize - pduSize);
@@ -1400,9 +1408,10 @@ void SNMP_PDU::setTrapId(const uint32_t *value, size_t length)
 
    // Set V1 trap type and specific trap type fields
    static uint32_t standardTrapPrefix[9] = { 1, 3, 6, 1, 6, 3, 1, 1, 5 };
-   if ((m_trapId.compare(standardTrapPrefix, 9) == OID_LONGER) && (m_trapId.length() == 10))
+   if ((m_trapId.length() == 10) && (m_trapId.compare(standardTrapPrefix, 9) == OID_LONGER) &&
+       (m_trapId.value()[9] >= 1) && (m_trapId.value()[9] <= 6))
    {
-      m_trapType = m_trapId.value()[9];
+      m_trapType = static_cast<int>(m_trapId.value()[9]) - 1;   // snmpTraps.N maps to generic trap type N-1 (RFC 2576 section 3.2)
       m_specificTrap = 0;
    }
    else
