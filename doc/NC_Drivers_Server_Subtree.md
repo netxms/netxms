@@ -1,6 +1,6 @@
 # Notification Channel Drivers in Server Subtree — Design Document
 
-Status: all three phases implemented (1: mechanical move; 2: v5 context interface, NXSL special case dissolved; 3: built-in snmptrap event forwarder driver, NC snmptrap driver deprecated). Tracked as issue #3382.
+Status: all three phases implemented (1: mechanical move; 2: v5 context interface, NXSL special case dissolved; 3: built-in snmptrap event forwarder driver, NC snmptrap driver deprecated). Tracked as issue #3382. The driver API has since been bumped to v6 by markdown support (issue #3481, see note in 3.2).
 
 This document assesses moving notification channel (NC) drivers from
 `src/ncdrivers` into the server subtree, giving them access to server objects
@@ -84,7 +84,8 @@ struct NotificationContext
 {
    const char *recipient;           // UTF-8, as today
    const char *subject;             // UTF-8, as today
-   const char *body;                // UTF-8, as today
+   const char *body;                // UTF-8 plain text, as today
+   const char *markdownBody;        // original markdown (UTF-8) or nullptr (added in v6, issue #3481)
    const wchar_t *recipientW;       // wide originals, so drivers needing
    const wchar_t *subjectW;         // wide strings skip a UTF-8 round trip
    const wchar_t *bodyW;
@@ -93,7 +94,16 @@ struct NotificationContext
    const wchar_t *channelName;
    uuid ruleId;
 };
+```
 
+Note: markdown support (issue #3481) later added `markdownBody` to the
+context and bumped `NCDRV_API_VERSION` to 6 — a version bump was still
+required because the struct layout changed. `send()` continues to receive
+plain text in `body`/`bodyW`; drivers with native rich-text support read
+`markdownBody` when it is not `nullptr`. The current definition is in
+`src/server/include/ncdrv.h`.
+
+```cpp
 class NCDriver
 {
 public:

@@ -598,7 +598,7 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, co
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s: \"%s\""), action->channelName, context->data.cstr());
             else
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, context->recipient.cstr(), context->data.cstr());
-            // Pass event and source object for NXSL notification channels
+            // Pass event and source object so driver can use event context (optional for drivers)
             shared_ptr<NetObj> sourceObject = FindObjectById(event.getSourceId());
             SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, &event, sourceObject, ruleId, ruleDescription, action->isMarkdown);
          }

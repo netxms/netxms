@@ -43,11 +43,11 @@ src/server/ncdrivers/
 
 ## Driver Interface
 
-All notification channel drivers implement the `NCDriver` interface defined in `src/server/include/nms_core.h`.
+All notification channel drivers implement the `NCDriver` interface defined in `src/server/include/ncdrv.h` (`NCDRV_API_VERSION` is checked at load time; a driver built against another version is rejected with a clear log message).
 
 ### Basic Structure
 
-All strings passed to `send()` (recipient, subject, body) are UTF-8 `char*` and may be `nullptr`. Persistent storage (`NCDriverStorageManager`) also uses UTF-8 keys and values. Configuration (`Config*`) is still wide-character.
+`send()` receives a `NotificationContext` (see `ncdrv.h`). Message text is provided both as UTF-8 (`recipient`, `subject`, `body`) and as wide string originals (`recipientW`, `subjectW`, `bodyW`); `body`/`bodyW` are always plain text, and when the message was submitted as markdown the original markdown is available in `markdownBody` (otherwise `nullptr`). Event context (`event`, `sourceObject`) is optional and may be `nullptr` — test sends, digest messages, and notifications sent with only an event code carry no event. Drivers that call `Event`/`NetObj` methods must link `libnxcore` (see `msteams` for an example). Persistent storage (`NCDriverStorageManager`) uses UTF-8 keys and values. Configuration (`Config*`) is wide-character.
 
 ```cpp
 // mydriver.h
@@ -63,7 +63,7 @@ public:
    MyNotificationDriver(Config *config);
    virtual ~MyNotificationDriver();
 
-   virtual int send(const char *recipient, const char *subject, const char *body) override;
+   virtual int send(const NotificationContext& context) override;
 };
 ```
 
@@ -78,10 +78,10 @@ MyNotificationDriver::MyNotificationDriver(Config *config) : NCDriver()
    _tcslcpy(m_apiKey, config->getValue(_T("/ApiKey"), _T("")), 256);
 }
 
-int MyNotificationDriver::send(const char *recipient, const char *subject, const char *body)
+int MyNotificationDriver::send(const NotificationContext& context)
 {
-   // Implement notification sending
-   // Return 0 on success, error code on failure
+   // context.recipient / context.subject / context.body are UTF-8; context.event may be nullptr
+   // Return 0 on success, positive value to retry after that many seconds, negative value on permanent failure
    return 0;
 }
 
@@ -107,8 +107,12 @@ DECLARE_NCD_ENTRY_POINT(DriverClassName, configTemplate)
 ### SMTP Driver
 
 ```cpp
-int SMTPDriver::send(const char *recipient, const char *subject, const char *body)
+int SMTPDriver::send(const NotificationContext& context)
 {
+   const char *recipient = context.recipient;
+   const char *subject = context.subject;
+   const char *body = context.body;
+
    SOCKET sock = ConnectToHost(m_server, m_port, m_timeout);
    if (sock == INVALID_SOCKET)
       return -1;
@@ -139,16 +143,16 @@ int SMTPDriver::send(const char *recipient, const char *subject, const char *bod
 ### Webhook-Based Driver (Slack, Teams, etc.)
 
 ```cpp
-int SlackDriver::send(const char *recipient, const char *subject, const char *body)
+int SlackDriver::send(const NotificationContext& context)
 {
    // Build JSON payload
    json_t *root = json_object();
-   json_object_set_new(root, "channel", json_string(recipient));
+   json_object_set_new(root, "channel", json_string(context.recipient));
 
    json_t *attachments = json_array();
    json_t *attachment = json_object();
-   json_object_set_new(attachment, "title", json_string(subject));
-   json_object_set_new(attachment, "text", json_string(body));
+   json_object_set_new(attachment, "title", json_string(context.subject));
+   json_object_set_new(attachment, "text", json_string(context.body));
    json_array_append_new(attachments, attachment);
    json_object_set_new(root, "attachments", attachments);
 
@@ -167,15 +171,15 @@ int SlackDriver::send(const char *recipient, const char *subject, const char *bo
 ### Shell Driver
 
 ```cpp
-int ShellDriver::send(const char *recipient, const char *subject, const char *body)
+int ShellDriver::send(const NotificationContext& context)
 {
    // Build command line with escaped arguments
    char command[4096];
    snprintf(command, 4096, "%s %s %s %s",
             m_command,
-            EscapeShellArg(recipient),
-            EscapeShellArg(subject),
-            EscapeShellArg(body));
+            EscapeShellArg(context.recipient),
+            EscapeShellArg(context.subject),
+            EscapeShellArg(context.body));
 
    // Execute command
    return ExecuteCommand(command, nullptr, nullptr);
@@ -220,19 +224,10 @@ int ShellDriver::send(const char *recipient, const char *subject, const char *bo
 
 ## Configuration Template
 
-Each driver defines a configuration template:
+Each driver declares which message parts it uses; the server drops messages without a recipient when `needRecipient` is set:
 
 ```cpp
-static NCConfigurationTemplate s_config =
-{
-   _T("MyDriver"),                          // Driver name
-   _T("<config>\n")
-   _T("  <server>api.example.com</server>\n")
-   _T("  <apiKey></apiKey>\n")
-   _T("  <timeout>30</timeout>\n")
-   _T("</config>\n"),                       // Default config
-   true                                     // Supports recipient customization
-};
+static const NCConfigurationTemplate s_config(true, true);   // (needSubject, needRecipient)
 ```
 
 ## Configuration Access
@@ -260,11 +255,10 @@ MyDriver::MyDriver(Config *config)
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| -1 | Connection failed |
-| -2 | Authentication failed |
-| -3 | Send failed |
-| -4 | Timeout |
-| -5 | Configuration error |
+| > 0 | Temporary failure — server retries after that many seconds (up to `NotificationChannels.MaxRetryCount` attempts) |
+| < 0 | Permanent failure — message dropped, `SYS_NOTIFICATION_FAILURE` generated |
+
+Drivers may also override `checkHealth()` (default `true`); it is polled periodically and shown as channel health status.
 
 ## Adding a New Driver
 
@@ -303,9 +297,9 @@ Parent `src/server/ncdrivers/Makefile.am` block (for a jansson-using driver):
 
 ```makefile
 mydriver_la_SOURCES = mydriver/mydriver.cpp
-mydriver_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
+mydriver_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 mydriver_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
-mydriver_la_LIBADD = ../libnetxms/libnetxms.la
+mydriver_la_LIBADD = ../../libnetxms/libnetxms.la
 if USE_INTERNAL_JANSSON
 mydriver_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
@@ -318,7 +312,7 @@ endif
 ```bash
 # Debug tags
 nxlog_debug_tag(_T("ncd.mydriver"), level, ...)    # Driver-specific
-nxlog_debug_tag(_T("notification"), level, ...)    # Notification system
+nxlog_debug_tag(_T("nc"), level, ...)              # Notification channel framework (server core)
 ```
 
 ## Testing
@@ -326,21 +320,22 @@ nxlog_debug_tag(_T("notification"), level, ...)    # Notification system
 Use the dummy driver (`ncdrivers/dummy/`) as a template for testing new implementations.
 
 ```cpp
-// Dummy driver logs all notifications to debug output
-int DummyDriver::send(const char *recipient, const char *subject, const char *body)
+// Dummy driver logs all notifications to debug output (level 6)
+int DummyDriver::send(const NotificationContext& context)
 {
-   nxlog_debug(1, _T("DummyDriver: to=%hs subject=%hs"), recipient, subject);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("recipient=\"%hs\", subject=\"%hs\", text=\"%hs\""), context.recipient, context.subject, context.body);
    return 0;
 }
 ```
 
 ## Built-in NXSL Driver
 
-The NXSL notification channel driver is built into the server core (not a loadable module) to provide access to the server scripting environment.
+The NXSL notification channel driver (`NXSLDriver` in `src/server/core/notification_channel.cpp`) is a regular `NCDriver` implementation registered as built-in driver `NXSL` by `LoadNotificationChannelDrivers()`; it is compiled into the server core rather than loaded as a module because it needs `libnxsl` and server objects.
 
 ### Configuration
-- Configuration is raw NXSL script text (not XML)
+- Configuration is raw NXSL script text (not XML) — the driver is registered with `xmlConfiguration = false`, so the channel code passes the text unparsed as `/Configuration`
 - Script has access to `NXSL_ServerEnv` with all server functions
+- Compilation errors are logged with line number under tag `nc`; the channel then reports "Unable to create instance of driver NXSL"
 
 ### Script Variables
 | Variable | Availability |
@@ -350,6 +345,7 @@ The NXSL notification channel driver is built into the server core (not a loadab
 | `$MESSAGE` | Always |
 | `$event` | When triggered from EPP action |
 | `$object` / `$node` | When triggered from EPP with source object |
+| `$dci` | When the triggering event is bound to a DCI (`$event.dciId != 0`) |
 
 ### Return Values
 | Return | Result |
