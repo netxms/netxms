@@ -18,7 +18,10 @@
  */
 package org.netxms.nxmc.modules.events.widgets;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.NXCommon;
@@ -44,6 +47,7 @@ public class EventSelector extends AbstractSelector
    private String eventName = null;
    private UUID eventGuid = null;
    private EventTemplate defaultNewTemplate = null;
+   private Consumer<List<EventTemplate>> multiSelectionHandler = null;
 
 	/**
 	 * @param parent
@@ -71,7 +75,7 @@ public class EventSelector extends AbstractSelector
 	protected void selectionButtonHandler()
 	{
       EventSelectionDialog dlg = new EventSelectionDialog(getShell());
-      dlg.enableMultiSelection(false);
+      dlg.enableMultiSelection(multiSelectionHandler != null);
       if (defaultNewTemplate != null)
          dlg.setDefaultNewTemplate(defaultNewTemplate);
 		if (dlg.open() == Window.OK)
@@ -99,8 +103,21 @@ public class EventSelector extends AbstractSelector
 			}
 			if (prevEventCode != eventCode)
 				fireModifyListeners();
+         if ((multiSelectionHandler != null) && (events.length > 1))
+            multiSelectionHandler.accept(Arrays.asList(events).subList(1, events.length));
 		}
 	}
+
+   /**
+    * Set handler for multiple selection. If handler is set, selection dialog will allow selection of more than one event. First
+    * selected event becomes this selector's value, and all remaining ones are passed to the handler.
+    *
+    * @param multiSelectionHandler handler for events selected in addition to the first one, or null to disable multiple selection
+    */
+   public void setMultiSelectionHandler(Consumer<List<EventTemplate>> multiSelectionHandler)
+   {
+      this.multiSelectionHandler = multiSelectionHandler;
+   }
 
    /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()

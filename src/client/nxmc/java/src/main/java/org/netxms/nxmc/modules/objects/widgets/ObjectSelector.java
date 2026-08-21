@@ -18,8 +18,11 @@
  */
 package org.netxms.nxmc.modules.objects.widgets;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
@@ -47,6 +50,7 @@ public class ObjectSelector extends AbstractSelector
    private String emptySelectionName = i18n.tr("None");
    private String contextSelectionName = i18n.tr("<context>");
    private BaseObjectLabelProvider labelProvider = new BaseObjectLabelProvider();
+   private Consumer<List<AbstractObject>> multiSelectionHandler = null;
 
    /**
     * Create object selector.
@@ -95,7 +99,7 @@ public class ObjectSelector extends AbstractSelector
 	protected void selectionButtonHandler()
 	{
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), classFilter);
-		dlg.enableMultiSelection(false);
+      dlg.enableMultiSelection(multiSelectionHandler != null);
 		if (dlg.open() == Window.OK)
 		{
          AbstractObject[] objects = (objectClassSet != null) ? dlg.getSelectedObjects(objectClassSet) : dlg.getSelectedObjects().toArray(AbstractObject[]::new);
@@ -114,8 +118,21 @@ public class ObjectSelector extends AbstractSelector
             setImage(null);
 			}
 			fireModifyListeners();
+         if ((multiSelectionHandler != null) && (objects.length > 1))
+            multiSelectionHandler.accept(Arrays.asList(objects).subList(1, objects.length));
 		}
 	}
+
+   /**
+    * Set handler for multiple selection. If handler is set, selection dialog will allow selection of more than one object. First
+    * selected object becomes this selector's value, and all remaining ones are passed to the handler.
+    *
+    * @param multiSelectionHandler handler for objects selected in addition to the first one, or null to disable multiple selection
+    */
+   public void setMultiSelectionHandler(Consumer<List<AbstractObject>> multiSelectionHandler)
+   {
+      this.multiSelectionHandler = multiSelectionHandler;
+   }
 
    /**
     * @see org.netxms.nxmc.base.widgets.AbstractSelector#contextButtonHandler()

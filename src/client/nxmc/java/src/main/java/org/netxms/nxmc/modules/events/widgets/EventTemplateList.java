@@ -96,7 +96,7 @@ public class EventTemplateList extends Composite implements SessionListener
     */
    public EventTemplateList(View view, Composite parent, int style, final String configPrefix)
    {
-      this(parent, style, configPrefix, false);
+      this(parent, style, configPrefix, false, true);
       this.view = view;
    }
 
@@ -107,8 +107,9 @@ public class EventTemplateList extends Composite implements SessionListener
     * @param style widget style bits
     * @param configPrefix configuration prefix
     * @param isDialog true if widget is part of dialog
+    * @param multiSelection true if selection of multiple event templates should be allowed
     */
-   public EventTemplateList(Composite parent, int style, final String configPrefix, boolean isDialog)
+   public EventTemplateList(Composite parent, int style, final String configPrefix, boolean isDialog, boolean multiSelection)
    {
       super(parent, style);
       setLayout(new FillLayout());
@@ -122,7 +123,8 @@ public class EventTemplateList extends Composite implements SessionListener
 
       viewer = new SortableTableViewer(this, isDialog ? dialogNames : names,
             isDialog ? dialogWidths : widths,
-            0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, configPrefix);
+            0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION | (multiSelection ? SWT.MULTI : SWT.SINGLE) | SWT.H_SCROLL | SWT.V_SCROLL,
+            configPrefix);
 
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new EventTemplateLabelProvider(isDialog));

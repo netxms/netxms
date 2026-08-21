@@ -50,6 +50,8 @@ public class ColumnFilterEditor extends DashboardComposite
 	private FilterBuilder filterBuilder;
 	private List<ConditionEditor> conditions = new ArrayList<ConditionEditor>();
 	private ColumnFilterSetOperation booleanOperation = ColumnFilterSetOperation.OR;
+   private Button radioAnd;
+   private Button radioOr;
 
 	/**
 	 * @param parent
@@ -99,7 +101,7 @@ public class ColumnFilterEditor extends DashboardComposite
 		gd.grabExcessHorizontalSpace = true;
 		buttons.setLayoutData(gd);
 
-      final Button radioAnd = new Button(buttons, SWT.RADIO);
+      radioAnd = new Button(buttons, SWT.RADIO);
       radioAnd.setText(i18n.tr("&AND condition"));
       radioAnd.setBackground(buttons.getBackground());
 		radioAnd.setSelection(booleanOperation == ColumnFilterSetOperation.AND);
@@ -111,7 +113,7 @@ public class ColumnFilterEditor extends DashboardComposite
 			}
 		});
 
-      final Button radioOr = new Button(buttons, SWT.RADIO);
+      radioOr = new Button(buttons, SWT.RADIO);
       radioOr.setText(i18n.tr("&OR condition"));
       radioOr.setBackground(buttons.getBackground());
 		radioOr.setSelection(booleanOperation == ColumnFilterSetOperation.OR);
@@ -153,12 +155,31 @@ public class ColumnFilterEditor extends DashboardComposite
 	private void setBooleanOperation(ColumnFilterSetOperation op)
 	{
 		booleanOperation = op;
+      radioAnd.setSelection(op == ColumnFilterSetOperation.AND);
+      radioOr.setSelection(op == ColumnFilterSetOperation.OR);
       final String opName = (op == ColumnFilterSetOperation.AND) ? i18n.tr("AND") : i18n.tr("OR");
 		for(int i = 1; i < conditions.size(); i++)
 		{
 			conditions.get(i).setLogicalOperation(opName);
 		}
 	}
+
+   /**
+    * Add conditions for elements selected in addition to the first one when multiple elements were selected at once. Boolean
+    * operation for this column is set to match condition type - OR for positive conditions and AND for negated ones, because any
+    * other combination will never match.
+    *
+    * @param filters filters for additional conditions
+    */
+   void addConditions(List<ColumnFilter> filters)
+   {
+      if (filters.isEmpty())
+         return;
+
+      setBooleanOperation(filters.get(0).isNegated() ? ColumnFilterSetOperation.AND : ColumnFilterSetOperation.OR);
+      for(ColumnFilter f : filters)
+         addCondition(f);
+   }
 
 	/**
 	 * Add condition

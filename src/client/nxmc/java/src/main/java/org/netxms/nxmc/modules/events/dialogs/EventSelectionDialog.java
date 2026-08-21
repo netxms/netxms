@@ -98,7 +98,7 @@ public class EventSelectionDialog extends DialogWithFilter
       Composite dialogArea = (Composite)super.createDialogArea(parent);
       dialogArea.setLayout(new FillLayout());
 
-      eventTemplateList = new EventTemplateList(dialogArea, SWT.NONE, CONFIG_PREFIX, true);
+      eventTemplateList = new EventTemplateList(dialogArea, SWT.NONE, CONFIG_PREFIX, true, multiSelection);
       setFilterClient(eventTemplateList.getViewer(), eventTemplateList.getFilter());
 
       eventTemplateList.getViewer().addDoubleClickListener(new IDoubleClickListener() {
