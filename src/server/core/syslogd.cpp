@@ -258,20 +258,7 @@ static time_t ParseRFC5424Timestamp(char **curr, size_t *currPos, size_t rawData
    p++;
    (*currPos)++;
 
-#if HAVE_TIMEGM
    time_t t = timegm(&timestamp);
-#else
-   time_t t = mktime(&timestamp);
-   // Adjust for local timezone to get UTC
-   struct tm utcCheck;
-#if HAVE_GMTIME_R
-   gmtime_r(&t, &utcCheck);
-#else
-   memcpy(&utcCheck, gmtime(&t), sizeof(struct tm));
-#endif
-   t += (t - mktime(&utcCheck));
-#endif
-
    if (t == static_cast<time_t>(-1))
       return static_cast<time_t>(-1);
 

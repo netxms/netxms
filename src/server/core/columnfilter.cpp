@@ -229,9 +229,14 @@ StringBuffer ColumnFilter::generateSql()
 			time_t localNow = time(nullptr) + tzOffset;
 			struct tm lt;
 #if HAVE_GMTIME_R
-			gmtime_r(&localNow, &lt);   // broken-down representation of "now" in client local time
+			if (gmtime_r(&localNow, &lt) == nullptr)   // broken-down representation of "now" in client local time
+                           memset(&lt, 0, sizeof(struct tm));
 #else
-		   memcpy(&lt, gmtime(&localNow), sizeof(struct tm));
+			struct tm *gt = gmtime(&localNow);
+			if (gt != nullptr)
+                           memcpy(&lt, gmtime(&localNow), sizeof(struct tm));
+			else
+                           memset(&lt, 0, sizeof(struct tm));
 #endif
 			lt.tm_hour = 0;
 			lt.tm_min = 0;

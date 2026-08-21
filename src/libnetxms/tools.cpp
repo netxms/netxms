@@ -1098,14 +1098,18 @@ TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer)
  */
 std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t)
 {
-   struct tm utcTime;
+   struct tm *utcTime;
 #if HAVE_GMTIME_R
-   gmtime_r(&t, &utcTime);
+   struct tm utcTimeBuffer;
+   utcTime = gmtime_r(&t, &utcTimeBuffer);
 #else
-   memcpy(&utcTime, gmtime(&t), sizeof(struct tm));
+   utcTime = gmtime(&t);
 #endif
+   if (utcTime == nullptr)
+      return std::string("(invalid-timestamp)");
+
    char text[64];
-   strftime(text, 64, "%Y-%m-%dT%H:%M:%SZ", &utcTime);
+   strftime(text, 64, "%Y-%m-%dT%H:%M:%SZ", utcTime);
    return std::string(text);
 }
 
@@ -1115,14 +1119,19 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t)
 std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t)
 {
    time_t seconds = static_cast<time_t>(t / 1000);
-   struct tm utcTime;
+
+   struct tm *utcTime;
 #if HAVE_GMTIME_R
-   gmtime_r(&seconds, &utcTime);
+   struct tm utcTimeBuffer;
+   utcTime = gmtime_r(&seconds, &utcTimeBuffer);
 #else
-   memcpy(&utcTime, gmtime(&seconds), sizeof(struct tm));
+   utcTime = gmtime(&seconds);
 #endif
+   if (utcTime == nullptr)
+      return std::string("(invalid-timestamp)");
+
    char text[64];
-   strftime(text, 64, "%Y-%m-%dT%H:%M:%S.", &utcTime);
+   strftime(text, 64, "%Y-%m-%dT%H:%M:%S.", utcTime);
    snprintf(&text[20], 44, "%03dZ", static_cast<int>(t % 1000));
    return std::string(text);
 }
