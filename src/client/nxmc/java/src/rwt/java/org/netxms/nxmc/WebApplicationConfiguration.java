@@ -67,6 +67,7 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
       addJsLibrary("/js/codemirror/codemirror-widget.js");
       addJsLibrary("/js/dom-to-image-more.js");
       addJsLibrary("/js/download.js");
+      addJsLibrary("/js/dragrelease.js");
       addJsLibrary("/js/longpress.js");
       addJsLibrary("/js/msgproxy.js");
       addJsLibrary("/js/rwt-util.js");

@@ -41,6 +41,7 @@ public class RAPDragTracker
    public boolean tracking;
    private final MouseMoveListener listener;
    private final Control control;
+   private Point lastLocation = null;
 
    /**
     * Create drag tracker for given control.
@@ -87,6 +88,7 @@ public class RAPDragTracker
                            Event ev = new Event();
                            ev.display = display;
                            Point loc = control.toControl(display.getCursorLocation());
+                           lastLocation = loc;
                            ev.type = SWT.DragDetect;
                            ev.widget = control;
                            ev.button = 1;
@@ -117,6 +119,11 @@ public class RAPDragTracker
                   public void run()
                   {
                      stop();
+                     // Tracker gives up on drag operation that takes too long or when mouse button was released
+                     // without mouse up event being delivered to the page. Complete such drag operation with
+                     // synthetic mouse up event, otherwise control will keep drag state until next mouse click.
+                     if (cancelled && !control.isDisposed())
+                        notifyMouseUp();
                   }
                });
             }
@@ -138,5 +145,23 @@ public class RAPDragTracker
    public void stop()
    {
       tracking = false;
+   }
+
+   /**
+    * Notify control listeners with synthetic mouse up event for left mouse button at last known mouse location.
+    */
+   private void notifyMouseUp()
+   {
+      Event ev = new Event();
+      ev.display = control.getDisplay();
+      ev.type = SWT.MouseUp;
+      ev.widget = control;
+      ev.button = 1;
+      if (lastLocation != null)
+      {
+         ev.x = lastLocation.x;
+         ev.y = lastLocation.y;
+      }
+      control.notifyListeners(SWT.MouseUp, ev);
    }
 }
