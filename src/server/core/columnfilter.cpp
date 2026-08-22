@@ -227,18 +227,18 @@ StringBuffer ColumnFilter::generateSql()
 		{
 			int32_t tzOffset = m_value.currentPeriod.tzOffset;
 			time_t localNow = time(nullptr) + tzOffset;
-			struct tm lt;
+         struct tm lt;
 #if HAVE_GMTIME_R
-			if (gmtime_r(&localNow, &lt) == nullptr)   // broken-down representation of "now" in client local time
-                           memset(&lt, 0, sizeof(struct tm));
+         if (gmtime_r(&localNow, &lt) == nullptr)   // broken-down representation of "now" in client local time
+            memset(&lt, 0, sizeof(struct tm));
 #else
-			struct tm *gt = gmtime(&localNow);
-			if (gt != nullptr)
-                           memcpy(&lt, gmtime(&localNow), sizeof(struct tm));
-			else
-                           memset(&lt, 0, sizeof(struct tm));
+         struct tm *gt = gmtime(&localNow);
+         if (gt != nullptr)
+            memcpy(&lt, gt, sizeof(struct tm));
+         else
+            memset(&lt, 0, sizeof(struct tm));
 #endif
-			lt.tm_hour = 0;
+         lt.tm_hour = 0;
 			lt.tm_min = 0;
 			lt.tm_sec = 0;
 			int64_t startLocal, endLocal;   // period boundaries expressed in client local time
