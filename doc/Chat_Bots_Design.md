@@ -1,6 +1,6 @@
 # Chat Bots — Interactive Chat Interface Design Document
 
-Status: phase 1 (framework + Telegram) implemented (issue #3383); phase 2 (XMPP, Mattermost) pending
+Status: phase 1 (framework + Telegram) and Mattermost chat driver implemented (issue #3383); XMPP pending
 
 This document describes a new server entity — **chat bot** — providing
 bidirectional, interactive access to the server over messaging platforms
@@ -180,7 +180,7 @@ libstrophe is natively bidirectional; the existing connection loop gains a
 message-stanza handler. Peer identity is the bare JID. Numbered-list
 question fallback.
 
-### 5.3 Mattermost (phase 2)
+### 5.3 Mattermost (phase 2, implemented)
 
 Inbound requires a WebSocket client (`/api/v4/websocket`, token auth,
 `posted` events). libcurl's WS API is only stable in recent 8.x (above our
@@ -190,8 +190,26 @@ with handshake verification, custom handshake headers (`Authorization:
 Bearer`), fragment reassembly, automatic pong, close handshake, and a
 single-reader / multi-sender threading model with `disconnect()` to
 unblock the reader on shutdown. The same client later enables Slack Socket
-Mode. Mattermost's interactive buttons POST to an integration URL (inbound
-HTTP), which v1 avoids — numbered-list fallback instead.
+Mode.
+
+`MattermostChatBot` (`src/server/ncdrivers/mattermost/mattermost.cpp`,
+exported via `DECLARE_CHATBOT_ENTRY_POINT` next to the notification
+driver) reuses the notification driver's `ServerURL` / `AuthToken` /
+`Channels` configuration. A reader thread keeps the WebSocket connection
+alive with exponential reconnect backoff (5 s → 5 min): it authenticates
+with the bearer header plus an explicit `authentication_challenge`, treats
+`hello` as "connected" for health reporting, and dispatches `posted`
+events with `channel_type == "D"` whose post has an empty `type` (i.e. not
+a system post) and a sender other than the bot itself. **Peer ID is the
+Mattermost user ID**; display name is `sender_name`. Outbound messages go
+through REST (`POST /api/v4/posts`, markdown rendered natively) to the
+direct-message channel, which is learned from inbound posts or created via
+`POST /api/v4/channels/direct` and cached. `sendMessage` recipients may also
+be `@username` (resolved through `/api/v4/users/username/`) or a channel
+alias from the `Channels` section, so the auto-registered notification
+channel can still target public channels. Mattermost's interactive buttons
+POST to an integration URL (inbound HTTP), which v1 avoids —
+`sendQuestion` returns `false` and the numbered-list fallback applies.
 
 ### 5.4 Slack (deferred)
 
@@ -251,8 +269,9 @@ answered) write audit records with the mapped NetXMS user as actor.
    v70 migration, NXCP + nxmc + WebAPI, Telegram chat factory with inline
    keyboards. One coherent deliverable; everything but the last item is
    platform-independent.
-2. **XMPP, then Mattermost** — XMPP validates the numbered-list fallback
-   cheaply; Mattermost carries the RFC 6455 WebSocket client investment.
+2. **Mattermost (done), then XMPP** — Mattermost carries the RFC 6455
+   WebSocket client investment and is the first user of the numbered-list
+   fallback; XMPP follows the same bare-JID / fallback pattern.
 3. **Deferred** — Slack (Socket Mode via the WS client); group chats
    (mention-triggered, sender-attributed buttons); self-service token
    binding for user mapping; structured command system and debug console

@@ -59,6 +59,11 @@ mattermost_la_SOURCES = mattermost/mattermost.cpp
 mattermost_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 mattermost_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
 mattermost_la_LIBADD = ../../libnetxms/libnetxms.la
+if USE_INTERNAL_JANSSON
+mattermost_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+mattermost_la_LIBADD += -ljansson
+endif
 
 mqtt_la_SOURCES = mqtt/mqtt.cpp
 mqtt_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
