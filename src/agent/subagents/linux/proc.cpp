@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2023 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -553,7 +553,7 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
             finalVal += currVal;
             break;
          case INFOTYPE_MIN:
-            finalVal = std::min(currVal, finalVal);
+            finalVal = (i == 0) ? currVal : std::min(currVal, finalVal);
             break;
          case INFOTYPE_MAX:
             finalVal = std::max(currVal, finalVal);
@@ -561,7 +561,7 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       }
    }
 
-   if (type == INFOTYPE_AVG)
+   if ((type == INFOTYPE_AVG) && (count > 0))
       finalVal /= count;
 
    if (CAST_FROM_POINTER(arg, int) == PROCINFO_MEMPERC)
