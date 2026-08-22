@@ -1,6 +1,6 @@
 # Chat Bots — Interactive Chat Interface Design Document
 
-Status: design draft (no issue yet)
+Status: phase 1 (framework + Telegram) implemented (issue #3383); phase 2 (XMPP, Mattermost) pending
 
 This document describes a new server entity — **chat bot** — providing
 bidirectional, interactive access to the server over messaging platforms
@@ -183,12 +183,15 @@ question fallback.
 ### 5.3 Mattermost (phase 2)
 
 Inbound requires a WebSocket client (`/api/v4/websocket`, token auth,
-`posted` events). This is the one genuinely new piece of plumbing: no WS
-client exists in-tree, and libcurl's WS API is only stable in recent 8.x
-(above our floor), so the plan is a small RFC 6455 client over existing
-TLS socket code. That client later enables Slack Socket Mode. Mattermost's
-interactive buttons POST to an integration URL (inbound HTTP), which v1
-avoids — numbered-list fallback instead.
+`posted` events). libcurl's WS API is only stable in recent 8.x (above our
+floor), so this is provided by `WebSocketClient` (`include/websocket.h`,
+`src/libnetxms/websocket.cpp`): an RFC 6455 client over `TLSConnection`
+with handshake verification, custom handshake headers (`Authorization:
+Bearer`), fragment reassembly, automatic pong, close handshake, and a
+single-reader / multi-sender threading model with `disconnect()` to
+unblock the reader on shutdown. The same client later enables Slack Socket
+Mode. Mattermost's interactive buttons POST to an integration URL (inbound
+HTTP), which v1 avoids — numbered-list fallback instead.
 
 ### 5.4 Slack (deferred)
 

@@ -307,6 +307,7 @@ watchdog	Server watchdog
 weather	Weather subagent (Open-Meteo, MET Norway)
 webapi.objtools	WebAPI object tool execution and streaming
 webapi.tls	WebAPI TLS reverse proxy (reproxy)
+websocket	WebSocket client (default tag, callers may override)
 websvc		Web services
 wincert		Windows certificate store metrics
 winevt		Windows event collection (server side)

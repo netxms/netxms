@@ -13,7 +13,7 @@ libnetxms_la_SOURCES = \
 	streamcomp.cpp string.cpp stringlist.cpp strlcat.cpp strlcpy.cpp strmap.cpp \
 	strmapbase.cpp strptime.cpp strset.cpp \
 	subproc.cpp table.cpp tasks.cpp tfw.cpp threads.cpp timegm.cpp tls_conn.cpp \
-	tools.cpp tp.cpp unicode.cpp unicode_case.cpp uuid.cpp vault.cpp xml.cpp \
+	tools.cpp tp.cpp unicode.cpp unicode_case.cpp uuid.cpp vault.cpp websocket.cpp xml.cpp \
 	wcslcat.cpp wcslcpy.cpp ztools.cpp
 
 libnetxms_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNETXMS_EXPORTS -I@top_srcdir@/build

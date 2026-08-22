@@ -85,7 +85,7 @@ public:
 
    /**
     * Recieves data from socket considering if TLS is on or off.
-    * @return number of bytes read on success, <= 0 on error.
+    * @return number of bytes read on success, 0 if connection was closed, -1 on error, -2 on timeout.
     */
    ssize_t recv(void* data, size_t size, uint32_t timeout = 0)
    {
@@ -103,6 +103,15 @@ public:
       if (timeout == 0)
          timeout = m_defaultTimeout;
       return isTLS() ? tlsSend(data, size, timeout) : SendEx(m_socket, data, size, 0, nullptr, timeout);
+   }
+
+   /**
+    * Check if TLS layer has decrypted data buffered that is not visible to socket poll.
+    * Callers that wait for data with poll() should check this first.
+    */
+   bool hasPendingData()
+   {
+      return (m_ssl != nullptr) && (SSL_pending(m_ssl) > 0);
    }
 
    /**

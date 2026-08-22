@@ -41,6 +41,8 @@ void TestMarkdown();
 void TestScheduleFields();
 void TestScheduleDayOfWeek();
 void TestScheduleSeconds();
+void TestWebSocketURLParsing();
+void TestWebSocketClient();
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
 /**
@@ -3753,6 +3755,8 @@ int main(int argc, char *argv[])
    TestThreadPoolDelayedExecution();
    TestThreadCountAndMaxWaitTime();
    TestThreadPoolStalledExpansion();
+   TestWebSocketURLParsing();
+   TestWebSocketClient();
 
    InitiateProcessShutdown();
 

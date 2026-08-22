@@ -91,6 +91,7 @@ SOURCES = \
 	unicode_case.cpp \
 	uuid.cpp \
 	vault.cpp \
+	websocket.cpp \
 	wcslcat.cpp \
 	wcslcpy.cpp \
 	windll.cpp \

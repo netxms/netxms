@@ -43,6 +43,7 @@ bool TLSConnection::connect(const InetAddress& addr, uint16_t port, bool tls, co
 
 /**
  * Reads data from TLS connection.
+ * @return number of bytes read on success, 0 if connection was closed, -1 on error, -2 on timeout
  */
 ssize_t TLSConnection::tlsRecv(void* data, const size_t size, const uint32_t timeout)
 {
@@ -60,17 +61,27 @@ ssize_t TLSConnection::tlsRecv(void* data, const size_t size, const uint32_t tim
          {
             int64_t remaining = deadline - GetMonotonicClockTime();
             if (remaining <= 0)
+            {
+               bytes = -2;
                break;
+            }
             SocketPoller sp(err == SSL_ERROR_WANT_WRITE);
             sp.add(m_socket);
             if (sp.poll(static_cast<uint32_t>(remaining)) > 0)
                canRetry = true;
+            else
+               bytes = -2;
+         }
+         else if (err == SSL_ERROR_ZERO_RETURN)
+         {
+            bytes = 0;
          }
          else
          {
             nxlog_debug_tag(m_debugTag, 7, _T("SSL_read error (bytes=%d ssl_err=%d socket_err=%d)"), bytes, err, WSAGetLastError());
             if (err == SSL_ERROR_SSL)
                LogOpenSSLErrorStack(7);
+            bytes = -1;
          }
       }
    }
