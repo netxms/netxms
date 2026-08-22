@@ -87,7 +87,7 @@ The JSON interface is becoming the primary interface to the system; a JSON→NXC
 
 ## Request Parsing Conventions
 
-- **Point-in-time values:** parse string values with `ParseTimestamp()` from libnetxms (`nms_util.h`) at the use site — it accepts ISO 8601, UNIX timestamps as strings, relative offsets (`[+|-]<number>[s|m|h|d]`), and `now`; 0 means parse failure → return 400. JSON integers are UNIX timestamps directly. Do not add new shared time-parse helpers to webapi headers.
+- **Point-in-time values:** parse string values with `ParseTimestamp()` from libnetxms (`nms_util.h`) at the use site — it accepts ISO 8601, UNIX timestamps as strings, relative offsets (`[+|-]<number>[s|m|h|d]`), and `now`. Detect a parse failure by passing an out-of-band `defaultValue` (`-1`) and testing for it; do not treat a returned 0 as failure, epoch is valid input. Range-check the result where it matters — timestamps are stored in the database as 32 bit values, so a millisecond timestamp or a max-date sentinel from a generated client wraps silently. JSON integers are UNIX timestamps directly. Do not add new shared time-parse helpers to webapi headers.
 - **Content types:** `RouteBuilder` accepts `application/json` on every POST/PUT/PATCH route by default; `.acceptProtobuf()` / `.acceptImage()` only widen the accepted set. A binary-only route (protobuf, raw image body) must call `.acceptJson(false)`, otherwise it silently accepts a JSON-labeled body and the handler parses it blindly. Anything not accepted gets 415.
 
 ## API Documentation

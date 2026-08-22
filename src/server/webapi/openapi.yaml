@@ -3615,6 +3615,58 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+    delete:
+      operationId: deleteObject
+      summary: Delete object
+      description: |
+        Delete an object. A child object is deleted along with it only when this object is
+        its last remaining parent; a child that is also reachable through another parent is
+        detached instead. A node normally belongs to both a subnet and a container, so
+        deleting a container usually leaves its nodes in place.
+
+        Deletion is **asynchronous**: the request is validated and queued, and `204` means
+        the deletion was accepted, not that the object is already gone. Clients should
+        re-read the tree rather than assume the object disappears immediately.
+
+        Built-in objects (ID below 10, such as "Entire Network" and the class roots) cannot
+        be deleted.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: removeDCI
+          in: query
+          required: false
+          description: >-
+            Templates and clusters only. Whether to also remove the data collection items
+            this object pushed onto its members. Ignored for every other object class.
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '204':
+          description: Deletion accepted. The object is removed asynchronously.
+        '400':
+          description: Invalid object ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: >-
+            User does not have delete access to the object, or the object is a built-in
+            object that cannot be deleted.
+        '404':
+          description: Object with given ID does not exist
+        '409':
+          description: >-
+            Object cannot be deleted in its current state — the zone still contains
+            objects, or the asset is linked to an object and
+            `Objects.Assets.AllowDeleteIfLinked` is disabled.
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/location:
     patch:
       operationId: updateObjectLocation
@@ -6271,6 +6323,97 @@ paths:
           description: Object with given ID does not exist
         '500':
           description: Unable to build internal communication topology
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/availability:
+    get:
+      operationId: getBusinessServiceAvailability
+      summary: Get business service availability
+      description: >-
+        Percentage of the requested period during which the business service was not in
+        CRITICAL state. Downtime is recorded only on transitions into and out of CRITICAL,
+        so a service whose failing checks never take it past DEGRADED reports 100% even
+        when `includeTickets` returns open tickets for the same period. Applies to objects
+        of class BusinessService only; any other class is reported as not found.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: from
+          in: query
+          required: false
+          description: >-
+            Start of the period. ISO 8601, a UNIX timestamp, a relative offset such as
+            `-30d`, or `now`. Must resolve to a moment between the epoch and
+            `2038-01-19T03:14:07Z`; timestamps are stored as 32 bit values, so anything
+            outside that range is rejected. Defaults to the epoch. Note that the percentage
+            is computed over the whole requested period while the housekeeper purges
+            downtime records older than `BusinessServices.History.RetentionTime` (90 days
+            by default), so a period reaching further back than the retention time counts
+            the purged part as uptime.
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          description: >-
+            End of the period, same formats and same accepted range as `from`. Defaults to
+            now.
+          schema:
+            type: string
+        - name: includeTickets
+          in: query
+          required: false
+          description: >-
+            Also return the service tickets overlapping the period, newest first. Omitted
+            from the response entirely when false, so a caller that only needs the
+            percentage does not pay for the second query.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Availability for the requested period.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uptime:
+                    type: number
+                    format: double
+                    description: Percentage of the period the service was up, 0 to 100.
+                  from:
+                    type: string
+                    format: date-time
+                    description: >-
+                      Start of the period actually used. `1970-01-01T00:00:00Z` when `from`
+                      was not supplied.
+                  to:
+                    type: string
+                    format: date-time
+                    description: End of the period actually used.
+                  tickets:
+                    type: array
+                    description: Present only when `includeTickets` is true.
+                    items:
+                      $ref: '#/components/schemas/BusinessServiceTicket'
+        '400':
+          description: >-
+            Unparseable `from` / `to`, a bound outside the accepted range, or `to` earlier
+            than `from`.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the business service
+        '404':
+          description: No business service with given ID
+        '500':
+          description: Unable to read business service history from database
       security:
         - BearerAuth: []
   /v1/objects/{object-id}/arp-cache:
@@ -14256,6 +14399,40 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ArpCacheEntry'
+    BusinessServiceTicket:
+      type: object
+      description: >-
+        One period during which a business service check was failing. A ticket raised on a
+        child service is propagated to every parent service, and the propagated copy reports
+        the id of the original ticket and of the service the check belongs to.
+      properties:
+        id:
+          type: integer
+          description: Ticket ID.
+        serviceId:
+          type: integer
+          description: >-
+            ID of the business service the check that raised the ticket belongs to. For a
+            ticket propagated from a child service this is the child, not the service that
+            was queried.
+        checkId:
+          type: integer
+          description: ID of the check that raised the ticket.
+        creationTime:
+          type: string
+          format: date-time
+          description: When the check started failing.
+        closureTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the check recovered. Null while the ticket is still open.
+        reason:
+          type: string
+          description: Failure reason recorded when the ticket was raised.
+        checkDescription:
+          type: string
+          description: Description of the check, as it read at the time.
     ArpCacheEntry:
       type: object
       description: Single ARP cache entry

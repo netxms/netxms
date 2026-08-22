@@ -808,28 +808,25 @@ NXSL_Value *BusinessService::createNXSLObject(NXSL_VM *vm)
 }
 
 /**
- * Get business service uptime in percents
+ * Get business service uptime in percents. Returns negative value if downtime records cannot
+ * be read from database.
  */
 double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
 {
    if ((to - from) <= 0)  // prevent division by zero (or negative value)
       return 100.0;
 
-   double uptimePercentage = 0;
+   double uptimePercentage = -1;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
             _T("SELECT from_timestamp,to_timestamp FROM business_service_downtime ")
-            _T("WHERE service_id=? AND ((from_timestamp BETWEEN ? AND ? OR to_timestamp BETWEEN ? and ?) OR (from_timestamp<=? AND (to_timestamp=0 OR to_timestamp>=?))) ")
+            _T("WHERE service_id=? AND from_timestamp<=? AND (to_timestamp=0 OR to_timestamp>=?) ")
             _T("ORDER BY from_timestamp"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(from));
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(to));
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(from));
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(to));
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(from));
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(to));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(to));
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(from));
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
@@ -894,16 +891,12 @@ void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage *
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
             _T("SELECT ticket_id,original_ticket_id,original_service_id,check_id,create_timestamp,close_timestamp,reason,check_description FROM business_service_tickets ")
-            _T("WHERE service_id=? AND ((create_timestamp BETWEEN ? AND ? OR close_timestamp BETWEEN ? and ?) OR (create_timestamp<? AND (close_timestamp=0 OR close_timestamp>?)))"));
+            _T("WHERE service_id=? AND create_timestamp<=? AND (close_timestamp=0 OR close_timestamp>=?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)from);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (uint32_t)to);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (uint32_t)from);
-      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (uint32_t)to);
-      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (uint32_t)from);
-      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (uint32_t)to);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (uint32_t)to);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (uint32_t)from);
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
@@ -937,4 +930,65 @@ void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage *
       DBFreeStatement(hStmt);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Get business service tickets as JSON array, newest first. Closure time of still open
+ * ticket is reported as null. Returns nullptr if tickets cannot be read from database.
+ */
+json_t *GetServiceTicketsAsJson(uint32_t serviceId, time_t from, time_t to)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+            _T("SELECT ticket_id,original_ticket_id,original_service_id,check_id,create_timestamp,close_timestamp,reason,check_description FROM business_service_tickets ")
+            _T("WHERE service_id=? AND create_timestamp<=? AND (close_timestamp=0 OR close_timestamp>=?) ")
+            _T("ORDER BY create_timestamp DESC"));
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return nullptr;
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, serviceId);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(to));
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(from));
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == nullptr)
+   {
+      DBFreeStatement(hStmt);
+      DBConnectionPoolReleaseConnection(hdb);
+      return nullptr;
+   }
+
+   json_t *tickets = json_array();
+   int count = DBGetNumRows(hResult);
+   for (int i = 0; i < count; i++)
+   {
+      uint32_t ticketId = DBGetFieldULong(hResult, i, 0);
+      uint32_t originalTicketId = DBGetFieldULong(hResult, i, 1);
+      uint32_t originalServiceId = DBGetFieldULong(hResult, i, 2);
+      uint32_t checkId = DBGetFieldULong(hResult, i, 3);
+      time_t creationTimestamp = static_cast<time_t>(DBGetFieldULong(hResult, i, 4));
+      time_t closureTimestamp = static_cast<time_t>(DBGetFieldULong(hResult, i, 5));
+      wchar_t reason[256];
+      DBGetField(hResult, i, 6, reason, 256);
+      wchar_t checkDescription[1024];
+      DBGetField(hResult, i, 7, checkDescription, 1024);
+
+      json_t *ticket = json_object();
+      json_object_set_new(ticket, "id", json_integer(originalTicketId != 0 ? originalTicketId : ticketId));
+      json_object_set_new(ticket, "serviceId", json_integer(originalTicketId != 0 ? originalServiceId : serviceId));
+      json_object_set_new(ticket, "checkId", json_integer(checkId));
+      json_object_set_new(ticket, "creationTime", json_time_string(creationTimestamp));
+      json_object_set_new(ticket, "closureTime", json_time_string(closureTimestamp));
+      json_object_set_new(ticket, "reason", json_string_t(reason));
+      json_object_set_new(ticket, "checkDescription", json_string_t(checkDescription));
+      json_array_append_new(tickets, ticket);
+   }
+
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+
+   return tickets;
 }

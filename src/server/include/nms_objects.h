@@ -6744,8 +6744,9 @@ void FindSshKeyById(uint32_t id, NXCPMessage *msg);
 json_t NXCORE_EXPORTABLE *GetSshKeysAsJson(bool includePublicKey);
 json_t NXCORE_EXPORTABLE *GetSshKeyByIdAsJson(uint32_t id);
 
-double GetServiceUptime(uint32_t serviceId, time_t from, time_t to);
+double NXCORE_EXPORTABLE GetServiceUptime(uint32_t serviceId, time_t from, time_t to);
 void GetServiceTickets(uint32_t serviceId, time_t from, time_t to, NXCPMessage* msg);
+json_t NXCORE_EXPORTABLE *GetServiceTicketsAsJson(uint32_t serviceId, time_t from, time_t to);
 
 void CheckNodeCountRestrictions();
 int GetMaxAllowedNodeCount();

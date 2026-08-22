@@ -342,6 +342,70 @@ int H_ObjectCreate(Context *context)
 }
 
 /**
+ * Worker for asynchronous object deletion
+ */
+static void DeleteObjectWorker(const shared_ptr<NetObj>& object)
+{
+   object->deleteObject();
+}
+
+/**
+ * Handler for DELETE /v1/objects/:object-id
+ *
+ * Object and its children are deleted on a worker thread, so 204 means that deletion request
+ * is accepted. Requests are serialized to prevent interleaved deletion of related objects.
+ */
+int H_ObjectDelete(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if ((object == nullptr) || object->isDeleted())
+      return 404;
+
+   // Check if it is a built-in object, like "Entire Network"
+   if (object->getId() < 10)
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on delete object %s", object->getName());
+      context->setErrorResponse("Built-in objects cannot be deleted");
+      return 403;
+   }
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_DELETE))
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, objectId, L"Access denied on delete object %s", object->getName());
+      return 403;
+   }
+
+   if ((object->getObjectClass() == OBJECT_ZONE) && !object->isEmpty())
+   {
+      context->setErrorResponse("Zone is not empty");
+      return 409;
+   }
+
+   if ((object->getObjectClass() == OBJECT_ASSET) &&
+       !ConfigReadBoolean(L"Objects.Assets.AllowDeleteIfLinked", false) &&
+       (static_cast<Asset&>(*object).getLinkedObjectId() != 0))
+   {
+      context->setErrorResponse("Asset is linked to an object");
+      return 409;
+   }
+
+   // For templates and clusters, set the DCI removal option before deletion
+   bool removeDCI = context->getQueryParameterAsBoolean("removeDCI", true);
+   if (object->getObjectClass() == OBJECT_TEMPLATE)
+      static_cast<Template&>(*object).setRemoveDCIOnDelete(removeDCI);
+   else if (object->getObjectClass() == OBJECT_CLUSTER)
+      static_cast<Cluster&>(*object).setRemoveDCIOnDelete(removeDCI);
+
+   context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Object %s deleted", object->getName());
+   ThreadPoolExecuteSerialized(g_clientThreadPool, L"DeleteObject", DeleteObjectWorker, object);
+   return 204;
+}
+
+/**
  * Handler for /v1/objects/:object-id
  */
 int H_ObjectDetails(Context *context)

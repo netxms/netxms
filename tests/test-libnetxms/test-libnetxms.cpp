@@ -1600,6 +1600,43 @@ static void TestParseDuration()
 }
 
 /**
+ * Test ParseTimestamp
+ */
+static void TestParseTimestamp()
+{
+   StartTest(_T("ParseTimestamp"));
+
+   // Absolute timestamps
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("0")), static_cast<int64_t>(0));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("1700000000")), static_cast<int64_t>(1700000000));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("1970-01-01T00:00:00Z")), static_cast<int64_t>(0));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("2023-11-14T22:13:20Z")), static_cast<int64_t>(1700000000));
+
+   // Relative timestamps (clock may move by a second between the calls)
+   time_t now = time(nullptr);
+   time_t t = ParseTimestamp("now");
+   AssertTrue((t >= now) && (t <= now + 1));
+   t = ParseTimestamp("-1h");
+   AssertTrue((t >= now - 3600) && (t <= now - 3599));
+   t = ParseTimestamp("+30");   // no suffix means minutes
+   AssertTrue((t >= now + 1800) && (t <= now + 1801));
+
+   // Invalid input returns default value
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("abc")), static_cast<int64_t>(0));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("abc", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("-10x", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("-", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("+", -1)), static_cast<int64_t>(-1));
+
+   // Epoch is a valid input and is not affected by default value
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("0", -1)), static_cast<int64_t>(0));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("1970-01-01T00:00:00Z", -1)), static_cast<int64_t>(0));
+
+   EndTest();
+}
+
+/**
  * Keys for hash map
  */
 typedef char HASH_KEY[6];
@@ -3712,6 +3749,7 @@ int main(int argc, char *argv[])
    TestInetAddress();
    TestIntegerToString();
    TestParseDuration();
+   TestParseTimestamp();
    TestQueue();
    TestSharedObjectQueue();
    TestSQueue();
