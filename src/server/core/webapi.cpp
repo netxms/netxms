@@ -111,7 +111,8 @@ static bool WSCalculateAcceptValue(MHD_Connection *connection, MHD_Response *res
 }
 
 /**
- * Read websocket frame
+ * Read websocket frame sent by client. Cannot be used for reading server side frames because
+ * according to RFC 6455 only client to server frames are masked.
  */
 bool NXCORE_EXPORTABLE ReadWebsocketFrame(SOCKET socketHandle, ByteStream *out, BYTE *frameType)
 {
@@ -129,10 +130,10 @@ bool NXCORE_EXPORTABLE ReadWebsocketFrame(SOCKET socketHandle, ByteStream *out, 
    bool masked = ((buffer[1] & 0x80) != 0);
    size_t payloadLength = buffer[1] & 0x7F;
 
-   // Check masking
-   if (!masked && ((*frameType == 1) || (*frameType == 2)))
+   // RFC 6455 requires client to mask every frame sent to the server
+   if (!masked)
    {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, L"Received unmasked websocket data frame from client");
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 7, L"Received unmasked websocket frame from client (frame type %d)", *frameType);
       return false;
    }
 
