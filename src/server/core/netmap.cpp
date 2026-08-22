@@ -1771,14 +1771,14 @@ static SharedObjectArray<DCObject> CollectDcis(shared_ptr<Node> node, uint32_t i
          if (inTraffic && outTraffic)
             return false;
          if (!inTraffic && (obj->getType() == DCO_TYPE_ITEM) && (obj->getRelatedObject() == interfaceId) &&
-                  tag.startsWith(L"iface-inbound-") && !tag.endsWith(L"-util"))
+                  tag.startsWith(L"iface.inbound.") && !tag.endsWith(L".util"))
          {
             inTraffic = true;
             return true;
          }
 
          if (!outTraffic && (obj->getType() == DCO_TYPE_ITEM) && (obj->getRelatedObject() == interfaceId) &&
-                  tag.startsWith(L"iface-outbound-") && !tag.endsWith(L"-util"))
+                  tag.startsWith(L"iface.outbound.") && !tag.endsWith(L".util"))
          {
             outTraffic = true;
             return true;
@@ -1847,7 +1847,7 @@ void NetworkMap::updateLinkDataSource(NetworkMapLinkContainer *linkContainer)
          {
             String tag = dci->getSystemTag();
             wchar_t format[128];
-            _sntprintf(format, 128, L"%s: %s", tag.startsWith(L"iface-inbound-") ? L"RX" : L"TX", L" %{u,m}s");
+            _sntprintf(format, 128, L"%s: %s", tag.startsWith(L"iface.inbound.") ? L"RX" : L"TX", L" %{u,m}s");
             LinkDataLocation loc = (dci->getRelatedObject() == linkContainer->get()->getInterface1()) ? LinkDataLocation::OBJECT1 : LinkDataLocation::OBJECT2;
             linkContainer->addSystemDataSource(dci->createDescriptor(), format, loc);
          }

@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.25 to 70.26
+ */
+static bool H_UpgradeFromV25()
+{
+   // Rename well-known interface DCI system tags from legacy hyphenated to dotted form
+   CHK_EXEC(SQLQuery(L"UPDATE items SET system_tag='iface.inbound.bits' WHERE system_tag='iface-inbound-bits'"));
+   CHK_EXEC(SQLQuery(L"UPDATE items SET system_tag='iface.inbound.bytes' WHERE system_tag='iface-inbound-bytes'"));
+   CHK_EXEC(SQLQuery(L"UPDATE items SET system_tag='iface.inbound.util' WHERE system_tag='iface-inbound-util'"));
+   CHK_EXEC(SQLQuery(L"UPDATE items SET system_tag='iface.outbound.bits' WHERE system_tag='iface-outbound-bits'"));
+   CHK_EXEC(SQLQuery(L"UPDATE items SET system_tag='iface.outbound.bytes' WHERE system_tag='iface-outbound-bytes'"));
+   CHK_EXEC(SQLQuery(L"UPDATE items SET system_tag='iface.outbound.util' WHERE system_tag='iface-outbound-util'"));
+   CHK_EXEC(SQLQuery(L"UPDATE items SET system_tag='iface.speed' WHERE system_tag='iface-speed'"));
+   CHK_EXEC(SetMinorSchemaVersion(26));
+   return true;
+}
+
+/**
  * Upgrade from 70.24 to 70.25
  */
 static bool H_UpgradeFromV24()
@@ -864,6 +881,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 25, 70, 26, H_UpgradeFromV25 },
    { 24, 70, 25, H_UpgradeFromV24 },
    { 23, 70, 24, H_UpgradeFromV23 },
    { 22, 70, 23, H_UpgradeFromV22 },

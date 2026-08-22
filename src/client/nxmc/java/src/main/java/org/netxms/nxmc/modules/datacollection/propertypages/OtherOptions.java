@@ -40,7 +40,14 @@ import org.xnap.commons.i18n.I18n;
  */
 public class OtherOptions extends AbstractDCIPropertyPage
 {
-   private static final String[] TAGS = { "iface-inbound-bits", "iface-inbound-bytes", "iface-inbound-util", "iface-outbound-bits", "iface-outbound-bytes", "iface-outbound-util", "iface-speed" };
+   private static final String[] TAGS = {
+      "iface.inbound.bits", "iface.inbound.bytes", "iface.inbound.util", "iface.outbound.bits", "iface.outbound.bytes", "iface.outbound.util", "iface.speed",
+      "eed.edc", "eed.eit", "eed.win", "eed.reuse", "eed.ren",
+      "power.feed", "power.in", "power.out", "power.gen",
+      "cooling.energy", "cooling.power", "cooling.load", "cooling.temp.supply", "cooling.temp.return", "cooling.flow",
+      "env.temp.outdoor", "env.temp.ambient", "env.temp.supply", "env.temp.return", "env.temp.inlet", "env.temp.outlet", "env.humidity.outdoor", "env.humidity.ambient",
+      "water.flow", "heat.export"
+   };
 
    private final I18n i18n = LocalizationHelper.getI18n(OtherOptions.class);
 
@@ -169,6 +176,31 @@ public class OtherOptions extends AbstractDCIPropertyPage
       interpretation.add(i18n.tr("Interface traffic - Outbound - bytes/sec"));
       interpretation.add(i18n.tr("Interface traffic - Outbound - Utilization %"));
       interpretation.add(i18n.tr("Interface speed"));
+      interpretation.add(i18n.tr("EED - Total facility energy (EDC)"));
+      interpretation.add(i18n.tr("EED - IT equipment energy (EIT)"));
+      interpretation.add(i18n.tr("EED - Water intake (WIN)"));
+      interpretation.add(i18n.tr("EED - Reused energy (REUSE)"));
+      interpretation.add(i18n.tr("EED - Renewable energy (REN)"));
+      interpretation.add(i18n.tr("Power - Feed power"));
+      interpretation.add(i18n.tr("Power - Input side power"));
+      interpretation.add(i18n.tr("Power - Output side power"));
+      interpretation.add(i18n.tr("Power - On-site generation"));
+      interpretation.add(i18n.tr("Cooling - Energy consumption"));
+      interpretation.add(i18n.tr("Cooling - Power consumption"));
+      interpretation.add(i18n.tr("Cooling - Thermal load"));
+      interpretation.add(i18n.tr("Cooling - Supply temperature"));
+      interpretation.add(i18n.tr("Cooling - Return temperature"));
+      interpretation.add(i18n.tr("Cooling - Coolant flow rate"));
+      interpretation.add(i18n.tr("Environment - Outdoor temperature"));
+      interpretation.add(i18n.tr("Environment - Ambient temperature"));
+      interpretation.add(i18n.tr("Environment - Supply air temperature"));
+      interpretation.add(i18n.tr("Environment - Return air temperature"));
+      interpretation.add(i18n.tr("Environment - Rack inlet temperature"));
+      interpretation.add(i18n.tr("Environment - Rack outlet temperature"));
+      interpretation.add(i18n.tr("Environment - Outdoor humidity"));
+      interpretation.add(i18n.tr("Environment - Ambient humidity"));
+      interpretation.add(i18n.tr("Water - Intake flow rate"));
+      interpretation.add(i18n.tr("Heat - Exported heat flow"));
       interpretation.select(interpretationFromTag(dci.getSystemTag()));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;

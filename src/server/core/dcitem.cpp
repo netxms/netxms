@@ -1048,12 +1048,12 @@ void DCItem::clearInterfaceUtilization()
    if ((m_relatedObject != 0) && !m_systemTag.isEmpty())
    {
       String tag(m_systemTag.str());
-      if (tag.startsWith(L"iface-inbound-") || tag.startsWith(L"iface-outbound-"))
+      if (tag.startsWith(L"iface.inbound.") || tag.startsWith(L"iface.outbound."))
       {
          shared_ptr<Interface> iface = static_pointer_cast<Interface>(FindObjectById(m_relatedObject, OBJECT_INTERFACE));
          if (iface != nullptr)
          {
-            if (tag.startsWith(L"iface-inbound-"))
+            if (tag.startsWith(L"iface.inbound."))
                iface->setInboundUtilization(-1);
             else
                iface->setOutboundUtilization(-1);
@@ -1376,7 +1376,7 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
    }
 
    // If DCI is related to interface and marked as inbound or outbound traffic indicator, update interface utilization
-   if ((m_relatedObject != 0) && !m_systemTag.isEmpty() && (m_systemTag.str().startsWith(_T("iface-inbound-")) || m_systemTag.str().startsWith(_T("iface-outbound-"))))
+   if ((m_relatedObject != 0) && !m_systemTag.isEmpty() && (m_systemTag.str().startsWith(L"iface.inbound.") || m_systemTag.str().startsWith(L"iface.outbound.")))
    {
       int64_t value = pValue->getInt64();
       if (value >= 0)
@@ -1389,7 +1389,7 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
                [iface, value, tag] () -> void
                {
                   int32_t u;
-                  if (tag.endsWith(_T("-util")))
+                  if (tag.endsWith(L".util"))
                   {
                      u = static_cast<int32_t>(value) * 10;
                   }
@@ -1398,7 +1398,7 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
                      uint64_t speed = iface->getSpeed();
                      if (speed > 0)
                      {
-                        u = static_cast<int32_t>((tag.endsWith(_T("-bytes")) ? value * 8 : value) * 1000 / iface->getSpeed());
+                        u = static_cast<int32_t>((tag.endsWith(L".bytes") ? value * 8 : value) * 1000 / iface->getSpeed());
                      }
                      else
                      {
@@ -1407,7 +1407,7 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
                   }
                   if (u > 1000)
                      u = 1000;
-                  if (tag.startsWith(_T("iface-inbound-")))
+                  if (tag.startsWith(L"iface.inbound."))
                      iface->setInboundUtilization(u);
                   else
                      iface->setOutboundUtilization(u);
