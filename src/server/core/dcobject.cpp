@@ -37,6 +37,31 @@
 uint32_t QueueStorageClassMigration(uint32_t dciId, char dciType, DCObjectStorageClass oldClass, DCObjectStorageClass newClass);
 
 /**
+ * Convert legacy hyphenated form of well-known system tags to current dotted form
+ * (configurations exported before schema version 70.26 use the legacy form)
+ */
+static const wchar_t *NormalizeSystemTag(const wchar_t *tag)
+{
+   static const wchar_t *legacyTags[][2] =
+   {
+      { L"iface-inbound-bits", L"iface.inbound.bits" },
+      { L"iface-inbound-bytes", L"iface.inbound.bytes" },
+      { L"iface-inbound-util", L"iface.inbound.util" },
+      { L"iface-outbound-bits", L"iface.outbound.bits" },
+      { L"iface-outbound-bytes", L"iface.outbound.bytes" },
+      { L"iface-outbound-util", L"iface.outbound.util" },
+      { L"iface-speed", L"iface.speed" }
+   };
+   if (tag != nullptr)
+   {
+      for(size_t i = 0; i < sizeof(legacyTags) / sizeof(legacyTags[0]); i++)
+         if (!wcscmp(tag, legacyTags[i][0]))
+            return legacyTags[i][1];
+   }
+   return tag;
+}
+
+/**
  * Code/name lookup tables for symbolic representation of data collection enumerations in JSON.
  * Origin names are kept in sync with DCObject::getDataProviderName().
  */
@@ -297,7 +322,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_templateItemId = 0;
    m_name = config->getSubEntryValue(_T("name"), 0, _T("unnamed"));
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
-   m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
+   m_systemTag = NormalizeSystemTag(config->getSubEntryValue(_T("systemTag"), 0, nullptr));
    m_userTag = config->getSubEntryValue(_T("userTag"), 0, nullptr);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_flags = config->getSubEntryValueAsInt(_T("flags"));
@@ -1404,7 +1429,7 @@ void DCObject::updateFromImport(ConfigEntry *config, bool nxslV5, ImportContext 
 
    m_name = config->getSubEntryValue(_T("name"), 0, _T("unnamed"));
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
-   m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
+   m_systemTag = NormalizeSystemTag(config->getSubEntryValue(_T("systemTag"), 0, nullptr));
    m_userTag = config->getSubEntryValue(_T("userTag"), 0, nullptr);
    m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_flags = config->getSubEntryValueAsInt(_T("flags"));

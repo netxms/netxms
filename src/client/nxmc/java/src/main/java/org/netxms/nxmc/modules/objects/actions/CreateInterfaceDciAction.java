@@ -230,16 +230,16 @@ public class CreateInterfaceDciAction extends ObjectAction<Interface>
          switch(dciType)
          {
             case IFDCI_IN_BITS:
-               dci.setSystemTag("iface-inbound-bits");
+               dci.setSystemTag("iface.inbound.bits");
                break;
             case IFDCI_IN_BYTES:
-               dci.setSystemTag("iface-inbound-bytes");
+               dci.setSystemTag("iface.inbound.bytes");
                break;
             case IFDCI_OUT_BITS:
-               dci.setSystemTag("iface-outbound-bits");
+               dci.setSystemTag("iface.outbound.bits");
                break;
             case IFDCI_OUT_BYTES:
-               dci.setSystemTag("iface-outbound-bytes");
+               dci.setSystemTag("iface.outbound.bytes");
                break;
          }
       }

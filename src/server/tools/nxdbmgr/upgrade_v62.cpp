@@ -25,11 +25,30 @@
 #include <nxtools.h>
 
 /**
- * Upgrade from 62.38 to 70.0
+ * Upgrade from 62.39 to 70.0
+ */
+static bool H_UpgradeFromV39()
+{
+   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 62.38 to 62.39
  */
 static bool H_UpgradeFromV38()
 {
-   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   const wchar_t *batch =
+      L"UPDATE items SET system_tag='iface.inbound.bits' WHERE system_tag='iface-inbound-bits'\n"
+      L"UPDATE items SET system_tag='iface.inbound.bytes' WHERE system_tag='iface-inbound-bytes'\n"
+      L"UPDATE items SET system_tag='iface.inbound.util' WHERE system_tag='iface-inbound-util'\n"
+      L"UPDATE items SET system_tag='iface.outbound.bits' WHERE system_tag='iface-outbound-bits'\n"
+      L"UPDATE items SET system_tag='iface.outbound.bytes' WHERE system_tag='iface-outbound-bytes'\n"
+      L"UPDATE items SET system_tag='iface.outbound.util' WHERE system_tag='iface-outbound-util'\n"
+      L"UPDATE items SET system_tag='iface.speed' WHERE system_tag='iface-speed'\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SetMinorSchemaVersion(39));
    return true;
 }
 
@@ -1308,7 +1327,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 38, 70,  0, H_UpgradeFromV38 },
+   { 39, 70,  0, H_UpgradeFromV39 },
+   { 38, 62, 39, H_UpgradeFromV38 },
    { 37, 62, 38, H_UpgradeFromV37 },
    { 36, 62, 37, H_UpgradeFromV36 },
    { 35, 62, 36, H_UpgradeFromV35 },

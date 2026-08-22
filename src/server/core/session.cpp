@@ -20978,14 +20978,14 @@ static void GetInterfaceTrafficDcis(shared_ptr<Node> node, uint32_t interfaceId,
          if (foundElements[IN_BITS] && foundElements[OUT_BITS] && foundElements[IN_UTIL] && foundElements[OUT_UTIL])
             return true;
 
-         if (!foundElements[IN_BITS] && tag.equals(L"iface-inbound-bits"))
+         if (!foundElements[IN_BITS] && tag.equals(L"iface.inbound.bits"))
          {
             dciId[IN_BITS] = obj->getId();
             units[IN_BITS] = static_cast<DCItem *>(obj)->getUnitName();
             foundElements[IN_BITS] = true;
             return false;
          }
-         if ((!foundElements[IN_BITS] || !foundElements[IN_BYTES]) && tag.equals(L"iface-inbound-bytes"))
+         if ((!foundElements[IN_BITS] || !foundElements[IN_BYTES]) && tag.equals(L"iface.inbound.bytes"))
          {
             dciId[IN_BITS] = obj->getId();
             units[IN_BITS] = static_cast<DCItem *>(obj)->getUnitName();
@@ -20993,14 +20993,14 @@ static void GetInterfaceTrafficDcis(shared_ptr<Node> node, uint32_t interfaceId,
             return false;
          }
 
-         if (!foundElements[OUT_BITS] && tag.equals(L"iface-outbound-bits"))
+         if (!foundElements[OUT_BITS] && tag.equals(L"iface.outbound.bits"))
          {
             dciId[OUT_BITS] = obj->getId();
             units[OUT_BITS] = static_cast<DCItem *>(obj)->getUnitName();
             foundElements[OUT_BITS] = true;
             return false;
          }
-         if ((!foundElements[OUT_BITS] || !foundElements[OUT_BYTES]) && tag.equals(L"iface-outbound-bytes"))
+         if ((!foundElements[OUT_BITS] || !foundElements[OUT_BYTES]) && tag.equals(L"iface.outbound.bytes"))
          {
             dciId[OUT_BITS] = obj->getId();
             units[OUT_BITS] = static_cast<DCItem *>(obj)->getUnitName();
@@ -21008,14 +21008,14 @@ static void GetInterfaceTrafficDcis(shared_ptr<Node> node, uint32_t interfaceId,
             return false;
          }
 
-         if (!foundElements[IN_UTIL] && tag.equals(L"iface-inbound-util"))
+         if (!foundElements[IN_UTIL] && tag.equals(L"iface.inbound.util"))
          {
             dciId[IN_UTIL] = obj->getId();
             units[IN_UTIL] = static_cast<DCItem *>(obj)->getUnitName();
             foundElements[IN_UTIL] = true;
             return false;
          }
-         if (!foundElements[OUT_UTIL] && tag.equals(L"iface-outbound-util"))
+         if (!foundElements[OUT_UTIL] && tag.equals(L"iface.outbound.util"))
          {
             dciId[OUT_UTIL] = obj->getId();
             units[OUT_UTIL] = static_cast<DCItem *>(obj)->getUnitName();
