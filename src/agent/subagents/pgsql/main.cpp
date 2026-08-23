@@ -142,6 +142,42 @@ DatabaseQuery g_queries[] =
 	{ _T("REPLICATION"), MAKE_PGSQL_VERSION(10, 0, 0), 0, 0,
 		_T("SELECT pg_catalog.pg_wal_lsn_diff(pg_current_wal_lsn(),'0/00000000') AS xlog_size, count(*) AS xlog_files FROM pg_catalog.pg_ls_waldir()")
 	},
+	// Shared memory area size is reported by the server itself starting from v15 (rounded up to a megabyte).
+	{ _T("MEMORY"), MAKE_PGSQL_VERSION(15, 0, 0), 0, 0,
+		_T("WITH s AS (SELECT name, setting::bigint * CASE unit WHEN 'B' THEN 1 WHEN 'kB' THEN 1024 WHEN 'MB' THEN 1048576 WHEN 'GB' THEN 1073741824 WHEN '8kB' THEN 8192 ELSE 1 END AS value ")
+			_T("FROM pg_catalog.pg_settings WHERE name IN ('shared_memory_size', 'shared_buffers', 'work_mem', 'maintenance_work_mem', 'autovacuum_work_mem', 'temp_buffers', 'max_connections', 'autovacuum_max_workers')), ")
+			_T("v AS (SELECT max(CASE WHEN name = 'shared_memory_size' THEN value END) AS shared_size, ")
+			_T("max(CASE WHEN name = 'shared_buffers' THEN value END) AS shared_buffers, ")
+			_T("max(CASE WHEN name = 'work_mem' THEN value END) AS work_mem, ")
+			_T("max(CASE WHEN name = 'maintenance_work_mem' THEN value END) AS maintenance_work_mem, ")
+			_T("max(CASE WHEN name = 'autovacuum_work_mem' THEN value END) AS raw_autovacuum_work_mem, ")
+			_T("max(CASE WHEN name = 'temp_buffers' THEN value END) AS temp_buffers, ")
+			_T("max(CASE WHEN name = 'max_connections' THEN value END) AS max_connections, ")
+			_T("max(CASE WHEN name = 'autovacuum_max_workers' THEN value END) AS autovacuum_max_workers FROM s), ")
+			// autovacuum_work_mem is -1 when workers should fall back to maintenance_work_mem
+			_T("r AS (SELECT v.*, CASE WHEN raw_autovacuum_work_mem < 0 THEN maintenance_work_mem ELSE raw_autovacuum_work_mem END AS autovacuum_work_mem, ")
+			_T("max_connections * (work_mem + temp_buffers) AS configured_backend_max FROM v) ")
+			_T("SELECT shared_size, shared_buffers, work_mem, maintenance_work_mem, autovacuum_work_mem, temp_buffers, configured_backend_max, ")
+			_T("shared_size + configured_backend_max + autovacuum_max_workers * autovacuum_work_mem AS configured_total_max FROM r")
+	},
+	// Before v15 the shared memory area size is approximated as shared_buffers + wal_buffers; it excludes
+	// the lock tables, the predicate lock area and other fixed structures (typically a few megabytes).
+	{ _T("MEMORY"), 0, MAKE_PGSQL_VERSION(15, 0, 0), 0,
+		_T("WITH s AS (SELECT name, setting::bigint * CASE unit WHEN 'B' THEN 1 WHEN 'kB' THEN 1024 WHEN 'MB' THEN 1048576 WHEN 'GB' THEN 1073741824 WHEN '8kB' THEN 8192 ELSE 1 END AS value ")
+			_T("FROM pg_catalog.pg_settings WHERE name IN ('wal_buffers', 'shared_buffers', 'work_mem', 'maintenance_work_mem', 'autovacuum_work_mem', 'temp_buffers', 'max_connections', 'autovacuum_max_workers')), ")
+			_T("v AS (SELECT greatest(max(CASE WHEN name = 'wal_buffers' THEN value END), 0) + max(CASE WHEN name = 'shared_buffers' THEN value END) AS shared_size, ")
+			_T("max(CASE WHEN name = 'shared_buffers' THEN value END) AS shared_buffers, ")
+			_T("max(CASE WHEN name = 'work_mem' THEN value END) AS work_mem, ")
+			_T("max(CASE WHEN name = 'maintenance_work_mem' THEN value END) AS maintenance_work_mem, ")
+			_T("max(CASE WHEN name = 'autovacuum_work_mem' THEN value END) AS raw_autovacuum_work_mem, ")
+			_T("max(CASE WHEN name = 'temp_buffers' THEN value END) AS temp_buffers, ")
+			_T("max(CASE WHEN name = 'max_connections' THEN value END) AS max_connections, ")
+			_T("max(CASE WHEN name = 'autovacuum_max_workers' THEN value END) AS autovacuum_max_workers FROM s), ")
+			_T("r AS (SELECT v.*, CASE WHEN raw_autovacuum_work_mem < 0 THEN maintenance_work_mem ELSE raw_autovacuum_work_mem END AS autovacuum_work_mem, ")
+			_T("max_connections * (work_mem + temp_buffers) AS configured_backend_max FROM v) ")
+			_T("SELECT shared_size, shared_buffers, work_mem, maintenance_work_mem, autovacuum_work_mem, temp_buffers, configured_backend_max, ")
+			_T("shared_size + configured_backend_max + autovacuum_max_workers * autovacuum_work_mem AS configured_total_max FROM r")
+	},
 	{ nullptr, 0, 0, 0, nullptr }
 };
 
@@ -683,6 +719,14 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("PostgreSQL.GlobalConnections.Total(*)"), H_GlobalParameter, _T("CONNECTIONS/total"), DCI_DT_INT, _T("PostgreSQL/GlobalConnections: number of all backends") },
 	{ _T("PostgreSQL.GlobalConnections.TotalMax(*)"), H_GlobalParameter, _T("CONNECTIONS/max"), DCI_DT_INT, _T("PostgreSQL/GlobalConnections: max connections") },
 	{ _T("PostgreSQL.GlobalConnections.TotalPct(*)"), H_GlobalParameter, _T("CONNECTIONS/total_pct"), DCI_DT_FLOAT, _T("PostgreSQL/GlobalConnections: used connections (%)") },
+	{ _T("PostgreSQL.Memory.AutovacuumWorkMem(*)"), H_GlobalParameter, _T("MEMORY/autovacuum_work_mem"), DCI_DT_INT64, _T("PostgreSQL/Memory: autovacuum worker memory limit") },
+	{ _T("PostgreSQL.Memory.ConfiguredBackendMax(*)"), H_GlobalParameter, _T("MEMORY/configured_backend_max"), DCI_DT_INT64, _T("PostgreSQL/Memory: configured maximum backend memory") },
+	{ _T("PostgreSQL.Memory.ConfiguredTotalMax(*)"), H_GlobalParameter, _T("MEMORY/configured_total_max"), DCI_DT_INT64, _T("PostgreSQL/Memory: configured maximum total memory") },
+	{ _T("PostgreSQL.Memory.MaintenanceWorkMem(*)"), H_GlobalParameter, _T("MEMORY/maintenance_work_mem"), DCI_DT_INT64, _T("PostgreSQL/Memory: maintenance operation memory limit") },
+	{ _T("PostgreSQL.Memory.SharedBuffers(*)"), H_GlobalParameter, _T("MEMORY/shared_buffers"), DCI_DT_INT64, _T("PostgreSQL/Memory: shared buffer pool size") },
+	{ _T("PostgreSQL.Memory.SharedSize(*)"), H_GlobalParameter, _T("MEMORY/shared_size"), DCI_DT_INT64, _T("PostgreSQL/Memory: shared memory area size") },
+	{ _T("PostgreSQL.Memory.TempBuffers(*)"), H_GlobalParameter, _T("MEMORY/temp_buffers"), DCI_DT_INT64, _T("PostgreSQL/Memory: temporary table buffer limit per backend") },
+	{ _T("PostgreSQL.Memory.WorkMem(*)"), H_GlobalParameter, _T("MEMORY/work_mem"), DCI_DT_INT64, _T("PostgreSQL/Memory: query operation memory limit") },
 	{ _T("PostgreSQL.Replication.InRecovery(*)"), H_GlobalParameter, _T("REPLICATION/in_recovery"), DCI_DT_STRING, _T("PostgreSQL/Replication: in recovery") },
 	{ _T("PostgreSQL.Replication.IsReceiver(*)"), H_GlobalParameter, _T("REPLICATION/is_receiver"), DCI_DT_STRING, _T("PostgreSQL/Replication: is receiver") },
 	{ _T("PostgreSQL.Replication.Lag(*)"), H_GlobalParameter, _T("REPLICATION/lag"), DCI_DT_INT, _T("PostgreSQL/Replication: lag in seconds") },
