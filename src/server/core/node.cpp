@@ -5246,7 +5246,22 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
 
    // Check node name
    sendPollerMsg(_T("Checking node name\r\n"));
-   if (g_flags & AF_RESOLVE_NODE_NAMES)
+   bool resolved = false;
+   if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
+   {
+      sendPollerMsg(_T("Synchronizing node name with DNS\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
+      poller->setStatus(_T("resolving name"));
+      const TCHAR *facility;
+      resolved = resolveName(true, &facility);
+      if (resolved)
+      {
+         sendPollerMsg(POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
+         modified |= MODIFY_COMMON_PROPERTIES;
+      }
+   }
+   if (!resolved && (g_flags & AF_RESOLVE_NODE_NAMES))
    {
       InetAddress addr = InetAddress::parse(m_name);
       if (addr.isValidUnicast())
@@ -5273,20 +5288,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          sendPollerMsg(_T("Node name cannot be interpreted as valid IP address, no need to resolve to host name\r\n"));
       }
    }
-   else if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
-   {
-      sendPollerMsg(_T("Synchronizing node name with DNS\r\n"));
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
-      poller->setStatus(_T("resolving name"));
-      const TCHAR *facility;
-      if (resolveName(true, &facility))
-      {
-         sendPollerMsg(POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
-         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
-         modified |= MODIFY_COMMON_PROPERTIES;
-      }
-   }
-   else
+   else if (!resolved)
    {
       sendPollerMsg(_T("Node name is OK\r\n"));
    }
