@@ -53,7 +53,8 @@ public class LanguagePage extends PropertyPage
       new Language("es", "Español - Spanish"),
       new Language("fr", "Français - French"),
       new Language("pt_BR", "Português - Portuguese (Brazil)"),
-      new Language("ru", "Русский - Russian")
+      new Language("ru", "Русский - Russian"),
+      new Language("zh_TW", "繁體中文 - Chinese (Traditional)")
    };
 
    private PreferenceStore settings = PreferenceStore.getInstance();
