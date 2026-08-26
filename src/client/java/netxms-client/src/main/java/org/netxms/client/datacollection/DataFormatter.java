@@ -385,7 +385,8 @@ public class DataFormatter
       }
       else
       {
-         v.value = value;
+         // Value is between -1 and 1 and no multiplier is applicable - use it as is, without suffix
+         v.value = Double.valueOf(d);
       }
       return v;
    }
@@ -401,16 +402,40 @@ public class DataFormatter
       if ((dataType == DataType.STRING) || (dataType == DataType.NULL))
          return new Value(value);
 
-      Value v = useMultipliers ? getValueWithMultipliers(value) : new Value(value);
+      Value v;
+      if (useMultipliers)
+      {
+         v = getValueWithMultipliers(value);
+      }
+      else
+      {
+         v = new Value(value);
+         if (dataType == DataType.FLOAT)
+         {
+            // Server sends floating point values with fixed six decimal places, so they have to be converted to number for correct rounding
+            try
+            {
+               v.value = Double.valueOf(Double.parseDouble(value));
+            }
+            catch(NumberFormatException e)
+            {
+               // Not a valid number - leave value as is
+            }
+         }
+      }
+
       switch(formatSymbol)
       {
          case 's':
          case 'S':
             if (v.value instanceof Double)
             {
+               double d = (Double)v.value;
+               int precision = calculatePrecision(Math.abs(d));
                NumberFormat nf = NumberFormat.getNumberInstance();
-               nf.setMaximumFractionDigits(2);
-               v.value = nf.format((Double)v.value);
+               // Two decimal places is enough for values above 1, but smaller ones should keep two significant digits to not be rounded to zero
+               nf.setMaximumFractionDigits((precision > 0) ? Math.min(precision + 1, 8) : 2);
+               v.value = nf.format(d);
             }
             break;
          case 'a':
