@@ -1,0 +1,1632 @@
+-- ***************************************************************************
+-- ***************************************************************************
+--
+-- File         : chkpnt-trap.mib
+-- Description  : Check Point traps
+--
+--
+--
+-- ***************************************************************************
+-- ***************************************************************************
+
+CHECKPOINT-TRAP-MIB DEFINITIONS ::= BEGIN
+
+          -- SUBTREE: 1.3.6.1.4.1.2620.1
+          -- iso.org.dod.internet.private.enterprises.checkpoint.products
+
+IMPORTS
+ MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, Integer32, Unsigned32, enterprises
+FROM SNMPv2-SMI
+ MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+FROM SNMPv2-CONF
+  DisplayString
+  FROM SNMPv2-TC
+  multiDiskNameTrap, multiDiskFreeAvailablePercentTrap, raidVolumeIDTrap, raidVolumeStateTrap, raidDiskVolumeIDTrap, raidDiskIDTrap, raidDiskStateTrap, raidDiskFlagsTrap
+	FROM CHECKPOINT-MIB
+  svnNetIfName, svnNetIfAddress, svnNetIfState, svnNetIfOperState, svnNetIfRXDrops, multiProcIndexTrap, multiProcUserTimeTrap, multiProcSystemTimeTrap, multiProcIdleTimeTrap, multiProcUsageTrap
+	FROM CHECKPOINT-MIB
+  multiProcRunQueueTrap, multiProcInterruptsTrap, memActiveReal64Trap, memTotalReal64Trap, memActiveVirtual64Trap, memTotalVirtual64Trap, tempertureSensorNameTrap, tempertureSensorValueTrap
+	FROM CHECKPOINT-MIB
+  tempertureSensorUnitTrap, tempertureSensorTypeTrap, tempertureSensorStatusTrap, fanSpeedSensorNameTrap, fanSpeedSensorValueTrap, fanSpeedSensorUnitTrap, fanSpeedSensorTypeTrap, fanSpeedSensorStatusTrap
+	FROM CHECKPOINT-MIB
+  voltageSensorNameTrap, voltageSensorValueTrap, voltageSensorUnitTrap, voltageSensorTypeTrap, voltageSensorStatusTrap
+	FROM CHECKPOINT-MIB
+  haIdentifier, haState, haBlockState, haStatCode, haStatShort, haStatLong, haProblemName, haProblemStatus, haProblemPriority, haProblemVerified, haProblemDescr, haClusterXLFailover
+	FROM CHECKPOINT-MIB
+  haIfName, haIP, haStatus, haTrusted, haShared
+	FROM CHECKPOINT-MIB
+  fwLSConnName, fwLSConnState, fwLSConnStateDesc, fwLSConnOverall, fwLSConnOverallDesc
+	FROM CHECKPOINT-MIB
+  fwLocalLoggingDesc, fwLocalLoggingStat, fwLocalLoggingDesc, fwLocalLoggingStat, fwLocalLoggingDesc, fwLocalLoggingStat
+	FROM CHECKPOINT-MIB
+  asgNetIfName
+	FROM CHECKPOINT-MIB;
+
+	chkpntTrapMibModule MODULE-IDENTITY
+		LAST-UPDATED "201312261309Z"
+		ORGANIZATION "Check Point"
+		CONTACT-INFO "Check Point"
+		DESCRIPTION 
+			"Check Point SNMPv2 Traps, to enable\disable traps use threshold_config on the GW\Mgmt.
+			 On policy installation the Mgmt. confirurations override the GWs configurations
+			 See the most common OIDs, with detailed descriptions, in the SNMP Best Practices Guide - sk98552
+			 (https://support.checkpoint.com/results/sk/sk98552)"
+		REVISION "201312261309Z"
+	    DESCRIPTION "Update the SMIv1 MIB to SMIv2"
+		::= { chkpntTrapInfo 0 }
+
+
+          -- textual conventions
+
+          -- DisplayString ::=
+          --    OCTET STRING
+          -- This data type is used to model textual information taken
+          -- from the NVT ASCII character set.  By convention, objects
+          -- with this syntax are declared as having
+          --
+          --      SIZE (0..255)
+
+        checkpoint      	OBJECT IDENTIFIER ::= { enterprises 2620 }
+        products        	OBJECT IDENTIFIER ::= { checkpoint 1 }
+        chkpntTrap         	OBJECT IDENTIFIER ::= { products 2000 } 
+		chkpntTrapInfo		OBJECT IDENTIFIER ::= { chkpntTrap 0 } 
+        chkpntTrapNet	      	OBJECT IDENTIFIER ::= { chkpntTrap 1 } 
+		chkpntTrapDisk		OBJECT IDENTIFIER ::= { chkpntTrap 2 } 
+        chkpntTrapCPU		OBJECT IDENTIFIER ::= { chkpntTrap 3 } 
+        chkpntTrapMemory		OBJECT IDENTIFIER ::= { chkpntTrap 4 }
+        chkpntTrapHWSensor		OBJECT IDENTIFIER ::= { chkpntTrap 5 }
+        chkpntTrapHA		OBJECT IDENTIFIER ::= { chkpntTrap 6 }
+        chkpntTrapLSConn		OBJECT IDENTIFIER ::= { chkpntTrap 7 }
+        asgTrap         		OBJECT IDENTIFIER ::= { products 2001 } 
+		asgTrapInfo				OBJECT IDENTIFIER ::= { asgTrap 0 } 
+        asgTrapHA				OBJECT IDENTIFIER ::= { asgTrap 1 } 				
+		asgTrapNet	      		OBJECT IDENTIFIER ::= { asgTrap 2 } 
+		asgTrapDisk				OBJECT IDENTIFIER ::= { asgTrap 3 } 
+        asgTrapCPU				OBJECT IDENTIFIER ::= { asgTrap 4 } 
+        asgTrapMemory			OBJECT IDENTIFIER ::= { asgTrap 5 } 
+        asgTrapCplic			OBJECT IDENTIFIER ::= { asgTrap 6 } 
+		asgTrapHWSensor			OBJECT IDENTIFIER ::= { asgTrap 7 }		
+		asgTrapPerf				OBJECT IDENTIFIER ::= { asgTrap 8 }		
+		asgTrapGeneral			OBJECT IDENTIFIER ::= { asgTrap 10 }
+		chkpntTrapMIBConformance OBJECT IDENTIFIER ::= { checkpoint 2 }
+		chkpntTrapMIBCompliances OBJECT IDENTIFIER ::= { chkpntTrapMIBConformance 1 }
+		chkpntTrapMIBGroups OBJECT IDENTIFIER ::= { chkpntTrapMIBConformance 2 }
+		chkpntNotificationGroups OBJECT IDENTIFIER ::= { chkpntTrapMIBConformance 3 }
+
+--******************************************
+--Compliance statements
+--******************************************
+		chkpntTrapBasicCompliance MODULE-COMPLIANCE
+              STATUS current
+              DESCRIPTION 
+              " The compliance statement for check point entities which implement the chkpnt MIB."
+              MODULE -- this module
+                  GROUP chkpntTrapGroup
+                  DESCRIPTION 
+                  "This group is for checkpoint traps" 
+                  GROUP chkpntNotificationGroup
+                  DESCRIPTION 
+                  "This group is for chkpnt notifications" 
+                  ::= { chkpntTrapMIBCompliances 1 }
+       
+       
+--******************************************
+--Units of conformance
+--******************************************
+
+
+		chkpntTrapGroup  OBJECT-GROUP
+                  OBJECTS
+                    {
+                    chkpntTrapOID,
+                    chkpntTrapOIDValue,
+                    chkpntTrapMsgText,
+                    chkpntTrapSeverity,
+                    chkpntTrapCategory,
+                    multiDiskNameTrap,
+                    multiDiskFreeAvailablePercentTrap,
+                    raidVolumeIDTrap,
+                    raidVolumeStateTrap,
+                    raidDiskVolumeIDTrap,
+                    raidDiskIDTrap,
+                    raidDiskStateTrap,
+                    raidDiskFlagsTrap,
+                    chkpntTrapChassisId,
+                    chkpntTrapBladeId,
+                    multiProcIndexTrap,
+                    multiProcUserTimeTrap,
+                    multiProcSystemTimeTrap,
+                    multiProcIdleTimeTrap,
+                    multiProcUsageTrap,
+                    multiProcRunQueueTrap,
+                    multiProcInterruptsTrap,
+                    memTotalVirtual64Trap,
+                    memActiveVirtual64Trap,
+                    memTotalReal64Trap,
+                    memActiveReal64Trap,
+                    tempertureSensorNameTrap,
+                    tempertureSensorValueTrap,
+                    tempertureSensorUnitTrap,  
+                    tempertureSensorTypeTrap,
+                    tempertureSensorStatusTrap,  
+                    fanSpeedSensorNameTrap,  
+                    fanSpeedSensorValueTrap,  
+                    fanSpeedSensorUnitTrap,  
+                    fanSpeedSensorTypeTrap, 
+                    fanSpeedSensorStatusTrap,  
+                    voltageSensorNameTrap, 
+                    voltageSensorValueTrap,  
+                    voltageSensorUnitTrap,  
+                    voltageSensorTypeTrap,  
+                    voltageSensorStatusTrap 
+                    }
+                 STATUS current 
+                 DESCRIPTION
+                 "A collection of managed objects that provide information about CheckPoint objects"
+                 ::= { chkpntTrapMIBGroups 1 }
+          
+
+
+
+-- OBJECT-TYPE 
+
+		chkpntTrapOID  OBJECT-TYPE   
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "The trap OID that triggered this event."
+                       ::= { chkpntTrapInfo 10 } 
+
+		chkpntTrapOIDValue  OBJECT-TYPE    
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "The value of the trap OID that triggered this event."                   
+                       ::= { chkpntTrapInfo 11 } 
+
+		chkpntTrapMsgText  OBJECT-TYPE
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Alert Message Text"
+                       ::= { chkpntTrapInfo 12 }
+
+		chkpntTrapSeverity OBJECT-TYPE
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Alert Severity Value  
+                       	  - Critical Alert(4)
+                          - High Alert(3)
+                          - Medium Alert(2)
+                          - Low Alert(1)
+                          - Clear Alert(0)"
+                       ::= { chkpntTrapInfo 13 }
+
+		chkpntTrapCategory  OBJECT-TYPE      
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "The category of the trap"
+                       ::= { chkpntTrapInfo 14 }
+
+		chkpntTrapChassisId  OBJECT-TYPE
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Scalable Platform Chassis Identifier"
+                       ::= { chkpntTrapInfo 15 }
+
+		chkpntTrapBladeId  OBJECT-TYPE
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Scalable Platform Blade Identifier"
+                       ::= { chkpntTrapInfo 16 }
+
+		multiDiskNameTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION ""
+                       ::= { chkpntTrapInfo 17 }
+                       
+		multiDiskFreeAvailablePercentTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION ""
+                       ::= { chkpntTrapInfo 18 }
+                                              
+		raidVolumeIDTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Raid volume identification number"
+                       ::= { chkpntTrapInfo 19 }
+                       
+		raidVolumeStateTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Raid state: OPTIMAL(0), DEGRADED (1), FAILED(2) or UNKNOWN(other))"
+                       ::= { chkpntTrapInfo 20 }     
+                       
+		raidDiskVolumeIDTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Raid volume identification"
+                       ::= { chkpntTrapInfo 21 }
+                       
+		raidDiskIDTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Raid disk SCSI identification number"
+                       ::= { chkpntTrapInfo 22 }       
+                                 
+		raidDiskStateTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Raid disk state (can get more then one): ONLINE(0x00), MISSING(0x01), NOT_COMPATIBLE(0x02), DISC_FAILED(0x03),
+                       INITIALIZING(0x04), OFFLINE_REQUESTED(0x05), FAILED_REQUESTED(0x06), UNCONFIGURED_GOOD_SPUN_UP(0x07), UNCONFIGURED_GOOD_SPUN_DOWN (0x08),
+                        UNCONFIGURED_BAD(0x09), HOTSPARE(0x0A), DRIVE_OFFLINE(0x0B), REBUILD(0x0C), FAILED(0x0D), COPYBACK(0x0F),
+                        OTHER_OFFLINE(0xFF) or UNKNOWN (other)"
+                       ::= { chkpntTrapInfo 23 }    
+                       
+		raidDiskFlagsTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Raid disk flags: OUT_OF_SYNC(0x01),QUIESCED(0x02),VERIFYING(0x04),READY(0x08) or NONE(other)"
+                       ::= { chkpntTrapInfo 24 }   
+                                
+          
+		multiProcIndexTrap  OBJECT-TYPE      
+                       SYNTAX  Unsigned32
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION ""
+                       ::= { chkpntTrapInfo 25 }  
+                           
+		multiProcUserTimeTrap  OBJECT-TYPE      
+                       SYNTAX  Unsigned32
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION ""
+                       ::= { chkpntTrapInfo 26 }  
+                     
+		multiProcSystemTimeTrap  OBJECT-TYPE      
+                       SYNTAX  Unsigned32
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION ""
+                       ::= { chkpntTrapInfo 27 }                      
+                       
+		multiProcIdleTimeTrap  OBJECT-TYPE      
+                       SYNTAX  Unsigned32
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION ""
+                       ::= { chkpntTrapInfo 28 }  
+                       
+		multiProcUsageTrap  OBJECT-TYPE      
+                       SYNTAX  Unsigned32
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION ""
+                       ::= { chkpntTrapInfo 29 }    
+                      
+		multiProcRunQueueTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION ""
+                       ::= { chkpntTrapInfo 30 }
+                             
+		multiProcInterruptsTrap  OBJECT-TYPE      
+                       SYNTAX  Unsigned32
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION ""
+                       ::= { chkpntTrapInfo 31 } 
+                            
+		memTotalVirtual64Trap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Total virtual memory"
+                       ::= { chkpntTrapInfo 32 } 
+                        
+		memActiveVirtual64Trap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Active virtual memory"
+                       ::= { chkpntTrapInfo 33 }  
+                       
+		memTotalReal64Trap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Total real memory"
+                       ::= { chkpntTrapInfo 34 }  
+                      
+		memActiveReal64Trap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Active real memory"
+                       ::= { chkpntTrapInfo 35 }  
+                       
+		tempertureSensorNameTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor name"
+                       ::= { chkpntTrapInfo 36 }
+                         
+		tempertureSensorValueTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor value"
+                       ::= { chkpntTrapInfo 37 }  
+                      
+		tempertureSensorUnitTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor unit"
+                       ::= { chkpntTrapInfo 38 }  
+                       
+		tempertureSensorTypeTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor type"
+                       ::= { chkpntTrapInfo 39 } 
+                        
+		tempertureSensorStatusTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor is out of range TRUE(1), FALSE(0), READING ERROR(2)"
+                       ::= { chkpntTrapInfo 40 }  
+                       
+		fanSpeedSensorNameTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION 
+                       "Sensor name"
+                       ::= { chkpntTrapInfo 41 }  
+                      
+		fanSpeedSensorValueTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor value"
+                       ::= { chkpntTrapInfo 42 }
+                        
+		fanSpeedSensorUnitTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor unit"
+                       ::= { chkpntTrapInfo 43 }  
+                        
+		fanSpeedSensorTypeTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor type"
+                       ::= { chkpntTrapInfo 44 }  
+                        
+		fanSpeedSensorStatusTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor is out of range TRUE(1), FALSE(0), READING ERROR(2)"
+                       ::= { chkpntTrapInfo 45 }  
+                        
+		voltageSensorNameTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor name"
+                       ::= { chkpntTrapInfo 46 } 
+                     
+		voltageSensorValueTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor value"
+                       ::= { chkpntTrapInfo 47 } 
+                        
+		voltageSensorUnitTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor unit"
+                       ::= { chkpntTrapInfo 48 } 
+                       
+		voltageSensorTypeTrap  OBJECT-TYPE      
+                       SYNTAX  DisplayString (SIZE (0..255))
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor type"
+                       ::= { chkpntTrapInfo 49 } 
+                        
+		voltageSensorStatusTrap  OBJECT-TYPE      
+                       SYNTAX  Integer32(1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Sensor is out of range TRUE(1), FALSE(0), READING ERROR(2)"
+                       ::= { chkpntTrapInfo 50 } 
+                        
+
+			asgTrapChassisId  OBJECT-TYPE
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Chassis identifier"
+                       ::= { asgTrapInfo 10 }
+
+			asgTrapBladeId  OBJECT-TYPE
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Blade identifier"
+                       ::= { asgTrapInfo 11 }
+
+			asgTrapMsgText OBJECT-TYPE
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Alert Message Text"
+                       ::= { asgTrapInfo 12 }
+					   
+			asgTrapPriority OBJECT-TYPE
+                       SYNTAX  INTEGER (1..65535)
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Alert Severity Value
+			  - Critical Alert(4)
+                          - High Alert(3)
+                          - Medium Alert(2)
+                          - Low Alert(1)
+                          - Clear Alert(0)"
+                       ::= { asgTrapInfo 13 }
+					   
+			asgTrapOID  OBJECT-TYPE   
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "The trap OID that triggered this event."
+                       ::= { asgTrapInfo 14 } 
+
+			asgTrapOIDValue  OBJECT-TYPE    
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "The value of the trap OID that triggered this event."                   
+                       ::= { asgTrapInfo 15 } 
+
+			asgTrapSN  OBJECT-TYPE      
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "The appliance serial number - labelled on the appliance"
+                       ::= { asgTrapInfo 16 }
+
+			asgCoreId  OBJECT-TYPE      
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Core identifier"
+                       ::= { asgTrapInfo 17 }
+
+			asgTrapCategory  OBJECT-TYPE
+                       SYNTAX  DisplayString
+                       MAX-ACCESS  read-only
+                       STATUS  current
+                       DESCRIPTION
+                       "Trap Category"
+                       ::= { asgTrapInfo 18 }					   
+
+-- ******************************************
+-- Notification Groups
+-- ******************************************
+		chkpntNotificationGroup NOTIFICATION-GROUP
+                    NOTIFICATIONS 
+                          {
+                          chkpntDiskSpaceTrap,
+                          chkpntRAIDVolumeTrap,
+                          chkpntRAIDDiskTrap,
+                          chkpntRAIDDiskFlagsTrap,
+                          chkpntTrapNetIfState,
+                          chkpntTrapNetIfUnplugged,
+                          chkpntTrapNetIfOperState,
+                          chkpntTrapNetIfRXDrop,
+                          chkpntCPUCoreInterruptsTrap,
+                          chkpntSwapMemoryTrap,
+                          chkpntCPUCoreUtilTrap,
+                          chkpntRealMemoryTrap,
+                          chkpntTempertureTrap,
+                          chkpntFanSpeedTrap,
+                          chkpntVoltageTrap,
+						  chkpntTrapNewConnRate,
+						  chkpntTrapConcurrentConnRate,
+						  chkpntTrapBytesThroughput,
+						  chkpntTrapAcceptedPacketRate,
+						  chkpntTrapNetIfOperState,
+						  chkpntTrapNetIfRXDrop,
+						  asgTrapNetIfState,
+						  asgTrapNetAdminState
+						  
+                          }
+                    STATUS current
+                    DESCRIPTION "This is a group of notifications"               
+                    ::= { chkpntNotificationGroups 1 }
+                    
+           
+
+-- ******************************************
+-- Disk Space Traps
+-- ******************************************
+
+
+          chkpntDiskSpaceTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                multiDiskNameTrap,
+                                multiDiskFreeAvailablePercentTrap 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Monitored disk partiton is dangerously full alert, alerts when multiDiskFreeAvailablePercentTrap <= X (filesystem name in trap)"
+                          ::= { chkpntTrapDisk 1 }
+       
+           chkpntRAIDVolumeTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                raidVolumeIDTrap,
+                                raidVolumeStateTrap 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Monitored RAID volume state, alerts when raidVolumeState = 2(volume ID in trap)"
+                          ::= { chkpntTrapDisk 2 }
+                          
+         chkpntRAIDDiskTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                raidDiskVolumeIDTrap,
+                                raidDiskIDTrap,
+                                raidDiskStateTrap 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Monitored RAID disk state alert, alerts when raidDiskState is one of [DEGRADED (1), FAILED(2) or UNKNOWN(255)](disk ID and volume ID in trap)"
+                          ::= { chkpntTrapDisk 3 }
+						  
+		chkpntRAIDDiskFlagsTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                raidDiskVolumeIDTrap,
+                                raidDiskIDTrap,
+                                raidDiskStateTrap,
+                                raidDiskFlagsTrap  
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Monitored RAID disk flag alert, alerts when raidDiskFalgs contains the OUT_OF_SYNC(0x01) or QUIESCED(0x02) flags (disk ID and volume ID in trap)"
+                          ::= { chkpntTrapDisk 4 }
+
+		asgDiskSpaceTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Monitored disk partiton is dangerously Full Alert (filesystem name in trap)"
+                          ::= { asgTrapDisk 1 }
+       
+		asgRAIDVolumeTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapOID,
+                                asgTrapOIDValue,
+                                asgTrapMsgText,
+                                asgTrapPriority,
+                                asgTrapCategory,
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                raidVolumeIDTrap,
+                                raidVolumeStateTrap 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Monitored RAID volume state (volume ID in trap)"
+                          ::= { asgTrapDisk 2 }
+                          
+		asgRAIDDiskTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapOID,
+                                asgTrapOIDValue,
+                                asgTrapMsgText,
+                                asgTrapPriority,
+                                asgTrapCategory,
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                raidDiskVolumeIDTrap,
+                                raidDiskIDTrap,
+                                raidDiskStateTrap 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Monitored RAID disk state (disk ID and volume ID in trap)"
+                          ::= { asgTrapDisk 3 }
+
+                          
+-- ******************************************
+-- Network Traps
+-- ******************************************         
+                            
+                            
+		 chkpntTrapNetIfState NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                svnNetIfName,
+                                svnNetIfAddress,
+                                svnNetIfState
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Interface admin status alert, alerts when svnNetIfState = 0(Interface name provided in trap)"     
+                          ::= { chkpntTrapNet 1 }
+                          
+         chkpntTrapNetIfUnplugged NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                svnNetIfName,
+                                svnNetIfAddress
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Interface unplugged alert, alerts when an interface disappear from svnNetIfTable(Interface name provided in trap)"     
+                          ::= { chkpntTrapNet 2 }
+                          
+         chkpntTrapNewConnRate NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "New connection rate alert, alerts when the new connection rate equals\exceeds X (New Connections/Sec)"     
+                          ::= { chkpntTrapNet 3 }
+                          
+         chkpntTrapConcurrentConnRate NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Concurrent connections rate alert, alerts when fwNumConn >= X (Connections/Sec)"     
+                          ::= { chkpntTrapNet 4 }
+                          
+         chkpntTrapBytesThroughput NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Bytes throughput alert, alerts when the throughput equals\exceeds X (Bytes/Sec)"     
+                          ::= { chkpntTrapNet 5 }
+                          
+          chkpntTrapAcceptedPacketRate NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Accepted packet rate alert, alerts when the accepted packet rate equals\exceeds X (Packets/Sec)"     
+                          ::= { chkpntTrapNet 6 } 
+
+          chkpntTrapNetIfOperState NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                svnNetIfName,
+                                svnNetIfAddress,
+                                svnNetIfOperState
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Interface operational link status alert, alerts when svnNetIfOperState = 0(Interface name provided in trap)"     
+                          ::= { chkpntTrapNet 7 }
+					
+		  chkpntTrapNetIfRXDrop NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                svnNetIfName,
+                                svnNetIfState,
+                                svnNetIfRXDrops
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Interface RX drops changed alert, alerts when svnNetIfRXDrop changed"     
+                          ::= { chkpntTrapNet 8 }
+
+			asgTrapNetIfState NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapOID,
+                                asgTrapOIDValue,
+                                asgTrapMsgText,
+                                asgTrapPriority,
+                                asgTrapCategory,
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgNetIfName
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Interface Status Alert (Interface name provided in trap)"     
+                          ::= { asgTrapNet 1 }
+            
+			asgTrapNetAdminState NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapOID,
+                                asgTrapOIDValue,
+                                asgTrapMsgText,
+                                asgTrapPriority,
+                                asgTrapCategory,
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgNetIfName
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Administrative Status Alert (Interface name provided in trap)"     
+                          ::= { asgTrapNet 2 }
+						  
+-- ******************************************
+-- CPU Core Traps
+-- ******************************************
+                                       
+                                       
+          chkpntCPUCoreUtilTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory, 
+                                multiProcIndexTrap,
+                                multiProcUserTimeTrap,
+                                multiProcSystemTimeTrap, 
+                                multiProcIdleTimeTrap,
+                                multiProcUsageTrap,
+                                multiProcRunQueueTrap,
+                                multiProcInterruptsTrap
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Core utilization alert, alerts when multiProcUsage >= X (core name in trap)"
+                          ::= { chkpntTrapCPU 1 }
+                          
+          chkpntCPUCoreInterruptsTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory, 
+                                multiProcIndexTrap,
+                                multiProcUserTimeTrap,
+                                multiProcSystemTimeTrap, 
+                                multiProcIdleTimeTrap,
+                                multiProcUsageTrap,
+                                multiProcRunQueueTrap,
+                                multiProcInterruptsTrap
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Core interrupts alert, alerts when multiProcInterrupts >= X (core name in trap)"
+                          ::= { chkpntTrapCPU 2 }
+
+			asgCPUCoreUtilTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "CPU Core Utilization Alert (Core number provided in trap)"
+                          ::= { asgTrapCPU 1 }
+                          
+			asgCPUCoreInterruptsTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapOID,
+                                asgTrapOIDValue,
+                                asgTrapMsgText,
+                                asgTrapPriority,
+                                asgTrapCategory,
+				asgTrapChassisId,
+                                asgTrapBladeId,
+                                multiProcIndexTrap,
+                                multiProcUserTimeTrap,
+                                multiProcSystemTimeTrap, 
+                                multiProcIdleTimeTrap,
+                                multiProcUsageTrap,
+                                multiProcRunQueueTrap,
+                                multiProcInterruptsTrap
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "CPU Core Interrupts Alert (Core number provided in trap)"
+                          ::= { asgTrapCPU 2 }
+						  
+-- ******************************************
+-- Memory Traps
+-- ******************************************
+
+          chkpntSwapMemoryTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                memTotalVirtual64Trap,
+                                memActiveVirtual64Trap
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Swap memory utilization alert, alerts when memActiveVirtual64 exceeds X% of memTotalVirtual64"
+                          ::= { chkpntTrapMemory 1 }
+
+          chkpntRealMemoryTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                memTotalReal64Trap,
+                                memActiveReal64Trap
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Real memory utilization alert, alerts when memActiveReal64 exceeds X% of memTotalReal64"
+                          ::= { chkpntTrapMemory 2 }
+ 
+ 			asgSwapMemoryTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapOID,
+                                asgTrapOIDValue,
+                                asgTrapMsgText,
+                                asgTrapPriority,
+								asgTrapChassisId,
+                                asgTrapBladeId
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Swap Memory Utilization Alert"
+                          ::= { asgTrapMemory 1 }
+
+			asgRealMemoryTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Real Memory Utilization Alert"
+                          ::= { asgTrapMemory 2 }	
+
+-- ******************************************
+-- HW Sensor Traps
+-- ******************************************
+          chkpntTrapTempertureSensor		OBJECT IDENTIFIER ::= { chkpntTrapHWSensor 1 }
+          chkpntTrapFanSpeedSensor		OBJECT IDENTIFIER ::= { chkpntTrapHWSensor 2 }
+          chkpntTrapVoltageSensor		OBJECT IDENTIFIER ::= { chkpntTrapHWSensor 3 }	
+        	
+        	
+          chkpntTempertureTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                tempertureSensorNameTrap,
+                                tempertureSensorValueTrap,
+                                tempertureSensorUnitTrap,
+                                tempertureSensorTypeTrap,
+								tempertureSensorStatusTrap
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Temperture sensor alert (Sensor name provided in trap)"
+                          ::= { chkpntTrapTempertureSensor 1 }
+          
+
+          chkpntFanSpeedTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                fanSpeedSensorNameTrap,
+                                fanSpeedSensorValueTrap,
+                                fanSpeedSensorUnitTrap,
+                                fanSpeedSensorTypeTrap,
+								fanSpeedSensorStatusTrap
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Fan speed sensor alert (Sensor name provided in trap)"
+                          ::= { chkpntTrapFanSpeedSensor 1 }
+                          
+          chkpntVoltageTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                voltageSensorNameTrap,
+                                voltageSensorValueTrap,
+                                voltageSensorUnitTrap,
+                                voltageSensorTypeTrap,
+								voltageSensorStatusTrap
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Voltage sensor alert (Sensor name provided in trap)"
+                          ::= { chkpntTrapVoltageSensor 1 }
+            
+			asgTrapTempertureSensor		OBJECT IDENTIFIER ::= { asgTrapHWSensor 1 }
+			asgTrapFanSpeedSensor		OBJECT IDENTIFIER ::= { asgTrapHWSensor 2 }
+			asgTrapVoltageSensor		OBJECT IDENTIFIER ::= { asgTrapHWSensor 3 }	
+        	asgTrapSSMSensor			OBJECT IDENTIFIER ::= { asgTrapHWSensor 4 }
+        	asgTrapCMMSensor			OBJECT IDENTIFIER ::= { asgTrapHWSensor 5 }
+        		
+			asgTempertureTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Temperture sensor alert (Sensor name provided in trap)"
+                          ::= { asgTrapTempertureSensor 1 }
+                          
+			asgTempertureSensorStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Temperture sensor status alert (Sensor name provided in trap)"
+                          ::= { asgTrapTempertureSensor 2 }
+
+			asgFanSpeedTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Fan speed sensor alert (Sensor name provided in trap)"
+                          ::= { asgTrapFanSpeedSensor 1 }
+                          
+			asgFanSpeedSensorStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Fan speed sensor status alert (Sensor name provided in trap)"
+                          ::= { asgTrapFanSpeedSensor 2 }
+                          
+			asgVoltageTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Voltage sensor alert (Sensor name provided in trap)"
+                          ::= { asgTrapVoltageSensor 1 }
+                          
+			asgVoltageSensorStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Voltage sensor status alert (Sensor name provided in trap)"
+                          ::= { asgTrapVoltageSensor 2 }     
+
+			asgSSMTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Security Switch Module alert (Sensor name provided in trap)"
+                          ::= { asgTrapSSMSensor 1 }
+                          
+			asgSSMPortTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Security Switch Module port status alert (Sensor name provided in trap)"
+                          ::= { asgTrapSSMSensor 2 }     
+
+			asgCMMTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Chassis Management Module alert (Sensor name provided in trap)"
+                          ::= { asgTrapCMMSensor 1 }
+                          
+-- ******************************************
+-- HA Traps
+-- ******************************************
+               	 	
+          chkpntClusterMemberStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory, 
+                                haIdentifier,
+                                haState
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Cluster member state changed alert, alerts when haState changed (Cluster member identifier provided in trap)"
+                          ::= { chkpntTrapHA 1 } 
+          
+          
+          chkpntClusterBlockStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory, 
+                                haIdentifier, 
+                                haBlockState,
+                                haState
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Cluster block state alert, alert when haBlockState is not equal to OK (Cluster member identifier provided in trap)"
+                          ::= { chkpntTrapHA 2 }  
+                          
+             
+         chkpntClusterStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory, 
+                                haIdentifier, 
+                                haBlockState,
+                                haState,
+                                haStatCode,
+                                haStatShort,
+                                haStatLong
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Cluster state alert, alert when haStatCode is not equal to 0 (Cluster member identifier provided in trap)"
+                          ::= { chkpntTrapHA 3 } 
+                          
+          chkpntClusterProblemStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory, 
+                                haProblemName, 
+                                haProblemStatus,
+                                haProblemPriority,
+                                haProblemVerified,
+                                haProblemDescr
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Cluster problem status alert, alert when haProblemStatus is not equal to OK"
+                          ::= { chkpntTrapHA 4 }
+
+
+            chkpntClusterInterfaceStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory, 
+                                haIfName, 
+                                haIP,
+                                haStatus,
+                                haTrusted,
+                                haShared
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Cluster interface status alert, alerts when haStatus is not equal to Up (Interface name provided in trap)"
+                          ::= { chkpntTrapHA 5 }  
+						  						  
+			chkpntClusterXLFailoverTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                { haClusterXLFailover }
+                          STATUS        current 
+                          DESCRIPTION
+                          "ClusterXL failover alert, alerts when haClusterXLFailover is happened (clusterXL failover counter value provided in trap)"
+                          ::= { chkpntTrapHA 6 }  
+
+			asgChassisStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapChassisId,
+								asgTrapMsgText,
+								asgTrapPriority
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Critical Alert: Chassis State"
+                          ::= { asgTrapHA 1 }
+     
+			asgBladeStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+								asgTrapMsgText,
+								asgTrapPriority
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Critical Alert: Blade State"
+                          ::= { asgTrapHA 2 }
+						  
+			asgClusterProblemStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapOID,
+                                asgTrapOIDValue,
+                                asgTrapMsgText,
+                                asgTrapPriority,
+                                asgTrapCategory, 
+                                haProblemName, 
+                                haProblemStatus,
+                                haProblemPriority,
+                                haProblemVerified,
+                                haProblemDescr
+                                }
+                          STATUS        current 
+                          DESCRIPTION
+                          "Cluster problem status alert"
+                          ::= { asgTrapHA 3 }
+
+			asgMonitorStateTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+					  asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Monitor state"
+                          ::= { asgTrapHA 5 }
+        						 
+-- ******************************************
+-- Performance Traps
+-- ******************************************
+			asgTrapConnRate NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Connection Rate Alert (per blade), in connections/sec"     
+                          ::= { asgTrapPerf 1 }
+
+		  asgTrapConcurrentConn NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Concurrent Connections Alert (per blade)"     
+                          ::= { asgTrapPerf 2 }
+
+		  asgTrapConcurrentConnectionsTotal NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Concurrent Connections Total Alert (per system)"     
+                          ::= { asgTrapPerf 3 }
+                          
+			asgTrapConnRateTotal NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Connections Rate Total Alert (per system), in connections/sec"     
+                          ::= { asgTrapPerf 4 }
+
+						  
+			asgTrapThroughput NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Throughput Alert (per blade), in bps"     
+                          ::= { asgTrapPerf 5 }
+						  
+			asgTrapThroughputTotal NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Throughput Total Alert (per system), in bps"     
+                          ::= { asgTrapPerf 6 }
+		
+			asgTrapPacketRate NOTIFICATION-TYPE
+							  OBJECTS
+									{
+									asgTrapChassisId,
+									asgTrapBladeId,
+									asgTrapMsgText,
+									asgTrapPriority 
+									}       
+							  STATUS        current 
+							  DESCRIPTION
+							  "Packet Rate Alert (per blade), in bps"     
+							  ::= { asgTrapPerf 7 }
+		
+			asgTrapPacketRateTotal NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Packet Rate Total Alert (per system), in bps"     
+                          ::= { asgTrapPerf 8 }						  
+-- ******************************************
+-- LS Connection Traps
+-- ******************************************         
+                            
+                            
+		 chkpntTrapLSConnState NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                fwLSConnName,
+                                fwLSConnState,
+                                fwLSConnStateDesc,
+                                fwLocalLoggingDesc,
+                                fwLocalLoggingStat
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Problem with connection to log server(Log server name provided in trap)"     
+                          ::= { chkpntTrapLSConn 1 }
+                          
+         chkpntTrapOverallLSConnState NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                fwLSConnOverall,
+                                fwLSConnOverallDesc,
+                                fwLocalLoggingDesc,
+                                fwLocalLoggingStat
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Problem with connection to one or more log servers"     
+                          ::= { chkpntTrapLSConn 2 }
+						  
+		chkpntTrapLocalLoggingState NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                chkpntTrapOID,
+                                chkpntTrapOIDValue,
+                                chkpntTrapMsgText,
+                                chkpntTrapSeverity,
+                                chkpntTrapCategory,
+                                fwLSConnOverall,
+                                fwLSConnOverallDesc,
+                                fwLocalLoggingDesc,
+                                fwLocalLoggingStat
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Problem with one or more log servers resulted with local logging"     
+                          ::= { chkpntTrapLSConn 3 }
+                           
+-- ******************************************
+-- General Traps
+-- ******************************************
+			asgRouteTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Route inconsistency"     
+                          ::= { asgTrapGeneral 1 }
+
+			asgDiagTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Periodic system diagnostics (asg diag)"     
+                          ::= { asgTrapGeneral 2 }
+
+			asgPingableHostsTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Pingable hosts state"     
+                          ::= { asgTrapGeneral 3 }
+
+			asgMemoryLeakDetectTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "Memory leak detection reached threshold"     
+                          ::= { asgTrapGeneral 4 }
+						  
+			asgTrapSynatk NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "SYN Defender activation"     
+                          ::= { asgTrapGeneral 5 }
+
+			asgLspTrap NOTIFICATION-TYPE
+                          OBJECTS
+                                {
+								asgTrapChassisId,
+                                asgTrapBladeId,
+                                asgTrapMsgText,
+                                asgTrapPriority 
+                                }       
+                          STATUS        current 
+                          DESCRIPTION
+                          "LSP monitor change port state"
+                          ::= { asgTrapGeneral 6 }
+						   
+END
