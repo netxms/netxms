@@ -87,23 +87,43 @@ InterfaceList *GenericCiscoDriver::getInterfaces(DeviceContext *context, NObject
       return ifList;
    }
 
+   // Interfaces with three-part names are processed first, because two-part names are interpreted as belonging to
+   // chassis 1 and may collide with them. Such collision means that two-part name does not denote a front panel port -
+   // most likely it is an out-of-band management interface (like GigabitEthernet0/0 on Catalyst 9000 series).
    int pmatch[30];
+   IntegerArray<uint32_t> occupiedModules;
    for(int i = 0; i < ifList->size(); i++)
    {
       InterfaceInfo *iface = ifList->get(i);
-      if (_pcre_exec_t(reBase.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
-      {
-         iface->isPhysicalPort = true;
-         iface->location.chassis = 1;
-         iface->location.module = IntegerFromCGroup(iface->name, pmatch, 2);
-         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
-      }
-      else if (_pcre_exec_t(reFex.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
+      if (_pcre_exec_t(reFex.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 5)
       {
          iface->isPhysicalPort = true;
          iface->location.chassis = IntegerFromCGroup(iface->name, pmatch, 2);
          iface->location.module = IntegerFromCGroup(iface->name, pmatch, 3);
          iface->location.port = IntegerFromCGroup(iface->name, pmatch, 4);
+         if ((iface->location.chassis == 1) && !occupiedModules.contains(iface->location.module))
+            occupiedModules.add(iface->location.module);
+      }
+   }
+
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      InterfaceInfo *iface = ifList->get(i);
+      if (iface->isPhysicalPort)
+         continue;
+      if (_pcre_exec_t(reBase.get(), nullptr, reinterpret_cast<PCRE_TCHAR*>(iface->name), static_cast<int>(_tcslen(iface->name)), 0, 0, pmatch, 30) == 4)
+      {
+         uint32_t module = IntegerFromCGroup(iface->name, pmatch, 2);
+         if (occupiedModules.contains(module))
+         {
+            nxlog_debug_tag(DEBUG_TAG_CISCO, 6, _T("GenericCiscoDriver::getInterfaces: interface %s is not considered as front panel port (module 1/%u is populated by interfaces with three-part names)"),
+                  iface->name, module);
+            continue;
+         }
+         iface->isPhysicalPort = true;
+         iface->location.chassis = 1;
+         iface->location.module = module;
+         iface->location.port = IntegerFromCGroup(iface->name, pmatch, 3);
       }
    }
 
