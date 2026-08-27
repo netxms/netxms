@@ -2149,10 +2149,11 @@ bool ImportObjectTool(json_t *config, bool overwrite, ImportContext *context)
          if (!json_is_object(t))
             continue;
          String fieldTag = json_object_get_string(t, "field", _T(""));
-         String language = json_object_get_string(t, "language", _T(""));
+         StringBuffer language = json_object_get_string(t, "language", _T(""));
          String value = json_object_get_string(t, "value", _T(""));
          if (fieldTag.isEmpty() || language.isEmpty())
             continue;
+         language.replace(_T("_"), _T("-"));   // configurations written by older versions may use Java locale form
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, fieldTag, DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, language, DB_BIND_STATIC);
          DBBind(hStmt, 5, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);
@@ -3131,10 +3132,11 @@ static uint32_t SaveObjectToolFromJson(const json_t *config, uint32_t *toolId)
          if (!json_is_object(t))
             continue;
          String fieldTag = json_object_get_string(t, "field", _T(""));
-         String language = json_object_get_string(t, "language", _T(""));
+         StringBuffer language = json_object_get_string(t, "language", _T(""));
          String value = json_object_get_string(t, "value", _T(""));
          if (fieldTag.isEmpty() || language.isEmpty())
             continue;
+         language.replace(_T("_"), _T("-"));   // requests written against older versions may use Java locale form
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, fieldTag, DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, language, DB_BIND_STATIC);
          DBBind(hStmt, 5, DB_SQLTYPE_TEXT, value, DB_BIND_STATIC);

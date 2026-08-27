@@ -23,7 +23,6 @@ import java.net.InetSocketAddress;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.List;
-import java.util.Locale;
 import java.util.ServiceLoader;
 import java.util.UUID;
 import org.apache.commons.codec.binary.Base64;
@@ -68,6 +67,7 @@ public class LoginJob implements IRunnableWithProgress
    private Certificate certificate;
    private Signature signature;
    private String clientAddress;
+   private String language;
 
    /**
     * Create login job with specified credentials.
@@ -89,6 +89,7 @@ public class LoginJob implements IRunnableWithProgress
       this.enableCompression = enableCompression;
       this.ignoreProtocolVersion = ignoreProtocolVersion;
       this.clientAddress = Registry.getClientAddress();
+      this.language = LocalizationHelper.getLocale().toLanguageTag(); // must be read here - run() executes outside of web session context
    }
 
    /**
@@ -104,7 +105,7 @@ public class LoginJob implements IRunnableWithProgress
       final NXCSession session = createSession(serverAddress);
       try
       {
-         session.setClientLanguage(Locale.getDefault().getLanguage());
+         session.setClientLanguage(language);
 
          session.setClientInfo("nxmc/" + VersionInfo.version());
          session.setClientType(Registry.IS_WEB_CLIENT ? NXCSession.WEB_CLIENT : NXCSession.DESKTOP_CLIENT);
