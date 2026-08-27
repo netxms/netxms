@@ -77,6 +77,24 @@ bool CiscoSbDriver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectI
 }
 
 /**
+ * Get hardware information from device.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param hwInfo pointer to hardware information structure to fill
+ * @return true if hardware information is available
+ */
+bool CiscoSbDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   // Cisco devices often leave entPhysicalMfgName empty on chassis and stack entities,
+   // so vendor name cannot be obtained from ENTITY-MIB. Other fields are left empty
+   // intentionally to be filled by server from ENTITY-MIB.
+   wcscpy(hwInfo->vendor, L"Cisco Systems Inc.");
+   return true;
+}
+
+/**
  * Handler for physical port positions
  */
 static uint32_t HandlerPhysicalPorts(SNMP_Variable *var, SNMP_Transport *snmp, SB_MODULE_LAYOUT *layout)

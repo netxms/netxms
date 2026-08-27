@@ -62,6 +62,7 @@ class CiscoDeviceDriver : public NetworkDeviceDriver
 {
 public:
    virtual const TCHAR *getVersion() override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 	virtual VlanList *getVlans(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(DeviceContext *context, NObject *node, DriverData *driverData) override;
@@ -137,6 +138,7 @@ public:
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
@@ -176,6 +178,7 @@ public:
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getModuleLayout(DeviceContext *context, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout) override;
 };
@@ -190,6 +193,7 @@ public:
 
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid) override;
+   virtual bool getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual VlanList *getVlans(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;

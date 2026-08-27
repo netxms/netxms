@@ -58,6 +58,24 @@ bool CiscoEswDriver::isDeviceSupported(DeviceContext *context, const SNMP_Object
 }
 
 /**
+ * Get hardware information from device.
+ *
+ * @param context device context
+ * @param node Node
+ * @param driverData driver data
+ * @param hwInfo pointer to hardware information structure to fill
+ * @return true if hardware information is available
+ */
+bool CiscoEswDriver::getHardwareInformation(DeviceContext *context, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   // Cisco devices often leave entPhysicalMfgName empty on chassis and stack entities,
+   // so vendor name cannot be obtained from ENTITY-MIB. Other fields are left empty
+   // intentionally to be filled by server from ENTITY-MIB.
+   wcscpy(hwInfo->vendor, L"Cisco Systems Inc.");
+   return true;
+}
+
+/**
  * Determine maximum speed from ESW interface characteristics
  */
 static uint64_t MaxSpeedFromInterfaceInfo(const InterfaceInfo *iface, uint32_t model)
