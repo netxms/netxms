@@ -623,7 +623,7 @@ void Alarm::executeHookScript()
       return;
    }
 
-   vm->setGlobalVariable("$alarm", vm->createValue(vm->createObject(&g_nxslAlarmClass, new Alarm(this, false))));
+   vm->setGlobalVariable("$alarm", vm->createValue(vm->createObject(&g_nxslAlarmClass, new Alarm(this, true))));
    ThreadPoolExecute(g_mainThreadPool, ExecuteHookScript, vm.vm());
 }
 
@@ -2844,7 +2844,7 @@ int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
    s_alarmList.lock();
    Alarm *alarm = s_alarmList.find(key);
    if (alarm != nullptr)
-      alarm = new Alarm(alarm, false);
+      alarm = new Alarm(alarm, true);
    s_alarmList.unlock();
 
    *result = (alarm != nullptr) ? vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm)) : vm->createValue();
@@ -2874,7 +2874,7 @@ int F_FindAlarmByKeyRegex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
             int ovector[60];
             if (_pcre_exec_t(preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(key), static_cast<int>(_tcslen(key)), 0, 0, ovector, 60) >= 0)
             {
-               alarm = new Alarm(a, false);
+               alarm = new Alarm(a, true);
                return _STOP;
             }
             return _CONTINUE;
@@ -2898,7 +2898,7 @@ Alarm NXCORE_EXPORTABLE *FindAlarmById(UINT32 alarmId)
    s_alarmList.lock();
    Alarm *alarm = s_alarmList.find(alarmId);
    if (alarm != nullptr)
-      alarm = new Alarm(alarm, false);
+      alarm = new Alarm(alarm, true);
    s_alarmList.unlock();
    return alarm;
 }
