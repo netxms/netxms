@@ -7,8 +7,14 @@ agent.conn	Agent connections (server side)
 agent.policy	Agent policies (server side)
 agent.tunnel	Agent tunnels
 
+ai.anomaly	AI anomaly detection profiles
 ai.assistant	AI assistant core (including prompt injection guard)
+ai.messages	AI messages and user confirmation requests
 ai.prov.*	AI/LLM provider communication (openai, anthropic, mistral, ollama)
+ai.provider	AI/LLM provider framework (common layer above ai.prov.*)
+ai.skills	AI skill loading and management
+ai.tasks	AI background tasks
+ai.tools	AI assistant tools (server and agent side)
 
 aix		AIX platform subagent messages
 
