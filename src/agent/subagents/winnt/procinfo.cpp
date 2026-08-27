@@ -52,6 +52,7 @@ static uint64_t GetProcessAttributeFromHandle(DWORD pid, ProcessAttribute attr)
 
    uint64_t value;
    PROCESS_MEMORY_COUNTERS mc;
+   PROCESS_MEMORY_COUNTERS_EX mcx;
    IO_COUNTERS ioCounters;
    FILETIME ftCreate, ftExit, ftKernel, ftUser;
    switch (attr)
@@ -59,6 +60,14 @@ static uint64_t GetProcessAttributeFromHandle(DWORD pid, ProcessAttribute attr)
       case PROCINFO_PAGE_FAULTS:
          GetProcessMemoryInfo(hProcess, &mc, sizeof(PROCESS_MEMORY_COUNTERS));
          value = mc.PageFaultCount;
+         break;
+      case PROCINFO_PRIVATE_RSS:
+         // Private commit charge. Unlike working set it excludes pages shared with other
+         // processes, so it can be summed across processes without counting them repeatedly.
+         if (GetProcessMemoryInfo(hProcess, reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&mcx), sizeof(PROCESS_MEMORY_COUNTERS_EX)))
+            value = mcx.PrivateUsage;
+         else
+            value = 0;
          break;
       case PROCINFO_KTIME:
       case PROCINFO_UTIME:
@@ -124,6 +133,10 @@ static uint64_t GetProcessAttribute(SYSTEM_PROCESS_INFORMATION *process, uint64_
          break;
       case PROCINFO_MEMPERC:
          value = static_cast<uint64_t>(process->WorkingSetSize) * 10000 / totalMemory;
+         break;
+      case PROCINFO_PRIVATE_MEMPERC:
+         // Private memory is only available through a process handle
+         value = GetProcessAttributeFromHandle(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), PROCINFO_PRIVATE_RSS) * 10000 / totalMemory;
          break;
       case PROCINFO_HANDLES:
          value = process->HandleCount;
@@ -441,7 +454,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    if (counter == 0)    // No processes with given name
       return SYSINFO_RC_ERROR;
 
-   if (attribute == PROCINFO_MEMPERC)
+   if ((attribute == PROCINFO_MEMPERC) || (attribute == PROCINFO_PRIVATE_MEMPERC))
       ret_double(value, static_cast<double>(attributeValue) / 100.0, 2);
    else
       ret_uint64(value, attributeValue);

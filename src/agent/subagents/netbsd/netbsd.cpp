@@ -102,6 +102,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_INT64,	DCIDESC_PROCESS_CPUTIME },
 	{ "Process.PageFaults(*)",        H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_PAGEFAULTS, const char *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_PAGEFAULTS },
+	{ "Process.RSS(*)",               H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_WKSET, const char *),
+		DCI_DT_INT64,	DCIDESC_PROCESS_WKSET },
 	{ "Process.Threads(*)",           H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_THREADS, const char *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_THREADS },
 	{ "Process.UserTime(*)",          H_ProcessInfo,     CAST_TO_POINTER(PROCINFO_UTIME, const char *),

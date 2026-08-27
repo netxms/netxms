@@ -299,6 +299,48 @@ LONG H_SysProcCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
 }
 
 /**
+ * Read private (anonymous) resident set size of a process from /proc/<pid>/xmap.
+ * Anonymous pages are the ones not shared with other processes, so unlike the
+ * resident set size reported by psinfo they can be summed across processes
+ * without counting shared mappings once per process.
+ */
+static bool ReadPrivateRSS(const char *pidAsChar, uint64_t *privateRss)
+{
+   char fileName[MAX_PATH];
+   snprintf(fileName, MAX_PATH, "/proc/%s/xmap", pidAsChar);
+   int hFile = _open(fileName, O_RDONLY);
+   if (hFile == -1)
+      return false;
+
+   struct stat st;
+   if (fstat(hFile, &st) != 0)
+   {
+      _close(hFile);
+      return false;
+   }
+
+   // Mappings can be added between fstat() and read(), so allow for some growth
+   size_t bufferSize = st.st_size + 32 * sizeof(prxmap_t);
+   prxmap_t *maps = static_cast<prxmap_t*>(MemAlloc(bufferSize));
+   ssize_t bytes = _read(hFile, maps, bufferSize);
+   _close(hFile);
+   if (bytes <= 0)
+   {
+      MemFree(maps);
+      return false;
+   }
+
+   uint64_t pageSize = getpagesize();
+   uint64_t value = 0;
+   for(size_t i = 0; i < static_cast<size_t>(bytes) / sizeof(prxmap_t); i++)
+      value += static_cast<uint64_t>(maps[i].pr_anon) * pageSize;
+   MemFree(maps);
+
+   *privateRss = value;
+   return true;
+}
+
+/**
  * Get specific process attribute
  */
 static bool GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, uint64_t *pvalue)
@@ -349,6 +391,15 @@ static bool GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, ui
          {
             success = false;
          }
+         break;
+      case PROCINFO_PRIVATE_RSS:
+         success = ReadPrivateRSS(pidAsChar, &value);
+         break;
+      case PROCINFO_PRIVATE_MEMPERC:
+         // Returned as bytes and converted to percentage after aggregation - converting per
+         // process would truncate each process to whole hundredths of a percent, which rounds
+         // down to zero for processes using little private memory
+         success = ReadPrivateRSS(pidAsChar, &value);
          break;
       case PROCINFO_PF:
          if (ReadProcInfo<prusage_t>("usage", pidAsChar, &usage))
@@ -497,7 +548,13 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
             break;
       if (i == nCount)
       {
-         if (CAST_FROM_POINTER(arg, int) == PROCINFO_MEMPERC)
+         int attribute = CAST_FROM_POINTER(arg, int);
+         if (attribute == PROCINFO_PRIVATE_MEMPERC)
+         {
+            uint64_t totalMemory = static_cast<uint64_t>(sysconf(_SC_PHYS_PAGES)) * sysconf(_SC_PAGESIZE) / 1024;
+            qwValue = (totalMemory > 0) ? qwValue / 1024 * 10000 / totalMemory : 0;
+         }
+         if ((attribute == PROCINFO_MEMPERC) || (attribute == PROCINFO_PRIVATE_MEMPERC))
          {
             ret_double(value, static_cast<double>(qwValue) / 100, 2);
          }
