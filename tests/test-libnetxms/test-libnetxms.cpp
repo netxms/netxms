@@ -3718,15 +3718,9 @@ int main(int argc, char *argv[])
    TestGeoLocation();
    TestRSA();
    TestMD4();
-<<<<<<< HEAD
-=======
-   TestDES();
-   TestDESCBC();
-   TestMarkdown();
    TestScheduleFields();
    TestScheduleDayOfWeek();
    TestScheduleSeconds();
->>>>>>> b711439e08 (fixed various bugs in MatchSchedule function; ignore seconds field in schedule when not relevant; added tests for schedule matcher (issue #3525))
 
    if (debug)
       nxlog_set_debug_level(9);
