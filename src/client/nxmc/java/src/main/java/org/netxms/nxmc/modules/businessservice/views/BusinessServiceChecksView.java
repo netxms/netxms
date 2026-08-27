@@ -44,7 +44,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.businessservices.BusinessServiceCheck;
+import org.netxms.client.constants.BusinessServiceCheckType;
 import org.netxms.client.datacollection.DciInfo;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.interfaces.NodeItemPair;
@@ -56,6 +58,8 @@ import org.netxms.nxmc.modules.businessservice.dialogs.EditBusinessServiceCheckD
 import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceCheckFilter;
 import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceCheckLabelProvider;
 import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceComparator;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectDciDialog;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -85,6 +89,8 @@ public class BusinessServiceChecksView extends ObjectView
    private Action actionEdit;
    private Action actionDuplicate;
    private Action actionCreate;
+   private Action actionAddObjectChecks;
+   private Action actionAddDciChecks;
    private Action actionDelete;
    private Action actionShowObjectDetails;
    private Action actionShowDciDetails;
@@ -284,6 +290,8 @@ public class BusinessServiceChecksView extends ObjectView
    protected void fillContextMenu(IMenuManager manager)
    {
       manager.add(actionCreate);
+      manager.add(actionAddObjectChecks);
+      manager.add(actionAddDciChecks);
       manager.add(actionEdit);
       manager.add(actionDuplicate);
       manager.add(actionDelete);
@@ -309,6 +317,9 @@ public class BusinessServiceChecksView extends ObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionCreate);
+      manager.add(actionAddObjectChecks);
+      manager.add(actionAddDciChecks);
+      manager.add(new Separator());
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
@@ -334,6 +345,22 @@ public class BusinessServiceChecksView extends ObjectView
          public void run()
          {
             createCheck();
+         }
+      };
+
+      actionAddObjectChecks = new Action(i18n.tr("Add o&bject checks...")) {
+         @Override
+         public void run()
+         {
+            addObjectChecks();
+         }
+      };
+
+      actionAddDciChecks = new Action(i18n.tr("Add D&CI checks...")) {
+         @Override
+         public void run()
+         {
+            addDciChecks();
          }
       };
 
@@ -494,6 +521,82 @@ public class BusinessServiceChecksView extends ObjectView
             }
          }.start();
       }
+   }
+
+   /**
+    * Add object status check for each of selected objects.
+    */
+   private void addObjectChecks()
+   {
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell());
+      dlg.setTitle(i18n.tr("Select Objects"));
+      if (dlg.open() != Window.OK)
+         return;
+
+      final List<AbstractObject> objects = dlg.getSelectedObjects();
+      if (objects.isEmpty())
+         return;
+
+      final List<BusinessServiceCheck> newChecks = new ArrayList<>(objects.size());
+      for(AbstractObject o : objects)
+      {
+         BusinessServiceCheck check = new BusinessServiceCheck();
+         check.setCheckType(BusinessServiceCheckType.OBJECT);
+         check.setObjectId(o.getObjectId());
+         check.setDescription(o.getObjectName());
+         newChecks.add(check);
+      }
+      createChecks(newChecks);
+   }
+
+   /**
+    * Add DCI threshold check for each of selected DCIs.
+    */
+   private void addDciChecks()
+   {
+      final SelectDciDialog dlg = new SelectDciDialog(getWindow().getShell(), 0);
+      if (dlg.open() != Window.OK)
+         return;
+
+      final List<DciValue> dciList = dlg.getSelection();
+      if ((dciList == null) || dciList.isEmpty())
+         return;
+
+      final List<BusinessServiceCheck> newChecks = new ArrayList<>(dciList.size());
+      for(DciValue d : dciList)
+      {
+         BusinessServiceCheck check = new BusinessServiceCheck();
+         check.setCheckType(BusinessServiceCheckType.DCI);
+         check.setObjectId(d.getNodeId());
+         check.setDciId(d.getId());
+         check.setDescription(d.getDescription());
+         newChecks.add(check);
+      }
+      createChecks(newChecks);
+   }
+
+   /**
+    * Create multiple checks on this business service.
+    *
+    * @param newChecks checks to create
+    */
+   private void createChecks(final List<BusinessServiceCheck> newChecks)
+   {
+      final long serviceId = getObjectId();
+      new Job(i18n.tr("Creating business service checks"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(BusinessServiceCheck check : newChecks)
+               session.modifyBusinessServiceCheck(serviceId, check);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create business service checks");
+         }
+      }.start();
    }
 
    /**
