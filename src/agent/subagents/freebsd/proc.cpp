@@ -167,6 +167,43 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstract
 }
 
 /**
+ * Get number of resident pages private to given process. Private pages are not shared with
+ * other processes, so unlike the resident set size they can be summed across processes
+ * without counting shared mappings once per process. Requires walking the process VM map,
+ * which is noticeably more expensive than reading the resident set size from kinfo_proc.
+ */
+static bool GetProcessPrivateRSS(pid_t pid, int64_t *privatePages)
+{
+   int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_VMMAP, static_cast<int>(pid) };
+   size_t size = 0;
+   if (sysctl(mib, 4, nullptr, &size, nullptr, 0) != 0)
+      return false;
+
+   // Mappings can be added between the sizing call and the actual read
+   size = size + size / 3 + sizeof(struct kinfo_vmentry);
+   char *buffer = static_cast<char*>(MemAlloc(size));
+   if (sysctl(mib, 4, buffer, &size, nullptr, 0) != 0)
+   {
+      MemFree(buffer);
+      return false;
+   }
+
+   int64_t pages = 0;
+   for(char *curr = buffer, *limit = buffer + size; curr < limit;)
+   {
+      struct kinfo_vmentry *entry = reinterpret_cast<struct kinfo_vmentry*>(curr);
+      if (entry->kve_structsize == 0)
+         break;
+      pages += entry->kve_private_resident;
+      curr += entry->kve_structsize;
+   }
+   MemFree(buffer);
+
+   *privatePages = pages;
+   return true;
+}
+
+/**
  * Get total memory size (in pages)
  */
 static int GetTotalMemorySize()
@@ -251,6 +288,28 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
                      }
                      currValue = kp[i].ki_rssize * 10000 / totalMemory;
                      break;
+                  case PROCINFO_PRIVATE_MEMPERC:
+                     // Accumulated as pages and converted to percentage after aggregation -
+                     // converting per process would truncate each process to whole hundredths
+                     // of a percent, rounding down to zero for small private working sets
+                     if (totalMemory == 0)
+                     {
+                        totalMemory = GetTotalMemorySize();
+                        if (totalMemory == 0)
+                        {
+                           kvm_close(kd);
+                           return SYSINFO_RC_ERROR;
+                        }
+                     }
+                     if (!GetProcessPrivateRSS(kp[i].ki_pid, &currValue))
+                        currValue = 0;
+                     break;
+                  case PROCINFO_PRIVATE_RSS:
+                     if (GetProcessPrivateRSS(kp[i].ki_pid, &currValue))
+                        currValue *= getpagesize();
+                     else
+                        currValue = 0;
+                     break;
                   case PROCINFO_RSS:
                      currValue = kp[i].ki_rssize * getpagesize();
                      break;
@@ -281,7 +340,10 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
          if ((type == INFOTYPE_AVG) && (matched > 0))
             result /= matched;
 
-         if (CAST_FROM_POINTER(arg, int) == PROCINFO_MEMPERC)
+         int attribute = CAST_FROM_POINTER(arg, int);
+         if (attribute == PROCINFO_PRIVATE_MEMPERC)
+            result = (totalMemory > 0) ? result * 10000 / totalMemory : 0;
+         if ((attribute == PROCINFO_MEMPERC) || (attribute == PROCINFO_PRIVATE_MEMPERC))
          {
             _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%02d"), static_cast<int>(result) / 100, static_cast<int>(result) % 100);
          }

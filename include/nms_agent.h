@@ -514,6 +514,8 @@ static inline bool ValidateComponentToken(const AgentComponentToken *token, cons
 #define DCIDESC_PROCESS_KERNELTIME                   _T("Total execution time in kernel mode for process {instance}")
 #define DCIDESC_PROCESS_MEMORYUSAGE                  _T("Percentage of total physical memory used by process {instance}")
 #define DCIDESC_PROCESS_PAGEFAULTS                   _T("Page faults for process {instance}")
+#define DCIDESC_PROCESS_PRIVATE_RSS                  _T("Private physical memory used by process {instance}")
+#define DCIDESC_PROCESS_PRIVATEMEMORYUSAGE           _T("Percentage of total physical memory used by process {instance} as private memory")
 #define DCIDESC_PROCESS_SYSCALLS                     _T("Number of system calls made by process {instance}")
 #define DCIDESC_PROCESS_THREADS                      _T("Number of threads in process {instance}")
 #define DCIDESC_PROCESS_USEROBJ                      _T("USER objects used by process {instance}")

@@ -36,6 +36,21 @@
 #define MAX_CMD_LINE_LEN     ARG_MAX
 
 /**
+ * Get physical footprint of a process - the memory the system charges to it, which excludes
+ * pages shared with other processes. Unlike the resident set size it can be summed across
+ * processes without counting shared mappings once per process. This is the same value
+ * Activity Monitor shows in its "Memory" column.
+ */
+static bool GetProcessPhysFootprint(pid_t pid, int64_t *footprint)
+{
+   struct rusage_info_v2 ri;
+   if (proc_pid_rusage(pid, RUSAGE_INFO_V2, reinterpret_cast<rusage_info_t*>(&ri)) != 0)
+      return false;
+   *footprint = static_cast<int64_t>(ri.ri_phys_footprint);
+   return true;
+}
+
+/**
  * Read process command line using sysctl(KERN_PROCARGS2)
  */
 static bool ReadProcCmdLine(pid_t pid, char *cmdLine, size_t maxLen)
@@ -254,6 +269,26 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
             }
             currValue = static_cast<int64_t>(static_cast<double>(ti.pti_resident_size) * 10000.0 / totalMemory);
             break;
+         case PROCINFO_PRIVATE_MEMPERC:
+            // Accumulated as bytes and converted to percentage after aggregation - converting
+            // per process would truncate each process to whole hundredths of a percent, which
+            // rounds down to zero for processes with a small footprint
+            if (totalMemory == 0)
+            {
+               totalMemory = GetTotalPhysicalMemory();
+               if (totalMemory == 0)
+               {
+                  MemFree(procs);
+                  return SYSINFO_RC_ERROR;
+               }
+            }
+            if (!GetProcessPhysFootprint(procs[i].kp_proc.p_pid, &currValue))
+               currValue = 0;
+            break;
+         case PROCINFO_PRIVATE_RSS:
+            if (!GetProcessPhysFootprint(procs[i].kp_proc.p_pid, &currValue))
+               currValue = 0;
+            break;
          case PROCINFO_RSS:
             currValue = static_cast<int64_t>(ti.pti_resident_size);
             break;
@@ -286,7 +321,10 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    if ((type == INFOTYPE_AVG) && (matched > 0))
       result /= matched;
 
-   if (CAST_FROM_POINTER(arg, int) == PROCINFO_MEMPERC)
+   int attribute = CAST_FROM_POINTER(arg, int);
+   if (attribute == PROCINFO_PRIVATE_MEMPERC)
+      result = (totalMemory > 0) ? static_cast<int64_t>(static_cast<double>(result) * 10000.0 / totalMemory) : 0;
+   if ((attribute == PROCINFO_MEMPERC) || (attribute == PROCINFO_PRIVATE_MEMPERC))
    {
       _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%02d"), static_cast<int>(result) / 100, static_cast<int>(result) % 100);
    }

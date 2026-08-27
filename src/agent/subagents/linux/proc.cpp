@@ -77,6 +77,7 @@ struct Process
    unsigned long utime;  // Number of ticks spent in user mode
    unsigned long vmsize; // Size of process's virtual memory in bytes
    long rss;             // Process's resident set size in pages
+   long privateRss;      // Resident pages not shared with other processes
    unsigned long minflt; // Number of minor page faults
    unsigned long majflt; // Number of major page faults
    ObjectArray<FileDescriptor> *fd;
@@ -95,6 +96,7 @@ struct Process
       utime = 0;
       vmsize = 0;
       rss = 0;
+      privateRss = 0;
       minflt = 0;
       majflt = 0;
       fd = nullptr;
@@ -322,6 +324,29 @@ static int ProcRead(ObjectArray<Process> *plist, const char *procNameFilter, con
                nxlog_debug_tag(DEBUG_TAG, 5, _T("Error parsing /proc/%u/stat"), pid);
             }
          }
+
+         // Private resident pages are derived from /proc/pid/statm, where the second field is
+         // the resident set size and the third is the part of it shared with other processes.
+         // Both values must come from statm - the resident set size reported by /proc/pid/stat
+         // is maintained separately and differs slightly, which would make the difference
+         // inaccurate (and for processes mapping large shared segments, negative).
+         strcpy(&fileName[fileNamePos], "statm");
+         int hStatm = _open(fileName, O_RDONLY);
+         if (hStatm != -1)
+         {
+            char statmData[256];
+            ssize_t statmBytes = _read(hStatm, statmData, sizeof(statmData) - 1);
+            if (statmBytes > 0)
+            {
+               statmData[statmBytes] = 0;
+               long resident, shared;
+               if (sscanf(statmData, "%*u %ld %ld", &resident, &shared) == 2)
+                  p->privateRss = (resident > shared) ? resident - shared : 0;
+               else
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("Error parsing /proc/%u/statm"), pid);
+            }
+            _close(hStatm);
+         }
          if (readHandles)
          {
             strcpy(&fileName[fileNamePos], "fd");
@@ -529,6 +554,17 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
          case PROCINFO_PAGEFAULTS:
             currVal = p->majflt + p->minflt;
             break;
+         case PROCINFO_PRIVATE_MEMPERC:
+            // Accumulated as bytes and converted to percentage after aggregation - converting
+            // per process would truncate each process to whole hundredths of a percent, which
+            // rounds down to zero for processes using little private memory
+            currVal = p->privateRss * pageSize;
+            break;
+         case PROCINFO_PRIVATE_RSS:
+            // Pages resident in this process only. Unlike RSS this can be summed across
+            // processes without counting shared memory once per process.
+            currVal = p->privateRss * pageSize;
+            break;
          case PROCINFO_RSS:
             currVal = p->rss * pageSize;
             break;
@@ -564,7 +600,13 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
    if ((type == INFOTYPE_AVG) && (count > 0))
       finalVal /= count;
 
-   if (CAST_FROM_POINTER(arg, int) == PROCINFO_MEMPERC)
+   int attribute = CAST_FROM_POINTER(arg, int);
+   if (attribute == PROCINFO_PRIVATE_MEMPERC)
+   {
+      uint64_t totalMemory = GetTotalMemorySize();
+      finalVal = (totalMemory > 0) ? finalVal * 10000 / (totalMemory * 1024) : 0;
+   }
+   if ((attribute == PROCINFO_MEMPERC) || (attribute == PROCINFO_PRIVATE_MEMPERC))
    {
       _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%02d"), static_cast<int>(finalVal) / 100, static_cast<int>(finalVal) % 100);
    }
