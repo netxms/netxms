@@ -114,6 +114,7 @@ class AITask
 private:
    uint32_t m_id;
    uint32_t m_userId;
+   mutable Mutex m_mutex;
    std::string m_prompt;
    time_t m_lastExecutionTime;
    time_t m_nextExecutionTime;
@@ -123,7 +124,11 @@ private:
    AITaskState m_state;
    uint32_t m_iteration;
 
-   void logExecution();
+   // Runtime state (not persisted), protected by AI task list lock
+   bool m_executing;
+
+   void logExecution();   // must be called with task lock held
+   void clearExecutingState();
 
 public:
    AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt);
@@ -134,12 +139,14 @@ public:
    uint32_t getId() const { return m_id; }
    uint32_t getUserId() const { return m_userId; }
    const wchar_t *getDescription() const { return m_description.cstr(); }
-   const std::string& getPrompt() const { return m_prompt; }
+   std::string getPrompt() const { return GetAttributeWithLock(m_prompt, m_mutex); }
    AITaskState getState() const { return m_state; }
    time_t getLastExecutionTime() const { return m_lastExecutionTime; }
    time_t getNextExecutionTime() const { return m_nextExecutionTime; }
    uint32_t getIteration() const { return m_iteration; }
-   const wchar_t *getExplanation() const { return m_explanation.cstr(); }
+   String getExplanation() const { return GetAttributeWithLock<String>(m_explanation, m_mutex); }
+   bool isExecuting() const { return m_executing; }
+   void setExecuting() { m_executing = true; }
 
    void saveToDatabase() const;
    void deleteFromDatabase();

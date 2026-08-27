@@ -139,9 +139,10 @@ int64_t GetLastAITaskLogRecordId()
 uint32_t NXCORE_EXPORTABLE RegisterAITask(const wchar_t *description, uint32_t userId, const wchar_t *prompt, time_t nextExecutionTime)
 {
    shared_ptr<AITask> task = make_shared<AITask>(description, userId, prompt);
-   s_aiTasksLock.lock();
    if (nextExecutionTime > 0)
       task->setNextExecutionTime(nextExecutionTime);
+   task->saveToDatabase();   // Save before publishing, so that scheduler cannot pick task up while it is being saved
+   s_aiTasksLock.lock();
    s_aiTasks.set(task->getId(), task);
    s_aiTasksLock.unlock();
    nxlog_debug_tag(DEBUG_TAG, 4, L"Registered AI task [%u] \"%s\"", task->getId(), description);
@@ -171,7 +172,7 @@ void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId)
             msg->setFieldFromTime(fieldId++, task->getLastExecutionTime());
             msg->setFieldFromTime(fieldId++, task->getNextExecutionTime());
             msg->setField(fieldId++, task->getIteration());
-            msg->setField(fieldId++, task->getExplanation());
+            msg->setField(fieldId++, task->getExplanation().cstr());
             fieldId += 11;
          }
          return _CONTINUE;
@@ -204,6 +205,7 @@ uint32_t NXCORE_EXPORTABLE DeleteAITask(uint32_t taskId, uint32_t userId)
    s_aiTasks.remove(taskId);
    s_aiTasksLock.unlock();
 
+   task->deleteFromDatabase();
    nxlog_debug_tag(DEBUG_TAG, 4, L"Deleted AI task [%u] \"%s\"", task->getId(), task->getDescription());
    return RCC_SUCCESS;
 }
@@ -258,6 +260,7 @@ std::string F_DeleteAITask(json_t *arguments, uint32_t userId)
    s_aiTasks.remove(taskId);
    s_aiTasksLock.unlock();
 
+   task->deleteFromDatabase();
    nxlog_debug_tag(DEBUG_TAG, 4, L"Deleted AI task [%u] \"%s\"", task->getId(), task->getDescription());
    return std::string("OK");
 }
@@ -275,11 +278,13 @@ void AITaskSchedulerThread(ThreadPool *aiTaskThreadPool)
       std::vector<shared_ptr<AITask>> tasksToExecute;
 
       // Find tasks ready for execution
+      // Mark selected tasks as executing at enqueue time to prevent double dispatch
       s_aiTasksLock.lock();
       for(const shared_ptr<AITask>& task : s_aiTasks)
       {
-         if ((task->getState() == AITaskState::SCHEDULED) && (task->getNextExecutionTime() <= now))
+         if ((task->getState() == AITaskState::SCHEDULED) && !task->isExecuting() && (task->getNextExecutionTime() <= now))
          {
+            task->setExecuting();
             tasksToExecute.push_back(task);
          }
       }
@@ -310,6 +315,7 @@ AITask::AITask(const wchar_t *descripion, uint32_t userId, const wchar_t *prompt
    m_nextExecutionTime = time(nullptr);
    m_iteration = 0;
    m_userId = userId;
+   m_executing = false;
    char *mp = UTF8StringFromWideString(prompt);
    m_prompt = mp;
    MemFree(mp);
@@ -334,6 +340,7 @@ AITask::AITask(DB_RESULT hResult, int row) : m_description(DBGetFieldAsString(hR
    m_iteration = DBGetFieldUInt32(hResult, row, 6);
    m_userId = DBGetFieldUInt32(hResult, row, 7);
    m_state = (m_nextExecutionTime == 0) ? AITaskState::COMPLETED : AITaskState::SCHEDULED;
+   m_executing = false;
 }
 
 /**
@@ -344,17 +351,24 @@ void AITask::execute()
    // Re-check that user still have AI access rights
    if ((GetEffectiveSystemRights(m_userId) & SYSTEM_ACCESS_USE_AI_ASSISTANT) == 0)
    {
+      m_mutex.lock();
       m_state = AITaskState::FAILED;
       nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" execution failed (user %u lost AI access rights)", m_id, m_description.cstr(), m_userId);
       logExecution();
+      m_mutex.unlock();
       deleteFromDatabase();
+      clearExecutingState();
       return;
    }
 
+   time_t now = time(nullptr);
+
+   m_mutex.lock();
+   m_lastExecutionTime = now;
    m_state = AITaskState::RUNNING;
    std::string prompt(m_prompt);
    prompt.append("</instructions>\n<current_time>");
-   prompt.append(FormatISO8601Timestamp(time(nullptr)));
+   prompt.append(FormatISO8601Timestamp(now));
    prompt.append("</current_time>\n<iteration>");
    char buffer[32];
    prompt.append(IntegerToString(++m_iteration, buffer));
@@ -365,9 +379,18 @@ void AITask::execute()
       prompt.append(m_memento);
       prompt.append("</memento>\n");
    }
+   m_mutex.unlock();
 
    Chat chat(nullptr, nullptr, m_userId, s_systemPrompt.c_str(), false);
    char *response = chat.sendRequest(prompt.c_str());
+
+   // Do not re-create database record if task was deleted while executing.
+   // Lock order is always AI task list lock -> AITask::m_mutex, never the reverse.
+   s_aiTasksLock.lock();
+   bool registered = s_aiTasks.contains(m_id);
+   s_aiTasksLock.unlock();
+
+   m_mutex.lock();
    if (response != nullptr)
    {
       // Models may wrap the JSON object into a markdown code fence or prepend prose despite instructions,
@@ -446,15 +469,28 @@ void AITask::execute()
    }
 
    logExecution();
+   bool save = registered && (m_state == AITaskState::SCHEDULED);
+   m_mutex.unlock();
 
-   if (m_state == AITaskState::SCHEDULED)
-   {
+   if (save)
       saveToDatabase();
-   }
    else
-   {
       deleteFromDatabase();
-   }
+
+   // Executing flag is cleared only after database update is complete, so that
+   // scheduler cannot dispatch this task again while its state is being saved
+   clearExecutingState();
+}
+
+/**
+ * Clear executing flag. Flag is protected by AI task list lock, so that setting it at dispatch time
+ * and clearing it here are serialized with scheduler's check.
+ */
+void AITask::clearExecutingState()
+{
+   s_aiTasksLock.lock();
+   m_executing = false;
+   s_aiTasksLock.unlock();
 }
 
 /**
@@ -532,8 +568,10 @@ void AITask::setNextExecutionTime(time_t t)
  */
 void AITask::saveToDatabase() const
 {
+   LockGuard lockGuard(m_mutex);
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   
+
    const wchar_t *mergeColumns[] = { L"user_id", L"description", L"prompt", L"memento", L"last_execution_time", L"next_execution_time", L"iteration", nullptr };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"ai_tasks", L"id", m_id, mergeColumns);
    if (hStmt != nullptr)
@@ -568,6 +606,8 @@ void AITask::deleteFromDatabase()
  */
 json_t *AITask::toJson() const
 {
+   LockGuard lockGuard(m_mutex);
+
    json_t *taskObject = json_object();
    json_object_set_new(taskObject, "id", json_integer(m_id));
    json_object_set_new(taskObject, "description", json_string_t(m_description));
