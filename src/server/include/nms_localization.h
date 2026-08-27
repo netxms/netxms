@@ -68,8 +68,9 @@ public:
 
    /**
     * Return the best translation for (fieldTag, language) following the fallback chain:
-    * exact match (e.g. "pt-BR") -> language-only ("pt") -> fallback. Empty strings in
-    * the table are treated as absent so admins can clear a translation.
+    * exact match (e.g. "pt-BR") -> language-only ("pt") -> fallback. Language codes are
+    * canonicalized to BCP 47 form, so "pt_BR" and "pt-BR" refer to the same entry. Empty
+    * strings in the table are treated as absent so admins can clear a translation.
     */
    const wchar_t *resolve(const wchar_t *fieldTag, const wchar_t *language, const wchar_t *fallback) const;
 

@@ -45,16 +45,16 @@ public class LanguagePage extends PropertyPage
    private final I18n i18n = LocalizationHelper.getI18n(LanguagePage.class);
 
    /**
-    * Available languages
+    * Available languages. Codes are BCP 47 language tags.
     */
    private static final Language[] languages = {
       new Language("de", "Deutsch - German"),
       new Language("en", "English"),
       new Language("es", "Español - Spanish"),
       new Language("fr", "Français - French"),
-      new Language("pt_BR", "Português - Portuguese (Brazil)"),
+      new Language("pt-BR", "Português - Portuguese (Brazil)"),
       new Language("ru", "Русский - Russian"),
-      new Language("zh_TW", "繁體中文 - Chinese (Traditional)")
+      new Language("zh-TW", "繁體中文 - Chinese (Traditional)")
    };
 
    private PreferenceStore settings = PreferenceStore.getInstance();
@@ -78,7 +78,8 @@ public class LanguagePage extends PropertyPage
       layout.marginWidth = 0;
       dialogArea.setLayout(layout);
 
-      final String currentLanguage = settings.getAsString("nxmc.language", "en");
+      // Settings written by older versions use Java locale form ("pt_BR") instead of BCP 47 tag
+      final String currentLanguage = settings.getAsString("nxmc.language", "en").replace('_', '-');
       languageSelector = new LabeledCombo(dialogArea, SWT.NONE);
       languageSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       languageSelector.setLabel(i18n.tr("Selected language"));

@@ -48,16 +48,17 @@ public class TranslationEditDialog extends Dialog
 
    /**
     * Supported languages — mirrors the list on the client's Language preference page so
-    * admins can only define translations for languages users can actually pick.
+    * admins can only define translations for languages users can actually pick. Codes are
+    * BCP 47 language tags, same form as sent to the server at login.
     */
    private final Language[] languages = {
       new Language("de", i18n.tr("German")),
       new Language("en", i18n.tr("English")),
       new Language("es", i18n.tr("Spanish")),
       new Language("fr", i18n.tr("French")),
-      new Language("pt_BR", i18n.tr("Portuguese (Brazil)")),
+      new Language("pt-BR", i18n.tr("Portuguese (Brazil)")),
       new Language("ru", i18n.tr("Russian")),
-      new Language("zh_TW", i18n.tr("Chinese (Traditional)"))
+      new Language("zh-TW", i18n.tr("Chinese (Traditional)"))
    };
 
    private final boolean create;

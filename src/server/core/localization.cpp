@@ -29,19 +29,22 @@
 #define KEY_SEP L"\x1F"
 
 /**
- * Build "fieldTag\x1Flanguage" composite key for the in-memory string map
+ * Build "fieldTag\x1Flanguage" composite key for the in-memory string map. Language part is
+ * canonicalized to BCP 47 form, so codes written in Java locale form ("pt_BR") by older clients
+ * are stored and looked up as "pt-BR".
  */
 static inline StringBuffer BuildKey(const wchar_t *fieldTag, const wchar_t *language)
 {
    StringBuffer key(fieldTag);
    key.append(KEY_SEP);
-   key.append(language);
+   for(const wchar_t *p = language; *p != 0; p++)
+      key.append((*p == L'_') ? L'-' : *p);
    return key;
 }
 
 /**
  * Resolve a (fieldTag, language) lookup with fallback chain:
- *   exact -> language-only (strip region suffix after '-') -> fallback
+ *   exact -> language-only (strip region suffix) -> fallback
  * Empty string in storage is treated as absent so the editor can clear an entry.
  */
 const wchar_t *LocalizedStringSet::resolve(const wchar_t *fieldTag, const wchar_t *language, const wchar_t *fallback) const
@@ -53,7 +56,7 @@ const wchar_t *LocalizedStringSet::resolve(const wchar_t *fieldTag, const wchar_
    if ((value != nullptr) && (*value != 0))
       return value;
 
-   const wchar_t *region = wcschr(language, L'-');
+   const wchar_t *region = wcspbrk(language, L"-_");
    if (region != nullptr)
    {
       wchar_t baseLang[8];
