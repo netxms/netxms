@@ -4,6 +4,6 @@
 #
 
 DRIVER = cisco
-SOURCES = cat2900xl.cpp catalyst.cpp cisco.cpp esw.cpp firepower.cpp generic.cpp nexus.cpp sb.cpp wlc.cpp
+SOURCES = cat2900xl.cpp catalyst.cpp cisco.cpp esw.cpp firepower.cpp generic.cpp nexus.cpp sb.cpp wlc.cpp airespace.cpp c9800.cpp
 
 include $(TOPDIR)/src/server/drivers/ndd-common.mk

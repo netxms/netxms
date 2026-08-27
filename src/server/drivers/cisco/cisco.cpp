@@ -589,6 +589,7 @@ NDD_DRIVER(CiscoFirepowerDriver)
 NDD_DRIVER(CiscoNexusDriver)
 NDD_DRIVER(CiscoSbDriver)
 NDD_DRIVER(CiscoWirelessControllerDriver)
+NDD_DRIVER(CiscoC9800Driver)
 NDD_DRIVER(GenericCiscoDriver)
 NDD_END_DRIVER_LIST
 DECLARE_NDD_MODULE_ENTRY_POINT

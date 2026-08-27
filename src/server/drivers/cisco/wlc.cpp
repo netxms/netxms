@@ -200,117 +200,6 @@ bool CiscoWirelessControllerDriver::isWirelessController(DeviceContext *context,
 }
 
 /**
- * Handler for access point enumeration
- */
-static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<AccessPointInfo> *apList)
-{
-   const SNMP_ObjectId& name = var->getName();
-   size_t nameLen = name.length();
-   uint32_t oid[MAX_OID_LEN];
-   memcpy(oid, name.value(), nameLen * sizeof(UINT32));
-
-   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-   
-   oid[11] = 1;   // bsnAPDot3MacAddress
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   oid[11] = 19;  // bsnApIpAddress
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   oid[11] = 6;   // bsnAPOperationStatus
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   oid[11] = 3;   // bsnAPName
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   oid[11] = 16;  // bsnAPModel
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   oid[11] = 17;  // bsnAPSerialNumber
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   oid[9] = 2;    // bsnAPIfTable
-   oid[10] = 1;   // bsnAPIfEntry
-   oid[11] = 4;   // bsnAPIfPhyChannelNumber
-   
-   nameLen++;
-   oid[nameLen - 1] = 0;   // first radio
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   oid[nameLen - 1] = 1;   // second radio
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   oid[11] = 2;   // bsnAPIfType
-   oid[nameLen - 1] = 0;   // first radio
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   oid[nameLen - 1] = 1;   // second radio
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
-
-   SNMP_PDU *response;
-   uint32_t rcc = snmp->doRequest(request, &response);
-	delete request;
-   if (rcc == SNMP_ERR_SUCCESS)
-   {
-      if (response->getNumVariables() == 10)
-      {
-         TCHAR ipAddr[32], name[MAX_OBJECT_NAME], model[MAX_OBJECT_NAME], serial[MAX_OBJECT_NAME];
-         AccessPointInfo *ap = 
-            new AccessPointInfo(
-               0,
-               var->getValueAsMACAddr(),
-               InetAddress::parse(response->getVariable(1)->getValueAsString(ipAddr, 32)),
-               (response->getVariable(2)->getValueAsInt() == 1) ? AP_UP : AP_UNPROVISIONED,
-               response->getVariable(3)->getValueAsString(name, MAX_OBJECT_NAME),
-               _T("Cisco Systems Inc."),   // vendor
-               response->getVariable(4)->getValueAsString(model, MAX_OBJECT_NAME),
-               response->getVariable(5)->getValueAsString(serial, MAX_OBJECT_NAME));
-
-         RadioInterfaceInfo radio;
-         memset(&radio, 0, sizeof(RadioInterfaceInfo));
-         _tcscpy(radio.name, _T("slot0"));
-         radio.index = 0;
-         response->getVariable(0)->getRawValue(radio.bssid, MAC_ADDR_LENGTH);
-         radio.channel = response->getVariable(6)->getValueAsInt();
-         switch(response->getVariable(8)->getValueAsInt())  // bsnAPIfType
-         {
-            case 1:  // dot11b
-               radio.band = RADIO_BAND_2_4_GHZ;
-               break;
-            case 2:  // dot11a
-               radio.band = RADIO_BAND_5_GHZ;
-               break;
-         }
-         radio.frequency = WirelessChannelToFrequency(radio.band, radio.channel);
-         ap->addRadioInterface(radio);
-
-         if ((response->getVariable(7)->getType() != ASN_NO_SUCH_INSTANCE) && (response->getVariable(7)->getType() != ASN_NO_SUCH_OBJECT))
-         {
-            _tcscpy(radio.name, _T("slot1"));
-            radio.index = 1;
-            radio.channel = response->getVariable(7)->getValueAsInt();
-            switch(response->getVariable(9)->getValueAsInt())  // bsnAPIfType
-            {
-               case 1:  // dot11b
-                  radio.band = RADIO_BAND_2_4_GHZ;
-                  break;
-               case 2:  // dot11a
-                  radio.band = RADIO_BAND_5_GHZ;
-                  break;
-            }
-            radio.frequency = WirelessChannelToFrequency(radio.band, radio.channel);
-            ap->addRadioInterface(radio);
-         }
-
-         apList->add(ap);
-      }
-      delete response;
-   }
-
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Get access points
  *
  * @param context device context
@@ -319,17 +208,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
  */
 ObjectArray<AccessPointInfo> *CiscoWirelessControllerDriver::getAccessPoints(DeviceContext *context, NObject *node, DriverData *driverData)
 {
-   SNMP_Transport *snmp = context->getSNMPTransport();
-   ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
-
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14179.2.2.1.1.33"),  // bsnAPEthernetMacAddress
-                HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
-   {
-      delete apList;
-      return nullptr;
-   }
-
-   return apList;
+   return AirespaceGetAccessPoints(context->getSNMPTransport());
 }
 
 /**
@@ -421,30 +300,5 @@ ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStat
 AccessPointState CiscoWirelessControllerDriver::getAccessPointState(DeviceContext *context, NObject *node, DriverData *driverData,
       uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces)
 {
-   SNMP_Transport *snmp = context->getSNMPTransport();
-   if (radioInterfaces.isEmpty())
-      return AP_UNKNOWN;
-
-   TCHAR oid[256], macAddrText[64];
-   _sntprintf(oid, 256, _T(".1.3.6.1.4.1.14179.2.2.1.1.6.%s"),
-            MacAddress(radioInterfaces.get(0)->bssid, MAC_ADDR_LENGTH).toString(macAddrText, MacAddressNotation::DECIMAL_DOT_SEPARATED));
-
-   TCHAR buffer[32];
-   uint32_t value;
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &value, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot get access point [index=%u, mac=%s] status from OID %s"), apIndex, macAddr.toString(buffer), oid);
-      return AP_UNKNOWN;
-   }
-
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("Retrieved access point [index=%u, mac=%s] status %d"), apIndex, macAddr.toString(buffer), value);
-   switch(value)
-   {
-      case 1:
-         return AP_UP;
-      case 2:
-         return AP_UNPROVISIONED;
-      default:
-         return AP_UNKNOWN;
-   }
+   return AirespaceGetAccessPointState(context->getSNMPTransport(), apIndex, macAddr, radioInterfaces, DEBUG_TAG);
 }
