@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
    protected NodeSubObjectFilter filter;
    protected Action actionCopyToClipboard;
    protected Action actionExportToCsv;
+   protected Action actionExportAllToCsv;
 
    /**
     * @param name
@@ -87,6 +88,7 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
       };
 
       actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+      actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
    }
 
    /**
