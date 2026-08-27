@@ -78,7 +78,7 @@ bool CiscoFirepowerDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Ob
  */
 bool CiscoFirepowerDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
 {
-   wcscpy(hwInfo->vendor, L"Cisco");
+   wcscpy(hwInfo->vendor, L"Cisco Systems Inc.");
 
    wchar_t sysDescr[1024];
    if (SnmpGetEx(snmp, L".1.3.6.1.2.1.1.1.0", nullptr, 0, sysDescr, sizeof(sysDescr), SG_STRING_RESULT, nullptr) == SNMP_ERR_SUCCESS)

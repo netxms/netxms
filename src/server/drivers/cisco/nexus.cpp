@@ -73,6 +73,24 @@ bool CiscoNexusDriver::isDeviceSupported(SNMP_Transport *snmp, const SNMP_Object
 }
 
 /**
+ * Get hardware information from device.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param hwInfo pointer to hardware information structure to fill
+ * @return true if hardware information is available
+ */
+bool CiscoNexusDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   // Cisco devices often leave entPhysicalMfgName empty on chassis and stack entities,
+   // so vendor name cannot be obtained from ENTITY-MIB. Other fields are left empty
+   // intentionally to be filled by server from ENTITY-MIB.
+   wcscpy(hwInfo->vendor, L"Cisco Systems Inc.");
+   return true;
+}
+
+/**
  * Handler for IP address enumeration
  */
 static UINT32 HandlerIPAddressList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
