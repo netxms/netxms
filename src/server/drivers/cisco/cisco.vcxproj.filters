@@ -20,6 +20,12 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="airespace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="c9800.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="cat2900xl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

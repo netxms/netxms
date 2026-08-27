@@ -301,7 +301,8 @@
     <ClInclude Include="cisco.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cat2900xl.cpp" />
+    <ClCompile Include="airespace.cpp" />
+    <ClCompile Include="c9800.cpp" />
     <ClCompile Include="catalyst.cpp" />
     <ClCompile Include="cisco.cpp" />
     <ClCompile Include="esw.cpp" />
