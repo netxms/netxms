@@ -21,16 +21,6 @@ FROM SNMPv2-SMI
 FROM SNMPv2-CONF
   DisplayString
   FROM SNMPv2-TC
-  multiDiskNameTrap, multiDiskFreeAvailablePercentTrap, raidVolumeIDTrap, raidVolumeStateTrap, raidDiskVolumeIDTrap, raidDiskIDTrap, raidDiskStateTrap, raidDiskFlagsTrap
-	FROM CHECKPOINT-MIB
-  svnNetIfName, svnNetIfAddress, svnNetIfState, svnNetIfOperState, svnNetIfRXDrops, multiProcIndexTrap, multiProcUserTimeTrap, multiProcSystemTimeTrap, multiProcIdleTimeTrap, multiProcUsageTrap
-	FROM CHECKPOINT-MIB
-  multiProcRunQueueTrap, multiProcInterruptsTrap, memActiveReal64Trap, memTotalReal64Trap, memActiveVirtual64Trap, memTotalVirtual64Trap, tempertureSensorNameTrap, tempertureSensorValueTrap
-	FROM CHECKPOINT-MIB
-  tempertureSensorUnitTrap, tempertureSensorTypeTrap, tempertureSensorStatusTrap, fanSpeedSensorNameTrap, fanSpeedSensorValueTrap, fanSpeedSensorUnitTrap, fanSpeedSensorTypeTrap, fanSpeedSensorStatusTrap
-	FROM CHECKPOINT-MIB
-  voltageSensorNameTrap, voltageSensorValueTrap, voltageSensorUnitTrap, voltageSensorTypeTrap, voltageSensorStatusTrap
-	FROM CHECKPOINT-MIB
   haIdentifier, haState, haBlockState, haStatCode, haStatShort, haStatLong, haProblemName, haProblemStatus, haProblemPriority, haProblemVerified, haProblemDescr, haClusterXLFailover
 	FROM CHECKPOINT-MIB
   haIfName, haIP, haStatus, haTrusted, haShared
