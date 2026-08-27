@@ -140,6 +140,7 @@ ndd.cambium	Cambium network device driver
 ndd.common	Network device drivers common
 ndd.hostmib	Hostmib related functionality
 ndd.cisco	Cisco network device driver
+ndd.cisco.c9800	Cisco-C9800 network device driver
 ndd.cisco.sb	Cisco-SB network device driver
 ndd.cisco.wlc	Cisco-WLC network device driver
 ndd.etherwan	EtherWAN network device driver

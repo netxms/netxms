@@ -196,7 +196,19 @@ public:
 };
 
 /**
- * Cisco Wireless LAN Controllers driver
+ * Maximum number of radio slots per access point examined in bsnAPIfTable
+ */
+#define AIRESPACE_MAX_RADIO_SLOTS   4
+
+/**
+ * Access point enumeration and state via AIRESPACE-WIRELESS-MIB (shared by AireOS and IOS-XE controller drivers)
+ */
+ObjectArray<AccessPointInfo> *AirespaceGetAccessPoints(SNMP_Transport *snmp);
+AccessPointState AirespaceGetAccessPointState(SNMP_Transport *snmp, uint32_t apIndex, const MacAddress& macAddr,
+      const StructArray<RadioInterfaceInfo>& radioInterfaces, const TCHAR *debugTag);
+
+/**
+ * Cisco AireOS Wireless LAN Controllers driver
  */
 class CiscoWirelessControllerDriver : public NetworkDeviceDriver
 {
@@ -207,6 +219,25 @@ public:
    virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
+   virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype) override;
+   virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
+         uint32_t apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const StructArray<RadioInterfaceInfo>& radioInterfaces) override;
+};
+
+/**
+ * Cisco Catalyst 9800 (IOS-XE) Wireless LAN Controllers driver
+ */
+class CiscoC9800Driver : public CiscoDeviceDriver
+{
+public:
+   virtual const TCHAR *getName() override;
+
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const SNMP_ObjectId& oid) override;
    virtual bool getVirtualizationType(SNMP_Transport *snmp, NObject *node, DriverData *driverData, VirtualizationType *vtype) override;
    virtual int getClusterMode(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
    virtual bool isWirelessController(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
