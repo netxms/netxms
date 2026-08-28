@@ -415,7 +415,11 @@ public class ViewStack extends ViewContainer
 
       view = getActiveView(); // New current view
       if (view == null)
+      {
+         if (perspective != null)
+            perspective.updateAiAssistantContext();
          return true;
+      }
 
       activateView(view);
       return true;
@@ -475,6 +479,9 @@ public class ViewStack extends ViewContainer
 
       view.getViewArea().setSize(viewArea.getSize());
       view.activate();
+
+      if (perspective != null)
+         perspective.updateAiAssistantContext();
    }
 
    /**

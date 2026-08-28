@@ -165,6 +165,8 @@ public class ViewFolder extends ViewContainer
                {
                   showView(lastViewId);
                }
+               if (perspective != null)
+                  perspective.updateAiAssistantContext();
             }
          }
       });
@@ -735,6 +737,9 @@ public class ViewFolder extends ViewContainer
 
       view.activate();
       updateRefreshActionState();
+
+      if (perspective != null)
+         perspective.updateAiAssistantContext();
    }
 
    /**
@@ -1002,6 +1007,9 @@ public class ViewFolder extends ViewContainer
       }
 
       contextChange = false;
+
+      if (perspective != null)
+         perspective.updateAiAssistantContext();
    }
 
    /**

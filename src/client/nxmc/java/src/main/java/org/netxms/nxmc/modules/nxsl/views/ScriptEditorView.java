@@ -25,6 +25,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -41,17 +42,21 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.ai.AiChatContext;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.JsonObject;
 
 /**
  * Script editor view
  */
 public class ScriptEditorView extends ConfigurationView
 {
+   private static final int MAX_INLINE_SCRIPT_SIZE = 32768;
+
    private final I18n i18n = LocalizationHelper.getI18n(ScriptEditorView.class);
 
    private static final Map<String, String> hintMap = new HashMap<String, String>() {
@@ -201,6 +206,7 @@ public class ScriptEditorView extends ConfigurationView
    private Action actionShowLineNumbers;
    private Action actionGoToLine;
    private String savedScript = null;
+   private ScriptAiContext aiContext = null;
 
    /**
     * Create new script editor view.
@@ -399,6 +405,8 @@ public class ScriptEditorView extends ConfigurationView
                   editor.setText(script.getSource());
                   actionSave.setEnabled(false);
                   modified = false;
+                  if (getPerspective() != null)
+                     getPerspective().updateAiAssistantContext();
                }
             });
          }
@@ -574,5 +582,71 @@ public class ScriptEditorView extends ConfigurationView
       scriptName = memento.getAsString("scriptName");
       savedScript  = memento.getAsString("savedScript", null);
       setName(scriptName);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getAiAssistantContext()
+    */
+   @Override
+   public AiChatContext getAiAssistantContext()
+   {
+      if (aiContext == null)
+         aiContext = new ScriptAiContext();
+      return aiContext;
+   }
+
+   /**
+    * AI assistant chat context representing script being edited. Script source is read at the moment of serialization, so that
+    * assistant always sees current content of the editor, including unsaved changes.
+    */
+   private class ScriptAiContext implements AiChatContext
+   {
+      private ImageDescriptor image = ResourceManager.getImageDescriptor("icons/config-views/script-editor.png");
+
+      /**
+       * @see org.netxms.nxmc.modules.ai.AiChatContext#getContextName()
+       */
+      @Override
+      public String getContextName()
+      {
+         return scriptName;
+      }
+
+      /**
+       * @see org.netxms.nxmc.modules.ai.AiChatContext#getContextImage()
+       */
+      @Override
+      public ImageDescriptor getContextImage()
+      {
+         return image;
+      }
+
+      /**
+       * @see org.netxms.nxmc.modules.ai.AiChatContext#getContextAsJson()
+       */
+      @Override
+      public String getContextAsJson()
+      {
+         JsonObject json = new JsonObject();
+         json.addProperty("type", "library_script");
+         json.addProperty("script_id", scriptId);
+         json.addProperty("script_name", scriptName);
+         json.addProperty("modified", modified);
+
+         String hint = hintMap.get(scriptName);
+         if (hint != null)
+            json.addProperty("hint", hint);
+
+         if ((editor != null) && !editor.isDisposed())
+         {
+            String source = editor.getText();
+            if (source.length() <= MAX_INLINE_SCRIPT_SIZE)
+               json.addProperty("source", source);
+            else
+               json.addProperty("source_omitted", "script is too large, use get-library-script-content function to read saved version");
+         }
+
+         return json.toString();
+      }
    }
 }

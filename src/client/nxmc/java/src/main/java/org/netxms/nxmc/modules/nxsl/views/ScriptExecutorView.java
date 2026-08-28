@@ -27,6 +27,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -43,6 +44,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.Script;
 import org.netxms.client.TextOutputAdapter;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -50,6 +52,7 @@ import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.TextConsole;
 import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.ai.AiChatContext;
 import org.netxms.nxmc.modules.nxsl.dialogs.CreateScriptDialog;
 import org.netxms.nxmc.modules.nxsl.dialogs.SaveScriptDialog;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
@@ -58,12 +61,16 @@ import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.JsonObject;
 
 /**
  * Sored on server agent's configuration editor
  */
 public class ScriptExecutorView extends AdHocObjectView
 {
+   private static final int MAX_INLINE_SCRIPT_SIZE = 32768;
+   private static final int MAX_INLINE_OUTPUT_SIZE = 8192;
+
    private final I18n i18n = LocalizationHelper.getI18n(ScriptExecutorView.class);
 
    private Label scriptName;
@@ -84,6 +91,7 @@ public class ScriptExecutorView extends AdHocObjectView
    private int previousSelection = -1;
    private boolean modified = false;
    private Runnable postRefreshAction = null;
+   private ScriptAiContext aiContext = null;
 
    /**
     * Create agent configuration editor for given node.
@@ -749,5 +757,92 @@ public class ScriptExecutorView extends AdHocObjectView
             parametersField.setText(memento.getAsString("parameters", ""));
          }
       };
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getAiAssistantContext()
+    */
+   @Override
+   public AiChatContext getAiAssistantContext()
+   {
+      if (aiContext == null)
+         aiContext = new ScriptAiContext();
+      return aiContext;
+   }
+
+   /**
+    * AI assistant chat context representing script being executed. Script source, arguments, and execution output are read at the
+    * moment of serialization, so that assistant always sees current state of the view. Object this view is bound to is included as
+    * well, because it replaces object context provided by perspective.
+    */
+   private class ScriptAiContext implements AiChatContext
+   {
+      private ImageDescriptor image = ResourceManager.getImageDescriptor("icons/object-views/script-executor.png");
+
+      /**
+       * @see org.netxms.nxmc.modules.ai.AiChatContext#getContextName()
+       */
+      @Override
+      public String getContextName()
+      {
+         AbstractObject object = getObject();
+         return (object != null) ? i18n.tr("Script on {0}", object.getObjectName()) : i18n.tr("Script");
+      }
+
+      /**
+       * @see org.netxms.nxmc.modules.ai.AiChatContext#getContextImage()
+       */
+      @Override
+      public ImageDescriptor getContextImage()
+      {
+         return image;
+      }
+
+      /**
+       * @see org.netxms.nxmc.modules.ai.AiChatContext#getContextAsJson()
+       */
+      @Override
+      public String getContextAsJson()
+      {
+         JsonObject json = new JsonObject();
+         json.addProperty("type", "script_executor");
+
+         AbstractObject object = getObject();
+         if (object != null)
+         {
+            json.addProperty("object_id", object.getObjectId());
+            json.addProperty("object_name", object.getObjectName());
+         }
+
+         if ((scriptName != null) && !scriptName.isDisposed())
+            json.addProperty("script_name", scriptName.getText());
+         json.addProperty("modified", modified);
+
+         if ((parametersField != null) && !parametersField.isDisposed())
+            json.addProperty("arguments", parametersField.getText());
+
+         if ((scriptEditor != null) && !scriptEditor.isDisposed())
+         {
+            String source = scriptEditor.getText();
+            if (source.length() <= MAX_INLINE_SCRIPT_SIZE)
+               json.addProperty("source", source);
+            else
+               json.addProperty("source_omitted", "script is too large");
+         }
+
+         if ((output != null) && !output.isDisposed())
+         {
+            String text = output.getText();
+            if (!text.isEmpty())
+            {
+               // Keep the tail of the output - errors and last execution results are at the end
+               if (text.length() > MAX_INLINE_OUTPUT_SIZE)
+                  text = text.substring(text.length() - MAX_INLINE_OUTPUT_SIZE);
+               json.addProperty("output", text);
+            }
+         }
+
+         return json.toString();
+      }
    }
 }

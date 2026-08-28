@@ -1074,7 +1074,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       weights[weights.length - 1] = 3 * total / 7; // 30% of new full weight
       horizontalSplitArea.setWeights(weights);
 
-      setAiAssistantContext(currentPerspective.getContext());
+      currentPerspective.updateAiAssistantContext();
    }
 
    /**
