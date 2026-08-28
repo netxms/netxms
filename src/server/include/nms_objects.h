@@ -4641,7 +4641,7 @@ public:
 
    bool is8021xPollingEnabled() const
    {
-      return is_bit_set(g_flags, AF_ENABLE_8021X_STATUS_POLL) && is_bit_set(m_flags, NF_DISABLE_8021X_STATUS_POLL);
+      return is_bit_set(g_flags, AF_ENABLE_8021X_STATUS_POLL) && !is_bit_set(m_flags, NF_DISABLE_8021X_STATUS_POLL);
    }
 
    const uuid& getAgentId() const { return m_agentId; }
