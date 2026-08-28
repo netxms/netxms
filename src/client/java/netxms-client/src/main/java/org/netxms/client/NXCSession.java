@@ -430,6 +430,7 @@ public class NXCSession
    private boolean userDatabaseSynchronized = false;
    private Set<Integer> userSyncList = new HashSet<Integer>();
    private List<Runnable> callbackList = new ArrayList<Runnable>();
+   private final Object userSyncLock = new Object();
 
    // Event objects
    private Map<Integer, EventTemplate> eventTemplates = new HashMap<>();
@@ -1480,13 +1481,13 @@ public class NXCSession
       {
          while(!disconnected)
          {
-            synchronized(userSyncList)
+            synchronized(userSyncLock)
             {
                while(userSyncList.isEmpty())
                {
                   try
                   {
-                     userSyncList.wait();
+                     userSyncLock.wait();
                   }
                   catch(InterruptedException e)
                   {
@@ -1507,7 +1508,7 @@ public class NXCSession
 
             Set<Integer> userSyncListCopy;
             List<Runnable> callbackListCopy;
-            synchronized(userSyncList)
+            synchronized(userSyncLock)
             {
                userSyncListCopy = userSyncList;
                userSyncList = new HashSet<Integer>();
@@ -2797,9 +2798,9 @@ public class NXCSession
       notificationQueue.offer(new SessionNotification(SessionNotification.STOP_PROCESSING_THREAD));
 
       // cause user sync thrad to stop
-      synchronized(userSyncList)
+      synchronized(userSyncLock)
       {
-         userSyncList.notifyAll();
+         userSyncLock.notifyAll();
       }
 
       if (recvThread != null)
@@ -5649,12 +5650,12 @@ public class NXCSession
       }
       if (needSync)
       {
-         synchronized(userSyncList)
+         synchronized(userSyncLock)
          {
             userSyncList.add(id);
             if (callback != null)
                callbackList.add(callback);
-            userSyncList.notifyAll();
+            userSyncLock.notifyAll();
          }
       }
       return object;
