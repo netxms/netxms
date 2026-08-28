@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,15 +52,15 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 {
    private final I18n i18n = LocalizationHelper.getI18n(ConnectionPointLabelProvider.class);
    
-	private static final Color COLOR_FOUND_OBJECT_DIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkGreen"));
-	private static final Color COLOR_FOUND_OBJECT_INDIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("SeaGreen"));
-   private static final Color COLOR_FOUND_OBJECT_WIRELESS = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("Teal"));
-   private static final Color COLOR_FOUND_OBJECT_UNKNOWN = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("Peru"));
-	private static final Color COLOR_FOUND_MAC_DIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkBlue"));
-	private static final Color COLOR_FOUND_MAC_INDIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkSlateBlue"));
-   private static final Color COLOR_FOUND_MAC_WIRELESS = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("SteelBlue"));
-	private static final Color COLOR_NOT_FOUND = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkRed"));
-   private static final Color COLOR_HISTORICAL = ThemeEngine.getForegroundColor("List.DisabledItem");
+   private final Color COLOR_FOUND_OBJECT_DIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkGreen"));
+   private final Color COLOR_FOUND_OBJECT_INDIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("SeaGreen"));
+   private final Color COLOR_FOUND_OBJECT_WIRELESS = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("Teal"));
+   private final Color COLOR_FOUND_OBJECT_UNKNOWN = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("Peru"));
+   private final Color COLOR_FOUND_MAC_DIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkBlue"));
+   private final Color COLOR_FOUND_MAC_INDIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkSlateBlue"));
+   private final Color COLOR_FOUND_MAC_WIRELESS = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("SteelBlue"));
+   private final Color COLOR_NOT_FOUND = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkRed"));
+   private final Color COLOR_HISTORICAL = ThemeEngine.getForegroundColor("List.DisabledItem");
 
 	private Map<Long, String> cachedObjectNames = new HashMap<Long, String>();
    private NXCSession session = Registry.getSession();
@@ -73,6 +73,24 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	{
 	   this.viewer = viewer;
 	}
+
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      COLOR_FOUND_OBJECT_DIRECT.dispose();
+      COLOR_FOUND_OBJECT_INDIRECT.dispose();
+      COLOR_FOUND_OBJECT_WIRELESS.dispose();
+      COLOR_FOUND_OBJECT_UNKNOWN.dispose();
+      COLOR_FOUND_MAC_DIRECT.dispose();
+      COLOR_FOUND_MAC_INDIRECT.dispose();
+      COLOR_FOUND_MAC_WIRELESS.dispose();
+      COLOR_NOT_FOUND.dispose();
+      COLOR_HISTORICAL.dispose();
+      super.dispose();
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -188,12 +206,11 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		ConnectionPoint cp = (ConnectionPoint)element;
 		if (cp.getType() == ConnectionPointType.NOT_FOUND)
 		   return COLOR_NOT_FOUND;
-		
+
 		if (cp.getLocalNodeId() == 0)
 		   return (cp.getType() == ConnectionPointType.DIRECT) ? COLOR_FOUND_MAC_DIRECT : 
 		         ((cp.getType() == ConnectionPointType.WIRELESS) ? COLOR_FOUND_MAC_WIRELESS : COLOR_FOUND_MAC_INDIRECT);
-		    
-		          
+
       switch(cp.getType())
       {
          case DIRECT:
