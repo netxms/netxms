@@ -285,6 +285,27 @@ WebServiceCallResult WebServiceDefinition::makeCustomRequest(shared_ptr<Node> no
 }
 
 /**
+ * Retrieve raw response document using this definition. URL, request data, and headers are expanded in context of given
+ * object, and request is sent through provided connection (normally connection to object's effective web service proxy).
+ * Response is always read from the service itself, bypassing agent's response cache.
+ */
+WebServiceCallResult WebServiceDefinition::retrieveDocument(DataCollectionTarget *object, const StringList& args, AgentConnectionEx *conn) const
+{
+   StringBuffer url = object->expandText(m_url, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
+   StringBuffer requestData = object->expandText(m_requestData, nullptr, nullptr, shared_ptr<DCObjectInfo>(), nullptr, nullptr, nullptr, nullptr, &args);
+
+   StringMap headers;
+   ExpandHeadersContext context;
+   context.headers = &headers;
+   context.object = object;
+   context.args = &args;
+   m_headers.forEach(ExpandHeaders, &context);
+
+   return conn->webServiceCustomRequest(m_httpRequestMethod, url, m_requestTimeout, m_login, m_password, m_authType, headers,
+            isVerifyCertificate(), isVerifyHost(), isFollowLocation(), 0, requestData);
+}
+
+/**
  * Fill NXCP message
  */
 void WebServiceDefinition::fillMessage(NXCPMessage *msg) const
