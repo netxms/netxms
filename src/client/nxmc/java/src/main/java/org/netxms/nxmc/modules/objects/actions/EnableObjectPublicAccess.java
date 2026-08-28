@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,61 +23,63 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.dialogs.NetworkMapPublicAccessDialog;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectPublicAccessDialog;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Enable network map public access
+ * Enable public access to object (network map or dashboard) via anonymous user
  */
-public class EnableNetworkMapPublicAccess extends ObjectAction<NetworkMap>
+public class EnableObjectPublicAccess extends ObjectAction<AbstractObject>
 {
-   private final I18n i18n = LocalizationHelper.getI18n(EnableNetworkMapPublicAccess.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EnableObjectPublicAccess.class);
 
    /**
-    * Create action to clone network map
+    * Create action
     *
     * @param viewPlacement view placement information
     * @param selectionProvider associated selection provider
     */
-   public EnableNetworkMapPublicAccess(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
+   public EnableObjectPublicAccess(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(NetworkMap.class, LocalizationHelper.getI18n(EnableNetworkMapPublicAccess.class).tr("Enable public access..."), viewPlacement, selectionProvider);
+      super(AbstractObject.class, LocalizationHelper.getI18n(EnableObjectPublicAccess.class).tr("Enable public access..."), viewPlacement, selectionProvider);
    }
 
    /**
     * @see org.netxms.nxmc.modules.objects.actions.ObjectAction#run(java.util.List)
     */
    @Override
-   protected void run(List<NetworkMap> objects)
+   protected void run(List<AbstractObject> objects)
    {      
-      final NetworkMap map = objects.get(0);
+      final AbstractObject object = objects.get(0);
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Setting up network map public access"), null, getMessageArea()) {
+      new Job(i18n.tr("Setting up public access"), null, getMessageArea()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final String token = session.enableAnonymousObjectAccess(map.getObjectId());
+            final String token = session.enableAnonymousObjectAccess(object.getObjectId());
             runInUIThread(() -> {
                StringBuilder url = new StringBuilder(session.getClientConfigurationHint("BaseURL", "https://{server-name}").replace("{server-name}", session.getServerAddress()));
                if (url.charAt(url.length() - 1) != '/')
                   url.append('/');
                url.append("nxmc-light.app?auto&kiosk-mode=true&token=");
                url.append(token);
-               url.append("&map=");
-               url.append(map.getObjectId());
-               new NetworkMapPublicAccessDialog(getShell(), token, url.toString()).open();
+               url.append((object instanceof Dashboard) ? "&dashboard=" : "&map=");
+               url.append(object.getObjectId());
+               new ObjectPublicAccessDialog(getShell(), token, url.toString()).open();
             });
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot setup public access for network map \"%s\""), map.getObjectName());
+            return String.format(i18n.tr("Cannot setup public access for object \"%s\""), object.getObjectName());
          }
       }.start();
    }
@@ -88,6 +90,6 @@ public class EnableNetworkMapPublicAccess extends ObjectAction<NetworkMap>
    @Override
    public boolean isValidForSelection(IStructuredSelection selection)
    {
-      return (selection.size() == 1) && (selection.getFirstElement() instanceof NetworkMap);
+      return (selection.size() == 1) && ((selection.getFirstElement() instanceof NetworkMap) || (selection.getFirstElement() instanceof Dashboard));
    }
 }
