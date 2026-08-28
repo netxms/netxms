@@ -239,6 +239,7 @@ enum CertificateOperation
 #define AUDIT_SYSCFG       _T("SYSCFG")
 #define AUDIT_CONSOLE      _T("CONSOLE")
 #define AUDIT_NETWORK      _T("NETWORK")
+#define AUDIT_AI           _T("AI")
 
 #define AUDIT_SYSTEM_SID   (-1)
 

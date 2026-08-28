@@ -48,6 +48,8 @@ size_t GetRegisteredSkillCount();
 std::string GetRegisteredSkills();
 void FillAISkillListMessage(NXCPMessage *msg);
 std::unordered_set<std::string> GetRegisteredSkillNames();
+void CollectSkillFunctions(std::vector<shared_ptr<AssistantFunction>>& functions, const std::unordered_set<std::string>& disabledSkills);
+shared_ptr<AssistantFunction> FindSkillFunction(const char *name);
 
 std::string F_AITaskList(json_t *arguments, uint32_t userId);
 std::string F_DeleteAITask(json_t *arguments, uint32_t userId);
@@ -875,7 +877,7 @@ static std::string CallAIAssistantFunction(shared_ptr<AssistantFunction> functio
 }
 
 /**
- * Call registered function
+ * Call globally registered function
  */
 std::string NXCORE_EXPORTABLE CallGlobalAIAssistantFunction(const char *name, json_t *arguments, uint32_t userId)
 {
@@ -892,6 +894,94 @@ std::string NXCORE_EXPORTABLE CallGlobalAIAssistantFunction(const char *name, js
    }
    s_globalFunctionsMutex.unlock();
    return std::string("Error: function not found");
+}
+
+/**
+ * Build MCP tool descriptor for AI assistant function (input schema is built the same way as internal LLM function declarations)
+ */
+static json_t *BuildMCPToolDescriptor(const AssistantFunction& function)
+{
+   json_t *tool = json_object();
+   json_object_set_new(tool, "name", json_string(function.name.c_str()));
+   json_object_set_new(tool, "description", json_string(function.description.c_str()));
+   json_t *schema = json_object();
+   json_object_set_new(schema, "type", json_string("object"));
+   json_t *properties = json_object();
+   for(const auto& p : function.parameters)
+   {
+      json_t *property = json_object();
+      json_object_set_new(property, "type", json_string("string"));
+      json_object_set_new(property, "description", json_string(p.second.c_str()));
+      json_object_set_new(properties, p.first.c_str(), property);
+   }
+   json_object_set_new(schema, "properties", properties);
+   json_object_set_new(schema, "required", json_array());
+   json_object_set_new(tool, "inputSchema", schema);
+   return tool;
+}
+
+/**
+ * Get unified tool list for MCP clients
+ */
+json_t NXCORE_EXPORTABLE *GetMCPToolsAsJson()
+{
+   auto disabledFunctions = GetAIDisabledFunctions();
+   auto disabledSkills = GetAIDisabledSkills();
+
+   json_t *tools = json_array();
+   std::unordered_set<std::string> names;
+
+   s_globalFunctionsMutex.lock();
+   for(const auto& pair : s_globalFunctions)
+   {
+      const AssistantFunction& function = *pair.second;
+      if (function.chatOnly || disabledFunctions.count(function.name))
+         continue;
+      json_array_append_new(tools, BuildMCPToolDescriptor(function));
+      names.insert(function.name);
+   }
+   s_globalFunctionsMutex.unlock();
+
+   std::vector<shared_ptr<AssistantFunction>> skillFunctions;
+   CollectSkillFunctions(skillFunctions, disabledSkills);
+   for(const auto& function : skillFunctions)
+   {
+      if (function->chatOnly || disabledFunctions.count(function->name) || !names.insert(function->name).second)
+         continue;
+      json_array_append_new(tools, BuildMCPToolDescriptor(*function));
+   }
+
+   return tools;
+}
+
+/**
+ * Call AI assistant function by name on behalf of MCP client
+ */
+std::string NXCORE_EXPORTABLE CallMCPTool(const char *name, json_t *arguments, uint32_t userId, bool *found)
+{
+   shared_ptr<AssistantFunction> function;
+   if (!IsAIFunctionDisabled(name))
+   {
+      s_globalFunctionsMutex.lock();
+      auto it = s_globalFunctions.find(name);
+      if (it != s_globalFunctions.end())
+         function = it->second;
+      s_globalFunctionsMutex.unlock();
+
+      if (function == nullptr)
+         function = FindSkillFunction(name);
+   }
+
+   if ((function == nullptr) || function->chatOnly)
+   {
+      if (found != nullptr)
+         *found = false;
+      return std::string("Error: function not found");
+   }
+
+   if (found != nullptr)
+      *found = true;
+   return CallAIAssistantFunction(function, name, arguments, userId);
 }
 
 /**
@@ -1328,7 +1418,8 @@ void Chat::initializeFunctions()
       [this] (json_t *arguments, uint32_t userId) -> std::string
       {
          return this->loadSkill(json_object_get_string_utf8(arguments, "name", ""));
-      }
+      },
+      true
    ));
 
    m_functions.emplace("delegate-to-skill", make_shared<AssistantFunction>(
@@ -1345,7 +1436,8 @@ void Chat::initializeFunctions()
          return this->delegateToSkill(
             json_object_get_string_utf8(arguments, "name", ""),
             json_object_get_string_utf8(arguments, "task", ""));
-      }
+      },
+      true
    ));
 
    m_functions.emplace("get-session-info", make_shared<AssistantFunction>(
@@ -1360,7 +1452,8 @@ void Chat::initializeFunctions()
          json_object_set_new(result, "session_type", json_string(m_isInteractive ? "interactive" : "background"));
          json_object_set_new(result, "user_interaction_available", json_boolean(m_isInteractive));
          return JsonToString(result);
-      }
+      },
+      true
    ));
 
    m_functions.emplace("ask-user-confirmation", make_shared<AssistantFunction>(
@@ -1388,7 +1481,8 @@ void Chat::initializeFunctions()
 
          bool result = this->askConfirmation(text, context, type);
          return result ? R"({"approved": true})" : R"({"approved": false})";
-      }
+      },
+      true
    ));
 
    m_functions.emplace("ask-user-choice", make_shared<AssistantFunction>(
@@ -1448,7 +1542,8 @@ void Chat::initializeFunctions()
             json_object_set_new(response, "error", json_string("No selection made or timeout"));
             return JsonToString(response);
          }
-      }
+      },
+      true
    ));
 
    m_functionDeclarations = RebuildFunctionDeclarations(m_functions);

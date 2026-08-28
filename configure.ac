@@ -4917,6 +4917,7 @@ AC_CONFIG_FILES([
 	src/server/docker/Makefile
 	src/server/leef/Makefile
 	src/server/libnxsrv/Makefile
+	src/server/mcp/Makefile
 	src/server/netxmsd/Makefile
 	src/server/ntcb/Makefile
 	src/server/otlp/Makefile

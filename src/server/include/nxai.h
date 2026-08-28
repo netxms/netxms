@@ -42,10 +42,11 @@ struct AssistantFunction
    std::string description;
    std::vector<std::pair<std::string, std::string>> parameters;
    AssistantFunctionHandler handler;
+   bool chatOnly;  // Function only makes sense within interactive chat context and is not exposed to MCP clients
 
    AssistantFunction(const std::string& name, const std::string& description,
-      const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
-      : name(name), description(description), parameters(parameters), handler(handler)
+      const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler, bool chatOnly = false)
+      : name(name), description(description), parameters(parameters), handler(handler), chatOnly(chatOnly)
    {
    }
 };
@@ -298,6 +299,32 @@ std::string NXCORE_EXPORTABLE CallGlobalAIAssistantFunction(const char *name, js
  * Fill message with registered function list
  */
 void FillAIAssistantFunctionListMessage(NXCPMessage *msg);
+
+/**
+ * Get unified tool list for MCP clients: global functions plus functions from all skills flattened into one namespace,
+ * excluding disabled and chat-only items. Each element is a JSON object with name, description, and MCP input schema.
+ * Caller must call json_decref on result.
+ */
+json_t NXCORE_EXPORTABLE *GetMCPToolsAsJson();
+
+/**
+ * Call AI assistant function by name on behalf of MCP client. Function name is resolved in global functions first,
+ * then across all skills, honoring disabled lists and chat-only flags. If function cannot be resolved, *found is
+ * set to false (when provided) and error message is returned.
+ */
+std::string NXCORE_EXPORTABLE CallMCPTool(const char *name, json_t *arguments, uint32_t userId, bool *found = nullptr);
+
+/**
+ * Get skill prompt list for MCP clients (excluding disabled skills) as JSON array of objects with name and description.
+ * Caller must call json_decref on result.
+ */
+json_t NXCORE_EXPORTABLE *GetMCPPromptsAsJson();
+
+/**
+ * Get single skill prompt for MCP clients as JSON object with name, description, and prompt text.
+ * Returns nullptr if skill does not exist or is disabled. Caller must call json_decref on result.
+ */
+json_t NXCORE_EXPORTABLE *GetMCPPromptAsJson(const char *name);
 
 /**
  * Fill message with registered skills and functions list (including disabled status)

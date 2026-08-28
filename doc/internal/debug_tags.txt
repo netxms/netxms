@@ -126,6 +126,8 @@ localadmin	Local administration interface
 logs		Server log access
 logwatch.*	Messages from log monitoring library
 
+mcp		MCP endpoint module (AI function/skill registry access over MCP)
+
 mobile		Mobile devices
 modbus		Modbus cominication messages
 modules		Server modules
