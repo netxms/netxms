@@ -95,7 +95,7 @@ import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
 import org.netxms.nxmc.modules.objects.actions.ClearInterfacePeerInformation;
 import org.netxms.nxmc.modules.objects.actions.CloneNetworkMap;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
-import org.netxms.nxmc.modules.objects.actions.EnableNetworkMapPublicAccess;
+import org.netxms.nxmc.modules.objects.actions.EnableObjectPublicAccess;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.actions.SetInterfacePeerInformation;
@@ -185,7 +185,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionImportDashboard;
    private ObjectAction<?> actionAssignDashboard;
    private ObjectAction<?> actionCloneNetworkMap;
-   private ObjectAction<?> actionNetworkMapPublicAccess;
+   private ObjectAction<?> actionPublicAccess;
    private ObjectAction<?> actionChangeInterfaceExpectedState;
    private ObjectAction<?> actionChangeMacAddress;
    private ObjectAction<?> actionUploadFileToAgent;
@@ -587,7 +587,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionImportDashboard = new ImportDashboardAction(viewPlacement, selectionProvider);
       actionAssignDashboard = new AssignDashboardAction(viewPlacement, selectionProvider);
       actionCloneNetworkMap = new CloneNetworkMap(viewPlacement, selectionProvider);
-      actionNetworkMapPublicAccess = new EnableNetworkMapPublicAccess(viewPlacement, selectionProvider);
+      actionPublicAccess = new EnableObjectPublicAccess(viewPlacement, selectionProvider);
       actionChangeInterfaceExpectedState = new ChangeInterfaceExpectedStateAction(viewPlacement, selectionProvider);
       actionChangeMacAddress = new ChangeMacAddressAction(viewPlacement, selectionProvider);
       actionSetInterfacePeer = new SetInterfacePeerInformation(viewPlacement, selectionProvider);
@@ -668,6 +668,8 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionCloneAsDashboard);
             add(actionCloneAsDashboardTemplate);
             add(actionExportDashboard);
+            if (actionPublicAccess.isValidForSelection(selection))
+               add(actionPublicAccess);
             add(new Separator());
          }
          if (object instanceof WirelessDomain)
@@ -921,7 +923,8 @@ public class ObjectContextMenuManager extends MenuManager
       {
          add(new Separator());
          add(actionCloneNetworkMap);
-         add(actionNetworkMapPublicAccess);
+         if (actionPublicAccess.isValidForSelection(selection))
+            add(actionPublicAccess);
       }
 
       if (actionChangeInterfaceExpectedState.isValidForSelection(selection))

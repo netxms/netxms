@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,11 +36,11 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Dialog to show public access information for network map
+ * Dialog to show public access information for object (network map or dashboard)
  */
-public class NetworkMapPublicAccessDialog extends Dialog
+public class ObjectPublicAccessDialog extends Dialog
 {
-   private final I18n i18n = LocalizationHelper.getI18n(NetworkMapPublicAccessDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectPublicAccessDialog.class);
 
    private String token;
    private String url;
@@ -52,7 +52,7 @@ public class NetworkMapPublicAccessDialog extends Dialog
     * @param token access token
     * @param url direct access URL
     */
-   public NetworkMapPublicAccessDialog(Shell parentShell, String token, String url)
+   public ObjectPublicAccessDialog(Shell parentShell, String token, String url)
    {
       super(parentShell);
       this.token = token;
@@ -66,7 +66,7 @@ public class NetworkMapPublicAccessDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(i18n.tr("Map Public Access Details"));
+      newShell.setText(i18n.tr("Public Access Details"));
    }
 
    /**
@@ -85,7 +85,7 @@ public class NetworkMapPublicAccessDialog extends Dialog
       dialogArea.setLayout(layout);
 
       LabeledText tokenText = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
-      tokenText.setLabel("Access token");
+      tokenText.setLabel(i18n.tr("Access token"));
       tokenText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       tokenText.setText(token);
 
