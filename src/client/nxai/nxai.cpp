@@ -359,13 +359,22 @@ static std::string ReadStandardInput()
 }
 
 /**
- * Authenticate on server. User name and password are requested from user if not provided.
+ * Authenticate on server. User name and password are requested from user if not provided and input is read
+ * from terminal. Password can be nullptr, which means that it was not provided at all - empty string is a
+ * valid password and does not cause a prompt.
  */
 static bool Authenticate(WebApiClient *client, const char *user, const char *password)
 {
+   bool terminalInput = (_isatty(_fileno(stdin)) != 0);
+
    std::string userBuffer;
    if (*user == 0)
    {
+      if (!terminalInput)
+      {
+         PrintError("user name is not specified (use -u option or NETXMS_USER environment variable)");
+         return false;
+      }
       char prompt[256];
       snprintf(prompt, sizeof(prompt), "User name for %s: ", client->getServerUrl());
       if (!ReadInputLine(prompt, &userBuffer) || userBuffer.empty())
@@ -377,8 +386,13 @@ static bool Authenticate(WebApiClient *client, const char *user, const char *pas
    }
 
    char passwordBuffer[MAX_PASSWORD];
-   if (*password == 0)
+   if (password == nullptr)
    {
+      if (!terminalInput)
+      {
+         PrintError("password is not specified (use -p option or NETXMS_PASSWORD environment variable)");
+         return false;
+      }
       char prompt[256];
       snprintf(prompt, sizeof(prompt), "Password for %s@%s: ", user, client->getServerUrl());
       if (!ReadPasswordFromTerminal(prompt, passwordBuffer, sizeof(passwordBuffer)))
@@ -406,7 +420,7 @@ int main(int argc, char *argv[])
 
    const char *optServer = "";
    const char *optUser = "";
-   const char *optPassword = "";
+   const char *optPassword = nullptr;   // nullptr means that password was not provided, empty string is a valid password
    const char *optNode = "";
    uint32_t optObjectId = 0;
    uint32_t optIncidentId = 0;
@@ -499,11 +513,8 @@ int main(int argc, char *argv[])
       const char *user = getenv("NETXMS_USER");
       optUser = (user != nullptr) ? user : "";
    }
-   if (*optPassword == 0)
-   {
-      const char *password = getenv("NETXMS_PASSWORD");
-      optPassword = (password != nullptr) ? password : "";
-   }
+   if (optPassword == nullptr)
+      optPassword = getenv("NETXMS_PASSWORD");
 
    if (!InitializeLibCURL())
    {
