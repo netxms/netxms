@@ -34,6 +34,7 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;
@@ -61,11 +62,13 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.ai.AiChatContext;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
+import org.netxms.nxmc.tools.ImageCache;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +92,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    private long boundIncidentId;
    private boolean withContext;
    private Object context = null;
-   private boolean contextChanged = false;
+   private String lastSentContext = null;
    private Browser chatBrowser;
    private CLabel contextName;
    private Text chatInput;
@@ -97,6 +100,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    private AiQuestion pendingQuestion;
    private String currentMessageId;
    private Image imageUnknownContext;
+   private ImageCache imageCache;
    private BaseObjectLabelProvider objectLabelProvider;
    private List<ChatMessage> messages;
 
@@ -136,6 +140,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       this.messages = new ArrayList<>();
 
       imageUnknownContext = ResourceManager.getImage("icons/ai/unknown-context.png");
+      imageCache = new ImageCache();
       objectLabelProvider = new BaseObjectLabelProvider();
 
       initializeHtmlTemplate();
@@ -145,6 +150,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       addDisposeListener((e) -> {
          session.removeListener(AiAssistantChatWidget.this);
          imageUnknownContext.dispose();
+         imageCache.dispose();
          objectLabelProvider.dispose();
       });
    }
@@ -462,8 +468,16 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       addUserMessage(message);
       chatInput.setEnabled(false);
       currentMessageId = addThinkingMessage();
-      final String contextString = buildContextString();
-      contextChanged = false;
+      String currentContext = buildContextString();
+      if ((currentContext != null) && currentContext.equals(lastSentContext))
+      {
+         currentContext = null; // Context did not change since last query, no need to send it again
+      }
+      else
+      {
+         lastSentContext = currentContext;
+      }
+      final String contextString = currentContext;
       Job job = new Job(i18n.tr("Processing AI assistant query"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -721,7 +735,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       messages.clear();
       initializeHtmlTemplate();
       addAssistantMessage("Hello! I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
-      contextChanged = true; // Force context resend on next query
+      lastSentContext = null; // Force context resend on next query
    }
 
    /**
@@ -975,10 +989,9 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
     */
    public void setContext(Object context)
    {
-      if (!withContext || this.context == context)
+      if (!withContext)
          return;
 
-      this.contextChanged = true;
       this.context = context;
       if (context == null)
       {
@@ -995,6 +1008,15 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
          return;
       }
 
+      if (context instanceof AiChatContext)
+      {
+         AiChatContext chatContext = (AiChatContext)context;
+         ImageDescriptor image = chatContext.getContextImage();
+         contextName.setImage((image != null) ? imageCache.create(image) : imageUnknownContext);
+         contextName.setText(chatContext.getContextName());
+         return;
+      }
+
       contextName.setImage(imageUnknownContext);
       contextName.setText(context.toString());
    }
@@ -1006,7 +1028,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
     */
    private String buildContextString()
    {
-      if (context == null || !contextChanged)
+      if (context == null)
          return null;
 
       if (context instanceof AbstractObject)
@@ -1014,6 +1036,9 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
          AbstractObject object = (AbstractObject)context;
          return "{\"type\":\"object\", \"object_name\":\"" + escapeForJson(object.getObjectName()) + "\", \"object_id\":" + object.getObjectId() + "}";
       }
+
+      if (context instanceof AiChatContext)
+         return ((AiChatContext)context).getContextAsJson();
 
       return context.toString();
    }

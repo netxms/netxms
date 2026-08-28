@@ -44,7 +44,9 @@ import org.netxms.nxmc.base.UIElementFilter.ElementType;
 import org.netxms.nxmc.base.views.helpers.NavigationHistory;
 import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.keyboard.KeyStroke;
+import org.netxms.nxmc.modules.ai.AiChatContext;
 import org.netxms.nxmc.tools.ImageCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,7 +158,22 @@ public abstract class Perspective
          mainFolder.setContext(context);
       else if (mainArea != null)
          mainArea.setContext(context);
-      Registry.getMainWindow().setAiAssistantContext(context);
+      updateAiAssistantContext();
+   }
+
+   /**
+    * Update context of AI assistant chat control. Context provided by currently active main view takes precedence over context of
+    * this perspective. Called by framework when active view or perspective context changes.
+    */
+   public void updateAiAssistantContext()
+   {
+      MainWindow mainWindow = Registry.getMainWindow();
+      if (mainWindow == null)
+         return;
+
+      View view = (mainFolder != null) ? mainFolder.getActiveView() : ((mainArea != null) ? mainArea.getActiveView() : null);
+      AiChatContext viewContext = (view != null) ? view.getAiAssistantContext() : null;
+      mainWindow.setAiAssistantContext((viewContext != null) ? viewContext : getContext());
    }
 
    /**
@@ -276,6 +293,8 @@ public abstract class Perspective
             }
          }
       });
+
+      updateAiAssistantContext();
    }
 
    /**

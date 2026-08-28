@@ -50,6 +50,7 @@ import org.netxms.nxmc.base.widgets.ProgressArea;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
+import org.netxms.nxmc.modules.ai.AiChatContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -534,6 +535,17 @@ public abstract class View implements MessageAreaHolder
    public Perspective getPerspective()
    {
       return (viewContainer != null) ? viewContainer.getPerspective() : null;
+   }
+
+   /**
+    * Get context for AI assistant chat. Default implementation returns null, which means that this view does not provide its own
+    * context and context of owning perspective should be used.
+    *
+    * @return AI assistant chat context or null
+    */
+   public AiChatContext getAiAssistantContext()
+   {
+      return null;
    }
 
    /**
