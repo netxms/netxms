@@ -50,6 +50,54 @@ const InetAddress __EXPORT InetAddress::IPV4_LINK_LOCAL(0xA9FE0000, 0xFFFF0000);
 const InetAddress __EXPORT InetAddress::IPV6_LINK_LOCAL((const BYTE *)"\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 10);
 
 /**
+ * Reserved IPv6 prefixes: address ranges that never form a network segment where nodes communicate
+ * (synthesized, transitional, or per-router function identifiers). Each entry is a prefix in network
+ * byte order followed by prefix length.
+ */
+static const struct
+{
+   BYTE prefix[16];
+   int bits;
+} s_reservedIPv6[] =
+{
+   { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 96 },   // ::/96 IPv4-compatible (deprecated)
+   { { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00 }, 96 },   // ::ffff:0:0/96 IPv4-mapped
+   { { 0x00, 0x64, 0xFF, 0x9B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 96 },   // 64:ff9b::/96 NAT64
+   { { 0x00, 0x64, 0xFF, 0x9B, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 48 },   // 64:ff9b:1::/48 local-use NAT64
+   { { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 64 },   // 100::/64 discard-only (RFC 6666)
+   { { 0x20, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 32 },   // 2001::/32 Teredo
+   { { 0x20, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 16 },   // 2002::/16 6to4
+   { { 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, 16 }    // 5f00::/16 SRv6 SIDs (RFC 9602)
+};
+
+/**
+ * Check if address belongs to a reserved range that cannot form a real network segment
+ * (and therefore should never produce a subnet). For IPv4 this is 0.0.0.0/8; for IPv6
+ * these are IPv4-compatible, IPv4-mapped, NAT64, discard-only, Teredo, 6to4, and SRv6 SID ranges.
+ * Link-local, loopback, multicast, and unspecified addresses are handled by isValidUnicast().
+ */
+bool InetAddress::isReserved() const
+{
+   if (m_family == AF_INET)
+      return (m_addr.v4 & 0xFF000000) == 0;
+
+   if (m_family != AF_INET6)
+      return false;
+
+   for(size_t i = 0; i < sizeof(s_reservedIPv6) / sizeof(s_reservedIPv6[0]); i++)
+   {
+      int bits = s_reservedIPv6[i].bits;
+      int fullBytes = bits / 8;
+      if (memcmp(m_addr.v6, s_reservedIPv6[i].prefix, fullBytes) != 0)
+         continue;
+      int rem = bits % 8;
+      if ((rem == 0) || (((m_addr.v6[fullBytes] ^ s_reservedIPv6[i].prefix[fullBytes]) & (0xFF << (8 - rem))) == 0))
+         return true;
+   }
+   return false;
+}
+
+/**
  * Convert to string
  */
 String InetAddress::toString() const

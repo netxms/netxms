@@ -4792,6 +4792,7 @@ public:
    {
       return isValid() && !isAnyLocal() && !isLoopback() && !isMulticast() && !isBroadcast() && !isLinkLocal();
    }
+   bool isReserved() const;
 
    int getFamily() const { return m_family; }
    uint32_t getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }

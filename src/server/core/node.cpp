@@ -2671,7 +2671,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
       for(int i = 0; i < info->ipAddrList.size(); i++)
       {
          InetAddress addr = info->ipAddrList.get(i);
-         bool addToSubnet = addr.isValidUnicast() && ((cluster == nullptr) || !cluster->isSyncAddr(addr));
+         bool addToSubnet = addr.isValidUnicast() && !addr.isReserved() && ((cluster == nullptr) || !cluster->isSyncAddr(addr));
          if (addToSubnet && IsAddressInTopologyExcludedSubnet(m_zoneUIN, addr))
             addToSubnet = false;
          nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface: node=%s [%d] ip=%s/%d cluster=%s [%d] add=%s"),
@@ -14481,9 +14481,10 @@ shared_ptr<Subnet> Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
    InetAddress addr = baseAddr.getSubnetAddress();
 
    // Subnet with non-unicast base address (for example ::/64 derived from malformed IPv6 address with zeroed prefix)
-   // will not be added to address index, and therefore will be created again on each poll
-   // Do not create IPv4 subnets from range 0.0.0.0/8
-   if (!addr.isValidUnicast() || ((addr.getFamily() == AF_INET) && ((addr.getAddressV4() & 0xFF000000) == 0)))
+   // will not be added to address index, and therefore will be created again on each poll.
+   // Reserved ranges (0.0.0.0/8, IPv4-mapped, NAT64, Teredo, 6to4, SRv6 SIDs, etc.) never form
+   // a segment where nodes communicate, so no subnet is created for them either.
+   if (!addr.isValidUnicast() || addr.isReserved())
    {
       wchar_t buffer[64];
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, L"Node::createSubnet(%s [%u]): refusing to create subnet with invalid base address %s/%d",
