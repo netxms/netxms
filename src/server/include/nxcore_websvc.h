@@ -65,6 +65,7 @@ public:
             const StringList& args, AgentConnection *conn, void *result) const;
    WebServiceCallResult makeCustomRequest(shared_ptr<Node> node, const HttpRequestMethod requestMethod,
          const StringList& args, const TCHAR *data, const TCHAR *contentType, bool acceptCached) const;
+   WebServiceCallResult retrieveDocument(DataCollectionTarget *object, const StringList& args, AgentConnectionEx *conn) const;
    void fillMessage(NXCPMessage *msg) const;
    void createExportRecord(json_t *array) const;
    json_t *toJson() const;

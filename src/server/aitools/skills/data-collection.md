@@ -36,6 +36,7 @@ When creating metrics, select the appropriate data origin based on what is avail
    - For agent origin: use NetXMS agent metric names (e.g., `System.CPU.LoadAvg`, `System.Memory.Physical.Free`)
    - For SNMP origin: use appropriate SNMP OIDs (e.g., `.1.3.6.1.4.1.2021.10.1.3.1` for CPU load on net-snmp)
    - For script origin: use NXSL script names
+   - For webService origin: use `<definition name>:<path>` (e.g., `PrometheusNode:/data/result/0/value/1`), where the definition name refers to a configured web service definition and the path is a JSONPath or XPath expression into the response document. Load the `web-services` skill to list definitions, retrieve a live response document, and verify the path before creating the metric - it returns the exact metric name to use here.
 
 4. **When in doubt, ask**: If you don't know how to collect the requested data with the available data sources, inform the user instead of creating a metric that won't work. Explain what data sources are available and ask for guidance.
 

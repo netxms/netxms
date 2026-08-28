@@ -110,6 +110,12 @@ std::string F_AddDashboardElement(json_t *arguments, uint32_t userId);
 std::string F_UpdateDashboardElement(json_t *arguments, uint32_t userId);
 std::string F_RemoveDashboardElement(json_t *arguments, uint32_t userId);
 std::string F_MoveDashboardElement(json_t *arguments, uint32_t userId);
+std::string F_ListWebServices(json_t *arguments, uint32_t userId);
+std::string F_GetWebService(json_t *arguments, uint32_t userId);
+std::string F_QueryWebService(json_t *arguments, uint32_t userId);
+std::string F_TestWebServicePath(json_t *arguments, uint32_t userId);
+std::string F_CreateWebService(json_t *arguments, uint32_t userId);
+std::string F_UpdateWebService(json_t *arguments, uint32_t userId);
 
 /**
  * Module metadata
@@ -331,7 +337,7 @@ static void CreateAssistantSkillList()
             "Create new data collection item (metric) for given object (node, device, server, etc.).",
             {
                { "object", "name or ID of an object (mandatory)" },
-               { "metric", "name of the metric to create (mandatory, meaning depends on the origin: metric name for agent, OID for SNMP, script name for script)" },
+               { "metric", "name of the metric to create (mandatory, meaning depends on the origin: metric name for agent, OID for SNMP, script name for script, \"<web service definition name>:<data extraction path>\" for webService)" },
                { "description", "optional metric description, if not provided then name will be used" },
                { "origin", "data collection origin: agent, snmp, script, ssh, push, webService, deviceDriver, mqtt, modbus, internal (default: agent)" },
                { "dataType", "data type: int, unsigned-int, int64, unsigned-int64, counter32, counter64, float, string (default: string)" },
@@ -1127,6 +1133,91 @@ static void CreateAssistantSkillList()
                { "position", "new zero-based position in the element list (mandatory)" }
             },
             F_MoveDashboardElement)
+      }
+   );
+
+   RegisterAIAssistantSkill(
+      "web-services",
+      "Provides access to NetXMS web service definitions and the ability to actually call them. Use this skill to inspect configured web services, retrieve a live response document from a REST or HTTP API and analyze its structure, verify that a JSON or XML data extraction path resolves to the expected value, and create or update web service definitions. Essential when setting up web service based data collection (data collection items with origin webService) and when troubleshooting web service metrics that return no data or wrong values.",
+      "@web-services.md",
+      {
+         AssistantFunction(
+            "list-web-services",
+            "Get list of configured web service definitions with their URL, HTTP method, authentication type, timeouts, and headers. Credentials are never returned. Use this to find out which web services are already configured before creating a new one.",
+            {
+               { "filter", "optional filter to select definitions by name, description, or URL (partial match, case insensitive)" }
+            },
+            F_ListWebServices),
+         AssistantFunction(
+            "get-web-service",
+            "Get full configuration of a single web service definition, including the metric name template to use when creating a data collection item based on it. Credentials are never returned.",
+            {
+               { "service", "name or ID of the web service definition (mandatory)" }
+            },
+            F_GetWebService),
+         AssistantFunction(
+            "query-web-service",
+            "Call a web service against a monitored object and return the raw response document, HTTP response code, and the actual URL that was called. The request is sent by the agent on the object's effective web service proxy, exactly as it would be during data collection, and always hits the live service rather than the agent response cache. Use this to see what an API actually returns before proposing data extraction paths, and to diagnose failing web service metrics. Large documents are truncated.",
+            {
+               { "object", "name or ID of the object the web service is queried for, used as context for macro expansion in URL and headers (mandatory)" },
+               { "service", "name or ID of the web service definition (mandatory)" },
+               { "args", "optional array of string arguments substituted into URL and headers as macros $1, $2, and so on" }
+            },
+            F_QueryWebService),
+         AssistantFunction(
+            "test-web-service-path",
+            "Resolve a data extraction path against a web service response and return the extracted value or list of values. Path syntax is JSONPath for JSON responses and XPath for XML responses. Use this to confirm that a path proposed from the response document actually works before creating a data collection item; on success the exact metric name for that item is returned. Note that the response may come from the agent response cache according to the definition's cache retention time.",
+            {
+               { "object", "name or ID of the object the web service is queried for (mandatory)" },
+               { "service", "name or ID of the web service definition (mandatory)" },
+               { "path", "data extraction path to resolve, for example /data/cpu/load or //sensor[@id='1']/value (mandatory)" },
+               { "type", "what the path is expected to produce: 'value' for a single value used by a normal metric, or 'list' for a list of values used for instance discovery (default: value)" },
+               { "args", "optional array of string arguments substituted into URL and headers as macros $1, $2, and so on" }
+            },
+            F_TestWebServicePath),
+         AssistantFunction(
+            "create-web-service",
+            "Create new web service definition. Prefer asking the user to configure credentials in the management client instead of passing them here, because everything passed to this function is sent to the configured AI provider.",
+            {
+               { "name", "definition name, used as first part of metric name in data collection items (mandatory)" },
+               { "url", "service URL, may contain macros expanded in context of the queried object (mandatory)" },
+               { "description", "optional description" },
+               { "http_request_method", "HTTP request method: GET, POST, PUT, DELETE, PATCH (default: GET)" },
+               { "request_data", "optional request body for POST, PUT, and PATCH requests" },
+               { "auth_type", "authentication type: none, basic, digest, ntlm, bearer, any, anysafe (default: none)" },
+               { "login", "login name, or access token for bearer authentication (optional)" },
+               { "password", "password (optional)" },
+               { "headers", "optional JSON object with additional HTTP headers as name/value pairs" },
+               { "request_timeout", "request timeout in milliseconds (default: 30000)" },
+               { "cache_retention_time", "how long agent may reuse cached response for subsequent requests, in milliseconds (default: 0, no caching)" },
+               { "verify_certificate", "verify peer TLS certificate (default: false)" },
+               { "verify_host", "verify that TLS certificate matches host name (default: false)" },
+               { "follow_location", "follow HTTP redirects (default: false)" },
+               { "force_plain_text_parser", "treat response as plain text instead of detecting JSON or XML (default: false)" }
+            },
+            F_CreateWebService),
+         AssistantFunction(
+            "update-web-service",
+            "Update existing web service definition. Only provided properties are changed, all others keep their current values. Credentials that are not provided are preserved.",
+            {
+               { "service", "name or ID of the web service definition to update (mandatory)" },
+               { "name", "new definition name (optional)" },
+               { "url", "new service URL (optional)" },
+               { "description", "new description (optional)" },
+               { "http_request_method", "new HTTP request method: GET, POST, PUT, DELETE, PATCH (optional)" },
+               { "request_data", "new request body (optional)" },
+               { "auth_type", "new authentication type: none, basic, digest, ntlm, bearer, any, anysafe (optional)" },
+               { "login", "new login name, or access token for bearer authentication (optional)" },
+               { "password", "new password (optional)" },
+               { "headers", "new complete set of additional HTTP headers as a JSON object with name/value pairs, replaces existing headers (optional)" },
+               { "request_timeout", "new request timeout in milliseconds (optional)" },
+               { "cache_retention_time", "new agent response cache retention time in milliseconds (optional)" },
+               { "verify_certificate", "new value of peer TLS certificate verification flag (optional)" },
+               { "verify_host", "new value of TLS host name verification flag (optional)" },
+               { "follow_location", "new value of HTTP redirect following flag (optional)" },
+               { "force_plain_text_parser", "new value of plain text parser flag (optional)" }
+            },
+            F_UpdateWebService)
       }
    );
 }
