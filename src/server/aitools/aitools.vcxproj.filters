@@ -54,6 +54,9 @@
     <ClCompile Include="operational.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="websvc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\nms_core.h">

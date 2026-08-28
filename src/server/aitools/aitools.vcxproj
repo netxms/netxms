@@ -338,6 +338,7 @@
     <ClCompile Include="operational.cpp" />
     <ClCompile Include="polling.cpp" />
     <ClCompile Include="snmp.cpp" />
+    <ClCompile Include="websvc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\nms_common.h" />
