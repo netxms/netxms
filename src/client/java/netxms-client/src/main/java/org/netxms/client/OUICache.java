@@ -38,8 +38,9 @@ final class OUICache
    private HashMap<MacAddress, String> ouiToVendorMap = new HashMap<MacAddress, String>();
    private Set<MacAddress> syncList = new HashSet<MacAddress>();
    private List<Runnable> callbackList = new ArrayList<Runnable>();
+   private final Object syncLock = new Object();
    private BackgroundWorker backgroundWorker = new BackgroundWorker();
-   private boolean running = true;
+   private volatile boolean running = true;
    private NXCSession session;
 
    /**
@@ -60,9 +61,9 @@ final class OUICache
       running = false;
       try
       {
-         synchronized(syncList)
+         synchronized(syncLock)
          {
-            syncList.notifyAll();
+            syncLock.notifyAll();
          }
          backgroundWorker.join();
       }
@@ -123,12 +124,12 @@ final class OUICache
       }
       if (needSync)
       {
-         synchronized(syncList)
+         synchronized(syncLock)
          {
             syncList.add(mac);
             if (callback != null)
                callbackList.add(callback);
-            syncList.notifyAll();
+            syncLock.notifyAll();
          }
       }
       return name;    
@@ -154,13 +155,13 @@ final class OUICache
       {
          while(running)
          {
-            synchronized(syncList)
+            synchronized(syncLock)
             {
                while(running && syncList.isEmpty())
                {
                   try
                   {
-                     syncList.wait();
+                     syncLock.wait();
                   }
                   catch(InterruptedException e)
                   {
@@ -183,7 +184,7 @@ final class OUICache
 
             Set<MacAddress> syncListCopy;
             List<Runnable> callbackListCopy;
-            synchronized(syncList)
+            synchronized(syncLock)
             {
                syncListCopy = syncList;
                syncList = new HashSet<MacAddress>();
