@@ -59,13 +59,13 @@ static bool ReadSysDescr(SNMP_Transport *snmp, TCHAR *buffer, size_t size)
  */
 bool CiscoC9800Driver::isDeviceSupported(DeviceContext *context, const SNMP_ObjectId& oid)
 {
-   // sysDescr on Catalyst 9800 looks like "Cisco IOS Software [Cupertino], C9800 Software (C9800_IOSXE-K9), Version 17.9.4a, ..."
+   // sysDescr on Catalyst 9800 looks like "Cisco IOS Software [IOSXE], C9800 Software (C9800_IOSXE-K9), Version 17.15.4d, RELEASE SOFTWARE (fc4)..."
    // (or "C9800-CL Software", "C9800-L Software")
    TCHAR sysDescr[1024];
    if (!ReadSysDescr(context->getSNMPTransport(), sysDescr, sizeof(sysDescr)))
       return false;
    nxlog_debug_tag(DEBUG_TAG, 5, _T("sysDescr=\"%s\""), sysDescr);
-   return (_tcsstr(sysDescr, _T("IOS-XE")) != nullptr) && (_tcsstr(sysDescr, _T("C9800")) != nullptr);
+   return (_tcsstr(sysDescr, _T("Cisco IOS")) != nullptr) && (_tcsstr(sysDescr, _T("C9800")) != nullptr);
 }
 
 /**
