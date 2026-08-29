@@ -127,7 +127,7 @@ private:
    // Runtime state (not persisted), protected by AI task list lock
    bool m_executing;
 
-   void logExecution();   // must be called with task lock held
+   void logExecution();   // must be called from executing thread with task lock released
    void clearExecutingState();
 
 public:

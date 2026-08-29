@@ -156,28 +156,34 @@ void FillAIAgentTaskListMessage(NXCPMessage *msg, uint32_t userId)
 {
    bool accessAllTasks = ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) != 0);
 
-   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   // Collect task references under list lock and release it before reading task attributes,
+   // because attribute getters acquire task lock which can be held across database update
+   std::vector<shared_ptr<AITask>> tasks;
    s_aiTasksLock.lock();
    s_aiTasks.forEach(
-      [msg, &fieldId, userId, accessAllTasks] (const uint32_t& key, const shared_ptr<AITask>& task) -> EnumerationCallbackResult
+      [&tasks, userId, accessAllTasks] (const uint32_t& key, const shared_ptr<AITask>& task) -> EnumerationCallbackResult
       {
          if (accessAllTasks || (task->getUserId() == userId))
-         {
-            msg->setField(fieldId++, task->getId());
-            msg->setField(fieldId++, task->getUserId());
-            msg->setField(fieldId++, task->getDescription());
-            msg->setFieldFromUtf8String(fieldId++, task->getPrompt().c_str());
-            msg->setField(fieldId++, static_cast<uint16_t>(task->getState()));
-            msg->setFieldFromTime(fieldId++, task->getLastExecutionTime());
-            msg->setFieldFromTime(fieldId++, task->getNextExecutionTime());
-            msg->setField(fieldId++, task->getIteration());
-            msg->setField(fieldId++, task->getExplanation().cstr());
-            fieldId += 11;
-         }
+            tasks.push_back(task);
          return _CONTINUE;
       });
-   msg->setField(VID_NUM_ELEMENTS, s_aiTasks.size());
    s_aiTasksLock.unlock();
+
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for(const shared_ptr<AITask>& task : tasks)
+   {
+      msg->setField(fieldId++, task->getId());
+      msg->setField(fieldId++, task->getUserId());
+      msg->setField(fieldId++, task->getDescription());
+      msg->setFieldFromUtf8String(fieldId++, task->getPrompt().c_str());
+      msg->setField(fieldId++, static_cast<uint16_t>(task->getState()));
+      msg->setFieldFromTime(fieldId++, task->getLastExecutionTime());
+      msg->setFieldFromTime(fieldId++, task->getNextExecutionTime());
+      msg->setField(fieldId++, task->getIteration());
+      msg->setField(fieldId++, task->getExplanation().cstr());
+      fieldId += 11;
+   }
+   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(tasks.size()));
 }
 
 /**
@@ -216,17 +222,22 @@ std::string F_AITaskList(json_t *arguments, uint32_t userId)
 {
    bool accessAllTasks = ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_AI_TASKS) != 0);
 
-   json_t *output = json_array();
-
+   // Collect task references under list lock and release it before serialization,
+   // because AITask::toJson acquires task lock which can be held across database update
+   std::vector<shared_ptr<AITask>> tasks;
    s_aiTasksLock.lock();
    s_aiTasks.forEach(
-      [&output, userId, accessAllTasks] (const uint32_t& key, const shared_ptr<AITask>& task) -> EnumerationCallbackResult
+      [&tasks, userId, accessAllTasks] (const uint32_t& key, const shared_ptr<AITask>& task) -> EnumerationCallbackResult
       {
          if (accessAllTasks || (task->getUserId() == userId))
-            json_array_append_new(output, task->toJson());
+            tasks.push_back(task);
          return _CONTINUE;
       });
    s_aiTasksLock.unlock();
+
+   json_t *output = json_array();
+   for(const shared_ptr<AITask>& task : tasks)
+      json_array_append_new(output, task->toJson());
 
    return JsonToString(output);
 }
@@ -352,9 +363,9 @@ void AITask::execute()
    {
       m_mutex.lock();
       m_state = AITaskState::FAILED;
+      m_mutex.unlock();
       nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" execution failed (user %u lost AI access rights)", m_id, m_description.cstr(), m_userId);
       logExecution();
-      m_mutex.unlock();
       deleteFromDatabase();
       clearExecutingState();
       return;
@@ -382,12 +393,6 @@ void AITask::execute()
 
    Chat chat(nullptr, nullptr, m_userId, s_systemPrompt.c_str(), false);
    char *response = chat.sendRequest(prompt.c_str());
-
-   // Do not re-create database record if task was deleted while executing.
-   // Lock order is always AI task list lock -> AITask::m_mutex, never the reverse.
-   s_aiTasksLock.lock();
-   bool registered = s_aiTasks.contains(m_id);
-   s_aiTasksLock.unlock();
 
    m_mutex.lock();
    if (response != nullptr)
@@ -467,11 +472,18 @@ void AITask::execute()
       nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" execution failed (no response from assistant)", m_id, m_description.cstr());
    }
 
-   logExecution();
-   bool save = registered && (m_state == AITaskState::SCHEDULED);
+   AITaskState state = m_state;
    m_mutex.unlock();
 
-   if (save)
+   logExecution();
+
+   // Do not re-create database record if task was deleted while executing.
+   // Lock order is always AI task list lock -> AITask::m_mutex, never the reverse.
+   s_aiTasksLock.lock();
+   bool registered = s_aiTasks.contains(m_id);
+   s_aiTasksLock.unlock();
+
+   if (registered && (state == AITaskState::SCHEDULED))
       saveToDatabase();
    else
       deleteFromDatabase();
@@ -483,13 +495,19 @@ void AITask::execute()
 
 /**
  * Clear executing flag. Flag is protected by AI task list lock, so that setting it at dispatch time
- * and clearing it here are serialized with scheduler's check.
+ * and clearing it here are serialized with scheduler's check. Task can be deleted after execution
+ * checked registration but before database record was written, so registration is checked again here
+ * to remove record re-created by such execution.
  */
 void AITask::clearExecutingState()
 {
    s_aiTasksLock.lock();
    m_executing = false;
+   bool registered = s_aiTasks.contains(m_id);
    s_aiTasksLock.unlock();
+
+   if (!registered)
+      deleteFromDatabase();
 }
 
 /**
