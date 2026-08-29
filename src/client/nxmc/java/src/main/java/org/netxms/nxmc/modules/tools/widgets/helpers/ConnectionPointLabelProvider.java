@@ -88,7 +88,6 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
       COLOR_FOUND_MAC_INDIRECT.dispose();
       COLOR_FOUND_MAC_WIRELESS.dispose();
       COLOR_NOT_FOUND.dispose();
-      COLOR_HISTORICAL.dispose();
       super.dispose();
    }
 
