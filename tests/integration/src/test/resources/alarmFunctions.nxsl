@@ -15,7 +15,10 @@ assert(alarm == null);
 //Valid
 alarm = FindAlarmById(alarmId);
 assert(alarm.key == alarmKey);
+assert(alarm.relatedEvents.size > 0);
 alarm = FindAlarmByKey(alarmKey);
 assert(alarm.id == alarmId);
+assert(alarm.relatedEvents.size > 0);
 alarm = FindAlarmByKeyRegex(alarmKeyRegexp);
 assert(alarm != null);
+assert(alarm.relatedEvents.size > 0);
