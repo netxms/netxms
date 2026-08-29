@@ -340,8 +340,8 @@ void AIOperatorInstance::execute()
          m_id, m_name, FormatTimestamp(m_nextExecutionTime).cstr());
       logExecution('S', 0, 0, 0);
       saveToDatabase();
-      m_executing = false;
       m_mutex.unlock();
+      clearExecutingState();
       return;
    }
 
@@ -350,8 +350,8 @@ void AIOperatorInstance::execute()
       handleFailure("AI operator account does not have AI assistant access right", now);
       logExecution('F', 0, 0, 0);
       saveToDatabase();
-      m_executing = false;
       m_mutex.unlock();
+      clearExecutingState();
       return;
    }
 
@@ -440,16 +440,40 @@ void AIOperatorInstance::execute()
       m_consecutiveFailures = 0;
 
    logExecution(success ? 'C' : 'F', durationMs, tokenUsage.inputTokens, tokenUsage.outputTokens);
+   m_mutex.unlock();
 
-   // Do not re-create database record if instance was deleted while executing
+   // Do not re-create database record if instance was deleted while executing.
+   // Lock order is always instance list lock -> AIOperatorInstance::m_mutex, never the reverse.
    s_instancesLock.lock();
    bool registered = s_instances.contains(m_id);
    s_instancesLock.unlock();
-   if (registered)
-      saveToDatabase();
 
+   if (registered)
+   {
+      LockGuard lockGuard(m_mutex);
+      saveToDatabase();
+   }
+
+   // Executing flag is cleared only after database update is complete, so that
+   // scheduler cannot dispatch this instance again while its state is being saved
+   clearExecutingState();
+}
+
+/**
+ * Clear executing flag. Flag is protected by instance list lock, so that setting it at dispatch time
+ * and clearing it here are serialized with scheduler's check. Instance can be deleted after execution
+ * checked registration but before database record was written, so registration is checked again here
+ * to remove record re-created by such execution.
+ */
+void AIOperatorInstance::clearExecutingState()
+{
+   s_instancesLock.lock();
    m_executing = false;
-   m_mutex.unlock();
+   bool registered = s_instances.contains(m_id);
+   s_instancesLock.unlock();
+
+   if (!registered)
+      deleteFromDatabase();
 }
 
 /**
@@ -768,15 +792,13 @@ unique_ptr<SharedObjectArray<AIOperatorInstance>> NXCORE_EXPORTABLE GetAIOperato
  */
 json_t NXCORE_EXPORTABLE *GetAIOperatorInstancesAsJson()
 {
+   // Collect instance references under list lock and release it before serialization,
+   // because AIOperatorInstance::toJson acquires instance lock which can be held across database update
+   unique_ptr<SharedObjectArray<AIOperatorInstance>> instances = GetAIOperatorInstances();
+
    json_t *output = json_array();
-   s_instancesLock.lock();
-   s_instances.forEach(
-      [output] (const uint32_t& key, const shared_ptr<AIOperatorInstance>& instance) -> EnumerationCallbackResult
-      {
-         json_array_append_new(output, instance->toJson());
-         return _CONTINUE;
-      });
-   s_instancesLock.unlock();
+   for(int i = 0; i < instances->size(); i++)
+      json_array_append_new(output, instances->get(i)->toJson());
    return output;
 }
 
@@ -785,19 +807,17 @@ json_t NXCORE_EXPORTABLE *GetAIOperatorInstancesAsJson()
  */
 void FillAIOperatorListMessage(NXCPMessage *msg)
 {
-   uint32_t count = 0;
+   // Collect instance references under list lock and release it before reading instance attributes,
+   // because AIOperatorInstance::fillMessage acquires instance lock which can be held across database update
+   unique_ptr<SharedObjectArray<AIOperatorInstance>> instances = GetAIOperatorInstances();
+
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-   s_instancesLock.lock();
-   s_instances.forEach(
-      [msg, &count, &fieldId] (const uint32_t& key, const shared_ptr<AIOperatorInstance>& instance) -> EnumerationCallbackResult
-      {
-         instance->fillMessage(msg, fieldId);
-         fieldId += 30;
-         count++;
-         return _CONTINUE;
-      });
-   s_instancesLock.unlock();
-   msg->setField(VID_NUM_ELEMENTS, count);
+   for(int i = 0; i < instances->size(); i++)
+   {
+      instances->get(i)->fillMessage(msg, fieldId);
+      fieldId += 30;
+   }
+   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(instances->size()));
 }
 
 /**

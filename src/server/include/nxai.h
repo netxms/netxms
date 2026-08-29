@@ -127,7 +127,7 @@ private:
    // Runtime state (not persisted), protected by AI task list lock
    bool m_executing;
 
-   void logExecution();   // must be called with task lock held
+   void logExecution();   // must be called from executing thread with task lock released
    void clearExecutingState();
 
 public:
@@ -200,13 +200,14 @@ private:
    time_t m_modificationTime;
 
    // Runtime state (not persisted)
-   bool m_executing;
+   bool m_executing;    // protected by instance list lock
    int m_consecutiveFailures;
    StringBuffer m_lastExplanation;
 
    bool processResponse(const char *response, time_t now);
    void handleFailure(const char *error, time_t now);
    void logExecution(wchar_t status, uint32_t durationMs, int64_t inputTokens, int64_t outputTokens);
+   void clearExecutingState();
    void saveToDatabase() const;   // must be called with instance lock held
 
 public:
