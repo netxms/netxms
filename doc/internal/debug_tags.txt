@@ -147,6 +147,7 @@ nc.*		Notification channels
 
 ncd.*		Notification channel drivers
 ncd.webhook	Generic webhook notification channel driver
+ncd.xmpp	XMPP notification channel driver
 
 ndd.*           Network device drivers
 ndd.bdcom	BDCOM network device driver
@@ -321,7 +322,6 @@ winevt		Windows event collection (server side)
 winnt		WINNT platform subagent messages
 wol		Wake-on-lan functions
 
-xmpp		XMPP notifications
 
 zone.*		Zone related
 zone.proxy	Zone proxy related

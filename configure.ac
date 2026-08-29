@@ -2179,7 +2179,7 @@ if test "x$DISABLE_XMPP" != "xyes"; then
 	if test "x$HAVE_LIBSTROPHE" = "xyes"; then
 		OLD_LIBS="$LIBS"
 		LIBS="$LIBS -lstrophe"
-		AC_CHECK_FUNCS([xmpp_stanza_add_child_ex])
+		AC_CHECK_FUNCS([xmpp_stanza_add_child_ex xmpp_conn_set_cafile xmpp_conn_set_certfail_handler xmpp_conn_set_sockopt_callback xmpp_conn_send_queue_len])
 		LIBS="$OLD_LIBS"
 	fi
 fi

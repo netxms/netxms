@@ -5,9 +5,9 @@
 
 DRIVER = xmpp
 SOURCES = $(wildcard *.cpp)
-# The SDK's libstrophe provides xmpp_stanza_add_child_ex, so skip the in-tree
-# compatibility shim (autoconf would define this; the mingw build has no configure).
-DRV_CPPFLAGS = -I$(LIBSTROPHE_ROOT)/include -DHAVE_XMPP_STANZA_ADD_CHILD_EX=1
+# The SDK's libstrophe is 0.12 or later, so all optional APIs are available
+# (autoconf would define these; the mingw build has no configure).
+DRV_CPPFLAGS = -I$(LIBSTROPHE_ROOT)/include -DHAVE_XMPP_STANZA_ADD_CHILD_EX=1 -DHAVE_XMPP_CONN_SET_CAFILE=1 -DHAVE_XMPP_CONN_SET_CERTFAIL_HANDLER=1 -DHAVE_XMPP_CONN_SET_SOCKOPT_CALLBACK=1 -DHAVE_XMPP_CONN_SEND_QUEUE_LEN=1
 DRV_LIBS = $(STROPHE_LIBS)
 
 include $(TOPDIR)/src/server/ncdrivers/ncdrv-common.mk
