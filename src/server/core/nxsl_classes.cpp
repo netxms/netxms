@@ -7402,6 +7402,42 @@ NXSL_METHOD_DEFINITION(DCI, detectAnomalies)
 }
 
 /**
+ * DCI::enable(enabled) method
+ *
+ * Enables or disables data collection for this DCI.
+ * Returns true on success, false on failure (no modify access on owning object or on DCI itself,
+ * or owner/DCI already gone).
+ */
+NXSL_METHOD_DEFINITION(DCI, enable)
+{
+   int status = argv[0]->isTrue() ? ITEM_STATUS_ACTIVE : ITEM_STATUS_DISABLED;
+
+   const DCObjectInfo *info = static_cast<shared_ptr<DCObjectInfo>*>(object->getData())->get();
+   shared_ptr<DataCollectionTarget> target;
+   shared_ptr<DCObject> dci = ResolveLiveDCObjectFromNXSL(info, &target);
+   if (dci == nullptr)
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, target.get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   IntegerArray<uint32_t> dciList(1);
+   dciList.add(dci->getId());
+   unique_ptr<IntegerArray<uint32_t>> rcc = target->setItemStatus(dciList, status, vm->getUserId(), true);
+   bool success = (rcc->get(0) == RCC_SUCCESS);
+   if (success)
+      target->applyDCIChanges(false);
+   *result = vm->createValue(success);
+   return 0;
+}
+
+/**
  * Implementation of "DataPoint" class: constructor
  */
 NXSL_DataPointClass::NXSL_DataPointClass() : NXSL_Class()
@@ -7448,6 +7484,7 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 
    NXSL_REGISTER_METHOD(DCI, delete, 0);
    NXSL_REGISTER_METHOD(DCI, detectAnomalies, -1);
+   NXSL_REGISTER_METHOD(DCI, enable, 1);
    NXSL_REGISTER_METHOD(DCI, forcePoll, 0);
    NXSL_REGISTER_METHOD(DCI, generateAnomalyProfile, 0);
    NXSL_REGISTER_METHOD(DCI, getAverageValue, -1);

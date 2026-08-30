@@ -82,7 +82,18 @@ java -jar src/client/nxmc/java/target/netxms-nxmc-standalone-*.jar
 
 # Run web client in dev mode
 mvn -f src/client/nxmc/java/pom.xml jetty:run -Pweb -Dnetxms.build.disablePlatformProfile=true
+
+# Run integration tests against a running server (tests/integration also depends on
+# netxms-mobile-agent, so build it in addition to base and client libraries)
+mvn -f src/mobile-agent/java/pom.xml install
+mvn -f tests/integration/pom.xml test -Dtest=ScriptTest#testNXSLDataCollectionFunctions
 ```
+
+Maven must run online for `tests/integration` - offline mode (`-o`) cannot resolve the
+`nexus-staging-maven-plugin` build extension. Server address and credentials default to
+`127.0.0.1` and `admin`/`netxms` (see `TestConstants.java`), and the tests locate their target
+node through `TestHelper.findManagementServer()`, so the server must have a node with the
+`NC_IS_LOCAL_MGMT` capability.
 
 ## Architecture
 

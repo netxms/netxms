@@ -93,3 +93,13 @@ assert(value == 2);
 
 values = GetDCIValues(preCreatedNode, pushDci.id, startTime, time());
 assert(string(values) == string(%(2, 1, 25, 13)));
+
+//Enable and disable DCI
+dci = GetDCIObject(preCreatedNode, pushDci.id);
+assert(dci.status == DCI::ACTIVE);
+assert(dci->enable(false));
+dci = GetDCIObject(preCreatedNode, pushDci.id);
+assert(dci.status == DCI::DISABLED);
+assert(dci->enable(true));
+dci = GetDCIObject(preCreatedNode, pushDci.id);
+assert(dci.status == DCI::ACTIVE);
