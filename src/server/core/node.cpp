@@ -5261,6 +5261,44 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          modified |= MODIFY_COMMON_PROPERTIES;
       }
    }
+   if (!resolved && (g_flags & AF_SYNC_NODE_NAMES_WITH_SNMP_SYSNAME))
+   {
+      sendPollerMsg(_T("Synchronizing node name with SNMP system name\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with SNMP system name"), m_name, m_id);
+      poller->setStatus(_T("resolving name"));
+
+      TCHAR sysName[MAX_OBJECT_NAME];
+      lockProperties();
+      _tcslcpy(sysName, CHECK_NULL_EX(m_sysName), MAX_OBJECT_NAME);
+      unlockProperties();
+      Trim(sysName);
+
+      if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
+      {
+         TCHAR *p = _tcschr(sysName, _T('.'));
+         if (p != nullptr)
+            *p = 0;
+      }
+
+      if ((sysName[0] != 0) && IsValidObjectName(sysName, TRUE))
+      {
+         if (_tcscmp(sysName, m_name))
+         {
+            lockProperties();
+            _tcscpy(m_name, sysName);
+            unlockProperties();
+            modified |= MODIFY_COMMON_PROPERTIES;
+            sendPollerMsg(POLLER_INFO _T("Node name changed to %s\r\n"), sysName);
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name synchronized with SNMP system name"), m_name, m_id);
+         }
+         resolved = true;
+      }
+      else
+      {
+         sendPollerMsg(POLLER_WARNING _T("SNMP system name is not available or cannot be used as object name\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): SNMP system name is not available or cannot be used as object name"), m_name, m_id);
+      }
+   }
    if (!resolved && (g_flags & AF_RESOLVE_NODE_NAMES))
    {
       InetAddress addr = InetAddress::parse(m_name);

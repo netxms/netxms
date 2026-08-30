@@ -25,6 +25,18 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.39 to 62.40
+ */
+static bool H_UpgradeFromV39()
+{
+   CHK_EXEC(CreateConfigParam(L"Objects.Nodes.SyncNamesWithSNMPSysName", L"0",
+      L"Enable/disable synchronization of node names with SNMP system name (sysName) on each configuration poll. Applied only if synchronization with DNS is disabled or did not produce a name.",
+      nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(40));
+   return true;
+}
+
+/**
  * Upgrade from 62.38 to 62.39
  */
 static bool H_UpgradeFromV38()
@@ -1318,6 +1330,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 39, 62, 40, H_UpgradeFromV39 },
    { 38, 62, 39, H_UpgradeFromV38 },
    { 37, 62, 38, H_UpgradeFromV37 },
    { 36, 62, 37, H_UpgradeFromV36 },

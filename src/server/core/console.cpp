@@ -1419,6 +1419,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_SNMP_TRAPD));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_ZONING));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SYNC_NODE_NAMES_WITH_DNS));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SYNC_NODE_NAMES_WITH_SNMP_SYSNAME));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_CHECK_TRUSTED_OBJECTS));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_UNLIMITED_NODES));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_CONTAINER_FUNCTIONS));
