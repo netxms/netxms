@@ -1605,6 +1605,7 @@ public class NXCPCodes
    public static final long VID_MAINTENANCE_SCHEDULED = 1027;
    public static final long VID_SNMP_AGENT_COUNT = 1028;
    public static final long VID_SNMP_AGENT_NAME = 1029;
+   public static final long VID_LAST_COLLECTION_ERROR = 1030;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_SNMP_AGENT_LIST_BASE = 0x79000000L;

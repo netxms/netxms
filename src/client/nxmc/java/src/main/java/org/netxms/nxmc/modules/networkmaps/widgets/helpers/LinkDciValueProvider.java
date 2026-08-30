@@ -38,12 +38,11 @@ import org.netxms.client.maps.configs.MapDataSource;
 import org.netxms.nxmc.DisposableSingleton;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.DateFormatFactory;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DciValueFormatter;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.tools.FontTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * DCI last value provider for map links
@@ -51,9 +50,6 @@ import org.xnap.commons.i18n.I18n;
 public class LinkDciValueProvider implements DisposableSingleton
 {
    private static Logger logger = LoggerFactory.getLogger(FontTools.class);
-
-   private final I18n i18n = LocalizationHelper.getI18n(LinkDciValueProvider.class);
-
 
 	private Set<MapDCIInstance> dciIDList = Collections.synchronizedSet(new HashSet<MapDCIInstance>());
 	private Map<Long, DciValue> cachedDciValues = new HashMap<Long, DciValue>();
@@ -262,7 +258,7 @@ public class LinkDciValueProvider implements DisposableSingleton
          
          DciValue v = getDciLastValue(dciList[i].getDciId());
          if (v != null)
-            sb.append(v.isDataCollectionError() ? i18n.tr("<< ERROR >>") : DciValueFormatter.format(v, dciList[i].getFormatString(), timeFormatter));
+            sb.append(v.isDataCollectionError() ? DataCollectionDisplayInfo.getErrorText(v.getLastCollectionError()) : DciValueFormatter.format(v, dciList[i].getFormatString(), timeFormatter));
       }
       return sb.toString();
    }
@@ -279,7 +275,7 @@ public class LinkDciValueProvider implements DisposableSingleton
       {
          DciValue v = getDciLastValue(dciList.get(i).getDciId());
          if (v != null)
-            sb.append(v.isDataCollectionError() ? i18n.tr("<< ERROR >>") : DciValueFormatter.format(v, dciList.get(i).getFormatString(), timeFormatter));
+            sb.append(v.isDataCollectionError() ? DataCollectionDisplayInfo.getErrorText(v.getLastCollectionError()) : DciValueFormatter.format(v, dciList.get(i).getFormatString(), timeFormatter));
          if (++i != dciList.size())
             sb.append('\n');
       }

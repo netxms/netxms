@@ -368,6 +368,7 @@ protected:
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
    uint32_t m_errorCount;        // Consequtive collection error count
+   BYTE m_lastCollectionError;   // Reason code of the last collection error (DCE_SUCCESS if last poll was successful)
    uint32_t m_resourceId;	   	// Associated cluster resource ID
    uint32_t m_sourceNode;        // Source node ID or 0 to disable
 	uint16_t m_snmpPort;          // Custom SNMP port or 0 for node default
@@ -435,10 +436,10 @@ public:
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStatements);
    virtual void loadCache() = 0;
 
-   virtual void processNewError(bool noInstance, Timestamp timestamp);
-   void processNewError(bool noInstance)
+   virtual void processNewError(DataCollectionError error, Timestamp timestamp);
+   void processNewError(DataCollectionError error)
    {
-      processNewError(noInstance, Timestamp::now());
+      processNewError(error, Timestamp::now());
    }
 
    virtual void saveStateBeforeMaintenance() = 0;
@@ -472,6 +473,7 @@ public:
    Timestamp getLastPollTime() const { return m_lastPollTime; }
    Timestamp getLastValueTimestamp() const { return m_lastValueTimestamp; }
    uint32_t getErrorCount() const { return m_errorCount; }
+   DataCollectionError getLastCollectionError() const { return static_cast<DataCollectionError>(m_lastCollectionError); }
    bool isInErrorState() const { return (m_status != ITEM_STATUS_ACTIVE) || (m_errorCount > 0); }
 	uint16_t getSnmpPort() const { return m_snmpPort; }
    SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
@@ -621,7 +623,7 @@ protected:
    int32_t m_dailyRetention;           // Per-DCI daily aggregate retention override (days), 0 = use default
    int64_t m_aggregationWatermark;     // Earliest bucket start (ms) not yet rolled up; non-TSDB only
 
-   bool transform(ItemValue &value, int64_t elapsedTime);
+   DataCollectionError transform(ItemValue &value, int64_t elapsedTime);
    void checkThresholds(ItemValue &value, const shared_ptr<DCObject>& originalDci);
    uint32_t calculateRequiredCacheSize(const NetObj& owner) const;
    void updateCacheSizeInternal(bool allowLoad);
@@ -716,10 +718,10 @@ public:
 
 	uint64_t getCacheMemoryUsage() const;
 
-   bool processNewValue(Timestamp timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints);
+   DataCollectionError processNewValue(Timestamp timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints);
    void feedValueFromPeer(Timestamp timestamp, const wchar_t *rawValue, const wchar_t *transformedValue, bool storedInDb, bool anomalyDetected);
 
-   virtual void processNewError(bool noInstance, Timestamp timestamp) override;
+   virtual void processNewError(DataCollectionError error, Timestamp timestamp) override;
    virtual void saveStateBeforeMaintenance() override;
    virtual void generateEventsAfterMaintenance() override;
 
@@ -971,7 +973,7 @@ protected:
    ObjectArray<DCTableThreshold> *m_thresholds;
 	shared_ptr<Table> m_lastValue;
 
-   bool transform(const shared_ptr<Table>& value);
+   DataCollectionError transform(const shared_ptr<Table>& value);
    void checkThresholds(Table *value);
 
    bool loadThresholds(DB_HANDLE hdb);
@@ -999,7 +1001,7 @@ public:
    virtual void deleteFromDatabase() override;
    virtual void loadCache() override;
 
-   virtual void processNewError(bool noInstance, Timestamp timestamp) override;
+   virtual void processNewError(DataCollectionError error, Timestamp timestamp) override;
    virtual void saveStateBeforeMaintenance() override;
    virtual void generateEventsAfterMaintenance() override;
 
@@ -1015,7 +1017,7 @@ public:
    virtual json_t *createExportRecord() const override;
    virtual uint32_t updateFromJSON(json_t *json, bool create) override;
 
-   bool processNewValue(Timestamp timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints);
+   DataCollectionError processNewValue(Timestamp timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints);
 
    virtual void fillLastValueSummaryMessage(NXCPMessage *bsg, uint32_t baseId,const TCHAR *column = nullptr, const TCHAR *instance = nullptr) override;
    virtual void fillLastValueMessage(NXCPMessage *msg) override;
@@ -1130,6 +1132,7 @@ struct ScoredDciValue
 extern uuid g_nxslExitDCError;
 extern uuid g_nxslExitDCNotSupported;
 extern uuid g_nxslExitDCNoSuchInstance;
+extern uuid g_nxslExitDCInvalidData;
 
 /**
  * Convert NXSL exit code GUID to data collection status code
@@ -1142,6 +1145,8 @@ static inline DataCollectionError NXSLExitCodeToDCE(const uuid& exitCode, DataCo
       return DCE_NOT_SUPPORTED;
    if (exitCode.equals(g_nxslExitDCError))
       return DCE_COLLECTION_ERROR;
+   if (exitCode.equals(g_nxslExitDCInvalidData))
+      return DCE_INVALID_DATA;
    return defaultValue;
 }
 
@@ -1164,6 +1169,8 @@ static inline uint32_t RCCFromDCIError(DataCollectionError error)
          return RCC_AGENT_ERROR;
       case DCE_ACCESS_DENIED:
          return RCC_ACCESS_DENIED;
+      case DCE_INVALID_DATA:
+         return RCC_INVALID_DATA;
       default:
          return RCC_SYSTEM_FAILURE;
    }

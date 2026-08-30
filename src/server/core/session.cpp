@@ -5874,6 +5874,7 @@ bool ClientSession::getCollectedDataFromDB(const NXCPMessage& request, NXCPMessa
       response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
       response->setField(VID_DCI_STATUS, static_cast<uint16_t>(dci->getStatus()));
       response->setField(VID_ERROR_COUNT, dci->getErrorCount());
+      response->setField(VID_LAST_COLLECTION_ERROR, static_cast<uint16_t>(dci->getLastCollectionError()));
       response->setField(VID_DCI_TIER_USED, static_cast<int16_t>(DCI_TIER_RAW));
       sendMessage(response);
 
@@ -6026,6 +6027,7 @@ read_from_db:
 	      response->setField(VID_STORE_CHANGES_ONLY, dci->isStoreChangesOnly());
 	      response->setField(VID_DCI_STATUS, static_cast<uint16_t>(dci->getStatus()));
 	      response->setField(VID_ERROR_COUNT, dci->getErrorCount());
+	      response->setField(VID_LAST_COLLECTION_ERROR, static_cast<uint16_t>(dci->getLastCollectionError()));
 	      response->setField(VID_DCI_TIER_USED, static_cast<int16_t>(resolvedTier));
 	      sendMessage(response);
 

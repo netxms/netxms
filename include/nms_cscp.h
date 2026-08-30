@@ -1802,6 +1802,7 @@ __PACK_END__
 #define VID_MAINTENANCE_SCHEDULED   ((uint32_t)1027)
 #define VID_SNMP_AGENT_COUNT        ((uint32_t)1028)
 #define VID_SNMP_AGENT_NAME         ((uint32_t)1029)
+#define VID_LAST_COLLECTION_ERROR   ((uint32_t)1030)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

@@ -1174,19 +1174,19 @@ bool DataCollectionTarget::processNewDCValue(const shared_ptr<DCObject>& dcObjec
       return true;  // duplicate timestamp and/or value, silently ignore it
 
    bool updateStatus;
-	bool success = (dcObject->getType() == DCO_TYPE_ITEM) ?
+	DataCollectionError error = (dcObject->getType() == DCO_TYPE_ITEM) ?
 	         static_cast<DCItem&>(*dcObject).processNewValue(timestamp, itemValue, &updateStatus, allowPastDataPoints) :
 	         static_cast<DCTable&>(*dcObject).processNewValue(timestamp, tableValue, &updateStatus, allowPastDataPoints);
-	if (!success)
+	if (error != DCE_SUCCESS)
 	{
       // value processing failed, convert to data collection error
-      dcObject->processNewError(false);
+      dcObject->processNewError(error);
 	}
 	if (updateStatus)
 	{
       calculateCompoundStatus(false);
    }
-   return success;
+   return error == DCE_SUCCESS;
 }
 
 /**

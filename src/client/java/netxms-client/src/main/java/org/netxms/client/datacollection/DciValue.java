@@ -20,6 +20,7 @@ package org.netxms.client.datacollection;
 
 import java.util.Date;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataCollectionError;
 import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
@@ -46,6 +47,7 @@ public abstract class DciValue
 	protected DataType dataType;
    protected DataCollectionObjectStatus status;
    protected int errorCount;
+   protected DataCollectionError lastCollectionError = DataCollectionError.SUCCESS;
    protected int dcObjectType; // Data collection object type (item, table, etc.)
    protected Date timestamp;
    protected Threshold activeThreshold;
@@ -116,6 +118,7 @@ public abstract class DciValue
       userTag = msg.getFieldAsString(fieldId++);
       thresholdDisableEndTime = msg.getFieldAsInt64(fieldId++);
       mappingTableId = msg.getFieldAsInt32(fieldId++);
+      lastCollectionError = DataCollectionError.getByValue(msg.getFieldAsInt32(fieldId++));
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
@@ -269,6 +272,16 @@ public abstract class DciValue
 	{
 		return errorCount;
 	}
+
+   /**
+    * Get reason of the last data collection error. Meaningful only if error count is not 0.
+    *
+    * @return reason of the last data collection error
+    */
+   public DataCollectionError getLastCollectionError()
+   {
+      return lastCollectionError;
+   }
 
 	/**
 	 * @return the templateDciId

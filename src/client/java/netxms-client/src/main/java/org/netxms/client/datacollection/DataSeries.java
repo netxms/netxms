@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.DataCollectionError;
 import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.DciTier;
@@ -49,6 +50,7 @@ public class DataSeries
    private DciTier tierServed = DciTier.RAW;
    private DataCollectionObjectStatus dciStatus = DataCollectionObjectStatus.ACTIVE;
    private int errorCount = 0;
+   private DataCollectionError lastCollectionError = DataCollectionError.SUCCESS;
    private int mappingTableId = 0;
 
    /**
@@ -110,6 +112,7 @@ public class DataSeries
       this.tierServed = src.tierServed;
       this.dciStatus = src.dciStatus;
       this.errorCount = src.errorCount;
+      this.lastCollectionError = src.lastCollectionError;
       this.mappingTableId = src.mappingTableId;
    }
 
@@ -129,6 +132,7 @@ public class DataSeries
       storeChangesOnly = msg.getFieldAsBoolean(NXCPCodes.VID_STORE_CHANGES_ONLY);
       dciStatus = DataCollectionObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS));
       errorCount = msg.getFieldAsInt32(NXCPCodes.VID_ERROR_COUNT);
+      lastCollectionError = DataCollectionError.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_LAST_COLLECTION_ERROR));
       // Legacy servers that don't know about tier dispatch omit the field — default to RAW
       // rather than the AUTO value (0), which is a request-side sentinel and never served.
       tierServed = msg.isFieldPresent(NXCPCodes.VID_DCI_TIER_USED)
@@ -499,6 +503,16 @@ public class DataSeries
    public int getErrorCount()
    {
       return errorCount;
+   }
+
+   /**
+    * Get reason of the last data collection error. Meaningful only if error count is not 0.
+    *
+    * @return reason of the last data collection error
+    */
+   public DataCollectionError getLastCollectionError()
+   {
+      return lastCollectionError;
    }
 
    /**

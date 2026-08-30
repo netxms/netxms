@@ -213,24 +213,26 @@ enum DataCollectionError
    DCE_IGNORE            = 3,
    DCE_NO_SUCH_INSTANCE  = 4,
    DCE_COLLECTION_ERROR  = 5,
-   DCE_ACCESS_DENIED     = 6
+   DCE_ACCESS_DENIED     = 6,
+   DCE_INVALID_DATA      = 7
 };
 
 /**
- * Get textual representation of DataCollectionError value
+ * Get stable symbolic name of DataCollectionError value for use in external APIs
  */
-static inline const wchar_t *DataCollectionErrorToText(DataCollectionError e)
+static inline const char *DataCollectionErrorName(DataCollectionError e)
 {
    switch(e)
    {
-      case DCE_SUCCESS: return L"Success";
-      case DCE_COMM_ERROR: return L"Communication error";
-      case DCE_NOT_SUPPORTED: return L"Not supported";
-      case DCE_IGNORE: return L"Ignore";
-      case DCE_NO_SUCH_INSTANCE: return L"No such instance";
-      case DCE_COLLECTION_ERROR: return L"Collection error";
-      case DCE_ACCESS_DENIED: return L"Access denied";
-      default: return L"Unknown error";
+      case DCE_SUCCESS: return "SUCCESS";
+      case DCE_COMM_ERROR: return "COMM_ERROR";
+      case DCE_NOT_SUPPORTED: return "NOT_SUPPORTED";
+      case DCE_IGNORE: return "IGNORE";
+      case DCE_NO_SUCH_INSTANCE: return "NO_SUCH_INSTANCE";
+      case DCE_COLLECTION_ERROR: return "COLLECTION_ERROR";
+      case DCE_ACCESS_DENIED: return "ACCESS_DENIED";
+      case DCE_INVALID_DATA: return "INVALID_DATA";
+      default: return "UNKNOWN";
    }
 }
 

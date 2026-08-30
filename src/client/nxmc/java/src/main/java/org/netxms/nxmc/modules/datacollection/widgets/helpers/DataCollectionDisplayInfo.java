@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
+import org.netxms.client.constants.DataCollectionError;
 import org.netxms.client.constants.DataType;
 import org.netxms.nxmc.localization.LocalizationHelper;
 
@@ -43,6 +44,31 @@ public class DataCollectionDisplayInfo
 		dciDataTypes[DataType.STRING.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("String");
 		dciDataTypes[DataType.NULL.getValue()] = LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("Null");
 	}
+
+   /**
+    * Get text to be displayed instead of DCI value when data collection failed.
+    *
+    * @param error reason of the last data collection error
+    * @return text to be displayed instead of DCI value
+    */
+   public static String getErrorText(DataCollectionError error)
+   {
+      switch(error)
+      {
+         case ACCESS_DENIED:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<< ACCESS DENIED >>");
+         case COMM_ERROR:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<< COMM ERROR >>");
+         case INVALID_DATA:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<< INVALID DATA >>");
+         case NO_SUCH_INSTANCE:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<< NO SUCH INSTANCE >>");
+         case NOT_SUPPORTED:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<< NOT SUPPORTED >>");
+         default:
+            return LocalizationHelper.getI18n(DataCollectionDisplayInfo.class).tr("<< ERROR >>");
+      }
+   }
 
 	/**
 	 * Get name for given data type

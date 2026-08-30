@@ -198,6 +198,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
 	m_flags = 0;
    m_stateFlags = 0;
    m_errorCount = 0;
+   m_lastCollectionError = DCE_SUCCESS;
 	m_resourceId = 0;
 	m_sourceNode = 0;
 	m_snmpPort = 0;	// use default
@@ -243,6 +244,7 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_nextPollTime = shadowCopy ? src->m_nextPollTime : 0;
    m_tLastCheck = shadowCopy ? src->m_tLastCheck : 0;
    m_errorCount = shadowCopy ? src->m_errorCount : 0;
+   m_lastCollectionError = shadowCopy ? src->m_lastCollectionError : DCE_SUCCESS;
 	m_flags = src->m_flags;
    m_stateFlags = src->m_stateFlags;
 	m_resourceId = src->m_resourceId;
@@ -291,6 +293,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_schedules = nullptr;
    m_tLastCheck = 0;
    m_errorCount = 0;
+   m_lastCollectionError = DCE_SUCCESS;
    m_resourceId = 0;
    m_sourceNode = 0;
    m_snmpPort = 0;	// use default
@@ -356,6 +359,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_nextPollTime = 0;
    m_tLastCheck = 0;
    m_errorCount = 0;
+   m_lastCollectionError = DCE_SUCCESS;
    m_resourceId = 0;
    m_sourceNode = 0;
    ConfigEntry *sourceNodeEntry = config->findEntry(_T("sourceNode"));
@@ -452,6 +456,7 @@ DCObject::DCObject(json_t *json, const shared_ptr<DataCollectionOwner>& owner, I
    m_nextPollTime = 0;
    m_tLastCheck = 0;
    m_errorCount = 0;
+   m_lastCollectionError = DCE_SUCCESS;
    m_resourceId = 0;
    m_sourceNode = 0;
    json_t *sourceNodeObj = json_object_get(json, "sourceNode");
@@ -1347,7 +1352,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 /**
  * Process new data collection error
  */
-void DCObject::processNewError(bool noInstance, Timestamp timestamp)
+void DCObject::processNewError(DataCollectionError error, Timestamp timestamp)
 {
 }
 

@@ -47,10 +47,9 @@ import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.nxmc.localization.DateFormatFactory;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.tools.ColorConverter;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Chart legend
@@ -60,7 +59,6 @@ public class ChartLegend extends Composite
    private static final int SYMBOL_WIDTH = 12;
    private static final int EXTENDED_LEGEND_DATA_SPACING = 6;
 
-   private final I18n i18n = LocalizationHelper.getI18n(ChartLegend.class);
    private final Color defaultForeground = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
 
    private Chart chart;
@@ -361,7 +359,7 @@ public class ChartLegend extends Composite
                .setDefaultForMultipliers(useMultipliers);
          TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
          boolean error = s.isDataCollectionError();
-         labels[0].setText(error ? i18n.tr("<< ERROR >>") : formatter.format(s.getCurrentValueAsString(), timeFormatter));
+         labels[0].setText(error ? DataCollectionDisplayInfo.getErrorText(s.getLastCollectionError()) : formatter.format(s.getCurrentValueAsString(), timeFormatter));
          if (chart.getType() == ChartType.LINE)
          {
             labels[1].setText(formatter.format(Double.toString(s.getMinValue()), timeFormatter));

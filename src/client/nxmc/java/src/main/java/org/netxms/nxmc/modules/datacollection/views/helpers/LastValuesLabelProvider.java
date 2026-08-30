@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.DataCollectionError;
 import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
@@ -38,6 +39,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DciValueFormatter;
 import org.netxms.nxmc.modules.datacollection.propertypages.Thresholds;
 import org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdLabelProvider;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -130,7 +132,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
             return DateFormatFactory.getDateTimeFormat().format(dciValue.getTimestamp());
 			case BaseDataCollectionView.LV_COLUMN_VALUE:
 				if (showErrors && dciValue.getErrorCount() > 0)
-               return i18n.tr("<< ERROR >>");
+               return DataCollectionDisplayInfo.getErrorText(dciValue.getLastCollectionError());
 				if (dciValue.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
                return i18n.tr("<< TABLE >>");
             return DciValueFormatter.format(dciValue, useMultipliers, DateFormatFactory.getTimeFormatter());
@@ -223,8 +225,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	{
       if (((DciValue)element).getStatus() == DataCollectionObjectStatus.DISABLED)
 			return StatusDisplayInfo.getStatusColor(ObjectStatus.UNMANAGED);
-		if (showErrors && ((DciValue)element).getErrorCount() > 0)
-			return StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL);
+      if (showErrors && (((DciValue)element).getErrorCount() > 0))
+         return StatusDisplayInfo.getStatusColor((((DciValue)element).getLastCollectionError() == DataCollectionError.INVALID_DATA) ? ObjectStatus.MAJOR : ObjectStatus.CRITICAL);
       if (((DciValue)element).isAnomalyDetected())
          return StatusDisplayInfo.getStatusColor(ObjectStatus.MAJOR);
 		return null;

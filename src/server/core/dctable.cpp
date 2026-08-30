@@ -270,14 +270,14 @@ bool DCTable::deleteEntry(Timestamp timestamp)
 }
 
 /**
- * Process new collected value. Should return true on success.
- * If returns false, current poll result will be converted into data collection error.
+ * Process new collected value. Any returned value other than DCE_SUCCESS will be converted
+ * into data collection error with that error as a reason code.
  * If allowPastDataPoints is false, data points with timestamp older than last stored one
  * will be rejected.
  *
- * @return true on success
+ * @return DCE_SUCCESS on success or reason code on failure
  */
-bool DCTable::processNewValue(Timestamp timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints)
+DataCollectionError DCTable::processNewValue(Timestamp timestamp, const shared_ptr<Table>& value, bool *updateStatus, bool allowPastDataPoints)
 {
    *updateStatus = false;
    lock();
@@ -288,14 +288,14 @@ bool DCTable::processNewValue(Timestamp timestamp, const shared_ptr<Table>& valu
    if (owner == nullptr)
    {
       unlock();
-      return false;
+      return DCE_COLLECTION_ERROR;
    }
 
    if (!allowPastDataPoints && (timestamp < m_lastValueTimestamp))
    {
       // Old value, ignore
       unlock();
-      return false;
+      return DCE_COLLECTION_ERROR;
    }
 
    // Transform input value
@@ -303,14 +303,16 @@ bool DCTable::processNewValue(Timestamp timestamp, const shared_ptr<Table>& valu
    // should not be used on aggregation
    if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform(value))
+      DataCollectionError error = transform(value);
+      if (error != DCE_SUCCESS)
       {
          unlock();
-         return false;
+         return error;
       }
    }
 
    m_errorCount = 0;
+   m_lastCollectionError = DCE_SUCCESS;
 	m_lastValue = value;
 	m_lastValue->setTitle(m_description);
    m_lastValue->setSource(m_source);
@@ -331,7 +333,7 @@ bool DCTable::processNewValue(Timestamp timestamp, const shared_ptr<Table>& valu
       if (!DBBegin(hdb))
       {
    	   DBConnectionPoolReleaseConnection(hdb);
-         return true;
+         return DCE_SUCCESS;
       }
 
       bool success = false;
@@ -391,21 +393,21 @@ bool DCTable::processNewValue(Timestamp timestamp, const shared_ptr<Table>& valu
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, timestamp, value.get());
 
-   return true;
+   return DCE_SUCCESS;
 }
 
 /**
  * Transform received value. Expected to be called while object is locked.
  */
-bool DCTable::transform(const shared_ptr<Table>& value)
+DataCollectionError DCTable::transform(const shared_ptr<Table>& value)
 {
    if (m_transformationScript == nullptr)
    {
       // Return error if transformation script is present but cannot be compiled
-      return m_transformationScriptSource.isNull() || IsBlankString(m_transformationScriptSource);
+      return (m_transformationScriptSource.isNull() || IsBlankString(m_transformationScriptSource)) ? DCE_SUCCESS : DCE_COLLECTION_ERROR;
    }
 
-   bool success = false;
+   DataCollectionError error = DCE_COLLECTION_ERROR;
    ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript.get(), m_owner.lock(), createDescriptorInternal());
    if (vm.isValid())
    {
@@ -414,12 +416,11 @@ bool DCTable::transform(const shared_ptr<Table>& value)
 
       // remove lock from DCI for script execution to avoid deadlocks
       unlock();
-      success = vm->run(1, &nxslValue);
+      bool success = vm->run(1, &nxslValue);
       lock();
       if (success)
       {
-         if (vm->getResult()->isGuid() && (NXSLExitCodeToDCE(vm->getResult()->getValueAsGuid()) != DCE_SUCCESS))
-            success = false;
+         error = vm->getResult()->isGuid() ? NXSLExitCodeToDCE(vm->getResult()->getValueAsGuid()) : DCE_SUCCESS;
       }
       else
       {
@@ -453,7 +454,7 @@ bool DCTable::transform(const shared_ptr<Table>& value)
          m_lastScriptErrorReport = now;
       }
    }
-   return success;
+   return error;
 }
 
 /**
@@ -532,9 +533,10 @@ void DCTable::checkThresholds(Table *value)
 /**
  * Process new data collection error
  */
-void DCTable::processNewError(bool noInstance, Timestamp timestamp)
+void DCTable::processNewError(DataCollectionError error, Timestamp timestamp)
 {
 	m_errorCount++;
+	m_lastCollectionError = static_cast<BYTE>(error);
 }
 
 /**
@@ -927,6 +929,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, m_userTag);
    msg->setFieldFromTime(fieldId++, m_thresholdDisableEndTime);
    msg->setField(fieldId++, static_cast<uint32_t>(0));   // mapping_table_id placeholder; tables don't carry one
+   msg->setField(fieldId++, static_cast<uint16_t>(m_lastCollectionError));
 
    if (m_thresholds != nullptr)
    {

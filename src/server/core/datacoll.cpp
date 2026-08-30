@@ -57,6 +57,7 @@ uint32_t g_averageDCIQueuingTime = 0;
 uuid g_nxslExitDCError = uuid::parseA("8c640b20-ee7d-4a5b-9e34-eebbf868302a");
 uuid g_nxslExitDCNotSupported = uuid::parseA("6e3282cc-84c5-4f5b-b354-b08691d8404f");
 uuid g_nxslExitDCNoSuchInstance = uuid::parseA("0043db2a-17f0-464c-83ee-bf0ac6e8cfb4");
+uuid g_nxslExitDCInvalidData = uuid::parseA("b3f6f73c-8a33-45b0-8e6f-f3c2cce4e949");
 
 /**
  * Collect data for DCI
@@ -418,17 +419,14 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
                static_cast<DataCollectionTarget*>(dcObject->getOwner().get())->processNewDCValue(dcObject, currTime, value, table, false);
                break;
             case DCE_COLLECTION_ERROR:
-               if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-                  dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-               dcObject->processNewError(false);
-               break;
+            case DCE_INVALID_DATA:
             case DCE_NO_SUCH_INSTANCE:
                if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                   dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-               dcObject->processNewError(true);
+               dcObject->processNewError(static_cast<DataCollectionError>(error));
                break;
             case DCE_COMM_ERROR:
-               dcObject->processNewError(false);
+               dcObject->processNewError(static_cast<DataCollectionError>(error));
                break;
             case DCE_NOT_SUPPORTED:
                // Change item's status

@@ -14870,6 +14870,19 @@ components:
         errorCount:
           type: integer
           description: Number of consecutive collection errors
+        lastCollectionError:
+          type: string
+          description: Reason of the last data collection error (`SUCCESS` if last collection attempt was successful)
+          enum:
+            - SUCCESS
+            - COMM_ERROR
+            - NOT_SUPPORTED
+            - IGNORE
+            - NO_SUCH_INSTANCE
+            - COLLECTION_ERROR
+            - ACCESS_DENIED
+            - INVALID_DATA
+            - UNKNOWN
         templateItemId:
           type: integer
           description: Template item ID if DCI is created from template

@@ -344,6 +344,7 @@ std::string F_GetMetricDetails(json_t *arguments, uint32_t userId)
    if (!dco->getLastValueTimestamp().isNull())
       json_object_set_new(output, "lastValueTimestamp", dco->getLastValueTimestamp().asJson());
    json_object_set_new(output, "errorCount", json_integer(dco->getErrorCount()));
+   json_object_set_new(output, "lastCollectionError", json_string(DataCollectionErrorName(dco->getLastCollectionError())));
 
    // DCItem-specific fields
    if (dco->getType() == DCO_TYPE_ITEM)

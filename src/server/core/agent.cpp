@@ -911,15 +911,15 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       case ERR_UNSUPPORTED_METRIC:
          if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
             dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-         dcObject->processNewError(false, t);
+         dcObject->processNewError(DCE_NOT_SUPPORTED, t);
          break;
       case ERR_NO_SUCH_INSTANCE:
          if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
             dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-         dcObject->processNewError(true, t);
+         dcObject->processNewError(DCE_NO_SUCH_INSTANCE, t);
          break;
       case ERR_INTERNAL_ERROR:
-         dcObject->processNewError(true, t);
+         dcObject->processNewError(DCE_COLLECTION_ERROR, t);
          break;
    }
 
@@ -1063,15 +1063,15 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
          case ERR_UNSUPPORTED_METRIC:
             if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-            dcObject->processNewError(false, t);
+            dcObject->processNewError(DCE_NOT_SUPPORTED, t);
             break;
          case ERR_NO_SUCH_INSTANCE:
             if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
-            dcObject->processNewError(true, t);
+            dcObject->processNewError(DCE_NO_SUCH_INSTANCE, t);
             break;
          case ERR_INTERNAL_ERROR:
-            dcObject->processNewError(true, t);
+            dcObject->processNewError(DCE_COLLECTION_ERROR, t);
             break;
       }
 

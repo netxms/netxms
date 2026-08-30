@@ -32,6 +32,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -165,7 +166,7 @@ public class LastValuesComparator extends ViewerComparator
 	   if (showErrors && (dci1.getErrorCount() > 0))
 	   {
 	      dt1 = DataType.STRING;
-         v1 = i18n.tr("<< ERROR >>");
+         v1 = DataCollectionDisplayInfo.getErrorText(dci1.getLastCollectionError());
 	   }
 	   else if (dci1.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
 	   {
@@ -181,7 +182,7 @@ public class LastValuesComparator extends ViewerComparator
       if (showErrors && (dci2.getErrorCount() > 0))
       {
          dt2 = DataType.STRING;
-         v2 = i18n.tr("<< ERROR >>");
+         v2 = DataCollectionDisplayInfo.getErrorText(dci2.getLastCollectionError());
       }
       else if (dci2.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
       {

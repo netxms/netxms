@@ -1200,14 +1200,14 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 }
 
 /**
- * Process new collected value. Should return true on success.
- * If returns false, current poll result will be converted into data collection error.
+ * Process new collected value. Any returned value other than DCE_SUCCESS will be converted
+ * into data collection error with that error as a reason code.
  * If allowPastDataPoints is false, data points with timestamp older than last stored one
  * will be rejected.
  *
- * @return true on success
+ * @return DCE_SUCCESS on success or reason code on failure
  */
-bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints)
+DataCollectionError DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints)
 {
    ItemValue rawValue, *pValue;
 
@@ -1221,14 +1221,14 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
    if (owner == nullptr)
    {
       unlock();
-      return false;
+      return DCE_COLLECTION_ERROR;
    }
 
    if (!allowPastDataPoints && (timestamp < m_lastValueTimestamp))
    {
       // Old value, ignore
       unlock();
-      return false;
+      return DCE_COLLECTION_ERROR;
    }
 
    // Create new ItemValue object and transform it as needed
@@ -1242,15 +1242,17 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
    // should not be used on aggregation
    if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform(*pValue, (timestamp > m_prevValueTimeStamp) ? (timestamp - m_prevValueTimeStamp) : 0))
+      DataCollectionError error = transform(*pValue, (timestamp > m_prevValueTimeStamp) ? (timestamp - m_prevValueTimeStamp) : 0);
+      if (error != DCE_SUCCESS)
       {
          unlock();
          delete pValue;
-         return false;
+         return error;
       }
    }
 
    m_errorCount = 0;
+   m_lastCollectionError = DCE_SUCCESS;
 
    if (isStatusDCO() && (timestamp > m_prevValueTimeStamp) && ((m_cacheSize == 0) || !m_cacheLoaded || (pValue->getUInt32() != m_ppValueCache[0]->getUInt32())))
    {
@@ -1448,7 +1450,7 @@ bool DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, 
 
    unlock();
 
-   return true;
+   return DCE_SUCCESS;
 }
 
 /**
@@ -1516,13 +1518,14 @@ void DCItem::feedValueFromPeer(Timestamp timestamp, const wchar_t *rawValue, con
 /**
  * Process new data collection error
  */
-void DCItem::processNewError(bool noInstance, Timestamp timestamp)
+void DCItem::processNewError(DataCollectionError error, Timestamp timestamp)
 {
    lock();
 
    clearInterfaceUtilization();
 
    m_errorCount++;
+   m_lastCollectionError = static_cast<BYTE>(error);
 
    bool hasActiveThresholds = false;
    bool thresholdDeactivated = false;
@@ -1728,10 +1731,10 @@ static inline void ConvertValue(ItemValue& value, int destinationDataType, int s
 /**
  * Transform received value. Assuming that DCI object is locked.
  */
-bool DCItem::transform(ItemValue &value, int64_t elapsedTime)
+DataCollectionError DCItem::transform(ItemValue &value, int64_t elapsedTime)
 {
    if ((m_transformationScript == nullptr) && !m_transformationScriptSource.isNull() && !IsBlankString(m_transformationScriptSource))
-      return false;  // Transformation script present but cannot be compiled
+      return DCE_COLLECTION_ERROR;  // Transformation script present but cannot be compiled
 
    bool success = true;
    int deltaDataType = m_dataType;
@@ -1911,8 +1914,9 @@ bool DCItem::transform(ItemValue &value, int64_t elapsedTime)
    }
 
    if (!success)
-      return false;
+      return DCE_COLLECTION_ERROR;
 
+   DataCollectionError error = DCE_SUCCESS;
    if (m_transformationScript != nullptr)
    {
       ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript.get(), m_owner.lock(), createDescriptorInternal());
@@ -1933,10 +1937,9 @@ bool DCItem::transform(ItemValue &value, int64_t elapsedTime)
             if (nxslValue->isGuid())
             {
                // Check for special return codes
-               if (NXSLExitCodeToDCE(nxslValue->getValueAsGuid()) != DCE_SUCCESS)
-                  success = false;
+               error = NXSLExitCodeToDCE(nxslValue->getValueAsGuid());
             }
-            if (!nxslValue->isNull() && success)
+            if (!nxslValue->isNull() && (error == DCE_SUCCESS))
             {
                switch(getTransformedDataType())
                {
@@ -1967,11 +1970,13 @@ bool DCItem::transform(ItemValue &value, int64_t elapsedTime)
          }
          else if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
+            error = DCE_COLLECTION_ERROR;
             nxlog_debug_tag(DEBUG_TAG_DC_TRANSFORM, 6, L"Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted",
                       m_description.cstr(), m_id, getOwnerName(), getOwnerId());
          }
          else
          {
+            error = DCE_COLLECTION_ERROR;
             time_t now = time(nullptr);
             if (m_lastScriptErrorReport + ConfigReadInt(L"DataCollection.ScriptErrorReportInterval", 86400) < now)
             {
@@ -1990,6 +1995,7 @@ bool DCItem::transform(ItemValue &value, int64_t elapsedTime)
       }
       else
       {
+         error = DCE_COLLECTION_ERROR;
          time_t now = time(nullptr);
          if (m_lastScriptErrorReport + ConfigReadInt(L"DataCollection.ScriptErrorReportInterval", 86400) < now)
          {
@@ -1998,14 +2004,13 @@ bool DCItem::transform(ItemValue &value, int64_t elapsedTime)
                      getOwnerName(), getOwnerId(), m_name.cstr(), m_id);
             m_lastScriptErrorReport = now;
          }
-         success = false;
       }
    }
    else if (getTransformedDataType() != deltaDataType)
    {
       ConvertValue(value, getTransformedDataType(), deltaDataType);
    }
-   return success;
+   return error;
 }
 
 /**
@@ -2431,6 +2436,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    msg->setField(baseId++, m_userTag);
    msg->setFieldFromTime(baseId++, m_thresholdDisableEndTime);
    msg->setField(baseId++, m_mappingTableId);
+   msg->setField(baseId++, static_cast<uint16_t>(m_lastCollectionError));
 
 	if (m_thresholds != nullptr)
 	{
@@ -2506,6 +2512,7 @@ json_t *DCItem::lastValueToJSON()
    json_object_set_new(data, "status", json_integer(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED));
    json_object_set_new(data, "type", json_integer(getType()));
    json_object_set_new(data, "errorCount", json_integer(m_errorCount));
+   json_object_set_new(data, "lastCollectionError", json_string(DataCollectionErrorName(static_cast<DataCollectionError>(m_lastCollectionError))));
    json_object_set_new(data, "templateItemId", json_integer(m_templateItemId));
    json_object_set_new(data, "unitName", json_string_t(m_unitName));
    json_object_set_new(data, "multiplier", json_integer(m_multiplier));
@@ -3531,7 +3538,7 @@ void DCItem::recalculateValue(ItemValue &value)
    auto owner = m_owner.lock();
    if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform(value, (value.getTimeStamp() > m_prevValueTimeStamp) ? (value.getTimeStamp() - m_prevValueTimeStamp) : 0))
+      if (transform(value, (value.getTimeStamp() > m_prevValueTimeStamp) ? (value.getTimeStamp() - m_prevValueTimeStamp) : 0) != DCE_SUCCESS)
       {
          return;
       }

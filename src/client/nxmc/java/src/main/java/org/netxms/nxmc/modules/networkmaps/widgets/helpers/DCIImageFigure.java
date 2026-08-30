@@ -27,10 +27,9 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.configs.DCIImageConfiguration;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.nxmc.localization.DateFormatFactory;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DciValueFormatter;
+import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Map decoration figure
@@ -39,7 +38,6 @@ public class DCIImageFigure extends DecorationLayerAbstractFigure
 {
    private static final int DEFAULT_SIZE = 30;
 
-   private final I18n i18n = LocalizationHelper.getI18n(DCIImageFigure.class);
    private LinkDciValueProvider dciValueProvider;
    private DCIImageConfiguration dciImageConfiguration;
    private Label toolTip = new Label();
@@ -87,7 +85,7 @@ public class DCIImageFigure extends DecorationLayerAbstractFigure
       }
       else if (value.isDataCollectionError())
       {
-         toolTip.setText(name + " = " + i18n.tr("<< ERROR >>"));
+         toolTip.setText(name + " = " + DataCollectionDisplayInfo.getErrorText(value.getLastCollectionError()));
       }
       else
       {

@@ -2800,6 +2800,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
    {
       // Data collection exit codes
       NXSL_ENV_CONSTANT("DataCollection::ERROR", g_nxslExitDCError);
+      NXSL_ENV_CONSTANT("DataCollection::INVALID_DATA", g_nxslExitDCInvalidData);
       NXSL_ENV_CONSTANT("DataCollection::NO_SUCH_INSTANCE", g_nxslExitDCNoSuchInstance);
       NXSL_ENV_CONSTANT("DataCollection::NOT_SUPPORTED", g_nxslExitDCNotSupported);
 
