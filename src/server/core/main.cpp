@@ -674,6 +674,8 @@ static void LoadGlobalConfig()
       g_flags |= AF_RESOLVE_NODE_NAMES;
    if (ConfigReadBoolean(_T("Objects.Nodes.SyncNamesWithDNS"), false))
       g_flags |= AF_SYNC_NODE_NAMES_WITH_DNS;
+   if (ConfigReadBoolean(_T("Objects.Nodes.SyncNamesWithSNMPSysName"), false))
+      g_flags |= AF_SYNC_NODE_NAMES_WITH_SNMP_SYSNAME;
    if (ConfigReadBoolean(_T("Objects.Security.CheckTrustedObjects"), false))
       g_flags |= AF_CHECK_TRUSTED_OBJECTS;
    if (ConfigReadBoolean(_T("Objects.AutobindOnConfigurationPoll"), true))

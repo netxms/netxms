@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.26 to 70.27
+ */
+static bool H_UpgradeFromV26()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 40)
+   {
+      CHK_EXEC(CreateConfigParam(L"Objects.Nodes.SyncNamesWithSNMPSysName", L"0",
+         L"Enable/disable synchronization of node names with SNMP system name (sysName) on each configuration poll. Applied only if synchronization with DNS is disabled or did not produce a name.",
+         nullptr, 'B', true, false, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 40));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(27));
+   return true;
+}
+
+/**
  * Upgrade from 70.25 to 70.26
  */
 static bool H_UpgradeFromV25()
@@ -887,6 +903,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 26, 70, 27, H_UpgradeFromV26 },
    { 25, 70, 26, H_UpgradeFromV25 },
    { 24, 70, 25, H_UpgradeFromV24 },
    { 23, 70, 24, H_UpgradeFromV23 },
