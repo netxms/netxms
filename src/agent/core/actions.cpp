@@ -33,6 +33,7 @@ class ExternalActionExecutor : public ProcessExecutor
 private:
    uint32_t m_requestId;
    shared_ptr<AbstractCommSession> m_session;
+   uint32_t m_completionCode;
 
 protected:
    virtual void onOutput(const char *text, size_t length) override;
@@ -41,6 +42,12 @@ protected:
 public:
    ExternalActionExecutor(const TCHAR *command, const StringList& args, const shared_ptr<AbstractCommSession>& session, uint32_t requestId, bool sendOutput);
    virtual ~ExternalActionExecutor();
+
+   /**
+    * Set code to be reported to server as command execution result. Must be called before process is
+    * terminated, so that output reader thread will see it when sending end of output marker.
+    */
+   void setCompletionCode(uint32_t rcc) { m_completionCode = rcc; }
 };
 
 /**
@@ -174,7 +181,9 @@ static void ExecutorCleanup(ExternalActionExecutor *executor)
 {
    if (executor->isRunning())
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Force terminate external action %s"), executor->getCommand());
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("External action \"%s\" terminated after exceeding execution time limit of %u seconds"),
+            executor->getCommand(), g_externalCommandTimeout / 1000);
+      executor->setCompletionCode(ERR_EXEC_TIMEOUT);
       executor->stop();
    }
    delete executor;
@@ -278,6 +287,7 @@ ExternalActionExecutor::ExternalActionExecutor(const TCHAR *command, const Strin
    m_sendOutput = sendOutput;
    m_replaceNullCharacters = true;
    m_requestId = requestId;
+   m_completionCode = ERR_SUCCESS;
 }
 
 /**
@@ -311,10 +321,12 @@ void ExternalActionExecutor::onOutput(const char *text, size_t length)
  */
 void ExternalActionExecutor::endOfOutput()
 {
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExternalActionExecutor: end of output for command %s"), m_cmd);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ExternalActionExecutor: end of output for command %s (RCC=%u)"), m_cmd, m_completionCode);
    NXCPMessage msg(m_session->getProtocolVersion());
    msg.setId(m_requestId);
    msg.setCode(CMD_COMMAND_OUTPUT);
    msg.setEndOfSequence();
+   if (m_completionCode != ERR_SUCCESS)
+      msg.setField(VID_RCC, m_completionCode);
    m_session->sendMessage(&msg);
 }

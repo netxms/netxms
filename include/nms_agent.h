@@ -146,6 +146,7 @@
 #define ERR_DOWNGRADE_NOT_ALLOWED      ((uint32_t)940)
 #define ERR_PROXY_CONNECT_FAILED       ((uint32_t)941)
 #define ERR_TLS_REQUIRED               ((uint32_t)942)
+#define ERR_EXEC_TIMEOUT               ((uint32_t)943)
 
 /**
  * Bulk data reconciliation DCI processing status codes
@@ -959,14 +960,17 @@ public:
    }
 
    /**
-    * Send end of output marker to server
+    * Send end of output marker to server. Result code other than ERR_SUCCESS indicates that command
+    * did not complete normally (for example was terminated after exceeding execution time limit).
     */
-   void sendEndOfOutputMarker()
+   void sendEndOfOutputMarker(uint32_t rcc = ERR_SUCCESS)
    {
       if (m_sendOutput)
       {
          NXCPMessage msg(CMD_COMMAND_OUTPUT, m_requestId, m_session->getProtocolVersion());
          msg.setEndOfSequence();
+         if (rcc != ERR_SUCCESS)
+            msg.setField(VID_RCC, rcc);
          m_session->sendMessage(&msg);
       }
    }

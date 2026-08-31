@@ -13171,6 +13171,14 @@ components:
         output:
           type: string
           description: Text output from tool execution (agent action output, server command output, or script output with result)
+        status:
+          type: string
+          enum: [completed, timeout]
+          description: >-
+            Command completion status. Set for agent action execution only.
+            `timeout` means that command was terminated by agent after exceeding
+            its execution time limit (`ExternalCommandTimeout`) and `output` contains
+            only the part produced before termination.
     ObjectToolTableResult:
       type: object
       required:
@@ -13242,6 +13250,10 @@ components:
           type: string
           enum: [none]
           description: Indicates tool executed successfully but produced no output
+        status:
+          type: string
+          enum: [completed]
+          description: Command completion status. Set for agent action execution only.
     ObjectToolUrlResult:
       type: object
       required:

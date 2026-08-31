@@ -5485,24 +5485,35 @@ msgstr "Índice de substring (Começando com 1)"
 msgid "Please enter valid substring number"
 msgstr "Por favor, informe número de substring válido"
 
-#: src/main/java/org/netxms/nxmc/modules/objecttools/widgets/ServerCommandExecutor.java:63
-#: src/main/java/org/netxms/nxmc/modules/objecttools/widgets/SSHExecutor.java:55
-#: src/main/java/org/netxms/nxmc/modules/objecttools/widgets/ActionExecutor.java:57
-#: src/main/java/org/netxms/nxmc/modules/objecttools/views/ServerCommandResults.java:148
-#: src/main/java/org/netxms/nxmc/modules/objecttools/views/AgentActionResults.java:103
-#: src/main/java/org/netxms/nxmc/modules/objects/views/SSHCommandResults.java:83
-#: src/swt/java/org/netxms/nxmc/modules/objecttools/widgets/LocalCommandExecutor.java:158
-#: src/swt/java/org/netxms/nxmc/modules/objecttools/views/LocalCommandResults.java:236
+#: src/main/java/org/netxms/nxmc/modules/objecttools/widgets/AbstractObjectToolExecutor.java:223
+#: src/main/java/org/netxms/nxmc/modules/objecttools/views/AbstractCommandResultView.java:413
+#: src/swt/java/org/netxms/nxmc/modules/objecttools/widgets/LocalCommandExecutor.java:161
+#: src/swt/java/org/netxms/nxmc/modules/objecttools/views/LocalCommandResults.java:237
 msgid ""
 "\n"
 "\n"
-"*** TERMINATED ***\n"
+"*** COMPLETED ***\n"
 "\n"
 "\n"
 msgstr ""
 "\n"
 "\n"
-"*** TERMINADO ***\n"
+"*** CONCLUÍDO ***\n"
+"\n"
+"\n"
+
+#: src/main/java/org/netxms/nxmc/modules/objecttools/widgets/AbstractObjectToolExecutor.java:222
+#: src/main/java/org/netxms/nxmc/modules/objecttools/views/AbstractCommandResultView.java:412
+msgid ""
+"\n"
+"\n"
+"*** EXECUTION FAILED: %s ***\n"
+"\n"
+"\n"
+msgstr ""
+"\n"
+"\n"
+"*** FALHA NA EXECUÇÃO: %s ***\n"
 "\n"
 "\n"
 

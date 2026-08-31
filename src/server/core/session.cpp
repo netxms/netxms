@@ -9834,15 +9834,29 @@ class ActionExecutionData
 public:
    ClientSession *m_session;
    NXCPMessage m_msg;
+   bool m_streamStarted;
 
    ActionExecutionData(ClientSession *session, uint32_t requestId) : m_msg(CMD_COMMAND_OUTPUT, requestId)
    {
       m_session = session;
+      m_streamStarted = false;
+   }
+
+   /**
+    * Send end of output marker with command execution result
+    */
+   void sendEndOfOutputMarker(uint32_t agentErrorCode)
+   {
+      NXCPMessage msg(CMD_COMMAND_OUTPUT, m_msg.getId());
+      msg.setEndOfSequence();
+      msg.setField(VID_RCC, AgentErrorToRCC(agentErrorCode));
+      m_session->sendMessage(msg);
    }
 };
 
 /**
- * Action execution callback
+ * Action execution callback. End of output marker is not sent here, but by caller after execution
+ * completes, so that actual execution result can be reported to client.
  */
 static void ActionExecuteCallback(ActionCallbackEvent e, const void *text, void *arg)
 {
@@ -9850,14 +9864,12 @@ static void ActionExecuteCallback(ActionCallbackEvent e, const void *text, void 
    switch(e)
    {
       case ACE_CONNECTED:
+         data->m_streamStarted = true;
          data->m_msg.setCode(CMD_REQUEST_COMPLETED);
          data->m_msg.setField(VID_RCC, RCC_SUCCESS);
          break;
       case ACE_DISCONNECTED:
-         data->m_msg.deleteAllFields();
-         data->m_msg.setCode(CMD_COMMAND_OUTPUT);
-         data->m_msg.setEndOfSequence();
-         break;
+         return;
       case ACE_DATA:
          data->m_msg.deleteAllFields();
          data->m_msg.setCode(CMD_COMMAND_OUTPUT);
@@ -9929,6 +9941,8 @@ void ClientSession::executeAction(const NXCPMessage& request)
                {
                   ActionExecutionData data(this, request.getId());
                   rcc = pConn->executeCommand(action, list, true, ActionExecuteCallback, &data, true);
+                  if (data.m_streamStarted)
+                     data.sendEndOfOutputMarker(rcc);
                }
                else
                {
@@ -9964,6 +9978,11 @@ void ClientSession::executeAction(const NXCPMessage& request)
                   case ERR_SUCCESS:
                      response.setField(VID_RCC, RCC_SUCCESS);
                      writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed agent action %s%s%s"),
+                           action, argsSuffix.cstr(), inputFieldsLog.cstr());
+                     break;
+                  case ERR_EXEC_TIMEOUT:   // Action was started, but terminated by agent before completion
+                     response.setField(VID_RCC, RCC_EXEC_TIMEOUT);
+                     writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed agent action %s%s%s (terminated after exceeding execution time limit)"),
                            action, argsSuffix.cstr(), inputFieldsLog.cstr());
                      break;
                   case ERR_ACCESS_DENIED:
@@ -19314,6 +19333,8 @@ void ClientSession::executeSshCommand(const NXCPMessage& request)
             {
                ActionExecutionData data(this, request.getId());
                rcc = conn->executeCommand(L"SSH.Command", args, true, ActionExecuteCallback, &data, true);
+               if (data.m_streamStarted)
+                  data.sendEndOfOutputMarker(rcc);
             }
             else
             {

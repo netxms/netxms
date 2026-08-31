@@ -20,17 +20,13 @@ package org.netxms.nxmc.modules.objecttools.widgets;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Action executor widget to run an action and display it's result
  */
 public class SSHExecutor extends AbstractObjectToolExecutor
 {
-   private I18n i18n = LocalizationHelper.getI18n(SSHExecutor.class);
-
    /**
     * Constructor for action execution
     * 
@@ -52,7 +48,7 @@ public class SSHExecutor extends AbstractObjectToolExecutor
    protected void executeInternal(Display display) throws Exception
    {
       session.executeSshCommand(objectContext.getObjectId(), objectContext.getAlarmId(), objectToolInfo.tool.getData(), objectToolInfo.inputValues, objectToolInfo.maskedFields, true, getOutputListener(), null);
-      writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+      writeCompletionBanner();
    }
 }
 

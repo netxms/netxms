@@ -234,7 +234,7 @@ public class LocalCommandResults extends AbstractCommandResultView
 						   listener.messageReceived(s);
 					}
 
-					listener.messageReceived(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+					listener.messageReceived(i18n.tr("\n\n*** COMPLETED ***\n\n\n"));
 				}
 				catch(IOException e)
 				{

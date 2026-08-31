@@ -75,6 +75,7 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 
    private IOConsoleOutputStream out;
    private TextOutputListener outputListener;
+   private String failureReason = null;
 
 	private Action actionClear;
 	private Action actionScrollLock;
@@ -98,7 +99,25 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
       this.inputValues = inputValues;
       this.maskedFields = maskedFields;
 
-      outputListener = new TextOutputAdapter() {
+      outputListener = createOutputListener();
+   }
+
+   /**
+    * Clone constructor
+    */
+   protected AbstractCommandResultView()
+   {
+      super();
+   }
+
+   /**
+    * Create listener that writes command output into this view's console.
+    *
+    * @return output listener
+    */
+   private TextOutputListener createOutputListener()
+   {
+      return new TextOutputAdapter() {
          @Override
          public void messageReceived(String text)
          {
@@ -117,15 +136,14 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
          {
             AbstractCommandResultView.this.streamId = streamId;
          }
-      };
-   }
 
-   /**
-    * Clone constructor
-    */
-   protected AbstractCommandResultView()
-   {
-      super();
+         @Override
+         public void onFailure(Exception exception)
+         {
+            if (exception != null)
+               failureReason = exception.getLocalizedMessage();
+         }
+      };
    }
 
    /**
@@ -137,29 +155,9 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
       AbstractCommandResultView view = (AbstractCommandResultView)super.cloneView();
       view.inputValues = inputValues;
       view.maskedFields = maskedFields;
-
-      view.outputListener = new TextOutputAdapter() {
-         @Override
-         public void messageReceived(String text)
-         {
-            try
-            {
-               if (view.out != null)
-                  view.out.write(text.replace("\r", ""));
-            }
-            catch(IOException e)
-            {
-            }
-         }
-
-         @Override
-         public void setStreamId(long streamId)
-         {
-            view.streamId = streamId;
-         }
-      };
+      view.outputListener = view.createOutputListener();
       return view;
-   } 
+   }
    
    
    /**
@@ -400,7 +398,19 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
    protected void createOutputStream()
    {
       closeOutputStream();
+      failureReason = null;
       out = console.newOutputStream();
+   }
+
+   /**
+    * Write execution completion banner to output stream. Command that did not complete normally (for example was
+    * terminated on agent after exceeding execution time limit) is reported with the reason instead.
+    */
+   protected void writeCompletionBanner()
+   {
+      writeToOutputStream((failureReason != null)
+            ? String.format(i18n.tr("\n\n*** EXECUTION FAILED: %s ***\n\n\n"), failureReason)
+            : i18n.tr("\n\n*** COMPLETED ***\n\n\n"));
    }
 
    /**
@@ -523,25 +533,6 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
       askInputValues = maskedFields.size() > 0;
       viewRestored = true;
 
-      outputListener = new TextOutputAdapter() {
-         @Override
-         public void messageReceived(String text)
-         {
-            try
-            {
-               if (out != null)
-                  out.write(text.replace("\r", ""));
-            }
-            catch(IOException e)
-            {
-            }
-         }
-
-         @Override
-         public void setStreamId(long streamId)
-         {
-            AbstractCommandResultView.this.streamId = streamId;
-         }
-      };
+      outputListener = createOutputListener();
    }
 }

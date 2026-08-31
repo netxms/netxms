@@ -20,17 +20,13 @@ package org.netxms.nxmc.modules.objecttools.widgets;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Action executor widget to run an action and display it's result 
  */
 public class ActionExecutor extends AbstractObjectToolExecutor
 {
-   private I18n i18n = LocalizationHelper.getI18n(ActionExecutor.class);
-
    /**
     * Constructor for action execution
     * 
@@ -54,6 +50,6 @@ public class ActionExecutor extends AbstractObjectToolExecutor
    protected void executeInternal(Display display) throws Exception
    {
       session.executeActionWithExpansion(objectContext.getObjectId(), objectContext.getAlarmId(), objectToolInfo.tool.getData(), true, objectToolInfo.inputValues, objectToolInfo.maskedFields, getOutputListener(), null);
-      writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+      writeCompletionBanner();
    }
 }

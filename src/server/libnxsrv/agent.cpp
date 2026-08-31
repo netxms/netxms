@@ -1875,6 +1875,7 @@ uint32_t AgentConnection::executeCommand(const wchar_t *command, const StringLis
       return rcc;
 
    outputCallback(ACE_CONNECTED, nullptr, context);    // Indicate successful start
+   uint32_t executionResult = ERR_SUCCESS;
    bool eos = false;
    while(!eos)
    {
@@ -1882,6 +1883,8 @@ uint32_t AgentConnection::executeCommand(const wchar_t *command, const StringLis
       if (response != nullptr)
       {
          eos = response->isEndOfSequence();
+         if (eos)
+            executionResult = response->getFieldAsUInt32(VID_RCC);   // Command execution result reported by agent (not set by older agents)
          if (response->isFieldExist(VID_MESSAGE))
          {
             if (utf8Output)
@@ -1901,11 +1904,12 @@ uint32_t AgentConnection::executeCommand(const wchar_t *command, const StringLis
       }
       else
       {
+         outputCallback(ACE_DISCONNECTED, nullptr, context);
          return ERR_REQUEST_TIMEOUT;
       }
    }
    outputCallback(ACE_DISCONNECTED, nullptr, context);
-   return ERR_SUCCESS;
+   return executionResult;
 }
 
 /**

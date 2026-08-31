@@ -192,6 +192,13 @@ public abstract class AbstractObjectToolExecutor extends Composite
          {
             AbstractObjectToolExecutor.this.streamId = streamId;
          }
+
+         @Override
+         public void onFailure(Exception exception)
+         {
+            if (exception != null)
+               failureReason = exception.getLocalizedMessage();
+         }
       };
       setRunning(false);
    }
@@ -203,6 +210,17 @@ public abstract class AbstractObjectToolExecutor extends Composite
    protected void writeOutput(String text)
    {
       job.writeOutput(text);
+   }
+
+   /**
+    * Write execution completion banner to output. Command that did not complete normally (for example was terminated
+    * on agent after exceeding execution time limit) is reported with the reason instead.
+    */
+   protected void writeCompletionBanner()
+   {
+      writeOutput((failureReason != null)
+            ? String.format(i18n.tr("\n\n*** EXECUTION FAILED: %s ***\n\n\n"), failureReason)
+            : i18n.tr("\n\n*** COMPLETED ***\n\n\n"));
    }
 
    /**

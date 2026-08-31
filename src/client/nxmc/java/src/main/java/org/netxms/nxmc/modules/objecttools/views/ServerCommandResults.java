@@ -145,7 +145,7 @@ public class ServerCommandResults extends AbstractCommandResultView
             try
             {
                session.executeServerCommand(object.object.getObjectId(), object.getAlarmId(), tool.getData(), inputValues, maskedFields, true, getOutputListener(), null);
-               writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+               writeCompletionBanner();
             }
             finally
             {

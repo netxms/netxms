@@ -93,6 +93,7 @@ static struct
    { ERR_DOWNGRADE_NOT_ALLOWED, _T("Package downgrade is not allowed") },
    { ERR_PROXY_CONNECT_FAILED, _T("Cannot connect to proxy agent") },
    { ERR_TLS_REQUIRED, _T("TLS connection required") },
+   { ERR_EXEC_TIMEOUT, _T("Command execution time limit exceeded") },
    { 0xFFFFFFFF, nullptr }
 };
 
@@ -129,6 +130,8 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
          return RCC_NO_SUCH_INSTANCE;
       case ERR_REQUEST_TIMEOUT:
          return RCC_TIMEOUT;
+      case ERR_EXEC_TIMEOUT:
+         return RCC_EXEC_TIMEOUT;
       case ERR_ENCRYPTION_ERROR:
          return RCC_ENCRYPTION_ERROR;
       case ERR_OUT_OF_STATE_REQUEST:

@@ -158,7 +158,7 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
                   writeOutput(s);
             }
 
-            writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+            writeOutput(i18n.tr("\n\n*** COMPLETED ***\n\n\n"));
          }
          catch(IOException e)
          {

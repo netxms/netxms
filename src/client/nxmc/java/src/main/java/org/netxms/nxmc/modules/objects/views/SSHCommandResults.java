@@ -80,7 +80,7 @@ public class SSHCommandResults extends AbstractCommandResultView
             try
             {
                session.executeSshCommand(object.object.getObjectId(), object.getAlarmId(), tool.getData(), inputValues, maskedFields, true, getOutputListener(), null);
-               writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+               writeCompletionBanner();
             }
             finally
             {

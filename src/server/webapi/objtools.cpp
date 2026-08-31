@@ -649,10 +649,12 @@ static int ExecuteAgentAction(Context *context, const shared_ptr<NetObj>& object
    {
       StringBuffer output;
       rcc = conn->executeCommand(actionName, args, true, ActionOutputCallback, &output, true);
-      if (rcc == ERR_SUCCESS)
+      // Command terminated by agent on execution time limit still has partial output worth returning
+      if ((rcc == ERR_SUCCESS) || (rcc == ERR_EXEC_TIMEOUT))
       {
          json_object_set_new(response, "type", json_string("text"));
          json_object_set_new(response, "output", json_string_t(output.cstr()));
+         json_object_set_new(response, "status", json_string((rcc == ERR_SUCCESS) ? "completed" : "timeout"));
       }
    }
    else
@@ -661,18 +663,20 @@ static int ExecuteAgentAction(Context *context, const shared_ptr<NetObj>& object
       if (rcc == ERR_SUCCESS)
       {
          json_object_set_new(response, "type", json_string("none"));
+         json_object_set_new(response, "status", json_string("completed"));
       }
    }
 
-   if (rcc != ERR_SUCCESS)
+   if ((rcc != ERR_SUCCESS) && (rcc != ERR_EXEC_TIMEOUT))
    {
       context->setAgentErrorResponse(rcc);
       return 500;
    }
 
    String inputFieldsLog = BuildAuditInputFieldsString(*inputFields, maskedFields);
-   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed agent action \"%s\" on object %s [%u]%s"),
-         actionName, object->getName(), object->getId(), inputFieldsLog.cstr());
+   context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed agent action \"%s\" on object %s [%u]%s%s"),
+         actionName, object->getName(), object->getId(), inputFieldsLog.cstr(),
+         (rcc == ERR_EXEC_TIMEOUT) ? _T(" (terminated after exceeding execution time limit)") : _T(""));
    return 200;
 }
 

@@ -8906,6 +8906,85 @@ public class NXCSession
    }
 
    /**
+    * Message handler for command output. Also captures command execution result reported by agent in end of sequence
+    * message - it indicates that command did not complete normally (for example was terminated after exceeding
+    * execution time limit) and therefore output may be incomplete.
+    */
+   private static class CommandOutputHandler extends MessageHandler
+   {
+      private TextOutputListener listener;
+      private Writer writer;
+      private int rcc = RCC.SUCCESS;
+
+      /**
+       * @param listener listener for command output or null
+       * @param writer writer for command output or null
+       */
+      CommandOutputHandler(TextOutputListener listener, Writer writer)
+      {
+         this.listener = listener;
+         this.writer = writer;
+      }
+
+      /**
+       * Get command execution result reported by agent.
+       *
+       * @return command execution result
+       */
+      int getRCC()
+      {
+         return rcc;
+      }
+
+      /**
+       * @see org.netxms.client.MessageHandler#processMessage(org.netxms.base.NXCPMessage)
+       */
+      @Override
+      public boolean processMessage(NXCPMessage m)
+      {
+         String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
+         if (text != null)
+         {
+            if (listener != null)
+               listener.messageReceived(text);
+            if (writer != null)
+            {
+               try
+               {
+                  writer.write(text);
+               }
+               catch(IOException e)
+               {
+               }
+            }
+         }
+         if (m.isEndOfSequence())
+         {
+            rcc = m.getFieldAsInt32(NXCPCodes.VID_RCC);
+            setComplete();
+         }
+         return true;
+      }
+   }
+
+   /**
+    * Wait for command output completion and report execution failure to listener. Execution failure is not thrown as
+    * exception because command may have produced partial output that is still useful.
+    *
+    * @param handler command output message handler
+    * @param listener listener for command output or null
+    * @throws NXCException if output was not received within timeout
+    */
+   private static void waitForCommandOutput(CommandOutputHandler handler, TextOutputListener listener) throws NXCException
+   {
+      handler.waitForCompletion();
+      if (handler.isExpired())
+         throw new NXCException(RCC.TIMEOUT);
+      if ((handler.getRCC() != RCC.SUCCESS) && (listener != null))
+         listener.onFailure(new NXCException(handler.getRCC()));
+   }
+
+   /**
     * Execute action on remote agent
     *
     * @param nodeId Node object ID
@@ -8970,31 +9049,7 @@ public class NXCSession
          msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_LIST_BASE, NXCPCodes.VID_NUM_MASKED_FIELDS);
       }
 
-      MessageHandler handler = receiveOutput ? new MessageHandler() {
-         @Override
-         public boolean processMessage(NXCPMessage m)
-         {
-            String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
-            if (text != null)
-            {
-               if (listener != null)
-                  listener.messageReceived(text);
-               if (writer != null)
-               {
-                  try
-                  {
-                     writer.write(text);
-                  }
-                  catch(IOException e)
-                  {
-                  }
-               }
-            }
-            if (m.isEndOfSequence())
-               setComplete();
-            return true;
-         }
-      } : null;
+      CommandOutputHandler handler = receiveOutput ? new CommandOutputHandler(listener, writer) : null;
       if (receiveOutput)
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
 
@@ -9002,11 +9057,7 @@ public class NXCSession
       NXCPMessage result = waitForRCC(msg.getMessageId());
 
       if (receiveOutput)
-      {
-         handler.waitForCompletion();
-         if (handler.isExpired())
-            throw new NXCException(RCC.TIMEOUT);
-      }
+         waitForCommandOutput(handler, listener);
       return result.getFieldAsString(NXCPCodes.VID_ACTION_NAME);
    }
 
@@ -9055,31 +9106,7 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, 0);
       }
 
-      MessageHandler handler = receiveOutput ? new MessageHandler() {
-         @Override
-         public boolean processMessage(NXCPMessage m)
-         {
-            String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
-            if (text != null)
-            {
-               if (listener != null)
-                  listener.messageReceived(text);
-               if (writer != null)
-               {
-                  try
-                  {
-                     writer.write(text);
-                  }
-                  catch(IOException e)
-                  {
-                  }
-               }
-            }
-            if (m.isEndOfSequence())
-               setComplete();
-            return true;
-         }
-      } : null;
+      CommandOutputHandler handler = receiveOutput ? new CommandOutputHandler(listener, writer) : null;
       if (receiveOutput)
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
 
@@ -9087,11 +9114,7 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
 
       if (receiveOutput)
-      {
-         handler.waitForCompletion();
-         if (handler.isExpired())
-            throw new NXCException(RCC.TIMEOUT);
-      }
+         waitForCommandOutput(handler, listener);
    }
 
    /**
@@ -9131,31 +9154,7 @@ public class NXCSession
          msg.setFieldsFromStringCollection(maskedFields, NXCPCodes.VID_MASKED_FIELD_LIST_BASE, NXCPCodes.VID_NUM_MASKED_FIELDS);
       }
 
-      MessageHandler handler = receiveOutput ? new MessageHandler() {
-         @Override
-         public boolean processMessage(NXCPMessage m)
-         {
-            String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
-            if (text != null)
-            {
-               if (listener != null)
-                  listener.messageReceived(text);
-               if (writer != null)
-               {
-                  try
-                  {
-                     writer.write(text);
-                  }
-                  catch(IOException e)
-                  {
-                  }
-               }
-            }
-            if (m.isEndOfSequence())
-               setComplete();
-            return true;
-         }
-      } : null;
+      CommandOutputHandler handler = receiveOutput ? new CommandOutputHandler(listener, writer) : null;
       if (receiveOutput)
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
 
@@ -9163,11 +9162,7 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
 
       if (receiveOutput)
-      {
-         handler.waitForCompletion();
-         if (handler.isExpired())
-            throw new NXCException(RCC.TIMEOUT);
-      }
+         waitForCommandOutput(handler, listener);
    }
 
    /**

@@ -100,7 +100,7 @@ public class AgentActionResults extends AbstractCommandResultView
             try
             {
                session.executeActionWithExpansion(object.object.getObjectId(), object.getAlarmId(), tool.getData(), true, inputValues, maskedFields, getOutputListener(), null);
-               writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+               writeCompletionBanner();
             }
             finally
             {

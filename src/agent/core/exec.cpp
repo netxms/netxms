@@ -177,6 +177,7 @@ class SystemActionProcessExecutor : public ProcessExecutor
 {
 private:
    ActionExecutionContext *m_context;
+   uint32_t m_completionCode;
 
 protected:
    virtual void onOutput(const char *text, size_t length) override;
@@ -188,8 +189,15 @@ public:
       m_context = context;
       m_sendOutput = true;
       m_replaceNullCharacters = true;
+      m_completionCode = ERR_SUCCESS;
    }
    virtual ~SystemActionProcessExecutor() = default;
+
+   /**
+    * Set code to be reported to server as command execution result. Must be called before process is
+    * terminated, so that output reader thread will see it when sending end of output marker.
+    */
+   void setCompletionCode(uint32_t rcc) { m_completionCode = rcc; }
 };
 
 /**
@@ -211,7 +219,7 @@ void SystemActionProcessExecutor::onOutput(const char *text, size_t length)
  */
 void SystemActionProcessExecutor::endOfOutput()
 {
-   m_context->sendEndOfOutputMarker();
+   m_context->sendEndOfOutputMarker(m_completionCode);
 }
 
 /**
@@ -230,7 +238,13 @@ uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context)
       {
          context->markAsCompleted(ERR_SUCCESS);
          nxlog_debug_tag(_T("actions"), 4, _T("H_SystemExecute: started execution of command %s"), command);
-         executor.waitForCompletion(g_externalCommandTimeout);
+         if (!executor.waitForCompletion(g_externalCommandTimeout))
+         {
+            nxlog_write_tag(NXLOG_WARNING, _T("actions"), _T("Command \"%s\" started by System.Execute terminated after exceeding execution time limit of %u seconds"),
+                  command, g_externalCommandTimeout / 1000);
+            executor.setCompletionCode(ERR_EXEC_TIMEOUT);
+            executor.stop();
+         }
          return ERR_SUCCESS;
       }
       else

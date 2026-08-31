@@ -24,17 +24,13 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Server command executor and output provider widget
  */
 public class ServerCommandExecutor extends AbstractObjectToolExecutor
 {
-   private I18n i18n = LocalizationHelper.getI18n(ServerCommandExecutor.class);
-   
    private NXCSession session;
 
    /**
@@ -60,7 +56,7 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor
    protected void executeInternal(Display display) throws Exception
    {
       session.executeServerCommand(objectContext.object.getObjectId(), objectContext.getAlarmId(), objectToolInfo.tool.getData(), objectToolInfo.inputValues, objectToolInfo.maskedFields, true, getOutputListener(), null);
-      writeOutput(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+      writeCompletionBanner();
    }
 
    /**
