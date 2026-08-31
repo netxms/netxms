@@ -490,6 +490,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
 		NetworkMapLink link = (NetworkMapLink)connection.getData();
 
+      connection.setTooltip(new LinkTooltip(link, this));
+
       switch(link.getRouting())
       {
          case NetworkMapLink.ROUTING_DIRECT:
