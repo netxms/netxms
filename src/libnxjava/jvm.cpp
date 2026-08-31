@@ -263,7 +263,7 @@ void LIBNXJAVA_EXPORTABLE DetachThreadFromJavaVM()
  * Log pending Java exception and clear exception state. If description buffer is provided, exception description
  * will be copied into it.
  */
-static void LogPendingJavaException(JNIEnv *env, StringBuffer *description = nullptr)
+void LogPendingJavaException(JNIEnv *env, StringBuffer *description)
 {
    jthrowable exception = env->ExceptionOccurred();
    if (exception == nullptr)

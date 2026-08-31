@@ -37,6 +37,7 @@ jclass LIBNXJAVA_EXPORTABLE CreateJavaClassGlobalRef(JNIEnv *env, const char *cl
    if (c == nullptr)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not find class %hs"), className);
+      LogPendingJavaException(env);   // FindClass leaves pending exception (NoClassDefFoundError, etc.) that would poison all subsequent JNI calls
       return nullptr;
    }
 
@@ -45,7 +46,8 @@ jclass LIBNXJAVA_EXPORTABLE CreateJavaClassGlobalRef(JNIEnv *env, const char *cl
 
    if (gc == nullptr)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not create global reference of class %s"), className);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_JAVA_BRIDGE, _T("Could not create global reference of class %hs"), className);
+      LogPendingJavaException(env);   // NewGlobalRef may leave pending OutOfMemoryError
       return nullptr;
    }
 

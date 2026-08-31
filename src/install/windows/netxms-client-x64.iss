@@ -54,6 +54,7 @@ Source: "..\files\windows\x64\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion 
 Source: "..\..\client\nxmc\nxmc.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; Common files for Java based components
 Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc or nxshell
+Source: "..\..\libnxjava\java\target\netxms-java-bridge-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc or nxshell
 ; nxmc
 Source: "..\..\..\x64\Release\nxmc.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc
 Source: "..\..\client\nxmc\java\target\nxmc-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc
