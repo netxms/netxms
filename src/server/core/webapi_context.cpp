@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2023 Raden Solutions
+** Copyright (C) 2023-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <netxms-webapi.h>
+#include <zlib.h>
 
 /**
  * Get request JSON document.
@@ -38,6 +39,48 @@ json_t *Context::getRequestDocument()
          nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Cannot parse request document (%hs)"), error.text);
    }
    return m_requestDocument;
+}
+
+/**
+ * Get placeholder value as uint32. Allows decimal and hexadecimal forms.
+ */
+const uint32_t Context::getPlaceholderValueAsUInt32(const TCHAR *name, uint32_t defaultValue) const
+{
+   const TCHAR *v = m_placeholderValues.get(name);
+   if (v == nullptr)
+      return defaultValue;
+   TCHAR *eptr;
+   bool hex = (_tcsncmp(v, _T("0x"), 2) == 0);
+   uint32_t n = _tcstoul(hex ? &v[2] : v, &eptr, hex ? 16 : 10);
+   return (*eptr == 0) ? n : defaultValue;
+}
+
+/**
+ * Get query parameter as int32. Allows decimal and hexadecimal forms.
+ */
+int32_t Context::getQueryParameterAsInt32(const char *name, int32_t defaultValue) const
+{
+   const char *v = getQueryParameter(name);
+   if (v == nullptr)
+      return defaultValue;
+   char *eptr;
+   bool hex = (strncmp(v, "0x", 2) == 0);
+   int32_t n = strtol(hex ? &v[2] : v, &eptr, hex ? 16 : 10);
+   return (*eptr == 0) ? n : defaultValue;
+}
+
+/**
+ * Get query parameter as uint32. Allows decimal and hexadecimal forms.
+ */
+uint32_t Context::getQueryParameterAsUInt32(const char *name, uint32_t defaultValue) const
+{
+   const char *v = getQueryParameter(name);
+   if (v == nullptr)
+      return defaultValue;
+   char *eptr;
+   bool hex = (strncmp(v, "0x", 2) == 0);
+   uint32_t n = strtoul(hex ? &v[2] : v, &eptr, hex ? 16 : 10);
+   return (*eptr == 0) ? n : defaultValue;
 }
 
 /**
@@ -105,4 +148,121 @@ void Context::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_
    va_start(args, format);
    WriteAuditLogWithJsonValues2(subsys, success, m_userId, m_workstation, 0, objectId, oldValue, newValue, format, args);
    va_end(args);
+}
+
+/**
+ * Upload data block handler
+ */
+bool Context::onUploadData(const char *data, size_t size)
+{
+   if (m_requestData.size() + size > MAX_WEBAPI_REQUEST_SIZE)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Request body exceeds maximum size limit (%u bytes)"), MAX_WEBAPI_REQUEST_SIZE);
+      return false;
+   }
+   m_requestData.write(data, size);
+   return true;
+}
+
+/**
+ * Decompress request body (gzip or zlib/deflate) in place. Uses automatic header
+ * detection so both "gzip" and "deflate" Content-Encoding values are handled.
+ * Decompressed output is capped at MAX_WEBAPI_REQUEST_SIZE to guard against
+ * decompression bombs. Returns true on success.
+ */
+static bool InflateRequestData(ByteStream& data)
+{
+   size_t inputSize;
+   const BYTE *input = data.buffer(&inputSize);
+   if (inputSize == 0)
+      return true;
+
+   z_stream stream;
+   memset(&stream, 0, sizeof(stream));
+   if (inflateInit2(&stream, 15 + 32) != Z_OK)   // 32 enables automatic gzip/zlib header detection
+      return false;
+
+   stream.next_in = const_cast<BYTE*>(input);
+   stream.avail_in = static_cast<uInt>(inputSize);
+
+   ByteStream output(inputSize * 4);
+   output.setAllocationStep(32768);
+
+   BYTE chunk[32768];
+   int rc;
+   do
+   {
+      stream.next_out = chunk;
+      stream.avail_out = sizeof(chunk);
+      rc = inflate(&stream, Z_NO_FLUSH);
+      if ((rc != Z_OK) && (rc != Z_STREAM_END) && (rc != Z_BUF_ERROR))
+      {
+         inflateEnd(&stream);
+         return false;
+      }
+
+      size_t produced = sizeof(chunk) - stream.avail_out;
+      if (produced > 0)
+      {
+         if (output.size() + produced > MAX_WEBAPI_REQUEST_SIZE)
+         {
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Decompressed request body exceeds maximum size limit (%u bytes)"), MAX_WEBAPI_REQUEST_SIZE);
+            inflateEnd(&stream);
+            return false;
+         }
+         output.write(chunk, produced);
+      }
+      else if (rc == Z_BUF_ERROR)
+      {
+         break;   // no progress possible (truncated input) - stop and fail below
+      }
+   } while (rc != Z_STREAM_END);
+
+   inflateEnd(&stream);
+
+   if (rc != Z_STREAM_END)
+      return false;   // incomplete or corrupt stream
+
+   data.clear();
+   size_t outputSize;
+   const BYTE *outputBuffer = output.buffer(&outputSize);
+   data.write(outputBuffer, outputSize);
+   return true;
+}
+
+/**
+ * Finalize request body once fully received: transparently decompress it if the
+ * client used a supported Content-Encoding, then null-terminate for text/JSON consumers.
+ */
+void Context::onUploadComplete()
+{
+   if (m_requestData.size() == 0)
+      return;
+
+   const char *encoding = getRequestHeader(MHD_HTTP_HEADER_CONTENT_ENCODING);
+   if ((encoding != nullptr) && (*encoding != 0) && stricmp(encoding, "identity"))
+   {
+      if (!stricmp(encoding, "gzip") || !stricmp(encoding, "x-gzip") || !stricmp(encoding, "deflate"))
+      {
+         size_t compressedSize = m_requestData.size();
+         if (!InflateRequestData(m_requestData))
+         {
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Cannot decompress Web API request body (Content-Encoding: %hs)"), encoding);
+            m_requestDecodingFailed = true;
+            return;
+         }
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Web API request body decompressed (%u -> %u bytes, Content-Encoding: %hs)"),
+            static_cast<uint32_t>(compressedSize), static_cast<uint32_t>(m_requestData.size()), encoding);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Unsupported Content-Encoding \"%hs\" in Web API request"), encoding);
+         m_requestDecodingFailed = true;
+         return;
+      }
+   }
+
+   m_requestData.write('\0');
+   nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("Web API request data received (%u bytes)"),
+      static_cast<uint32_t>(m_requestData.size() - 1));
 }
