@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.networkmaps.widgets.helpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.GridData;
 import org.eclipse.draw2d.GridLayout;
@@ -97,144 +99,69 @@ public class LinkTooltip extends Figure
    {
       removeAll();
 
-      Label title = new Label(getLinkTitle());
+      Label title = new Label(getLinkTitle(i18n, link));
       title.setFont(JFaceResources.getBannerFont());
       add(title);
 
-      ObjectStatus status = calculateLinkStatus();
-      Label statusLabel = new Label();
+      ObjectStatus status = calculateLinkStatus(session, link);
+      Label statusLabel = new Label(StatusDisplayInfo.getStatusText(status));
       statusLabel.setIcon(StatusDisplayInfo.getStatusImage(status));
-      statusLabel.setText(StatusDisplayInfo.getStatusText(status));
       add(statusLabel);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       setConstraint(statusLabel, gd);
 
-      Label type = new Label(i18n.tr("Type: {0}", getLinkTypeName()));
+      Label type = new Label(i18n.tr("Type: {0}", getLinkTypeName(i18n, link)));
       add(type);
       gd = new GridData();
       gd.horizontalSpan = 2;
       setConstraint(type, gd);
 
-      addEndpoint(link.getElement1(), link.getInterfaceId1(), link.getConnectorName1());
-      addEndpoint(link.getElement2(), link.getInterfaceId2(), link.getConnectorName2());
-   }
-
-   /**
-    * Add information block for single link endpoint.
-    *
-    * @param elementId map element ID
-    * @param interfaceId interface object ID on this side of the link (0 if unknown)
-    * @param connectorName connector name configured for this side of the link
-    */
-   private void addEndpoint(long elementId, long interfaceId, String connectorName)
-   {
-      AbstractObject object = resolveElementObject(elementId);
-      AbstractObject interfaceObject = (interfaceId != 0) ? session.findObjectById(interfaceId, true) : null;
-      Interface iface = (interfaceObject instanceof Interface) ? (Interface)interfaceObject : null;
-
-      addSeparator();
-
-      Label objectLabel = new Label();
-      objectLabel.setText((object != null) ? object.getObjectName() : i18n.tr("<unknown>"));
-      if (object != null)
-         objectLabel.setIcon(labelProvider.getSmallIcon(object));
-      add(objectLabel);
-
-      if (object != null)
+      Object input = labelProvider.getViewer().getInput();
+      NetworkMapPage page = (input instanceof NetworkMapPage) ? (NetworkMapPage)input : null;
+      for(Endpoint endpoint : collectEndpoints(i18n, session, link, page))
       {
-         Label objectStatus = new Label();
-         objectStatus.setIcon(StatusDisplayInfo.getStatusImage(object.getStatus()));
-         objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
-         add(objectStatus);
-         GridData gd = new GridData();
-         gd.horizontalAlignment = SWT.RIGHT;
-         setConstraint(objectStatus, gd);
-      }
-      else
-      {
-         add(new Label());
-      }
+         addSeparator();
 
-      Figure details = new Figure();
-      GridLayout layout = new GridLayout(2, false);
-      layout.horizontalSpacing = 10;
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
-      details.setLayoutManager(layout);
+         Label objectLabel = new Label(endpoint.name);
+         if (endpoint.object != null)
+            objectLabel.setIcon(labelProvider.getSmallIcon(endpoint.object));
+         add(objectLabel);
 
-      if (iface != null)
-      {
-         addDetail(details, i18n.tr("Interface"), iface.getNameWithAlias());
-         addDetail(details, i18n.tr("Oper state"), iface.getOperStateAsText());
-         addDetail(details, i18n.tr("Admin state"), iface.getAdminStateAsText());
-         if (iface.getIfType() != 0)
+         if (endpoint.object != null)
          {
-            String typeName = iface.getIfTypeName();
-            addDetail(details, i18n.tr("Type"),
-                  (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()));
+            Label objectStatus = new Label(StatusDisplayInfo.getStatusText(endpoint.object.getStatus()));
+            objectStatus.setIcon(StatusDisplayInfo.getStatusImage(endpoint.object.getStatus()));
+            add(objectStatus);
+            gd = new GridData();
+            gd.horizontalAlignment = SWT.RIGHT;
+            setConstraint(objectStatus, gd);
          }
-         if (iface.getSpeed() > 0)
-            addDetail(details, i18n.tr("Speed"), InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
-         addUtilizationDetail(details, i18n.tr("Inbound"), iface.getInboundUtilization(), iface.getSpeed());
-         addUtilizationDetail(details, i18n.tr("Outbound"), iface.getOutboundUtilization(), iface.getSpeed());
-      }
-      else if ((connectorName != null) && !connectorName.isBlank())
-      {
-         addDetail(details, i18n.tr("Connector"), connectorName);
-      }
+         else
+         {
+            add(new Label());
+         }
 
-      if (!details.getChildren().isEmpty())
-      {
-         GridData gd = new GridData();
+         if (endpoint.details.isEmpty())
+            continue;
+
+         Figure details = new Figure();
+         GridLayout detailsLayout = new GridLayout(2, false);
+         detailsLayout.horizontalSpacing = 10;
+         detailsLayout.marginWidth = 0;
+         detailsLayout.marginHeight = 0;
+         details.setLayoutManager(detailsLayout);
+         for(String[] detail : endpoint.details)
+         {
+            details.add(new Label(detail[0] + ":"));
+            details.add(new Label(detail[1]));
+         }
+
+         gd = new GridData();
          gd.horizontalSpan = 2;
          gd.horizontalIndent = 16;
          add(details, gd);
       }
-   }
-
-   /**
-    * Add name/value pair to endpoint details block.
-    *
-    * @param parent details block figure
-    * @param name value name
-    * @param value value to display
-    */
-   private void addDetail(Figure parent, String name, String value)
-   {
-      if ((value == null) || value.isEmpty())
-         return;
-
-      parent.add(new Label(name + ":"));
-      parent.add(new Label(value));
-   }
-
-   /**
-    * Add utilization name/value pair to endpoint details block. If interface speed is known, actual traffic calculated from
-    * utilization and speed is shown as well.
-    *
-    * @param parent details block figure
-    * @param name value name
-    * @param utilization utilization in permille or -1 if not available
-    * @param speed interface speed in bps or 0 if not known
-    */
-   private void addUtilizationDetail(Figure parent, String name, int utilization, long speed)
-   {
-      if (utilization < 0)
-         return;
-
-      StringBuilder sb = new StringBuilder();
-      sb.append(utilization / 10);
-      sb.append('.');
-      sb.append(utilization % 10);
-      sb.append('%');
-      if (speed > 0)
-      {
-         sb.append(" (");
-         sb.append(InterfaceListLabelProvider.ifSpeedTotext(speed * utilization / 1000));
-         sb.append(')');
-      }
-      addDetail(parent, name, sb.toString());
    }
 
    /**
@@ -255,11 +182,129 @@ public class LinkTooltip extends Figure
    }
 
    /**
+    * Build plain text description of link with same content as this tooltip. Intended for map canvases that cannot host draw2d
+    * figures and have to use native tooltips.
+    *
+    * @param link map link
+    * @param page map page containing the link (can be null)
+    * @return plain text description of the link
+    */
+   public static String buildDescription(NetworkMapLink link, NetworkMapPage page)
+   {
+      I18n i18n = LocalizationHelper.getI18n(LinkTooltip.class);
+      NXCSession session = Registry.getSession();
+
+      StringBuilder sb = new StringBuilder(getLinkTitle(i18n, link));
+      sb.append('\n').append(StatusDisplayInfo.getStatusText(calculateLinkStatus(session, link)));
+      sb.append('\n').append(i18n.tr("Type: {0}", getLinkTypeName(i18n, link)));
+
+      for(Endpoint endpoint : collectEndpoints(i18n, session, link, page))
+      {
+         sb.append('\n').append(endpoint.name);
+         if (endpoint.object != null)
+            sb.append(" (").append(StatusDisplayInfo.getStatusText(endpoint.object.getStatus())).append(')');
+         for(String[] detail : endpoint.details)
+            sb.append("\n\t").append(detail[0]).append(": ").append(detail[1]);
+      }
+
+      return sb.toString();
+   }
+
+   /**
+    * Collect information about both endpoints of the link.
+    *
+    * @param i18n localization object
+    * @param session client session
+    * @param link map link
+    * @param page map page containing the link (can be null)
+    * @return information about both endpoints of the link
+    */
+   private static List<Endpoint> collectEndpoints(I18n i18n, NXCSession session, NetworkMapLink link, NetworkMapPage page)
+   {
+      List<Endpoint> endpoints = new ArrayList<Endpoint>(2);
+      endpoints.add(collectEndpoint(i18n, session, page, link.getElement1(), link.getInterfaceId1(), link.getConnectorName1()));
+      endpoints.add(collectEndpoint(i18n, session, page, link.getElement2(), link.getInterfaceId2(), link.getConnectorName2()));
+      return endpoints;
+   }
+
+   /**
+    * Collect information about single link endpoint.
+    *
+    * @param i18n localization object
+    * @param session client session
+    * @param page map page containing the link (can be null)
+    * @param elementId map element ID
+    * @param interfaceId interface object ID on this side of the link (0 if unknown)
+    * @param connectorName connector name configured for this side of the link
+    * @return information about link endpoint
+    */
+   private static Endpoint collectEndpoint(I18n i18n, NXCSession session, NetworkMapPage page, long elementId, long interfaceId,
+         String connectorName)
+   {
+      Endpoint endpoint = new Endpoint();
+      endpoint.object = resolveElementObject(session, page, elementId);
+      endpoint.name = (endpoint.object != null) ? endpoint.object.getObjectName() : i18n.tr("<unknown>");
+
+      AbstractObject interfaceObject = (interfaceId != 0) ? session.findObjectById(interfaceId, true) : null;
+      if (interfaceObject instanceof Interface)
+      {
+         Interface iface = (Interface)interfaceObject;
+         endpoint.addDetail(i18n.tr("Interface"), iface.getNameWithAlias());
+         endpoint.addDetail(i18n.tr("Oper state"), iface.getOperStateAsText());
+         endpoint.addDetail(i18n.tr("Admin state"), iface.getAdminStateAsText());
+         if (iface.getIfType() != 0)
+         {
+            String typeName = iface.getIfTypeName();
+            endpoint.addDetail(i18n.tr("Type"),
+                  (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()));
+         }
+         if (iface.getSpeed() > 0)
+            endpoint.addDetail(i18n.tr("Speed"), InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
+         endpoint.addDetail(i18n.tr("Inbound"), formatUtilization(iface.getInboundUtilization(), iface.getSpeed()));
+         endpoint.addDetail(i18n.tr("Outbound"), formatUtilization(iface.getOutboundUtilization(), iface.getSpeed()));
+      }
+      else if ((connectorName != null) && !connectorName.isBlank())
+      {
+         endpoint.addDetail(i18n.tr("Connector"), connectorName);
+      }
+
+      return endpoint;
+   }
+
+   /**
+    * Format interface utilization. If interface speed is known, actual traffic calculated from utilization and speed is added.
+    *
+    * @param utilization utilization in permille or -1 if not available
+    * @param speed interface speed in bps or 0 if not known
+    * @return formatted utilization or null if utilization is not available
+    */
+   private static String formatUtilization(int utilization, long speed)
+   {
+      if (utilization < 0)
+         return null;
+
+      StringBuilder sb = new StringBuilder();
+      sb.append(utilization / 10);
+      sb.append('.');
+      sb.append(utilization % 10);
+      sb.append('%');
+      if (speed > 0)
+      {
+         sb.append(" (");
+         sb.append(InterfaceListLabelProvider.ifSpeedTotext(speed * utilization / 1000));
+         sb.append(')');
+      }
+      return sb.toString();
+   }
+
+   /**
     * Get title for tooltip - link name if set, otherwise generic text.
     *
+    * @param i18n localization object
+    * @param link map link
     * @return tooltip title
     */
-   private String getLinkTitle()
+   private static String getLinkTitle(I18n i18n, NetworkMapLink link)
    {
       String name = link.getName();
       return ((name != null) && !name.isBlank()) ? name : i18n.tr("Link");
@@ -268,9 +313,11 @@ public class LinkTooltip extends Figure
    /**
     * Get display name for link type.
     *
+    * @param i18n localization object
+    * @param link map link
     * @return display name for link type
     */
-   private String getLinkTypeName()
+   private static String getLinkTypeName(I18n i18n, NetworkMapLink link)
    {
       switch(link.getType())
       {
@@ -305,9 +352,11 @@ public class LinkTooltip extends Figure
     * Calculate link status as most critical status of link's status objects, or, if link has no status objects, of interfaces on
     * both sides of the link.
     *
+    * @param session client session
+    * @param link map link
     * @return calculated link status
     */
-   private ObjectStatus calculateLinkStatus()
+   private static ObjectStatus calculateLinkStatus(NXCSession session, NetworkMapLink link)
    {
       ObjectStatus status = ObjectStatus.UNKNOWN;
       for(Long id : link.getStatusObjects())
@@ -319,8 +368,8 @@ public class LinkTooltip extends Figure
 
       if (status == ObjectStatus.UNKNOWN)
       {
-         status = mostCritical(status, getInterfaceStatus(link.getInterfaceId1()));
-         status = mostCritical(status, getInterfaceStatus(link.getInterfaceId2()));
+         status = mostCritical(status, getInterfaceStatus(session, link.getInterfaceId1()));
+         status = mostCritical(status, getInterfaceStatus(session, link.getInterfaceId2()));
       }
 
       return status;
@@ -329,10 +378,11 @@ public class LinkTooltip extends Figure
    /**
     * Get status of interface object with given ID.
     *
+    * @param session client session
     * @param interfaceId interface object ID (0 if unknown)
     * @return interface status or UNKNOWN if interface object is not available
     */
-   private ObjectStatus getInterfaceStatus(long interfaceId)
+   private static ObjectStatus getInterfaceStatus(NXCSession session, long interfaceId)
    {
       AbstractObject object = (interfaceId != 0) ? session.findObjectById(interfaceId, true) : null;
       return (object instanceof Interface) ? object.getStatus() : ObjectStatus.UNKNOWN;
@@ -355,16 +405,39 @@ public class LinkTooltip extends Figure
    /**
     * Find object represented by given map element.
     *
+    * @param session client session
+    * @param page map page containing the element (can be null)
     * @param elementId map element ID
     * @return object represented by given map element or null
     */
-   private AbstractObject resolveElementObject(long elementId)
+   private static AbstractObject resolveElementObject(NXCSession session, NetworkMapPage page, long elementId)
    {
-      Object input = labelProvider.getViewer().getInput();
-      if (!(input instanceof NetworkMapPage))
+      if (page == null)
          return null;
 
-      NetworkMapElement element = ((NetworkMapPage)input).getElement(elementId, NetworkMapObject.class);
+      NetworkMapElement element = page.getElement(elementId, NetworkMapObject.class);
       return (element != null) ? session.findObjectById(((NetworkMapObject)element).getObjectId(), true) : null;
+   }
+
+   /**
+    * Information about single link endpoint collected for display.
+    */
+   private static final class Endpoint
+   {
+      AbstractObject object;
+      String name;
+      List<String[]> details = new ArrayList<String[]>();
+
+      /**
+       * Add name/value pair to endpoint details. Pairs with empty values are ignored.
+       *
+       * @param name value name
+       * @param value value
+       */
+      void addDetail(String name, String value)
+      {
+         if ((value != null) && !value.isEmpty())
+            details.add(new String[] { name, value });
+      }
    }
 }

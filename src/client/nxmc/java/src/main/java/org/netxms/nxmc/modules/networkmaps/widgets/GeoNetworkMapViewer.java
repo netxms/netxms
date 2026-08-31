@@ -64,6 +64,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.GeoLinkRenderer;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.LinkDciValueProvider;
+import org.netxms.nxmc.modules.networkmaps.widgets.helpers.LinkTooltip;
 import org.netxms.nxmc.modules.worldmap.GeoLocationCache;
 import org.netxms.nxmc.modules.worldmap.widgets.AbstractGeoMapViewer;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -1202,16 +1203,27 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
    }
 
    /**
-    * Show a native tooltip over the pin currently under the cursor, mirroring
-    * what the Zest canvas shows via {@link ObjectTooltip} (name, status, IPs).
-    * Clears the tooltip when the cursor is not over a pin. The canvas is also
-    * a regular SWT control, so we set its {@code toolTipText} property — the
-    * platform handles show/hide timing and positioning.
+    * Show a native tooltip over the pin or link currently under the cursor, mirroring
+    * what the Zest canvas shows via {@link ObjectTooltip} (name, status, IPs) and
+    * {@link LinkTooltip} (link type and status, endpoints with interface state,
+    * speed, utilization and traffic). Clears the tooltip when the cursor is not over
+    * a pin or a link. The canvas is also a regular SWT control, so we set its
+    * {@code toolTipText} property — the platform handles show/hide timing and
+    * positioning.
     */
    private void updateHoverTooltip(Point pt)
    {
       AbstractObject hover = getObjectAtPoint(pt);
-      String text = (hover != null) ? buildHoverText(hover) : null;
+      String text;
+      if (hover != null)
+      {
+         text = buildHoverText(hover);
+      }
+      else
+      {
+         NetworkMapLink link = getLinkAtPoint(pt);
+         text = (link != null) ? LinkTooltip.buildDescription(link, content) : null;
+      }
       // Avoid pointless string churn that would flicker the tooltip.
       String current = getToolTipText();
       if ((current == null) ? (text != null) : !current.equals(text))
