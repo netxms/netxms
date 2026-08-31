@@ -12120,7 +12120,7 @@ void ClientSession::queryL2Topology(const NXCPMessage& request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
             bool useL1Topology = request.getFieldAsBoolean(VID_USE_L1_TOPOLOGY);
-            int radius = request.getFieldAsUInt32(VID_DISCOVERY_RADIUS);
+            int radius = request.getFieldAsInt32(VID_DISCOVERY_RADIUS);
             uint32_t rcc;
 			   shared_ptr<NetworkMapObjectList> topology = static_cast<Node&>(*object).getAndUpdateL2Topology(&rcc, radius, useL1Topology);
 				if (topology != nullptr)
@@ -12165,7 +12165,7 @@ void ClientSession::queryIPTopology(const NXCPMessage& request)
       {
          if (object->getObjectClass() == OBJECT_NODE)
          {
-            int radius = request.getFieldAsUInt32(VID_DISCOVERY_RADIUS);
+            int radius = request.getFieldAsInt32(VID_DISCOVERY_RADIUS);
             unique_ptr<NetworkMapObjectList> topology = BuildIPTopology(static_pointer_cast<Node>(object), nullptr, radius, true);
             response.setField(VID_RCC, RCC_SUCCESS);
             topology->createMessage(&response);

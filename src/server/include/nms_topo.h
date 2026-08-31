@@ -481,6 +481,13 @@ class NetworkMapObjectList;
 class NetworkMapElement;
 class NetworkMapLink;
 
+/**
+ * Maximum valid topology discovery radius; values outside (0, MAX_DISCOVERY_RADIUS]
+ * mean "use Topology.DefaultDiscoveryRadius" (guards against old clients that sent
+ * -1 stored as 65535 via unsigned 16 bit read)
+ */
+#define MAX_DISCOVERY_RADIUS  255
+
 shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 const ROUTE NXCORE_EXPORTABLE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
 shared_ptr<NetworkPath> NXCORE_EXPORTABLE TraceL2Path(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);

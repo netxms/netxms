@@ -25,6 +25,18 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.40 to 62.41
+ */
+static bool H_UpgradeFromV40()
+{
+   // Normalize invalid network map discovery radius values (old clients sent -1
+   // for "use default", stored as 65535 via unsigned 16 bit read)
+   CHK_EXEC(SQLQuery(L"UPDATE network_maps SET radius=0 WHERE radius<0 OR radius>255"));
+   CHK_EXEC(SetMinorSchemaVersion(28));
+   return true;
+}
+
+/**
  * Upgrade from 62.39 to 62.40
  */
 static bool H_UpgradeFromV39()
@@ -1330,6 +1342,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 40, 62, 41, H_UpgradeFromV40 },
    { 39, 62, 40, H_UpgradeFromV39 },
    { 38, 62, 39, H_UpgradeFromV38 },
    { 37, 62, 38, H_UpgradeFromV37 },
