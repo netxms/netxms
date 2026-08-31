@@ -34,9 +34,9 @@ import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.serverconfig.dialogs.helpers.SnmpTrapFilter;
 import org.netxms.nxmc.modules.serverconfig.dialogs.helpers.TrapListLabelProvider;
 import org.netxms.nxmc.modules.snmp.views.helpers.SnmpTrapComparator;
+import org.netxms.nxmc.modules.snmp.views.helpers.SnmpTrapFilter;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 

@@ -54,6 +54,7 @@ import org.netxms.nxmc.modules.snmp.propertypages.SnmpTrapGeneral;
 import org.netxms.nxmc.modules.snmp.propertypages.SnmpTrapParameters;
 import org.netxms.nxmc.modules.snmp.propertypages.SnmpTrapTransformation;
 import org.netxms.nxmc.modules.snmp.views.helpers.SnmpTrapComparator;
+import org.netxms.nxmc.modules.snmp.views.helpers.SnmpTrapFilter;
 import org.netxms.nxmc.modules.snmp.views.helpers.SnmpTrapLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -147,6 +148,10 @@ public class SnmpTrapEditor extends ConfigurationView
 				actionEdit.run();
 			}
 		});
+
+      SnmpTrapFilter filter = new SnmpTrapFilter();
+      viewer.addFilter(filter);
+      setFilterClient(viewer, filter);
 
 		createActions();
 		createPopupMenu();
