@@ -290,17 +290,8 @@ public:
       return MHD_lookup_connection_value(m_connection, MHD_GET_ARGUMENT_KIND, name);
    }
 
-   int32_t getQueryParameterAsInt32(const char *name, int32_t defaultValue = 0) const
-   {
-      const char *v = getQueryParameter(name);
-      return (v != nullptr) ? strtol(v, nullptr, 0) : defaultValue;
-   }
-
-   uint32_t getQueryParameterAsUInt32(const char *name, uint32_t defaultValue = 0) const
-   {
-      const char *v = getQueryParameter(name);
-      return (v != nullptr) ? strtoul(v, nullptr, 0) : defaultValue;
-   }
+   int32_t getQueryParameterAsInt32(const char *name, int32_t defaultValue = 0) const;
+   uint32_t getQueryParameterAsUInt32(const char *name, uint32_t defaultValue = 0) const;
 
    bool getQueryParameterAsBoolean(const char *name, bool defaultValue = false) const
    {
@@ -317,11 +308,7 @@ public:
       return m_placeholderValues.get(name);
    }
 
-   const uint32_t getPlaceholderValueAsUInt32(const TCHAR *name, uint32_t defaultValue = 0) const
-   {
-      const TCHAR *v = m_placeholderValues.get(name);
-      return (v != nullptr) ? _tcstoul(v, nullptr, 0) : defaultValue;
-   }
+   const uint32_t getPlaceholderValueAsUInt32(const TCHAR *name, uint32_t defaultValue = 0) const;
 
    bool isProtocolUpgradeAllowed() const
    {
@@ -390,17 +377,7 @@ public:
       return GetClientAddress(m_connection);
    }
 
-   bool onUploadData(const char *data, size_t size)
-   {
-      if (m_requestData.size() + size > MAX_WEBAPI_REQUEST_SIZE)
-      {
-         nxlog_debug_tag(DEBUG_TAG_WEBAPI, 4, _T("Request body exceeds maximum size limit (%u bytes)"), MAX_WEBAPI_REQUEST_SIZE);
-         return false;
-      }
-      m_requestData.write(data, size);
-      return true;
-   }
-
+   bool onUploadData(const char *data, size_t size);
    void onUploadComplete();
 
    bool isRequestDecodingFailed() const
