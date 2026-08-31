@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.27 to 70.28
+ */
+static bool H_UpgradeFromV27()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 41)
+   {
+      // Normalize invalid network map discovery radius values (old clients sent -1
+      // for "use default", stored as 65535 via unsigned 16 bit read)
+      CHK_EXEC(SQLQuery(L"UPDATE network_maps SET radius=0 WHERE radius<0 OR radius>255"));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 41));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(28));
+   return true;
+}
+
+/**
  * Upgrade from 70.26 to 70.27
  */
 static bool H_UpgradeFromV26()
@@ -903,6 +919,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 27, 70, 28, H_UpgradeFromV27 },
    { 26, 70, 27, H_UpgradeFromV26 },
    { 25, 70, 26, H_UpgradeFromV25 },
    { 24, 70, 25, H_UpgradeFromV24 },

@@ -13790,7 +13790,7 @@ shared_ptr<NetworkMapObjectList> Node::getAndUpdateL2Topology(uint32_t *status, 
 {
    shared_ptr<NetworkMapObjectList> result;
    time_t expTime = ConfigReadULong(_T("Topology.AdHocRequest.ExpirationTime"), 900);
-   int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
+   int nDepth = ((radius <= 0) || (radius > MAX_DISCOVERY_RADIUS)) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
 
    m_topologyMutex.lock();
    if ((m_topology != nullptr) && (m_topologyRebuildTimestamp + expTime >= time(nullptr)) && (m_l1TopologyUsed == useL1Topology) && (m_topologyDepth == nDepth))
@@ -13842,7 +13842,7 @@ shared_ptr<NetworkMapObjectList> Node::buildL2Topology(int radius, bool includeE
    m_topologyMutex.unlock();
 
    shared_ptr<NetworkMapObjectList> result = make_shared<NetworkMapObjectList>();
-   int nDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
+   int nDepth = ((radius <= 0) || (radius > MAX_DISCOVERY_RADIUS)) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
    BuildL2Topology(*result, this, filterProvider, nDepth, includeEndNodes, useL1Topology, includeWiFiClients);
    return result;
 }

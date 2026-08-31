@@ -849,7 +849,10 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg, ClientSes
 	}
 
 	if (msg.isFieldExist(VID_DISCOVERY_RADIUS))
-		m_discoveryRadius = msg.getFieldAsUInt16(VID_DISCOVERY_RADIUS);
+	{
+	   uint16_t radius = msg.getFieldAsUInt16(VID_DISCOVERY_RADIUS);
+	   m_discoveryRadius = (radius <= MAX_DISCOVERY_RADIUS) ? radius : 0;
+	}
 
 	if (msg.isFieldExist(VID_LINK_COLOR))
 		m_defaultLinkColor = msg.getFieldAsUInt32(VID_LINK_COLOR);
@@ -1020,6 +1023,8 @@ uint32_t NetworkMap::modifyFromJSONInternal(json_t *json, GenericClientSession *
       return RCC_INVALID_ARGUMENT;
    if (!json_object_update_integer(json, "discoveryRadius", &m_discoveryRadius))
       return RCC_INVALID_ARGUMENT;
+   if (m_discoveryRadius > MAX_DISCOVERY_RADIUS)
+      m_discoveryRadius = 0;
    if (!json_object_update_integer(json, "defaultLinkColor", &m_defaultLinkColor))
       return RCC_INVALID_ARGUMENT;
    if (!json_object_update_integer(json, "defaultLinkColorSource", &m_defaultLinkColorSource))

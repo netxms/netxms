@@ -353,7 +353,7 @@ static void BuildOSPFTopology(NetworkMapObjectList *topology, const shared_ptr<N
  */
 unique_ptr<NetworkMapObjectList> NXCORE_EXPORTABLE BuildOSPFTopology(const shared_ptr<Node>& root, NetworkMap *filterProvider, int radius)
 {
-   int maxDepth = (radius <= 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
+   int maxDepth = ((radius <= 0) || (radius > MAX_DISCOVERY_RADIUS)) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
    auto topology = make_unique<NetworkMapObjectList>();
    BuildOSPFTopology(topology.get(), root, filterProvider, maxDepth);
    return topology;
