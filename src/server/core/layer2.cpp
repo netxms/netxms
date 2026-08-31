@@ -169,6 +169,31 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindInterfaceConnectionPoint(const MacAddre
    if (!macAddr.isValid() || (macAddr.length() != MAC_ADDR_LENGTH))
       return shared_ptr<NetObj>();
 
+   // Check link layer neighbor information (LLDP/CDP/etc.) first - it is authoritative
+   // compared to the FDB heuristic below. Only interface peers are usable here: an access
+   // point stored in peer interface ID is handled by the wireless station scan instead.
+   shared_ptr<NetObj> owner = MacDbFind(macAddr);
+   if (owner != nullptr)
+   {
+      uint32_t peerInterfaceId = 0;
+      if (owner->getObjectClass() == OBJECT_INTERFACE)
+         peerInterfaceId = static_cast<Interface&>(*owner).getPeerInterfaceId();
+      else if (owner->getObjectClass() == OBJECT_ACCESSPOINT)
+         peerInterfaceId = static_cast<AccessPoint&>(*owner).getPeerInterfaceId();
+      if (peerInterfaceId != 0)
+      {
+         shared_ptr<NetObj> peerIface = FindObjectById(peerInterfaceId, OBJECT_INTERFACE);
+         if (peerIface != nullptr)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, L"FindInterfaceConnectionPoint(%s): found link layer peer interface %s [%u] on node %s [%u]",
+                  macAddrText, peerIface->getName(), peerIface->getId(),
+                  static_cast<Interface&>(*peerIface).getParentNodeName().cstr(), static_cast<Interface&>(*peerIface).getParentNodeId());
+            *type = CP_TYPE_DIRECT;
+            return peerIface;
+         }
+      }
+   }
+
 	shared_ptr<NetObj> cp;
 	unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects();
 
@@ -289,33 +314,8 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindInterfaceConnectionPoint(const MacAddre
 static MacAddressInfo* CollectMacAddressInfo(const MacAddress& macAddr)
 {
    int type = CP_TYPE_UNKNOWN;
-   shared_ptr<NetObj> cp;
    shared_ptr<NetObj> object = MacDbFind(macAddr);
-
-   if (object != nullptr)
-   {
-      if (object->getObjectClass() == OBJECT_INTERFACE)
-      {
-         Interface *localIf = static_cast<Interface*>(object.get());
-         if (localIf->getPeerInterfaceId() != 0)
-         {
-            type = CP_TYPE_DIRECT;
-            cp = FindObjectById(localIf->getPeerInterfaceId());
-         }
-      }
-      else if (object->getObjectClass() == OBJECT_ACCESSPOINT)
-      {
-         AccessPoint *accessPoint = static_cast<AccessPoint*>(object.get());
-         if (accessPoint->getPeerInterfaceId() != 0)
-         {
-            type = CP_TYPE_DIRECT;
-            cp = FindObjectById(accessPoint->getPeerInterfaceId());
-         }
-      }
-   }
-
-   if (cp == nullptr)
-      cp = FindInterfaceConnectionPoint(macAddr, &type);
+   shared_ptr<NetObj> cp = FindInterfaceConnectionPoint(macAddr, &type);
 
    if (cp == nullptr && object == nullptr)
       return nullptr;
