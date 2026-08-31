@@ -86,6 +86,7 @@ public class ObjectTooltip extends Figure
 
       setOpaque(true);
       setBackgroundColor(ThemeEngine.getBackgroundColor("Map.ObjectTooltip"));
+      setForegroundColor(ThemeEngine.getForegroundColor("Map.ObjectTooltip"));
 
       Label title = new Label();
 		title.setIcon(labelProvider.getSmallIcon(object));
