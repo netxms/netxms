@@ -32,6 +32,7 @@
 
 bool RegisterConfigHelperNatives(JNIEnv *env);
 bool RegisterPlatformNatives(JNIEnv *env);
+void LogPendingJavaException(JNIEnv *env, StringBuffer *description = nullptr);
 
 // JNI native method registration requires casting function pointers to void*
 // (JNINativeMethod::fnPtr), which is conditionally-supported by the C++ standard
