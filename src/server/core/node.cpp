@@ -2130,21 +2130,49 @@ shared_ptr<NetObj> Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAd
 {
    shared_ptr<NetObj> cp;
    readLockChildList();
+
+   // First pass: interfaces with known link layer peer - direct connection information
+   // from topology poll takes precedence over the FDB heuristic
    for(int i = 0; i < getChildList().size(); i++)
    {
       if (getChildList().get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
          auto iface = static_cast<Interface*>(getChildList().get(i));
-         MacAddress macAddress = iface->getMacAddress();
-         cp = FindInterfaceConnectionPoint(macAddress, type);
-         if (cp != nullptr)
+         if (iface->getPeerInterfaceId() != 0)
          {
-            *localIfId = iface->getId();
-            memcpy(localMacAddr, macAddress.value(), MAC_ADDR_LENGTH);
-            break;
+            shared_ptr<NetObj> peerIface = FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
+            if (peerIface != nullptr)
+            {
+               *localIfId = iface->getId();
+               memcpy(localMacAddr, iface->getMacAddress().value(), MAC_ADDR_LENGTH);
+               *type = CP_TYPE_DIRECT;
+               cp = peerIface;
+               break;
+            }
          }
       }
    }
+
+   // Second pass: search for interface MAC addresses in switch forwarding databases
+   if (cp == nullptr)
+   {
+      for(int i = 0; i < getChildList().size(); i++)
+      {
+         if (getChildList().get(i)->getObjectClass() == OBJECT_INTERFACE)
+         {
+            auto iface = static_cast<Interface*>(getChildList().get(i));
+            MacAddress macAddress = iface->getMacAddress();
+            cp = FindInterfaceConnectionPoint(macAddress, type);
+            if (cp != nullptr)
+            {
+               *localIfId = iface->getId();
+               memcpy(localMacAddr, macAddress.value(), MAC_ADDR_LENGTH);
+               break;
+            }
+         }
+      }
+   }
+
    unlockChildList();
    return cp;
 }
