@@ -14873,8 +14873,10 @@ components:
           type: string
           description: Current value as string
         timestamp:
-          type: integer
-          description: Timestamp of last value collection (Unix timestamp)
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of last value collection in ISO 8601 format with milliseconds, or null if no value was collected
         status:
           type: integer
           description: Current DCI status
@@ -14918,6 +14920,12 @@ components:
         userTag:
           type: string
           description: User-defined tag
+        thresholdDisableEndTime:
+          type: integer
+          description: Time until which threshold processing is disabled (Unix timestamp), 0 if not disabled, -1 if disabled permanently
+        mappingTableId:
+          type: integer
+          description: ID of the value mapping table, 0 if none
         hasActiveThreshold:
           type: boolean
           description: True if DCI has active threshold
