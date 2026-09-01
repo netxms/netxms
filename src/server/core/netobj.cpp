@@ -2598,9 +2598,10 @@ uint32_t NetObj::updateAccessListFromJson(json_t *json)
       m_inheritAccessRights = json_is_true(inherit);
    if (accessList != nullptr)
       m_accessList.updateFromJson(accessList);
+   unlockProperties();
+
    clearInheritedAccessCache();
    notifyClientsOnAccessChange();
-   unlockProperties();
 
    markAsModified(MODIFY_ACCESS_LIST);
    return RCC_SUCCESS;
