@@ -298,6 +298,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="aoscx.cpp" />
     <ClCompile Include="aruba-sw.cpp" />
     <ClCompile Include="comware.cpp" />
     <ClCompile Include="h3c.cpp" />

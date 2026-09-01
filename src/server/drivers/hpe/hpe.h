@@ -28,6 +28,23 @@
 #include <netxms-version.h>
 
 /**
+ * Driver for HPE Aruba CX (AOS-CX) switches
+ */
+class ArubaCXDriver : public NetworkDeviceDriver
+{
+public:
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
+
+   virtual int isPotentialDevice(const SNMP_ObjectId& oid) override;
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
+   virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
+   virtual bool isConfigBackupSupported() override;
+   virtual bool getRunningConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+   virtual bool getStartupConfig(DeviceBackupContext *ctx, ByteStream *output) override;
+};
+
+/**
  * Driver for Aruba switches
  */
 class ArubaSwitchDriver : public NetworkDeviceDriver

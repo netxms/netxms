@@ -197,6 +197,7 @@ void MyVendorDriver::getSSHDriverHints(SSHDriverHints *hints) const
 | Hirschmann HiOS | `HirschmannHiOSDriver` | IOS-like, `terminal datadump` |
 | Extreme EXOS | `ExtremeDriver` | `host.slot #`, no enable, `disable clipaging` |
 | HP ProCurve / ArubaOS-S | `ProCurveDriver` | IOS-like, `enable`, `no page` |
+| HPE Aruba CX (AOS-CX) | `ArubaCXDriver` | IOS-like, no enable (role-based), `no page` |
 | HPE Comware (H3C/HH3C) | `ComwareDeviceDriver` | `<host>`/`[host]`, no enable, `screen-length disable`, exit is `quit` |
 | Aruba ArubaOS (controllers) | `ArubaSwitchDriver` | `(host) #`, `enable`, `no paging` |
 
