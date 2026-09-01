@@ -66,6 +66,7 @@ public:
    virtual InterfaceList *getInterfaces(DeviceContext *context, NObject *node, DriverData *driverData, bool useIfXTable) override;
 	virtual VlanList *getVlans(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual StructArray<ForwardingDatabaseEntry> *getForwardingDatabase(DeviceContext *context, NObject *node, DriverData *driverData) override;
+   virtual StructArray<BridgePort> *getBridgePorts(DeviceContext *context, NObject *node, DriverData *driverData) override;
    virtual void getSSHDriverHints(SSHDriverHints *hints) const override;
    virtual bool isConfigBackupSupported() override;
    virtual bool getRunningConfig(DeviceContext *ctx, ByteStream *output) override;
