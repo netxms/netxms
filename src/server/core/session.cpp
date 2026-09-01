@@ -19183,8 +19183,15 @@ void ClientSession::getBusinessServiceUptime(const NXCPMessage& request)
          }
 
          double uptime = GetServiceUptime(object->getId(), from, to);
-         response.setField(VID_BUSINESS_SERVICE_UPTIME, (uptime >= 0) ? uptime : 0.0);
-         response.setField(VID_RCC, RCC_SUCCESS);
+         if (uptime >= 0)
+         {
+            response.setField(VID_BUSINESS_SERVICE_UPTIME, uptime);
+            response.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_DB_FAILURE);
+         }
       }
       else
       {
