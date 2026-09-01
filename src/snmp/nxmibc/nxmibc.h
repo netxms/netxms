@@ -39,6 +39,7 @@
 #define ERR_UNRESOLVED_SYNTAX    6
 #define ERR_UPPERCASE_IDENTIFIER 7
 #define ERR_DANGLING_COMMA       8
+#define ERR_DUPLICATE_MODULE     9
 
 void ReportError(int error, const char *module, ...);
 

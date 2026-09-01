@@ -98,7 +98,8 @@ static struct
    { MIBC_ERROR, _T("Cannot resolve symbol %hs") },
    { MIBC_WARNING, _T("Cannot resolve data type \"%hs\" for object \"%hs\"") },
    { MIBC_WARNING, _T("Object identifier started with uppercase letter in line %d") },
-   { MIBC_WARNING, _T("Dangling comma character in line %d") }
+   { MIBC_WARNING, _T("Dangling comma character in line %d") },
+   { MIBC_WARNING, _T("Module already defined in another file, second definition ignored") }
 };
 
 /**
@@ -308,6 +309,7 @@ int main(int argc, char *argv[])
 
    if (s_fileList.size() > 0)
    {
+      s_fileList.sort();  // Sort file list to make compilation order (and duplicate module resolution) deterministic
       SNMP_MIBObject *rootObject;
       ParseMIBFiles(&s_fileList, &rootObject);
       if (rootObject != nullptr)
