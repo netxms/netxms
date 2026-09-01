@@ -808,14 +808,15 @@ NXSL_Value *BusinessService::createNXSLObject(NXSL_VM *vm)
 }
 
 /**
- * Get business service uptime in percents
+ * Get business service uptime in percents. Returns negative value if downtime records cannot
+ * be read from database.
  */
 double GetServiceUptime(uint32_t serviceId, time_t from, time_t to)
 {
    if ((to - from) <= 0)  // prevent division by zero (or negative value)
       return 100.0;
 
-   double uptimePercentage = 0;
+   double uptimePercentage = -1;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
             _T("SELECT from_timestamp,to_timestamp FROM business_service_downtime ")
