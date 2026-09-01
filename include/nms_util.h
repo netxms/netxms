@@ -139,7 +139,7 @@ void LIBNETXMS_EXPORTABLE bswap_array_32(uint32_t *v, int len);
  */
 template<typename T> static inline void ZeroInit(T *const& obj) noexcept
 {
-   static_assert(std::is_trivially_copyable<T>::value, "ZeroInit() requires a trivially copyable type");
+   static_assert(NX_IS_TRIVIALLY_COPYABLE(T), "ZeroInit() requires a trivially copyable type");
    memset(static_cast<void*>(obj), 0, sizeof(T));
 }
 
@@ -149,7 +149,7 @@ template<typename T> static inline void ZeroInit(T *const& obj) noexcept
  */
 template<typename T> static inline void ZeroInit(T *obj, size_t count) noexcept
 {
-   static_assert(std::is_trivially_copyable<T>::value, "ZeroInit() requires a trivially copyable type");
+   static_assert(NX_IS_TRIVIALLY_COPYABLE(T), "ZeroInit() requires a trivially copyable type");
    memset(static_cast<void*>(obj), 0, sizeof(T) * count);
 }
 
