@@ -1656,8 +1656,8 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
 
    if (!g_skipDataSchemaMigration)
    {
-      bool singleTableDestination = (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0) != 0);
-      bool singleTableSource = (DBMgrMetaDataReadInt32Ex(s_hdbSource, _T("SingeTablePerfData"), 0) != 0);
+      bool singleTableDestination = (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0) != 0);
+      bool singleTableSource = (DBMgrMetaDataReadInt32Ex(s_hdbSource, _T("SingleTablePerfData"), 0) != 0);
 
       if (singleTableSource && singleTableDestination && !g_skipDataMigration)
       {

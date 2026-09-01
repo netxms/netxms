@@ -1399,7 +1399,7 @@ bool IsDataTableExist(const wchar_t *format, uint32_t id)
  */
 static void CheckDataTables()
 {
-   if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
+   if (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0))
       return;  // Single table mode
 
    StartStage(_T("Data tables"));
@@ -1874,7 +1874,7 @@ void CheckDatabase()
          CheckAssetNodeLinks();
          if (g_checkData)
          {
-            if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))
+            if (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0))
             {
                if (g_dbSyntax == DB_SYNTAX_TSDB)
                {

@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.28 to 70.29
+ */
+static bool H_UpgradeFromV28()
+{
+   CHK_EXEC(SQLQuery(L"UPDATE metadata SET var_name='SingleTablePerfData' WHERE var_name='SingeTablePerfData'"));
+   CHK_EXEC(SetMinorSchemaVersion(29));
+   return true;
+}
+
+/**
  * Upgrade from 70.27 to 70.28
  */
 static bool H_UpgradeFromV27()
@@ -919,6 +929,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 28, 70, 29, H_UpgradeFromV28 },
    { 27, 70, 28, H_UpgradeFromV27 },
    { 26, 70, 27, H_UpgradeFromV26 },
    { 25, 70, 26, H_UpgradeFromV25 },

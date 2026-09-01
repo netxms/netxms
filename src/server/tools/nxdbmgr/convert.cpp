@@ -354,7 +354,7 @@ bool ConvertDatabase()
       _T("   SELECT * FROM idata_1d_sc_other")));
 
    CHK_EXEC_NO_SP(SQLQuery(_T("UPDATE metadata SET var_value='TSDB' WHERE var_name='Syntax'")));
-   CHK_EXEC_NO_SP(SQLQuery(_T("UPDATE metadata SET var_value='1' WHERE var_name='SingeTablePerfData'")));
+   CHK_EXEC_NO_SP(SQLQuery(_T("UPDATE metadata SET var_value='1' WHERE var_name='SingleTablePerfData'")));
 
    WriteToTerminal(_T("Database conversion is \x1b[1;32mSUCCESSFUL\x1b[0m\n"));
    return true;

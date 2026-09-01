@@ -10,9 +10,9 @@ INSERT INTO metadata (var_name,var_value) VALUES ('SchemaVersionMinor',DB_SCHEMA
 INSERT INTO metadata (var_name,var_value) VALUES ('Syntax',DB_SYNTAX);
 
 #ifdef DB_TSDB
-INSERT INTO metadata (var_name,var_value) VALUES ('SingeTablePerfData','1');
+INSERT INTO metadata (var_name,var_value) VALUES ('SingleTablePerfData','1');
 #else
-INSERT INTO metadata (var_name,var_value) VALUES ('SingeTablePerfData','0');
+INSERT INTO metadata (var_name,var_value) VALUES ('SingleTablePerfData','0');
 #endif
 
 INSERT INTO metadata (var_name,var_value)

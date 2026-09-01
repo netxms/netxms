@@ -486,7 +486,7 @@ static bool ExportAggregateTable(sqlite3 *db, uint32_t id, bool hourly, const St
 static bool ExportPerfData(sqlite3 *db, const StringList& excludedTables)
 {
    IntegerArray<uint32_t> targets = GetDataCollectionTargets();
-   bool singleTable = (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0) != 0);
+   bool singleTable = (DBMgrMetaDataReadInt32(_T("SingleTablePerfData"), 0) != 0);
    bool exportAggregates = (g_dbSyntax != DB_SYNTAX_TSDB) && !singleTable;
 
    for(int i = 0; i < targets.size(); i++)

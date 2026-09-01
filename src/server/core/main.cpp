@@ -625,7 +625,7 @@ static bool CheckDataDirectory()
  */
 static void LoadGlobalConfig()
 {
-   if (MetaDataReadInt32(_T("SingeTablePerfData"), 0))
+   if (MetaDataReadInt32(_T("SingleTablePerfData"), 0))
    {
       nxlog_debug_tag(_T("dc"), 1, _T("Using single table for performance data storage"));
       g_flags |= AF_SINGLE_TABLE_PERF_DATA;
