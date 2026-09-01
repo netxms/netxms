@@ -52,6 +52,78 @@ static LONG H_TopicStructuredListData(const TCHAR *name, const TCHAR *arg, Strin
 }
 
 /**
+ * Topic instance list handler
+ */
+static LONG H_TopicInstances(const TCHAR *name, const TCHAR *arg, StringList *result, AbstractCommSession *session)
+{
+   return ((Topic*)arg)->retrieveInstances(result);
+}
+
+/**
+ * Add metric definition, warning about duplicate metric names
+ */
+static void AddMetricDefinition(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, const NETXMS_SUBAGENT_PARAM *p)
+{
+   for(int i = 0; i < parameters->size(); i++)
+      if (!_tcsicmp(parameters->get(i)->name, p->name))
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Duplicate definition of MQTT metric \"%s\" - only last definition will be used"), p->name);
+         break;
+      }
+   parameters->add(p);
+}
+
+/**
+ * Add list definition, warning about duplicate list names
+ */
+static void AddListDefinition(StructArray<NETXMS_SUBAGENT_LIST> *lists, const NETXMS_SUBAGENT_LIST *l)
+{
+   for(int i = 0; i < lists->size(); i++)
+      if (!_tcsicmp(lists->get(i)->name, l->name))
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Duplicate definition of MQTT list \"%s\" - only last definition will be used"), l->name);
+         break;
+      }
+   lists->add(l);
+}
+
+/**
+ * Replace {instance} placeholders in topic pattern with MQTT single level wildcards. Returns index of topic
+ * segment holding instance name, or -1 if placeholder is not present or cannot be used.
+ */
+static int ExtractInstancePlaceholder(TCHAR *pattern, const TCHAR *extractorName)
+{
+   static const size_t placeholderLength = 10;  // length of "{instance}"
+
+   int segment = -1;
+   TCHAR *p;
+   while((p = _tcsstr(pattern, _T("{instance}"))) != nullptr)
+   {
+      if (((p != pattern) && (*(p - 1) != _T('/'))) || ((p[placeholderLength] != 0) && (p[placeholderLength] != _T('/'))))
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Placeholder {instance} in topic \"%s\" of MQTT extractor %s does not occupy entire topic segment and will be ignored"), pattern, extractorName);
+         break;
+      }
+
+      *p = _T('+');
+      memmove(p + 1, p + placeholderLength, (_tcslen(p + placeholderLength) + 1) * sizeof(TCHAR));
+
+      if (segment == -1)
+      {
+         segment = 0;
+         for(const TCHAR *s = pattern; s < p; s++)
+            if (*s == _T('/'))
+               segment++;
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Only first {instance} placeholder in topic of MQTT extractor %s is used as instance name"), extractorName);
+      }
+   }
+   return segment;
+}
+
+/**
  * Broker constructor
  */
 MqttBroker::MqttBroker(const uuid& guid, const TCHAR *name) : m_topics(16, 16, Ownership::True), m_topicLock(MutexType::FAST)
@@ -98,7 +170,7 @@ MqttBroker::~MqttBroker()
 /**
  * Create broker object from configuration
  */
-MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_LIST> *lists)
+MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_LIST> *lists, bool prefixMetricNames)
 {
    MqttBroker *broker = new MqttBroker(uuid::generate(), config->getName());
    if (broker->m_handle == nullptr)
@@ -139,7 +211,7 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
          p.dataType = DCI_DT_STRING;
          p.handler = H_TopicData;
          _sntprintf(p.description, MAX_DB_STRING, _T("MQTT topic %hs"), t->getPattern());
-         parameters->add(p);
+         AddMetricDefinition(parameters, &p);
       }
    }
 
@@ -150,17 +222,39 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
       for(int i = 0; i < extractors->size(); i++)
       {
          ConfigEntry *extractor = extractors->get(i);
-         const TCHAR *topic = extractor->getSubEntryValue(_T("Topic"));
-         if (topic == nullptr)
+         const TCHAR *configuredTopic = extractor->getSubEntryValue(_T("Topic"));
+         if (configuredTopic == nullptr)
          {
             nxlog_debug_tag(DEBUG_TAG, 3, _T("Skipping extractor without topic: %s"), extractor->getName());
             continue;
+         }
+
+         TCHAR *topic = MemCopyString(configuredTopic);
+         int instanceSegment = ExtractInstancePlaceholder(topic, extractor->getName());
+         const TCHAR *instanceQuery = extractor->getSubEntryValue(_T("InstanceFromPayload"), 0, nullptr);
+         if ((instanceQuery != nullptr) && (*instanceQuery == 0))
+            instanceQuery = nullptr;
+         if ((instanceSegment >= 0) && (instanceQuery != nullptr))
+         {
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Both {instance} placeholder and InstanceFromPayload query are defined for MQTT extractor %s, query will be ignored"), extractor->getName());
+            instanceQuery = nullptr;
          }
 
          bool parseAsText = extractor->getSubEntryValueAsBoolean(_T("ForcePlainTextParser"), false);
          const TCHAR *description = extractor->getSubEntryValue(_T("Description"), 0, nullptr);
 
          Topic *t = new Topic(topic, extractor->getName(), parseAsText);
+         if ((instanceSegment >= 0) || (instanceQuery != nullptr))
+         {
+            uint32_t instanceTimeout = extractor->getSubEntryValueAsUInt(_T("InstanceTimeout"), 0, 86400);
+            int maxInstances = extractor->getSubEntryValueAsInt(_T("MaxInstances"), 0, 1000);
+            if (instanceSegment >= 0)
+               t->enableInstanceDiscoveryFromTopic(instanceSegment, instanceTimeout, maxInstances);
+            else
+               t->enableInstanceDiscoveryFromPayload(instanceQuery, instanceTimeout, maxInstances);
+            nxlog_debug_tag(DEBUG_TAG, 3, _T("Instance discovery enabled for MQTT extractor %s (subscription topic \"%s\", instance timeout %u seconds, instance limit %d)"),
+                     extractor->getName(), topic, instanceTimeout, maxInstances);
+         }
          broker->m_topics.add(t);
 
          NETXMS_SUBAGENT_PARAM p;
@@ -173,7 +267,7 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
             _tcslcpy(p.description, description, MAX_DB_STRING);
          else
             _sntprintf(p.description, MAX_DB_STRING, _T("MQTT topic %s"), topic);
-         parameters->add(&p);
+         AddMetricDefinition(parameters, &p);
 
          StringMap *metricDefenitions = new StringMap();
          const ConfigEntry *metricRoot = extractor->findEntry(_T("Metrics"));
@@ -197,13 +291,23 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
                _tcscpy(tmp, name);
                _tcscat(tmp, _T(".dataType"));
                int dataType = TextToDataType(metricRoot->getSubEntryValue(tmp, 0 , _T("")));
-               String baseName = name.endsWith(_T("(*)")) ? name.substring(0, name.length() - 3) : name;
+               TCHAR metricName[MAX_PARAM_NAME];
+               if (prefixMetricNames)
+                  _sntprintf(metricName, MAX_PARAM_NAME, _T("%s.%s"), extractor->getName(), name.cstr());
+               else
+                  _tcslcpy(metricName, name.cstr(), MAX_PARAM_NAME);
+
+               size_t metricNameLength = _tcslen(metricName);
+               bool parametrized = (metricNameLength > 3) && !_tcscmp(&metricName[metricNameLength - 3], _T("(*)"));
+               String baseName = parametrized ? String(metricName, metricNameLength - 3) : String(metricName);
+               if (!parametrized && t->isInstanceDiscoveryEnabled())
+                  _tcslcat(metricName, _T("(*)"), MAX_PARAM_NAME);   // instance name is passed as metric argument
 
                metricDefenitions->set(baseName, e->getValue());
 
                NETXMS_SUBAGENT_PARAM p;
                memset(&p, 0, sizeof(NETXMS_SUBAGENT_PARAM));
-               _tcslcpy(p.name, e->getName(), MAX_PARAM_NAME);
+               _tcslcpy(p.name, metricName, MAX_PARAM_NAME);
                p.arg = (const TCHAR *)t;
                p.dataType = (dataType == -1) ? DCI_DT_STRING : dataType;
                p.handler = H_TopicStructuredData;
@@ -211,7 +315,7 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
                   _tcslcpy(p.description, description, MAX_DB_STRING);
                else
                   _sntprintf(p.description, MAX_DB_STRING, _T("MQTT topic %s"), topic);
-               parameters->add(&p);
+               AddMetricDefinition(parameters, &p);
             }
          }
          t->setExtractors(metricDefenitions);
@@ -225,7 +329,18 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
             _tcslcpy(l.description, description, MAX_DB_STRING);
          else
             _sntprintf(l.description, MAX_DB_STRING, _T("MQTT topic %s"), topic);
-         lists->add(&l);
+         AddListDefinition(lists, &l);
+
+         if (t->isInstanceDiscoveryEnabled())
+         {
+            NETXMS_SUBAGENT_LIST il;
+            memset(&il, 0, sizeof(NETXMS_SUBAGENT_LIST));
+            _tcslcpy(il.name, t->getInstanceListName(), MAX_PARAM_NAME);
+            il.arg = (const TCHAR *)t;
+            il.handler = H_TopicInstances;
+            _sntprintf(il.description, MAX_DB_STRING, _T("Instances of MQTT extractor %s"), extractor->getName());
+            AddListDefinition(lists, &il);
+         }
 
          StringMap *listDefenitions = new StringMap();
          metricRoot = extractor->findEntry(_T("Lists"));
@@ -245,23 +360,36 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
                _tcscpy(tmp, name);
                _tcscat(tmp, _T(".description"));
                const TCHAR *description = metricRoot->getSubEntryValue(tmp, 0 , _T(""));
-               String baseName = name.endsWith(_T("(*)")) ? name.substring(0, name.length() - 3) : name;
+
+               TCHAR listName[MAX_PARAM_NAME];
+               if (prefixMetricNames)
+                  _sntprintf(listName, MAX_PARAM_NAME, _T("%s.%s"), extractor->getName(), name.cstr());
+               else
+                  _tcslcpy(listName, name.cstr(), MAX_PARAM_NAME);
+
+               size_t listNameLength = _tcslen(listName);
+               bool parametrized = (listNameLength > 3) && !_tcscmp(&listName[listNameLength - 3], _T("(*)"));
+               String baseName = parametrized ? String(listName, listNameLength - 3) : String(listName);
+               if (!parametrized && t->isInstanceDiscoveryEnabled())
+                  _tcslcat(listName, _T("(*)"), MAX_PARAM_NAME);   // instance name is passed as list argument
 
                listDefenitions->set(baseName, e->getValue());
 
                NETXMS_SUBAGENT_LIST l;
                memset(&l, 0, sizeof(NETXMS_SUBAGENT_LIST));
-               _tcslcpy(l.name, e->getName(), MAX_PARAM_NAME);
+               _tcslcpy(l.name, listName, MAX_PARAM_NAME);
                l.arg = (const TCHAR *)t;
                l.handler = H_TopicStructuredListData;
                if (description != nullptr)
                   _tcslcpy(l.description, description, MAX_DB_STRING);
                else
                   _sntprintf(l.description, MAX_DB_STRING, _T("MQTT topic %s"), topic);
-               lists->add(&l);
+               AddListDefinition(lists, &l);
             }
          }
          t->setListExtractors(listDefenitions);
+
+         MemFree(topic);
       }
    }
 

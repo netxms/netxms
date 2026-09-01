@@ -42,13 +42,27 @@ private:
    char m_lastValue[MAX_RESULT_LENGTH];
    time_t m_timestamp;
    TCHAR *m_event;
+   TCHAR *m_name;
    TCHAR m_genericParamName[MAX_PARAM_NAME];
+   TCHAR m_instanceListName[MAX_PARAM_NAME];
    StringMap *m_parameters;
    StringMap *m_lists;
    StructuredDataExtractor *m_dataExtractor;
+   StringObjectMap<StructuredDataExtractor> *m_instances;
+   int m_instanceSegment;
+   TCHAR *m_instanceQuery;
+   uint32_t m_instanceTimeout;
+   int m_maxInstances;
+   bool m_instanceLimitReported;
    bool m_parseAsText;
    bool m_truncationReported;
    Mutex m_mutex;
+
+   void initInstanceMap(uint32_t timeout, int maxInstances);
+   void updateInstanceContent(const char *topic, const char *msg, size_t msgLen);
+   bool canAddInstance();
+   StructuredDataExtractor *getInstance(const TCHAR *instance);
+   void purgeExpiredInstances();
 
 public:
    Topic(const TCHAR *pattern, const TCHAR *event);
@@ -58,15 +72,20 @@ public:
 
    const char *getPattern() const { return m_pattern; }
    time_t getTimestamp() const { return m_timestamp; }
-   const TCHAR *getGenericParameterName() { return m_genericParamName; }
+   const TCHAR *getGenericParameterName() const { return m_genericParamName; }
+   const TCHAR *getInstanceListName() const { return m_instanceListName; }
+   bool isInstanceDiscoveryEnabled() const { return m_instances != nullptr; }
 
    void setExtractors(StringMap *parameters) { m_parameters = parameters; }
    void setListExtractors(StringMap *lists) { m_lists = lists; }
+   void enableInstanceDiscoveryFromTopic(int segment, uint32_t timeout, int maxInstances);
+   void enableInstanceDiscoveryFromPayload(const TCHAR *query, uint32_t timeout, int maxInstances);
 
    void processMessage(const char *topic, const char *msg);
    bool retrieveData(TCHAR *buffer, size_t bufferLen);
    LONG retrieveData(const TCHAR *metricName, TCHAR *buffer, size_t bufferLen);
    LONG retrieveListData(const TCHAR *metricName, StringList *buffer);
+   LONG retrieveInstances(StringList *buffer);
 };
 
 /**
@@ -112,7 +131,7 @@ public:
 
    LONG getTopicData(const char *topicName, TCHAR *value, bool enableAutoRegistration);
 
-   static MqttBroker *createFromConfig(const ConfigEntry *e, StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_LIST> *lists);
+   static MqttBroker *createFromConfig(const ConfigEntry *e, StructArray<NETXMS_SUBAGENT_PARAM> *parameters, StructArray<NETXMS_SUBAGENT_LIST> *lists, bool prefixMetricNames);
    static MqttBroker *createFromMessage(const NXCPMessage *msg);
 };
 
