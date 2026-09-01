@@ -5352,7 +5352,9 @@ paths:
     get:
       operationId: getDciCurrentValues
       summary: Get current DCI values
-      description: Retrieve current values for all data collection items (DCIs) of a given object.
+      description: |
+        Retrieve current values for all data collection items (DCIs) of a given object.
+        Table DCIs are listed with `dataType` 6 (null) and an empty `value` - the table content itself is not returned.
       parameters:
         - name: object-id
           in: path

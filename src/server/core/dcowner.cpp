@@ -1116,12 +1116,12 @@ void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context)
    lockProperties();
    String name = json_object_get_string(data, "name", _T("Unnamed Object"));
    wcslcpy(m_name, name, MAX_OBJECT_NAME);
-   
+
    json_t *flagsObj = json_object_get(data, "flags");
    if (json_is_integer(flagsObj))
       m_flags = static_cast<uint32_t>(json_integer_value(flagsObj));
    unlockProperties();
-   
+
    String comments = json_object_get_string(data, "comments", _T(""));
    setComments(comments.isEmpty() ? nullptr : comments.cstr());
 
@@ -1142,7 +1142,7 @@ void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context)
          {
             if (!json_is_object(dciJson))
                continue;
-               
+
             uuid guid = json_object_get_uuid(dciJson, "guid");
             shared_ptr<DCObject> curr = !guid.isNull() ? getDCObjectByGUID(guid, 0, false) : shared_ptr<DCObject>();
             if ((curr != nullptr) && (curr->getType() == DCO_TYPE_ITEM))
@@ -1402,7 +1402,7 @@ uint32_t DataCollectionOwner::getDataCollectionSummary(json_t *values, bool obje
           object->hasAccess(userId) &&
           (filter == nullptr || filter(object)))
       {
-         json_array_append_new(values, static_cast<DCItem*>(object)->lastValueToJSON());
+         json_array_append_new(values, object->lastValueToJSON());
       }
    }
 

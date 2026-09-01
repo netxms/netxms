@@ -3188,7 +3188,7 @@ uint32_t DataCollectionTarget::getDataCollectionSummary(json_t *values, bool obj
           object->hasAccess(userId) &&
           (filter == nullptr || filter(object)))
       {
-         json_array_append_new(values, static_cast<DCItem*>(object)->lastValueToJSON());
+         json_array_append_new(values, object->lastValueToJSON());
       }
    }
 

@@ -171,7 +171,7 @@ DCTable::DCTable(json_t *json, const shared_ptr<DataCollectionOwner>& owner, Imp
 {
    m_columns = new ObjectArray<DCTableColumn>(0, 8, Ownership::True);
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 8, Ownership::True);
-   
+
    json_t *columnsArray = json_object_get(json, "columns");
    if (json_is_array(columnsArray))
    {
@@ -873,22 +873,74 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
 }
 
 /**
- * Put last value into JSON object
+ * Get summary of last collected value as JSON object (same shape as DCItem::lastValueToJSON,
+ * table content itself is not included)
  */
 json_t *DCTable::lastValueToJSON()
 {
-   json_t *value;
+   json_t *data = json_object();
+
    lock();
-   if (m_lastValue != nullptr)
+   json_object_set_new(data, "ownerId", json_integer(m_ownerId));
+   json_object_set_new(data, "id", json_integer(m_id));
+   json_object_set_new(data, "name", json_string_t(m_name));
+   json_object_set_new(data, "flags", json_integer(m_flags));
+   json_object_set_new(data, "description", json_string_t(m_description));
+   json_object_set_new(data, "sourceType", json_integer(m_source));
+   json_object_set_new(data, "dataType", json_integer(DCI_DT_NULL));
+   json_object_set_new(data, "value", json_string(""));
+   json_object_set_new(data, "timestamp", (m_lastValue != nullptr) ? m_lastValueTimestamp.asJson() : json_null());
+
+   // Show resource-bound DCIs as inactive if cluster resource is not on this node
+   json_object_set_new(data, "status", json_integer(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED));
+   json_object_set_new(data, "type", json_integer(getType()));
+   json_object_set_new(data, "errorCount", json_integer(m_errorCount));
+   json_object_set_new(data, "lastCollectionError", json_string(DataCollectionErrorName(static_cast<DataCollectionError>(m_lastCollectionError))));
+   json_object_set_new(data, "templateItemId", json_integer(m_templateItemId));
+   json_object_set_new(data, "unitName", json_string(""));
+   json_object_set_new(data, "multiplier", json_integer(0));
+   json_object_set_new(data, "noValue", json_boolean(!hasValue()));
+   json_object_set_new(data, "comments", json_string_t(m_comments));
+   json_object_set_new(data, "anomalyDetected", json_boolean(false));
+   json_object_set_new(data, "userTag", json_string_t(m_userTag));
+   json_object_set_new(data, "thresholdDisableEndTime", json_integer(m_thresholdDisableEndTime));
+   json_object_set_new(data, "mappingTableId", json_integer(0));
+
+   DCTableThreshold *threshold = nullptr;
+   int severity = -1;
+   if (m_thresholds != nullptr)
    {
-      value = m_lastValue->toJson();
+      for(int i = 0; (i < m_thresholds->size()) && (severity != STATUS_CRITICAL); i++)
+      {
+         DCTableThreshold *t = m_thresholds->get(i);
+         if (t->isActive())
+         {
+            shared_ptr<EventTemplate> event = FindEventTemplateByCode(t->getActivationEvent());
+            if ((event != nullptr) && (event->getSeverity() > severity))
+            {
+               threshold = t;
+               severity = event->getSeverity();
+            }
+         }
+      }
+   }
+
+   if (threshold != nullptr)
+   {
+      json_object_set_new(data, "hasActiveThreshold", json_boolean(true));
+      json_t *thresholdData = threshold->toJson();
+      json_object_set_new(thresholdData, "condition", json_string_t(threshold->getConditionAsText()));
+      json_object_set_new(thresholdData, "currentSeverity", json_integer(severity));
+      json_object_set_new(thresholdData, "isReached", json_boolean(true));
+      json_object_set_new(data, "threshold", thresholdData);
    }
    else
    {
-      value = json_null();
+      json_object_set_new(data, "hasActiveThreshold", json_boolean(false));
    }
+
    unlock();
-   return value;
+   return data;
 }
 
 /**
@@ -1192,7 +1244,7 @@ void DCTable::updateFromTemplate(DCObject *src)
 json_t *DCTable::createExportRecord() const
 {
    json_t *root = json_object();
-   
+
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "name", json_string_t(m_name));
@@ -1322,7 +1374,7 @@ void DCTable::updateFromImport(json_t *json, ImportContext *context)
    DCObject::updateFromImport(json, context);
 
    lock();
-   
+
    m_columns->clear();
    json_t *columnsArray = json_object_get(json, "columns");
    if (json_is_array(columnsArray))
@@ -1352,7 +1404,7 @@ void DCTable::updateFromImport(json_t *json, ImportContext *context)
          }
       }
    }
-   
+
    unlock();
 }
 
