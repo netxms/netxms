@@ -5689,6 +5689,11 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
          modified |= MODIFY_COMMON_PROPERTIES;
       }
+      else
+      {
+         sendPollerMsg(POLLER_WARNING _T("Cannot synchronize node name with DNS (unable to resolve IP address to host name)\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): cannot resolve node IP address to host name"), m_name, m_id);
+      }
    }
    if (!resolved && (g_flags & AF_SYNC_NODE_NAMES_WITH_SNMP_SYSNAME))
    {
@@ -5755,7 +5760,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          sendPollerMsg(_T("Node name cannot be interpreted as valid IP address, no need to resolve to host name\r\n"));
       }
    }
-   else if (!resolved)
+   else if (!resolved && !(g_flags & (AF_SYNC_NODE_NAMES_WITH_DNS | AF_SYNC_NODE_NAMES_WITH_SNMP_SYSNAME)))
    {
       sendPollerMsg(_T("Node name is OK\r\n"));
    }
