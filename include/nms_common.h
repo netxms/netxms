@@ -1106,7 +1106,12 @@ enum class Ownership : bool
 /**
  * Macros for suppress and resume compiler warning about potential unaligned access.
  */
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__clang__)
+#if __has_warning("-Waddress-of-packed-member")
+#define SUPPRESS_WARNING_PACKED_PUSH _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Waddress-of-packed-member\"")
+#define SUPPRESS_WARNING_PACKED_POP _Pragma("GCC diagnostic pop")
+#endif
+#elif defined(__GNUC__) && (__GNUC__ >= 9)
 #define SUPPRESS_WARNING_PACKED_PUSH _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Waddress-of-packed-member\"")
 #define SUPPRESS_WARNING_PACKED_POP _Pragma("GCC diagnostic pop")
 #else
