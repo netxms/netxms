@@ -28,6 +28,7 @@
 #include <netxms-version.h>
 #include <nxlibcurl.h>
 #include <nxjson.h>
+#include <nxmarkdown.h>
 #include <websocket.h>
 
 #define DEBUG_TAG _T("ncd.mattermost")
@@ -460,7 +461,7 @@ public:
 
    virtual bool start(ChatBotMessageSink *sink) override;
    virtual void stop() override;
-   virtual bool sendMessage(const char *peerId, const char *text) override;
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) override;
 
    /**
     * Mattermost interactive buttons require inbound HTTP integration endpoint, so questions
@@ -932,12 +933,22 @@ bool MattermostChatBot::postMessage(const char *channelId, const char *text)
 }
 
 /**
- * Send message to given peer
+ * Send message to given peer. Mattermost renders posts as markdown, so markdown text is posted
+ * as is and literal text is escaped to be displayed as written.
  */
-bool MattermostChatBot::sendMessage(const char *peerId, const char *text)
+bool MattermostChatBot::sendMessage(const char *peerId, const char *text, bool isMarkdown)
 {
    char channelId[64];
-   return resolveRecipient(peerId, channelId, sizeof(channelId)) && postMessage(channelId, text);
+   if (!resolveRecipient(peerId, channelId, sizeof(channelId)))
+      return false;
+
+   if (isMarkdown)
+      return postMessage(channelId, text);
+
+   char *escapedText = EscapeStringForMarkdown(text);
+   bool success = postMessage(channelId, escapedText);
+   MemFree(escapedText);
+   return success;
 }
 
 /**

@@ -167,7 +167,7 @@ public:
          const char *providerSlot, const StructArray<ChatBotUserMapping>& userMappings);
    void updateName(const wchar_t *newName) { wcslcpy(m_name, newName, MAX_OBJECT_NAME); }
 
-   bool sendMessageToPeer(const char *peerId, const char *text);
+   bool sendMessageToPeer(const char *peerId, const char *text, bool isMarkdown);
    void deliverQuestion(const QuestionDelivery& question);
 
    void checkHealth();
@@ -207,8 +207,9 @@ public:
       if ((context.recipient == nullptr) || (*context.recipient == 0))
          return -1;
 
-      // Chat bot drivers treat message text as markdown, so pass original markdown body when available
-      const char *body = (context.markdownBody != nullptr) ? context.markdownBody : context.body;
+      // Pass original markdown body when message was submitted as markdown, plain text body otherwise
+      bool isMarkdown = (context.markdownBody != nullptr);
+      const char *body = isMarkdown ? context.markdownBody : context.body;
       std::string text;
       if ((context.subject != nullptr) && (*context.subject != 0))
       {
@@ -217,7 +218,7 @@ public:
       }
       if (body != nullptr)
          text.append(body);
-      return m_bot->sendMessageToPeer(context.recipient, text.c_str()) ? 0 : -1;
+      return m_bot->sendMessageToPeer(context.recipient, text.c_str(), isMarkdown) ? 0 : -1;
    }
 
    virtual bool checkHealth() override
@@ -413,18 +414,19 @@ void ChatBot::update(const wchar_t *description, const wchar_t *driverName, char
 /**
  * Send message to given peer through platform driver
  */
-bool ChatBot::sendMessageToPeer(const char *peerId, const char *text)
+bool ChatBot::sendMessageToPeer(const char *peerId, const char *text, bool isMarkdown)
 {
    bool success = false;
    m_driverLock.lock();
    if (m_driver != nullptr)
-      success = m_driver->sendMessage(peerId, text);
+      success = m_driver->sendMessage(peerId, text, isMarkdown);
    m_driverLock.unlock();
    return success;
 }
 
 /**
- * Send reply to peer asynchronously (used from driver transport thread which must not block)
+ * Send reply composed by server core to peer asynchronously (used from driver transport thread
+ * which must not block). Such replies are literal text, never markdown.
  */
 void ChatBot::replyAsync(const std::string& peerId, const std::string& text)
 {
@@ -434,7 +436,7 @@ void ChatBot::replyAsync(const std::string& peerId, const std::string& text)
    ThreadPoolExecute(g_mainThreadPool,
       [bot, peerId, text] ()
       {
-         bot->sendMessageToPeer(peerId.c_str(), text.c_str());
+         bot->sendMessageToPeer(peerId.c_str(), text.c_str(), false);
       });
 }
 
@@ -497,7 +499,7 @@ void ChatBot::processRequest(shared_ptr<ChatBotSession> session, std::string inp
       shared_ptr<Chat> chat = acquireChat(session);
       if (chat == nullptr)
       {
-         sendMessageToPeer(session->peerId.c_str(), "Cannot connect to AI assistant. Please contact your NetXMS administrator.");
+         sendMessageToPeer(session->peerId.c_str(), "Cannot connect to AI assistant. Please contact your NetXMS administrator.", false);
          m_lock.lock();
          session->busy = false;
          session->pendingInput.clear();
@@ -508,12 +510,12 @@ void ChatBot::processRequest(shared_ptr<ChatBotSession> session, std::string inp
       char *response = chat->sendRequest(input.c_str());
       if (response != nullptr)
       {
-         sendMessageToPeer(session->peerId.c_str(), response);
+         sendMessageToPeer(session->peerId.c_str(), response, true);   // assistant replies are markdown
          MemFree(response);
       }
       else
       {
-         sendMessageToPeer(session->peerId.c_str(), "Request to AI assistant failed. Please try again later.");
+         sendMessageToPeer(session->peerId.c_str(), "Request to AI assistant failed. Please try again later.", false);
       }
 
       m_lock.lock();
@@ -688,7 +690,7 @@ void ChatBot::deliverQuestion(const QuestionDelivery& question)
          MemFree(option);
       }
       text.append("\n\nReply with the option number.");
-      sendMessageToPeer(question.peerId.c_str(), text.c_str());
+      sendMessageToPeer(question.peerId.c_str(), text.c_str(), true);   // question text is produced by assistant
    }
 }
 

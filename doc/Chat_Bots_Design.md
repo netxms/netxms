@@ -1,6 +1,6 @@
 # Chat Bots — Interactive Chat Interface Design Document
 
-Status: phase 1 (framework + Telegram) and Mattermost chat driver implemented (issue #3383); XMPP pending
+Status: phase 1 (framework + Telegram) and phase 2 (Mattermost, XMPP) implemented (issue #3383)
 
 This document describes a new server entity — **chat bot** — providing
 bidirectional, interactive access to the server over messaging platforms
@@ -99,7 +99,7 @@ class ChatBotDriver
 public:
    virtual bool start(ChatBotMessageSink *sink) = 0;   // driver owns its transport thread(s)
    virtual void stop() = 0;
-   virtual bool sendMessage(const char *peerId, const char *text) = 0;
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) = 0;
    virtual bool sendQuestion(const char *peerId, const char *text, const StringList& options, uint64_t questionId) = 0;
    virtual bool checkHealth() { return true; }
 };
@@ -148,8 +148,21 @@ session's `Chat`, created on first message with
 `CreateAIAssistantChat(userId, ...)` so every assistant function is
 ACL-checked as that user. One outstanding request per session; messages
 arriving mid-request are queued into the next prompt or answered with a
-brief "still working". Replies go back through `sendMessage()`; the driver
-translates or strips markdown to its platform dialect.
+brief "still working". Replies go back through `sendMessage()`.
+
+`sendMessage()` carries an **`isMarkdown` flag** rather than a single
+implied text format, because the method has two sources: assistant replies
+and question text, which are markdown, and messages composed by core
+(built-in command replies, error notices) plus notifications routed through
+the bot's auto-registered channel, which are literal — `SendNotification()`
+defaults to `isMarkdown = false`, so most notifications are plain. The
+driver renders or strips markdown when the flag is set, and otherwise must
+ensure the text is displayed as written; without the flag a plain alert
+reading `*** CRITICAL ***` loses its asterisks on every platform.
+`sendQuestion()` needs no flag — its text is always assistant-authored.
+Literal text destined for a markdown-native platform is escaped with
+`EscapeStringForMarkdown()` (`include/nxmarkdown.h`), which escapes inline
+constructs anywhere and block constructs only at the start of a line.
 
 **Confirmations**: assistant functions call
 `GetCurrentAIChat()->askConfirmation()`, blocking the worker on a
@@ -174,11 +187,27 @@ capability extends it to dispatch `message` updates (only
 and is acknowledged with `answerCallbackQuery`. Reply formatting uses HTML
 parse mode (MarkdownV2 escaping is a known trap).
 
-### 5.2 XMPP (phase 2)
+### 5.2 XMPP (phase 2, implemented)
 
-libstrophe is natively bidirectional; the existing connection loop gains a
-message-stanza handler. Peer identity is the bare JID. Numbered-list
-question fallback.
+libstrophe is natively bidirectional, so no new transport was needed: the
+chat bot (`XmppChatBot` in `src/server/ncdrivers/xmpp/xmpp.cpp`, exported
+via `DECLARE_CHATBOT_ENTRY_POINT`) wraps an `XmppDriver` instance and only
+installs the message sink — the driver's existing connection thread,
+reconnect back-off, mandatory STARTTLS and blocking send hand-off are
+reused unchanged, following the Telegram pattern. Configuration is the
+notification driver's (`Login` / `Password` / `Server` / `TLSMode` / ...).
+
+**Peer ID is the bare JID** of the sender (resource stripped); the local
+part of the JID is passed as display name, because an XMPP message stanza
+carries no nickname. The stanza handler passes on only one-to-one messages
+(`type` `chat` or `normal`, group chat is out of scope) that carry a
+`<body>`, dropping messages from the bot's own account and **delayed
+messages** — offline messages replayed by the server on connect, or
+archive replays — so that a command issued while the server was down is
+not acted on hours later. XMPP messages carry no markup, so markdown text
+is stripped with `MarkdownToPlainText()` and literal text is sent as is.
+XMPP has no interactive elements, so `sendQuestion()` returns `false` and
+the numbered-list fallback applies.
 
 ### 5.3 Mattermost (phase 2, implemented)
 
@@ -210,6 +239,8 @@ alias from the `Channels` section, so the auto-registered notification
 channel can still target public channels. Mattermost's interactive buttons
 POST to an integration URL (inbound HTTP), which v1 avoids —
 `sendQuestion` returns `false` and the numbered-list fallback applies.
+Because Mattermost renders every post as markdown, literal text is escaped
+with `EscapeStringForMarkdown()` before posting.
 
 ### 5.4 Slack (deferred)
 
@@ -269,9 +300,10 @@ answered) write audit records with the mapped NetXMS user as actor.
    v70 migration, NXCP + nxmc + WebAPI, Telegram chat factory with inline
    keyboards. One coherent deliverable; everything but the last item is
    platform-independent.
-2. **Mattermost (done), then XMPP** — Mattermost carries the RFC 6455
+2. **Mattermost and XMPP (done)** — Mattermost carries the RFC 6455
    WebSocket client investment and is the first user of the numbered-list
-   fallback; XMPP follows the same bare-JID / fallback pattern.
+   fallback; XMPP reuses the notification driver's libstrophe session and
+   the same fallback.
 3. **Deferred** — Slack (Socket Mode via the WS client); group chats
    (mention-triggered, sender-attributed buttons); self-service token
    binding for user mapping; structured command system and debug console

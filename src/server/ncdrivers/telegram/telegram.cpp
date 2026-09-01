@@ -238,7 +238,7 @@ public:
 
    void setSink(ChatBotMessageSink *sink) { m_sink = sink; }
    void shutdown();
-   int sendMessageToChat(const char *peerId, const char *text);
+   int sendMessageToChat(const char *peerId, const char *text, bool isMarkdown);
    bool sendQuestionToChat(const char *peerId, const char *text, const StringList& options, uint64_t questionId);
 
    static TelegramDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
@@ -1100,15 +1100,21 @@ void TelegramDriver::processCallbackQuery(json_t *callbackQuery)
 }
 
 /**
- * Send message to given chat (chat bot interface). Message text is markdown
- * (chat bot messages are produced by LLM).
+ * Send message to given chat (chat bot interface). Markdown text is rendered as HTML by send(),
+ * literal text is passed as plain body so that it is sent without parse mode.
  */
-int TelegramDriver::sendMessageToChat(const char *peerId, const char *text)
+int TelegramDriver::sendMessageToChat(const char *peerId, const char *text, bool isMarkdown)
 {
-   char *plainText = MarkdownToPlainText(text);
    NotificationContext context;
    context.recipient = peerId;
    context.subject = "";
+   if (!isMarkdown)
+   {
+      context.body = text;
+      return send(context);
+   }
+
+   char *plainText = MarkdownToPlainText(text);
    context.body = plainText;
    context.markdownBody = text;
    int result = send(context);
@@ -1380,9 +1386,9 @@ public:
       m_driver->shutdown();
    }
 
-   virtual bool sendMessage(const char *peerId, const char *text) override
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) override
    {
-      return m_driver->sendMessageToChat(peerId, text) == 0;
+      return m_driver->sendMessageToChat(peerId, text, isMarkdown) == 0;
    }
 
    virtual bool sendQuestion(const char *peerId, const char *text, const StringList& options, uint64_t questionId) override

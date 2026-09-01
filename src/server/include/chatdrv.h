@@ -78,9 +78,12 @@ public:
    virtual void stop() = 0;
 
    /**
-    * Send plain text message to given peer.
+    * Send message to given peer. When isMarkdown is true, text is markdown (assistant replies
+    * and notifications submitted as markdown) and the driver renders or strips it according to
+    * platform capabilities; otherwise text is literal and the driver must ensure it is displayed
+    * as written (escaping it if the platform interprets markup).
     */
-   virtual bool sendMessage(const char *peerId, const char *text) = 0;
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) = 0;
 
    /**
     * Send question with selectable options to given peer using platform-native interactive

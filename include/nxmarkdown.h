@@ -51,4 +51,13 @@ char LIBNETXMS_EXPORTABLE *MarkdownToHTML(const char *markdown, MarkdownHTMLDial
 char LIBNETXMS_EXPORTABLE *MarkdownToSlackText(const char *markdown);
 char LIBNETXMS_EXPORTABLE *MarkdownToTerminal(const char *markdown);
 
+/**
+ * Escape markdown special characters in plain text, so that text is displayed as written by
+ * a markdown renderer. Characters starting inline constructs (emphasis, code spans, links,
+ * strikethrough) are escaped anywhere in the text, and characters starting block constructs
+ * (headings, block quotes, lists, tables) only at the beginning of a line where they are
+ * recognized as such. Returned string is allocated with MemAlloc and should be freed by the caller.
+ */
+char LIBNETXMS_EXPORTABLE *EscapeStringForMarkdown(const char *text);
+
 #endif   /* _nxmarkdown_h_ */

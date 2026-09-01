@@ -1793,6 +1793,75 @@ static char *Convert(const char *markdown, MarkdownRenderer& renderer)
 }
 
 /**
+ * Escape markdown special characters in plain text
+ */
+char LIBNETXMS_EXPORTABLE *EscapeStringForMarkdown(const char *text)
+{
+   if (text == nullptr)
+      return MemCopyStringA("");
+
+   std::string output;
+   const char *p = text;
+   bool lineStart = true;
+   while(*p != 0)
+   {
+      if (lineStart)
+      {
+         // Leading spaces are part of block construct prefix and do not end it
+         if ((*p == ' ') || (*p == '\t'))
+         {
+            output.append(1, *p++);
+            continue;
+         }
+
+         // Ordered list marker (digits followed by '.' or ')')
+         const char *marker = p;
+         while((*marker >= '0') && (*marker <= '9'))
+            marker++;
+         if ((marker != p) && ((*marker == '.') || (*marker == ')')))
+         {
+            output.append(p, marker - p);
+            output.append(1, '\\');
+            output.append(1, *marker);
+            p = marker + 1;
+            lineStart = false;
+            continue;
+         }
+
+         // Heading, block quote, bullet list, or table row
+         if ((*p == '#') || (*p == '>') || (*p == '-') || (*p == '+') || (*p == '|'))
+            output.append(1, '\\');
+      }
+
+      char ch = *p++;
+      if (ch == '\n')
+      {
+         output.append(1, ch);
+         lineStart = true;
+         continue;
+      }
+
+      switch(ch)
+      {
+         case '\\':
+         case '`':
+         case '*':
+         case '_':
+         case '[':
+         case ']':
+         case '~':
+            output.append(1, '\\');
+            break;
+         default:
+            break;
+      }
+      output.append(1, ch);
+      lineStart = false;
+   }
+   return MemCopyStringA(output.c_str());
+}
+
+/**
  * Convert markdown to plain text (strip all markup)
  */
 char LIBNETXMS_EXPORTABLE *MarkdownToPlainText(const char *markdown)

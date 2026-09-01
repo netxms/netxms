@@ -147,7 +147,7 @@ nc.*		Notification channels
 
 ncd.*		Notification channel drivers
 ncd.webhook	Generic webhook notification channel driver
-ncd.xmpp	XMPP notification channel driver
+ncd.xmpp	XMPP notification channel and chat bot driver
 
 ndd.*           Network device drivers
 ndd.bdcom	BDCOM network device driver

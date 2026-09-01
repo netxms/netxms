@@ -63,6 +63,28 @@ static void CheckTerminal(const char *input, const char *expected)
    MemFree(r);
 }
 
+static void CheckEscape(const char *input, const char *expected)
+{
+   char *r = EscapeStringForMarkdown(input);
+   AssertEquals(r, expected);
+   MemFree(r);
+}
+
+/**
+ * Check escaping and that escaped text renders back to the original. Round trip check is not
+ * applicable to input with leading indentation, which markdown renderers do not preserve.
+ */
+static void CheckEscapeAndRoundTrip(const char *input, const char *expected)
+{
+   CheckEscape(input, expected);
+
+   char *escaped = EscapeStringForMarkdown(input);
+   char *plain = MarkdownToPlainText(escaped);
+   AssertEquals(plain, input);
+   MemFree(escaped);
+   MemFree(plain);
+}
+
 /**
  * Test markdown conversion functions
  */
@@ -320,5 +342,25 @@ void TestMarkdown()
          "\xE2\x80\xA2 \x1b[36mhttpd\x1b[39m not responding\n"
          "\n"
          "See \x1b[4mrunbook\x1b[24m (\x1b[36mhttps://wiki.local/rb\x1b[39m) for details.");
+   EndTest();
+
+   StartTest(_T("Markdown - escaping of literal text"));
+   CheckEscapeAndRoundTrip("Disk usage > 90% on /var", "Disk usage > 90% on /var");
+   CheckEscapeAndRoundTrip("*** CRITICAL *** node down", "\\*\\*\\* CRITICAL \\*\\*\\* node down");
+   CheckEscapeAndRoundTrip("Interface eth0_1 changed state to _down_", "Interface eth0\\_1 changed state to \\_down\\_");
+   CheckEscapeAndRoundTrip("Threshold 5 * 60 seconds exceeded", "Threshold 5 \\* 60 seconds exceeded");
+   CheckEscapeAndRoundTrip("Value [1] is `high`", "Value \\[1\\] is \\`high\\`");
+   CheckEscapeAndRoundTrip("C:\\Windows\\System32 unreachable", "C:\\\\Windows\\\\System32 unreachable");
+   CheckEscapeAndRoundTrip("~50 packets lost", "\\~50 packets lost");
+   EndTest();
+
+   StartTest(_T("Markdown - escaping of block constructs"));
+   CheckEscapeAndRoundTrip("# not a heading", "\\# not a heading");
+   CheckEscapeAndRoundTrip("> not a quote", "\\> not a quote");
+   CheckEscapeAndRoundTrip("- not a list\n- second line", "\\- not a list\n\\- second line");
+   CheckEscape("  + indented item", "  \\+ indented item");   // leading indentation is not preserved by renderer
+   CheckEscapeAndRoundTrip("1. not a list item", "1\\. not a list item");
+   CheckEscapeAndRoundTrip("| not | a table |", "\\| not | a table |");
+   CheckEscapeAndRoundTrip("Reboot in 5 minutes. Node 1. is down", "Reboot in 5 minutes. Node 1. is down");
    EndTest();
 }

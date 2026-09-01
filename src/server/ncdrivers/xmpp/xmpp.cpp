@@ -19,6 +19,8 @@
 **
 ** File: xmpp.cpp
 **
+** Module provides notification channel driver and chat bot driver sharing single XMPP session.
+**
 ** Configuration (section [XMPP]):
 **    Login      - JID (user@domain) or bare user name (domain is then taken from Server). Required.
 **    Password   - account password, optionally encrypted with nxencpasswd using Login as key. Required.
@@ -34,10 +36,15 @@
 ** messages over to the connection thread and waits until the message is written to the socket;
 ** when session is not available, send() reports a retry interval so that the server-side retry
 ** logic handles the outage.
+**
+** When module is instantiated as a chat bot driver, incoming chat messages are passed to the
+** message sink provided by server core. Peer ID is bare JID of the sender.
 **/
 
 #include <ncdrv.h>
+#include <chatdrv.h>
 #include <nms_util.h>
+#include <nxmarkdown.h>
 #include <netxms-version.h>
 #include <strophe.h>
 
@@ -187,6 +194,7 @@ private:
 
    volatile ConnectionState m_state;
    volatile bool m_shutdownFlag;
+   ChatBotMessageSink * volatile m_sink;   // set when driver instance is used as chat bot transport
    Condition m_shutdownCondition;
    THREAD m_connectionManagerThread;
 
@@ -206,6 +214,7 @@ private:
    void connectionHandler(xmpp_conn_event_t status, int error, xmpp_stream_error_t *streamError);
    void iqHandler(xmpp_stanza_t *stanza);
    void messageHandler(xmpp_stanza_t *stanza);
+   void dispatchIncomingMessage(ChatBotMessageSink *sink, xmpp_stanza_t *stanza, const char *from, const char *type, const char *text);
    void presenceHandler(xmpp_stanza_t *stanza);
 
    friend void Logger(void *userdata, xmpp_log_level_t level, const char *area, const char *msg);
@@ -238,6 +247,10 @@ public:
 
    virtual int send(const NotificationContext& context) override;
    virtual bool checkHealth() override { return m_state == ConnectionState::CONNECTED; }
+
+   int sendMessageToPeer(const char *recipient, const char *body);
+   void setSink(ChatBotMessageSink *sink) { m_sink = sink; }
+   void shutdown();
 
    static XmppDriver *createInstance(Config *config);
 };
@@ -289,6 +302,7 @@ XmppDriver::XmppDriver() : m_shutdownCondition(true), m_requestLock(MutexType::F
    m_tlsStartFailed = false;
    m_state = ConnectionState::DISCONNECTED;
    m_shutdownFlag = false;
+   m_sink = nullptr;
    m_connectionManagerThread = INVALID_THREAD_HANDLE;
 }
 
@@ -297,9 +311,21 @@ XmppDriver::XmppDriver() : m_shutdownCondition(true), m_requestLock(MutexType::F
  */
 XmppDriver::~XmppDriver()
 {
+   shutdown();
+}
+
+/**
+ * Stop connection thread, closing XMPP session gracefully. Can be called more than once.
+ */
+void XmppDriver::shutdown()
+{
+   if (m_connectionManagerThread == INVALID_THREAD_HANDLE)
+      return;
+
    m_shutdownFlag = true;
    m_shutdownCondition.set();
    ThreadJoin(m_connectionManagerThread);
+   m_connectionManagerThread = INVALID_THREAD_HANDLE;
 }
 
 /**
@@ -402,17 +428,28 @@ XmppDriver *XmppDriver::createInstance(Config *config)
 }
 
 /**
- * Driver send method. Hands message over to connection thread and waits for completion.
+ * Driver send method
  */
 int XmppDriver::send(const NotificationContext& context)
 {
+   return sendMessageToPeer(context.recipient, context.body);
+}
+
+/**
+ * Send message to given recipient. Hands message over to connection thread and waits for completion.
+ * Returns 0 on success, retry interval in seconds if message should be retried, or -1 on failure.
+ * Calls are expected to be serialized by the caller (both server-side notification channel and chat
+ * bot session manager do that), only one message can be in flight at any moment.
+ */
+int XmppDriver::sendMessageToPeer(const char *recipient, const char *body)
+{
    if (m_state == ConnectionState::DISCONNECTED)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("XMPP session is not available, message to %hs will be retried"), context.recipient);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("XMPP session is not available, message to %hs will be retried"), recipient);
       return RETRY_INTERVAL;
    }
 
-   shared_ptr<SendRequest> request = make_shared<SendRequest>(context.recipient, context.body);
+   shared_ptr<SendRequest> request = make_shared<SendRequest>(recipient, body);
    m_requestLock.lock();
    m_pendingRequest = request;
    m_requestLock.unlock();
@@ -423,7 +460,7 @@ int XmppDriver::send(const NotificationContext& context)
       if (m_pendingRequest == request)
          m_pendingRequest.reset();
       m_requestLock.unlock();
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Timeout waiting for XMPP session, message to %hs will be retried"), context.recipient);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Timeout waiting for XMPP session, message to %hs will be retried"), recipient);
       return RETRY_INTERVAL;
    }
 
@@ -804,24 +841,85 @@ void XmppDriver::iqHandler(xmpp_stanza_t *stanza)
 }
 
 /**
+ * Extract bare JID (user@domain) from possibly full JID (user@domain/resource)
+ */
+static void GetBareJid(const char *jid, char *bareJid, size_t size)
+{
+   const char *resource = strchr(jid, '/');
+   if (resource == nullptr)
+   {
+      strlcpy(bareJid, jid, size);
+      return;
+   }
+
+   size_t length = std::min(static_cast<size_t>(resource - jid), size - 1);
+   memcpy(bareJid, jid, length);
+   bareJid[length] = 0;
+}
+
+/**
  * Incoming message handler
  */
 void XmppDriver::messageHandler(xmpp_stanza_t *stanza)
 {
+   const char *from = xmpp_stanza_get_attribute(stanza, "from");
    const char *type = xmpp_stanza_get_type(stanza);
    if ((type != nullptr) && !strcmp(type, "error"))
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Error message received from %hs"), CHECK_NULL_A(xmpp_stanza_get_attribute(stanza, "from")));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Error message received from %hs"), CHECK_NULL_A(from));
       return;
    }
 
    xmpp_stanza_t *body = xmpp_stanza_get_child_by_name(stanza, "body");
    if (body == nullptr)
-      return;
+      return;   // message without content (chat state notification, delivery receipt, etc.)
 
    char *text = xmpp_stanza_get_text(body);
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("Incoming message from %hs: %hs"), CHECK_NULL_A(xmpp_stanza_get_attribute(stanza, "from")), CHECK_NULL_A(text));
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Incoming message from %hs: %hs"), CHECK_NULL_A(from), CHECK_NULL_A(text));
+
+   ChatBotMessageSink *sink = m_sink;
+   if ((sink != nullptr) && (from != nullptr) && (text != nullptr))
+      dispatchIncomingMessage(sink, stanza, from, type, text);
+
    xmpp_free(m_context, text);
+}
+
+/**
+ * Pass incoming message to chat bot message sink. Only one to one chat messages are passed on:
+ * group chat is out of scope, and delayed messages (offline messages replayed by the server on
+ * connect, message archive replays) are dropped because acting on a command issued while the
+ * server was offline can be unexpected for the sender.
+ */
+void XmppDriver::dispatchIncomingMessage(ChatBotMessageSink *sink, xmpp_stanza_t *stanza, const char *from, const char *type, const char *text)
+{
+   if ((type != nullptr) && strcmp(type, "chat") && strcmp(type, "normal"))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Ignoring incoming message from %hs (unsupported message type %hs)"), from, type);
+      return;
+   }
+
+   if (xmpp_stanza_get_child_by_name(stanza, "delay") != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Ignoring delayed message from %hs"), from);
+      return;
+   }
+
+   char peerId[MAX_LOGIN];
+   GetBareJid(from, peerId, MAX_LOGIN);
+   if (!stricmp(peerId, m_login))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Ignoring incoming message from own account"));
+      return;
+   }
+
+   // XMPP message stanza does not carry sender's nickname, so local part of JID is used as display name
+   char displayName[MAX_LOGIN];
+   strlcpy(displayName, peerId, MAX_LOGIN);
+   char *domain = strchr(displayName, '@');
+   if (domain != nullptr)
+      *domain = 0;
+
+   sink->onMessage(peerId, displayName, text);
 }
 
 /**
@@ -854,4 +952,74 @@ void XmppDriver::presenceHandler(xmpp_stanza_t *stanza)
 DECLARE_NCD_ENTRY_POINT(XMPP, &s_config)
 {
    return XmppDriver::createInstance(config);
+}
+
+/**
+ * Chat bot driver - wraps XMPP driver instance, dispatching incoming chat messages into
+ * message sink provided by server core. Peer ID is bare JID of the sender.
+ */
+class XmppChatBot : public ChatBotDriver
+{
+private:
+   XmppDriver *m_driver;
+
+public:
+   XmppChatBot(XmppDriver *driver) : ChatBotDriver()
+   {
+      m_driver = driver;
+   }
+
+   virtual ~XmppChatBot()
+   {
+      delete m_driver;
+   }
+
+   virtual bool start(ChatBotMessageSink *sink) override
+   {
+      m_driver->setSink(sink);
+      return true;
+   }
+
+   virtual void stop() override
+   {
+      m_driver->shutdown();
+   }
+
+   /**
+    * Send message to given peer. XMPP messages carry no markup, so markdown is stripped;
+    * literal text is sent as is.
+    */
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) override
+   {
+      if (!isMarkdown)
+         return m_driver->sendMessageToPeer(peerId, text) == 0;
+
+      char *plainText = MarkdownToPlainText(text);
+      bool success = (m_driver->sendMessageToPeer(peerId, plainText) == 0);
+      MemFree(plainText);
+      return success;
+   }
+
+   /**
+    * XMPP has no interactive elements, so questions are left to the numbered list fallback
+    * provided by server core.
+    */
+   virtual bool sendQuestion(const char *peerId, const char *text, const StringList& options, uint64_t questionId) override
+   {
+      return false;
+   }
+
+   virtual bool checkHealth() override
+   {
+      return m_driver->checkHealth();
+   }
+};
+
+/**
+ * Chat bot entry point
+ */
+DECLARE_CHATBOT_ENTRY_POINT
+{
+   XmppDriver *driver = XmppDriver::createInstance(config);
+   return (driver != nullptr) ? new XmppChatBot(driver) : nullptr;
 }
