@@ -1050,6 +1050,15 @@ enum class Ownership : bool
 #endif
 
 /**
+ * libstdc++ before GCC 5 does not provide std::is_trivially_copyable; use compiler intrinsic there
+ */
+#if defined(__GNUC__) && !defined(__clang__) && (__GNUC__ < 5)
+#define NX_IS_TRIVIALLY_COPYABLE(T) __has_trivial_copy(T)
+#else
+#define NX_IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
+#endif
+
+/**
  * "unused" attribute
  */
 #if defined(__GNUC__) || defined(__clang__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
