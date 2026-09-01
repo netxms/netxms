@@ -398,11 +398,13 @@ std::string F_GetMetrics(json_t *arguments, uint32_t userId)
    if (!object->isDataCollectionTarget())
       return std::string("Object is not a data collection target");
 
-   wchar_t nameFilter[256];
-   utf8_to_wchar(json_object_get_string_utf8(arguments, "filter", ""), -1, nameFilter, 256);
+   String filter(json_object_get_string_utf8(arguments, "filter", ""), "utf-8");
+   std::function<bool(DCObject*)> dciFilter;
+   if (!filter.isEmpty())
+      dciFilter = [&filter](DCObject *dci) { return (wcsistr(dci->getName(), filter) != nullptr) || (wcsistr(dci->getDescription(), filter) != nullptr); };
 
    json_t *output = json_array();
-   static_cast<DataCollectionTarget&>(*object).getDataCollectionSummary(output, false, false, true, userId);
+   static_cast<DataCollectionTarget&>(*object).getDataCollectionSummary(output, false, false, true, userId, dciFilter);
    return JsonToString(output);
 }
 

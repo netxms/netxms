@@ -419,7 +419,7 @@ static void CreateAssistantSkillList()
             "Get data collection items (metrics) and their current values for given object",
             {
                { "object", "name or ID of an object (node, device, server, workstation, container, etc.)" },
-               { "filter", "optional filter to select specific metrics by name (partial names allowed)" }
+               { "filter", "optional filter to select specific metrics by name or description (partial match, case insensitive)" }
             },
             F_GetMetrics),
          AssistantFunction(
