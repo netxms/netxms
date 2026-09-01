@@ -32,7 +32,7 @@ static bool H_UpgradeFromV40()
    // Normalize invalid network map discovery radius values (old clients sent -1
    // for "use default", stored as 65535 via unsigned 16 bit read)
    CHK_EXEC(SQLQuery(L"UPDATE network_maps SET radius=0 WHERE radius<0 OR radius>255"));
-   CHK_EXEC(SetMinorSchemaVersion(28));
+   CHK_EXEC(SetMinorSchemaVersion(41));
    return true;
 }
 
