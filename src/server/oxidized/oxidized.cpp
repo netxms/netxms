@@ -96,7 +96,8 @@ static void InitializeDriverModelMap()
    // Fortinet
    s_driverModelMap.set(L"FORTIGATE", L"fortios");
    // HPE / Aruba
-   s_driverModelMap.set(L"ARUBA-SW", L"aoscx");
+   s_driverModelMap.set(L"ARUBA-CX", L"aoscx");
+   s_driverModelMap.set(L"ARUBA-SW", L"aosw");
    s_driverModelMap.set(L"PROCURVE", L"procurve");
    s_driverModelMap.set(L"H3C", L"comware");
    s_driverModelMap.set(L"HPSW", L"procurve");
@@ -148,6 +149,8 @@ static void InitializeSysDescrModelMap()
    AddSysDescrMapping(L"OS10 Enterprise", L"os10");
    AddSysDescrMapping(L"Force10", L"ftos");
    AddSysDescrMapping(L"FTOS", L"ftos");
+   // HPE Aruba OS variants
+   AddSysDescrMapping(L"ArubaOS-CX", L"aoscx");
 }
 
 /**
@@ -161,7 +164,7 @@ static void InitializeVendorModelMap()
    s_vendorModelMap.set(L"MikroTik", L"routeros");
    s_vendorModelMap.set(L"Huawei", L"vrp");
    s_vendorModelMap.set(L"Fortinet", L"fortios");
-   s_vendorModelMap.set(L"HPE Aruba Networking", L"arubaos");
+   s_vendorModelMap.set(L"HPE Aruba Networking", L"aosw");
    s_vendorModelMap.set(L"Hewlett Packard Enterprise", L"procurve");
    s_vendorModelMap.set(L"Extreme Networks", L"xos");
    s_vendorModelMap.set(L"D-Link", L"dlink");

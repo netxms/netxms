@@ -27,6 +27,7 @@
  * Driver module entry point
  */
 NDD_BEGIN_DRIVER_LIST
+NDD_DRIVER(ArubaCXDriver)
 NDD_DRIVER(ArubaSwitchDriver)
 NDD_DRIVER(H3CDriver)
 NDD_DRIVER(HPSwitchDriver)
