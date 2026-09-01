@@ -160,7 +160,10 @@ HttpRequestResult HttpClient::get(const char *url, HttpCacheState *cache, ByteSt
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("HTTP response code %03ld for [%hs]"), httpCode, url);
+            // Log host and path only - the query string may carry an API key
+            const char *query = strchr(url, '?');
+            int urlLength = (query != nullptr) ? static_cast<int>(query - url) : static_cast<int>(strlen(url));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("HTTP response code %03ld for [%.*hs]"), httpCode, urlLength, url);
          }
       }
       else
