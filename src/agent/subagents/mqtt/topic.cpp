@@ -26,12 +26,21 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *event)
 {
    m_pattern = UTF8StringFromTString(pattern);
    m_event = MemCopyString(event);
+   m_name = nullptr;
    m_lastName[0] = 0;
    m_lastValue[0] = 0;
+   m_genericParamName[0] = 0;
+   m_instanceListName[0] = 0;
    m_timestamp = 0;
    m_parameters = nullptr;
    m_lists = nullptr;
    m_dataExtractor = nullptr;
+   m_instances = nullptr;
+   m_instanceSegment = -1;
+   m_instanceQuery = nullptr;
+   m_instanceTimeout = 0;
+   m_maxInstances = 0;
+   m_instanceLimitReported = false;
    m_parseAsText = false;
    m_truncationReported = false;
 }
@@ -43,12 +52,21 @@ Topic::Topic(const char *pattern)
 {
    m_pattern = MemCopyStringA(pattern);
    m_event = nullptr;
+   m_name = nullptr;
    m_lastName[0] = 0;
    m_lastValue[0] = 0;
+   m_genericParamName[0] = 0;
+   m_instanceListName[0] = 0;
    m_timestamp = 0;
    m_parameters = nullptr;
    m_lists = nullptr;
    m_dataExtractor = nullptr;
+   m_instances = nullptr;
+   m_instanceSegment = -1;
+   m_instanceQuery = nullptr;
+   m_instanceTimeout = 0;
+   m_maxInstances = 0;
+   m_instanceLimitReported = false;
    m_parseAsText = false;
    m_truncationReported = false;
 }
@@ -60,16 +78,25 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *name, bool parseAsText)
 {
    m_pattern = UTF8StringFromTString(pattern);
    m_event = nullptr;
+   m_name = MemCopyString(name);
    m_lastName[0] = 0;
    m_lastValue[0] = 0;
    m_timestamp = 0;
    m_parameters = nullptr;
    m_lists = nullptr;
    m_dataExtractor = new StructuredDataExtractor(pattern);
+   m_instances = nullptr;
+   m_instanceSegment = -1;
+   m_instanceQuery = nullptr;
+   m_instanceTimeout = 0;
+   m_maxInstances = 0;
+   m_instanceLimitReported = false;
    m_parseAsText = parseAsText;
    m_truncationReported = false;
    _tcslcpy(m_genericParamName, name, MAX_PARAM_NAME);
    _tcslcat(m_genericParamName, _T("(*)"), MAX_PARAM_NAME);
+   _tcslcpy(m_instanceListName, name, MAX_PARAM_NAME);
+   _tcslcat(m_instanceListName, _T(".Instances"), MAX_PARAM_NAME);
 }
 
 /**
@@ -79,9 +106,184 @@ Topic::~Topic()
 {
    MemFree(m_pattern);
    MemFree(m_event);
+   MemFree(m_name);
+   MemFree(m_instanceQuery);
    delete m_dataExtractor;
+   delete m_instances;
    delete m_parameters;
    delete m_lists;
+}
+
+/**
+ * Switch topic to instance discovery mode
+ */
+void Topic::initInstanceMap(uint32_t timeout, int maxInstances)
+{
+   delete m_dataExtractor;
+   m_dataExtractor = nullptr;
+   m_instances = new StringObjectMap<StructuredDataExtractor>(Ownership::True);
+   m_instances->setIgnoreCase(false);   // MQTT topics are case sensitive
+   m_instanceTimeout = timeout;
+   m_maxInstances = maxInstances;
+}
+
+/**
+ * Enable instance discovery with instance name taken from topic segment
+ */
+void Topic::enableInstanceDiscoveryFromTopic(int segment, uint32_t timeout, int maxInstances)
+{
+   initInstanceMap(timeout, maxInstances);
+   m_instanceSegment = segment;
+}
+
+/**
+ * Enable instance discovery with instance name taken from message payload
+ */
+void Topic::enableInstanceDiscoveryFromPayload(const TCHAR *query, uint32_t timeout, int maxInstances)
+{
+   initInstanceMap(timeout, maxInstances);
+   m_instanceQuery = MemCopyString(query);
+}
+
+/**
+ * Extract instance name from given segment of topic name
+ */
+static bool InstanceFromTopic(const char *topic, int segment, TCHAR *buffer, size_t size)
+{
+   const char *curr = topic;
+   for(int i = 0; i < segment; i++)
+   {
+      curr = strchr(curr, '/');
+      if (curr == nullptr)
+         return false;
+      curr++;
+   }
+
+   const char *end = strchr(curr, '/');
+   size_t len = (end != nullptr) ? static_cast<size_t>(end - curr) : strlen(curr);
+   if ((len == 0) || (len >= size))
+      return false;
+
+   char instance[MAX_DB_STRING];
+   memcpy(instance, curr, len);
+   instance[len] = 0;
+   utf8_to_tchar(instance, -1, buffer, size);
+   buffer[size - 1] = 0;
+   return true;
+}
+
+/**
+ * Delete instances that were not updated within instance timeout. Should be called with topic mutex locked.
+ */
+void Topic::purgeExpiredInstances()
+{
+   if (m_instanceTimeout == 0)
+      return;
+
+   StringList expiredInstances;
+   m_instances->forEach(
+      [this, &expiredInstances] (const TCHAR *instance, StructuredDataExtractor *extractor) -> EnumerationCallbackResult
+      {
+         if (extractor->isDataExpired(m_instanceTimeout))
+            expiredInstances.add(instance);
+         return _CONTINUE;
+      });
+
+   for(int i = 0; i < expiredInstances.size(); i++)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Instance \"%s\" of MQTT extractor %s expired"), expiredInstances.get(i), m_name);
+      m_instances->remove(expiredInstances.get(i));
+   }
+}
+
+/**
+ * Get data extractor for given instance. Returns nullptr if instance is unknown or expired.
+ * Should be called with topic mutex locked.
+ */
+StructuredDataExtractor *Topic::getInstance(const TCHAR *instance)
+{
+   StructuredDataExtractor *extractor = m_instances->get(instance);
+   if (extractor == nullptr)
+      return nullptr;
+
+   if ((m_instanceTimeout != 0) && extractor->isDataExpired(m_instanceTimeout))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Instance \"%s\" of MQTT extractor %s expired"), instance, m_name);
+      m_instances->remove(instance);
+      return nullptr;
+   }
+
+   return extractor;
+}
+
+/**
+ * Check if new instance can be added to this topic. Should be called with topic mutex locked.
+ */
+bool Topic::canAddInstance()
+{
+   purgeExpiredInstances();
+
+   if ((m_maxInstances <= 0) || (m_instances->size() < m_maxInstances))
+      return true;
+
+   if (!m_instanceLimitReported)
+   {
+      m_instanceLimitReported = true;
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Instance limit (%d) reached for MQTT extractor %s, new instances will be ignored"), m_maxInstances, m_name);
+   }
+   return false;
+}
+
+/**
+ * Update instance content from received message. Should be called with topic mutex locked.
+ */
+void Topic::updateInstanceContent(const char *topic, const char *msg, size_t msgLen)
+{
+   if (m_instanceSegment >= 0)
+   {
+      TCHAR instance[MAX_DB_STRING];
+      if (!InstanceFromTopic(topic, m_instanceSegment, instance, MAX_DB_STRING))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot extract instance name from topic \"%hs\" for MQTT extractor %s"), topic, m_name);
+         return;
+      }
+
+      StructuredDataExtractor *extractor = m_instances->get(instance);
+      if (extractor == nullptr)
+      {
+         if (!canAddInstance())
+            return;
+         extractor = new StructuredDataExtractor(m_name);
+         m_instances->set(instance, extractor);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("New instance \"%s\" registered for MQTT extractor %s"), instance, m_name);
+      }
+      extractor->updateContent(msg, msgLen, m_parseAsText, instance);
+   }
+   else
+   {
+      // Instance name is part of the payload, so document has to be parsed before instance can be determined
+      StructuredDataExtractor *extractor = new StructuredDataExtractor(m_name);
+      extractor->updateContent(msg, msgLen, m_parseAsText, m_name);
+
+      TCHAR instance[MAX_DB_STRING];
+      if ((extractor->getMetric(m_instanceQuery, instance, MAX_DB_STRING) != SYSINFO_RC_SUCCESS) || (instance[0] == 0))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Cannot extract instance name from message on topic \"%hs\" for MQTT extractor %s"), topic, m_name);
+         delete extractor;
+         return;
+      }
+
+      if (!m_instances->contains(instance))
+      {
+         if (!canAddInstance())
+         {
+            delete extractor;
+            return;
+         }
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("New instance \"%s\" registered for MQTT extractor %s"), instance, m_name);
+      }
+      m_instances->set(instance, extractor);
+   }
 }
 
 /**
@@ -140,6 +342,10 @@ void Topic::processMessage(const char *topic, const char *msg)
 #endif
          m_dataExtractor->updateContent(msg, msgLen, m_parseAsText, buffer);
       }
+      else if (m_instances != nullptr)
+      {
+         updateInstanceContent(topic, msg, msgLen);
+      }
       m_mutex.unlock();
    }
 }
@@ -152,10 +358,7 @@ bool Topic::retrieveData(TCHAR *buffer, size_t bufferLen)
    LockGuard lockGuard(m_mutex);
 
    if ((m_timestamp == 0) || (m_lastName[0] == 0))
-   {
-      m_mutex.unlock();
       return false;
-   }
 
 #ifdef UNICODE
    utf8_to_wchar(m_lastValue, -1, buffer, bufferLen);
@@ -174,6 +377,19 @@ LONG Topic::retrieveData(const TCHAR *metricName, TCHAR *buffer, size_t bufferLe
 {
    LockGuard lockGuard(m_mutex);
 
+   StructuredDataExtractor *dataExtractor = m_dataExtractor;
+   int genericQueryArg = 1;
+   if (m_instances != nullptr)
+   {
+      TCHAR instance[MAX_DB_STRING];
+      if (!AgentGetParameterArg(metricName, 1, instance, MAX_DB_STRING) || (instance[0] == 0))
+         return SYSINFO_RC_UNSUPPORTED;
+      dataExtractor = getInstance(instance);
+      if (dataExtractor == nullptr)
+         return SYSINFO_RC_NO_SUCH_INSTANCE;
+      genericQueryArg = 2;
+   }
+
    LONG rc = SYSINFO_RC_UNKNOWN;
    const TCHAR *bracket = _tcschr(metricName, _T('('));
    String baseName = (bracket != nullptr) ? String(metricName, bracket - metricName) : String(metricName);
@@ -183,18 +399,18 @@ LONG Topic::retrieveData(const TCHAR *metricName, TCHAR *buffer, size_t bufferLe
       if ((bracket != nullptr) && IsParametrizedCommand(query))
       {
          String expandedQuery = SubstituteCommandArguments(query, metricName);
-         rc = m_dataExtractor->getMetric(expandedQuery, buffer, bufferLen);
+         rc = dataExtractor->getMetric(expandedQuery, buffer, bufferLen);
       }
       else
       {
-         rc = m_dataExtractor->getMetric(query, buffer, bufferLen);
+         rc = dataExtractor->getMetric(query, buffer, bufferLen);
       }
    }
    else if (MatchString(m_genericParamName, metricName, false))
    {
       TCHAR query[1024];
-      AgentGetParameterArg(metricName, 1, query, 1024);
-      rc = m_dataExtractor->getMetric(query, buffer, bufferLen);
+      AgentGetParameterArg(metricName, genericQueryArg, query, 1024);
+      rc = dataExtractor->getMetric(query, buffer, bufferLen);
    }
 
    return rc;
@@ -207,6 +423,19 @@ LONG Topic::retrieveListData(const TCHAR *metricName, StringList *buffer)
 {
    LockGuard lockGuard(m_mutex);
 
+   StructuredDataExtractor *dataExtractor = m_dataExtractor;
+   int genericQueryArg = 1;
+   if (m_instances != nullptr)
+   {
+      TCHAR instance[MAX_DB_STRING];
+      if (!AgentGetParameterArg(metricName, 1, instance, MAX_DB_STRING) || (instance[0] == 0))
+         return SYSINFO_RC_UNSUPPORTED;
+      dataExtractor = getInstance(instance);
+      if (dataExtractor == nullptr)
+         return SYSINFO_RC_NO_SUCH_INSTANCE;
+      genericQueryArg = 2;
+   }
+
    LONG rc = SYSINFO_RC_UNKNOWN;
    const TCHAR *bracket = _tcschr(metricName, _T('('));
    String baseName = (bracket != nullptr) ? String(metricName, bracket - metricName) : String(metricName);
@@ -216,19 +445,37 @@ LONG Topic::retrieveListData(const TCHAR *metricName, StringList *buffer)
       if ((bracket != nullptr) && IsParametrizedCommand(query))
       {
          String expandedQuery = SubstituteCommandArguments(query, metricName);
-         rc = m_dataExtractor->getList(expandedQuery, buffer);
+         rc = dataExtractor->getList(expandedQuery, buffer);
       }
       else
       {
-         rc = m_dataExtractor->getList(query, buffer);
+         rc = dataExtractor->getList(query, buffer);
       }
    }
    else if (MatchString(m_genericParamName, metricName, false))
    {
       TCHAR query[1024];
-      AgentGetParameterArg(metricName, 1, query, 1024);
-      rc = m_dataExtractor->getList(query, buffer);
+      AgentGetParameterArg(metricName, genericQueryArg, query, 1024);
+      rc = dataExtractor->getList(query, buffer);
    }
 
    return rc;
+}
+
+/**
+ * Get list of instances known for this topic
+ */
+LONG Topic::retrieveInstances(StringList *buffer)
+{
+   LockGuard lockGuard(m_mutex);
+
+   purgeExpiredInstances();
+   m_instances->forEach(
+      [buffer] (const TCHAR *instance, const StructuredDataExtractor *extractor) -> EnumerationCallbackResult
+      {
+         buffer->add(instance);
+         return _CONTINUE;
+      });
+
+   return SYSINFO_RC_SUCCESS;
 }

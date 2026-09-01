@@ -70,12 +70,13 @@ static void RegisterBrokers(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Stru
 {
    int initialParameterCount = parameters->size();
    int initialListCount = lists->size();
+   bool prefixMetricNames = config->getValueAsBoolean(_T("/MQTT/PrefixMetricsWithExtractorName"), false);
    unique_ptr<ObjectArray<ConfigEntry>> brokers = config->getSubEntries(_T("/MQTT/Brokers"), _T("*"));
    if (brokers != nullptr)
    {
       for(int i = 0; i < brokers->size(); i++)
       {
-         MqttBroker *b = MqttBroker::createFromConfig(brokers->get(i), parameters, lists);
+         MqttBroker *b = MqttBroker::createFromConfig(brokers->get(i), parameters, lists, prefixMetricNames);
          if (b != nullptr)
          {
             s_brokers.add(b);
