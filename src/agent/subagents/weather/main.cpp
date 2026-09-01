@@ -281,7 +281,7 @@ static bool GetLocationInstance(const TCHAR *cmd, TCHAR *instance)
       return false;
 
    Trim(instance);
-   if (_istdigit(instance[0]) && (_tcschr(instance, _T(',')) == nullptr))
+   if ((_istdigit(instance[0]) || (instance[0] == _T('-')) || (instance[0] == _T('+'))) && (_tcschr(instance, _T(',')) == nullptr))
    {
       TCHAR part2[64];
       if (AgentGetParameterArg(cmd, 2, part2, 64))
