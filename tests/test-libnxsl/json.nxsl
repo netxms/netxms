@@ -129,4 +129,49 @@ assert(json.value == 100);
 assert(json.data.id == 1);
 assert(json.data.version == "10X");
 
+// JsonArray insert/set/append with JsonObject and JsonArray values (issue #3615)
+arr = JsonParse("[1, 2, 3]");
+assert(arr != null);
+assert(arr.size == 3);
+
+obj = new JsonObject();
+obj.id = 7;
+nested = new JsonArray(["a", "b"]);
+
+arr.insert(0, obj);
+assert(arr.size == 4);
+assert(arr.get(0).id == 7);
+assert(arr.get(1) == 1);
+
+arr.insert(2, nested);
+assert(arr.size == 5);
+assert(arr.get(2).size == 2);
+assert(arr.get(2).get(1) == "b");
+assert(arr.get(3) == 2);
+
+arr.set(1, nested);
+assert(arr.size == 5);
+assert(arr.get(1).get(0) == "a");
+
+arr.set(4, obj);
+assert(arr.size == 5);
+assert(arr.get(4).id == 7);
+
+arr.append(obj);
+arr.append(nested);
+assert(arr.size == 7);
+assert(arr.get(5).id == 7);
+assert(arr.get(6).size == 2);
+
+arr.insert(1, "scalar");
+arr.set(0, 99);
+assert(arr.size == 8);
+assert(arr.get(0) == 99);
+assert(arr.get(1) == "scalar");
+assert(arr.get(2).get(0) == "a");
+
+serialized = arr.serialize();
+assert(serialized like "*\"id\": 7*");
+assert(serialized like "*\"a\",*");
+
 return 0;
