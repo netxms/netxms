@@ -431,7 +431,7 @@ NXSL_METHOD_DEFINITION(JsonArray, insert)
    if (argv[1]->isObject(_T("JsonObject")) || argv[1]->isObject(_T("JsonArray")))
    {
       json_array_insert(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),
-               static_cast<json_t*>(argv[0]->getValueAsObject()->getData()));
+               static_cast<json_t*>(argv[1]->getValueAsObject()->getData()));
    }
    else
    {
@@ -492,7 +492,7 @@ NXSL_METHOD_DEFINITION(JsonArray, set)
    if (argv[1]->isObject(_T("JsonObject")) || argv[1]->isObject(_T("JsonArray")))
    {
       json_array_set(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),
-               static_cast<json_t*>(argv[0]->getValueAsObject()->getData()));
+               static_cast<json_t*>(argv[1]->getValueAsObject()->getData()));
    }
    else
    {
