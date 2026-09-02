@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.29 to 70.30
+ */
+static bool H_UpgradeFromV29()
+{
+   CHK_EXEC(CreateConfigParam(L"Redmine.ApiKey", L"", L"API key used for authentication on Redmine server.", nullptr, 'P', true, true, false));
+   CHK_EXEC(CreateConfigParam(L"Redmine.PriorityId", L"2", L"Priority ID assigned to issues created in Redmine.", nullptr, 'I', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Redmine.ProjectId", L"1", L"ID of Redmine project where issues will be created.", nullptr, 'I', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Redmine.ServerURL", L"http://localhost", L"The URL of the Redmine server.", nullptr, 'S', true, true, false));
+   CHK_EXEC(CreateConfigParam(L"Redmine.StatusId", L"1", L"Status ID assigned to issues created in Redmine.", nullptr, 'I', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Redmine.TrackerId", L"3", L"Tracker ID assigned to issues created in Redmine.", nullptr, 'I', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Redmine.VerifyPeer", L"1", L"Enable/disable verification of Redmine server TLS certificate.", nullptr, 'B', true, true, false));
+   CHK_EXEC(SetMinorSchemaVersion(30));
+   return true;
+}
+
+/**
  * Upgrade from 70.28 to 70.29
  */
 static bool H_UpgradeFromV28()
@@ -889,10 +905,12 @@ static bool H_UpgradeFromV2()
  */
 static bool H_UpgradeFromV1()
 {
+   // Webhook was disabled by setting listener port to 0; preserve that state in the new enable flag
+   bool webhookEnabled = DBMgrConfigReadInt32(L"Jira.Webhook.Port", 8008) != 0;
    CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='HelpDeskLink'"));
    CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='Jira.Webhook.Path'"));
    CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='Jira.Webhook.Port'"));
-   CHK_EXEC(CreateConfigParam(L"Jira.Webhook.Enable", L"1", L"Enable/disable Jira webhook on the web API listener.", nullptr, 'B', true, true, false));
+   CHK_EXEC(CreateConfigParam(L"Jira.Webhook.Enable", webhookEnabled ? L"1" : L"0", L"Enable/disable Jira webhook on the web API listener.", nullptr, 'B', true, true, false));
    CHK_EXEC(CreateConfigParam(L"Jira.Webhook.Secret", L"", L"Secret used for validation of Jira webhook calls (validation disabled if empty).", nullptr, 'S', true, false, false));
    CHK_EXEC(SetMinorSchemaVersion(2));
    return true;
@@ -929,6 +947,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 29, 70, 30, H_UpgradeFromV29 },
    { 28, 70, 29, H_UpgradeFromV28 },
    { 27, 70, 28, H_UpgradeFromV27 },
    { 26, 70, 27, H_UpgradeFromV26 },

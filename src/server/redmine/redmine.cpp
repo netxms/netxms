@@ -31,8 +31,8 @@
  */
 RedmineLink::RedmineLink() : HelpDeskLink()
 {
-   strcpy(m_serverUrl, "http://localhost:3000");
-   strcpy(m_apiKey, "netxms");
+   m_serverUrl[0] = 0;
+   m_apiKey[0] = 0;
    m_curl = nullptr;
    m_verifyPeer = false;
 }
@@ -67,8 +67,8 @@ bool RedmineLink::init()
       nxlog_debug_tag(DEBUG_TAG, 1, L"Redmine: cURL initialization failed");
       return false;
    }
-   ConfigReadStrUTF8(L"Redmine.ServerURL", m_serverUrl, MAX_OBJECT_NAME, "http://localhost");
-   ConfigReadStrUTF8(L"Redmine.ApiKey", m_apiKey, REDMINE_MAX_API_KEY_LEN, "n/a");
+   ConfigReadStrUTF8(L"Redmine.ServerURL", m_serverUrl, MAX_PATH, "http://localhost");
+   ConfigReadStrUTF8(L"Redmine.ApiKey", m_apiKey, REDMINE_MAX_API_KEY_LEN, "");
    m_verifyPeer = ConfigReadBoolean(L"Redmine.VerifyPeer", true);
    nxlog_debug_tag(DEBUG_TAG, 5, L"Redmine: server URL set to %hs", m_serverUrl);
    return true;
@@ -421,7 +421,8 @@ static bool InitModule(Config *config)
       delete link;
       return false;
    }
-   RegisterHelpDeskLink(link);
+   if (!RegisterHelpDeskLink(link))
+      delete link;
    return true;
 }
 

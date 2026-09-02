@@ -105,6 +105,10 @@ gps		GPS subagent
 
 ha.lease	High availability cluster lease management
 
+hdlink		Helpdesk link registration and dispatch
+hdlink.jira	Jira helpdesk link module (including webhook)
+hdlink.redmine	Redmine helpdesk link module
+
 housekeeper	Housekeeper
 
 image.library	Image library management and SVG sanitization

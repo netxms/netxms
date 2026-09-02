@@ -559,13 +559,15 @@ static bool InitModule(Config *config)
       delete link;
       return false;
    }
-   if (RegisterHelpDeskLink(link))
+   if (!RegisterHelpDeskLink(link))
    {
-      if (ConfigReadBoolean(L"Jira.Webhook.Enable", true))
-         RegisterJiraWebhook(link);
-      else
-         nxlog_debug_tag(JIRA_DEBUG_TAG, 1, L"Jira webhook is disabled");
+      delete link;
+      return true;
    }
+   if (ConfigReadBoolean(L"Jira.Webhook.Enable", true))
+      RegisterJiraWebhook(link);
+   else
+      nxlog_debug_tag(JIRA_DEBUG_TAG, 1, L"Jira webhook is disabled");
    return true;
 }
 

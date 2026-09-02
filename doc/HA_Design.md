@@ -777,8 +777,8 @@ processor threads are `StartEventProcessor`), `LoadAlarmCategories`,
 build only), `InitClientListeners` (pool + session manager; socket opens
 separately), `InitMobileDeviceListeners` (pool only), `ValidateScripts`.
 Caveats: `InitAuditLog` is passive except an optional external-syslog
-announce (`AuditLog.External.Server`); `LoadHelpDeskLink` and
-`LoadNetXMSModules` call module init code that may itself misbehave — the
+announce (`AuditLog.External.Server`); `LoadNetXMSModules` calls module
+init code that may itself misbehave — the
 `NXMODULE` contract extension (section 5.2) is the fix.
 
 **Whitelisted passive threads:** log writer, `WatchdogInit`,

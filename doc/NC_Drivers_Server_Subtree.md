@@ -50,7 +50,8 @@ exists twice:
 - **pdsdrv** (`src/server/pdsdrv/`) — performance data storage drivers,
   dynamically loaded, link `../../core/libnxcore.la`, receive live server
   objects (`PerfDataStorageDriver::saveDCItemValue(DCItem*, ...)`).
-- **hdlink** (`src/server/hdlink/`) — helpdesk link modules, same linkage.
+- **jira / redmine** (`src/server/jira/`, `src/server/redmine/`) — helpdesk link
+  server modules, same linkage.
 
 Both prove that dynamically loaded drivers may link against `libnxcore` and
 resolve symbols at runtime against the copy already loaded in the `netxmsd`
@@ -116,8 +117,8 @@ public:
 touch the event context needs no server headers and no `libnxcore` linkage
 (holding or comparing the `shared_ptr<NetObj>` does not require the complete
 type). Drivers that start calling `Event`/`NetObj` methods add
-`../../core/libnxcore.la` to their `LIBADD` at that point — the pdsdrv/hdlink
-precedent.
+`../../core/libnxcore.la` to their `LIBADD` at that point — the pdsdrv/helpdesk
+link module precedent.
 
 Rules:
 

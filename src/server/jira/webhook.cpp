@@ -141,4 +141,9 @@ void RegisterJiraWebhook(JiraLink *link)
       .noauth()
       .build();
    nxlog_write_tag(NXLOG_INFO, JIRA_DEBUG_TAG, L"Jira webhook registered on web API path /jira-webhook");
+
+   wchar_t secret[256];
+   ConfigReadStr(L"Jira.Webhook.Secret", secret, 256, L"");
+   if (secret[0] == 0)
+      nxlog_write_tag(NXLOG_WARNING, JIRA_DEBUG_TAG, L"Jira webhook secret is not set (Jira.Webhook.Secret), webhook calls are accepted without validation");
 }
