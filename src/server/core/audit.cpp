@@ -186,19 +186,16 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues(const TCHAR *subsys, bool isS
 }
 
 /**
- * Write audit record with old and new values
+ * Write audit record with old and new values and pre-formatted message text
  */
-void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
-         session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, va_list args)
+static void WriteAuditRecord(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *text)
 {
-   StringBuffer text;
-   text.appendFormattedStringV(format, args);
-
 	TCHAR recordId[16], _time[32], success[2], _userId[16], _sessionId[16], _objectId[16], _valueType[2], _hmac[SHA256_DIGEST_SIZE * 2 + 1];
    const TCHAR *values[13] = {
       recordId, _time, subsys, success, _userId,
       (workstation != nullptr) && (*workstation != 0) ? workstation : _T("SYSTEM"),
-      _sessionId, _objectId, text.cstr(), nullptr, nullptr, nullptr, nullptr };
+      _sessionId, _objectId, text, nullptr, nullptr, nullptr, nullptr };
    static int sqlTypes[13] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_TEXT, -1, -1, -1, -1 };
    _sntprintf(recordId, 16, _T("%d"), InterlockedIncrement(&s_recordId));
    _sntprintf(_time, 32, INT64_FMT, static_cast<int64_t>(time(nullptr)));
@@ -340,14 +337,213 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 /**
  * Write audit record with old and new values
  */
+void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
+         session_id_t sessionId, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, va_list args)
+{
+   StringBuffer text;
+   text.appendFormattedStringV(format, args);
+   WriteAuditRecord(subsys, isSuccess, userId, workstation, sessionId, objectId, oldValue, newValue, valueType, text);
+}
+
+/**
+ * Maximum number of changed attributes listed in audit record message
+ */
+#define MAX_LISTED_ATTRIBUTES    10
+
+/**
+ * Maximum length of changed attribute list in audit record message
+ */
+#define MAX_ATTRIBUTE_LIST_LEN   512
+
+/**
+ * Maximum length of single attribute value in audit record message
+ */
+#define MAX_ATTRIBUTE_VALUE_LEN  40
+
+/**
+ * Attributes that are updated as a side effect of any modification and therefore
+ * are not reported as changes.
+ */
+static const char *s_ignoredAttributes[] = { "timestamp", nullptr };
+
+/**
+ * Check if given top level attribute should be ignored
+ */
+static bool IsIgnoredAttribute(const char *name)
+{
+   for(int i = 0; s_ignoredAttributes[i] != nullptr; i++)
+      if (!strcmp(s_ignoredAttributes[i], name))
+         return true;
+   return false;
+}
+
+/**
+ * Append JSON value to attribute description
+ */
+static void AppendAttributeValue(StringBuffer *description, json_t *value)
+{
+   switch(json_typeof(value))
+   {
+      case JSON_STRING:
+         {
+            const char *s = json_string_value(value);
+            size_t l = strlen(s);
+            description->append(_T('"'));
+            if (l > MAX_ATTRIBUTE_VALUE_LEN)
+            {
+               // Do not cut in the middle of multibyte UTF-8 character
+               l = MAX_ATTRIBUTE_VALUE_LEN;
+               while((l > 0) && ((s[l] & 0xC0) == 0x80))
+                  l--;
+               description->appendUtf8String(s, l);
+               description->append(_T("..."));
+            }
+            else
+            {
+               description->appendUtf8String(s, l);
+            }
+            description->append(_T('"'));
+         }
+         break;
+      case JSON_INTEGER:
+         description->append(static_cast<int64_t>(json_integer_value(value)));
+         break;
+      case JSON_REAL:
+         description->append(json_real_value(value));
+         break;
+      case JSON_TRUE:
+         description->append(_T("true"));
+         break;
+      case JSON_FALSE:
+         description->append(_T("false"));
+         break;
+      default:
+         description->append(_T("null"));
+         break;
+   }
+}
+
+/**
+ * Add description of changed attribute to the list. Value is not included for attributes
+ * that has no scalar representation (objects and arrays).
+ */
+static void AddChangedAttribute(StringList *attributes, const TCHAR *prefix, const char *name, json_t *value)
+{
+   StringBuffer description;
+   if (prefix != nullptr)
+      description.append(prefix);
+   description.appendUtf8String(name);
+   if ((value != nullptr) && !json_is_object(value) && !json_is_array(value))
+   {
+      description.append(_T('='));
+      AppendAttributeValue(&description, value);
+   }
+   attributes->add(description.cstr());
+}
+
+/**
+ * Collect descriptions of attributes that are different in old and new object representation.
+ * Nested objects are traversed recursively, arrays are compared as a whole.
+ */
+static void CollectChangedAttributes(json_t *oldValue, json_t *newValue, const TCHAR *prefix, StringList *attributes)
+{
+   void *it = json_object_iter(oldValue);
+   while(it != nullptr)
+   {
+      const char *name = json_object_iter_key(it);
+      json_t *ov = json_object_iter_value(it);
+      it = json_object_iter_next(oldValue, it);
+
+      if ((prefix == nullptr) && IsIgnoredAttribute(name))
+         continue;
+
+      json_t *nv = json_object_get(newValue, name);
+      if (nv == nullptr)
+      {
+         AddChangedAttribute(attributes, prefix, name, nullptr);
+      }
+      else if (json_is_object(ov) && json_is_object(nv))
+      {
+         StringBuffer nestedPrefix;
+         if (prefix != nullptr)
+            nestedPrefix.append(prefix);
+         nestedPrefix.appendUtf8String(name);
+         nestedPrefix.append(_T('.'));
+         CollectChangedAttributes(ov, nv, nestedPrefix.cstr(), attributes);
+      }
+      else if (!json_equal(ov, nv))
+      {
+         AddChangedAttribute(attributes, prefix, name, nv);
+      }
+   }
+
+   it = json_object_iter(newValue);
+   while(it != nullptr)
+   {
+      const char *name = json_object_iter_key(it);
+      json_t *nv = json_object_iter_value(it);
+      it = json_object_iter_next(newValue, it);
+
+      if ((prefix == nullptr) && IsIgnoredAttribute(name))
+         continue;
+
+      if (json_object_get(oldValue, name) == nullptr)
+         AddChangedAttribute(attributes, prefix, name, nv);
+   }
+}
+
+/**
+ * Append list of changed attributes to audit record message. Nothing is appended if changes
+ * cannot be determined (for example if changed attribute is not part of object's JSON
+ * representation because it contains sensitive data).
+ */
+static void AppendChangedAttributes(StringBuffer *text, json_t *oldValue, json_t *newValue)
+{
+   if (!json_is_object(oldValue) || !json_is_object(newValue))
+      return;
+
+   StringList attributes;
+   CollectChangedAttributes(oldValue, newValue, nullptr, &attributes);
+   if (attributes.isEmpty())
+      return;
+
+   if (attributes.size() <= MAX_LISTED_ATTRIBUTES)
+   {
+      StringBuffer list;
+      for(int i = 0; i < attributes.size(); i++)
+      {
+         if (i > 0)
+            list.append(_T(", "));
+         list.append(attributes.get(i));
+      }
+      if (list.length() <= MAX_ATTRIBUTE_LIST_LEN)
+      {
+         text->append(_T(" ("));
+         text->append(list);
+         text->append(_T(')'));
+         return;
+      }
+   }
+
+   text->appendFormattedString((attributes.size() == 1) ? _T(" (%d attribute changed)") : _T(" (%d attributes changed)"), attributes.size());
+}
+
+/**
+ * Write audit record with old and new values
+ */
 void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
          session_id_t sessionId, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, va_list args)
 {
+   StringBuffer text;
+   text.appendFormattedStringV(format, args);
+   if ((oldValue != nullptr) && (newValue != nullptr))
+      AppendChangedAttributes(&text, oldValue, newValue);
+
    char *js1 = (oldValue != nullptr) ? json_dumps(oldValue, JSON_SORT_KEYS | JSON_INDENT(3)) : MemCopyStringA("");
    char *js2 = (newValue != nullptr) ? json_dumps(newValue, JSON_SORT_KEYS | JSON_INDENT(3)) : MemCopyStringA("");
    WCHAR *js1w = WideStringFromUTF8String(js1);
    WCHAR *js2w = WideStringFromUTF8String(js2);
-   WriteAuditLogWithValues2(subsys, isSuccess, userId, workstation, sessionId, objectId, js1w, js2w, 'J', format, args);
+   WriteAuditRecord(subsys, isSuccess, userId, workstation, sessionId, objectId, js1w, js2w, 'J', text);
    MemFree(js1w);
    MemFree(js2w);
    MemFree(js1);

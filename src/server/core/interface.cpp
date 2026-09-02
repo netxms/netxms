@@ -655,6 +655,17 @@ static uint32_t statusToEventInverted[] =
 };
 
 /**
+ * Expected interface state text
+ */
+static const TCHAR *s_expectedStateText[] =
+{
+   _T("UP"),
+   _T("DOWN"),
+   _T("IGNORE"),
+   _T("AUTO")
+};
+
+/**
  * PAE state text
  */
 static const TCHAR *paeStateText[] =
@@ -2284,6 +2295,9 @@ json_t *Interface::toJson(bool includeSensitiveData)
    json_object_set_new(root, "macAddress", m_macAddress.toJson());
    json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
+   int expectedState = (m_flags & IF_EXPECTED_STATE_MASK) >> 28;
+   json_object_set_new(root, "expectedState", json_integer(expectedState));
+   json_object_set_new(root, "expectedStateText", json_string_t(s_expectedStateText[expectedState]));
    json_object_set_new(root, "description", json_string_t(m_description));
    json_object_set_new(root, "ifAlias", json_string_t(m_ifAlias));
    json_object_set_new(root, "type", json_integer(m_type));
