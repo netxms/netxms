@@ -1089,16 +1089,19 @@ enum class Ownership : bool
 #endif
 
 /**
+ * Define clang-specific __has_warning macro as 0 so it can be safely used in #if expressions
+ */
+#ifndef __has_warning
+#define __has_warning(x) 0
+#endif
+
+/**
  * Macros for suppress and resume compiler warning about potential unaligned access.
  */
-#if defined(__clang__)
-#if __has_warning("-Waddress-of-packed-member")
+#if __has_warning("-Waddress-of-packed-member") || \
+    (defined(__GNUC__) && !defined(__clang__) && (__GNUC__ >= 9))
 #define SUPPRESS_WARNING_PACKED_PUSH _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Waddress-of-packed-member\"")
-#define SUPPRESS_WARNING_PACKED_POP _Pragma("GCC diagnostic pop")
-#endif
-#elif defined(__GNUC__) && (__GNUC__ >= 9)
-#define SUPPRESS_WARNING_PACKED_PUSH _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Waddress-of-packed-member\"")
-#define SUPPRESS_WARNING_PACKED_POP _Pragma("GCC diagnostic pop")
+#define SUPPRESS_WARNING_PACKED_POP  _Pragma("GCC diagnostic pop")
 #else
 #define SUPPRESS_WARNING_PACKED_PUSH
 #define SUPPRESS_WARNING_PACKED_POP
