@@ -253,6 +253,13 @@ uint32_t DashboardBase::modifyFromJSONInternal(json_t *json, GenericClientSessio
    if (!json_object_update_integer(json, "numColumns", &m_numColumns))
       return RCC_INVALID_ARGUMENT;
 
+   // Scrollable flag
+   uint32_t setFlags = 0, mask = 0;
+   if (!json_object_update_flag(json, "scrollable", DBF_SCROLLABLE, &setFlags, &mask))
+      return RCC_INVALID_ARGUMENT;
+   if (mask != 0)
+      updateFlags(setFlags, mask);
+
    // Dashboard elements (full replacement)
    json_t *elements = json_object_get(json, "elements");
    if (elements != nullptr)
@@ -359,6 +366,7 @@ json_t *DashboardBase::toJson(bool includeSensitiveData)
 
    lockProperties();
    json_object_set_new(root, "numColumns", json_integer(m_numColumns));
+   json_object_set_new(root, "scrollable", json_boolean((m_flags & DBF_SCROLLABLE) != 0));
    json_object_set_new(root, "elements", json_object_array(m_elements));
    unlockProperties();
 

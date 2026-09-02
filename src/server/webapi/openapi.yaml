@@ -4614,8 +4614,8 @@ paths:
       summary: Get dashboard content
       description: |
         Return the content of a dashboard or dashboard template object: the column count,
-        display priority, and the element (widget) layout. Requires read access. Applies only
-        to objects of class `Dashboard` or `DashboardTemplate`.
+        the scrollable flag, display priority, and the element (widget) layout. Requires read
+        access. Applies only to objects of class `Dashboard` or `DashboardTemplate`.
       parameters:
         - name: object-id
           in: path
@@ -13421,11 +13421,17 @@ components:
         - type
     DashboardContent:
       type: object
-      description: Content of a dashboard or dashboard template object - column count, display priority, and element layout.
+      description: Content of a dashboard or dashboard template object - column count, scrollable flag, display priority, and element layout.
       properties:
         numColumns:
           type: integer
           description: Number of layout columns.
+        scrollable:
+          type: boolean
+          description: |
+            When true the dashboard scrolls vertically and elements keep their own heights.
+            When false (the default) the elements are fitted to the available height, with
+            rows carrying `grabVerticalSpace` sharing whatever space is left over.
         displayPriority:
           type: integer
           description: Display ordering priority (plain dashboards only; ignored for templates).
