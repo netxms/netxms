@@ -3593,6 +3593,16 @@ paths:
                     bidirectional peer link (any previous peer on either side is cleared) and
                     requires modify access on the peer interface. `null` or `0` clears the
                     current peer.
+                primaryName:
+                  type: string
+                  description: >-
+                    Node only. Primary host name, either a DNS name or a literal IP address.
+                    The node's primary IP address is derived from it and is updated by the
+                    forced configuration poll that a change schedules — it is not settable on
+                    its own. If the name resolves to an address that does not belong to any of
+                    the node's interfaces, that address must not already be used by another
+                    node or subnet (this check is skipped for an external gateway). A name that
+                    does not resolve is accepted.
       responses:
         '200':
           description: Object updated; full updated object returned.
@@ -3611,6 +3621,10 @@ paths:
             comments
         '404':
           description: Object with given ID does not exist
+        '409':
+          description: >-
+            IP address resolved from the new primary host name is already used by another
+            node or subnet.
       security:
         - BearerAuth: []
       tags:
