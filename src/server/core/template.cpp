@@ -74,17 +74,15 @@ static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UI
 /**
  * Default constructor
  */
-Template::Template() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
+Template::Template() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this), m_removeDCIOnDelete(-1)
 {
-   m_removeDCIOnDelete = true;
 }
 
 /**
  * Create new template
  */
-Template::Template(const TCHAR *name, const uuid& guid) : super(name, guid), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
+Template::Template(const TCHAR *name, const uuid& guid) : super(name, guid), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this), m_removeDCIOnDelete(-1)
 {
-   m_removeDCIOnDelete = true;
 }
 
 /**
@@ -660,16 +658,17 @@ void Template::onDataCollectionChange()
  */
 void Template::prepareForDeletion()
 {
+   // Remove if m_removeDCIOnDelete is default or explicitly set to remove
+   bool remove = (m_removeDCIOnDelete.load() != 0);
+
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *object = getChildList().get(i);
       if (object->isDataCollectionTarget())
-         queueRemoveFromTarget(object->getId(), m_removeDCIOnDelete);
+         queueRemoveFromTarget(object->getId(), remove);
       if (object->getObjectClass() == OBJECT_NODE)
-      {
          removeAllPolicies(static_cast<Node*>(object));
-      }
    }
    unlockChildList();
    super::prepareForDeletion();

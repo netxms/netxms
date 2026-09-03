@@ -28,25 +28,23 @@
 /**
  * Cluster class default constructor
  */
-Cluster::Cluster() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::AUTOBIND), AutoBindTarget(this), m_syncNetworks(0, 8, Ownership::True)
+Cluster::Cluster() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::AUTOBIND), AutoBindTarget(this), m_syncNetworks(0, 8, Ownership::True), m_removeDCIOnDelete(-1)
 {
 	m_clusterType = 0;
 	m_dwNumResources = 0;
 	m_pResourceList = nullptr;
 	m_zoneUIN = 0;
-	m_removeDCIOnDelete = true;
 }
 
 /**
  * Cluster class new object constructor
  */
-Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName, Pollable::STATUS | Pollable::CONFIGURATION | Pollable::AUTOBIND), AutoBindTarget(this), m_syncNetworks(0, 8, Ownership::True)
+Cluster::Cluster(const TCHAR *pszName, int32_t zoneUIN) : super(pszName, Pollable::STATUS | Pollable::CONFIGURATION | Pollable::AUTOBIND), AutoBindTarget(this), m_syncNetworks(0, 8, Ownership::True), m_removeDCIOnDelete(-1)
 {
 	m_clusterType = 0;
 	m_dwNumResources = 0;
 	m_pResourceList = nullptr;
 	m_zoneUIN = zoneUIN;
-	m_removeDCIOnDelete = true;
 }
 
 /**
@@ -70,12 +68,15 @@ uint32_t Cluster::getDeleteEventCode() const
  */
 void Cluster::prepareForDeletion()
 {
+   // Remove if m_removeDCIOnDelete is default or explicitly set to remove
+   bool remove = (m_removeDCIOnDelete.load() != 0);
+
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *object = getChildList().get(i);
       if (object->isDataCollectionTarget())
-         queueRemoveFromTarget(object->getId(), m_removeDCIOnDelete);
+         queueRemoveFromTarget(object->getId(), remove);
    }
    unlockChildList();
    super::prepareForDeletion();
