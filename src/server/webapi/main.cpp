@@ -106,6 +106,7 @@ int H_DataCollectionConfigGet(Context *context);
 int H_DataCollectionConfigCreate(Context *context);
 int H_DataCollectionConfigUpdate(Context *context);
 int H_DataCollectionConfigDelete(Context *context);
+int H_PushData(Context *context);
 int H_NotificationChannelClearQueue(Context *context);
 int H_NotificationChannelCreate(Context *context);
 int H_NotificationChannelDelete(Context *context);
@@ -830,6 +831,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/search")
       .POST(H_ObjectSearch)
+      .build();
+   RouteBuilder("v1/push-data")
+      .POST(H_PushData)
       .build();
    RouteBuilder("v1/scheduled-task-handlers")
       .GET(H_ScheduledTaskHandlers)
