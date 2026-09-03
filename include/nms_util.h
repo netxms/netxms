@@ -413,9 +413,11 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t);
 
 /**
  * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
- * as well as relative timestamps in format [+|-]<number>[s|m|h|d]
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d]. Returns defaultValue if string
+ * cannot be parsed. Valid representations of epoch (like "0") are parsed into 0, so caller that has
+ * to tell parsing errors from epoch should pass non-zero default value.
  */
-time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts);
+time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue = 0);
 
 /**
  * Parse time duration string with optional unit suffix. Recognized suffixes (case-insensitive):

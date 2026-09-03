@@ -1138,15 +1138,18 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t)
 
 /**
  * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
- * as well as relative timestamps in format [+|-]<number>[s|m|h|d] or word "now".
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d] or word "now". Returns defaultValue
+ * if string cannot be parsed, including empty string and a sign without a number.
  */
-time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts)
+time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue)
 {
    char *eptr;
    if ((ts[0] == '-') || (ts[0] == '+'))
    {
       // Offset from now
       int64_t offset = strtoll(&ts[1], &eptr, 10);
+      if (eptr == &ts[1])
+         return defaultValue;  // sign not followed by a number
       if (*eptr != 0)
       {
          // check for suffix
@@ -1157,7 +1160,7 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts)
          else if (stricmp(eptr, "d") == 0)
             offset *= 86400;
          else if (stricmp(eptr, "s") != 0)
-            return 0;  // invalid format
+            return defaultValue;  // invalid format
       }
       else
       {
@@ -1172,12 +1175,12 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts)
       return time(nullptr);
 
    int64_t n = strtoll(ts, &eptr, 10);
-   if (*eptr == 0)
+   if ((eptr != ts) && (*eptr == 0))
       return static_cast<time_t>(n);   // Assume UNIX timestamp
 
    struct tm t;
    if (strptime(ts, "%Y-%m-%dT%H:%M:%SZ", &t) == nullptr)
-      return 0;
+      return defaultValue;
 
    return timegm(&t);
 }
