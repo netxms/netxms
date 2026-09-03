@@ -19,6 +19,8 @@
 package org.netxms.nxmc.modules.events.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -68,6 +70,7 @@ public class RuleAlarm extends RuleBasePropertyPage
    private Combo alarmSeverity;
    private LabeledDurationInput alarmTimeout;
 	private AlarmCategorySelector alarmCategory;
+	private ScriptSelector alarmCategoryScript;
 	private EventSelector timeoutEvent;
 	private ScriptSelector rcaScript;
 	private LabeledText alarmKeyTerminate;
@@ -249,6 +252,22 @@ public class RuleAlarm extends RuleBasePropertyPage
       gd.horizontalAlignment = SWT.FILL;
       alarmCategory.setLayoutData(gd);
 
+      alarmCategoryScript = new ScriptSelector(alarmCreationGroup, SWT.NONE, false, true);
+      alarmCategoryScript.setLabel(i18n.tr("Alarm category script"));
+      alarmCategoryScript.setScriptName(rule.getAlarmCategoryScriptName());
+      alarmCategoryScript.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            updateAlarmCategoryState();
+         }
+      });
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      alarmCategoryScript.setLayoutData(gd);
+      updateAlarmCategoryState();
+
       checkCreateHelpdeskTicket = new Button(alarmCreationGroup, SWT.CHECK);
       checkCreateHelpdeskTicket.setText(i18n.tr("Create helpdesk ticket on alarm creation"));
       checkCreateHelpdeskTicket.setSelection((rule.getFlags() & EventProcessingPolicyRule.CREATE_TICKET) != 0);
@@ -336,6 +355,16 @@ public class RuleAlarm extends RuleBasePropertyPage
 	}
 
    /**
+    * Enable static category selector only when alarm category script is not set - categories returned
+    * by the script replace static category list.
+    */
+   private void updateAlarmCategoryState()
+   {
+      String script = alarmCategoryScript.getScriptName();
+      alarmCategory.setEnabled((script == null) || script.isEmpty());
+   }
+
+   /**
     * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
     */
    @Override
@@ -352,6 +381,7 @@ public class RuleAlarm extends RuleBasePropertyPage
 				rule.setAlarmSeverity(Severity.getByValue(alarmSeverity.getSelectionIndex()));
 				rule.setAlarmTimeoutEvent(timeoutEvent.getEventCode());
 				rule.setAlarmCategories(alarmCategory.getCategoryId());				
+				rule.setAlarmCategoryScriptName(alarmCategoryScript.getScriptName());
 				rule.setRcaScriptName(rcaScript.getScriptName());
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
 				if (checkCreateHelpdeskTicket.getSelection())

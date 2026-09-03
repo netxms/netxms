@@ -748,6 +748,7 @@ private:
    uint32_t m_alarmTimeoutEvent;
 	IntegerArray<uint32_t> m_alarmCategoryList;
 	wchar_t *m_rcaScriptName;    // Name of library script used for root cause analysis
+	wchar_t *m_alarmCategoryScriptName;   // Name of library script that returns alarm categories for generated alarm
 
    // Incident creation settings (used when RF_CREATE_INCIDENT flag is set)
    uint32_t m_incidentDelay;        // Delay in seconds (0 = immediate)
@@ -774,6 +775,7 @@ private:
    bool matchTime(struct tm *localTime) const;
 
    uint32_t generateAlarm(Event *event, EventRuleExecution *rec) const;
+   bool resolveAlarmCategories(Event *event, IntegerArray<uint32_t> *categories) const;
    void createIncidentFromAlarm(Event *event, uint32_t alarmId, EventRuleExecution *rec) const;
    bool executeActionScript(Event *event, StringBuffer *errorText) const;
 

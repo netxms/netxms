@@ -784,7 +784,11 @@ public class RuleEditor extends Composite
                createLabel(clientArea, 1, false, i18n.tr("(use regular expression for alarm resolve)"), listener);
          }
          
-         if (rule.getAlarmCategories().size() > 0)
+         if ((rule.getAlarmCategoryScriptName() != null) && !rule.getAlarmCategoryScriptName().isEmpty())
+         {
+            createLabel(clientArea, 1, false, String.format(i18n.tr("with categories selected by script \"%s\""), rule.getAlarmCategoryScriptName()), listener);
+         }
+         else if (rule.getAlarmCategories().size() > 0)
          {
             createLabel(clientArea, 1, false, rule.getAlarmCategories().size() == 1 ? i18n.tr("with category: ") : i18n.tr("with categories: "), listener);
             for(Long id :rule.getAlarmCategories())

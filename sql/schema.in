@@ -1738,6 +1738,7 @@ CREATE TABLE event_policy
   alarm_timeout_event integer not null,  // Event to be sent on timeout
   downtime_tag varchar(15) null,
   rca_script_name varchar(255) null,
+  alarm_category_script varchar(255) null,  // Name of library script returning alarm categories
   action_script SQL_TEXT null,
   ai_instructions SQL_TEXT null,
   incident_delay integer not null,  // Delay in seconds for incident creation (0 = immediate)

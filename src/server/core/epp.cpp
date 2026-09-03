@@ -52,6 +52,7 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
    m_alarmMessage = nullptr;
    m_alarmImpact = nullptr;
    m_rcaScriptName = nullptr;
+   m_alarmCategoryScriptName = nullptr;
    m_filterScriptSource = nullptr;
    m_filterScript = nullptr;
    m_actionScriptSource = nullptr;
@@ -132,6 +133,7 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    m_alarmMessage = MemCopyString(config.getSubEntryValue(_T("alarmMessage")));
    m_alarmImpact = MemCopyString(config.getSubEntryValue(_T("alarmImpact")));
    m_rcaScriptName = MemCopyString(config.getSubEntryValue(L"rootCauseAnalysisScript"));
+   m_alarmCategoryScriptName = MemCopyString(config.getSubEntryValue(L"alarmCategoryScript"));
    m_aiAgentInstructions = MemCopyString(config.getSubEntryValue(L"aiAgentInstructions"));
 
    wcslcpy(m_downtimeTag, config.getSubEntryValue(L"downtimeTag", 0, L""), MAX_DOWNTIME_TAG_LENGTH);
@@ -552,6 +554,8 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
    m_rcaScriptName = MemCopyStringA(rcaScript);
 #endif
 
+   m_alarmCategoryScriptName = MemCopyString(json_object_get_string(json, "alarmCategoryScript", _T("")));
+
    m_aiAgentInstructions = MemCopyString(json_object_get_string(json, "aiAgentInstructions", _T("")));
 
    String downtimeTag = json_object_get_string(json, "downtimeTag", _T(""));
@@ -684,7 +688,8 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
  * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,
  * downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,
- * incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time
+ * incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time,
+ * alarm_category_script
  */
 EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
@@ -737,6 +742,7 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True
    m_modifiedByGuid = DBGetFieldGUID(hResult, row, 20);
    m_modifiedByName = DBGetFieldAsString(hResult, row, 21);
    m_modificationTime = static_cast<time_t>(DBGetFieldULong(hResult, row, 22));
+   m_alarmCategoryScriptName = DBGetField(hResult, row, 23, nullptr, 0);
 }
 
 /**
@@ -802,6 +808,7 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
 	m_alarmTimeout = msg.getFieldAsUInt32(VID_ALARM_TIMEOUT);
 	m_alarmTimeoutEvent = msg.getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
 	m_rcaScriptName = msg.getFieldAsString(VID_RCA_SCRIPT_NAME);
+	m_alarmCategoryScriptName = msg.getFieldAsString(VID_ALARM_CATEGORY_SCRIPT);
 
    msg.getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
 
@@ -860,6 +867,7 @@ EPRule::~EPRule()
    MemFree(m_alarmImpact);
    MemFree(m_alarmKey);
    MemFree(m_rcaScriptName);
+   MemFree(m_alarmCategoryScriptName);
    MemFree(m_comments);
    MemFree(m_filterScriptSource);
    delete m_filterScript;
@@ -917,6 +925,9 @@ void EPRule::getScriptDependencies(StringSet *dependencies) const
 
    if ((m_rcaScriptName != nullptr) && (m_rcaScriptName[0] != 0))
       AddScriptDependencies(dependencies, m_rcaScriptName);
+
+   if ((m_alarmCategoryScriptName != nullptr) && (m_alarmCategoryScriptName[0] != 0))
+      AddScriptDependencies(dependencies, m_alarmCategoryScriptName);
 
    if (m_alarmMessage != nullptr)
       FindScriptMacrosInText(m_alarmMessage, dependencies);
@@ -1514,6 +1525,78 @@ void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId, EventRuleEx
 }
 
 /**
+ * Add alarm category returned by alarm category script to category list. Categories are referenced
+ * by name and must be already defined on the server - unknown names are ignored.
+ */
+static void AddAlarmCategoryByName(NXSL_Value *value, IntegerArray<uint32_t> *categories, uint32_t ruleNumber)
+{
+   if (!value->isString())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Alarm category script in event processing policy rule #%u returned value that is not a category name", ruleNumber);
+      return;
+   }
+
+   const wchar_t *name = value->getValueAsCString();
+   if (*name == 0)
+      return;
+
+   uint32_t id = FindAlarmCategoryIdByName(name);
+   if (id == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Alarm category \"%s\" returned by alarm category script in event processing policy rule #%u does not exist", name, ruleNumber);
+      return;
+   }
+
+   if (!categories->contains(id))
+      categories->add(id);
+}
+
+/**
+ * Resolve alarm categories for generated alarm by executing alarm category script configured for this rule.
+ * Script is expected to return category name or array of category names. Returns true if script was
+ * executed successfully and category list was populated from its result.
+ */
+bool EPRule::resolveAlarmCategories(Event *event, IntegerArray<uint32_t> *categories) const
+{
+   shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
+   ScriptVMHandle vm = CreateServerScriptVM(m_alarmCategoryScriptName, object);
+   if (!vm.isValid())
+   {
+      ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, vm.failureReasonText(), m_alarmCategoryScriptName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot create NXSL VM for alarm category script \"%s\" in event processing policy rule #%u (%s)",
+               m_alarmCategoryScriptName, m_id + 1, vm.failureReasonText());
+      return false;
+   }
+
+   SetRestrictedSecurityContext(vm);
+   vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
+
+   if (!vm->run())
+   {
+      ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, vm->getErrorText(), m_alarmCategoryScriptName);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Failed to execute alarm category script for event processing policy rule #%u (%s)", m_id + 1, vm->getErrorText());
+      vm.destroy();
+      return false;
+   }
+
+   NXSL_Value *result = vm->getResult();
+   if (result->isArray())
+   {
+      NXSL_Array *a = result->getValueAsArray();
+      for(int i = 0; i < a->size(); i++)
+         AddAlarmCategoryByName(a->getByPosition(i), categories, m_id + 1);
+   }
+   else if (!result->isNull())
+   {
+      AddAlarmCategoryByName(result, categories, m_id + 1);
+   }
+   vm.destroy();
+
+   nxlog_debug_tag(DEBUG_TAG, 6, L"Alarm category script in event processing policy rule #%u selected %d categories", m_id + 1, categories->size());
+   return true;
+}
+
+/**
  * Generate alarm from event
  */
 uint32_t EPRule::generateAlarm(Event *event, EventRuleExecution *rec) const
@@ -1565,9 +1648,15 @@ uint32_t EPRule::generateAlarm(Event *event, EventRuleExecution *rec) const
 	   String message = event->expandText(m_alarmMessage);
 	   String impact = event->expandText(m_alarmImpact);
 
+	   // Category list returned by alarm category script replaces static category list configured for the rule
+	   IntegerArray<uint32_t> scriptCategories;
+	   const IntegerArray<uint32_t> *alarmCategories = &m_alarmCategoryList;
+	   if ((m_alarmCategoryScriptName != nullptr) && (m_alarmCategoryScriptName[0] != 0) && resolveAlarmCategories(event, &scriptCategories))
+	      alarmCategories = &scriptCategories;
+
 	   alarmId = CreateNewAlarm(m_guid, m_comments, message, key, impact,
                      (m_alarmSeverity == SEVERITY_FROM_EVENT) ? event->getSeverity() : m_alarmSeverity,
-                     m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, m_alarmCategoryList,
+                     m_alarmTimeout, m_alarmTimeoutEvent, parentAlarmId, m_rcaScriptName, event, 0, *alarmCategories,
                      (m_flags & RF_CREATE_TICKET) != 0, (m_flags & RF_REQUEST_AI_COMMENT) != 0);
 	   event->setLastAlarmMessage(message);
 	   event->setLastAlarmId(alarmId);
@@ -1788,8 +1877,9 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
                                   _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,")
                                   _T("action_script,downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,")
-                                  _T("incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time) ")
-                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                                  _T("incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time,")
+                                  _T("alarm_category_script) ")
+                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1815,6 +1905,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
       DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, modifiedByGuid);
       DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, modifiedByName, DB_BIND_STATIC, 63);
       DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(modificationTime));
+      DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_alarmCategoryScriptName, DB_BIND_STATIC, MAX_DB_STRING);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -2016,6 +2107,7 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_ALARM_TIMEOUT_EVENT, m_alarmTimeoutEvent);
    msg->setFieldFromInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
    msg->setField(VID_RCA_SCRIPT_NAME, m_rcaScriptName);
+   msg->setField(VID_ALARM_CATEGORY_SCRIPT, m_alarmCategoryScriptName);
    msg->setField(VID_DOWNTIME_TAG, m_downtimeTag);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_AI_AGENT_INSTRUCTIONS, CHECK_NULL_EX(m_aiAgentInstructions));
@@ -2188,6 +2280,7 @@ json_t *EPRule::toJson(bool assistantMode) const
    json_object_set_new(root, "actionScript", json_string_t(m_actionScriptSource));
    json_object_set_new(root, "rootCauseAnalysisScript", json_string_t(m_rcaScriptName));
    json_object_set_new(root, "alarmCategories", m_alarmCategoryList.toJson());
+   json_object_set_new(root, "alarmCategoryScript", json_string_t(m_alarmCategoryScriptName));
    json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
    json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
@@ -2274,7 +2367,8 @@ bool EventProcessingPolicy::loadFromDB()
                            L"rca_script_name,alarm_impact,action_script,downtime_tag,ai_instructions,"
                            L"incident_delay,incident_title,incident_description,"
                            L"incident_ai_depth,incident_ai_prompt,"
-                           L"modified_by_guid,modified_by_name,modification_time "
+                           L"modified_by_guid,modified_by_name,modification_time,"
+                           L"alarm_category_script "
                            L"FROM event_policy ORDER BY rule_id");
    if (hResult != nullptr)
    {

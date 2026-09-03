@@ -1074,6 +1074,9 @@ static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, std::string *
    v = json_object_get(arguments, "rca_script_name");
    if (json_is_string(v)) json_object_set(rule, "rootCauseAnalysisScript", v);
 
+   v = json_object_get(arguments, "alarm_category_script");
+   if (json_is_string(v)) json_object_set(rule, "alarmCategoryScript", v);
+
    v = json_object_get(arguments, "ai_agent_instructions");
    if (json_is_string(v)) json_object_set(rule, "aiAgentInstructions", v);
 

@@ -72,6 +72,7 @@ public class EventProcessingPolicyRule
    private int alarmTimeout;
    private int alarmTimeoutEvent;
    private List<Long> alarmCategoryIds;
+   private String alarmCategoryScriptName;
    private String rcaScriptName;
    private String downtimeTag;
    private int incidentDelay;
@@ -115,6 +116,7 @@ public class EventProcessingPolicyRule
       alarmTimeout = 0;
       alarmTimeoutEvent = 43;
       alarmCategoryIds = new ArrayList<Long>(0);
+      alarmCategoryScriptName = null;
       rcaScriptName = null;
       downtimeTag = "";
       incidentDelay = 0;
@@ -163,6 +165,7 @@ public class EventProcessingPolicyRule
       alarmTimeout = src.alarmTimeout;
       alarmTimeoutEvent = src.alarmTimeoutEvent;
       alarmCategoryIds = src.alarmCategoryIds;
+      alarmCategoryScriptName = src.alarmCategoryScriptName;
       rcaScriptName = src.rcaScriptName;
       downtimeTag = src.downtimeTag;
       incidentDelay = src.incidentDelay;
@@ -218,6 +221,7 @@ public class EventProcessingPolicyRule
       alarmTimeout = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT);
       alarmTimeoutEvent = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
       alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
+      alarmCategoryScriptName = msg.getFieldAsString(NXCPCodes.VID_ALARM_CATEGORY_SCRIPT);
       rcaScriptName = msg.getFieldAsString(NXCPCodes.VID_RCA_SCRIPT_NAME);
       downtimeTag = msg.getFieldAsString(NXCPCodes.VID_DOWNTIME_TAG);
       incidentDelay = msg.getFieldAsInt32(NXCPCodes.VID_INCIDENT_DELAY);
@@ -293,6 +297,7 @@ public class EventProcessingPolicyRule
       msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
       msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, alarmTimeoutEvent);
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds);
+      msg.setField(NXCPCodes.VID_ALARM_CATEGORY_SCRIPT, alarmCategoryScriptName);
       msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
       msg.setField(NXCPCodes.VID_DOWNTIME_TAG, downtimeTag);
       msg.setFieldInt32(NXCPCodes.VID_INCIDENT_DELAY, incidentDelay);
@@ -487,6 +492,28 @@ public class EventProcessingPolicyRule
             break;
          }
       }
+   }
+
+   /**
+    * Get name of alarm category script. If set, list of categories returned by that script is used
+    * instead of static category list configured for the rule.
+    *
+    * @return name of alarm category script (can be null or empty string if not set)
+    */
+   public String getAlarmCategoryScriptName()
+   {
+      return alarmCategoryScriptName;
+   }
+
+   /**
+    * Set name of alarm category script.
+    *
+    * @param alarmCategoryScriptName name of alarm category script (can be null or empty string to use static category list)
+    */
+   public void setAlarmCategoryScriptName(String alarmCategoryScriptName)
+   {
+      this.alarmCategoryScriptName = alarmCategoryScriptName;
+      this.modified = true;
    }
 
    /**

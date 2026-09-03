@@ -12594,6 +12594,9 @@ components:
           description: Alarm category IDs assigned to the generated alarm
           items:
             type: integer
+        alarmCategoryScript:
+          type: string
+          description: Name of the library script returning alarm categories for the generated alarm (replaces alarmCategories when set)
         rootCauseAnalysisScript:
           type: string
           description: Name of the library script used for root cause analysis

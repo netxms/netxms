@@ -464,6 +464,27 @@ uint32_t UpdateAlarmCategoryDescription(const TCHAR *name, const TCHAR *descript
 }
 
 /**
+ * Find alarm category by name. Returns category ID, or 0 if category with given name does not exist.
+ */
+uint32_t FindAlarmCategoryIdByName(const TCHAR *name)
+{
+   uint32_t id = 0;
+   s_lock.readLock();
+   Iterator<AlarmCategory> it = s_categories.begin();
+   while(it.hasNext())
+   {
+      AlarmCategory *c = it.next();
+      if (!_tcscmp(c->getName(), name))
+      {
+         id = c->getId();
+         break;
+      }
+   }
+   s_lock.unlock();
+   return id;
+}
+
+/**
  * Create new alarm category
  */
 uint32_t CreateAlarmCategory(const TCHAR *name, const TCHAR *description)

@@ -28,6 +28,11 @@
 #define DEBUG_TAG L"alarm"
 
 /**
+ * Maximum length of alarm category list as stored in alarm_category_ids column
+ */
+#define MAX_ALARM_CATEGORY_LIST_LEN 255
+
+/**
  * Column list for loading alarms from database
  */
 #define ALARM_LOAD_COLUMN_LIST \
@@ -675,16 +680,27 @@ NXSL_Value *Alarm::relatedEventsToNXSLArray(NXSL_VM *vm) const
 }
 
 /**
- * Convert alarm category list to string
+ * Convert alarm category list to string for storing in alarm_category_ids column. Resulting string
+ * is limited to the size of that column, and is always cut on category ID boundary - categories
+ * that do not fit are dropped.
  */
 StringBuffer Alarm::categoryListToString()
 {
    StringBuffer buffer;
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
+      wchar_t id[16];
+      IntegerToString(m_alarmCategoryList.get(i), id);
+      size_t length = wcslen(id) + ((buffer.length() > 0) ? 1 : 0);
+      if (buffer.length() + length > MAX_ALARM_CATEGORY_LIST_LEN)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 3, L"Category list for alarm [%u] is too long, only %d categories out of %d will be stored",
+                  m_alarmId, i, m_alarmCategoryList.size());
+         break;
+      }
       if (buffer.length() > 0)
-         buffer.append(_T(','));
-      buffer.append(m_alarmCategoryList.get(i));
+         buffer.append(L',');
+      buffer.append(id);
    }
    return buffer;
 }
@@ -869,7 +885,7 @@ static void AlarmDbWriterThread()
             DBBind(hStmt, 21, DB_SQLTYPE_BIGINT, rq->sourceEventId);
             DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(rq->ackTimeout));
             DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, rq->dciId);
-            DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, rq->categoryList, DB_BIND_STATIC);
+            DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, rq->categoryList, DB_BIND_STATIC, MAX_ALARM_CATEGORY_LIST_LEN);
             if (!rq->ruleGuid.isNull())
             {
                DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, rq->ruleGuid);
@@ -911,7 +927,7 @@ static void AlarmDbWriterThread()
             DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(rq->ackTimeout));
             DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, rq->sourceObject);
             DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, rq->dciId);
-            DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, rq->categoryList, DB_BIND_STATIC);
+            DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, rq->categoryList, DB_BIND_STATIC, MAX_ALARM_CATEGORY_LIST_LEN);
             if (!rq->ruleGuid.isNull())
             {
                DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, rq->ruleGuid);
