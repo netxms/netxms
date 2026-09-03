@@ -60,9 +60,11 @@ struct ConnectionHistoryChange
 };
 
 /**
- * Extract connection points from FDB (MACs that are the only entry on their port)
+ * Extract connection points from FDB (MACs that are the only entry on their port).
+ * Ports without interface object (for example rejected by Hook::CreateInterface) and
+ * interfaces excluded from topology are ignored.
  */
-static void ExtractConnectionPoints(const shared_ptr<ForwardingDatabase>& fdb, HashMap<MacAddress, ConnectionPoint> *connections)
+static void ExtractConnectionPoints(const shared_ptr<ForwardingDatabase>& fdb, const Node& node, HashMap<MacAddress, ConnectionPoint> *connections)
 {
    if (fdb == nullptr)
       return;
@@ -78,6 +80,18 @@ static void ExtractConnectionPoints(const shared_ptr<ForwardingDatabase>& fdb, H
       if (checkedPorts.contains(entry->ifIndex))
          continue;
       checkedPorts.put(entry->ifIndex);
+
+      shared_ptr<Interface> iface = node.findInterfaceByIndex(entry->ifIndex);
+      if (iface == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, L"ExtractConnectionPoints(%u): ignoring port %u (no interface object)", node.getId(), entry->ifIndex);
+         continue;
+      }
+      if (iface->isExcludedFromTopology())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, L"ExtractConnectionPoints(%u): ignoring port %u (interface %s excluded from topology)", node.getId(), entry->ifIndex, iface->getName());
+         continue;
+      }
 
       MacAddress mac;
       if (fdb->isSingleMacOnPort(entry->ifIndex, &mac))
@@ -368,11 +382,18 @@ void UpdateConnectionHistory(uint32_t switchId, const shared_ptr<ForwardingDatab
       return;
    }
 
+   shared_ptr<Node> switchNode = static_pointer_cast<Node>(FindObjectById(switchId, OBJECT_NODE));
+   if (switchNode == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"UpdateConnectionHistory(%u): switch node object not found, skipping", switchId);
+      return;
+   }
+
    // Extract connection points from both FDBs
    HashMap<MacAddress, ConnectionPoint> newConnections(Ownership::True);
    HashMap<MacAddress, ConnectionPoint> prevConnections(Ownership::True);
-   ExtractConnectionPoints(newFdb, &newConnections);
-   ExtractConnectionPoints(prevFdb, &prevConnections);
+   ExtractConnectionPoints(newFdb, *switchNode, &newConnections);
+   ExtractConnectionPoints(prevFdb, *switchNode, &prevConnections);
 
    nxlog_debug_tag(DEBUG_TAG, 5, L"UpdateConnectionHistory(%u): new=%d prev=%d connection points",
       switchId, newConnections.size(), prevConnections.size());
