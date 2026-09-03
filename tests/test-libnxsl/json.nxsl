@@ -174,4 +174,41 @@ serialized = arr.serialize();
 assert(serialized like "*\"id\": 7*");
 assert(serialized like "*\"a\",*");
 
+// JsonArray set/insert report failure on out of range index (issue #3617)
+bounds = JsonParse("[1, 2]");
+assert(bounds != null);
+assert(bounds.size == 2);
+
+assert(bounds.set(0, 10));
+assert(bounds.get(0) == 10);
+assert(bounds.setBoolean(0, true));
+assert(bounds.setNull(1));
+assert(bounds.setString(1, "s"));
+assert(bounds.set(1, nested));
+assert(bounds.get(1).get(0) == "a");
+
+assert(!bounds.set(2, 99));
+assert(!bounds.set(5, 99));
+assert(!bounds.set(-1, 99));
+assert(!bounds.set(2, obj));
+assert(!bounds.setBoolean(2, true));
+assert(!bounds.setNull(2));
+assert(!bounds.setString(2, "x"));
+assert(bounds.size == 2);
+
+assert(bounds.insert(2, "tail"));   // index equal to array size is valid for insert
+assert(bounds.size == 3);
+assert(bounds.get(2) == "tail");
+
+assert(!bounds.insert(4, "x"));
+assert(!bounds.insert(-1, "x"));
+assert(!bounds.insert(4, obj));
+assert(!bounds.insertBoolean(4, true));
+assert(!bounds.insertNull(4));
+assert(!bounds.insertString(4, "x"));
+assert(bounds.size == 3);
+assert(bounds.get(0) == true);
+assert(bounds.get(1).get(1) == "b");
+assert(bounds.get(2) == "tail");
+
 return 0;

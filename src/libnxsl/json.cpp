@@ -428,17 +428,23 @@ NXSL_METHOD_DEFINITION(JsonArray, insert)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   if (argv[1]->isObject(_T("JsonObject")) || argv[1]->isObject(_T("JsonArray")))
+   int32_t index = argv[0]->getValueAsInt32();
+   bool success;
+   if (index < 0)
    {
-      json_array_insert(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),
-               static_cast<json_t*>(argv[1]->getValueAsObject()->getData()));
+      success = false;
+   }
+   else if (argv[1]->isObject(_T("JsonObject")) || argv[1]->isObject(_T("JsonArray")))
+   {
+      success = (json_array_insert(static_cast<json_t*>(object->getData()), index,
+               static_cast<json_t*>(argv[1]->getValueAsObject()->getData())) == 0);
    }
    else
    {
-      json_array_insert_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(), argv[1]->toJson());
+      success = (json_array_insert_new(static_cast<json_t*>(object->getData()), index, argv[1]->toJson()) == 0);
    }
 
-   *result = vm->createValue();
+   *result = vm->createValue(success);
    return 0;
 }
 
@@ -450,8 +456,9 @@ NXSL_METHOD_DEFINITION(JsonArray, insertBoolean)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   json_array_insert_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),json_boolean(argv[1]->isTrue()));
-   *result = vm->createValue();
+   int32_t index = argv[0]->getValueAsInt32();
+   *result = vm->createValue((index >= 0) &&
+            (json_array_insert_new(static_cast<json_t*>(object->getData()), index, json_boolean(argv[1]->isTrue())) == 0));
    return 0;
 }
 
@@ -463,8 +470,9 @@ NXSL_METHOD_DEFINITION(JsonArray, insertNull)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   json_array_insert_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),json_null());
-   *result = vm->createValue();
+   int32_t index = argv[0]->getValueAsInt32();
+   *result = vm->createValue((index >= 0) &&
+            (json_array_insert_new(static_cast<json_t*>(object->getData()), index, json_null()) == 0));
    return 0;
 }
 
@@ -476,8 +484,9 @@ NXSL_METHOD_DEFINITION(JsonArray, insertString)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   json_array_insert_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),json_string_t(argv[1]->getValueAsCString()));
-   *result = vm->createValue();
+   int32_t index = argv[0]->getValueAsInt32();
+   *result = vm->createValue((index >= 0) &&
+            (json_array_insert_new(static_cast<json_t*>(object->getData()), index, json_string_t(argv[1]->getValueAsCString())) == 0));
    return 0;
 }
 
@@ -489,17 +498,23 @@ NXSL_METHOD_DEFINITION(JsonArray, set)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   if (argv[1]->isObject(_T("JsonObject")) || argv[1]->isObject(_T("JsonArray")))
+   int32_t index = argv[0]->getValueAsInt32();
+   bool success;
+   if (index < 0)
    {
-      json_array_set(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(),
-               static_cast<json_t*>(argv[1]->getValueAsObject()->getData()));
+      success = false;
+   }
+   else if (argv[1]->isObject(_T("JsonObject")) || argv[1]->isObject(_T("JsonArray")))
+   {
+      success = (json_array_set(static_cast<json_t*>(object->getData()), index,
+               static_cast<json_t*>(argv[1]->getValueAsObject()->getData())) == 0);
    }
    else
    {
-      json_array_set_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(), argv[1]->toJson());
+      success = (json_array_set_new(static_cast<json_t*>(object->getData()), index, argv[1]->toJson()) == 0);
    }
 
-   *result = vm->createValue();
+   *result = vm->createValue(success);
    return 0;
 }
 
@@ -511,8 +526,9 @@ NXSL_METHOD_DEFINITION(JsonArray, setBoolean)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   json_array_set_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(), json_boolean(argv[1]->isTrue()));
-   *result = vm->createValue();
+   int32_t index = argv[0]->getValueAsInt32();
+   *result = vm->createValue((index >= 0) &&
+            (json_array_set_new(static_cast<json_t*>(object->getData()), index, json_boolean(argv[1]->isTrue())) == 0));
    return 0;
 }
 
@@ -524,8 +540,9 @@ NXSL_METHOD_DEFINITION(JsonArray, setNull)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   json_array_set_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(), json_null());
-   *result = vm->createValue();
+   int32_t index = argv[0]->getValueAsInt32();
+   *result = vm->createValue((index >= 0) &&
+            (json_array_set_new(static_cast<json_t*>(object->getData()), index, json_null()) == 0));
    return 0;
 }
 
@@ -537,8 +554,9 @@ NXSL_METHOD_DEFINITION(JsonArray, setString)
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
-   json_array_set_new(static_cast<json_t*>(object->getData()), argv[0]->getValueAsUInt32(), json_string_t(argv[1]->getValueAsCString()));
-   *result = vm->createValue();
+   int32_t index = argv[0]->getValueAsInt32();
+   *result = vm->createValue((index >= 0) &&
+            (json_array_set_new(static_cast<json_t*>(object->getData()), index, json_string_t(argv[1]->getValueAsCString())) == 0));
    return 0;
 }
 
