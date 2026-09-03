@@ -11295,7 +11295,7 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
          if (objectId != 0)
          {
             shared_ptr<NetObj> o = FindObjectById(objectId);
-            if (o->isDataCollectionTarget())
+            if ((o != nullptr) && o->isDataCollectionTarget())
                object = static_pointer_cast<DataCollectionTarget>(o);
          }
          else
