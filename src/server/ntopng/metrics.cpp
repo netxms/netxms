@@ -246,12 +246,17 @@ DataCollectionError NtopngGetPointTable(const char *pointId, const wchar_t *metr
          json_t *entry;
          json_array_foreach(data, i, entry)
          {
+            // Validated against ntopng 6.7: {"application":{"id","name"},"bytes":{"sent","rcvd","total"},
+            // "packets":{"sent","rcvd","total"},"tot_num_flows",...,"breed"}
+            json_t *application = json_object_get(entry, "application");
+            json_t *bytes = json_object_get(entry, "bytes");
+            json_t *packets = json_object_get(entry, "packets");
             table->addRow();
-            table->set(0, json_object_get_string_utf8(entry, "application", json_object_get_string_utf8(entry, "label", "")));
-            table->set(1, json_object_get_uint64(entry, "bytes.sent", json_object_get_uint64(entry, "bytes_sent", 0)));
-            table->set(2, json_object_get_uint64(entry, "bytes.rcvd", json_object_get_uint64(entry, "bytes_rcvd", 0)));
-            table->set(3, json_object_get_uint64(entry, "packets", 0));
-            table->set(4, json_object_get_uint64(entry, "num_flows", json_object_get_uint64(entry, "flows", 0)));
+            table->set(0, json_is_object(application) ? json_object_get_string_utf8(application, "name", "") : json_object_get_string_utf8(entry, "application", ""));
+            table->set(1, json_object_get_uint64(bytes, "sent", 0));
+            table->set(2, json_object_get_uint64(bytes, "rcvd", 0));
+            table->set(3, json_object_get_uint64(packets, "total", 0));
+            table->set(4, json_object_get_uint64(entry, "tot_num_flows", 0));
             table->set(5, json_object_get_string_utf8(entry, "breed", ""));
          }
       }

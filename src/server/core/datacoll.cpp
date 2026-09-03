@@ -510,6 +510,8 @@ static void ItemPoller()
       g_idxNodeById.forEach(QueueItems, &watchdogId);
 		g_idxResourceById.forEach(QueueItems, &watchdogId);
       g_idxSensorById.forEach(QueueItems, &watchdogId);
+      g_idxTrafficObserverById.forEach(QueueItems, &watchdogId);
+      g_idxObservationPointById.forEach(QueueItems, &watchdogId);
 
 		queuingTime.update(static_cast<uint32_t>(GetCurrentTimeMs() - startTime));
 		g_averageDCIQueuingTime = static_cast<uint32_t>(queuingTime.getAverage());
@@ -943,6 +945,8 @@ static void V5DataMigrationManager()
       g_idxNodeById.getObjects(&objects, filter);
       g_idxResourceById.getObjects(&objects, filter);
       g_idxSensorById.getObjects(&objects, filter);
+      g_idxTrafficObserverById.getObjects(&objects, filter);
+      g_idxObservationPointById.getObjects(&objects, filter);
 
       if (objects.isEmpty())
       {
@@ -1011,6 +1015,10 @@ void StartV5DataMigration()
       g_idxResourceById.forEach(callback);
    if (!hasV5Tables)
       g_idxSensorById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxTrafficObserverById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxObservationPointById.forEach(callback);
 
    if (hasV5Tables)
       s_v5DataMigrationThread = ThreadCreateEx(V5DataMigrationManager);

@@ -517,6 +517,8 @@ static void CollectAllDCTargets(SharedObjectArray<NetObj> *objects)
    g_idxNodeById.getObjects(objects);
    g_idxResourceById.getObjects(objects);
    g_idxSensorById.getObjects(objects);
+   g_idxTrafficObserverById.getObjects(objects);
+   g_idxObservationPointById.getObjects(objects);
 }
 
 /**

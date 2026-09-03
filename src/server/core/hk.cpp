@@ -310,6 +310,8 @@ static void CleanTimescaleData(DB_HANDLE hdb)
    g_idxNodeById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxResourceById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxSensorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxTrafficObserverById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxObservationPointById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
 
    // Always run on default storage class
    time_t defaultCutoffTime = time(nullptr) - DCObject::m_defaultRetentionTime * 86400;
@@ -580,6 +582,8 @@ static void HouseKeeper()
             g_idxNodeById.getObjects(&objects);
             g_idxResourceById.getObjects(&objects);
             g_idxSensorById.getObjects(&objects);
+            g_idxTrafficObserverById.getObjects(&objects);
+            g_idxObservationPointById.getObjects(&objects);
 
             for(int i = 0; (i < objects.size()) && !s_shutdown; i++)
             {

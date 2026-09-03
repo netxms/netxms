@@ -205,6 +205,8 @@ static void CacheLoadingThread()
 	UpdateDataCollectionCache(&g_idxAccessPointById);
    UpdateDataCollectionCache(&g_idxChassisById);
    UpdateDataCollectionCache(&g_idxSensorById);
+   UpdateDataCollectionCache(&g_idxTrafficObserverById);
+   UpdateDataCollectionCache(&g_idxObservationPointById);
 
    nxlog_debug_tag(DEBUG_TAG_DC_CACHE, 1, _T("Finished caching of DCI values"));
 }
@@ -2898,8 +2900,9 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
       }
    }
 
-   // Check zone
-   if (IsZoningEnabled() && (zoneUIN != 0) && (objectClass != OBJECT_ZONE) && (FindZoneByUIN(zoneUIN) == nullptr))
+   // Check zone (-1 on a traffic observer means "match hosts in all zones")
+   if (IsZoningEnabled() && (zoneUIN != 0) && (objectClass != OBJECT_ZONE) &&
+       !((objectClass == OBJECT_TRAFFICOBSERVER) && (zoneUIN == -1)) && (FindZoneByUIN(zoneUIN) == nullptr))
       return RCC_INVALID_ZONE_ID;
 
    // Check if all mandatory asset properties are set and are valid

@@ -8033,11 +8033,11 @@ NXSL_Value *NXSL_ObservationPointClass::getAttr(NXSL_Object *object, const NXSL_
    {
       value = vm->createValue(point->getSamplingRate());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("pointState"))
    {
       value = vm->createValue(point->getState());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("pointType"))
    {
       value = vm->createValue(point->getPointType().c_str());
    }

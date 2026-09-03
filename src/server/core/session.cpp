@@ -6750,8 +6750,9 @@ void ClientSession::createObject(const NXCPMessage& request)
             }
          }
 
-         // Check zone
-         if ((rcc == RCC_SUCCESS) && IsZoningEnabled() && (zoneUIN != 0) && (objectClass != OBJECT_ZONE) && (FindZoneByUIN(zoneUIN) == nullptr))
+         // Check zone (-1 on a traffic observer means "match hosts in all zones")
+         if ((rcc == RCC_SUCCESS) && IsZoningEnabled() && (zoneUIN != 0) && (objectClass != OBJECT_ZONE) &&
+             !((objectClass == OBJECT_TRAFFICOBSERVER) && (zoneUIN == -1)) && (FindZoneByUIN(zoneUIN) == nullptr))
          {
             debugPrintf(4, _T("Creation of object \"%s\" of class %d under %s [%u] failed (invalid zone UIN %d)"), objectName, objectClass,
                   (parent != nullptr) ? parent->getName() : _T("<no parent>"), (parent != nullptr) ? parent->getId() : 0, zoneUIN);

@@ -210,7 +210,7 @@ All views are fed by live queries and work with zero DCIs configured.
   `version`, `zoneUIN` (plus data collection target attributes).
 - **ObservationPoint** class attributes: `effectiveZoneUIN`, `externalId`,
   `inScope`, `lastDiscoveryTime`, `localNetworks`, `observer`,
-  `providerState`, `samplingRate`, `state`, `type`, `zoneUIN`.
+  `pointState`, `pointType`, `providerState`, `samplingRate`, `zoneUIN`.
 
 ## 11. Server configuration variables
 
