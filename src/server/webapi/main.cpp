@@ -138,6 +138,7 @@ int H_ObjectAgentGet(Context *context);
 int H_ObjectAgentUpdate(Context *context);
 int H_ObjectAutoBindUpdate(Context *context);
 int H_ObjectCreate(Context *context);
+int H_ObjectDelete(Context *context);
 int H_ObjectAccessRights(Context *context);
 int H_ObjectAccessRightsUpdate(Context *context);
 int H_ObjectDashboards(Context *context);
@@ -526,6 +527,7 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id")
       .GET(H_ObjectDetails)
       .PATCH(H_ObjectPropertiesUpdate)
+      .DELETE(H_ObjectDelete)
       .build();
    RouteBuilder("v1/objects/:object-id/rack-layout")
       .GET(H_RackLayout)

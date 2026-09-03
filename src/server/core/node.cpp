@@ -10920,12 +10920,56 @@ uint32_t Node::modifyJsonAgentConfig(json_t *agent)
 }
 
 /**
- * Modify node from JSON document (WebAPI path). Handles the "polling", "snmp" and
- * "agent" property groups; all other fields are delegated to the base class
- * implementation. Runs under the property lock (see NetObj::modifyFromJSON).
+ * Modify node from JSON document (WebAPI path). Handles primary host name along with the
+ * "polling", "snmp" and "agent" property groups; all other fields are delegated to the base
+ * class implementation. Runs under the property lock (see NetObj::modifyFromJSON).
  */
 uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
 {
+   // Change primary host name. Primary IP address is always derived from it (host name may be
+   // given as a literal IP address) and is updated by the forced configuration poll below.
+   json_t *primaryName = json_object_get(json, "primaryName");
+   if (primaryName != nullptr)
+   {
+      if (!json_is_string(primaryName))
+         return RCC_INVALID_ARGUMENT;
+
+      wchar_t hostName[MAX_DNS_NAME];
+      utf8_to_wchar(json_string_value(primaryName), -1, hostName, MAX_DNS_NAME);
+      hostName[MAX_DNS_NAME - 1] = 0;
+
+      if (wcscmp(m_primaryHostName, hostName))
+      {
+         InetAddress ipAddr = ResolveHostName(m_zoneUIN, hostName);
+         if (ipAddr.isValid() && !(m_flags & NF_EXTERNAL_GATEWAY))
+         {
+            // Check if resolved IP address is one of node's interface addresses
+            unlockProperties(); // removing possible deadlock
+            readLockChildList();
+            int i, count = getChildList().size();
+            for(i = 0; i < count; i++)
+            {
+               NetObj *curr = getChildList().get(i);
+               if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
+                   static_cast<Interface*>(curr)->hasIpAddress(ipAddr))
+                  break;
+            }
+            unlockChildList();
+            lockProperties();
+            if (i == count)
+            {
+               // Check that there is no other node or subnet with same IP
+               shared_ptr<Node> conflictNode = FindNodeByIP(m_zoneUIN, ipAddr);
+               if (((conflictNode != nullptr) && (conflictNode->getId() != m_id)) || (FindSubnetByIP(m_zoneUIN, ipAddr) != nullptr))
+                  return RCC_IP_ADDRESS_CONFLICT;
+            }
+         }
+
+         m_primaryHostName = hostName;
+         m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
+      }
+   }
+
    json_t *polling = json_object_get(json, "polling");
    if (polling != nullptr)
    {

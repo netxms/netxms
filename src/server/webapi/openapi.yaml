@@ -2733,6 +2733,16 @@ paths:
                     bidirectional peer link (any previous peer on either side is cleared) and
                     requires modify access on the peer interface. `null` or `0` clears the
                     current peer.
+                primaryName:
+                  type: string
+                  description: >-
+                    Node only. Primary host name, either a DNS name or a literal IP address.
+                    The node's primary IP address is derived from it and is updated by the
+                    forced configuration poll that a change schedules — it is not settable on
+                    its own. If the name resolves to an address that does not belong to any of
+                    the node's interfaces, that address must not already be used by another
+                    node or subnet (this check is skipped for an external gateway). A name that
+                    does not resolve is accepted.
       responses:
         '200':
           description: Object updated; full updated object returned.
@@ -2751,6 +2761,62 @@ paths:
             comments
         '404':
           description: Object with given ID does not exist
+        '409':
+          description: >-
+            IP address resolved from the new primary host name is already used by another
+            node or subnet.
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    delete:
+      operationId: deleteObject
+      summary: Delete object
+      description: |
+        Delete an object. A child object is deleted along with it only when this object is
+        its last remaining parent; a child that is also reachable through another parent is
+        detached instead. A node normally belongs to both a subnet and a container, so
+        deleting a container usually leaves its nodes in place.
+
+        Deletion is **asynchronous**: the request is validated and queued, and `204` means
+        the deletion was accepted, not that the object is already gone. Clients should
+        re-read the tree rather than assume the object disappears immediately.
+
+        Built-in objects (ID below 10, such as "Entire Network" and the class roots) cannot
+        be deleted.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: removeDCI
+          in: query
+          required: false
+          description: >-
+            Templates and clusters only. Whether to also remove the data collection items
+            this object pushed onto its members. Ignored for every other object class.
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '204':
+          description: Deletion accepted. The object is removed asynchronously.
+        '400':
+          description: Invalid object ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: >-
+            User does not have delete access to the object, or the object is a built-in
+            object that cannot be deleted.
+        '404':
+          description: Object with given ID does not exist
+        '409':
+          description: >-
+            Object cannot be deleted in its current state — the zone still contains
+            objects, or the asset is linked to an object and
+            `Objects.Assets.AllowDeleteIfLinked` is disabled.
       security:
         - BearerAuth: []
       tags:

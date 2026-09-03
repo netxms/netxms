@@ -91,8 +91,21 @@ int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const
       json_decref(oldSnapshot);
       nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"ApplyJsonPatch: modifyFromJSON failed for object %s [%u] (group=%hs) with RCC %u",
          object->getName(), object->getId(), (groupKey != nullptr) ? groupKey : "(top-level)", rcc);
-      context->setErrorResponse("Invalid property values in request");
-      return 400;
+      switch(rcc)
+      {
+         case RCC_ACCESS_DENIED:
+            context->setErrorResponse("Access denied");
+            return 403;
+         case RCC_IP_ADDRESS_CONFLICT:
+            context->setErrorResponse("IP address is already used by another node or subnet");
+            return 409;
+         case RCC_SUBNET_OVERLAP:
+            context->setErrorResponse("Subnet overlaps with existing one");
+            return 409;
+         default:
+            context->setErrorResponse("Invalid property values in request");
+            return 400;
+      }
    }
 
    json_t *newSnapshot = object->toJson(false);
