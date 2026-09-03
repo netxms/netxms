@@ -367,3 +367,223 @@ int H_PerformanceViewDCIs(Context *context)
    json_decref(response);
    return 200;
 }
+
+/**
+ * Element of data push request
+ */
+struct PushDataElement
+{
+   shared_ptr<DataCollectionTarget> target;
+   shared_ptr<DCObject> dci;
+   wchar_t *value;
+   Timestamp timestamp;
+
+   PushDataElement(const shared_ptr<DataCollectionTarget>& _target, const shared_ptr<DCObject>& _dci, wchar_t *_value, const Timestamp& _timestamp) :
+            target(_target), dci(_dci), timestamp(_timestamp)
+   {
+      value = _value;
+   }
+
+   ~PushDataElement()
+   {
+      MemFree(value);
+   }
+};
+
+/**
+ * Set error response for given element of data push request and return HTTP status code to be
+ * returned by handler. Element index allows client to identify offending element in a batch.
+ */
+static int PushDataError(Context *context, size_t index, int httpCode, const char *reason)
+{
+   json_t *response = json_object();
+   json_object_set_new(response, "reason", json_string(reason));
+   json_object_set_new(response, "index", json_integer(static_cast<json_int_t>(index)));
+   context->setResponseData(response);
+   json_decref(response);
+   return httpCode;
+}
+
+/**
+ * Convert "value" property of data push request element into DCI value. Returns nullptr if
+ * property is missing or has unsupported type.
+ */
+static wchar_t *GetPushDataValue(json_t *element)
+{
+   json_t *value = json_object_get(element, "value");
+
+   wchar_t *s;
+   if (json_is_string(value))
+   {
+      s = WideStringFromUTF8String(json_string_value(value));
+   }
+   else
+   {
+      wchar_t buffer[64];
+      if (json_is_integer(value))
+         IntegerToString(static_cast<int64_t>(json_integer_value(value)), buffer);
+      else if (json_is_real(value))
+         nx_swprintf(buffer, 64, L"%.15g", json_real_value(value));
+      else
+         return nullptr;
+      s = MemCopyStringW(buffer);
+   }
+
+   if (wcslen(s) >= MAX_DCI_STRING_VALUE)
+      s[MAX_DCI_STRING_VALUE - 1] = 0;
+   return s;
+}
+
+/**
+ * Read optional "timestamp" property of data push request element. Returns false if property is
+ * present but cannot be interpreted as a valid timestamp.
+ */
+static bool GetPushDataTimestamp(json_t *element, Timestamp *timestamp)
+{
+   json_t *value = json_object_get(element, "timestamp");
+   if ((value == nullptr) || json_is_null(value))
+      return true;   // Left as null timestamp, server time will be used
+
+   time_t t;
+   if (json_is_integer(value))
+      t = static_cast<time_t>(json_integer_value(value));
+   else if (json_is_string(value))
+      t = ParseTimestamp(json_string_value(value), -1);
+   else
+      return false;
+
+   // Timestamps are stored in database as 32 bit values
+   if ((t <= 0) || (t > 0x7FFFFFFF))
+      return false;
+
+   *timestamp = Timestamp::fromTime(t);
+   return true;
+}
+
+/**
+ * Handler for POST /v1/push-data
+ * Request body is a JSON array of elements, each identifying target object by "objectId" or
+ * "objectName", DCI by "dciId" or "dciName", and carrying "value" and optional "timestamp".
+ * Whole batch is validated before any value is pushed, so request either applies completely or
+ * has no effect at all.
+ */
+int H_PushData(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if (!json_is_array(request) || (json_array_size(request) == 0))
+   {
+      context->setErrorResponse("Request body must be a non-empty JSON array");
+      return 400;
+   }
+
+   ObjectArray<PushDataElement> values(static_cast<int>(json_array_size(request)), 16, Ownership::True);
+
+   size_t index;
+   json_t *element;
+   json_array_foreach(request, index, element)
+   {
+      if (!json_is_object(element))
+         return PushDataError(context, index, 400, "Push element must be a JSON object");
+
+      // Find target object either by ID or by name
+      shared_ptr<DataCollectionTarget> object;
+      json_t *objectId = json_object_get(element, "objectId");
+      if (json_is_integer(objectId))
+      {
+         json_int_t id = json_integer_value(objectId);
+         if ((id <= 0) || (id > UINT32_MAX))
+            return PushDataError(context, index, 400, "Invalid object identifier");
+         shared_ptr<NetObj> o = FindObjectById(static_cast<uint32_t>(id));
+         if (o == nullptr)
+            return PushDataError(context, index, 404, "Target object not found");
+         if (!o->isDataCollectionTarget())
+            return PushDataError(context, index, 400, "Target object is not a data collection target");
+         object = static_pointer_cast<DataCollectionTarget>(o);
+      }
+      else if (json_object_get(element, "objectName") != nullptr)
+      {
+         wchar_t name[MAX_OBJECT_NAME] = L"";
+         if (!json_object_update_string(element, "objectName", name, MAX_OBJECT_NAME) || (name[0] == 0))
+            return PushDataError(context, index, 400, "Invalid object name");
+         object = FindDataCollectionTargetByName(name);
+         if (object == nullptr)
+            return PushDataError(context, index, 404, "Target object not found");
+      }
+      else
+      {
+         return PushDataError(context, index, 400, "Integer objectId or string objectName must be provided");
+      }
+
+      if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_PUSH_DATA))
+         return PushDataError(context, index, 403, "Access denied");
+
+      DataCollectionTarget& target = *object;
+
+      // Find DCI either by ID or by name
+      shared_ptr<DCObject> dci;
+      json_t *dciId = json_object_get(element, "dciId");
+      if (json_is_integer(dciId))
+      {
+         json_int_t id = json_integer_value(dciId);
+         if ((id <= 0) || (id > UINT32_MAX))
+            return PushDataError(context, index, 400, "Invalid DCI identifier");
+         dci = target.getDCObjectById(static_cast<uint32_t>(id), context->getUserId());
+      }
+      else if (json_object_get(element, "dciName") != nullptr)
+      {
+         wchar_t name[MAX_ITEM_NAME] = L"";
+         if (!json_object_update_string(element, "dciName", name, MAX_ITEM_NAME) || (name[0] == 0))
+            return PushDataError(context, index, 400, "Invalid DCI name");
+         dci = target.getDCObjectByName(name, context->getUserId());
+         if (dci == nullptr)
+         {
+            nxlog_debug_tag(DEBUG_TAG_WEBAPI, 5, L"H_PushData: DCI \"%s\" not found on object %s [%u], trying to create one using instance discovery",
+               name, object->getName(), object->getId());
+            dci = target.createPushDciInstance(name);
+         }
+      }
+      else
+      {
+         return PushDataError(context, index, 400, "Integer dciId or string dciName must be provided");
+      }
+
+      if (dci == nullptr)
+         return PushDataError(context, index, 404, "DCI not found");
+      if (dci->getType() != DCO_TYPE_ITEM)
+         return PushDataError(context, index, 400, "Data can be pushed only to single value DCIs");
+      if (dci->getDataSource() != DS_PUSH_AGENT)
+         return PushDataError(context, index, 400, "DCI is not configured for data push");
+
+      Timestamp timestamp = Timestamp::fromTime(0);
+      if (!GetPushDataTimestamp(element, &timestamp))
+         return PushDataError(context, index, 400, "Invalid timestamp");
+
+      wchar_t *value = GetPushDataValue(element);
+      if (value == nullptr)
+         return PushDataError(context, index, 400, "Value must be a string or a number");
+
+      values.add(new PushDataElement(object, dci, value, timestamp));
+   }
+
+   shared_ptr<Table> tableValue;   // Empty pointer to pass to processNewDCValue()
+   for(int i = 0; i < values.size(); i++)
+   {
+      PushDataElement *e = values.get(i);
+      Timestamp t = e->timestamp;
+      if (t.isNull())
+      {
+         t = Timestamp::now();
+         if (e->dci->getLastValueTimestamp() == t)
+         {
+            // Prevent multiple values with the same timestamp
+            ThreadSleepMs(1);
+            t = Timestamp::now();
+         }
+      }
+      e->target->processNewDCValue(e->dci, t, e->value, tableValue, true);
+      if (t > e->dci->getLastPollTime())
+         e->dci->setLastPollTime(t);
+   }
+
+   return 204;
+}

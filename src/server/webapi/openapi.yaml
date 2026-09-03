@@ -4800,6 +4800,76 @@ paths:
         - BearerAuth: []
       tags:
         - Data Collection
+  /v1/push-data:
+    post:
+      operationId: pushData
+      summary: Push data collection values
+      description: |
+        Push values to data collection items with origin "push". Multiple values for different
+        objects and DCIs can be submitted in a single request.
+
+        Target object is identified either by `objectId` or by `objectName`, and target DCI either
+        by `dciId` or by `dciName`. When a DCI is addressed by name and does not exist yet, the
+        server attempts to create it through instance discovery.
+
+        The whole batch is validated before any value is pushed, so a request either applies
+        completely or has no effect at all. If validation fails, the response body identifies the
+        offending element by its position in the request array.
+
+        Requires `OBJECT_ACCESS_PUSH_DATA` on every target object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/PushDataElement'
+            examples:
+              singleValue:
+                summary: Push single value
+                value:
+                  - objectId: 123
+                    dciId: 456
+                    value: 42
+              multipleValues:
+                summary: Push multiple values addressed by name
+                value:
+                  - objectName: srv-app-01
+                    dciName: app.queue.length
+                    value: 17
+                  - objectName: srv-app-01
+                    dciName: app.response.time
+                    value: 0.135
+                    timestamp: '2026-09-03T10:15:00Z'
+      responses:
+        '204':
+          description: Values pushed successfully
+        '400':
+          description: Malformed or empty request, or invalid push element
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushDataError'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have push access to one of target objects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushDataError'
+        '404':
+          description: Target object or DCI not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushDataError'
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
   /v1/objects/{object-id}/expand-text:
     post:
       operationId: expandText
@@ -11600,6 +11670,55 @@ components:
         - 6
         - 7
         - 8
+    PushDataElement:
+      type: object
+      description: |
+        Single value submitted to `/v1/push-data`. Exactly one of `objectId`/`objectName` and one of
+        `dciId`/`dciName` must be provided; when both are present, the identifier takes precedence.
+      properties:
+        objectId:
+          type: integer
+          format: int32
+          description: Target object ID
+        objectName:
+          type: string
+          description: Target object name, used when `objectId` is not provided. Matched case-insensitively against data collection targets only.
+        dciId:
+          type: integer
+          format: int32
+          description: Target DCI ID
+        dciName:
+          type: string
+          description: |
+            Target DCI name, used when `dciId` is not provided. If no matching DCI exists, the server
+            attempts to create one through instance discovery.
+        value:
+          oneOf:
+            - type: string
+            - type: number
+          description: |
+            Value to push. Numbers are accepted for convenience and converted to their textual
+            representation; values longer than 255 characters are truncated.
+        timestamp:
+          oneOf:
+            - type: string
+            - type: integer
+              format: int32
+          description: |
+            Collection time of the value. Accepts an ISO 8601 string, a UNIX timestamp (as integer or
+            string), a relative offset such as `-5m`, or `now`. Defaults to server time when omitted.
+      required:
+        - value
+    PushDataError:
+      type: object
+      description: Rejected push request, identifying the element that failed validation.
+      properties:
+        reason:
+          type: string
+          description: Human readable description of the problem
+        index:
+          type: integer
+          description: Zero-based position of the offending element in the request array
     DataCollectionItem:
       type: object
       description: |

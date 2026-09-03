@@ -11147,11 +11147,13 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
          bOK = false;
 
          // Find object either by ID or name (id ID==0)
-         shared_ptr<NetObj> object;
+         shared_ptr<DataCollectionTarget> object;
          uint32_t objectId = request.getFieldAsUInt32(fieldId++);
          if (objectId != 0)
          {
-            object = FindObjectById(objectId);
+            shared_ptr<NetObj> o = FindObjectById(objectId);
+            if ((o != nullptr) && o->isDataCollectionTarget())
+               object = static_pointer_cast<DataCollectionTarget>(o);
          }
          else
          {
@@ -11164,61 +11166,54 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
 				}
 				else
 				{
-					object = FindObjectByName(name, OBJECT_NODE);
+					object = FindDataCollectionTargetByName(name);
 				}
          }
 
          // Validate object
          if (object != nullptr)
          {
-            if (object->isDataCollectionTarget())
+            if (object->checkAccessRights(m_userId, OBJECT_ACCESS_PUSH_DATA))
             {
-               if (object->checkAccessRights(m_userId, OBJECT_ACCESS_PUSH_DATA))
+               // Object OK, find DCI by ID or name (if ID==0)
+               uint32_t dciId = request.getFieldAsUInt32(fieldId++);
+               shared_ptr<DCObject> dci;
+               if (dciId != 0)
                {
-                  // Object OK, find DCI by ID or name (if ID==0)
-                  uint32_t dciId = request.getFieldAsUInt32(fieldId++);
-						shared_ptr<DCObject> dci;
-                  if (dciId != 0)
+                  dci = object->getDCObjectById(dciId, m_userId);
+               }
+               else
+               {
+                  wchar_t name[256];
+                  request.getFieldAsString(fieldId++, name, 256);
+                  dci = object->getDCObjectByName(name, m_userId);
+                  if (dci == nullptr)
                   {
-                     dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, m_userId);
+                     debugPrintf(5, _T("data push: DCI not found for %s, trying to create one using instance discovery"), object->getName(), name);
+                     dci = object->createPushDciInstance(name);
                   }
-                  else
-                  {
-                     wchar_t name[256];
-                     request.getFieldAsString(fieldId++, name, 256);
-                     dci = static_cast<DataCollectionTarget&>(*object).getDCObjectByName(name, m_userId);
-                     if (dci == nullptr)
-                     {
-                        debugPrintf(5, _T("data push: DCI not found for %s, trying to create one using instance discovery"), object->getName(), name);
-                        dci = static_cast<DataCollectionTarget&>(*object).createPushDciInstance(name);
-                     }
-                  }
+               }
 
-                  if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
+               if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
+               {
+                  if (dci->getDataSource() == DS_PUSH_AGENT)
                   {
-                     if (dci->getDataSource() == DS_PUSH_AGENT)
-                     {
-                        values.add(new ClientDataPushElement(static_pointer_cast<DataCollectionTarget>(object), dci, request.getFieldAsString(fieldId++)));
-                        bOK = true;
-                     }
-                     else
-                     {
-                        response.setField(VID_RCC, RCC_NOT_PUSH_DCI);
-                     }
+                     values.add(new ClientDataPushElement(object, dci, request.getFieldAsString(fieldId++)));
+                     bOK = true;
                   }
                   else
                   {
-                     response.setField(VID_RCC, RCC_INVALID_DCI_ID);
+                     response.setField(VID_RCC, RCC_NOT_PUSH_DCI);
                   }
                }
                else
                {
-                  response.setField(VID_RCC, RCC_ACCESS_DENIED);
+                  response.setField(VID_RCC, RCC_INVALID_DCI_ID);
                }
             }
             else
             {
-               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+               response.setField(VID_RCC, RCC_ACCESS_DENIED);
             }
          }
          else
