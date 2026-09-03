@@ -13074,6 +13074,7 @@ void Node::prepareForDeletion()
    nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, L"Node::prepareForDeletion(%s [%u]): no outstanding polls left", m_name, m_id);
 
    UnbindAgentTunnel(m_id, 0);
+   DropNodeObservationRecords(m_id);
 
    // Clear possible references to self and other nodes
    m_lastKnownNetworkPath.reset();

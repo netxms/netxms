@@ -181,18 +181,18 @@ public class ObservationPointView extends ObjectView
     * @param value raw metric value
     * @return formatted text
     */
-   private static String formatThroughput(String value)
+   private String formatThroughput(String value)
    {
       try
       {
          double bps = Double.parseDouble(value);
          if (bps >= 1000000000.0)
-            return String.format("%.1f Gbps", bps / 1000000000.0);
+            return String.format(i18n.tr("%.1f Gbps"), bps / 1000000000.0);
          if (bps >= 1000000.0)
-            return String.format("%.1f Mbps", bps / 1000000.0);
+            return String.format(i18n.tr("%.1f Mbps"), bps / 1000000.0);
          if (bps >= 1000.0)
-            return String.format("%.1f Kbps", bps / 1000.0);
-         return String.format("%.0f bps", bps);
+            return String.format(i18n.tr("%.1f Kbps"), bps / 1000.0);
+         return String.format(i18n.tr("%.0f bps"), bps);
       }
       catch(NumberFormatException e)
       {

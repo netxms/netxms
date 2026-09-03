@@ -47,6 +47,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.TrafficMetric;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.ObservationPoint;
+import org.netxms.client.objects.TrafficObserver;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -74,6 +76,7 @@ public class SelectTrafficMetricDlg extends Dialog implements IParameterSelectio
    private long objectId;
    private boolean tableMode;
    private AbstractObject object;
+   private TrafficObserver observer;   // owning observer when known (capability filtering), null for nodes
    private Text filterText;
    private SortableTableViewer viewer;
    private MetricFilter filter;
@@ -89,7 +92,18 @@ public class SelectTrafficMetricDlg extends Dialog implements IParameterSelectio
       super(parentShell);
       this.objectId = objectId;
       this.tableMode = tableMode;
-      this.object = Registry.getSession().findObjectById(objectId);
+      NXCSession session = Registry.getSession();
+      this.object = session.findObjectById(objectId);
+      if (object instanceof TrafficObserver)
+      {
+         observer = (TrafficObserver)object;
+      }
+      else if (object instanceof ObservationPoint)
+      {
+         AbstractObject owner = session.findObjectById(((ObservationPoint)object).getObserverId());
+         if (owner instanceof TrafficObserver)
+            observer = (TrafficObserver)owner;
+      }
       setShellStyle(getShellStyle() | SWT.RESIZE);
    }
 
@@ -192,6 +206,9 @@ public class SelectTrafficMetricDlg extends Dialog implements IParameterSelectio
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<TrafficMetric> metrics = session.getTrafficMetricDefinitions(objectId);
+            // Offer only metrics of the requested kind (scalar or table) that the backend can serve
+            metrics.removeIf(m -> (m.isTable() != tableMode) ||
+                  ((observer != null) && (m.getRequiredCapability() != 0) && !observer.hasCapability(m.getRequiredCapability())));
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -280,6 +297,25 @@ public class SelectTrafficMetricDlg extends Dialog implements IParameterSelectio
    @Override
    public DataType getParameterDataType()
    {
+      if (selectedMetric == null)
+         return DataType.FLOAT;
+
+      // Strip host prefix and instance suffix: "Host.BytesIn(...)" -> "BytesIn"
+      String name = selectedMetric.getName();
+      if (name.startsWith("Host."))
+         name = name.substring(5);
+      int index = name.indexOf('(');
+      if (index > 0)
+         name = name.substring(0, index);
+
+      if (name.startsWith("Bytes") || name.startsWith("Packets") || name.equals("Drops") || name.equals("TcpRetransmits"))
+         return DataType.COUNTER64;
+      if (name.equals("ActiveHosts") || name.equals("ActiveFlows") || name.equals("Alerts") || name.equals("Uptime"))
+         return DataType.UINT64;
+      if (name.equals("Present"))
+         return DataType.INT32;
+      if (name.equals("Version"))
+         return DataType.STRING;
       return DataType.FLOAT;
    }
 

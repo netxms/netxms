@@ -68,7 +68,7 @@ static json_t *NtopngApiRequest(json_t *credentials, const char *path, const cha
    if ((baseUrl == nullptr) || (*baseUrl == 0) || (token == nullptr) || (*token == 0))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest: missing \"url\" or \"token\" in credentials");
-      SetStatus(status, TrafficConnectorStatus::AUTH_ERROR);
+      SetStatus(status, TrafficConnectorStatus::API_ERROR);   // configuration problem, not a rejected token
       return nullptr;
    }
 
@@ -90,7 +90,9 @@ static json_t *NtopngApiRequest(json_t *credentials, const char *path, const cha
    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
    curl_easy_setopt(curl, CURLOPT_HEADER, (long)0);
-   curl_easy_setopt(curl, CURLOPT_TIMEOUT, (long)json_object_get_uint32(credentials, "timeout", 30));
+   uint32_t timeout = json_object_get_uint32(credentials, "timeout", 30);
+   curl_easy_setopt(curl, CURLOPT_TIMEOUT, (long)((timeout > 0) ? timeout : 1));   // 0 would disable the timeout
+   curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");   // let libcurl negotiate compression (host list pages are large)
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS ntopng Connector/" NETXMS_VERSION_STRING_A);
    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, (long)0);   // 302 = auth failure, never follow
 
@@ -135,10 +137,18 @@ static json_t *NtopngApiRequest(json_t *credentials, const char *path, const cha
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
 
-   if ((httpCode == 302) || (httpCode == 301) || (httpCode == 401) || (httpCode == 403))
+   // ntopng answers a bad token (and unknown endpoints) with a 302 redirect to the login page
+   if ((httpCode == 302) || (httpCode == 401) || (httpCode == 403))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): authentication failure (HTTP %d)", url, static_cast<int>(httpCode));
       SetStatus(status, TrafficConnectorStatus::AUTH_ERROR);
+      return nullptr;
+   }
+
+   if ((httpCode == 301) || (httpCode == 307) || (httpCode == 308))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngApiRequest(%hs): unexpected redirect (HTTP %d) - check \"url\" (scheme/port) in credentials", url, static_cast<int>(httpCode));
+      SetStatus(status, TrafficConnectorStatus::API_ERROR);
       return nullptr;
    }
 

@@ -32,8 +32,8 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ObservationPoint;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.widgets.ZoneSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -46,7 +46,7 @@ public class ObservationPointScope extends ObjectPropertyPage
 
    private ObservationPoint point;
    private Button checkboxInScope;
-   private LabeledText zoneUIN;
+   private ZoneSelector zoneSelector;
 
    /**
     * Create new page.
@@ -77,6 +77,15 @@ public class ObservationPointScope extends ObjectPropertyPage
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 10;
+   }
+
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -102,10 +111,14 @@ public class ObservationPointScope extends ObjectPropertyPage
       gd.widthHint = 400;
       hint.setLayoutData(gd);
 
-      zoneUIN = new LabeledText(dialogArea, SWT.NONE);
-      zoneUIN.setLabel(i18n.tr("Zone UIN for host matching (-1 = inherit from observer)"));
-      zoneUIN.setText(Integer.toString(point.getZoneUIN()));
-      zoneUIN.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      if (Registry.getSession().isZoningEnabled())
+      {
+         zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, true);
+         zoneSelector.setLabel(i18n.tr("Zone for host matching"));
+         zoneSelector.setEmptySelectionText(i18n.tr("Inherit from observer"));
+         zoneSelector.setZoneUIN(point.getZoneUIN());
+         zoneSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      }
 
       return dialogArea;
    }
@@ -118,15 +131,8 @@ public class ObservationPointScope extends ObjectPropertyPage
    {
       final NXCObjectModificationData md = new NXCObjectModificationData(point.getObjectId());
       md.setInScope(checkboxInScope.getSelection());
-
-      try
-      {
-         md.setZoneUIN(Integer.parseInt(zoneUIN.getText().trim()));
-      }
-      catch(NumberFormatException e)
-      {
-         md.setZoneUIN(-1);
-      }
+      if ((zoneSelector != null) && (zoneSelector.getZoneUIN() != point.getZoneUIN()))
+         md.setZoneUIN(zoneSelector.getZoneUIN());
 
       if (isApply)
          setValid(false);

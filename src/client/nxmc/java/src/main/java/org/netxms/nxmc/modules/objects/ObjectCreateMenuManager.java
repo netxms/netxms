@@ -58,7 +58,6 @@ import org.netxms.nxmc.modules.businessservice.dialogs.CreateBusinessServiceProt
 import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateCloudDomainDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateClusterDialog;
-import org.netxms.nxmc.modules.objects.dialogs.CreateTrafficObserverDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkMapDialog;
@@ -68,6 +67,7 @@ import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateRackDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateSensorDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateSubnetDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateTrafficObserverDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateZoneDialog;
 import org.xnap.commons.i18n.I18n;
 
@@ -668,6 +668,7 @@ public class ObjectCreateMenuManager extends MenuManager
                   cd.setObjectAlias(dlg.getAlias());
                   cd.setConnectorName(dlg.getConnectorName());
                   cd.setCredentials(dlg.getCredentials());
+                  cd.setZoneUIN(dlg.getZoneUIN());
                   session.createObject(cd);
                }
 

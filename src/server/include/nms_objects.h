@@ -3687,12 +3687,14 @@ protected:
    uint32_t m_aliasSyncErrors;
 
    void parseCredentials();
+   void updateBackendInfo(const TrafficBackendInfo& info);
    void updateConnectionState(int16_t newState, const wchar_t *details);
    bool isHostAliasSyncEnabled(uint32_t *interval) const;
    void syncHostAliases();
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -3763,10 +3765,12 @@ protected:
    int16_t m_state;
    std::string m_providerState;
    time_t m_lastDiscoveryTime;
-   weak_ptr<TrafficObserver> m_owner;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session) override;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
@@ -3804,8 +3808,7 @@ public:
 
    void updateFromDiscovery(const ObservationPointDescriptor *desc, uint32_t observerId);
    void updateState(int16_t newState, const char *providerState);
-   void setOwner(const shared_ptr<TrafficObserver>& observer) { m_owner = observer; }
-   shared_ptr<TrafficObserver> getOwner() const { return m_owner.lock(); }
+   shared_ptr<TrafficObserver> getOwner() const;
 
    DataCollectionError getMetricFromConnector(const wchar_t *metric, wchar_t *buffer, size_t size);
    DataCollectionError getTableFromConnector(const wchar_t *metric, shared_ptr<Table> *table);
@@ -3833,12 +3836,13 @@ struct ObservationPointHostRecord
 void LoadObservationPointHosts();
 void RunObservationPointHostMatching(ObservationPoint *point);
 void DropObservationPointHosts(uint32_t pointId);
+void DropNodeObservationRecords(uint32_t nodeId);
 void AgeObservationPointHosts(DB_HANDLE hdb, time_t cycleStartTime);
 unique_ptr<ObjectArray<ObservationPointHostRecord>> GetObservationPointHostsForNode(uint32_t nodeId);
 unique_ptr<ObjectArray<ObservationPointHostRecord>> GetObservationPointMatchedHosts(uint32_t pointId);
 void GetObservationPointIdsForNode(uint32_t nodeId, IntegerArray<uint32_t> *pointIds);
 bool NXCORE_EXPORTABLE IsNodeObserved(uint32_t nodeId);
-uint32_t GetObservationPointActiveHosts(ObservationPoint *point, shared_ptr<Table> *table);
+uint32_t GetObservationPointActiveHosts(ObservationPoint *point, uint32_t userId, shared_ptr<Table> *table);
 DataCollectionError GetObservationPointHostMetric(Node *node, const wchar_t *name, wchar_t *buffer, size_t size);
 DataCollectionError GetObservationPointHostTable(Node *node, const wchar_t *name, shared_ptr<Table> *table);
 DataCollectionError GetNodeObservationPointsTable(Node *node, shared_ptr<Table> *table);

@@ -62,6 +62,8 @@ connector (`NTOPNG`), and provide credentials as a JSON document:
 | `timeout` | 30 | HTTP request timeout, seconds |
 | `verifyTls` | true | Verify TLS certificate |
 | `cacheTtl` | 30 | Connector-side cache TTL, seconds (active host lists, host details, interface counters) |
+| `pageSize` | 1000 | Page size for active host list retrieval |
+| `maxHosts` | 100000 | Upper bound on active hosts retrieved per observation point |
 
 Credentials are write-only from the client: the object editor shows only
 whether credentials are set, and an empty credentials field on the
@@ -166,7 +168,8 @@ sync* (ntopng: admin token).
   a traffic connector module loaded.
 - For bespoke timing, a user-created scheduled task with handler
   `Traffic.ConfigSync` bound to a specific observer runs that observer's sync
-  immediately (interval and connection-state gates bypassed).
+  immediately (interval and connection-state gates bypassed). The task owner
+  needs *Control* access to the observer object.
 - NetXMS is authoritative for matched hosts: a manually set analyzer alias
   for a matched host is overwritten on the next run. Aliases are not cleared
   when a match disappears.

@@ -36,8 +36,12 @@ import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
+import org.netxms.nxmc.modules.objects.widgets.ZoneSelector;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * "Connection" property page for traffic observer objects
@@ -49,6 +53,7 @@ public class TrafficObserverConnection extends ObjectPropertyPage
    private TrafficObserver observer;
    private LabeledText connectorName;
    private LabeledText credentials;
+   private ZoneSelector zoneSelector;
    private ObjectSelector linkedNode;
    private LabeledCombo removalPolicy;
    private LabeledSpinner gracePeriod;
@@ -82,6 +87,15 @@ public class TrafficObserverConnection extends ObjectPropertyPage
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 10;
+   }
+
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -108,6 +122,15 @@ public class TrafficObserverConnection extends ObjectPropertyPage
       GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.heightHint = 120;
       credentials.setLayoutData(gd);
+
+      if (Registry.getSession().isZoningEnabled())
+      {
+         zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, true);
+         zoneSelector.setLabel(i18n.tr("Zone for host matching"));
+         zoneSelector.setEmptySelectionText(i18n.tr("All zones"));
+         zoneSelector.setZoneUIN(observer.getZoneId());
+         zoneSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      }
 
       linkedNode = new ObjectSelector(dialogArea, SWT.NONE, true);
       linkedNode.setLabel(i18n.tr("Node representing the analyzer itself (optional)"));
@@ -143,7 +166,26 @@ public class TrafficObserverConnection extends ObjectPropertyPage
 
       String credentialsText = credentials.getText().trim();
       if (!credentialsText.isEmpty())
+      {
+         boolean valid;
+         try
+         {
+            valid = JsonParser.parseString(credentialsText).isJsonObject();
+         }
+         catch(JsonSyntaxException e)
+         {
+            valid = false;
+         }
+         if (!valid)
+         {
+            MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Credentials must be a valid JSON object"));
+            return false;
+         }
          md.setCredentials(credentialsText);
+      }
+
+      if ((zoneSelector != null) && (zoneSelector.getZoneUIN() != observer.getZoneId()))
+         md.setZoneUIN(zoneSelector.getZoneUIN());
 
       md.setLinkedNodeId(linkedNode.getObjectId());
       md.setRemovalPolicy(removalPolicy.getSelectionIndex());

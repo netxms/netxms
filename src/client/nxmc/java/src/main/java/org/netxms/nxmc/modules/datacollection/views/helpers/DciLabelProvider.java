@@ -81,6 +81,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
       originTexts.put(DataOrigin.SMCLP, i18n.tr("SM-CLP"));
       originTexts.put(DataOrigin.SNMP, i18n.tr("SNMP"));
       originTexts.put(DataOrigin.SSH, i18n.tr("SSH"));
+      originTexts.put(DataOrigin.TRAFFIC_OBSERVER, i18n.tr("Traffic Observer"));
       originTexts.put(DataOrigin.WEB_SERVICE, i18n.tr("Web Service"));
       originTexts.put(DataOrigin.WINPERF, i18n.tr("Windows Performance Counters"));
 

@@ -70,7 +70,8 @@ void InitializeTrafficConnectors()
    int count = 0;
    ENUMERATE_MODULES(trafficConnector)
    {
-      TrafficConnectorStatus status = CURRENT_MODULE.trafficConnector->Initialize();
+      TrafficConnectorStatus status = (CURRENT_MODULE.trafficConnector->Initialize != nullptr) ?
+               CURRENT_MODULE.trafficConnector->Initialize() : TrafficConnectorStatus::SUCCESS;
       if (status == TrafficConnectorStatus::SUCCESS)
       {
          s_connectors.set(CURRENT_MODULE.name, CURRENT_MODULE.trafficConnector);

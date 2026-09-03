@@ -291,7 +291,40 @@ void DropObservationPointHosts(uint32_t pointId)
    RebuildObservedNodesLocked();
    s_hostRecordsLock.unlock();
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   ExecuteQueryOnObject(hdb, pointId, L"DELETE FROM observation_point_hosts WHERE point_id=?");
+   DBConnectionPoolReleaseConnection(hdb);
+
    NotifyNodesOnObservationChange(droppedNodes);
+}
+
+/**
+ * Unlink host records from a node being deleted. Records stay (the host is still
+ * present on the analyzer) but become unmatched until the next matching pass.
+ */
+void DropNodeObservationRecords(uint32_t nodeId)
+{
+   int count = 0;
+   s_hostRecordsLock.writeLock();
+   for (KeyValuePair<ObservationPointHostRecord> *p : s_hostRecords)
+   {
+      if (p->value->nodeId == nodeId)
+      {
+         p->value->nodeId = 0;
+         count++;
+      }
+   }
+   if (count > 0)
+      RebuildObservedNodesLocked();
+   s_hostRecordsLock.unlock();
+
+   if (count > 0)
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      ExecuteQueryOnObject(hdb, nodeId, L"UPDATE observation_point_hosts SET node_id=0 WHERE node_id=?");
+      DBConnectionPoolReleaseConnection(hdb);
+      nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"DropNodeObservationRecords: %d host records unlinked from node [%u]", count, nodeId);
+   }
 }
 
 /**
@@ -393,7 +426,7 @@ bool IsNodeObserved(uint32_t nodeId)
  * Build live active-host table for an observation point (CMD_QUERY_TRAFFIC_DATA).
  * Rows are annotated with the matched node where a host record exists.
  */
-uint32_t GetObservationPointActiveHosts(ObservationPoint *point, shared_ptr<Table> *result)
+uint32_t GetObservationPointActiveHosts(ObservationPoint *point, uint32_t userId, shared_ptr<Table> *result)
 {
    shared_ptr<TrafficObserver> observer = point->getOwner();
    if (observer == nullptr)
@@ -446,12 +479,15 @@ uint32_t GetObservationPointActiveHosts(ObservationPoint *point, shared_ptr<Tabl
          nodeId = r->nodeId;
       s_hostRecordsLock.unlock();
 
+      // Matched node is only disclosed to callers with read access to it
       wchar_t nodeName[MAX_OBJECT_NAME] = L"";
       if (nodeId != 0)
       {
          shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
-         if (node != nullptr)
+         if ((node != nullptr) && node->checkAccessRights(userId, OBJECT_ACCESS_READ))
             wcslcpy(nodeName, node->getName(), MAX_OBJECT_NAME);
+         else
+            nodeId = 0;
       }
 
       wchar_t hostKeyText[128], ipText[64], macText[64], timeText[64];

@@ -101,12 +101,13 @@ ObservationPointDescriptor *NtopngDiscoverPoints(json_t *credentials)
       json_t *iface;
       json_array_foreach(interfaces, i, iface)
       {
+         // Interface ID is numeric on 6.7 but some ntopng endpoints emit numeric IDs as strings
          json_t *ifid = json_object_get(iface, "ifid");
-         if (!json_is_integer(ifid))
+         if (!json_is_integer(ifid) && !json_is_string(ifid))
             continue;
 
          auto d = new ObservationPointDescriptor();
-         snprintf(d->externalId, sizeof(d->externalId), "%d", static_cast<int>(json_integer_value(ifid)));
+         snprintf(d->externalId, sizeof(d->externalId), "%d", static_cast<int>(json_integer_value_ex(ifid, 0)));
 
          const char *name = json_object_get_string_utf8(iface, "name", nullptr);
          if (name == nullptr)

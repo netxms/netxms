@@ -152,7 +152,7 @@ void TrafficObserver::parseCredentials()
       json_error_t error;
       m_parsedCredentials = json_loads(m_credentials, 0, &error);
       if (m_parsedCredentials == nullptr)
-         nxlog_write_tag(NXLOG_WARNING, L"traffic", L"TrafficObserver(%s [%u]): failed to parse credentials JSON on line %d: %hs", m_name, m_id, error.line, error.text);
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_TRAFFIC_POLL, L"TrafficObserver(%s [%u]): failed to parse credentials JSON on line %d: %hs", m_name, m_id, error.line, error.text);
    }
 }
 
@@ -363,6 +363,96 @@ uint32_t TrafficObserver::modifyFromMessageInternal(const NXCPMessage& msg, Clie
 }
 
 /**
+ * Copy JSON value into a UTF-8 string attribute: objects and arrays are serialized,
+ * strings copied as is, null clears. Returns false for any other JSON type.
+ */
+static bool JsonValueToAttribute(json_t *value, char **attribute)
+{
+   if (json_is_object(value) || json_is_array(value))
+   {
+      char *text = json_dumps(value, JSON_COMPACT);
+      MemFree(*attribute);
+      *attribute = MemCopyStringA(text);
+      free(text);
+   }
+   else if (json_is_string(value))
+   {
+      MemFree(*attribute);
+      *attribute = MemCopyStringA(json_string_value(value));
+   }
+   else if (json_is_null(value))
+   {
+      MemFree(*attribute);
+      *attribute = nullptr;
+   }
+   else
+   {
+      return false;
+   }
+   return true;
+}
+
+/**
+ * Modify object from JSON document (same keys as the JSON creation constructor)
+ */
+uint32_t TrafficObserver::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   json_t *value = json_object_get(json, "connectorName");
+   if (value != nullptr)
+   {
+      if (!json_is_string(value))
+         return RCC_INVALID_ARGUMENT;
+      m_connectorName = json_object_get_string(json, "connectorName", L"");
+   }
+
+   value = json_object_get(json, "credentials");
+   if (value != nullptr)
+   {
+      if (!JsonValueToAttribute(value, &m_credentials))
+         return RCC_INVALID_ARGUMENT;
+      parseCredentials();
+   }
+
+   value = json_object_get(json, "zoneUIN");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      m_zoneUIN = static_cast<int32_t>(json_integer_value(value));
+   }
+
+   value = json_object_get(json, "linkedNodeId");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      m_linkedNodeId = static_cast<uint32_t>(json_integer_value(value));
+   }
+
+   value = json_object_get(json, "removalPolicy");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      m_removalPolicy = static_cast<int16_t>(json_integer_value(value));
+   }
+
+   value = json_object_get(json, "gracePeriod");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      m_gracePeriod = static_cast<uint32_t>(json_integer_value(value));
+   }
+
+   value = json_object_get(json, "syncConfig");
+   if ((value != nullptr) && !JsonValueToAttribute(value, &m_syncConfig))
+      return RCC_INVALID_ARGUMENT;
+
+   return super::modifyFromJSONInternal(json, session);
+}
+
+/**
  * Calculate compound status
  */
 void TrafficObserver::calculateCompoundStatus(bool forcedRecalc)
@@ -370,6 +460,24 @@ void TrafficObserver::calculateCompoundStatus(bool forcedRecalc)
    int oldStatus = m_status;
    super::calculateCompoundStatus(forcedRecalc);
    if (oldStatus != m_status)
+      setModified(MODIFY_RUNTIME);
+}
+
+/**
+ * Update backend product/version/edition and capability set from connection test result,
+ * notifying clients if anything changed
+ */
+void TrafficObserver::updateBackendInfo(const TrafficBackendInfo& info)
+{
+   lockProperties();
+   bool changed = (m_backendProduct.compare(info.product) != 0) || (m_backendVersion.compare(info.version) != 0) ||
+            (m_backendEdition.compare(info.edition) != 0) || (m_capabilities != info.capabilities);
+   m_backendProduct = info.product;
+   m_backendVersion = info.version;
+   m_backendEdition = info.edition;
+   m_capabilities = info.capabilities;
+   unlockProperties();
+   if (changed)
       setModified(MODIFY_RUNTIME);
 }
 
@@ -385,6 +493,8 @@ void TrafficObserver::updateConnectionState(int16_t newState, const wchar_t *det
 
    if (oldState == newState)
       return;
+
+   setModified(MODIFY_RUNTIME);
 
    if ((newState == TRAFFIC_OBSERVER_STATE_UNREACHABLE) || (newState == TRAFFIC_OBSERVER_STATE_AUTH_FAILURE))
    {
@@ -443,12 +553,7 @@ void TrafficObserver::statusPoll(PollerInfo *poller, ClientSession *session, uin
 
       if (status == TrafficConnectorStatus::SUCCESS)
       {
-         lockProperties();
-         m_backendProduct = info.product;
-         m_backendVersion = info.version;
-         m_backendEdition = info.edition;
-         m_capabilities = info.capabilities;
-         unlockProperties();
+         updateBackendInfo(info);
          updateConnectionState(TRAFFIC_OBSERVER_STATE_CONNECTED, nullptr);
          sendPollerMsg(L"   Analyzer API is reachable (%hs %hs %hs)\r\n", info.product, info.version, info.edition);
       }
@@ -523,12 +628,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
                connector->TestConnection(credentials, &info) : TrafficConnectorStatus::NOT_IMPLEMENTED;
       if (status == TrafficConnectorStatus::SUCCESS)
       {
-         lockProperties();
-         m_backendProduct = info.product;
-         m_backendVersion = info.version;
-         m_backendEdition = info.edition;
-         m_capabilities = info.capabilities;
-         unlockProperties();
+         updateBackendInfo(info);
          updateConnectionState(TRAFFIC_OBSERVER_STATE_CONNECTED, nullptr);
          sendPollerMsg(L"   Backend: %hs %hs (%hs), capabilities 0x%08X\r\n", info.product, info.version, info.edition, static_cast<uint32_t>(info.capabilities));
       }
@@ -580,7 +680,6 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
                point->setName(wName);
                NetObjInsert(point, true, false);
                point->updateFromDiscovery(d, m_id);
-               point->setOwner(self());
                linkObjects(self(), point);
                point->publish();
 
@@ -816,6 +915,7 @@ void TrafficObserver::syncHostAliases()
    else
       m_aliasSyncErrors++;
    unlockProperties();
+   setModified(MODIFY_RUNTIME);
 
    if (status == TrafficConnectorStatus::SUCCESS)
    {
@@ -865,10 +965,18 @@ void SyncTrafficObserverConfig(const shared_ptr<ScheduledTaskParameters>& parame
    if (parameters->m_objectId != 0)
    {
       shared_ptr<NetObj> object = FindObjectById(parameters->m_objectId, OBJECT_TRAFFICOBSERVER);
-      if (object != nullptr)
-         static_cast<TrafficObserver*>(object.get())->runConfigSync(true);
-      else
+      if (object == nullptr)
+      {
          nxlog_debug_tag(DEBUG_TAG_TRAFFIC_SYNC, 4, L"SyncTrafficObserverConfig: invalid object ID %u", parameters->m_objectId);
+      }
+      else if (!object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_CONTROL))
+      {
+         nxlog_debug_tag(DEBUG_TAG_TRAFFIC_SYNC, 4, L"SyncTrafficObserverConfig: access to object %s [%u] denied for user [%u]", object->getName(), object->getId(), parameters->m_userId);
+      }
+      else
+      {
+         static_cast<TrafficObserver*>(object.get())->runConfigSync(true);
+      }
    }
    else
    {

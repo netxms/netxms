@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.traffic.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
@@ -121,6 +122,10 @@ public class NodeTrafficView extends ObjectView
             if (column != -1)
                instance = ((TableRow)selection.getFirstElement()).getValue(column);
          }
+         // Rows are replaced on every table refresh, which transiently empties the selection;
+         // keep the current record while it still exists (it is re-selected after the refresh)
+         if ((instance == null) && (selectedInstance != null) && (findRecordRow(selectedInstance) != null))
+            return;
          if ((instance != null) ? !instance.equals(selectedInstance) : (selectedInstance != null))
          {
             selectedInstance = instance;
@@ -183,9 +188,33 @@ public class NodeTrafficView extends ObjectView
    }
 
    /**
+    * Find row of observation point record table for given instance
+    *
+    * @param instance instance identifier (INSTANCE column value)
+    * @return matching row or null
+    */
+   private TableRow findRecordRow(String instance)
+   {
+      Table data = hostRecordsTable.getCurrentData();
+      if (data == null)
+         return null;
+      int column = data.getColumnIndex("INSTANCE");
+      if (column == -1)
+         return null;
+      for(int i = 0; i < data.getRowCount(); i++)
+      {
+         TableRow row = data.getRow(i);
+         if (instance.equals(row.getValue(column)))
+            return row;
+      }
+      return null;
+   }
+
+   /**
     * Query host-level table for currently selected observation point record.
     *
     * @param name host table base name
+    * @param requiredCapability backend capability required to serve the table
     * @return table or null if nothing is selected
     * @throws Exception on query failure
     */
@@ -274,7 +303,21 @@ public class NodeTrafficView extends ObjectView
    @Override
    public void refresh()
    {
-      hostRecordsTable.refresh(null);
+      hostRecordsTable.refresh(() -> {
+         // Restore selection on the fresh row set, or clear details if the record is gone
+         if (selectedInstance == null)
+            return;
+         TableRow row = findRecordRow(selectedInstance);
+         if (row != null)
+         {
+            hostRecordsTable.getViewer().setSelection(new StructuredSelection(row), true);
+         }
+         else
+         {
+            selectedInstance = null;
+            refreshHostDetails();
+         }
+      });
       refreshHostDetails();
    }
 

@@ -21652,7 +21652,7 @@ void ClientSession::queryTrafficData(const NXCPMessage& request)
          if ((queryType == TRAFFIC_QUERY_ACTIVE_HOSTS) && (object->getObjectClass() == OBJECT_OBSERVATIONPOINT))
          {
             shared_ptr<Table> table;
-            uint32_t rcc = GetObservationPointActiveHosts(static_cast<ObservationPoint*>(object.get()), &table);
+            uint32_t rcc = GetObservationPointActiveHosts(static_cast<ObservationPoint*>(object.get()), m_userId, &table);
             response.setField(VID_RCC, rcc);
             if (rcc == RCC_SUCCESS)
                table->fillMessage(&response, 0, -1);

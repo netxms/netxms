@@ -78,6 +78,8 @@ IntegerArray<uint32_t> GetDataCollectionTargets()
    CollectObjectIdentifiers(L"sensors", &list);
    CollectObjectIdentifiers(L"resources", &list);
    CollectObjectIdentifiers(L"cloud_domains", &list);
+   CollectObjectIdentifiers(L"traffic_observers", &list);
+   CollectObjectIdentifiers(L"observation_points", &list);
    CollectObjectIdentifiers(L"object_containers WHERE object_class=29 OR object_class=30", &list);   // objects of class "collector" or "circuit"
    return list;
 }
@@ -1515,6 +1517,8 @@ static void CheckTemplateToTargetMapping()
              !IsDatabaseRecordExist(g_dbHandle, _T("mobile_devices"), _T("id"), targetId) &&
              !IsDatabaseRecordExist(g_dbHandle, _T("sensors"), _T("id"), targetId) &&
              !IsDatabaseRecordExist(g_dbHandle, _T("access_points"), _T("id"), targetId) &&
+             !IsDatabaseRecordExist(g_dbHandle, _T("traffic_observers"), _T("id"), targetId) &&
+             !IsDatabaseRecordExist(g_dbHandle, _T("observation_points"), _T("id"), targetId) &&
              !IsContainerObjectExists(g_dbHandle, targetId, OBJECT_COLLECTOR))
          {
             if (IsDatabaseRecordExist(g_dbHandle, _T("object_containers"), _T("id"), templateId))

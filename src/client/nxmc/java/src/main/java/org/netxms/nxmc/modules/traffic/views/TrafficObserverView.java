@@ -182,8 +182,6 @@ public class TrafficObserverView extends ObjectView
       viewer.setLabelProvider(new ObservationPointListLabelProvider());
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(new ObservationPointListComparator());
-      viewer.getTable().setHeaderVisible(true);
-      viewer.getTable().setLinesVisible(true);
 
       ObservationPointFilter filter = new ObservationPointFilter();
       viewer.addFilter(filter);
@@ -515,6 +513,16 @@ public class TrafficObserverView extends ObjectView
    {
       if ((object != null) && isActive())
          refresh();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectUpdate(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void onObjectUpdate(AbstractObject object)
+   {
+      // Observer runtime state (connection, backend, discovery and sync status) lives in the header
+      refresh();
    }
 
    /**

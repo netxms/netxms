@@ -324,13 +324,15 @@ DataCollectionError NtopngGetPointTable(const char *pointId, const wchar_t *metr
 struct JsonCacheEntry
 {
    json_t *data;
-   time_t timestamp;
+   time_t timestamp;      // time of last successful fetch
+   time_t lastAttempt;    // time of last fetch attempt (successful or not) - drives retry back-off
    volatile bool processing;
 
    JsonCacheEntry()
    {
       data = nullptr;
       timestamp = 0;
+      lastAttempt = 0;
       processing = false;
    }
 
@@ -343,6 +345,38 @@ struct JsonCacheEntry
 static StringObjectMap<JsonCacheEntry> s_interfaceDataCache(Ownership::True);
 static StringObjectMap<JsonCacheEntry> s_pointHostCache(Ownership::True);
 static StringObjectMap<JsonCacheEntry> s_hostDetailCache(Ownership::True);
+
+/**
+ * Drop cache entries not touched for 10 TTLs (documents referenced once by a live view, hosts
+ * that disappeared, observers whose URL changed). Sweeps all maps at most once a minute; called
+ * with s_cacheLock held. Entries in flight are never deleted.
+ */
+static void EvictStaleEntries(time_t now, time_t ttl)
+{
+   static time_t lastRun = 0;
+   if (lastRun > now - 60)
+      return;
+   lastRun = now;
+
+   time_t cutoff = now - ttl * 10;
+   StringObjectMap<JsonCacheEntry> *caches[] = { &s_interfaceDataCache, &s_pointHostCache, &s_hostDetailCache };
+   int evicted = 0;
+   for (StringObjectMap<JsonCacheEntry> *cache : caches)
+   {
+      StringList keys = cache->keys();
+      for (int i = 0; i < keys.size(); i++)
+      {
+         JsonCacheEntry *entry = cache->get(keys.get(i));
+         if ((entry != nullptr) && !entry->processing && (entry->timestamp < cutoff) && (entry->lastAttempt < cutoff))
+         {
+            cache->remove(keys.get(i));
+            evicted++;
+         }
+      }
+   }
+   if (evicted > 0)
+      nxlog_debug_tag(DEBUG_TAG, 7, L"EvictStaleEntries: %d cache entries evicted", evicted);
+}
 
 /**
  * Fetch the full active host list for an interface, paging until exhausted.
@@ -367,18 +401,19 @@ static json_t *FetchActiveHosts(json_t *credentials, const char *ifid)
          nxlog_debug_tag(DEBUG_TAG, 3, L"FetchActiveHosts(%hs): host limit reached (%u), list truncated", ifid, static_cast<uint32_t>(maxHosts));
          break;
       }
+      // Deterministic order so paging under host churn skips or duplicates as little as possible.
+      // Sort key name follows ntopng's internal column naming (column_ip); verify against the target version.
       char path[256];
-      snprintf(path, sizeof(path), "/lua/rest/v2/get/host/active.lua?ifid=%s&perPage=%d&currentPage=%d&sortColumn=ip&sortOrder=asc",
+      snprintf(path, sizeof(path), "/lua/rest/v2/get/host/active.lua?ifid=%s&perPage=%d&currentPage=%d&sortColumn=column_ip&sortOrder=asc",
          ifid, pageSize, page);
       json_t *response = NtopngApiGet(credentials, path);
       if (response == nullptr)
       {
-         if (page == 1)
-         {
-            json_decref(result);
-            return nullptr;
-         }
-         break;   // partial result usable; next poll repairs omissions
+         // A truncated sweep must not be served as the authoritative host set (hosts past the
+         // failed page would be reported absent); the previous complete sweep stays in cache instead
+         nxlog_debug_tag(DEBUG_TAG, 5, L"FetchActiveHosts(%hs): page %d retrieval failed, sweep discarded", ifid, page);
+         json_decref(result);
+         return nullptr;
       }
 
       json_t *rsp = json_object_get(response, "rsp");
@@ -388,6 +423,11 @@ static json_t *FetchActiveHosts(json_t *credentials, const char *ifid)
          json_decref(response);
          break;
       }
+
+      // ntopng may cap the page size; the effective value is echoed in the response
+      int effectivePageSize = json_is_object(rsp) ? json_object_get_int32(rsp, "perPage", pageSize) : pageSize;
+      if (effectivePageSize < 1)
+         effectivePageSize = pageSize;
 
       size_t count = json_array_size(data);
       size_t i;
@@ -403,7 +443,7 @@ static json_t *FetchActiveHosts(json_t *credentials, const char *ifid)
       }
       json_decref(response);
 
-      if (static_cast<int>(count) < pageSize)
+      if ((count == 0) || (static_cast<int>(count) < effectivePageSize))
          break;
    }
    return result;
@@ -420,8 +460,12 @@ static json_t *GetCachedDocument(StringObjectMap<JsonCacheEntry> *cache, json_t 
    wchar_t wkey[640];
    utf8_to_wchar(key, -1, wkey, 640);
 
+   time_t now = time(nullptr);
+   time_t ttl = GetCacheTtl(credentials);
+   EvictStaleEntries(now, ttl);
+
    JsonCacheEntry *ce = cache->get(wkey);
-   if ((ce != nullptr) && (ce->data != nullptr) && (ce->timestamp >= time(nullptr) - static_cast<time_t>(GetCacheTtl(credentials))))
+   if ((ce != nullptr) && (ce->data != nullptr) && (ce->timestamp >= now - ttl))
       return ce->data;
 
    if (ce == nullptr)
@@ -430,9 +474,26 @@ static json_t *GetCachedDocument(StringObjectMap<JsonCacheEntry> *cache, json_t 
       cache->set(wkey, ce);
    }
 
-   if (!ce->processing)
+   if (ce->processing)
    {
+      // Another thread is fetching this document - wait for it. The borrowed entry pointer stays
+      // valid across the unlock because entries are only deleted by EvictStaleEntries (which skips
+      // entries in flight and those attempted recently) and by NtopngClearCache (module shutdown,
+      // after data collection has stopped).
+      do
+      {
+         s_cacheLock.unlock();
+         ThreadSleepMs(200);
+         s_cacheLock.lock();
+      } while (ce->processing);
+   }
+   else if (ce->lastAttempt < now - ttl)
+   {
+      // No attempt within the last TTL - fetch. A failed attempt is not retried before the TTL
+      // elapses, so an unreachable analyzer costs one timeout per TTL per document, not one
+      // per collection.
       ce->processing = true;
+      ce->lastAttempt = now;
       s_cacheLock.unlock();
       json_t *data = fetch();
       s_cacheLock.lock();
@@ -445,15 +506,10 @@ static json_t *GetCachedDocument(StringObjectMap<JsonCacheEntry> *cache, json_t 
       }
       ce->processing = false;
    }
-   else
-   {
-      do
-      {
-         s_cacheLock.unlock();
-         ThreadSleepMs(200);
-         s_cacheLock.lock();
-      } while (ce->processing);
-   }
+
+   // Serve stale data across short outages only; beyond twice the TTL callers see a communication error
+   if ((ce->data != nullptr) && (ce->timestamp < now - ttl * 2))
+      return nullptr;
    return ce->data;
 }
 
@@ -582,10 +638,16 @@ DataCollectionError NtopngGetHostMetric(const char *pointId, const char *hostKey
       return FormatNumericField(row, "num_flows/total", value, size);   // ActiveFlows: nested {num_flows:{total}}
    }
 
-   // Everything else needs the detail document (host/data.lua uses flat dotted keys)
+   // Everything else needs the detail document (host/data.lua uses flat dotted keys).
+   // The active list decides whether the host still exists; a failed detail fetch is a communication error.
+   json_t *hosts = GetCachedActiveHosts(credentials, pointId);
+   if (hosts == nullptr)
+      return DCE_COMM_ERROR;
+   if (json_object_get(hosts, hostKey) == nullptr)
+      return DCE_NO_SUCH_INSTANCE;
    json_t *detail = GetCachedHostDetail(credentials, pointId, hostKey);
    if (detail == nullptr)
-      return DCE_NO_SUCH_INSTANCE;
+      return DCE_COMM_ERROR;
 
    if (!wcscmp(metric, L"PacketsIn"))
       return FormatNumericField(detail, "packets.rcvd", value, size);
@@ -624,9 +686,14 @@ DataCollectionError NtopngGetHostTable(const char *pointId, const char *hostKey,
    if (!wcscmp(metric, L"L7Breakdown"))
    {
       LockGuard lockGuard(s_cacheLock);
+      json_t *hosts = GetCachedActiveHosts(credentials, pointId);
+      if (hosts == nullptr)
+         return DCE_COMM_ERROR;
+      if (json_object_get(hosts, hostKey) == nullptr)
+         return DCE_NO_SUCH_INSTANCE;
       json_t *detail = GetCachedHostDetail(credentials, pointId, hostKey);
       if (detail == nullptr)
-         return DCE_NO_SUCH_INSTANCE;
+         return DCE_COMM_ERROR;
 
       json_t *ndpi = json_object_get(detail, "ndpi");
       if (!json_is_object(ndpi))
@@ -815,9 +882,6 @@ ObjectArray<TrafficMetricDefinition> *NtopngGetMetricDefinitions(TrafficMetricLe
 }
 
 /**
- * Drop all cached host data
- */
-/**
  * Remove all completed entries from a cache map. Entries with a fetch in flight
  * are left in place - GetCachedDocument holds borrowed pointers to them across
  * lock releases, so deleting them here would be a use-after-free.
@@ -833,6 +897,10 @@ static void ClearCacheMap(StringObjectMap<JsonCacheEntry> *cache)
    }
 }
 
+/**
+ * Drop all cached data. Called only from the module shutdown hook, after data
+ * collection has stopped, so no waiter in GetCachedDocument can be holding an entry.
+ */
 void NtopngClearCache()
 {
    LockGuard lockGuard(s_cacheLock);

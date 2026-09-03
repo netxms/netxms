@@ -215,6 +215,53 @@ uint32_t ObservationPoint::modifyFromMessageInternal(const NXCPMessage& msg, Cli
 }
 
 /**
+ * Modify object from NXCP message - stage 2 (called without property lock).
+ * Taking a point out of scope drops its host records immediately instead of
+ * waiting for retention age-out, so nodes stop reporting coverage from it.
+ */
+uint32_t ObservationPoint::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session)
+{
+   if (msg.isFieldExist(VID_IN_SCOPE) && !msg.getFieldAsBoolean(VID_IN_SCOPE))
+      DropObservationPointHosts(m_id);
+   return super::modifyFromMessageInternalStage2(msg, session);
+}
+
+/**
+ * Modify object from JSON document
+ */
+uint32_t ObservationPoint::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   json_t *value = json_object_get(json, "inScope");
+   if (value != nullptr)
+   {
+      if (!json_is_boolean(value))
+         return RCC_INVALID_ARGUMENT;
+      m_inScope = json_boolean_value(value);
+   }
+
+   value = json_object_get(json, "zoneUIN");
+   if (value != nullptr)
+   {
+      if (!json_is_integer(value))
+         return RCC_INVALID_ARGUMENT;
+      m_zoneUIN = static_cast<int32_t>(json_integer_value(value));
+   }
+
+   return super::modifyFromJSONInternal(json, session);
+}
+
+/**
+ * Modify object from JSON document - stage 2 (called without property lock)
+ */
+uint32_t ObservationPoint::modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session)
+{
+   json_t *value = json_object_get(json, "inScope");
+   if ((value != nullptr) && json_is_false(value))
+      DropObservationPointHosts(m_id);
+   return super::modifyFromJSONInternalStage2(json, session);
+}
+
+/**
  * Calculate compound status
  */
 void ObservationPoint::calculateCompoundStatus(bool forcedRecalc)
@@ -254,7 +301,7 @@ int32_t ObservationPoint::getEffectiveZoneUIN() const
 {
    if (m_zoneUIN != -1)
       return m_zoneUIN;
-   shared_ptr<TrafficObserver> observer = m_owner.lock();
+   shared_ptr<TrafficObserver> observer = getOwner();
    return (observer != nullptr) ? observer->getZoneUIN() : -1;
 }
 
@@ -328,11 +375,19 @@ void ObservationPoint::updateFromDiscovery(const ObservationPointDescriptor *des
    {
       m_localNetworks = "";
    }
+   bool firstDiscovery = (m_lastDiscoveryTime == 0);
    m_lastDiscoveryTime = time(nullptr);
+   if (firstDiscovery)
+   {
+      // Initial state of a newly created point is not a transition - set it silently
+      m_state = desc->state;
+      m_providerState = desc->providerState;
+   }
    setModified(MODIFY_OBSERVATION_POINT_PROPERTIES);
    unlockProperties();
 
-   updateState(desc->state, desc->providerState);
+   if (!firstDiscovery)
+      updateState(desc->state, desc->providerState);
 }
 
 /**
@@ -366,6 +421,15 @@ void ObservationPoint::updateState(int16_t newState, const char *providerState)
 }
 
 /**
+ * Get owning traffic observer. Resolved by ID on each call (rather than cached)
+ * so the link survives object replacement during warm-standby synchronization.
+ */
+shared_ptr<TrafficObserver> ObservationPoint::getOwner() const
+{
+   return static_pointer_cast<TrafficObserver>(FindObjectById(m_observerId, OBJECT_TRAFFICOBSERVER));
+}
+
+/**
  * Post-load hook. Link observation point to owning observer after all objects are loaded.
  */
 void ObservationPoint::postLoad()
@@ -377,7 +441,6 @@ void ObservationPoint::postLoad()
       if (observer != nullptr)
       {
          linkObjects(observer, self());
-         m_owner = static_pointer_cast<TrafficObserver>(observer);
       }
       else
       {

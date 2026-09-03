@@ -123,6 +123,8 @@ public class CreateCloudDomainDialog extends Dialog
             final List<String> connectors = session.getCloudConnectorNames();
             Collections.sort(connectors);
             runInUIThread(() -> {
+               if (connectorNameField.isDisposed())
+                  return;
                for(String c : connectors)
                   connectorNameField.add(c);
                connectorNameField.select(0);

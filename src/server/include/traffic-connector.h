@@ -188,7 +188,7 @@ struct TrafficConnectorInterface
    uint64_t (*GetCapabilities)(json_t *credentials);
 
    // Discovery
-   ObservationPointDescriptor *(*DiscoverPoints)(json_t *credentials);   // linked list, caller owns
+   ObservationPointDescriptor *(*DiscoverPoints)(json_t *credentials);   // linked list, caller owns; nullptr is treated as discovery failure (existing points are kept)
 
    // Observer / point level data
    DataCollectionError (*GetObserverMetric)(const wchar_t *metric, wchar_t *value, size_t size, json_t *credentials);

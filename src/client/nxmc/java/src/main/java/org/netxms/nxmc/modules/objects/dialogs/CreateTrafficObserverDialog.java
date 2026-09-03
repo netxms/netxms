@@ -34,9 +34,13 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.widgets.ZoneSelector;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.ObjectNameValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * Traffic observer object creation dialog
@@ -49,11 +53,13 @@ public class CreateTrafficObserverDialog extends Dialog
    private LabeledText aliasField;
    private LabeledCombo connectorNameField;
    private LabeledText credentialsField;
+   private ZoneSelector zoneSelector;
 
    private String name;
    private String alias;
    private String connectorName;
    private String credentials;
+   private int zoneUIN = 0;
 
    /**
     * @param parentShell
@@ -109,12 +115,21 @@ public class CreateTrafficObserverDialog extends Dialog
       connectorNameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       credentialsField = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-      credentialsField.setLabel(i18n.tr("Credentials"));
+      credentialsField.setLabel(i18n.tr("Credentials (JSON)"));
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.heightHint = 160;
       credentialsField.setLayoutData(gd);
 
       final NXCSession session = Registry.getSession();
+      if (session.isZoningEnabled())
+      {
+         zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, true);
+         zoneSelector.setLabel(i18n.tr("Zone for host matching"));
+         zoneSelector.setEmptySelectionText(i18n.tr("All zones"));
+         zoneSelector.setZoneUIN(-1);
+         zoneSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      }
+
       new Job(i18n.tr("Reading list of available traffic connectors"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -122,6 +137,8 @@ public class CreateTrafficObserverDialog extends Dialog
             final List<String> connectors = session.getTrafficConnectorNames();
             Collections.sort(connectors);
             runInUIThread(() -> {
+               if (connectorNameField.isDisposed())
+                  return;
                for(String c : connectors)
                   connectorNameField.add(c);
                connectorNameField.select(0);
@@ -152,10 +169,43 @@ public class CreateTrafficObserverDialog extends Dialog
 
       name = nameField.getText().trim();
       alias = aliasField.getText().trim();
-      connectorName = connectorNameField.getText();
-      credentials = credentialsField.getText();
+      connectorName = connectorNameField.getText().trim();
+      credentials = credentialsField.getText().trim();
+
+      if (connectorName.isEmpty())
+      {
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select traffic connector"));
+         return;
+      }
+
+      if (!credentials.isEmpty() && !isJsonObject(credentials))
+      {
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Credentials must be a valid JSON object"));
+         return;
+      }
+
+      if (zoneSelector != null)
+         zoneUIN = zoneSelector.getZoneUIN();
 
       super.okPressed();
+   }
+
+   /**
+    * Check that given text is a JSON object
+    *
+    * @param text text to check
+    * @return true if text parses as JSON object
+    */
+   private static boolean isJsonObject(String text)
+   {
+      try
+      {
+         return JsonParser.parseString(text).isJsonObject();
+      }
+      catch(JsonSyntaxException e)
+      {
+         return false;
+      }
    }
 
    /**
@@ -188,5 +238,13 @@ public class CreateTrafficObserverDialog extends Dialog
    public String getCredentials()
    {
       return credentials;
+   }
+
+   /**
+    * @return zone UIN for host matching (-1 = all zones)
+    */
+   public int getZoneUIN()
+   {
+      return zoneUIN;
    }
 }
