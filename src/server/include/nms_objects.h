@@ -2363,7 +2363,7 @@ protected:
    SharedObjectArray<GenericAgentPolicy> m_policyList;
    SharedObjectArray<GenericAgentPolicy> m_deletedPolicyList;
    SharedString m_exclusionGroup;
-   bool m_removeDCIOnDelete;
+   std::atomic<short> m_removeDCIOnDelete;
 
    virtual void prepareForDeletion() override;
    virtual void onDataCollectionChange() override;
@@ -2418,7 +2418,11 @@ public:
    void checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyInfo *ap);
    void initiatePolicyValidation();
    void removeAllPolicies(Node *node);
-   void setRemoveDCIOnDelete(bool removeDCI) { m_removeDCIOnDelete = removeDCI; }
+   void setRemoveDCIOnDelete(bool removeDCI)
+   {
+      short expected = -1;
+      m_removeDCIOnDelete.compare_exchange_strong(expected, removeDCI ? 1 : 0);
+   }
 
    SharedString getExclusionGroup() const { return GetAttributeWithLock(m_exclusionGroup, NetObj::m_mutexProperties); }
    shared_ptr<Template> findExclusionGroupConflict(const NetObj& target) const;
@@ -3297,7 +3301,7 @@ protected:
    uint32_t m_dwNumResources;
    CLUSTER_RESOURCE *m_pResourceList;
    int32_t m_zoneUIN;
-   bool m_removeDCIOnDelete;
+   std::atomic<short> m_removeDCIOnDelete;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
@@ -3350,7 +3354,11 @@ public:
    void removeNode(const shared_ptr<Node>& node);
    void changeZone(uint32_t newZoneUIN);
 
-   void setRemoveDCIOnDelete(bool removeDCI) { m_removeDCIOnDelete = removeDCI; }
+   void setRemoveDCIOnDelete(bool removeDCI)
+   {
+      short expected = -1;
+      m_removeDCIOnDelete.compare_exchange_strong(expected, removeDCI ? 1 : 0);
+   }
 };
 
 /**
