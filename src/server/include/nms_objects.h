@@ -6640,6 +6640,7 @@ void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response);
 
 const wchar_t NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const wchar_t *defaultName);
 shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *pszName);
+shared_ptr<DataCollectionTarget> NXCORE_EXPORTABLE FindDataCollectionTargetByName(const TCHAR *name);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddress& ipAddr);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, bool allZones, const InetAddress& ipAddr);
 shared_ptr<Node> NXCORE_EXPORTABLE FindNodeByIP(int32_t zoneUIN, const InetAddressList *ipAddrList);

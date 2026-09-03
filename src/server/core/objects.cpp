@@ -1305,8 +1305,20 @@ shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *name)
 	return static_pointer_cast<Template>(g_idxObjectById.find(
 	   [name] (NetObj *object) -> bool
 	   {
-	      return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && !_tcsicmp(object->getName(), (const TCHAR *)name);
+	      return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && !_tcsicmp(object->getName(), name);
 	   }));
+}
+
+/**
+ * Find data collection target object by name
+ */
+shared_ptr<DataCollectionTarget> NXCORE_EXPORTABLE FindDataCollectionTargetByName(const TCHAR *name)
+{
+   return static_pointer_cast<DataCollectionTarget>(g_idxObjectById.find(
+      [name] (NetObj *object) -> bool
+      {
+         return object->isDataCollectionTarget() && !object->isDeleted() && !_tcsicmp(object->getName(), name);
+      }));
 }
 
 /**
