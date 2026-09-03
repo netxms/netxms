@@ -5916,7 +5916,7 @@ paths:
         '204':
           description: Values pushed successfully
         '400':
-          description: Malformed request or invalid push element
+          description: Malformed or empty request, or invalid push element
           content:
             application/json:
               schema:
@@ -14743,7 +14743,7 @@ components:
           description: Target object ID
         objectName:
           type: string
-          description: Target object name, used when `objectId` is not provided
+          description: Target object name, used when `objectId` is not provided. Matched case-insensitively against data collection targets only.
         dciId:
           type: integer
           format: int32

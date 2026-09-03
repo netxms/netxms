@@ -470,9 +470,9 @@ static bool GetPushDataTimestamp(json_t *element, Timestamp *timestamp)
 int H_PushData(Context *context)
 {
    json_t *request = context->getRequestDocument();
-   if (!json_is_array(request))
+   if (!json_is_array(request) || (json_array_size(request) == 0))
    {
-      context->setErrorResponse("Request body must be a JSON array");
+      context->setErrorResponse("Request body must be a non-empty JSON array");
       return 400;
    }
 
@@ -486,35 +486,38 @@ int H_PushData(Context *context)
          return PushDataError(context, index, 400, "Push element must be a JSON object");
 
       // Find target object either by ID or by name
-      shared_ptr<NetObj> object;
+      shared_ptr<DataCollectionTarget> object;
       json_t *objectId = json_object_get(element, "objectId");
       if (json_is_integer(objectId))
       {
          json_int_t id = json_integer_value(objectId);
          if ((id <= 0) || (id > UINT32_MAX))
             return PushDataError(context, index, 400, "Invalid object identifier");
-         object = FindObjectById(static_cast<uint32_t>(id));
+         shared_ptr<NetObj> o = FindObjectById(static_cast<uint32_t>(id));
+         if (o == nullptr)
+            return PushDataError(context, index, 404, "Target object not found");
+         if (!o->isDataCollectionTarget())
+            return PushDataError(context, index, 400, "Target object is not a data collection target");
+         object = static_pointer_cast<DataCollectionTarget>(o);
       }
       else if (json_object_get(element, "objectName") != nullptr)
       {
          wchar_t name[MAX_OBJECT_NAME] = L"";
          if (!json_object_update_string(element, "objectName", name, MAX_OBJECT_NAME) || (name[0] == 0))
             return PushDataError(context, index, 400, "Invalid object name");
-         object = FindObjectByName(name);
+         object = FindDataCollectionTargetByName(name);
+         if (object == nullptr)
+            return PushDataError(context, index, 404, "Target object not found");
       }
       else
       {
          return PushDataError(context, index, 400, "Integer objectId or string objectName must be provided");
       }
 
-      if (object == nullptr)
-         return PushDataError(context, index, 404, "Target object not found");
-      if (!object->isDataCollectionTarget())
-         return PushDataError(context, index, 400, "Target object is not a data collection target");
       if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_PUSH_DATA))
          return PushDataError(context, index, 403, "Access denied");
 
-      DataCollectionTarget& target = static_cast<DataCollectionTarget&>(*object);
+      DataCollectionTarget& target = *object;
 
       // Find DCI either by ID or by name
       shared_ptr<DCObject> dci;
@@ -559,7 +562,7 @@ int H_PushData(Context *context)
       if (value == nullptr)
          return PushDataError(context, index, 400, "Value must be a string or a number");
 
-      values.add(new PushDataElement(static_pointer_cast<DataCollectionTarget>(object), dci, value, timestamp));
+      values.add(new PushDataElement(object, dci, value, timestamp));
    }
 
    shared_ptr<Table> tableValue;   // Empty pointer to pass to processNewDCValue()
