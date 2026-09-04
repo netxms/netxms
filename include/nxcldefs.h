@@ -1319,6 +1319,16 @@ enum AggregationFunction
 #define RF_CLEAR_LOG_FLAG        0x800000
 
 /**
+ * Event policy rule error flags. Calculated by server when policy is sent to client, read-only for client.
+ */
+#define EPP_ERROR_MISSING_SOURCE_OBJECT      0x00000001
+#define EPP_ERROR_MISSING_EVENT              0x00000002
+#define EPP_ERROR_MISSING_ACTION             0x00000004
+#define EPP_ERROR_MISSING_ALARM_CATEGORY     0x00000008
+#define EPP_ERROR_FILTER_SCRIPT              0x00000010
+#define EPP_ERROR_ACTION_SCRIPT              0x00000020
+
+/**
  * Network map flags
  */
 #define MF_SHOW_STATUS_ICON        0x00000001

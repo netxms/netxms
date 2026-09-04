@@ -785,6 +785,8 @@ private:
          ((m_flags & (RF_SEVERITY_INFO | RF_SEVERITY_WARNING | RF_SEVERITY_MINOR | RF_SEVERITY_MAJOR | RF_SEVERITY_CRITICAL)) == (RF_SEVERITY_INFO | RF_SEVERITY_WARNING | RF_SEVERITY_MINOR | RF_SEVERITY_MAJOR | RF_SEVERITY_CRITICAL));
    }
 
+   uint32_t getErrors() const;
+
 public:
    EPRule(uint32_t id);
    EPRule(DB_RESULT hResult, int row);

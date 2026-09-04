@@ -116,6 +116,7 @@ public class RuleEditor extends Composite
    private Label ruleNumberLabel;
    private Composite header;
    private Label headerLabel;
+   private Label errorMarker = null;
    private Composite mainArea;
    private Card condition;
    private Card action;
@@ -182,7 +183,28 @@ public class RuleEditor extends Composite
       createHeader();
       createMainArea();
 
-      createPopupMenu(new Control[] { leftPanel, ruleNumberLabel, header, headerLabel });
+      createPopupMenu((errorMarker != null) ?
+            new Control[] { leftPanel, ruleNumberLabel, header, headerLabel, errorMarker } :
+            new Control[] { leftPanel, ruleNumberLabel, header, headerLabel });
+
+      if (rule.hasErrors())
+      {
+         Card errors = new Card(mainArea, i18n.tr("Errors")) {
+            @Override
+            protected Control createClientArea(Composite parent)
+            {
+               setTitleBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Error"));
+               setTitleColor(ThemeEngine.getForegroundColor("RuleEditor.Title"));
+               return createErrorControl(parent, RuleEditor.this.rule);
+            }
+         };
+         GridData gd = new GridData();
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.verticalAlignment = SWT.FILL;
+         errors.setLayoutData(gd);
+      }
 
       condition = new Card(mainArea, i18n.tr("Filter")) {
          @Override
@@ -280,7 +302,7 @@ public class RuleEditor extends Composite
    private void createLeftPanel()
    {
       leftPanel = new Composite(this, SWT.NONE);
-      leftPanel.setBackground(ThemeEngine.getBackgroundColor((rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
+      leftPanel.setBackground(ThemeEngine.getBackgroundColor(getTitleThemeElement()));
       leftPanel.addMouseListener(ruleMouseListener);
 
       GridLayout layout = new GridLayout();
@@ -329,6 +351,66 @@ public class RuleEditor extends Composite
    }
 
    /**
+    * Get name of theme element to be used as background for rule's title area
+    *
+    * @return theme element name
+    */
+   private String getTitleThemeElement()
+   {
+      if (selected)
+         return "RuleEditor.Title.Selected";
+      if (rule.hasErrors())
+         return "RuleEditor.Title.Error";
+      return (rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal";
+   }
+
+   /**
+    * Create control with list of errors detected in this rule by server
+    *
+    * @param parent parent composite
+    * @param rule rule to be checked
+    * @return control with error descriptions
+    */
+   private Control createErrorControl(Composite parent, final EventProcessingPolicyRule rule)
+   {
+      Composite clientArea = new Composite(parent, SWT.NONE);
+
+      clientArea.setBackground(ThemeEngine.getBackgroundColor("RuleEditor"));
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = 0;
+      clientArea.setLayout(layout);
+
+      int errorFlags = rule.getErrors();
+      if ((errorFlags & EventProcessingPolicyRule.ERROR_MISSING_SOURCE_OBJECT) != 0)
+         addErrorLabel(clientArea, i18n.tr("Rule refers to source objects that do not exist"));
+      if ((errorFlags & EventProcessingPolicyRule.ERROR_MISSING_EVENT) != 0)
+         addErrorLabel(clientArea, i18n.tr("Rule refers to events that do not exist"));
+      if ((errorFlags & EventProcessingPolicyRule.ERROR_MISSING_ACTION) != 0)
+         addErrorLabel(clientArea, i18n.tr("Rule refers to actions that do not exist"));
+      if ((errorFlags & EventProcessingPolicyRule.ERROR_MISSING_ALARM_CATEGORY) != 0)
+         addErrorLabel(clientArea, i18n.tr("Rule refers to alarm categories that do not exist"));
+      if ((errorFlags & EventProcessingPolicyRule.ERROR_FILTER_SCRIPT) != 0)
+         addErrorLabel(clientArea, i18n.tr("Filtering script cannot be compiled"));
+      if ((errorFlags & EventProcessingPolicyRule.ERROR_ACTION_SCRIPT) != 0)
+         addErrorLabel(clientArea, i18n.tr("Action script cannot be compiled"));
+
+      return clientArea;
+   }
+
+   /**
+    * Add label with error description
+    *
+    * @param parent parent composite
+    * @param text error description
+    */
+   private void addErrorLabel(Composite parent, String text)
+   {
+      CLabel label = createCLabel(parent, 0, false);
+      label.setImage(editor.getImageError());
+      label.setText(text);
+   }
+
+   /**
     * Create rule header
     */
    private void createHeader()
@@ -355,17 +437,25 @@ public class RuleEditor extends Composite
       };
 
       header = new Composite(this, SWT.NONE);
-      header.setBackground(ThemeEngine.getBackgroundColor((rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
+      header.setBackground(ThemeEngine.getBackgroundColor(getTitleThemeElement()));
       header.addMouseListener(headerMouseListener);
 
       GridLayout layout = new GridLayout();
-      layout.numColumns = 3;
+      layout.numColumns = rule.hasErrors() ? 4 : 3;
       header.setLayout(layout);
 
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       header.setLayoutData(gd);
+
+      if (rule.hasErrors())
+      {
+         errorMarker = new Label(header, SWT.NONE);
+         errorMarker.setBackground(header.getBackground());
+         errorMarker.setImage(editor.getImageError());
+         errorMarker.addMouseListener(headerMouseListener);
+      }
 
       headerLabel = new Label(header, SWT.NONE);
       if (rule.isDisabled())
@@ -794,10 +884,7 @@ public class RuleEditor extends Composite
             for(Long id :rule.getAlarmCategories())
             {
                AlarmCategory category = session.findAlarmCategoryById(id);
-               if (category != null)
-               {
-                  createLabel(clientArea, 2, false, category.getName(), listener);
-               }
+               createLabel(clientArea, 2, false, (category != null) ? category.getName() : "[" + Long.toString(id) + "]", listener);
             }
          }
 
@@ -1231,18 +1318,8 @@ public class RuleEditor extends Composite
    public void setSelected(boolean selected)
    {
       this.selected = selected;
-      final Color color = ThemeEngine
-            .getBackgroundColor(selected ? "RuleEditor.Title.Selected" : ((rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
-
-      leftPanel.setBackground(color);
-      for(Control c : leftPanel.getChildren())
-         c.setBackground(color);
+      updateBackground();
       leftPanel.redraw();
-
-      header.setBackground(color);
-      headerLabel.setBackground(color);
-      expandButton.setBackground(color);
-      editButton.setBackground(color);
       header.redraw();
    }
 
@@ -1280,15 +1357,13 @@ public class RuleEditor extends Composite
     */
    private void updateBackground()
    {
-      final Color color = ThemeEngine.getBackgroundColor(
-            selected ? "RuleEditor.Title.Selected" : ((rule.isDisabled() || rule.isFilterEmpty()) ? "RuleEditor.Title.Disabled" : "RuleEditor.Title.Normal"));
+      final Color color = ThemeEngine.getBackgroundColor(getTitleThemeElement());
       leftPanel.setBackground(color);
       for(Control c : leftPanel.getChildren())
          c.setBackground(color);
       header.setBackground(color);
-      headerLabel.setBackground(color);
-      expandButton.setBackground(color);
-      editButton.setBackground(color);
+      for(Control c : header.getChildren())
+         c.setBackground(color);
    }
 
    /**

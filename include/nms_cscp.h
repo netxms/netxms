@@ -1805,6 +1805,7 @@ __PACK_END__
 #define VID_LAST_COLLECTION_ERROR   ((uint32_t)1030)
 #define VID_ALARM_CATEGORY_SCRIPT   ((uint32_t)1031)
 #define VID_NETCONF_QUERY_LIST      ((uint32_t)1032)
+#define VID_RULE_ERRORS             ((uint32_t)1033)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

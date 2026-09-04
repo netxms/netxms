@@ -296,6 +296,7 @@ uint32_t NXCORE_EXPORTABLE DeleteAlarmCategory(uint32_t id);
 bool CheckAlarmCategoryAccess(uint32_t userId, uint32_t categoryId);
 void LoadAlarmCategories();
 AlarmCategory *GetAlarmCategory(uint32_t id);
+bool IsValidAlarmCategoryId(uint32_t id);
 uint32_t UpdateAlarmCategoryDescription(const TCHAR *name, const TCHAR *description);
 uint32_t FindAlarmCategoryIdByName(const TCHAR *name);
 uint32_t CreateAlarmCategory(const TCHAR *name, const TCHAR *description);

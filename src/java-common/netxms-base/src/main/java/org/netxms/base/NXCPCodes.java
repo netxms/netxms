@@ -1608,6 +1608,7 @@ public class NXCPCodes
    public static final long VID_LAST_COLLECTION_ERROR = 1030;
    public static final long VID_ALARM_CATEGORY_SCRIPT = 1031;
    public static final long VID_NETCONF_QUERY_LIST = 1032;
+   public static final long VID_RULE_ERRORS = 1033;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_SNMP_AGENT_LIST_BASE = 0x79000000L;

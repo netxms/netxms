@@ -59,6 +59,14 @@ public class EventProcessingPolicyRule
 
    public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 
+   // Rule error flags. Calculated by server, read-only.
+   public static final int ERROR_MISSING_SOURCE_OBJECT  = 0x00000001;
+   public static final int ERROR_MISSING_EVENT          = 0x00000002;
+   public static final int ERROR_MISSING_ACTION         = 0x00000004;
+   public static final int ERROR_MISSING_ALARM_CATEGORY = 0x00000008;
+   public static final int ERROR_FILTER_SCRIPT          = 0x00000010;
+   public static final int ERROR_ACTION_SCRIPT          = 0x00000020;
+
    private UUID guid;
    private List<Long> sources;
    private List<Long> sourceExclusions;
@@ -90,6 +98,9 @@ public class EventProcessingPolicyRule
    private String aiAgentInstructions;
    private String comments;
    private int ruleNumber;
+
+   // Errors in rule configuration as detected by server (bit mask of ERROR_xxx constants)
+   private int errors;
 
    // Optimistic concurrency control fields
    private int version;
@@ -134,6 +145,7 @@ public class EventProcessingPolicyRule
       aiAgentInstructions = "";
       comments = "";
       ruleNumber = 0;
+      errors = 0;
 
       // New rules are inherently modified
       version = 0;
@@ -185,6 +197,7 @@ public class EventProcessingPolicyRule
       aiAgentInstructions = src.aiAgentInstructions;
       comments = src.comments;
       ruleNumber = src.ruleNumber;
+      errors = src.errors; // Copy has same references as source rule, so it has same errors
 
       // Copy is essentially a new rule (has new GUID)
       version = 0;
@@ -250,6 +263,7 @@ public class EventProcessingPolicyRule
       customAttributeStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_CUSTOM_ATTR_DEL_LIST_BASE, NXCPCodes.VID_CUSTOM_ATTR_DEL_COUNT);
 
       this.ruleNumber = ruleNumber;
+      errors = msg.getFieldAsInt32(NXCPCodes.VID_RULE_ERRORS);
 
       // Read version tracking fields
       version = msg.getFieldAsInt32(NXCPCodes.VID_RULE_VERSION);
@@ -946,6 +960,27 @@ public class EventProcessingPolicyRule
    {
       this.aiAgentInstructions = aiAgentInstructions;
       this.modified = true;
+   }
+
+   /**
+    * Get errors in rule configuration detected by server. Errors are calculated by server each time policy is sent to client,
+    * so they reflect server state at the moment when policy was loaded.
+    *
+    * @return bit mask of ERROR_xxx constants
+    */
+   public int getErrors()
+   {
+      return errors;
+   }
+
+   /**
+    * Check if server detected any errors in rule configuration.
+    *
+    * @return true if rule has errors
+    */
+   public boolean hasErrors()
+   {
+      return errors != 0;
    }
 
    /**

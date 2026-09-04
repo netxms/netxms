@@ -441,6 +441,17 @@ AlarmCategory *GetAlarmCategory(uint32_t id)
 }
 
 /**
+ * Check if alarm category with given ID exists
+ */
+bool IsValidAlarmCategoryId(uint32_t id)
+{
+   s_lock.readLock();
+   bool valid = (s_categories.get(id) != nullptr);
+   s_lock.unlock();
+   return valid;
+}
+
+/**
  * Update description for alarm category with given name. On success
  * returns ID of updated category, and 0 on failure.
  */

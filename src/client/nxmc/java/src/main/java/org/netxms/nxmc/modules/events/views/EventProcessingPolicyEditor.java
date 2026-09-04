@@ -103,6 +103,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private Image imageEndDowntime;
    private Image imageLogEvent;
    private Image imageNoLogEvent;
+   private Image imageError;
 
    private Action actionHorizontal;
    private Action actionVertical;
@@ -145,6 +146,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       imageEndDowntime = ResourceManager.getImage("icons/epp/end-downtime.png");
       imageLogEvent = ResourceManager.getImage("icons/epp/log-event.png");
       imageNoLogEvent = ResourceManager.getImage("icons/epp/no-log-event.png");
+      imageError = ResourceManager.getImage("icons/messages/error.png");
 
       objectLabelProvider = new BaseObjectLabelProvider();
       actionLabelProvider = new DecoratingActionLabelProvider();
@@ -577,6 +579,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       imageEndDowntime.dispose();
       imageLogEvent.dispose();
       imageNoLogEvent.dispose();
+      imageError.dispose();
 
       objectLabelProvider.dispose();
       actionLabelProvider.dispose();
@@ -707,6 +710,16 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    public Image getImageEndDowntime()
    {
       return imageEndDowntime;
+   }
+
+   /**
+    * Get image used as marker for rules with errors
+    *
+    * @return error marker image
+    */
+   public Image getImageError()
+   {
+      return imageError;
    }
 
    /**

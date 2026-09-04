@@ -916,6 +916,87 @@ void EPRule::validateConfig() const
 }
 
 /**
+ * Mapping between rule error flags and JSON field names
+ */
+static FlagNameMapping s_ruleErrorMapping[] =
+{
+   { EPP_ERROR_MISSING_SOURCE_OBJECT, "missingSourceObject" },
+   { EPP_ERROR_MISSING_EVENT, "missingEvent" },
+   { EPP_ERROR_MISSING_ACTION, "missingAction" },
+   { EPP_ERROR_MISSING_ALARM_CATEGORY, "missingAlarmCategory" },
+   { EPP_ERROR_FILTER_SCRIPT, "filterScriptCompilationError" },
+   { EPP_ERROR_ACTION_SCRIPT, "actionScriptCompilationError" },
+   { 0, nullptr }
+};
+
+/**
+ * Get errors in rule configuration as bit mask of EPP_ERROR_* flags. Detects references to deleted
+ * objects, events, actions, and alarm categories, as well as scripts that failed to compile.
+ * References are only reported and never removed automatically - dropping the last source object
+ * from a rule's filter would silently turn it into a "match any object" rule.
+ */
+uint32_t EPRule::getErrors() const
+{
+   uint32_t errors = 0;
+
+   for(int i = 0; i < m_sources.size(); i++)
+   {
+      if (FindObjectById(m_sources.get(i)) == nullptr)
+      {
+         errors |= EPP_ERROR_MISSING_SOURCE_OBJECT;
+         break;
+      }
+   }
+
+   if ((errors & EPP_ERROR_MISSING_SOURCE_OBJECT) == 0)
+   {
+      for(int i = 0; i < m_sourceExclusions.size(); i++)
+      {
+         if (FindObjectById(m_sourceExclusions.get(i)) == nullptr)
+         {
+            errors |= EPP_ERROR_MISSING_SOURCE_OBJECT;
+            break;
+         }
+      }
+   }
+
+   for(int i = 0; i < m_events.size(); i++)
+   {
+      if (FindEventTemplateByCode(m_events.get(i)) == nullptr)
+      {
+         errors |= EPP_ERROR_MISSING_EVENT;
+         break;
+      }
+   }
+
+   for(int i = 0; i < m_actions.size(); i++)
+   {
+      if (!IsValidActionId(m_actions.get(i)->actionId))
+      {
+         errors |= EPP_ERROR_MISSING_ACTION;
+         break;
+      }
+   }
+
+   for(int i = 0; i < m_alarmCategoryList.size(); i++)
+   {
+      if (!IsValidAlarmCategoryId(m_alarmCategoryList.get(i)))
+      {
+         errors |= EPP_ERROR_MISSING_ALARM_CATEGORY;
+         break;
+      }
+   }
+
+   if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0) && (m_filterScript == nullptr))
+      errors |= EPP_ERROR_FILTER_SCRIPT;
+
+   if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0) && (m_actionScript == nullptr))
+      errors |= EPP_ERROR_ACTION_SCRIPT;
+
+   return errors;
+}
+
+/**
  * Get script dependencies from this rule
  */
 void EPRule::getScriptDependencies(StringSet *dependencies) const
@@ -2095,6 +2176,7 @@ void EPRule::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_FLAGS, m_flags);
    msg->setField(VID_RULE_ID, m_id);
    msg->setField(VID_GUID, m_guid);
+   msg->setField(VID_RULE_ERRORS, getErrors());
    msg->setField(VID_RULE_VERSION, m_version);
    msg->setField(VID_MODIFIED_BY_GUID, m_modifiedByGuid);
    msg->setField(VID_MODIFIED_BY_NAME, m_modifiedByName);
@@ -2158,6 +2240,7 @@ json_t *EPRule::createExportRecord() const
 {
    json_t *root = toJson();
    json_object_set_new(root, "id", json_integer(m_id + 1));
+   json_object_del(root, "errors");   // Errors reflect state of this server and are meaningless in exported configuration
 
    // Replace source ID array with full object information
    json_t *sources = json_array();
@@ -2286,6 +2369,7 @@ json_t *EPRule::toJson(bool assistantMode) const
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
    json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
    json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
+   json_object_set_new(root, "errors", json_boolean_object(getErrors(), s_ruleErrorMapping));
 
    if (assistantMode)
    {

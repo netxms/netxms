@@ -12609,6 +12609,32 @@ components:
         ruleNumber:
           type: integer
           description: 1-based position of the rule in the policy (output only; ignored on input - array order is authoritative)
+        errors:
+          type: object
+          readOnly: true
+          description: |
+            Errors detected in the rule by the server (output only; ignored on input). Broken references
+            are reported but never removed automatically, because dropping the last source object from a
+            rule's filter would silently turn it into a "match any object" rule.
+          properties:
+            missingSourceObject:
+              type: boolean
+              description: Rule refers to source objects or source exclusions that do not exist
+            missingEvent:
+              type: boolean
+              description: Rule refers to event templates that do not exist
+            missingAction:
+              type: boolean
+              description: Rule refers to server actions that do not exist
+            missingAlarmCategory:
+              type: boolean
+              description: Rule refers to alarm categories that do not exist
+            filterScriptCompilationError:
+              type: boolean
+              description: Filtering script cannot be compiled, so the rule matches all events that pass other filter conditions
+            actionScriptCompilationError:
+              type: boolean
+              description: Action script cannot be compiled and will not be executed
         flags:
           type: integer
           description: |

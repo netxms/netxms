@@ -87,10 +87,12 @@ public class DefaultLightTheme extends Theme
       elements.put("Rack.EmptySpace", new ThemeElement(new RGB(224, 224, 224), null));
       elements.put("RuleEditor", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
       elements.put("RuleEditor.Title.Disabled", new ThemeElement(new RGB(232, 224, 212), null));
+      elements.put("RuleEditor.Title.Error", new ThemeElement(new RGB(250, 214, 208), null));
       elements.put("RuleEditor.Title.Normal", new ThemeElement(new RGB(225, 233, 241), null));
       elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(245, 216, 90), null));
       elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(186, 176, 201), null));
       elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(198, 214, 172), null));
+      elements.put("RuleEditor.Border.Error", new ThemeElement(new RGB(226, 176, 170), null));
       elements.put("RuleEditor.Border.Explanation", new ThemeElement(new RGB(223, 235, 247), null));
       elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(153, 180, 209), null));
       elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(0, 0, 0)));
