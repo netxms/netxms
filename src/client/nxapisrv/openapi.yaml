@@ -2220,9 +2220,13 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
+              description: |
+                Either a single value, or a batch of values wrapped into `data` array.
+                Presence of `data` property selects the batch form.
+              anyOf:
                 - $ref: '#/components/schemas/DciPushData'
                 - type: object
+                  required: [data]
                   properties:
                     data:
                       type: array
@@ -2890,7 +2894,8 @@ components:
           format: uuid
           description: mapBackgroundLocation, mapBackgroundZoom, mapBackgroundColor should be provided in the same request
         mapBackgroundLocation:
-          $ref: '#/components/schemas/Geolocation'
+          allOf:
+            - $ref: '#/components/schemas/Geolocation'
           description: mapBackground, mapBackgroundZoom, mapBackgroundColor should be provided in the same request
         mapBackgroundZoom:
           type: integer

@@ -13,4 +13,4 @@ jobs:
         with:
           node-version: lts/*
       - run: |
-          npx @redocly/cli lint src/client/nxapisrv/openapi.yaml
+          npx @redocly/cli lint

@@ -1,0 +1,34 @@
+# This file instructs Redocly's linter to ignore the rules contained for specific parts of your API.
+# See https://redocly.com/docs/cli/ for more information.
+#
+# Every entry below must stay justified - do not add new ones to silence a fixable problem, and
+# drop an entry as soon as the underlying specification changes. Regenerating this file with
+# "redocly lint --generate-ignore-file" discards these comments.
+
+src/client/nxapisrv/openapi.yaml:
+  # Unauthenticated endpoints returning static version information (InfoHandler.java).
+  # They have no failure path, so there is no 4xx response to document.
+  operation-4xx-response:
+    - '#/paths/~1/get/responses'
+    - '#/paths/~1info/get/responses'
+
+src/server/webapi/openapi.yaml:
+  # The router matches each path segment against literals first and only falls back to a
+  # placeholder (RouteRequest() in src/server/core/webapi_router.cpp), so "configuration" and
+  # "output" always win over the sibling placeholder. Object tool and DCI identifiers are
+  # numeric, so they can never collide with those literals.
+  no-ambiguous-paths:
+    - '#/paths/~1v1~1objects~1{object-id}~1data-collection~1configuration~1{dci-id}'
+    - '#/paths/~1v1~1object-tools~1output~1{token}'
+
+  # Unauthenticated root endpoint returning static server information (H_Root() in
+  # src/server/core/webapi.cpp). It has no failure path.
+  operation-4xx-response:
+    - '#/paths/~1/get/responses'
+
+  # WebSocket endpoints - success is 101 Switching Protocols. OpenAPI 3.0 has no notion of a
+  # protocol upgrade, and the rule has no exception for it, so a 2xx response cannot be
+  # documented without inventing one.
+  operation-2xx-response:
+    - '#/paths/~1v1~1tcp-proxy~1{token}/get/responses'
+    - '#/paths/~1v1~1object-tools~1output~1{token}/get/responses'

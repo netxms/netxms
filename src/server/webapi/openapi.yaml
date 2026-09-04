@@ -3,6 +3,11 @@ info:
   title: NetXMS API
   description: REST API for NetXMS network monitoring server
   version: 1.0.0
+  license:
+    name: GNU Free Documentation License
+    url: https://www.gnu.org/licenses/fdl-1.3.html
+servers:
+  - url: http://127.0.0.1:8000
 tags:
   - name: Authentication
     description: User authentication and session management
@@ -318,8 +323,8 @@ paths:
         - Close frame (opcode 0x08) terminates the connection
 
         **Control Messages (JSON):**
-        - Connection ready: `{"type": "connected", "channelId": 12345}`
-        - Close notification: `{"type": "close", "reason": "normal|error|agent_disconnect"}`
+        - Connection ready: `TcpProxyConnectedMessage`, e.g. `{"type": "connected", "channelId": 12345}`
+        - Close notification: `TcpProxyCloseMessage`, e.g. `{"type": "close", "reason": "normal"}`
       parameters:
         - name: token
           in: path
@@ -334,6 +339,9 @@ paths:
             Switching Protocols - WebSocket connection established successfully.
             After upgrade, the connection enters WebSocket mode for bidirectional data transfer.
             A JSON message `{"type": "connected", "channelId": N}` is sent after successful upgrade.
+            If the token is invalid, expired or already used, the connection is closed right after
+            the upgrade with WebSocket close code 1008 (Policy Violation) - no HTTP error status
+            is returned in that case.
           headers:
             Upgrade:
               schema:
@@ -346,10 +354,15 @@ paths:
             Sec-WebSocket-Accept:
               schema:
                 type: string
-        '401':
-          description: |
-            Unauthorized - Token is invalid, expired, or already used.
-            WebSocket close frame with code 1008 (Policy Violation) is sent.
+          content:
+            application/json:
+              schema:
+                description: Control messages sent by the server as WebSocket text frames
+                oneOf:
+                  - $ref: '#/components/schemas/TcpProxyConnectedMessage'
+                  - $ref: '#/components/schemas/TcpProxyCloseMessage'
+        '426':
+          description: Upgrade required - request did not ask for a protocol upgrade to WebSocket.
       security: []
       tags:
         - TCP Proxy
@@ -480,8 +493,11 @@ paths:
                     enum: [idle, processing, completed, error]
                     description: Current processing state
                   pendingQuestion:
-                    description: Pending question from AI (present when status is processing)
+                    type: object
                     nullable: true
+                    description: Pending question from AI (present when status is processing)
+                    allOf:
+                      - $ref: '#/components/schemas/PendingQuestion'
                   currentFunction:
                     type: string
                     description: Name of the function currently being executed by AI (present when status is processing)
@@ -526,8 +542,11 @@ paths:
                 type: object
                 properties:
                   question:
-                    description: Pending question object, or null if no question is pending
+                    type: object
                     nullable: true
+                    description: Pending question object, or null if no question is pending
+                    allOf:
+                      - $ref: '#/components/schemas/PendingQuestion'
         '400':
           description: Invalid chat ID
         '401':
@@ -1150,6 +1169,8 @@ paths:
                       allOf:
                         - $ref: '#/components/schemas/ObjectSummary'
                       description: Full source object summary. Present only when includeObjectDetails=true.
+        '401':
+          description: Unauthorized
       security:
         - BearerAuth: []
       tags:
@@ -1416,6 +1437,8 @@ paths:
                 type: array
                 items:
                   type: string
+        '401':
+          description: Unauthorized
       security:
         - BearerAuth: []
       tags:
@@ -2547,6 +2570,8 @@ paths:
       responses:
         '204':
           description: Successful logout.
+        '401':
+          description: Unauthorized
       security:
         - BearerAuth: []
       tags:
@@ -7448,6 +7473,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ObjectToolSummary'
+        '401':
+          description: Unauthorized
         '500':
           description: Database failure.
       security:
@@ -7791,7 +7818,13 @@ paths:
           description: Single-use token from the streaming execute response
       responses:
         '101':
-          description: Switching protocols to WebSocket
+          description: |
+            Switching protocols to WebSocket. If the token is invalid, expired or already used,
+            the connection is closed right after the upgrade with WebSocket close code 1008
+            (Policy Violation) - no HTTP error status is returned in that case.
+        '426':
+          description: Upgrade required - request did not ask for a protocol upgrade to WebSocket.
+      security: []
   /v1/event-processing-policy:
     get:
       operationId: getEventProcessingPolicy
@@ -9066,6 +9099,36 @@ components:
           type: string
           nullable: true
           description: The prompt text
+    PendingQuestion:
+      type: object
+      description: Question raised by the AI assistant and awaiting an answer from the user
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique question identifier, to be sent back when answering
+        type:
+          type: string
+          enum: [confirmation, multipleChoice]
+          description: Question type
+        confirmationType:
+          type: integer
+          description: Button labels to present for a confirmation question (0=approve/reject, 1=yes/no, 2=confirm/cancel)
+        text:
+          type: string
+          description: Question text to present to the user
+        context:
+          type: string
+          description: Additional context for the question (empty string if not provided)
+        expiresAt:
+          type: integer
+          format: int64
+          description: Time when the question expires, as UNIX timestamp
+        options:
+          type: array
+          description: Available answer options (present only for multipleChoice questions)
+          items:
+            type: string
     ChassisPlacement:
       type: object
       description: >-
@@ -11239,6 +11302,7 @@ components:
           nullable: true
           description: SNMP v3 context name.
         trap:
+          type: object
           nullable: true
           description: Separate credentials for received SNMP traps. An object fully replaces them; null reverts to using the polling credentials.
           allOf:
@@ -12047,6 +12111,7 @@ components:
     TcpProxyConnectedMessage:
       type: object
       description: WebSocket text message sent when TCP proxy connection is established
+      required: [type, channelId]
       properties:
         type:
           type: string
@@ -12054,31 +12119,10 @@ components:
         channelId:
           type: integer
           description: Channel ID for the established TCP proxy connection
-    TcpProxyErrorMessage:
-      type: object
-      description: WebSocket text message sent when an error occurs
-      properties:
-        type:
-          type: string
-          enum: [error]
-        code:
-          type: integer
-          description: |
-            Error code (RCC - Request Completion Code):
-            - 0: Success
-            - 1: Component locked
-            - 2: Access denied
-            - 3: Invalid request
-            - 4: Request timeout
-            - 5: Access denied
-            - 7: Communication failure
-            - 8: Invalid object ID
-        message:
-          type: string
-          description: Human-readable error message
     TcpProxyCloseMessage:
       type: object
       description: WebSocket text message sent when the TCP proxy connection is closed
+      required: [type, reason]
       properties:
         type:
           type: string
