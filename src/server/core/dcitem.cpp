@@ -2412,7 +2412,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    msg->setField(baseId++, m_flags);
    msg->setField(baseId++, m_description);
    msg->setField(baseId++, static_cast<uint16_t>(m_source));
-   if (m_cacheSize > 0)
+   if ((m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp().asMilliseconds() > 1))
    {
       msg->setField(baseId++, static_cast<uint16_t>(getTransformedDataType()));
       msg->setField(baseId++, m_ppValueCache[0]->getString());
@@ -2495,7 +2495,7 @@ json_t *DCItem::lastValueToJSON()
    json_object_set_new(data, "description", json_string_t(m_description));
    json_object_set_new(data, "sourceType", json_integer(m_source));
 
-   if (m_cacheSize > 0)
+   if ((m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp().asMilliseconds() > 1))
    {
       json_object_set_new(data, "dataType", json_integer(getTransformedDataType()));
       json_object_set_new(data, "value", json_string_t(m_ppValueCache[0]->getString()));
