@@ -1,0 +1,15 @@
+# Redocly configuration for NetXMS OpenAPI specifications.
+# Used by .github/workflows/lint-openapi.yaml and by local "npx @redocly/cli lint" runs.
+#
+# Per-location suppressions live in .redocly.lint-ignore.yaml - each entry there documents
+# why the reported problem cannot or should not be fixed. Prefer fixing the specification
+# over adding a new entry.
+
+apis:
+  nxapisrv:
+    root: src/client/nxapisrv/openapi.yaml
+  webapi:
+    root: src/server/webapi/openapi.yaml
+
+extends:
+  - recommended
