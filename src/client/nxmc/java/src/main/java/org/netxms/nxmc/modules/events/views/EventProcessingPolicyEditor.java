@@ -543,7 +543,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
                   actions.put(a.getId(), a);
             }
             runInUIThread(() -> {
-               System.out.println("Policy version: " + policy.getVersion());
                initPolicyEditor();
                modified = false;
                actionSave.setEnabled(false);
