@@ -718,6 +718,10 @@ paths:
                                 type: string
                               type:
                                 type: string
+                                description: JSON schema type of the parameter
+                                enum: [string, integer, number, boolean, array, object]
+                              description:
+                                type: string
                   disabledExtras:
                     type: array
                     items:

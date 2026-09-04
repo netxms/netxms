@@ -682,6 +682,32 @@ static char *StripThinkingTags(const char *input)
 }
 
 /**
+ * Build JSON schema for function parameters (used for both LLM function declarations and MCP tool descriptors)
+ */
+static json_t *BuildParameterSchema(const std::vector<AssistantFunctionParameter>& parameters)
+{
+   json_t *schema = json_object();
+   json_object_set_new(schema, "type", json_string("object"));
+   json_t *properties = json_object();
+   for(const AssistantFunctionParameter& p : parameters)
+   {
+      json_t *property = json_object();
+      json_object_set_new(property, "type", json_string(p.type.c_str()));
+      json_object_set_new(property, "description", json_string(p.description.c_str()));
+      if (p.type == "array")
+      {
+         json_t *items = json_object();
+         json_object_set_new(items, "type", json_string(p.itemType.c_str()));
+         json_object_set_new(property, "items", items);
+      }
+      json_object_set_new(properties, p.name.c_str(), property);
+   }
+   json_object_set_new(schema, "properties", properties);
+   json_object_set_new(schema, "required", json_array());
+   return schema;
+}
+
+/**
  * Rebuild function declarations JSON object. Functions mutex must be locked before calling this function.
  */
 json_t *RebuildFunctionDeclarations(const std::unordered_map<std::string, shared_ptr<AssistantFunction>>& functions)
@@ -695,19 +721,7 @@ json_t *RebuildFunctionDeclarations(const std::unordered_map<std::string, shared
       json_t *functionObject = json_object();
       json_object_set_new(functionObject, "name", json_string(function.name.c_str()));
       json_object_set_new(functionObject, "description", json_string(function.description.c_str()));
-      json_t *parametersObject = json_object();
-      json_object_set_new(parametersObject, "type", json_string("object"));
-      json_t *propObject = json_object();
-      for(std::pair<std::string, std::string> p : function.parameters)
-      {
-         json_t *propData = json_object();
-         json_object_set_new(propData, "description", json_string(p.second.c_str()));
-         json_object_set_new(propData, "type", json_string("string"));
-         json_object_set_new(propObject, p.first.c_str(), propData);
-      }
-      json_object_set_new(parametersObject, "properties", propObject);
-      json_object_set_new(parametersObject, "required", json_array());
-      json_object_set_new(functionObject, "parameters", parametersObject);
+      json_object_set_new(functionObject, "parameters", BuildParameterSchema(function.parameters));
       json_object_set_new(tool, "function", functionObject);
       json_array_append_new(functionDeclarations, tool);
    }
@@ -717,7 +731,7 @@ json_t *RebuildFunctionDeclarations(const std::unordered_map<std::string, shared
 /**
  * Register global AI assistant function. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler)
+void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<AssistantFunctionParameter>& parameters, AssistantFunctionHandler handler)
 {
    if (s_globalFunctions.find(name) != s_globalFunctions.end())
    {
@@ -803,7 +817,7 @@ void RegisterAIFunctionScriptHandler(const NXSL_LibraryScript *script, bool runt
    char *d = UTF8StringFromWideString(script->getMetadataEntry(L"description"));
    std::string description = (d != nullptr) ? d : "No description provided.";
    MemFree(d);
-   std::vector<std::pair<std::string, std::string>> args;
+   std::vector<AssistantFunctionParameter> args;
    args.emplace_back("args", "optional argument list as a single string (description should define expected arguments)");
    if (objectContext)
    {
@@ -904,19 +918,7 @@ static json_t *BuildMCPToolDescriptor(const AssistantFunction& function)
    json_t *tool = json_object();
    json_object_set_new(tool, "name", json_string(function.name.c_str()));
    json_object_set_new(tool, "description", json_string(function.description.c_str()));
-   json_t *schema = json_object();
-   json_object_set_new(schema, "type", json_string("object"));
-   json_t *properties = json_object();
-   for(const auto& p : function.parameters)
-   {
-      json_t *property = json_object();
-      json_object_set_new(property, "type", json_string("string"));
-      json_object_set_new(property, "description", json_string(p.second.c_str()));
-      json_object_set_new(properties, p.first.c_str(), property);
-   }
-   json_object_set_new(schema, "properties", properties);
-   json_object_set_new(schema, "required", json_array());
-   json_object_set_new(tool, "inputSchema", schema);
+   json_object_set_new(tool, "inputSchema", BuildParameterSchema(function.parameters));
    return tool;
 }
 
@@ -1004,10 +1006,11 @@ void FillAIAssistantFunctionListMessage(NXCPMessage *msg)
       msg->setField(fieldId++, static_cast<uint16_t>(disabledFunctions.count(function.name) ? 1 : 0)); // +2 disabled flag
       fieldId += 6;                                                         // +3..+8 reserved
       msg->setField(fieldId++, static_cast<uint32_t>(function.parameters.size())); // +9
-      for(const auto& p : function.parameters)
+      for(const AssistantFunctionParameter& p : function.parameters)
       {
-         msg->setFieldFromUtf8String(fieldId++, p.first.c_str());
-         msg->setFieldFromUtf8String(fieldId++, p.second.c_str());
+         msg->setFieldFromUtf8String(fieldId++, p.name.c_str());
+         msg->setFieldFromUtf8String(fieldId++, p.description.c_str());
+         msg->setFieldFromUtf8String(fieldId++, p.type.c_str());
       }
       baseFieldId += 0x100;
    }
@@ -1078,11 +1081,12 @@ json_t NXCORE_EXPORTABLE *GetAIFunctionsAsJson()
       json_object_set_new(entry, "disabled", json_boolean(disabledFunctions.count(function.name) > 0));
 
       json_t *params = json_array();
-      for (const auto& p : function.parameters)
+      for (const AssistantFunctionParameter& p : function.parameters)
       {
          json_t *param = json_object();
-         json_object_set_new(param, "name", json_string(p.first.c_str()));
-         json_object_set_new(param, "type", json_string(p.second.c_str()));
+         json_object_set_new(param, "name", json_string(p.name.c_str()));
+         json_object_set_new(param, "type", json_string(p.type.c_str()));
+         json_object_set_new(param, "description", json_string(p.description.c_str()));
          json_array_append_new(params, param);
       }
       json_object_set_new(entry, "parameters", params);
@@ -1412,7 +1416,7 @@ void Chat::initializeFunctions()
       "load-skill",
       "Load AI assistant skill into the current chat context. The skill's prompt and functions become permanently available in this conversation. "
       "Use this when you need ongoing access to the skill's capabilities throughout the conversation, or when the skill does not support delegation.",
-      std::vector<std::pair<std::string, std::string>>{
+      std::vector<AssistantFunctionParameter>{
          {"name", "Name of the skill to load"}
       },
       [this] (json_t *arguments, uint32_t userId) -> std::string
@@ -1427,7 +1431,7 @@ void Chat::initializeFunctions()
       "Execute a skill in a separate context. The skill handles the task autonomously and returns a concise result. "
       "Use this instead of load-skill when the task is self-contained and does not require ongoing skill knowledge in this conversation. "
       "This preserves context window space by not loading the skill's prompt and functions into the current chat.",
-      std::vector<std::pair<std::string, std::string>>{
+      std::vector<AssistantFunctionParameter>{
          {"name", "Name of the skill to delegate to"},
          {"task", "Description of the task for the skill to perform, including all necessary context"}
       },
@@ -1445,7 +1449,7 @@ void Chat::initializeFunctions()
       "Get information about the current session type. Returns whether this is an interactive session (user chat) or background session (autonomous task). "
       "Use this to determine the appropriate approval workflow: interactive sessions should use ask-user-confirmation, "
       "background sessions should use create-approval-request.",
-      std::vector<std::pair<std::string, std::string>>{},
+      std::vector<AssistantFunctionParameter>{},
       [this] (json_t *arguments, uint32_t userId) -> std::string
       {
          json_t *result = json_object();
@@ -1459,7 +1463,7 @@ void Chat::initializeFunctions()
    m_functions.emplace("ask-user-confirmation", make_shared<AssistantFunction>(
       "ask-user-confirmation",
       "Ask user a yes/no confirmation question. Blocks until user responds or timeout (5 minutes). Use for approval workflows or binary decisions.",
-      std::vector<std::pair<std::string, std::string>>{
+      std::vector<AssistantFunctionParameter>{
          {"intent", "Explanation of why this action is needed and what it accomplishes. Do not put actual command or action here, use 'action' parameter for that."},
          {"action", "Optional: The specific action to be approved (command, script code, configuration change, etc.). Do not add any additional text, just the action itself."},
          {"confirmation_type", "Type of confirmation: 'approve_reject', 'yes_no', or 'confirm_cancel'. Defaults to 'approve_reject'"}
@@ -1488,10 +1492,10 @@ void Chat::initializeFunctions()
    m_functions.emplace("ask-user-choice", make_shared<AssistantFunction>(
       "ask-user-choice",
       "Ask user to choose from multiple options. Blocks until user responds or timeout (5 minutes). Use when user needs to select from a list of choices.",
-      std::vector<std::pair<std::string, std::string>>{
+      std::vector<AssistantFunctionParameter>{
          {"question", "The question to display to the user"},
          {"context", "Optional additional context for the question"},
-         {"options", "Array of option strings for the user to choose from"}
+         {"options", "Array of option strings for the user to choose from", "array", "string"}
       },
       [this] (json_t *arguments, uint32_t userId) -> std::string
       {
@@ -2963,7 +2967,7 @@ bool InitAIAssistant()
       {
           { "description", "Task description" },
           { "prompt", "Initial prompt for the task" },
-          { "delay", "Optional delay in seconds before first execution" }
+          { "delay", "Optional delay in seconds before first execution", "integer" }
       },
       [] (json_t *arguments, uint32_t userId) -> std::string
       {
@@ -2989,7 +2993,7 @@ bool InitAIAssistant()
       "delete-ai-task",
       "Delete registered AI task.",
       {
-         { "task_id", "ID of the task to delete" }
+         { "task_id", "ID of the task to delete", "integer" }
       },
       F_DeleteAITask);
 
@@ -3027,8 +3031,8 @@ bool InitAIAssistant()
          { "title", "Short title for the message (max 255 chars)" },
          { "text", "Full message content" },
          { "type", "Message type: 'informational' or 'alert'" },
-         { "relatedObjectId", "Optional: ID of related NetXMS object" },
-         { "expirationMinutes", "Optional: minutes until message expires (default 7 days)" }
+         { "relatedObjectId", "Optional: ID of related NetXMS object", "integer" },
+         { "expirationMinutes", "Optional: minutes until message expires (default 7 days)", "integer" }
       }, F_CreateAIMessage);
 
    RegisterAIAssistantFunction(
@@ -3040,8 +3044,8 @@ bool InitAIAssistant()
          { "title", "Short title describing what needs approval (max 255 chars)" },
          { "text", "Full description of what will happen on approval" },
          { "taskPrompt", "The prompt for the AI task to execute when approved" },
-         { "relatedObjectId", "Optional: ID of related NetXMS object" },
-         { "expirationMinutes", "Optional: minutes until request expires (default 24 hours)" }
+         { "relatedObjectId", "Optional: ID of related NetXMS object", "integer" },
+         { "expirationMinutes", "Optional: minutes until request expires (default 24 hours)", "integer" }
       }, F_CreateApprovalRequest);
 
    RegisterAIAssistantFunction(
@@ -3060,7 +3064,7 @@ bool InitAIAssistant()
       {
          { "node", "Node ID or name (same node used in get-node-ai-tools)" },
          { "tool_name", "Name of the tool to execute (from get-node-ai-tools response)" },
-         { "parameters", "Tool parameters as JSON object matching the tool's parameter schema" }
+         { "parameters", "Tool parameters as JSON object matching the tool's parameter schema", "object" }
       },
       F_ExecuteAgentTool);
 
