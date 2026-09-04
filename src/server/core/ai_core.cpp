@@ -1220,7 +1220,7 @@ void Chat::bindToIncident(uint32_t incidentId)
       return;
    }
 
-   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: cannot bind to incident [%u] - incident not found"), m_id, incidentId);
@@ -2271,7 +2271,7 @@ shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32
    // Validate incident if specified
    if (incidentId != 0)
    {
-      shared_ptr<Incident> incident = FindIncidentById(incidentId);
+      shared_ptr<Incident> incident = LoadIncidentById(incidentId);
       if (incident == nullptr)
       {
          *rcc = RCC_INVALID_INCIDENT_ID;

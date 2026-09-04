@@ -204,11 +204,8 @@ int H_Incidents(Context *context)
       return 400;
    }
 
-   int32_t limit = context->getQueryParameterAsInt32("limit", 1000);
-   if (limit <= 0)
-      limit = 1000;
-   else if (limit > 10000)
-      limit = 10000;
+   // Default and cap for limit are applied by GetIncidentSummariesAsJson
+   int32_t limit = context->getQueryParameterAsInt32("limit", 0);
 
    json_t *output = GetIncidentSummariesAsJson(context->getUserId(), objectId, &states, from, to, limit);
    context->setResponseData(output);

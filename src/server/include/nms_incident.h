@@ -161,11 +161,13 @@ uint32_t NXCORE_EXPORTABLE UnlinkAlarmFromIncident(uint32_t incidentId, uint32_t
 uint32_t NXCORE_EXPORTABLE AddIncidentComment(uint32_t incidentId, const TCHAR *text, uint32_t userId, uint32_t *commentId, bool aiGenerated = false);
 uint32_t NXCORE_EXPORTABLE GetIncidentActivity(uint32_t incidentId, NXCPMessage *msg);
 
-void SendIncidentsToClient(uint32_t objectId, uint32_t requestId, ClientSession *session);
+void SendIncidentsToClient(uint32_t objectId, const IntegerArray<int32_t>& states, time_t from, time_t to, int limit,
+   uint32_t requestId, ClientSession *session);
 
 /**
  * JSON representations for REST API. All of them read from the database, so closed incidents
- * (which are not kept in memory) are visible as well.
+ * (which are not kept in memory) are visible as well. Summary query limit: 0 = default (1000),
+ * capped at 10000.
  */
 json_t NXCORE_EXPORTABLE *GetIncidentSummariesAsJson(uint32_t userId, uint32_t objectId,
    const IntegerArray<int32_t> *states, time_t from, time_t to, int limit);

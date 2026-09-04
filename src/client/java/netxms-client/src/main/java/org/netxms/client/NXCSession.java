@@ -5334,17 +5334,49 @@ public class NXCSession
    }
 
    /**
-    * Get list of incidents for an object. To get all incidents, use objectId = 0.
+    * Get list of all incidents (in any state, including closed) for an object. To get incidents for all objects, use objectId = 0.
+    * Server applies default result limit, see {@link #getIncidents(long, Collection, Date, Date, int)}.
     *
-    * @param objectId Object ID to filter by, or 0 for all incidents
+    * @param objectId Object ID to filter by, or 0 for all objects
     * @return List of incidents
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<IncidentSummary> getIncidents(long objectId) throws IOException, NXCException
    {
+      return getIncidents(objectId, null, null, null, 0);
+   }
+
+   /**
+    * Get list of incidents matching given filter. Closed incidents are read from the server database, so requests that
+    * include closed state or use time range or limit are served from the database and return newest incidents first.
+    *
+    * @param objectId Object ID to filter by, or 0 for all objects
+    * @param states Incident states to include, or null for all states
+    * @param from earliest incident creation time, or null for unbounded
+    * @param to latest incident creation time, or null for unbounded
+    * @param limit maximum number of incidents to return, or 0 for server default (1000; server caps at 10000)
+    * @return List of incidents
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<IncidentSummary> getIncidents(long objectId, Collection<IncidentState> states, Date from, Date to, int limit) throws IOException, NXCException
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_INCIDENTS);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      if ((states != null) && !states.isEmpty())
+      {
+         long[] stateValues = new long[states.size()];
+         int i = 0;
+         for(IncidentState s : states)
+            stateValues[i++] = s.getValue();
+         msg.setField(NXCPCodes.VID_INCIDENT_STATE, stateValues);
+      }
+      if (from != null)
+         msg.setFieldInt64(NXCPCodes.VID_TIME_FROM, from.getTime() / 1000);
+      if (to != null)
+         msg.setFieldInt64(NXCPCodes.VID_TIME_TO, to.getTime() / 1000);
+      msg.setFieldInt32(NXCPCodes.VID_MAX_RECORDS, limit);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 

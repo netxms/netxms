@@ -7803,12 +7803,39 @@ void ClientSession::unlinkHelpdeskIssue(const NXCPMessage& request)
 }
 
 /**
- * Get list of incidents
+ * Get list of incident summaries
+ *
+ * Expected input parameters (all optional):
+ * VID_OBJECT_ID        Source object ID (0 = any object)
+ * VID_INCIDENT_STATE   Int32 array of incident states to include (absent or empty = all states)
+ * VID_TIME_FROM        Earliest creation time (0 = unbounded)
+ * VID_TIME_TO          Latest creation time (0 = unbounded)
+ * VID_MAX_RECORDS      Maximum number of summaries to return, newest first (0 = server default)
+ *
+ * Request is served from memory when only active states are requested without time range or limit,
+ * otherwise from the database (closed incidents are not kept in memory).
  */
 void ClientSession::getIncidents(const NXCPMessage& request)
 {
-   uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
-   SendIncidentsToClient(objectId, request.getId(), this);
+   IntegerArray<uint32_t> requestedStates;
+   request.getFieldAsInt32Array(VID_INCIDENT_STATE, &requestedStates);
+
+   IntegerArray<int32_t> states(requestedStates.size());
+   for (int i = 0; i < requestedStates.size(); i++)
+   {
+      uint32_t state = requestedStates.get(i);
+      if (state > INCIDENT_STATE_CLOSED)
+      {
+         NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+         response.setField(VID_RCC, RCC_INVALID_INCIDENT_STATE);
+         sendMessage(response);
+         return;
+      }
+      states.add(static_cast<int32_t>(state));
+   }
+
+   SendIncidentsToClient(request.getFieldAsUInt32(VID_OBJECT_ID), states, request.getFieldAsTime(VID_TIME_FROM),
+      request.getFieldAsTime(VID_TIME_TO), request.getFieldAsInt32(VID_MAX_RECORDS), request.getId(), this);
 }
 
 /**
@@ -20336,7 +20363,7 @@ void ClientSession::createAiAssistantChat(const NXCPMessage& request)
    // If incident specified, verify access rights
    if (incidentId != 0)
    {
-      shared_ptr<Incident> incident = FindIncidentById(incidentId);
+      shared_ptr<Incident> incident = LoadIncidentById(incidentId);
       if (incident != nullptr)
       {
          shared_ptr<NetObj> sourceObject = FindObjectById(incident->getSourceObjectId());

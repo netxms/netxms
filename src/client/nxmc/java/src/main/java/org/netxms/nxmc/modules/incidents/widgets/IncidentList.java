@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.incidents.widgets;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +90,9 @@ public class IncidentList extends Composite
    private Map<Long, IncidentSummary> incidents = new HashMap<>();
 
    private Action actionCreate;
-   private Action actionHideClosed;
+   private Action actionShowAll;
+   private Action actionShowActive;
+   private Action actionShowClosed;
    private Action actionBlock;
    private Action actionInProgress;
    private Action actionResolve;
@@ -133,8 +136,7 @@ public class IncidentList extends Composite
       viewer.setComparator(new IncidentComparator());
 
       filter = new IncidentListFilter();
-      filter.setStateFilter(PreferenceStore.getInstance().getAsBoolean(configPrefix + ".hideClosed", true) ?
-            IncidentListFilter.STATE_FILTER_ACTIVE : IncidentListFilter.STATE_FILTER_ALL);
+      filter.setStateFilter(PreferenceStore.getInstance().getAsInteger(configPrefix + ".stateFilter", IncidentListFilter.STATE_FILTER_ACTIVE));
       viewer.addFilter(filter);
 
       createActions();
@@ -250,17 +252,68 @@ public class IncidentList extends Composite
          }
       };
 
-      actionHideClosed = new Action(i18n.tr("&Hide closed incidents"), Action.AS_CHECK_BOX) {
+      actionShowAll = new Action(i18n.tr("&All incidents"), Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            boolean hideClosed = actionHideClosed.isChecked();
-            filter.setStateFilter(hideClosed ? IncidentListFilter.STATE_FILTER_ACTIVE : IncidentListFilter.STATE_FILTER_ALL);
-            viewer.refresh();
-            PreferenceStore.getInstance().set(configPrefix + ".hideClosed", hideClosed);
+            if (isChecked())
+               setStateFilter(IncidentListFilter.STATE_FILTER_ALL);
          }
       };
-      actionHideClosed.setChecked(filter.getStateFilter() == IncidentListFilter.STATE_FILTER_ACTIVE);
+      actionShowAll.setChecked(filter.getStateFilter() == IncidentListFilter.STATE_FILTER_ALL);
+
+      actionShowActive = new Action(i18n.tr("&Open incidents only"), Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            if (isChecked())
+               setStateFilter(IncidentListFilter.STATE_FILTER_ACTIVE);
+         }
+      };
+      actionShowActive.setChecked(filter.getStateFilter() == IncidentListFilter.STATE_FILTER_ACTIVE);
+
+      actionShowClosed = new Action(i18n.tr("&Closed incidents only"), Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            if (isChecked())
+               setStateFilter(IncidentListFilter.STATE_FILTER_CLOSED);
+         }
+      };
+      actionShowClosed.setChecked(filter.getStateFilter() == IncidentListFilter.STATE_FILTER_CLOSED);
+   }
+
+   /**
+    * Set state filter, save it as preference, and reload incidents from server
+    *
+    * @param stateFilter state filter bit mask
+    */
+   private void setStateFilter(int stateFilter)
+   {
+      if (filter.getStateFilter() == stateFilter)
+         return;
+
+      filter.setStateFilter(stateFilter);
+      actionShowAll.setChecked(stateFilter == IncidentListFilter.STATE_FILTER_ALL);
+      actionShowActive.setChecked(stateFilter == IncidentListFilter.STATE_FILTER_ACTIVE);
+      actionShowClosed.setChecked(stateFilter == IncidentListFilter.STATE_FILTER_CLOSED);
+      PreferenceStore.getInstance().set(configPrefix + ".stateFilter", stateFilter);
+      refresh();
+   }
+
+   /**
+    * Create "Show" submenu with state filter selection. New menu manager is created on each call
+    * because one menu manager cannot be attached to two parent menus.
+    *
+    * @return state filter submenu
+    */
+   public MenuManager createStateFilterMenu()
+   {
+      MenuManager menu = new MenuManager(i18n.tr("&Show"));
+      menu.add(actionShowAll);
+      menu.add(actionShowActive);
+      menu.add(actionShowClosed);
+      return menu;
    }
 
    /**
@@ -292,7 +345,7 @@ public class IncidentList extends Composite
       manager.add(actionAssign);
       manager.add(actionAddComment);
       manager.add(new Separator());
-      manager.add(actionHideClosed);
+      manager.add(createStateFilterMenu());
    }
 
    /**
@@ -326,11 +379,16 @@ public class IncidentList extends Composite
     */
    public void refresh()
    {
+      final List<IncidentState> states = new ArrayList<>();
+      for(IncidentState s : IncidentState.values())
+         if ((filter.getStateFilter() & (1 << s.getValue())) != 0)
+            states.add(s);
+
       new Job(i18n.tr("Loading incidents"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<IncidentSummary> incidentList = session.getIncidents(0);
+            final List<IncidentSummary> incidentList = session.getIncidents(0, states, null, null, 0);
             runInUIThread(() -> {
                incidents.clear();
                for(IncidentSummary i : incidentList)
@@ -604,16 +662,6 @@ public class IncidentList extends Composite
    public Action getActionCreate()
    {
       return actionCreate;
-   }
-
-   /**
-    * Get action for hiding closed incidents
-    *
-    * @return hide closed incidents action
-    */
-   public Action getActionHideClosed()
-   {
-      return actionHideClosed;
    }
 
    /**

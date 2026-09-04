@@ -455,6 +455,15 @@ uint32_t Incident::changeState(int newState, uint32_t userId, const wchar_t *com
 
    unlock();
 
+   // Closed state is terminal, and only active incidents are kept in memory (see InitIncidentManager),
+   // so drop closed incident from the list. Caller holds shared pointer, so object stays valid.
+   if (newState == INCIDENT_STATE_CLOSED)
+   {
+      s_incidents.lock();
+      s_incidents.remove(m_id);
+      s_incidents.unlock();
+   }
+
    NotifyClientsOnIncidentUpdate(CMD_INCIDENT_UPDATE, this);
    return RCC_SUCCESS;
 }
@@ -1130,38 +1139,92 @@ uint32_t NXCORE_EXPORTABLE GetIncidentActivity(uint32_t incidentId, NXCPMessage 
 }
 
 /**
- * Send incidents to client
+ * Default and maximum number of incident summaries returned by database-backed queries
  */
-void SendIncidentsToClient(uint32_t objectId, uint32_t requestId, ClientSession *session)
+#define INCIDENT_QUERY_DEFAULT_LIMIT   1000
+#define INCIDENT_QUERY_MAX_LIMIT       10000
+
+/**
+ * Enumerate incident summaries from database, newest first. Reads from database, so closed
+ * incidents (which are not kept in memory) are included. Only incidents on source objects
+ * readable by given user are passed to callback. Result columns are:
+ *    0 - id, 1 - creation_time, 2 - last_change_time, 3 - state, 4 - assigned_user_id,
+ *    5 - title, 6 - source_object_id, 7 - number of linked alarms
+ *
+ * Filters: objectId (0 = any object), states (nullptr or empty = any state), from/to
+ * on creation time (0 = unbounded), limit (0 = default; capped at maximum).
+ *
+ * Row limit is applied after access check rather than as SQL LIMIT, because inaccessible
+ * rows would otherwise consume the limit and the caller would get fewer summaries
+ * than requested (same approach as connection history endpoint). Result set is read
+ * unbuffered so that fetching stops once the limit is reached - unlike alarms, closed
+ * incidents accumulate indefinitely and must not be materialized in full.
+ */
+static void EnumerateIncidentSummaries(uint32_t userId, uint32_t objectId, const IntegerArray<int32_t> *states,
+   time_t from, time_t to, int limit, std::function<void(DB_UNBUFFERED_RESULT, const NetObj&)> callback)
+{
+   if (limit <= 0)
+      limit = INCIDENT_QUERY_DEFAULT_LIMIT;
+   else if (limit > INCIDENT_QUERY_MAX_LIMIT)
+      limit = INCIDENT_QUERY_MAX_LIMIT;
+
+   StringBuffer query(
+      L"SELECT i.id,i.creation_time,i.last_change_time,i.state,i.assigned_user_id,i.title,i.source_object_id,"
+      L"(SELECT COUNT(*) FROM incident_alarms a WHERE a.incident_id=i.id) FROM incidents i WHERE 1=1");
+
+   if (objectId != 0)
+      query.appendFormattedString(L" AND i.source_object_id=%u", objectId);
+
+   if ((states != nullptr) && !states->isEmpty())
+   {
+      query.append(L" AND i.state IN (");
+      for (int i = 0; i < states->size(); i++)
+      {
+         if (i > 0)
+            query.append(L',');
+         query.appendFormattedString(L"%d", states->get(i));
+      }
+      query.append(L')');
+   }
+
+   if (from != 0)
+      query.appendFormattedString(L" AND i.creation_time>=" INT64_FMT, static_cast<int64_t>(from));
+   if (to != 0)
+      query.appendFormattedString(L" AND i.creation_time<=" INT64_FMT, static_cast<int64_t>(to));
+
+   query.append(L" ORDER BY i.id DESC");
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, query.cstr());
+   if (hResult != nullptr)
+   {
+      int count = 0;
+      while ((count < limit) && DBFetch(hResult))
+      {
+         shared_ptr<NetObj> object = FindObjectById(DBGetFieldUInt32(hResult, 6));
+         if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            continue;
+
+         callback(hResult, *object);
+         count++;
+      }
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Send incident summaries to client. Filter semantics match EnumerateIncidentSummaries.
+ * Request is served from in-memory list when it asks only for active states without time
+ * range or limit; any other combination is served from the database.
+ */
+void SendIncidentsToClient(uint32_t objectId, const IntegerArray<int32_t>& states, time_t from, time_t to, int limit,
+   uint32_t requestId, ClientSession *session)
 {
    NXCPMessage msg(CMD_REQUEST_COMPLETED, requestId);
 
-   if (objectId == 0)
+   if (objectId != 0)
    {
-      // Send all active incidents
-      uint32_t count = 0;
-      uint32_t baseId = VID_INCIDENT_LIST_BASE;
-
-      s_incidents.lock();
-      s_incidents.forEach(
-         [&msg, &count, &baseId, session] (Incident *incident) -> EnumerationCallbackResult
-         {
-            shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
-            if ((object != nullptr) && object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
-            {
-               incident->fillSummaryMessage(&msg, baseId);
-               count++;
-               baseId += 10;
-            }
-            return _CONTINUE;
-         });
-      s_incidents.unlock();
-
-      msg.setField(VID_NUM_ELEMENTS, count);
-   }
-   else
-   {
-      // Send incidents for specific object
       shared_ptr<NetObj> object = FindObjectById(objectId);
       if ((object == nullptr) || !object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
       {
@@ -1169,27 +1232,56 @@ void SendIncidentsToClient(uint32_t objectId, uint32_t requestId, ClientSession 
          session->sendMessage(msg);
          return;
       }
+   }
 
-      uint32_t count = 0;
-      uint32_t baseId = VID_INCIDENT_LIST_BASE;
+   uint32_t count = 0;
+   uint32_t baseId = VID_INCIDENT_LIST_BASE;
 
+   bool activeOnly = !states.isEmpty() && !states.contains(INCIDENT_STATE_CLOSED);
+   if (activeOnly && (from == 0) && (to == 0) && (limit == 0))
+   {
+      uint32_t userId = session->getUserId();
       s_incidents.lock();
       s_incidents.forEach(
-         [&msg, &count, &baseId, objectId] (Incident *incident) -> EnumerationCallbackResult
+         [&msg, &count, &baseId, &states, objectId, userId] (Incident *incident) -> EnumerationCallbackResult
          {
-            if (incident->getSourceObjectId() == objectId)
+            if ((objectId != 0) && (incident->getSourceObjectId() != objectId))
+               return _CONTINUE;
+            if (!states.contains(incident->getState()))
+               return _CONTINUE;
+            if (objectId == 0)
             {
-               incident->fillSummaryMessage(&msg, baseId);
-               count++;
-               baseId += 10;
+               shared_ptr<NetObj> object = FindObjectById(incident->getSourceObjectId());
+               if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+                  return _CONTINUE;
             }
+            incident->fillSummaryMessage(&msg, baseId);
+            count++;
+            baseId += 10;
             return _CONTINUE;
          });
       s_incidents.unlock();
-
-      msg.setField(VID_NUM_ELEMENTS, count);
+   }
+   else
+   {
+      EnumerateIncidentSummaries(session->getUserId(), objectId, &states, from, to, limit,
+         [&msg, &count, &baseId] (DB_UNBUFFERED_RESULT hResult, const NetObj& object)
+         {
+            wchar_t title[256];
+            msg.setField(baseId, DBGetFieldUInt32(hResult, 0));
+            msg.setFieldFromTime(baseId + 1, DBGetFieldTime(hResult, 1));
+            msg.setFieldFromTime(baseId + 2, DBGetFieldTime(hResult, 2));
+            msg.setField(baseId + 3, static_cast<uint16_t>(DBGetFieldInt32(hResult, 3)));
+            msg.setField(baseId + 4, DBGetFieldUInt32(hResult, 4));
+            msg.setField(baseId + 5, DBGetField(hResult, 5, title, 256));
+            msg.setField(baseId + 6, object.getId());
+            msg.setField(baseId + 7, DBGetFieldUInt32(hResult, 7));
+            count++;
+            baseId += 10;
+         });
    }
 
+   msg.setField(VID_NUM_ELEMENTS, count);
    msg.setField(VID_RCC, RCC_SUCCESS);
    session->sendMessage(msg);
 }
@@ -1268,61 +1360,16 @@ json_t NXCORE_EXPORTABLE *GetIncidentActivityAsJson(uint32_t incidentId)
 }
 
 /**
- * Get incident summaries as JSON array, newest first. Reads from database, so closed
- * incidents (which are not kept in memory) are included. Only incidents on source objects
- * readable by given user are returned.
- *
- * Row limit is applied after access check rather than as SQL LIMIT, because inaccessible
- * rows would otherwise consume the limit and the endpoint would return fewer summaries
- * than requested (same approach as connection history endpoint). Result set is read
- * unbuffered so that fetching stops once the limit is reached - unlike alarms, closed
- * incidents accumulate indefinitely and must not be materialized in full.
+ * Get incident summaries as JSON array, newest first. Filter semantics match
+ * EnumerateIncidentSummaries.
  */
 json_t NXCORE_EXPORTABLE *GetIncidentSummariesAsJson(uint32_t userId, uint32_t objectId,
    const IntegerArray<int32_t> *states, time_t from, time_t to, int limit)
 {
-   if (limit <= 0)
-      limit = INT_MAX;
-
-   StringBuffer query(
-      L"SELECT i.id,i.creation_time,i.last_change_time,i.state,i.assigned_user_id,i.title,i.source_object_id,"
-      L"(SELECT COUNT(*) FROM incident_alarms a WHERE a.incident_id=i.id) FROM incidents i WHERE 1=1");
-
-   if (objectId != 0)
-      query.appendFormattedString(L" AND i.source_object_id=%u", objectId);
-
-   if ((states != nullptr) && !states->isEmpty())
-   {
-      query.append(L" AND i.state IN (");
-      for (int i = 0; i < states->size(); i++)
-      {
-         if (i > 0)
-            query.append(L',');
-         query.appendFormattedString(L"%d", states->get(i));
-      }
-      query.append(L')');
-   }
-
-   if (from != 0)
-      query.appendFormattedString(L" AND i.creation_time>=" INT64_FMT, static_cast<int64_t>(from));
-   if (to != 0)
-      query.appendFormattedString(L" AND i.creation_time<=" INT64_FMT, static_cast<int64_t>(to));
-
-   query.append(L" ORDER BY i.id DESC");
-
    json_t *output = json_array();
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, query.cstr());
-   if (hResult != nullptr)
-   {
-      while ((json_array_size(output) < static_cast<size_t>(limit)) && DBFetch(hResult))
+   EnumerateIncidentSummaries(userId, objectId, states, from, to, limit,
+      [output] (DB_UNBUFFERED_RESULT hResult, const NetObj& object)
       {
-         uint32_t sourceObjectId = DBGetFieldUInt32(hResult, 6);
-         shared_ptr<NetObj> object = FindObjectById(sourceObjectId);
-         if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
-            continue;
-
          uint32_t assignedUserId = DBGetFieldUInt32(hResult, 4);
          int state = DBGetFieldInt32(hResult, 3);
          wchar_t title[256], userName[MAX_USER_NAME];
@@ -1332,19 +1379,15 @@ json_t NXCORE_EXPORTABLE *GetIncidentSummariesAsJson(uint32_t userId, uint32_t o
          json_object_set_new(summary, "state", json_integer(state));
          json_object_set_new(summary, "stateName", json_string_t(GetIncidentStateName(state)));
          json_object_set_new(summary, "title", json_string_t(DBGetField(hResult, 5, title, 256)));
-         json_object_set_new(summary, "sourceObjectId", json_integer(sourceObjectId));
-         json_object_set_new(summary, "sourceObjectName", json_string_t(object->getName()));
+         json_object_set_new(summary, "sourceObjectId", json_integer(object.getId()));
+         json_object_set_new(summary, "sourceObjectName", json_string_t(object.getName()));
          json_object_set_new(summary, "assignedUserId", json_integer(assignedUserId));
          json_object_set_new(summary, "assignedUserName", json_string_t(ResolveUserId(assignedUserId, userName, true)));
          json_object_set_new(summary, "alarmCount", json_integer(DBGetFieldInt32(hResult, 7)));
          json_object_set_new(summary, "creationTime", json_time_string(DBGetFieldTime(hResult, 1)));
          json_object_set_new(summary, "lastChangeTime", json_time_string(DBGetFieldTime(hResult, 2)));
          json_array_append_new(output, summary);
-      }
-      DBFreeResult(hResult);
-   }
-
-   DBConnectionPoolReleaseConnection(hdb);
+      });
    return output;
 }
 

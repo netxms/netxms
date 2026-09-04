@@ -35,7 +35,7 @@ std::string F_GetIncidentDetails(json_t *arguments, uint32_t userId)
    if (incidentId == 0)
       return std::string("Incident ID must be provided");
 
-   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident == nullptr)
       return std::string("Incident not found");
 
@@ -128,7 +128,7 @@ std::string F_GetIncidentRelatedEvents(json_t *arguments, uint32_t userId)
    utf8_to_wchar(json_object_get_string_utf8(arguments, "time_window", "1h"), -1, timeWindowStr, 64);
    time_t timeWindowSeconds = static_cast<time_t>(ParseDuration(timeWindowStr, 3600));
 
-   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident == nullptr)
       return std::string("Incident not found");
 
@@ -309,7 +309,7 @@ std::string F_GetIncidentTopologyContext(json_t *arguments, uint32_t userId)
    if (incidentId == 0)
       return std::string("Incident ID must be provided");
 
-   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident == nullptr)
       return std::string("Incident not found");
 
@@ -670,7 +670,7 @@ std::string F_SuggestIncidentAssignee(json_t *arguments, uint32_t userId)
    if (incidentId == 0)
       return std::string("Incident ID must be provided");
 
-   shared_ptr<Incident> incident = FindIncidentById(incidentId);
+   shared_ptr<Incident> incident = LoadIncidentById(incidentId);
    if (incident == nullptr)
       return std::string("Incident not found");
 

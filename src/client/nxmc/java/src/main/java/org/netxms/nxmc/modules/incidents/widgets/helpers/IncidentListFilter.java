@@ -37,6 +37,8 @@ public class IncidentListFilter extends ViewerFilter implements AbstractViewerFi
    public static final int STATE_FILTER_ALL = 0x1F;
    /** All states except closed */
    public static final int STATE_FILTER_ACTIVE = STATE_FILTER_ALL & ~(1 << IncidentState.CLOSED.getValue());
+   /** Closed state only */
+   public static final int STATE_FILTER_CLOSED = 1 << IncidentState.CLOSED.getValue();
 
    private NXCSession session;
    private String filterString = null;
