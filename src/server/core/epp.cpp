@@ -2369,7 +2369,9 @@ json_t *EPRule::toJson(bool assistantMode) const
    json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
    json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
    json_object_set_new(root, "aiAgentInstructions", json_string_t(m_aiAgentInstructions));
-   json_object_set_new(root, "errors", json_boolean_object(getErrors(), s_ruleErrorMapping));
+
+   uint32_t errors = getErrors();
+   json_object_set_new(root, "errors", (errors != 0) ? json_boolean_object(errors, s_ruleErrorMapping) : json_null());
 
    if (assistantMode)
    {

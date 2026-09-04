@@ -12615,7 +12615,8 @@ components:
           description: |
             Errors detected in the rule by the server (output only; ignored on input). Broken references
             are reported but never removed automatically, because dropping the last source object from a
-            rule's filter would silently turn it into a "match any object" rule.
+            rule's filter would silently turn it into a "match any object" rule. If rule has no errors
+            this field is set to null.
           properties:
             missingSourceObject:
               type: boolean
