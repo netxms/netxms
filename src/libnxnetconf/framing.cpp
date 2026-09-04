@@ -134,6 +134,10 @@ void NETCONF_MessageDecoder::decodeChunkedFrames()
                m_state = CHUNK_STATE_HASH1;
                pos++;
             }
+            else if ((c == '\r') && (m_message.size() == 0))
+            {
+               pos++;   // Stray line break between messages (some devices emit one after hello or between replies)
+            }
             else
             {
                m_error = true;
@@ -144,6 +148,10 @@ void NETCONF_MessageDecoder::decodeChunkedFrames()
             {
                m_state = CHUNK_STATE_SIZE_FIRST;
                pos++;
+            }
+            else if (((c == '\n') || (c == '\r')) && (m_message.size() == 0))
+            {
+               pos++;   // Stray line break between messages
             }
             else
             {

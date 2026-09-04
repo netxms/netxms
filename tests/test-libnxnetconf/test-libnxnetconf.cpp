@@ -439,6 +439,34 @@ static void TestFramingChunked()
    MemFree(message);
    AssertFalse(sessionDecoder.isError());
    EndTest();
+
+   StartTest(_T("Chunked framing - stray line breaks between messages"));
+   NETCONF_MessageDecoder tolerantDecoder;
+   ByteStream tolerantData;
+   tolerantData.write(s_serverHello, strlen(s_serverHello));
+   tolerantData.write("]]>]]>\r\n", 8);   // some devices emit line break after end-of-message marker
+   EncodeChunked("<a/>", 100, tolerantData);
+   tolerantData.write("\n", 1);
+   EncodeChunked("<b/>", 100, tolerantData);
+   tolerantDecoder.feed(tolerantData.buffer(), tolerantData.size());
+   message = tolerantDecoder.readMessage();
+   AssertNotNull(message);
+   MemFree(message);
+   tolerantDecoder.setVersion(NetconfVersion::NETCONF_1_1);
+   AssertFalse(tolerantDecoder.isError());
+   message = tolerantDecoder.readMessage();
+   AssertNotNull(message);
+   AssertEquals(message, "<a/>");
+   MemFree(message);
+   message = tolerantDecoder.readMessage();
+   AssertNotNull(message);
+   AssertEquals(message, "<b/>");
+   MemFree(message);
+   AssertFalse(tolerantDecoder.isError());
+   NETCONF_MessageDecoder strictDecoder(NetconfVersion::NETCONF_1_1);
+   strictDecoder.feed("\n#4\n<a/>\n\n##\n", 13);   // line break inside message is still a violation
+   AssertTrue(strictDecoder.isError());
+   EndTest();
 }
 
 /**

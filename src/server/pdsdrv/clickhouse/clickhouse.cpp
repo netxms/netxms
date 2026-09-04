@@ -319,6 +319,9 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, 
       case DS_NATIVE_AGENT:
          record.dataSource = "agent";
          break;
+      case DS_NETCONF:
+         record.dataSource = "netconf";
+         break;
       case DS_PUSH_AGENT:
          record.dataSource = "push";
          break;

@@ -125,7 +125,9 @@ LONG H_NETCONFCapabilities(const TCHAR *param, const TCHAR *arg, StringList *val
  * Process CMD_NETCONF_EXECUTE request. Request contains list of RPCs executed in order
  * on a single NETCONF session (so locks span the sequence). Execution stops at first RPC
  * that fails on transport level or returns rpc-error with severity "error"; replies
- * received so far are returned in any case.
+ * received so far are returned in any case. Session is closed after rpc-error, because
+ * datastore locks are bound to the session and the caller cannot tell whether a lock
+ * taken earlier in the sequence is still held - closing the session releases it.
  */
 void ExecuteNETCONFRequest(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session)
 {
@@ -169,13 +171,15 @@ void ExecuteNETCONFRequest(const NXCPMessage& request, NXCPMessage *response, Ab
 
       int executed = 0;
       bool transportFailure = false;
+      bool rpcError = false;
       for(int i = 0; i < count; i++)
       {
          char *content = request.getFieldAsUtf8String(VID_ELEMENT_LIST_BASE + i);
          if ((content == nullptr) || (*content == 0))
          {
             MemFree(content);
-            ReleaseSession(netconfSession);
+            ReleaseSession(netconfSession, executed > 0);   // earlier RPCs in the sequence may have taken locks
+            response->setField(VID_NUM_ELEMENTS, static_cast<int32_t>(executed));
             response->setField(VID_RCC, ERR_MALFORMED_COMMAND);
             return;
          }
@@ -193,7 +197,7 @@ void ExecuteNETCONFRequest(const NXCPMessage& request, NXCPMessage *response, Ab
          executed++;
 
          NETCONF_Response parsedReply;
-         bool rpcError = parsedReply.parse(reply, replySize) && !parsedReply.isSuccess();
+         rpcError = parsedReply.parse(reply, replySize) && !parsedReply.isSuccess();
          MemFree(reply);
          if (rpcError)
          {
@@ -210,7 +214,7 @@ void ExecuteNETCONFRequest(const NXCPMessage& request, NXCPMessage *response, Ab
          continue;
       }
 
-      ReleaseSession(netconfSession, transportFailure);
+      ReleaseSession(netconfSession, transportFailure || rpcError);
       response->setField(VID_NUM_ELEMENTS, static_cast<int32_t>(executed));
       response->setField(VID_RCC, transportFailure ? ERR_EXEC_FAILED : ERR_SUCCESS);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteNETCONFRequest: %d of %d RPC(s) executed on %s:%u"), executed, count, addr.toString(ipAddrText), port);

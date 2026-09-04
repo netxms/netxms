@@ -143,7 +143,7 @@ bool NodeDeviceContext::executeSSHCommand(const char *command, ByteStream *outpu
  */
 bool NodeDeviceContext::isNETCONFAvailable()
 {
-   return (m_node->getCapabilities() & NC_IS_NETCONF) != 0;
+   return ((m_node->getCapabilities() & NC_IS_NETCONF) != 0) && ((m_node->getFlags() & (NF_DISABLE_SSH | NF_DISABLE_NETCONF)) == 0);
 }
 
 /**

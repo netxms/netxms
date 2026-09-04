@@ -23,6 +23,7 @@
 
 #include "nxcore.h"
 #include <nxcore_websvc.h>
+#include <nxcore_netconf.h>
 #include <asset_management.h>
 #include <netxms_mt.h>
 #include <netxms-xml.h>
@@ -1359,7 +1360,7 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfigFromJson() called, flags=0x%04X"), flags);
 
    uint32_t rcc = RCC_SUCCESS;
-   json_t *events, *traps, *templates, *actions, *rules, *scripts, *objectTools, *summaryTables, *mappingTables, *webServices, *assets, *syslog, *winlog, *opentelemetry;
+   json_t *events, *traps, *templates, *actions, *rules, *scripts, *objectTools, *summaryTables, *mappingTables, *webServices, *netconfQueries, *assets, *syslog, *winlog, *opentelemetry;
 
    // Import events
    events = json_object_get(root, "events");
@@ -1488,6 +1489,27 @@ uint32_t ImportConfigFromJson(const char* content, uint32_t flags, StringBuffer 
          }
       }
       context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("Web service definitions import completed"));
+   }
+
+   // Import NETCONF query definitions
+   netconfQueries = json_object_get(root, "netconfQueries");
+   if (json_is_array(netconfQueries))
+   {
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("%d NETCONF query definitions to import"), static_cast<int>(json_array_size(netconfQueries)));
+
+      size_t index;
+      json_t *netconfQuery;
+      json_array_foreach(netconfQueries, index, netconfQuery)
+      {
+         if (json_is_object(netconfQuery))
+         {
+            if (!ImportNetconfQueryDefinition(netconfQuery, (flags & CFG_IMPORT_REPLACE_NETCONF_QUERIES) != 0, context))
+            {
+               context->log(NXLOG_ERROR, _T("ImportConfigFromJson()"), _T("Failed to import NETCONF query definition"));
+            }
+         }
+      }
+      context->log(NXLOG_INFO, _T("ImportConfigFromJson()"), _T("NETCONF query definitions import completed"));
    }
 
    // Import asset management schema

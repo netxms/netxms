@@ -302,6 +302,7 @@ public class NXCSession
    public static final int CFG_IMPORT_REPLACE_WINDOWS_LOG_PARSERS       = 0x00004000;
    public static final int CFG_IMPORT_REPLACE_MAPPING_TABLES            = 0x00008000;
    public static final int CFG_IMPORT_REPLACE_OTEL_LOG_PARSERS          = 0x00010000;
+   public static final int CFG_IMPORT_REPLACE_NETCONF_QUERIES           = 0x00020000;
    public static final int CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS        = 0x00100000;
    public static final int CFG_IMPORT_IGNORE_MISSING_EPP_EVENTS         = 0x00200000;
 
@@ -11238,6 +11239,7 @@ public class NXCSession
     * @param dciSummaryTables List of DCI summary table identifiers
     * @param actions List of action codes
     * @param webServices List of web service definition id's
+    * @param netconfQueries List of NETCONF query definition id's
     * @param assetAttributes List of asset management atributes to be exported
     * @param syslogList List of Syslog processing rule GUIDs
     * @param windowsEventList List of Windows Event Log processing rule GUIDs
@@ -11248,7 +11250,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public File exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
-         long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webServices,
+         long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webServices, long[] netconfQueries,
          String[] assetAttributes, UUID[] syslogList, UUID[] windowsEventList, UUID[] otelLogList, long[] mappingTables) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
@@ -11269,6 +11271,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_ACTION_LIST, actions);
       msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_DEF_COUNT, webServices.length);
       msg.setField(NXCPCodes.VID_WEB_SERVICE_DEF_LIST, webServices);
+      msg.setField(NXCPCodes.VID_NETCONF_QUERY_LIST, netconfQueries);
       msg.setField(NXCPCodes.VID_ASSET_ATTRIBUTE_NAMES, assetAttributes);
       msg.setFieldInt32(NXCPCodes.VID_NUM_MAPPING_TABLES, mappingTables.length);
       msg.setField(NXCPCodes.VID_MAPPING_TABLE_LIST, mappingTables);

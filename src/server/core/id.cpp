@@ -40,7 +40,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   39
+#define NUMBER_OF_GROUPS   40
 
 /**
  * Static data
@@ -57,7 +57,7 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 1, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1
+      1, 1, 1, 1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -70,7 +70,7 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
    };
 static const wchar_t *s_groupNames[NUMBER_OF_GROUPS] =
 {
@@ -112,7 +112,8 @@ static const wchar_t *s_groupNames[NUMBER_OF_GROUPS] =
    L"Storage Class Migrations",
    L"Trusted Devices",
    L"Connection History",
-   L"AI Saved Prompts"
+   L"AI Saved Prompts",
+   L"NETCONF Queries"
 };
 
 /**
@@ -358,6 +359,15 @@ bool InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_WEBSVC_DEFINITION] = std::max(s_freeIdTable[IDG_WEBSVC_DEFINITION], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available NETCONF query definition id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM netconf_queries"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_NETCONF_QUERY] = std::max(s_freeIdTable[IDG_NETCONF_QUERY], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

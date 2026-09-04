@@ -61,10 +61,12 @@ private:
 
 public:
    NetconfQueryDefinition(const NXCPMessage& msg);
+   NetconfQueryDefinition(json_t *config, uint32_t id);
    NetconfQueryDefinition(DB_HANDLE hdb, DB_RESULT hResult, int row);
    ~NetconfQueryDefinition();
 
    void fillMessage(NXCPMessage *msg) const;
+   json_t *toJson() const;
 
    uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
@@ -82,8 +84,11 @@ void LoadNetconfQueryDefinitions();
 SharedObjectArray<NetconfQueryDefinition> *GetNetconfQueryDefinitions();
 shared_ptr<NetconfQueryDefinition> NXCORE_EXPORTABLE FindNetconfQueryDefinition(uint32_t id);
 shared_ptr<NetconfQueryDefinition> NXCORE_EXPORTABLE FindNetconfQueryDefinition(const TCHAR *name);
+shared_ptr<NetconfQueryDefinition> NXCORE_EXPORTABLE FindNetconfQueryDefinition(const uuid& guid);
 uint32_t NXCORE_EXPORTABLE ModifyNetconfQueryDefinition(shared_ptr<NetconfQueryDefinition> definition);
 uint32_t NXCORE_EXPORTABLE DeleteNetconfQueryDefinition(uint32_t id);
+void CreateNetconfQueryDefinitionExportRecords(json_t *array, uint32_t count, const uint32_t *list);
+bool ImportNetconfQueryDefinition(json_t *config, bool overwrite, ImportContext *context);
 char NXCORE_EXPORTABLE *ExecuteNetconfRpc(Node& node, const char *rpcContent, uint32_t timeout, uint32_t *agentRcc);
 int NXCORE_EXPORTABLE ExecuteNetconfRpcBatch(Node& node, int count, const char * const *rpcContent, char **replies, uint32_t timeout, uint32_t *agentRcc);
 

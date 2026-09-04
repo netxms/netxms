@@ -3306,7 +3306,7 @@ restart_status_poll:
    }
 
    // Check NETCONF connectivity
-   if ((m_capabilities & NC_IS_NETCONF) && (!(m_flags & NF_DISABLE_SSH)) && m_ipAddress.isValidUnicast())
+   if ((m_capabilities & NC_IS_NETCONF) && (!(m_flags & (NF_DISABLE_SSH | NF_DISABLE_NETCONF))) && m_ipAddress.isValidUnicast())
    {
       sendPollerMsg(_T("Checking NETCONF connectivity...\r\n"));
       if (checkNetconfConnection())
@@ -7545,7 +7545,7 @@ bool Node::checkNetconfConnection()
  */
 bool Node::confPollNetconf()
 {
-   if ((m_flags & NF_DISABLE_SSH) || !m_ipAddress.isValidUnicast())
+   if ((m_flags & (NF_DISABLE_SSH | NF_DISABLE_NETCONF)) || !m_ipAddress.isValidUnicast())
       return false;
 
    sendPollerMsg(_T("   Checking NETCONF connectivity...\r\n"));
@@ -10385,6 +10385,10 @@ uint32_t Node::getMetricForClient(int origin, uint32_t userId, const wchar_t *na
          if (checkAccessRights(userId, OBJECT_ACCESS_READ_AGENT))
             rc = getMetricFromSmclp(name, buffer, size);
          break;
+      case DS_NETCONF:
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+            rc = getMetricFromNetconf(name, buffer, size);
+         break;
       default:
          return super::getMetricForClient(origin, userId, name, buffer, size);
    }
@@ -11163,6 +11167,7 @@ static const struct
    { "disableSNMP",             NF_DISABLE_SNMP },
    { "disableICMP",             NF_DISABLE_ICMP },
    { "disableSSH",              NF_DISABLE_SSH },
+   { "disableNETCONF",          NF_DISABLE_NETCONF },
    { "disableVNC",              NF_DISABLE_VNC },
    { "disableSMCLPProperties",  NF_DISABLE_SMCLP_PROPERTIES },
    { "disableEtherNetIP",       NF_DISABLE_ETHERNET_IP },

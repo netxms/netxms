@@ -134,6 +134,8 @@ static int ParseOrigin(const char *str)
       return DS_MODBUS;
    if (!stricmp(str, "internal"))
       return DS_INTERNAL;
+   if (!stricmp(str, "netconf"))
+      return DS_NETCONF;
    return -1;
 }
 
@@ -160,6 +162,7 @@ static const char *OriginToString(int origin)
       case DS_CLOUD_CONNECTOR: return "cloudConnector";
       case DS_OTLP: return "otlp";
       case DS_TRAFFIC_OBSERVER: return "trafficObserver";
+      case DS_NETCONF: return "netconf";
       default: return "unknown";
    }
 }

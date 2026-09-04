@@ -2450,6 +2450,16 @@ NXSL_METHOD_DEFINITION(Node, enableSsh)
 }
 
 /**
+ * enableNetconf(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enableNetconf)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(false); return 0; }
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NETCONF, true);
+}
+
+/**
  * enableTopologyPolling(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
@@ -3530,6 +3540,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableEtherNetIP, 1);
    NXSL_REGISTER_METHOD(Node, enableIcmp, 1);
    NXSL_REGISTER_METHOD(Node, enableModbusTcp, 1);
+   NXSL_REGISTER_METHOD(Node, enableNetconf, 1);
    NXSL_REGISTER_METHOD(Node, enablePrimaryIPPing, 1);
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSmclpPropertyPolling, 1);
@@ -3912,6 +3923,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(node->isModbusTCPSupported());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isNETCONF"))
+   {
+      value = vm->createValue(node->isNETCONFSupported());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isOSPF"))
    {
       value = vm->createValue(node->isOSPFSupported());
@@ -4011,6 +4026,30 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("modbusUnitId"))
    {
       value = vm->createValue(node->getModbusUnitId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("netconfCapabilities"))
+   {
+      value = vm->createValue(new NXSL_Array(vm, node->getNetconfCapabilities()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("netconfPort"))
+   {
+      value = vm->createValue(node->getNetconfPort());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("netconfProxy"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(node->getNetconfProxy());
+      if (object != nullptr)
+      {
+         value = object->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("netconfProxyId"))
+   {
+      value = vm->createValue(node->getNetconfProxy());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("networkPathCheckResult"))
    {

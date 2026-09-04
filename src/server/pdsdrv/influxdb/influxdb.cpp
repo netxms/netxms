@@ -253,6 +253,9 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, Ti
       case DS_NATIVE_AGENT:
          ds = _T("agent");
          break;
+      case DS_NETCONF:
+         ds = _T("netconf");
+         break;
       case DS_PUSH_AGENT:
          ds = _T("push");
          break;

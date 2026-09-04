@@ -4628,6 +4628,7 @@ public:
 
    bool isSNMPSupported() const { return is_bit_set(m_capabilities, NC_IS_SNMP); }
    bool isSSHSupported() const { return is_bit_set(m_capabilities, NC_IS_SSH); }
+   bool isNETCONFSupported() const { return is_bit_set(m_capabilities, NC_IS_NETCONF); }
    bool isNativeAgent() const { return is_bit_set(m_capabilities, NC_IS_NATIVE_AGENT); }
    bool isEthernetIPSupported() const { return is_bit_set(m_capabilities, NC_IS_ETHERNET_IP); }
    bool isModbusTCPSupported() const { return is_bit_set(m_capabilities, NC_IS_MODBUS_TCP); }

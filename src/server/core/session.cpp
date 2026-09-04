@@ -11930,6 +11930,13 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             CreateWebServiceDefinitionExportRecord(webServiceDefinitions, idList.size(), idList.getBuffer());
             json_object_set_new(root, "webServiceDefinitions", webServiceDefinitions);
 
+            // Export NETCONF query definitions
+            json_t *netconfQueries = json_array();
+            idList.clear();
+            request.getFieldAsInt32Array(VID_NETCONF_QUERY_LIST, &idList);
+            CreateNetconfQueryDefinitionExportRecords(netconfQueries, idList.size(), idList.getBuffer());
+            json_object_set_new(root, "netconfQueries", netconfQueries);
+
             // Export asset management schema
             json_t *assetManagementSchema = json_array();
             StringList assetAttributeNames(request, VID_ASSET_ATTRIBUTE_NAMES);

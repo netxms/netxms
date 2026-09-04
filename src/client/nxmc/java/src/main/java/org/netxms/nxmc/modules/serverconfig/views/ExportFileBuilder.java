@@ -61,6 +61,7 @@ import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.client.datacollection.NetconfQueryDefinition;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.client.events.ActionExecutionConfiguration;
@@ -83,6 +84,7 @@ import org.netxms.nxmc.modules.actions.dialogs.ActionSelectionDialog;
 import org.netxms.nxmc.modules.actions.views.helpers.ActionComparator;
 import org.netxms.nxmc.modules.actions.views.helpers.ActionLabelProvider;
 import org.netxms.nxmc.modules.assetmanagement.dialogs.SelectAssetAttributeDlg;
+import org.netxms.nxmc.modules.datacollection.dialogs.SelectNetconfQueryDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectWebServiceDlg;
 import org.netxms.nxmc.modules.events.dialogs.EventSelectionDialog;
 import org.netxms.nxmc.modules.events.dialogs.RuleSelectionDialog;
@@ -134,6 +136,7 @@ public class ExportFileBuilder extends ConfigurationView
    private TableViewer toolsViewer;
 	private TableViewer trapViewer;
    private TableViewer webServiceViewer;
+   private TableViewer netconfQueryViewer;
    private TableViewer assetAttributeViewer;
    private TableViewer syslogLogParserViewer;
    private TableViewer windowsLogParserViewer;
@@ -150,6 +153,7 @@ public class ExportFileBuilder extends ConfigurationView
    private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
    private Map<Integer, WebServiceDefinition> webServices = new HashMap<>();
+   private Map<Integer, NetconfQueryDefinition> netconfQueries = new HashMap<>();
    private Map<String, AssetAttribute> assetAttributes = new HashMap<>();
    private Map<UUID, LogParserRule> syslogLogParsers = new HashMap<>();
    private Map<UUID, LogParserRule> windowsLogParsers = new HashMap<>();
@@ -207,6 +211,7 @@ public class ExportFileBuilder extends ConfigurationView
       createSummaryTablesSection();
       createActionsSection();
       createWebServiceSection();
+      createNetconfQuerySection();
       createAssetAttributesSection();
       createSyslogSection();
       createWindowsEventLogSection();
@@ -1093,6 +1098,98 @@ public class ExportFileBuilder extends ConfigurationView
    }
 
    /**
+    * Create "NETCONF Query Definitions" section
+    */
+   private void createNetconfQuerySection()
+   {
+      Section section = new Section(content, i18n.tr("NETCONF Query Definitions"), false);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      section.setLayoutData(gd);
+
+      Composite clientArea = section.getClient();
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
+      clientArea.setLayout(layout);
+      clientArea.setBackground(content.getBackground());
+
+      netconfQueryViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      netconfQueryViewer.getTable().setLayoutData(gd);
+      netconfQueryViewer.setContentProvider(new ArrayContentProvider());
+      netconfQueryViewer.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((NetconfQueryDefinition)element).getName();
+         }
+      });
+      netconfQueryViewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((NetconfQueryDefinition)e1).getName().compareToIgnoreCase(((NetconfQueryDefinition)e2).getName());
+         }
+      });
+      netconfQueryViewer.getTable().setSortDirection(SWT.UP);
+
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addNetconfQueryDefinitions();
+         }
+      });
+
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
+      linkRemove.setText(i18n.tr("Remove"));
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            IStructuredSelection selection = netconfQueryViewer.getStructuredSelection();
+            if (selection.size() > 0)
+            {
+               removeObjects(netconfQueryViewer, netconfQueries);
+            }
+         }
+      });
+   }
+
+   /**
     * Create "Asset Attributes" section
     */
    private void createAssetAttributesSection()
@@ -1592,6 +1689,11 @@ public class ExportFileBuilder extends ConfigurationView
       for(WebServiceDefinition a : webServices.values())
          webServiceList[i++] = a.getId();
 
+      final long[] netconfQueryList = new long[netconfQueries.size()];
+      i = 0;
+      for(NetconfQueryDefinition q : netconfQueries.values())
+         netconfQueryList[i++] = q.getId();
+
       final String[] assetAttributesList = new String[assetAttributes.size()];
       i = 0;
       for(AssetAttribute a : assetAttributes.values())
@@ -1624,7 +1726,7 @@ public class ExportFileBuilder extends ConfigurationView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final File json = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList,
-                  assetAttributesList, syslogList, windowsEventList, otelLogList, mappingTableList);
+                  netconfQueryList, assetAttributesList, syslogList, windowsEventList, otelLogList, mappingTableList);
             runInUIThread(() -> completionHandler.exportCompleted(json));
          }
 
@@ -1678,6 +1780,8 @@ public class ExportFileBuilder extends ConfigurationView
 	      return ((Template)o).getObjectId();
       if (o instanceof WebServiceDefinition)
          return ((WebServiceDefinition)o).getId();
+      if (o instanceof NetconfQueryDefinition)
+         return ((NetconfQueryDefinition)o).getId();
       if (o instanceof AssetAttribute)
          return ((AssetAttribute)o).getName();
       if (o instanceof LogParserRule)
@@ -2293,6 +2397,21 @@ public class ExportFileBuilder extends ConfigurationView
    }
 
    /**
+    * Add NETCONF query definitions to list
+    */
+   private void addNetconfQueryDefinitions()
+   {
+      SelectNetconfQueryDlg dlg = new SelectNetconfQueryDlg(getWindow().getShell(), true);
+      if (dlg.open() == Window.OK)
+      {
+         for(NetconfQueryDefinition query : dlg.getSelection())
+            netconfQueries.put(query.getId(), query);
+         netconfQueryViewer.setInput(netconfQueries.values().toArray());
+         setModified();
+      }
+   }
+
+   /**
     * Add web service definitions to list
     */
    private void addWebServiceDefinitions()
@@ -2448,6 +2567,7 @@ public class ExportFileBuilder extends ConfigurationView
       traps.clear();
       tools.clear();
       webServices.clear();
+      netconfQueries.clear();
       assetAttributes.clear();
       syslogLogParsers.clear();
       windowsLogParsers.clear();
@@ -2462,6 +2582,7 @@ public class ExportFileBuilder extends ConfigurationView
       toolsViewer.setInput(new Object[0]);
       trapViewer.setInput(new Object[0]);
       webServiceViewer.setInput(new Object[0]);
+      netconfQueryViewer.setInput(new Object[0]);
       assetAttributeViewer.setInput(new Object[0]);
       syslogLogParserViewer.setInput(new Object[0]);
       windowsLogParserViewer.setInput(new Object[0]);

@@ -47,6 +47,27 @@ NetconfQueryDefinition::NetconfQueryDefinition(const NXCPMessage& msg)
 }
 
 /**
+ * Create NETCONF query definition from JSON (configuration import)
+ */
+NetconfQueryDefinition::NetconfQueryDefinition(json_t *config, uint32_t id)
+{
+   m_id = id;
+   if (m_id == 0)
+      m_id = CreateUniqueId(IDG_NETCONF_QUERY);
+   m_guid = json_object_get_uuid(config, "guid");
+   if (m_guid.isNull())
+      m_guid = uuid::generate();
+   m_name = json_object_get_string_t(config, "name", L"");
+   m_description = json_object_get_string_t(config, "description", L"");
+   m_datastore = static_cast<int16_t>(json_object_get_int32(config, "datastore", NETCONF_DATASTORE_OPERATIONAL));
+   m_filterType = static_cast<int16_t>(json_object_get_int32(config, "filterType", NETCONF_FILTER_NONE));
+   m_filter = json_object_get_string_t(config, "filter", L"");
+   m_cacheRetentionTime = json_object_get_uint32(config, "cacheRetentionTime");
+   m_requestTimeout = json_object_get_uint32(config, "requestTimeout");
+   m_flags = json_object_get_uint32(config, "flags");
+}
+
+/**
  * Create NETCONF query definition from database record
  * Expected column order: id,guid,name,description,datastore,filter_type,filter,cache_retention_time,request_timeout,flags
  */
@@ -89,6 +110,25 @@ void NetconfQueryDefinition::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_RETENTION_TIME, m_cacheRetentionTime);
    msg->setField(VID_TIMEOUT, m_requestTimeout);
    msg->setField(VID_FLAGS, m_flags);
+}
+
+/**
+ * Create JSON document (configuration export)
+ */
+json_t *NetconfQueryDefinition::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "datastore", json_integer(m_datastore));
+   json_object_set_new(root, "filterType", json_integer(m_filterType));
+   json_object_set_new(root, "filter", json_string_t(m_filter));
+   json_object_set_new(root, "cacheRetentionTime", json_integer(m_cacheRetentionTime));
+   json_object_set_new(root, "requestTimeout", json_integer(m_requestTimeout));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+   return root;
 }
 
 /**
@@ -164,6 +204,28 @@ shared_ptr<NetconfQueryDefinition> NXCORE_EXPORTABLE FindNetconfQueryDefinition(
    {
       auto d = s_netconfQueryDefinitions.getShared(i);
       if (!wcsicmp(name, d->getName()))
+      {
+         result = d;
+         break;
+      }
+   }
+   s_netconfQueryDefinitionLock.unlock();
+   return result;
+}
+
+/**
+ * Find NETCONF query definition by GUID
+ */
+shared_ptr<NetconfQueryDefinition> NXCORE_EXPORTABLE FindNetconfQueryDefinition(const uuid& guid)
+{
+   shared_ptr<NetconfQueryDefinition> result;
+   if (guid.isNull())
+      return result;
+   s_netconfQueryDefinitionLock.lock();
+   for(int i = 0; i < s_netconfQueryDefinitions.size(); i++)
+   {
+      auto d = s_netconfQueryDefinitions.getShared(i);
+      if (d->getGuid().equals(guid))
       {
          result = d;
          break;
@@ -268,6 +330,85 @@ uint32_t NXCORE_EXPORTABLE DeleteNetconfQueryDefinition(uint32_t id)
    }
 
    return rcc;
+}
+
+/**
+ * Create JSON export records for NETCONF query definitions with given IDs
+ */
+void CreateNetconfQueryDefinitionExportRecords(json_t *array, uint32_t count, const uint32_t *list)
+{
+   for(uint32_t i = 0; i < count; i++)
+   {
+      shared_ptr<NetconfQueryDefinition> definition = FindNetconfQueryDefinition(list[i]);
+      if (definition != nullptr)
+         json_array_append_new(array, definition->toJson());
+   }
+}
+
+/**
+ * Import NETCONF query definition from JSON. Existing definition is matched by GUID;
+ * name conflicts with other definitions are reported as errors.
+ */
+bool ImportNetconfQueryDefinition(json_t *config, bool overwrite, ImportContext *context)
+{
+   String name = json_object_get_string(config, "name", L"");
+   if (name.isEmpty())
+   {
+      context->log(NXLOG_ERROR, L"ImportNetconfQueryDefinition()", L"Missing NETCONF query definition name");
+      return false;
+   }
+
+   bool success = false;
+   uuid guid = json_object_get_uuid(config, "guid");
+   shared_ptr<NetconfQueryDefinition> existing = FindNetconfQueryDefinition(guid);
+   wchar_t guidText[64];
+   if (existing == nullptr)
+   {
+      if (FindNetconfQueryDefinition(name) == nullptr)
+      {
+         uint32_t rcc = ModifyNetconfQueryDefinition(make_shared<NetconfQueryDefinition>(config, 0));
+         if (rcc == RCC_SUCCESS)
+         {
+            context->log(NXLOG_INFO, L"ImportNetconfQueryDefinition()", L"NETCONF query definition \"%s\" created", name.cstr());
+            success = true;
+         }
+         else
+         {
+            context->log(NXLOG_ERROR, L"ImportNetconfQueryDefinition()", L"Cannot create NETCONF query definition \"%s\" (RCC=%u)", name.cstr(), rcc);
+         }
+      }
+      else
+      {
+         context->log(NXLOG_ERROR, L"ImportNetconfQueryDefinition()", L"NETCONF query definition with name \"%s\" already exists", name.cstr());
+      }
+   }
+   else if (overwrite)
+   {
+      shared_ptr<NetconfQueryDefinition> conflict = FindNetconfQueryDefinition(name);
+      if ((conflict == nullptr) || (conflict->getId() == existing->getId()))
+      {
+         uint32_t rcc = ModifyNetconfQueryDefinition(make_shared<NetconfQueryDefinition>(config, existing->getId()));
+         if (rcc == RCC_SUCCESS)
+         {
+            context->log(NXLOG_INFO, L"ImportNetconfQueryDefinition()", L"Found existing NETCONF query definition \"%s\" with GUID %s (overwrite)", existing->getName(), guid.toString(guidText));
+            success = true;
+         }
+         else
+         {
+            context->log(NXLOG_ERROR, L"ImportNetconfQueryDefinition()", L"Cannot update existing NETCONF query definition \"%s\" (RCC=%u)", existing->getName(), rcc);
+         }
+      }
+      else
+      {
+         context->log(NXLOG_ERROR, L"ImportNetconfQueryDefinition()", L"Cannot rename NETCONF query definition \"%s\" to \"%s\": name already used by another definition", existing->getName(), name.cstr());
+      }
+   }
+   else
+   {
+      context->log(NXLOG_INFO, L"ImportNetconfQueryDefinition()", L"Found existing NETCONF query definition \"%s\" with GUID %s (skipping)", existing->getName(), guid.toString(guidText));
+      success = true;
+   }
+   return success;
 }
 
 /**

@@ -100,6 +100,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final long NC_HAS_TLS_TUNNEL         = 0x8000000000L;
 
 	// Node flags
+   public static final int NF_DISABLE_NETCONF           = 0x00002000;
    public static final int NF_DISABLE_SMCLP_PROPERTIES  = 0x00004000;
    public static final int NF_DISABLE_VNC               = 0x00008000;
    public static final int NF_EXTERNAL_GATEWAY          = 0x00010000;

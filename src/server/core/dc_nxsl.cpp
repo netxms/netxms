@@ -674,7 +674,8 @@ static int F_GetDCIValuesEx(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 /**
  * NXSL function: create new DCI
  * Format: CreateDCI(node, origin, name, description, dataType, pollingInterval, retentionTime)
- * Possible origin values: "agent", "snmp", "internal", "push", "websvc", "winperf", "script", "ssh", "mqtt", "driver", "modbus", "ethernetip"
+ * Possible origin values: "agent", "snmp", "internal", "push", "websvc", "winperf", "script", "ssh", "mqtt", "driver", "modbus", "ethernetip",
+ *    "cloud", "otlp", "trafficobserver", "netconf"
  * Possible dataType values: "int32", "uint32", "int64", "uint64", "counter32", "counter64", "float", "string"
  * Returns DCI object on success and NULL of failure
  */
@@ -697,14 +698,15 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
 	if (argv[1]->isInteger())
 	{
 	   origin = argv[1]->getValueAsInt32();
-	   if ((origin < 0) || (origin > 12))
+	   if ((origin < 0) || (origin > DS_NETCONF))
 	      origin = -1;
 	}
 	else
 	{
 	   static const WCHAR *originNames[] = {
             L"internal", L"agent", L"snmp", L"websvc", L"push", L"winperf",
-            L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", nullptr };
+            L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", L"cloud", L"otlp",
+            L"trafficobserver", L"netconf", nullptr };
       const WCHAR *name = argv[1]->getValueAsCString();
       for(int i = 0; originNames[i] != nullptr; i++)
          if (!wcsicmp(originNames[i], name))

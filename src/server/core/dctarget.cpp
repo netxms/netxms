@@ -1222,7 +1222,8 @@ void DataCollectionTarget::queueItemsForPolling()
              (object->getDataSource() == DS_SNMP_AGENT) ||
              (object->getDataSource() == DS_SSH) ||
              (object->getDataSource() == DS_MODBUS) ||
-             (object->getDataSource() == DS_SMCLP))
+             (object->getDataSource() == DS_SMCLP) ||
+             (object->getDataSource() == DS_NETCONF))
          {
             uint32_t sourceNodeId = getEffectiveSourceNode(object);
             if (requireConnectivity)
@@ -1281,6 +1282,15 @@ void DataCollectionTarget::queueItemsForPolling()
                      object->setNextPollTime(currTime + g_statusPollingInterval / 2);
                      object->clearBusyFlag();
                      continue;  // Skip polling if MODBUS is unreachable
+                  }
+                  if ((object->getDataSource() == DS_NETCONF) && (!target->isNETCONFSupported() || (target->getState() & NSF_NETCONF_UNREACHABLE)))
+                  {
+                     nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" skipped because NETCONF is unreachable"),
+                              m_name, object->getId(), object->getName().cstr());
+                     // Set next poll time to be at least half of status polling interval later to avoid re-checking too often
+                     object->setNextPollTime(currTime + g_statusPollingInterval / 2);
+                     object->clearBusyFlag();
+                     continue;  // Skip polling if NETCONF is unreachable
                   }
                }
             }
