@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.users.AbstractUserObject;
 
 /**
  * DCI summary table
@@ -40,6 +41,7 @@ public class DciSummaryTable
 	private String nodeFilter;
 	private List<DciSummaryTableColumn> columns;
 	private String tableDciName;
+   private Integer[] accessList;
 	
 	/**
 	 * Create new empty summary table object
@@ -58,6 +60,8 @@ public class DciSummaryTable
 		nodeFilter = "";
 		columns = new ArrayList<DciSummaryTableColumn>();
 		tableDciName = "";
+      accessList = new Integer[1];
+      accessList[0] = AbstractUserObject.WELL_KNOWN_ID_EVERYONE;
 	}
 
    /**
@@ -85,7 +89,11 @@ public class DciSummaryTable
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		nodeFilter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
 		tableDciName = msg.getFieldAsString(NXCPCodes.VID_DCI_NAME);
-		
+
+      accessList = msg.getFieldAsInt32ArrayEx(NXCPCodes.VID_ACL);
+      if (accessList == null)
+         accessList = new Integer[0];
+
 		String s = msg.getFieldAsString(NXCPCodes.VID_COLUMNS);
 		if ((s != null) && (s.length() > 0))
 		{
@@ -133,6 +141,7 @@ public class DciSummaryTable
 		msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
 		msg.setField(NXCPCodes.VID_FILTER, nodeFilter);
 		msg.setField(NXCPCodes.VID_DCI_NAME, tableDciName);
+      msg.setField(NXCPCodes.VID_ACL, accessList);
 		
 		StringBuilder sb = new StringBuilder();
 		for(DciSummaryTableColumn c : columns)
@@ -283,4 +292,24 @@ public class DciSummaryTable
 	{
 	   tableDciName = name;
 	}
+
+   /**
+    * Get list of users and groups allowed to use this summary table.
+    *
+    * @return list of user and group IDs
+    */
+   public Integer[] getAccessList()
+   {
+      return accessList;
+   }
+
+   /**
+    * Set list of users and groups allowed to use this summary table.
+    *
+    * @param accessList list of user and group IDs
+    */
+   public void setAccessList(Integer[] accessList)
+   {
+      this.accessList = accessList;
+   }
 }

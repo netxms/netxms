@@ -52,6 +52,7 @@ import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.propertypages.SummaryTableAccessControl;
 import org.netxms.nxmc.modules.datacollection.propertypages.SummaryTableColumns;
 import org.netxms.nxmc.modules.datacollection.propertypages.SummaryTableFilterPropertyPage;
 import org.netxms.nxmc.modules.datacollection.propertypages.SummaryTableGeneral;
@@ -321,6 +322,7 @@ public class SummaryTableManager extends ConfigurationView
 	{
 	   PreferenceManager pm = new PreferenceManager();
 	   pm.addToRoot(new PreferenceNode("general", new SummaryTableGeneral(t)));
+      pm.addToRoot(new PreferenceNode("access_control", new SummaryTableAccessControl(t)));
       pm.addToRoot(new PreferenceNode("filter", new SummaryTableFilterPropertyPage(t)));
       if (!t.isTableSoure())
          pm.addToRoot(new PreferenceNode("columns", new SummaryTableColumns(t)));

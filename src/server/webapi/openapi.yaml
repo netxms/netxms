@@ -9737,7 +9737,9 @@ paths:
     get:
       operationId: listDciSummaryTables
       summary: List DCI summary tables
-      description: Retrieve a list of available DCI summary tables.
+      description: >
+        Retrieve a list of available DCI summary tables. Only tables the calling user has access to
+        are returned; users with "Configure DCI summary tables" system access right receive all tables.
       responses:
         '200':
           description: DCI summary tables retrieved successfully
@@ -9885,7 +9887,9 @@ paths:
     post:
       operationId: queryDciSummaryTable
       summary: Query specific DCI summary table
-      description: Execute a query on a specific DCI summary table.
+      description: >
+        Execute a query on a specific DCI summary table. Calling user must have access to the
+        summary table itself as well as read access to the root object.
       parameters:
         - name: table-id
           in: path
@@ -12864,6 +12868,11 @@ components:
           items:
             $ref: '#/components/schemas/SummaryTableColumn'
           description: Column definitions
+        acl:
+          type: array
+          items:
+            type: integer
+          description: IDs of users and groups allowed to use this summary table
     SummaryTableColumn:
       type: object
       description: DCI summary table column definition
@@ -12906,6 +12915,13 @@ components:
           items:
             $ref: '#/components/schemas/SummaryTableColumn'
           description: Column definitions
+        acl:
+          type: array
+          items:
+            type: integer
+          description: >
+            IDs of users and groups allowed to use this summary table. If omitted on creation, the
+            table is made accessible to everyone; if omitted on update, existing access list is left unchanged.
     TableData:
       type: object
       description: Tabular query result (serialized NetXMS Table).

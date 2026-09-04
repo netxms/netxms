@@ -21,8 +21,140 @@
 **/
 
 #include "nxcore.h"
+#include <nms_users.h>
 
 #define DEBUG_TAG _T("dc.summarytable")
+
+/**
+ * Access list entry for DCI summary table
+ */
+struct SummaryTableACLEntry
+{
+   uint32_t tableId;
+   uint32_t userId;
+};
+
+/**
+ * Check if single access list entry grants access to given user
+ */
+static inline bool MatchACLEntry(uint32_t entry, uint32_t userId)
+{
+   return (entry == userId) || (entry == GROUP_EVERYONE) || ((entry & GROUP_FLAG) && CheckUserMembership(userId, entry));
+}
+
+/**
+ * Check if user has access to summary table using pre-loaded access lists
+ */
+static bool CheckAccess(const SummaryTableACLEntry *acl, int aclSize, uint32_t tableId, uint32_t userId)
+{
+   for(int i = 0; i < aclSize; i++)
+      if ((acl[i].tableId == tableId) && MatchACLEntry(acl[i].userId, userId))
+         return true;
+   return false;
+}
+
+/**
+ * Read access lists for all DCI summary tables. Returns number of loaded entries or -1 on database failure.
+ */
+static int LoadAllSummaryTableACLs(DB_HANDLE hdb, Buffer<SummaryTableACLEntry> *acl)
+{
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT table_id,user_id FROM dci_summary_table_acl");
+   if (hResult == nullptr)
+      return -1;
+
+   int count = DBGetNumRows(hResult);
+   acl->reserve(count);
+   for(int i = 0; i < count; i++)
+   {
+      (*acl)[i].tableId = DBGetFieldULong(hResult, i, 0);
+      (*acl)[i].userId = DBGetFieldULong(hResult, i, 1);
+   }
+   DBFreeResult(hResult);
+   return count;
+}
+
+/**
+ * Read access list for DCI summary table
+ */
+bool GetSummaryTableACL(uint32_t tableId, IntegerArray<uint32_t> *acl)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT user_id FROM dci_summary_table_acl WHERE table_id=?");
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return false;
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   bool success = (hResult != nullptr);
+   if (success)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         acl->add(DBGetFieldULong(hResult, i, 0));
+      DBFreeResult(hResult);
+   }
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
+}
+
+/**
+ * Save access list for DCI summary table
+ */
+static bool SaveSummaryTableACL(DB_HANDLE hdb, uint32_t tableId, const IntegerArray<uint32_t>& acl)
+{
+   if (!ExecuteQueryOnObject(hdb, tableId, L"DELETE FROM dci_summary_table_acl WHERE table_id=?"))
+      return false;
+
+   if (acl.isEmpty())
+      return true;
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO dci_summary_table_acl (table_id,user_id) VALUES (?,?)", acl.size() > 1);
+   if (hStmt == nullptr)
+      return false;
+
+   bool success = true;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
+   for(int i = 0; success && (i < acl.size()); i++)
+   {
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, acl.get(i));
+      success = DBExecute(hStmt);
+   }
+   DBFreeStatement(hStmt);
+   return success;
+}
+
+/**
+ * Create default access list for newly created DCI summary table - accessible by everyone
+ */
+static bool SaveDefaultSummaryTableACL(DB_HANDLE hdb, uint32_t tableId)
+{
+   IntegerArray<uint32_t> acl(1);
+   acl.add(GROUP_EVERYONE);
+   return SaveSummaryTableACL(hdb, tableId, acl);
+}
+
+/**
+ * Check if user has access to DCI summary table. Users with "manage summary tables" system access
+ * right always have access to all summary tables.
+ */
+bool NXCORE_EXPORTABLE CheckSummaryTableAccess(uint32_t tableId, uint32_t userId)
+{
+   if ((userId == 0) || ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS) != 0))
+      return true;
+
+   IntegerArray<uint32_t> acl;
+   if (!GetSummaryTableACL(tableId, &acl))
+      return false;
+
+   for(int i = 0; i < acl.size(); i++)
+      if (MatchACLEntry(acl.get(i), userId))
+         return true;
+   return false;
+}
 
 /**
  * Modify DCI summary table. Will create new table if id is 0.
@@ -39,6 +171,11 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId)
    *newId = id;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!DBBegin(hdb))
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
 
    bool isNew = !IsDatabaseRecordExist(hdb, _T("dci_summary_tables"), _T("id"), id);
    DB_STATEMENT hStmt;
@@ -51,7 +188,7 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId)
       hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,table_dci_name=? WHERE id=?"));
    }
 
-   uint32_t rcc;
+   uint32_t rcc = RCC_DB_FAILURE;
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, msg.getFieldAsString(VID_MENU_PATH), DB_BIND_DYNAMIC);
@@ -67,15 +204,36 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId)
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, uuid::generate());
       }
 
-      rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
-      if (rcc == RCC_SUCCESS)
-         NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (UINT32)id);
+      if (DBExecute(hStmt))
+         rcc = RCC_SUCCESS;
 
       DBFreeStatement(hStmt);
    }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      // Access list is replaced only if provided by client
+      if (msg.isFieldExist(VID_ACL))
+      {
+         IntegerArray<uint32_t> acl;
+         msg.getFieldAsInt32Array(VID_ACL, &acl);
+         if (!SaveSummaryTableACL(hdb, id, acl))
+            rcc = RCC_DB_FAILURE;
+      }
+      else if (isNew && !SaveDefaultSummaryTableACL(hdb, id))
+      {
+         rcc = RCC_DB_FAILURE;
+      }
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      DBCommit(hdb);
+      NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, id);
+   }
    else
    {
-      rcc = RCC_DB_FAILURE;
+      DBRollback(hdb);
    }
 
    DBConnectionPoolReleaseConnection(hdb);
@@ -88,13 +246,19 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId)
  * @return RCC ready to be sent to client
  */
 uint32_t NXCORE_EXPORTABLE ModifySummaryTable(uint32_t id, const wchar_t *menuPath, const wchar_t *title,
-   const wchar_t *nodeFilter, uint32_t flags, const wchar_t *columns, const wchar_t *tableDciName, uint32_t *newId)
+   const wchar_t *nodeFilter, uint32_t flags, const wchar_t *columns, const wchar_t *tableDciName,
+   const IntegerArray<uint32_t> *acl, uint32_t *newId)
 {
    if (id == 0)
       id = CreateUniqueId(IDG_DCI_SUMMARY_TABLE);
    *newId = id;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (!DBBegin(hdb))
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
 
    bool isNew = !IsDatabaseRecordExist(hdb, L"dci_summary_tables", L"id", id);
    DB_STATEMENT hStmt;
@@ -107,7 +271,7 @@ uint32_t NXCORE_EXPORTABLE ModifySummaryTable(uint32_t id, const wchar_t *menuPa
       hStmt = DBPrepare(hdb, L"UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,table_dci_name=? WHERE id=?");
    }
 
-   uint32_t rcc;
+   uint32_t rcc = RCC_DB_FAILURE;
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, menuPath, DB_BIND_STATIC);
@@ -123,15 +287,34 @@ uint32_t NXCORE_EXPORTABLE ModifySummaryTable(uint32_t id, const wchar_t *menuPa
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, uuid::generate());
       }
 
-      rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
-      if (rcc == RCC_SUCCESS)
-         NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (UINT32)id);
+      if (DBExecute(hStmt))
+         rcc = RCC_SUCCESS;
 
       DBFreeStatement(hStmt);
    }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      // Null access list means that it should be left as is
+      if (acl != nullptr)
+      {
+         if (!SaveSummaryTableACL(hdb, id, *acl))
+            rcc = RCC_DB_FAILURE;
+      }
+      else if (isNew && !SaveDefaultSummaryTableACL(hdb, id))
+      {
+         rcc = RCC_DB_FAILURE;
+      }
+   }
+
+   if (rcc == RCC_SUCCESS)
+   {
+      DBCommit(hdb);
+      NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, id);
+   }
    else
    {
-      rcc = RCC_DB_FAILURE;
+      DBRollback(hdb);
    }
 
    DBConnectionPoolReleaseConnection(hdb);
@@ -145,7 +328,8 @@ uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId)
 {
    uint32_t rcc;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   if (ExecuteQueryOnObject(hdb, tableId, L"DELETE FROM dci_summary_tables WHERE id=?"))
+   if (ExecuteQueryOnObject(hdb, tableId, L"DELETE FROM dci_summary_tables WHERE id=?") &&
+       ExecuteQueryOnObject(hdb, tableId, L"DELETE FROM dci_summary_table_acl WHERE table_id=?"))
    {
       rcc = RCC_SUCCESS;
       NotifyClientSessions(NX_NOTIFY_DCISUMTBL_DELETED, tableId);
@@ -525,6 +709,12 @@ Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHoc
       return nullptr;
    }
 
+   if ((adHocDefinition == nullptr) && !CheckSummaryTableAccess(tableId, userId))
+   {
+      *rcc = RCC_ACCESS_DENIED;
+      return nullptr;
+   }
+
    if ((object->getObjectClass() != OBJECT_CONTAINER) && (object->getObjectClass() != OBJECT_COLLECTOR) &&
        (object->getObjectClass() != OBJECT_CLUSTER) && (object->getObjectClass() != OBJECT_SERVICEROOT) &&
        (object->getObjectClass() != OBJECT_SUBNET) && (object->getObjectClass() != OBJECT_ZONE) &&
@@ -668,7 +858,8 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
    DBFreeStatement(hStmt);
 
    // Step 2: create or update summary table configuration record
-   if (id == 0)
+   bool isNew = (id == 0);
+   if (isNew)
    {
       id = CreateUniqueId(IDG_DCI_SUMMARY_TABLE);
       hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,guid,id) VALUES (?,?,?,?,?,?,?)"));
@@ -704,10 +895,17 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
    {
       return ImportFailure(hdb, hStmt, context);
    }
-
-   NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (UINT32)id);
-
    DBFreeStatement(hStmt);
+
+   // Access list of already existing table is intentionally left as is, so that access restrictions
+   // configured by administrator will not be reset by re-import of table definition
+   if (isNew && !SaveDefaultSummaryTableACL(hdb, id))
+   {
+      return ImportFailure(hdb, nullptr, context);
+   }
+
+   NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, id);
+
    DBConnectionPoolReleaseConnection(hdb);
    return true;
 }
@@ -755,7 +953,8 @@ bool ImportSummaryTable(json_t *config, bool overwrite, ImportContext *context)
    DBFreeStatement(hStmt);
 
    // Step 2: create or update summary table configuration record
-   if (id == 0)
+   bool isNew = (id == 0);
+   if (isNew)
    {
       id = CreateUniqueId(IDG_DCI_SUMMARY_TABLE);
       hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,guid,id) VALUES (?,?,?,?,?,?,?)"));
@@ -814,14 +1013,124 @@ bool ImportSummaryTable(json_t *config, bool overwrite, ImportContext *context)
    {
       return ImportFailure(hdb, hStmt, context);
    }
-
-   NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (UINT32)id);
-
    DBFreeStatement(hStmt);
+
+   // Access list of already existing table is intentionally left as is, so that access restrictions
+   // configured by administrator will not be reset by re-import of table definition
+   if (isNew && !SaveDefaultSummaryTableACL(hdb, id))
+   {
+      return ImportFailure(hdb, nullptr, context);
+   }
+
+   NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, id);
+
    DBConnectionPoolReleaseConnection(hdb);
-   
+
    context->log(NXLOG_INFO, _T("ImportSummaryTable()"), _T("Summary table \"%s\" imported"), title.cstr());
    return true;
+}
+
+/**
+ * Get list of DCI summary tables available for given user into NXCP message
+ */
+uint32_t GetSummaryTablesIntoMessage(NXCPMessage *msg, uint32_t userId)
+{
+   bool fullAccess = (userId == 0) || ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS) != 0);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   int aclSize = 0;
+   Buffer<SummaryTableACLEntry> acl;
+   if (!fullAccess)
+   {
+      aclSize = LoadAllSummaryTableACLs(hdb, &acl);
+      if (aclSize == -1)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         return RCC_DB_FAILURE;
+      }
+   }
+
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT id,menu_path,title,flags,guid FROM dci_summary_tables");
+   if (hResult == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   wchar_t buffer[256];
+   uint32_t recordCount = 0;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      uint32_t id = DBGetFieldULong(hResult, i, 0);
+      if (!fullAccess && !CheckAccess(acl, aclSize, id, userId))
+         continue;
+
+      msg->setField(fieldId++, id);
+      msg->setField(fieldId++, DBGetField(hResult, i, 1, buffer, 256));
+      msg->setField(fieldId++, DBGetField(hResult, i, 2, buffer, 256));
+      msg->setField(fieldId++, DBGetFieldULong(hResult, i, 3));
+      msg->setField(fieldId++, DBGetFieldGUID(hResult, i, 4));
+      fieldId += 5;
+      recordCount++;
+   }
+   DBFreeResult(hResult);
+   DBConnectionPoolReleaseConnection(hdb);
+
+   msg->setField(VID_NUM_ELEMENTS, recordCount);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Get list of DCI summary tables available for given user as JSON
+ */
+json_t NXCORE_EXPORTABLE *GetSummaryTablesIntoJSON(uint32_t userId)
+{
+   bool fullAccess = (userId == 0) || ((GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS) != 0);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   int aclSize = 0;
+   Buffer<SummaryTableACLEntry> acl;
+   if (!fullAccess)
+   {
+      aclSize = LoadAllSummaryTableACLs(hdb, &acl);
+      if (aclSize == -1)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         return nullptr;
+      }
+   }
+
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT id,menu_path,title,flags,guid FROM dci_summary_tables");
+   if (hResult == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return nullptr;
+   }
+
+   json_t *output = json_array();
+   wchar_t buffer[256];
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      uint32_t id = DBGetFieldULong(hResult, i, 0);
+      if (!fullAccess && !CheckAccess(acl, aclSize, id, userId))
+         continue;
+
+      json_t *element = json_object();
+      json_object_set_new(element, "id", json_integer(id));
+      json_object_set_new(element, "menuPath", json_string_t(DBGetField(hResult, i, 1, buffer, 256)));
+      json_object_set_new(element, "title", json_string_t(DBGetField(hResult, i, 2, buffer, 256)));
+      json_object_set_new(element, "flags", json_integer(DBGetFieldULong(hResult, i, 3)));
+      json_object_set_new(element, "guid", DBGetFieldGUID(hResult, i, 4).toJson());
+      json_array_append_new(output, element);
+   }
+   DBFreeResult(hResult);
+   DBConnectionPoolReleaseConnection(hdb);
+   return output;
 }
 
 /**
@@ -879,6 +1188,10 @@ json_t NXCORE_EXPORTABLE *GetSummaryTableDetails(uint32_t id, uint32_t *rcc)
       json_array_append_new(columnsArray, colObj);
    }
    json_object_set_new(root, "columns", columnsArray);
+
+   IntegerArray<uint32_t> acl;
+   GetSummaryTableACL(table->getId(), &acl);
+   json_object_set_new(root, "acl", acl.toJson());
 
    delete table;
    return root;

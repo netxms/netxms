@@ -2827,6 +2827,16 @@ CREATE TABLE dci_summary_tables
 ) TABLE_TYPE;
 
 /*
+** DCI summary table access lists
+*/
+CREATE TABLE dci_summary_table_acl
+(
+  table_id integer not null,
+  user_id integer not null,
+  PRIMARY KEY(table_id,user_id)
+) TABLE_TYPE;
+
+/*
 ** Scheduled tasks
 */
 CREATE TABLE scheduled_tasks

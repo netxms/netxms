@@ -1665,12 +1665,16 @@ uint32_t NXCORE_EXPORTABLE GetObjectToolType(uint32_t toolId, int *toolType, TCH
 String NXCORE_EXPORTABLE BuildAuditInputFieldsString(const StringMap& inputFields, const StringList *maskedFields);
 
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
-uint32_t NXCORE_EXPORTABLE ModifySummaryTable(uint32_t id, const wchar_t *menuPath, const wchar_t *title, const wchar_t *nodeFilter, uint32_t flags, const wchar_t *columns, const wchar_t *tableDciName, uint32_t *newId);
+uint32_t NXCORE_EXPORTABLE ModifySummaryTable(uint32_t id, const wchar_t *menuPath, const wchar_t *title, const wchar_t *nodeFilter, uint32_t flags, const wchar_t *columns, const wchar_t *tableDciName, const IntegerArray<uint32_t> *acl, uint32_t *newId);
 uint32_t NXCORE_EXPORTABLE DeleteSummaryTable(uint32_t tableId);
 Table NXCORE_EXPORTABLE *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
+bool NXCORE_EXPORTABLE CheckSummaryTableAccess(uint32_t tableId, uint32_t userId);
+bool GetSummaryTableACL(uint32_t tableId, IntegerArray<uint32_t> *acl);
 bool CreateSummaryTableExportRecord(uint32_t id, json_t *array);
 bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context, bool nxslV5);
 bool ImportSummaryTable(json_t *config, bool overwrite, ImportContext *context);
+uint32_t GetSummaryTablesIntoMessage(NXCPMessage *msg, uint32_t userId);
+json_t NXCORE_EXPORTABLE *GetSummaryTablesIntoJSON(uint32_t userId);
 json_t NXCORE_EXPORTABLE *GetSummaryTablesList();
 json_t NXCORE_EXPORTABLE *GetSummaryTableDetails(uint32_t id, uint32_t *rcc);
 

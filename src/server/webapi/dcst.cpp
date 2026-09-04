@@ -27,38 +27,16 @@
  */
 int H_SummaryTables(Context *context)
 {
-   int responseCode;
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,menu_path,title,flags,guid FROM dci_summary_tables"));
-   if (hResult != nullptr)
-   {
-      json_t *output = json_array();
-
-      TCHAR buffer[256];
-      int32_t count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         json_t *element = json_object();
-         json_object_set_new(element, "id", json_integer(DBGetFieldULong(hResult, i, 0)));
-         json_object_set_new(element, "menuPath", json_string_t(DBGetField(hResult, i, 1, buffer, 256)));
-         json_object_set_new(element, "title", json_string_t(DBGetField(hResult, i, 2, buffer, 256)));
-         json_object_set_new(element, "flags", json_integer(DBGetFieldULong(hResult, i, 3)));
-         json_object_set_new(element, "guid", json_string_t(DBGetFieldGUID(hResult, i, 4).toString()));
-         json_array_append_new(output, element);
-      }
-      DBFreeResult(hResult);
-
-      context->setResponseData(output);
-      json_decref(output);
-      responseCode = 200;
-   }
-   else
+   json_t *output = GetSummaryTablesIntoJSON(context->getUserId());
+   if (output == nullptr)
    {
       context->setErrorResponse("Database failure");
-      responseCode = 500;
+      return 500;
    }
-   DBConnectionPoolReleaseConnection(hdb);
-   return responseCode;
+
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
 }
 
 /**
@@ -123,6 +101,25 @@ int H_SummaryTableDetails(Context *context)
 }
 
 /**
+ * Read access list from JSON document. Returns false if "acl" element is missing.
+ */
+static bool ReadAccessListFromJson(json_t *request, IntegerArray<uint32_t> *acl)
+{
+   json_t *aclJson = json_object_get(request, "acl");
+   if (!json_is_array(aclJson))
+      return false;
+
+   size_t index;
+   json_t *element;
+   json_array_foreach(aclJson, index, element)
+   {
+      if (json_is_integer(element))
+         acl->add(static_cast<uint32_t>(json_integer_value(element)));
+   }
+   return true;
+}
+
+/**
  * Create summary table
  */
 int H_SummaryTableCreate(Context *context)
@@ -156,8 +153,13 @@ int H_SummaryTableCreate(Context *context)
 
    StringBuffer columnList = BuildColumnListFromJson(json_object_get(request, "columns"));
 
+   // Newly created table is accessible by everyone unless access list is provided explicitly
+   IntegerArray<uint32_t> acl;
+   if (!ReadAccessListFromJson(request, &acl))
+      acl.add(GROUP_EVERYONE);
+
    uint32_t newId;
-   uint32_t rcc = ModifySummaryTable(0, menuPath, title, nodeFilter, flags, columnList.cstr(), tableDciName, &newId);
+   uint32_t rcc = ModifySummaryTable(0, menuPath, title, nodeFilter, flags, columnList.cstr(), tableDciName, &acl, &newId);
    MemFree(nodeFilter);
 
    if (rcc == RCC_SUCCESS)
@@ -221,8 +223,12 @@ int H_SummaryTableUpdate(Context *context)
 
    StringBuffer columnList = BuildColumnListFromJson(json_object_get(request, "columns"));
 
+   // Existing access list is left unchanged if "acl" element is missing in request
+   IntegerArray<uint32_t> acl;
+   bool aclProvided = ReadAccessListFromJson(request, &acl);
+
    uint32_t newId;
-   uint32_t rcc = ModifySummaryTable(tableId, menuPath, title, nodeFilter, flags, columnList.cstr(), tableDciName, &newId);
+   uint32_t rcc = ModifySummaryTable(tableId, menuPath, title, nodeFilter, flags, columnList.cstr(), tableDciName, aclProvided ? &acl : nullptr, &newId);
    MemFree(nodeFilter);
 
    if (rcc == RCC_SUCCESS)

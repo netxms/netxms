@@ -15297,32 +15297,7 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
 void ClientSession::getSummaryTables(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, L"SELECT id,menu_path,title,flags,guid FROM dci_summary_tables");
-   if (hResult != nullptr)
-   {
-      wchar_t buffer[256];
-      int32_t count = DBGetNumRows(hResult);
-      response.setField(VID_NUM_ELEMENTS, count);
-      uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-      for(int i = 0; i < count; i++)
-      {
-         response.setField(fieldId++, DBGetFieldULong(hResult, i, 0));
-         response.setField(fieldId++, DBGetField(hResult, i, 1, buffer, 256));
-         response.setField(fieldId++, DBGetField(hResult, i, 2, buffer, 256));
-         response.setField(fieldId++, DBGetFieldULong(hResult, i, 3));
-         response.setField(fieldId++, DBGetFieldGUID(hResult, i, 4));
-         fieldId += 5;
-      }
-      DBFreeResult(hResult);
-   }
-	else
-	{
-		response.setField(VID_RCC, RCC_DB_FAILURE);
-	}
-   DBConnectionPoolReleaseConnection(hdb);
-
+   response.setField(VID_RCC, GetSummaryTablesIntoMessage(&response, m_userId));
    sendMessage(response);
 }
 
@@ -15347,7 +15322,7 @@ void ClientSession::getSummaryTableDetails(const NXCPMessage& request)
             if (DBGetNumRows(hResult) > 0)
             {
                TCHAR buffer[256];
-               msg.setField(VID_SUMMARY_TABLE_ID, (UINT32)id);
+               msg.setField(VID_SUMMARY_TABLE_ID, id);
                msg.setField(VID_MENU_PATH, DBGetField(hResult, 0, 0, buffer, 256));
                msg.setField(VID_TITLE, DBGetField(hResult, 0, 1, buffer, 256));
                TCHAR *tmp = DBGetField(hResult, 0, 2, nullptr, 0);
@@ -15366,6 +15341,10 @@ void ClientSession::getSummaryTableDetails(const NXCPMessage& request)
                uuid guid = DBGetFieldGUID(hResult, 0, 5);
                msg.setField(VID_GUID, guid);
                msg.setField(VID_DCI_NAME, DBGetField(hResult, 0, 6, buffer, 256));
+
+               IntegerArray<uint32_t> acl;
+               GetSummaryTableACL(id, &acl);
+               msg.setFieldFromInt32Array(VID_ACL, acl);
             }
             else
             {
@@ -15401,16 +15380,20 @@ void ClientSession::modifySummaryTable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
-	{
-		uint32_t id;
-		response.setField(VID_RCC, ModifySummaryTable(request, &id));
-		response.setField(VID_SUMMARY_TABLE_ID, (UINT32)id);
-	}
-	else
-	{
-		response.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
+   {
+      uint32_t id;
+      uint32_t rcc = ModifySummaryTable(request, &id);
+      response.setField(VID_RCC, rcc);
+      response.setField(VID_SUMMARY_TABLE_ID, id);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("DCI summary table [%u] updated"), id);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating DCI summary table [%u]"), request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
 
    sendMessage(response);
 }
@@ -15422,14 +15405,19 @@ void ClientSession::deleteSummaryTable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
-	{
-		response.setField(VID_RCC, DeleteSummaryTable(request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID)));
-	}
-	else
-	{
-		response.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
+   uint32_t tableId = request.getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS)
+   {
+      uint32_t rcc = DeleteSummaryTable(tableId);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, _T("DCI summary table [%u] deleted"), tableId);
+   }
+   else
+   {
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting DCI summary table [%u]"), tableId);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
 
    sendMessage(response);
 }

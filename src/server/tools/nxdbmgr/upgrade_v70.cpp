@@ -24,6 +24,24 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.31 to 70.32
+ */
+static bool H_UpgradeFromV31()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE dci_summary_table_acl ("
+      L"  table_id integer not null,"
+      L"  user_id integer not null,"
+      L"  PRIMARY KEY(table_id,user_id))"));
+
+   // Existing summary tables should stay visible to everyone
+   CHK_EXEC(SQLQuery(L"INSERT INTO dci_summary_table_acl (table_id,user_id) SELECT id,1073741824 FROM dci_summary_tables"));
+
+   CHK_EXEC(SetMinorSchemaVersion(32));
+   return true;
+}
+
+/**
  * Upgrade from 70.30 to 70.31
  */
 static bool H_UpgradeFromV30()
@@ -957,6 +975,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 31, 70, 32, H_UpgradeFromV31 },
    { 30, 70, 31, H_UpgradeFromV30 },
    { 29, 70, 30, H_UpgradeFromV29 },
    { 28, 70, 29, H_UpgradeFromV28 },
