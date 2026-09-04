@@ -796,7 +796,7 @@ static void CreateAssistantSkillList()
             "Get events related to an incident within a time window around its creation for correlation analysis.",
             {
                { "incident_id", "ID of the incident (mandatory)", "integer" },
-               { "time_window", "Time window in seconds before and after incident creation (default: 3600)", "integer" }
+               { "time_window", "Time window before and after incident creation, as duration with unit suffix (e.g. '30m', '2h', '1d'); number without unit means seconds (default: 1h)" }
             },
             F_GetIncidentRelatedEvents),
          AssistantFunction(
