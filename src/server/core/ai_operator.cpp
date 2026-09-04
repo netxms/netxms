@@ -1240,7 +1240,7 @@ void InitAIOperators()
          { "severity", "Severity: 'normal', 'warning', 'minor', 'major', or 'critical'" },
          { "body", "Optional: detailed description of the observation" },
          { "object", "Optional: name or ID of the NetXMS object this observation relates to" },
-         { "references", "Optional: array of references supporting the observation (alarm IDs, event IDs, DCI IDs, etc.)" }
+         { "references", "Optional: array of references supporting the observation (alarm IDs, event IDs, DCI IDs, etc.)", "array", "string" }
       },
       F_RecordObservation);
 

@@ -155,9 +155,9 @@ static void CreateAssistantFunctionList()
       {
          { "name", "optional part of object name or alias" },
          { "ipAddress", "optional IP address assigned to object" },
-         { "classes", "optional array of object classes to search (node, interface, container, etc.)" },
-         { "parentId", "optional ID of parent object (container or group)" },
-         { "zoneUIN", "optional zone UIN" }
+         { "classes", "optional array of object classes to search (node, interface, container, etc.)", "array", "string" },
+         { "parentId", "optional ID of parent object (container or group)", "integer" },
+         { "zoneUIN", "optional zone UIN", "integer" }
       },
       F_FindObjects);
    RegisterAIAssistantFunction(
@@ -173,8 +173,8 @@ static void CreateAssistantFunctionList()
       {
          { "object", "name or ID of the object to poll (mandatory)" },
          { "pollType", "one of: status, configuration, instance-discovery, topology, routing-table, discovery, autobind, map-update (mandatory)" },
-         { "wait", "if true, block until the poll completes or timeoutSeconds elapses, returning captured poller output (default: false)" },
-         { "timeoutSeconds", "max seconds to wait when wait=true; clamped to [1, 300] (default: 30)" }
+         { "wait", "if true, block until the poll completes or timeoutSeconds elapses, returning captured poller output (default: false)", "boolean" },
+         { "timeoutSeconds", "max seconds to wait when wait=true; clamped to [1, 300] (default: 30)", "integer" }
       },
       F_ForcePoll);
    RegisterAIAssistantFunction(
@@ -246,9 +246,9 @@ static void CreateAssistantFunctionList()
          { "min_severity", "minimum severity to include: 'critical', 'major', 'minor', 'warning'. Default: 'major' (i.e. critical + major)" },
          { "scope", "optional name or ID of an object (container, zone, single device) to limit the view to that subtree. Default: whole infrastructure visible to user" },
          { "since", "optional timestamp; report only changes at or after this time (delta mode). Also sets the start of the 'recent events' window, overriding event_window_minutes" },
-         { "event_window_minutes", "time window for the 'recent events' section, in minutes. Clamped to [5, 1440]. Default: 60. Ignored when 'since' is set" },
+         { "event_window_minutes", "time window for the 'recent events' section, in minutes. Clamped to [5, 1440]. Default: 60. Ignored when 'since' is set", "integer" },
          { "dci_tag", "optional glob pattern; limit the DCI anomalies section to DCIs whose user tag matches the pattern" },
-         { "include_quiet", "if true, also include objects in maintenance mode and administratively unmanaged objects. Default: false" }
+         { "include_quiet", "if true, also include objects in maintenance mode and administratively unmanaged objects. Default: false", "boolean" }
       },
       F_OperationalStatus);
    RegisterAIAssistantFunction(
@@ -273,7 +273,7 @@ static void CreateAssistantFunctionList()
       {
           { "object", "name or ID of a node" },
           { "oid", "SNMP OID to start walk from" },
-          { "limit", "maximum number of variables to return (default: 1000)" }
+          { "limit", "maximum number of variables to return (default: 1000)", "integer" }
       },
       F_SNMPWalk);
 }
@@ -292,40 +292,40 @@ static void CreateAssistantSkillList()
             "get-alarm-details",
             "Get full details of a single active alarm: state, severity, source object and its status, timestamps, repeat count, helpdesk linkage, the originating EPP rule, the complete operator comment history, and recent related events. Use this before acting on an alarm to understand its context. Terminated alarms are not retained in the active list and cannot be retrieved here.",
             {
-               { "alarm", "numeric alarm ID (mandatory)" }
+               { "alarm", "numeric alarm ID (mandatory)", "integer" }
             },
             F_GetAlarmDetails),
          AssistantFunction(
             "acknowledge-alarm",
             "Acknowledge one or more alarms, signaling that an operator is aware of the condition. Only alarms in the outstanding state can be acknowledged. Returns a per-alarm result with success/failure for each ID.",
             {
-               { "alarms", "alarm ID, or array of alarm IDs, to acknowledge (mandatory)" },
-               { "sticky", "if true, the alarm stays acknowledged even if the originating condition repeats (default: false)" },
-               { "timeout_minutes", "for a sticky acknowledgment, automatically revert the alarm to outstanding after this many minutes unless it was resolved (optional; ignored unless sticky is true; 0 = no timeout)" },
-               { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)" }
+               { "alarms", "array of alarm IDs to acknowledge (mandatory)", "array", "integer" },
+               { "sticky", "if true, the alarm stays acknowledged even if the originating condition repeats (default: false)", "boolean" },
+               { "timeout_minutes", "for a sticky acknowledgment, automatically revert the alarm to outstanding after this many minutes unless it was resolved (optional; ignored unless sticky is true; 0 = no timeout)", "integer" },
+               { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)", "boolean" }
             },
             F_AcknowledgeAlarm),
          AssistantFunction(
             "resolve-alarm",
             "Resolve one or more alarms. A resolved alarm remains in the active alarm list and will be re-activated automatically if the originating condition occurs again. Use this when the underlying problem has been fixed. Returns a per-alarm result.",
             {
-               { "alarms", "alarm ID, or array of alarm IDs, to resolve (mandatory)" },
-               { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)" }
+               { "alarms", "array of alarm IDs to resolve (mandatory)", "array", "integer" },
+               { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)", "boolean" }
             },
             F_ResolveAlarm),
          AssistantFunction(
             "terminate-alarm",
             "Terminate one or more alarms, removing them from the active alarm list. The alarm will not reappear unless it is raised again. Use this to clear stale alarms or alarms that no longer apply. An alarm that is open in an external helpdesk system cannot be terminated until the helpdesk issue is closed. Returns a per-alarm result.",
             {
-               { "alarms", "alarm ID, or array of alarm IDs, to terminate (mandatory)" },
-               { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)" }
+               { "alarms", "array of alarm IDs to terminate (mandatory)", "array", "integer" },
+               { "include_subordinates", "also apply to subordinate (child) alarms grouped under each alarm (default: true)", "boolean" }
             },
             F_TerminateAlarm),
          AssistantFunction(
             "add-alarm-comment",
             "Add an operator comment to an alarm to document analysis findings, actions taken, or context for other operators. The comment is appended to the alarm's comment history.",
             {
-               { "alarm", "numeric alarm ID (mandatory)" },
+               { "alarm", "numeric alarm ID (mandatory)", "integer" },
                { "text", "comment text (mandatory)" }
             },
             F_AddAlarmComment)
@@ -349,8 +349,8 @@ static void CreateAssistantSkillList()
                { "pollingInterval", "polling interval in seconds (optional, uses system default if not specified)" },
                { "retentionTime", "retention time in days (optional, uses system default if not specified)" },
                { "deltaCalculation", "delta calculation: original, delta, averagePerSecond, averagePerMinute (default: original)" },
-               { "sampleCount", "number of samples for threshold functions (default: 1)" },
-               { "multiplier", "value multiplier (default: 0)" },
+               { "sampleCount", "number of samples for threshold functions (default: 1)", "integer" },
+               { "multiplier", "value multiplier (default: 0)", "integer" },
                { "unitName", "unit name for display (optional)" },
                { "transformationScript", "NXSL transformation script source code (optional)" },
                { "status", "status: active, disabled (default: active)" },
@@ -358,12 +358,12 @@ static void CreateAssistantSkillList()
                { "comments", "notes or comments about the metric (optional)" },
                { "userTag", "user-defined tag for categorization (optional)" },
                { "sourceNode", "name or ID of proxy node for data collection (optional)" },
-               { "snmpPort", "custom SNMP port (optional, uses node default if not set)" },
-               { "showOnObjectTooltip", "show value in object tooltip (optional, boolean)" },
-               { "showInObjectOverview", "show value in object overview (optional, boolean)" },
-               { "calculateNodeStatus", "use for node status calculation (optional, boolean)" },
-               { "storeChangesOnly", "store only changed values (optional, boolean)" },
-               { "hideOnLastValuesPage", "hide from last values page (optional, boolean)" }
+               { "snmpPort", "custom SNMP port (optional, uses node default if not set)", "integer" },
+               { "showOnObjectTooltip", "show value in object tooltip (optional, boolean)", "boolean" },
+               { "showInObjectOverview", "show value in object overview (optional, boolean)", "boolean" },
+               { "calculateNodeStatus", "use for node status calculation (optional, boolean)", "boolean" },
+               { "storeChangesOnly", "store only changed values (optional, boolean)", "boolean" },
+               { "hideOnLastValuesPage", "hide from last values page (optional, boolean)", "boolean" }
             },
             F_CreateMetric),
          AssistantFunction(
@@ -379,8 +379,8 @@ static void CreateAssistantSkillList()
                { "pollingInterval", "new polling interval in seconds (optional)" },
                { "retentionTime", "new retention time in days (optional)" },
                { "deltaCalculation", "new delta calculation: original, delta, averagePerSecond, averagePerMinute (optional)" },
-               { "sampleCount", "new number of samples for threshold functions (optional)" },
-               { "multiplier", "new value multiplier (optional)" },
+               { "sampleCount", "new number of samples for threshold functions (optional)", "integer" },
+               { "multiplier", "new value multiplier (optional)", "integer" },
                { "unitName", "new unit name for display (optional)" },
                { "transformationScript", "new NXSL transformation script source code (optional)" },
                { "status", "new status: active, disabled (optional)" },
@@ -389,13 +389,13 @@ static void CreateAssistantSkillList()
                { "userTag", "new user-defined tag (optional)" },
                { "systemTag", "new system tag (optional)" },
                { "sourceNode", "name or ID of proxy node, or 'none' to clear (optional)" },
-               { "snmpPort", "custom SNMP port, 0 to reset to default (optional)" },
-               { "showOnObjectTooltip", "show value in object tooltip (optional, boolean)" },
-               { "showInObjectOverview", "show value in object overview (optional, boolean)" },
-               { "calculateNodeStatus", "use for node status calculation (optional, boolean)" },
-               { "storeChangesOnly", "store only changed values (optional, boolean)" },
-               { "hideOnLastValuesPage", "hide from last values page (optional, boolean)" },
-               { "aggregateOnCluster", "aggregate on cluster (optional, boolean)" }
+               { "snmpPort", "custom SNMP port, 0 to reset to default (optional)", "integer" },
+               { "showOnObjectTooltip", "show value in object tooltip (optional, boolean)", "boolean" },
+               { "showInObjectOverview", "show value in object overview (optional, boolean)", "boolean" },
+               { "calculateNodeStatus", "use for node status calculation (optional, boolean)", "boolean" },
+               { "storeChangesOnly", "store only changed values (optional, boolean)", "boolean" },
+               { "hideOnLastValuesPage", "hide from last values page (optional, boolean)", "boolean" },
+               { "aggregateOnCluster", "aggregate on cluster (optional, boolean)", "boolean" }
             },
             F_EditMetric),
          AssistantFunction(
@@ -430,7 +430,7 @@ static void CreateAssistantSkillList()
                { "metric", "name of the metric/DCI to analyze (mandatory)" },
                { "timeFrom", "start time (ISO format or negative number of minutes, like '-60' for an our ago)" },
                { "timeTo", "end time (optional, ISO format, defaults to now)" },
-               { "maxDataPoints", "optional maximum number of data points to return; if set, data will be aggregated into time buckets with min/max/avg values; default is 500; set to 0 for raw data" }
+               { "maxDataPoints", "optional maximum number of data points to return; if set, data will be aggregated into time buckets with min/max/avg values; default is 500; set to 0 for raw data", "integer" }
             },
             F_GetHistoricalData),
          AssistantFunction(
@@ -457,12 +457,12 @@ static void CreateAssistantSkillList()
                { "value", "threshold value (mandatory)" },
                { "function", "function: last, average, sum, meanDeviation, diff, error, script, absDeviation, anomaly (default: last)" },
                { "operation", "operation: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike (default: greaterOrEqual)" },
-               { "sampleCount", "number of samples for the function (default: 1)" },
-               { "deactivationSampleCount", "number of consecutive non-matching polls before deactivation (default: 1)" },
+               { "sampleCount", "number of samples for the function (default: 1)", "integer" },
+               { "deactivationSampleCount", "number of consecutive non-matching polls before deactivation (default: 1)", "integer" },
                { "activationEvent", "event name or numeric code generated when threshold activates (default: SYS_THRESHOLD_REACHED)" },
                { "deactivationEvent", "event name or numeric code generated when threshold deactivates (default: SYS_THRESHOLD_REARMED)" },
-               { "repeatInterval", "repeat interval in seconds, -1=default, 0=off (default: -1)" },
-               { "regenerateOnValueChange", "regenerate activation event when value changes while threshold stays active (optional, boolean)" },
+               { "repeatInterval", "repeat interval in seconds, -1=default, 0=off (default: -1)", "integer" },
+               { "regenerateOnValueChange", "regenerate activation event when value changes while threshold stays active (optional, boolean)", "boolean" },
                { "script", "NXSL script for script function (optional)" }
             },
             F_AddThreshold),
@@ -472,17 +472,17 @@ static void CreateAssistantSkillList()
             {
                { "object", "name or ID of an object (mandatory)" },
                { "metric", "name or ID of the metric (mandatory)" },
-               { "thresholdId", "ID of the threshold to edit (mandatory)" },
+               { "thresholdId", "ID of the threshold to edit (mandatory)", "integer" },
                { "value", "new threshold value (optional)" },
                { "function", "new function: last, average, sum, meanDeviation, diff, error, script, absDeviation, anomaly (optional)" },
                { "operation", "new operation: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike (optional)" },
-               { "sampleCount", "new number of samples for the function (optional)" },
-               { "deactivationSampleCount", "new number of consecutive non-matching polls before deactivation (optional)" },
+               { "sampleCount", "new number of samples for the function (optional)", "integer" },
+               { "deactivationSampleCount", "new number of consecutive non-matching polls before deactivation (optional)", "integer" },
                { "activationEvent", "new event name or numeric code generated when threshold activates (optional)" },
                { "deactivationEvent", "new event name or numeric code generated when threshold deactivates (optional)" },
-               { "repeatInterval", "new repeat interval in seconds, -1=default, 0=off (optional)" },
-               { "regenerateOnValueChange", "regenerate activation event when value changes while threshold stays active (optional, boolean)" },
-               { "disabled", "disable or enable the threshold (optional, boolean)" },
+               { "repeatInterval", "new repeat interval in seconds, -1=default, 0=off (optional)", "integer" },
+               { "regenerateOnValueChange", "regenerate activation event when value changes while threshold stays active (optional, boolean)", "boolean" },
+               { "disabled", "disable or enable the threshold (optional, boolean)", "boolean" },
                { "script", "new NXSL script for script function, empty string to clear (optional)" }
             },
             F_EditThreshold),
@@ -492,7 +492,7 @@ static void CreateAssistantSkillList()
             {
                { "object", "name or ID of an object (mandatory)" },
                { "metric", "name or ID of the metric (mandatory)" },
-               { "thresholdId", "threshold ID to delete (mandatory)" }
+               { "thresholdId", "threshold ID to delete (mandatory)", "integer" }
             },
             F_DeleteThreshold)
       }
@@ -518,7 +518,7 @@ static void CreateAssistantSkillList()
             "modify-event-template",
             "Modify a user-defined event template (code >= 100000).",
             {
-               { "code", "event code (provide code or name)" },
+               { "code", "event code (provide code or name)", "integer" },
                { "name", "event name (provide code or name)" },
                { "newName", "new name (optional)" },
                { "severity", "new severity (optional)" },
@@ -531,7 +531,7 @@ static void CreateAssistantSkillList()
             "delete-event-template",
             "Delete a user-defined event template (code >= 100000).",
             {
-               { "code", "event code (provide code or name)" },
+               { "code", "event code (provide code or name)", "integer" },
                { "name", "event name (provide code or name)" }
             },
             F_DeleteEventTemplate),
@@ -539,7 +539,7 @@ static void CreateAssistantSkillList()
             "get-event-processing-action",
             "Get specific server-side action used in event processing by its ID. Server-side actions define operations that can be executed in response to events, such as sending notifications, executing commands, or running scripts.",
             {
-               { "id", "action ID (numeric)" }
+               { "id", "action ID (numeric)", "integer" }
             },
             F_GetEventProcessingAction),
          AssistantFunction(
@@ -551,7 +551,7 @@ static void CreateAssistantSkillList()
             "get-event-template",
             "Get event template definition by code or name. Event templates define the structure and properties of events that can be generated in NetXMS.",
             {
-               { "code", "event template code (numeric ID)" },
+               { "code", "event template code (numeric ID)", "integer" },
                { "name", "event template name (either code or name must be provided)" }
             },
             F_GetEventTemplate),
@@ -568,46 +568,46 @@ static void CreateAssistantSkillList()
                { "before_guid", "place the new rule immediately before this rule GUID (optional)" },
                { "position", "explicit position: 'first' or 'last' (default: 'last' if no after/before given)" },
                { "comments", "human-readable comments describing the rule (optional)" },
-               { "events", "array of event codes or names that the rule matches (optional; empty = match any event)" },
-               { "sources", "array of object IDs or names; rule applies to events from these objects (optional; empty = any source)" },
-               { "source_exclusions", "array of object IDs or names to exclude (optional)" },
-               { "match_severities", "array of severity names to match: info, warning, minor, major, critical (optional; absent = match all severities)" },
-               { "negated_event_match", "if true, invert the event match (match events NOT in the list) (optional, default false)" },
-               { "negated_source_match", "if true, invert the source match (optional, default false)" },
-               { "time_frames", "array of {time, date} integer pairs (optional; format documented in skill md)" },
+               { "events", "array of event codes or names that the rule matches (optional; empty = match any event)", "array", "string" },
+               { "sources", "array of object IDs or names; rule applies to events from these objects (optional; empty = any source)", "array", "string" },
+               { "source_exclusions", "array of object IDs or names to exclude (optional)", "array", "string" },
+               { "match_severities", "array of severity names to match: info, warning, minor, major, critical (optional; absent = match all severities)", "array", "string" },
+               { "negated_event_match", "if true, invert the event match (match events NOT in the list) (optional, default false)", "boolean" },
+               { "negated_source_match", "if true, invert the source match (optional, default false)", "boolean" },
+               { "time_frames", "array of {time, date} integer pairs (optional; format documented in skill md)", "array", "object" },
                { "filter_script", "NXSL filter script (optional)" },
-               { "actions", "array of {id, timer_delay?, timer_key?, blocking_timer_key?, snooze_time?, active?}; id is action ID or name (optional)" },
+               { "actions", "array of {id, timer_delay?, timer_key?, blocking_timer_key?, snooze_time?, active?}; id is action ID or name (optional)", "array", "object" },
                { "action_script", "NXSL action script (optional)" },
-               { "timer_cancellations", "array of timer keys to cancel (optional)" },
-               { "stop_processing", "if true, stop EPP processing after this rule matches (optional, default false)" },
-               { "generate_alarm", "if true, generate an alarm on match (optional, default false)" },
+               { "timer_cancellations", "array of timer keys to cancel (optional)", "array", "string" },
+               { "stop_processing", "if true, stop EPP processing after this rule matches (optional, default false)", "boolean" },
+               { "generate_alarm", "if true, generate an alarm on match (optional, default false)", "boolean" },
                { "alarm_severity", "alarm severity: info, warning, minor, major, critical, normal, 'same as event', resolve, terminate (optional)" },
                { "alarm_message", "alarm message template (optional)" },
                { "alarm_impact", "alarm impact text (optional)" },
                { "alarm_key", "alarm key for deduplication and resolve/terminate matching (optional)" },
-               { "alarm_timeout", "alarm acknowledgment timeout in seconds (optional, 0 = no timeout)" },
+               { "alarm_timeout", "alarm acknowledgment timeout in seconds (optional, 0 = no timeout)", "integer" },
                { "alarm_timeout_event", "event code or name to generate when alarm times out (optional)" },
-               { "alarm_categories", "array of alarm category IDs or names (optional)" },
+               { "alarm_categories", "array of alarm category IDs or names (optional)", "array", "string" },
                { "alarm_category_script", "name of library script that returns alarm category name or array of names; replaces alarm_categories when set (optional)" },
-               { "create_incident", "if true, create an incident on match (optional, default false)" },
-               { "incident_delay", "incident creation delay in seconds (optional, 0 = immediate)" },
+               { "create_incident", "if true, create an incident on match (optional, default false)", "boolean" },
+               { "incident_delay", "incident creation delay in seconds (optional, 0 = immediate)", "integer" },
                { "incident_title", "incident title template (optional; defaults to alarm message)" },
                { "incident_description", "incident description template (optional)" },
-               { "ai_analyze_incident", "if true, run AI analysis on created incident (optional, default false)" },
+               { "ai_analyze_incident", "if true, run AI analysis on created incident (optional, default false)", "boolean" },
                { "incident_ai_analysis_depth", "AI analysis depth: quick, standard, thorough (optional)" },
                { "incident_ai_prompt", "custom AI analysis instructions (optional)" },
-               { "create_ticket", "if true, create helpdesk ticket on match (optional, default false)" },
-               { "terminate_by_regexp", "if true, treat alarm_key as a regexp when resolving/terminating (optional, default false)" },
-               { "start_downtime", "if true, start a downtime period on match (optional, default false)" },
-               { "end_downtime", "if true, end a downtime period on match (optional, default false)" },
+               { "create_ticket", "if true, create helpdesk ticket on match (optional, default false)", "boolean" },
+               { "terminate_by_regexp", "if true, treat alarm_key as a regexp when resolving/terminating (optional, default false)", "boolean" },
+               { "start_downtime", "if true, start a downtime period on match (optional, default false)", "boolean" },
+               { "end_downtime", "if true, end a downtime period on match (optional, default false)", "boolean" },
                { "downtime_tag", "downtime tag (optional)" },
-               { "request_ai_comment", "if true, request AI-generated comment on alarm (optional, default false)" },
+               { "request_ai_comment", "if true, request AI-generated comment on alarm (optional, default false)", "boolean" },
                { "rca_script_name", "name of library script for root cause analysis (optional)" },
                { "ai_agent_instructions", "instructions for AI agent processing this rule (optional)" },
-               { "pstorage_set", "object map of persistent storage keys to set on match: {key: value, ...} (optional)" },
-               { "pstorage_delete", "array of persistent storage keys to delete on match (optional)" },
-               { "custom_attribute_set", "object map of custom attributes to set on the source object: {key: value, ...} (optional)" },
-               { "custom_attribute_delete", "array of custom attribute names to delete on the source object (optional)" }
+               { "pstorage_set", "object map of persistent storage keys to set on match: {key: value, ...} (optional)", "object" },
+               { "pstorage_delete", "array of persistent storage keys to delete on match (optional)", "array", "string" },
+               { "custom_attribute_set", "object map of custom attributes to set on the source object: {key: value, ...} (optional)", "object" },
+               { "custom_attribute_delete", "array of custom attribute names to delete on the source object (optional)", "array", "string" }
             },
             F_CreateEppRule),
          AssistantFunction(
@@ -616,46 +616,46 @@ static void CreateAssistantSkillList()
             {
                { "guid", "GUID of the rule to modify (mandatory)" },
                { "comments", "new comments (optional)" },
-               { "events", "new event list (optional, replaces current)" },
-               { "sources", "new source list (optional, replaces current)" },
-               { "source_exclusions", "new source exclusions list (optional, replaces current)" },
-               { "match_severities", "new severity match list (optional, replaces current)" },
-               { "negated_event_match", "new negated-event-match flag (optional)" },
-               { "negated_source_match", "new negated-source-match flag (optional)" },
-               { "time_frames", "new time frames list (optional, replaces current)" },
+               { "events", "new event list (optional, replaces current)", "array", "string" },
+               { "sources", "new source list (optional, replaces current)", "array", "string" },
+               { "source_exclusions", "new source exclusions list (optional, replaces current)", "array", "string" },
+               { "match_severities", "new severity match list (optional, replaces current)", "array", "string" },
+               { "negated_event_match", "new negated-event-match flag (optional)", "boolean" },
+               { "negated_source_match", "new negated-source-match flag (optional)", "boolean" },
+               { "time_frames", "new time frames list (optional, replaces current)", "array", "object" },
                { "filter_script", "new NXSL filter script (optional; empty string clears)" },
-               { "actions", "new actions list (optional, replaces current)" },
+               { "actions", "new actions list (optional, replaces current)", "array", "object" },
                { "action_script", "new NXSL action script (optional; empty string clears)" },
-               { "timer_cancellations", "new timer cancellations list (optional, replaces current)" },
-               { "stop_processing", "new stop_processing flag (optional)" },
-               { "generate_alarm", "new generate_alarm flag (optional)" },
+               { "timer_cancellations", "new timer cancellations list (optional, replaces current)", "array", "string" },
+               { "stop_processing", "new stop_processing flag (optional)", "boolean" },
+               { "generate_alarm", "new generate_alarm flag (optional)", "boolean" },
                { "alarm_severity", "new alarm severity (optional)" },
                { "alarm_message", "new alarm message (optional)" },
                { "alarm_impact", "new alarm impact (optional)" },
                { "alarm_key", "new alarm key (optional)" },
-               { "alarm_timeout", "new alarm timeout in seconds (optional)" },
+               { "alarm_timeout", "new alarm timeout in seconds (optional)", "integer" },
                { "alarm_timeout_event", "new alarm timeout event code or name (optional)" },
-               { "alarm_categories", "new alarm categories list (optional, replaces current)" },
+               { "alarm_categories", "new alarm categories list (optional, replaces current)", "array", "string" },
                { "alarm_category_script", "new alarm category script name (optional; empty string clears)" },
-               { "create_incident", "new create_incident flag (optional)" },
-               { "incident_delay", "new incident delay in seconds (optional)" },
+               { "create_incident", "new create_incident flag (optional)", "boolean" },
+               { "incident_delay", "new incident delay in seconds (optional)", "integer" },
                { "incident_title", "new incident title (optional)" },
                { "incident_description", "new incident description (optional)" },
-               { "ai_analyze_incident", "new ai_analyze_incident flag (optional)" },
+               { "ai_analyze_incident", "new ai_analyze_incident flag (optional)", "boolean" },
                { "incident_ai_analysis_depth", "new AI analysis depth (optional)" },
                { "incident_ai_prompt", "new AI analysis prompt (optional)" },
-               { "create_ticket", "new create_ticket flag (optional)" },
-               { "terminate_by_regexp", "new terminate_by_regexp flag (optional)" },
-               { "start_downtime", "new start_downtime flag (optional)" },
-               { "end_downtime", "new end_downtime flag (optional)" },
+               { "create_ticket", "new create_ticket flag (optional)", "boolean" },
+               { "terminate_by_regexp", "new terminate_by_regexp flag (optional)", "boolean" },
+               { "start_downtime", "new start_downtime flag (optional)", "boolean" },
+               { "end_downtime", "new end_downtime flag (optional)", "boolean" },
                { "downtime_tag", "new downtime tag (optional)" },
-               { "request_ai_comment", "new request_ai_comment flag (optional)" },
+               { "request_ai_comment", "new request_ai_comment flag (optional)", "boolean" },
                { "rca_script_name", "new RCA script name (optional)" },
                { "ai_agent_instructions", "new AI agent instructions (optional)" },
-               { "pstorage_set", "new persistent storage set map (optional, replaces current)" },
-               { "pstorage_delete", "new persistent storage delete list (optional, replaces current)" },
-               { "custom_attribute_set", "new custom attribute set map (optional, replaces current)" },
-               { "custom_attribute_delete", "new custom attribute delete list (optional, replaces current)" }
+               { "pstorage_set", "new persistent storage set map (optional, replaces current)", "object" },
+               { "pstorage_delete", "new persistent storage delete list (optional, replaces current)", "array", "string" },
+               { "custom_attribute_set", "new custom attribute set map (optional, replaces current)", "object" },
+               { "custom_attribute_delete", "new custom attribute delete list (optional, replaces current)", "array", "string" }
             },
             F_ModifyEppRule),
          AssistantFunction(
@@ -695,7 +695,7 @@ static void CreateAssistantSkillList()
             {
                { "name", "unique action name (mandatory)" },
                { "type", "action type: local_command, agent_command, ssh_command, notification, forward_event, nxsl_script (optional, default local_command)" },
-               { "disabled", "if true, action is created in disabled state (optional, default false)" },
+               { "disabled", "if true, action is created in disabled state (optional, default false)", "boolean" },
                { "recipient", "recipient address for notification, or destination server name for forward_event (optional)" },
                { "email_subject", "subject line for notification (optional)" },
                { "data", "command line text, NXSL source, or notification message body depending on type (optional)" },
@@ -706,10 +706,10 @@ static void CreateAssistantSkillList()
             "modify-server-action",
             "Modify an existing server-side action. Only fields actually provided are changed.",
             {
-               { "id", "action ID (mandatory)" },
+               { "id", "action ID (mandatory)", "integer" },
                { "name", "new action name (optional)" },
                { "type", "new action type (optional)" },
-               { "disabled", "new disabled flag (optional)" },
+               { "disabled", "new disabled flag (optional)", "boolean" },
                { "recipient", "new recipient address (optional)" },
                { "email_subject", "new email subject (optional)" },
                { "data", "new command line / script / body (optional)" },
@@ -720,7 +720,7 @@ static void CreateAssistantSkillList()
             "delete-server-action",
             "Delete a server-side action. Refused if any event processing rule still references it - modify those rules first.",
             {
-               { "id", "action ID (mandatory)" }
+               { "id", "action ID (mandatory)", "integer" }
             },
             F_DeleteServerAction)
       }
@@ -788,15 +788,15 @@ static void CreateAssistantSkillList()
             "get-incident-details",
             "Get full details of an incident including linked alarms, source object, comments, and state information.",
             {
-               { "incident_id", "ID of the incident (mandatory)" }
+               { "incident_id", "ID of the incident (mandatory)", "integer" }
             },
             F_GetIncidentDetails),
          AssistantFunction(
             "get-incident-related-events",
             "Get events related to an incident within a time window around its creation for correlation analysis.",
             {
-               { "incident_id", "ID of the incident (mandatory)" },
-               { "time_window", "Time window in seconds before and after incident creation (default: 3600)" }
+               { "incident_id", "ID of the incident (mandatory)", "integer" },
+               { "time_window", "Time window in seconds before and after incident creation (default: 3600)", "integer" }
             },
             F_GetIncidentRelatedEvents),
          AssistantFunction(
@@ -804,21 +804,21 @@ static void CreateAssistantSkillList()
             "Get historical incidents for a specific object to identify recurring issues and patterns.",
             {
                { "object", "Name or ID of the object to get incident history for (mandatory)" },
-               { "max_count", "Maximum number of historical incidents to return (default: 20)" }
+               { "max_count", "Maximum number of historical incidents to return (default: 20)", "integer" }
             },
             F_GetIncidentHistory),
          AssistantFunction(
             "get-incident-topology-context",
             "Get topology context for an incident including upstream and downstream objects with their current status.",
             {
-               { "incident_id", "ID of the incident (mandatory)" }
+               { "incident_id", "ID of the incident (mandatory)", "integer" }
             },
             F_GetIncidentTopologyContext),
          AssistantFunction(
             "add-incident-comment",
             "Add a comment to an incident for documenting analysis findings, updates, or notes.",
             {
-               { "incident_id", "ID of the incident (mandatory)" },
+               { "incident_id", "ID of the incident (mandatory)", "integer" },
                { "text", "Comment text to add (mandatory)" }
             },
             F_AddIncidentComment),
@@ -826,24 +826,24 @@ static void CreateAssistantSkillList()
             "link-alarm-to-incident",
             "Link a single alarm to an incident. Alarms can only be linked to one incident at a time.",
             {
-               { "incident_id", "ID of the incident (mandatory)" },
-               { "alarm_id", "ID of the alarm to link (mandatory)" }
+               { "incident_id", "ID of the incident (mandatory)", "integer" },
+               { "alarm_id", "ID of the alarm to link (mandatory)", "integer" }
             },
             F_LinkAlarmToIncident),
          AssistantFunction(
             "link-alarms-to-incident",
             "Link multiple alarms to an incident in a single operation.",
             {
-               { "incident_id", "ID of the incident (mandatory)" },
-               { "alarm_ids", "JSON array of alarm IDs to link (mandatory)" }
+               { "incident_id", "ID of the incident (mandatory)", "integer" },
+               { "alarm_ids", "JSON array of alarm IDs to link (mandatory)", "array", "integer" }
             },
             F_LinkAlarmsToIncident),
          AssistantFunction(
             "assign-incident",
             "Assign an incident to a specific user by user ID or username.",
             {
-               { "incident_id", "ID of the incident (mandatory)" },
-               { "user_id", "ID of the user to assign to (provide either user_id or user_name)" },
+               { "incident_id", "ID of the incident (mandatory)", "integer" },
+               { "user_id", "ID of the user to assign to (provide either user_id or user_name)", "integer" },
                { "user_name", "Username to assign to (provide either user_id or user_name)" }
             },
             F_AssignIncident),
@@ -851,7 +851,7 @@ static void CreateAssistantSkillList()
             "suggest-incident-assignee",
             "Get AI suggestion for incident assignment based on responsible users configured on the source object.",
             {
-               { "incident_id", "ID of the incident (mandatory)" }
+               { "incident_id", "ID of the incident (mandatory)", "integer" }
             },
             F_SuggestIncidentAssignee),
          AssistantFunction(
@@ -868,7 +868,7 @@ static void CreateAssistantSkillList()
                { "title", "Incident title (mandatory)" },
                { "source_object", "Name or ID of the source object (mandatory)" },
                { "initial_comment", "Initial comment describing the issue (optional)" },
-               { "source_alarm_id", "ID of an alarm to link (optional)" }
+               { "source_alarm_id", "ID of an alarm to link (optional)", "integer" }
             },
             F_CreateIncident),
          AssistantFunction(
@@ -876,7 +876,7 @@ static void CreateAssistantSkillList()
             "Create an incident linking multiple related alarms. Use when multiple alarms stem from a common root cause.",
             {
                { "title", "Incident title (mandatory)" },
-               { "alarm_ids", "JSON array of alarm IDs to link (mandatory)" },
+               { "alarm_ids", "JSON array of alarm IDs to link (mandatory)", "array", "integer" },
                { "initial_comment", "Initial comment describing the correlation (optional)" }
             },
             F_CreateIncidentFromAlarms)
@@ -909,8 +909,8 @@ static void CreateAssistantSkillList()
                { "time_from", "start time (ISO format or relative like '-60m', default: -60m)" },
                { "time_to", "end time (ISO format, default: now)" },
                { "text_pattern", "case-insensitive text search pattern across text columns" },
-               { "filters", "optional JSON object with column-specific filters" },
-               { "limit", "max results (default: 100, max: 1000)" }
+               { "filters", "optional JSON object with column-specific filters", "object" },
+               { "limit", "max results (default: 100, max: 1000)", "integer" }
             },
             F_SearchLog),
          AssistantFunction(
@@ -920,11 +920,11 @@ static void CreateAssistantSkillList()
                { "object", "optional node name or ID to filter by source" },
                { "time_from", "start time (ISO format or relative like '-60m' for 60 min ago, '-1h' for 1 hour ago)" },
                { "time_to", "end time (ISO format, defaults to now)" },
-               { "severity", "syslog severity (0-7) or array of severities" },
-               { "facility", "syslog facility (0-23) or array" },
+               { "severity", "syslog severity (0-7) or array of severities", "array", "integer" },
+               { "facility", "syslog facility (0-23) or array", "array", "integer" },
                { "text_pattern", "case-insensitive text search pattern" },
                { "tag", "syslog tag filter" },
-               { "limit", "max results (default: 100, max: 1000)" }
+               { "limit", "max results (default: 100, max: 1000)", "integer" }
             },
             F_SearchSyslog),
          AssistantFunction(
@@ -936,10 +936,10 @@ static void CreateAssistantSkillList()
                { "time_to", "end time (default: now)" },
                { "log_name", "log name (System, Application, Security, etc.)" },
                { "event_source", "event source filter" },
-               { "event_code", "event ID or array of event IDs" },
+               { "event_code", "event ID or array of event IDs", "array", "integer" },
                { "severity", "severity (1=Error, 2=Warning, 4=Info, 8=AuditSuccess, 16=AuditFailure)" },
                { "text_pattern", "text search pattern" },
-               { "limit", "max results (default: 100)" }
+               { "limit", "max results (default: 100)", "integer" }
             },
             F_SearchWindowsEvents),
          AssistantFunction(
@@ -952,7 +952,7 @@ static void CreateAssistantSkillList()
                { "trap_oid", "trap OID or OID prefix filter" },
                { "ip_address", "source IP address filter" },
                { "varbind_pattern", "text search in varbind data" },
-               { "limit", "max results (default: 100)" }
+               { "limit", "max results (default: 100)", "integer" }
             },
             F_SearchSnmpTraps),
          AssistantFunction(
@@ -963,11 +963,11 @@ static void CreateAssistantSkillList()
                { "time_from", "start time (default: -60m)" },
                { "time_to", "end time (default: now)" },
                { "event_code", "event code or name" },
-               { "severity", "severity (0=Normal to 4=Critical) or array" },
+               { "severity", "severity (0=Normal to 4=Critical) or array", "array", "integer" },
                { "origin", "event origin (SYSTEM, AGENT, CLIENT, SYSLOG, SNMP, NXSL, REMOTE_SERVER, WINDOWS_EVENT, OPENTELEMETRY)" },
                { "tags", "event tags filter" },
                { "text_pattern", "text search in message" },
-               { "limit", "max results (default: 100)" }
+               { "limit", "max results (default: 100)", "integer" }
             },
             F_SearchEvents),
          AssistantFunction(
@@ -988,9 +988,9 @@ static void CreateAssistantSkillList()
                { "object", "primary object for correlation (required)" },
                { "time_from", "correlation window start (required)" },
                { "time_to", "correlation window end (required)" },
-               { "include_neighbors", "include L2 neighbors (default: true)" },
-               { "log_types", "array of log types to include (default: all)" },
-               { "limit_per_source", "max entries per source (default: 50)" }
+               { "include_neighbors", "include L2 neighbors (default: true)", "boolean" },
+               { "log_types", "array of log types to include (default: all)", "array", "string" },
+               { "limit_per_source", "max entries per source (default: 50)", "integer" }
             },
             F_CorrelateLogs),
          AssistantFunction(
@@ -1031,7 +1031,7 @@ static void CreateAssistantSkillList()
             "Get full configuration content from a specific backup or the latest backup. Returns both running and startup configs.",
             {
                { "object", "name or ID of a node (mandatory)" },
-               { "backupId", "backup ID to retrieve (optional, defaults to latest backup)" }
+               { "backupId", "backup ID to retrieve (optional, defaults to latest backup)", "integer" }
             },
             F_GetBackupContent),
          AssistantFunction(
@@ -1076,8 +1076,8 @@ static void CreateAssistantSkillList()
             "Create a new empty dashboard. Returns the new dashboard ID used by the other dashboard tools.",
             {
                { "name", "name of the dashboard (mandatory)" },
-               { "columns", "number of layout columns, 1-12 (default 2)" },
-               { "scrollable", "make the dashboard scrollable vertically instead of squeezing all rows into the visible area (default false); set true when the dashboard has many rows of charts (default false)" },
+               { "columns", "number of layout columns, 1-12 (default 2)", "integer" },
+               { "scrollable", "make the dashboard scrollable vertically instead of squeezing all rows into the visible area (default false); set true when the dashboard has many rows of charts (default false)", "boolean" },
                { "group", "name or ID of a dashboard group to place the dashboard in (default: top-level Dashboards)" },
                { "associateWith", "name or ID of an object to associate the dashboard with (optional)" }
             },
@@ -1095,8 +1095,8 @@ static void CreateAssistantSkillList()
             {
                { "dashboard", "name or ID of the dashboard to update (mandatory)" },
                { "name", "new dashboard name (optional)" },
-               { "columns", "new number of layout columns, 1-12 (optional)" },
-               { "scrollable", "whether the dashboard is scrollable vertically; set true for dashboards with many rows of charts so they are not squeezed into the visible area (optional)" }
+               { "columns", "new number of layout columns, 1-12 (optional)", "integer" },
+               { "scrollable", "whether the dashboard is scrollable vertically; set true for dashboards with many rows of charts so they are not squeezed into the visible area (optional)", "boolean" }
             },
             F_UpdateDashboard),
          AssistantFunction(
@@ -1105,10 +1105,10 @@ static void CreateAssistantSkillList()
             {
                { "dashboard", "name or ID of the dashboard (mandatory)" },
                { "type", "element type name as returned by list-dashboard-element-types (mandatory)" },
-               { "config", "element configuration as a JSON object matching the type's schema (mandatory)" },
+               { "config", "element configuration as a JSON object matching the type's schema (mandatory)", "object" },
                { "width", "layout width intent: full, half, third, or quarter (default full)" },
-               { "height", "optional fixed element height in pixels" },
-               { "grabVerticalSpace", "whether the element grabs extra vertical space (default true); set false for labels so they take only their natural height" }
+               { "height", "optional fixed element height in pixels", "integer" },
+               { "grabVerticalSpace", "whether the element grabs extra vertical space (default true); set false for labels so they take only their natural height", "boolean" }
             },
             F_AddDashboardElement),
          AssistantFunction(
@@ -1117,10 +1117,10 @@ static void CreateAssistantSkillList()
             {
                { "dashboard", "name or ID of the dashboard (mandatory)" },
                { "guid", "GUID of the element to update (mandatory)" },
-               { "config", "new element configuration as a JSON object matching the type's schema (mandatory)" },
+               { "config", "new element configuration as a JSON object matching the type's schema (mandatory)", "object" },
                { "width", "optional new layout width intent: full, half, third, or quarter" },
-               { "height", "optional new fixed element height in pixels" },
-               { "grabVerticalSpace", "optional: whether the element grabs extra vertical space; set false for labels so they take only their natural height" }
+               { "height", "optional new fixed element height in pixels", "integer" },
+               { "grabVerticalSpace", "optional: whether the element grabs extra vertical space; set false for labels so they take only their natural height", "boolean" }
             },
             F_UpdateDashboardElement),
          AssistantFunction(
@@ -1137,7 +1137,7 @@ static void CreateAssistantSkillList()
             {
                { "dashboard", "name or ID of the dashboard (mandatory)" },
                { "guid", "GUID of the element to move (mandatory)" },
-               { "position", "new zero-based position in the element list (mandatory)" }
+               { "position", "new zero-based position in the element list (mandatory)", "integer" }
             },
             F_MoveDashboardElement)
       }
@@ -1168,7 +1168,7 @@ static void CreateAssistantSkillList()
             {
                { "object", "name or ID of the object the web service is queried for, used as context for macro expansion in URL and headers (mandatory)" },
                { "service", "name or ID of the web service definition (mandatory)" },
-               { "args", "optional array of string arguments substituted into URL and headers as macros $1, $2, and so on" }
+               { "args", "optional array of string arguments substituted into URL and headers as macros $1, $2, and so on", "array", "string" }
             },
             F_QueryWebService),
          AssistantFunction(
@@ -1179,7 +1179,7 @@ static void CreateAssistantSkillList()
                { "service", "name or ID of the web service definition (mandatory)" },
                { "path", "data extraction path to resolve, for example /data/cpu/load or //sensor[@id='1']/value (mandatory)" },
                { "type", "what the path is expected to produce: 'value' for a single value used by a normal metric, or 'list' for a list of values used for instance discovery (default: value)" },
-               { "args", "optional array of string arguments substituted into URL and headers as macros $1, $2, and so on" }
+               { "args", "optional array of string arguments substituted into URL and headers as macros $1, $2, and so on", "array", "string" }
             },
             F_TestWebServicePath),
          AssistantFunction(
@@ -1194,13 +1194,13 @@ static void CreateAssistantSkillList()
                { "auth_type", "authentication type: none, basic, digest, ntlm, bearer, any, anysafe (default: none)" },
                { "login", "login name, or access token for bearer authentication (optional)" },
                { "password", "password (optional)" },
-               { "headers", "optional JSON object with additional HTTP headers as name/value pairs" },
-               { "request_timeout", "request timeout in milliseconds (default: 30000)" },
-               { "cache_retention_time", "how long agent may reuse cached response for subsequent requests, in milliseconds (default: 0, no caching)" },
-               { "verify_certificate", "verify peer TLS certificate (default: false)" },
-               { "verify_host", "verify that TLS certificate matches host name (default: false)" },
-               { "follow_location", "follow HTTP redirects (default: false)" },
-               { "force_plain_text_parser", "treat response as plain text instead of detecting JSON or XML (default: false)" }
+               { "headers", "optional JSON object with additional HTTP headers as name/value pairs", "object" },
+               { "request_timeout", "request timeout in milliseconds (default: 30000)", "integer" },
+               { "cache_retention_time", "how long agent may reuse cached response for subsequent requests, in milliseconds (default: 0, no caching)", "integer" },
+               { "verify_certificate", "verify peer TLS certificate (default: false)", "boolean" },
+               { "verify_host", "verify that TLS certificate matches host name (default: false)", "boolean" },
+               { "follow_location", "follow HTTP redirects (default: false)", "boolean" },
+               { "force_plain_text_parser", "treat response as plain text instead of detecting JSON or XML (default: false)", "boolean" }
             },
             F_CreateWebService),
          AssistantFunction(
@@ -1216,13 +1216,13 @@ static void CreateAssistantSkillList()
                { "auth_type", "new authentication type: none, basic, digest, ntlm, bearer, any, anysafe (optional)" },
                { "login", "new login name, or access token for bearer authentication (optional)" },
                { "password", "new password (optional)" },
-               { "headers", "new complete set of additional HTTP headers as a JSON object with name/value pairs, replaces existing headers (optional)" },
-               { "request_timeout", "new request timeout in milliseconds (optional)" },
-               { "cache_retention_time", "new agent response cache retention time in milliseconds (optional)" },
-               { "verify_certificate", "new value of peer TLS certificate verification flag (optional)" },
-               { "verify_host", "new value of TLS host name verification flag (optional)" },
-               { "follow_location", "new value of HTTP redirect following flag (optional)" },
-               { "force_plain_text_parser", "new value of plain text parser flag (optional)" }
+               { "headers", "new complete set of additional HTTP headers as a JSON object with name/value pairs, replaces existing headers (optional)", "object" },
+               { "request_timeout", "new request timeout in milliseconds (optional)", "integer" },
+               { "cache_retention_time", "new agent response cache retention time in milliseconds (optional)", "integer" },
+               { "verify_certificate", "new value of peer TLS certificate verification flag (optional)", "boolean" },
+               { "verify_host", "new value of TLS host name verification flag (optional)", "boolean" },
+               { "follow_location", "new value of HTTP redirect following flag (optional)", "boolean" },
+               { "force_plain_text_parser", "new value of plain text parser flag (optional)", "boolean" }
             },
             F_UpdateWebService)
       }

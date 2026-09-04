@@ -34,18 +34,35 @@
 typedef std::function<std::string(json_t*, uint32_t)> AssistantFunctionHandler;
 
 /**
+ * Assistant function parameter descriptor. Type names follow JSON schema: "string", "integer", "number", "boolean", "array", "object".
+ * For "array" parameters itemType gives the type of array elements.
+ */
+struct AssistantFunctionParameter
+{
+   std::string name;
+   std::string description;
+   std::string type;
+   std::string itemType;
+
+   AssistantFunctionParameter(const char *name, const char *description, const char *type = "string", const char *itemType = "string")
+      : name(name), description(description), type(type), itemType(itemType)
+   {
+   }
+};
+
+/**
  * Assistant function descriptor
  */
 struct AssistantFunction
 {
    std::string name;
    std::string description;
-   std::vector<std::pair<std::string, std::string>> parameters;
+   std::vector<AssistantFunctionParameter> parameters;
    AssistantFunctionHandler handler;
    bool chatOnly;  // Function only makes sense within interactive chat context and is not exposed to MCP clients
 
    AssistantFunction(const std::string& name, const std::string& description,
-      const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler, bool chatOnly = false)
+      const std::vector<AssistantFunctionParameter>& parameters, AssistantFunctionHandler handler, bool chatOnly = false)
       : name(name), description(description), parameters(parameters), handler(handler), chatOnly(chatOnly)
    {
    }
@@ -458,7 +475,7 @@ struct AssistantSkill
 /**
  * Register assistant function. This function intended to be called only during server core or module initialization.
  */
-void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<std::pair<std::string, std::string>>& parameters, AssistantFunctionHandler handler);
+void NXCORE_EXPORTABLE RegisterAIAssistantFunction(const char *name, const char *description, const std::vector<AssistantFunctionParameter>& parameters, AssistantFunctionHandler handler);
 
 /**
  * Get unified tool list for MCP clients: global functions plus functions from all skills flattened into one namespace,
