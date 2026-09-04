@@ -124,7 +124,9 @@ std::string F_GetIncidentRelatedEvents(json_t *arguments, uint32_t userId)
    if (incidentId == 0)
       return std::string("Incident ID must be provided");
 
-   uint32_t timeWindowSeconds = json_object_get_uint32(arguments, "time_window_seconds", 3600);
+   wchar_t timeWindowStr[64];
+   utf8_to_wchar(json_object_get_string_utf8(arguments, "time_window", "1h"), -1, timeWindowStr, 64);
+   time_t timeWindowSeconds = static_cast<time_t>(ParseDuration(timeWindowStr, 3600));
 
    shared_ptr<Incident> incident = FindIncidentById(incidentId);
    if (incident == nullptr)
