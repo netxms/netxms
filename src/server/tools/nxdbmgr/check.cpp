@@ -75,6 +75,7 @@ IntegerArray<uint32_t> GetDataCollectionTargets()
    CollectObjectIdentifiers(L"mobile_devices", &list);
    CollectObjectIdentifiers(L"access_points", &list);
    CollectObjectIdentifiers(L"chassis", &list);
+   CollectObjectIdentifiers(L"racks", &list);
    CollectObjectIdentifiers(L"sensors", &list);
    CollectObjectIdentifiers(L"resources", &list);
    CollectObjectIdentifiers(L"cloud_domains", &list);

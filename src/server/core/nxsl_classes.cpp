@@ -122,7 +122,7 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
       return 0;
    }
    if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
-            (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+            (thisObject->getObjectClass() != OBJECT_RACK) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!argv[0]->isObject())
@@ -167,7 +167,7 @@ NXSL_METHOD_DEFINITION(NetObj, bindTo)
 
    shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(nxslParent->getData());
    if ((parent->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
-            (parent->getObjectClass() != OBJECT_SERVICEROOT))
+            (parent->getObjectClass() != OBJECT_RACK) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!IsValidParentClass(thisObject->getObjectClass(), parent->getObjectClass()))
@@ -936,7 +936,7 @@ NXSL_METHOD_DEFINITION(NetObj, unbind)
       return 0;
    }
    if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
-            (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+            (thisObject->getObjectClass() != OBJECT_RACK) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!argv[0]->isObject())
@@ -974,7 +974,7 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
 
    NetObj *parent = static_cast<shared_ptr<NetObj>*>(nxslParent->getData())->get();
    if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
-            (parent->getObjectClass() != OBJECT_SERVICEROOT))
+            (parent->getObjectClass() != OBJECT_RACK) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    NetObj::unlinkObjects(parent, thisObject);
@@ -5516,6 +5516,31 @@ static int CreateCollectorImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
 }
 
 /**
+ * Create rack object - common method implementation
+ * Arguments: name, [height]
+ */
+static int CreateRackImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if ((argc > 1) && !argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+   shared_ptr<Rack> rack = make_shared<Rack>(argv[0]->getValueAsCString(), (argc > 1) ? argv[1]->getValueAsInt32() : 0);
+   NetObjInsert(rack, true, false);
+   NetObj::linkObjects(thisObject, rack);
+   rack->publish();
+
+   *result = rack->createNXSLObject(vm);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Create node object - common method implementation
  */
 static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
@@ -5627,6 +5652,16 @@ NXSL_METHOD_DEFINITION(Container, createNode)
 }
 
 /**
+ * Container::createRack() method
+ */
+NXSL_METHOD_DEFINITION(Container, createRack)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRackImpl(object, argc, argv, result, vm);
+}
+
+/**
  * Container::createSensor() method
  */
 NXSL_METHOD_DEFINITION(Container, createSensor)
@@ -5680,6 +5715,7 @@ NXSL_ContainerClass::NXSL_ContainerClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(Container, createCollector, 1);
    NXSL_REGISTER_METHOD(Container, createContainer, 1);
    NXSL_REGISTER_METHOD(Container, createNode, -1);
+   NXSL_REGISTER_METHOD(Container, createRack, -1);
    NXSL_REGISTER_METHOD(Container, createSensor, -1);
    NXSL_REGISTER_METHOD(Container, setAutoBindMode, 2);
    NXSL_REGISTER_METHOD(Container, setAutoBindScript, 1);
@@ -5743,6 +5779,16 @@ NXSL_METHOD_DEFINITION(Collector, createNode)
 }
 
 /**
+ * Collector::createRack() method
+ */
+NXSL_METHOD_DEFINITION(Collector, createRack)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRackImpl(object, argc, argv, result, vm);
+}
+
+/**
  * Collector::createSensor() method
  */
 NXSL_METHOD_DEFINITION(Collector, createSensor)
@@ -5796,6 +5842,7 @@ NXSL_CollectorClass::NXSL_CollectorClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Collector, createCollector, 1);
    NXSL_REGISTER_METHOD(Collector, createContainer, 1);
    NXSL_REGISTER_METHOD(Collector, createNode, -1);
+   NXSL_REGISTER_METHOD(Collector, createRack, -1);
    NXSL_REGISTER_METHOD(Collector, createSensor, -1);
    NXSL_REGISTER_METHOD(Collector, setAutoBindMode, 2);
    NXSL_REGISTER_METHOD(Collector, setAutoBindScript, 1);
@@ -5868,6 +5915,36 @@ NXSL_Value *NXSL_CircuitClass::getAttr(NXSL_Object *object, const NXSL_Identifie
 }
 
 /**
+ * NXSL class "Rack" constructor
+ */
+NXSL_RackClass::NXSL_RackClass() : NXSL_DCTargetClass()
+{
+   setName(_T("Rack"));
+}
+
+/**
+ * NXSL class "Rack" attributes
+ */
+NXSL_Value *NXSL_RackClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto rack = SharedObjectFromData<Rack>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("height"))
+   {
+      value = vm->createValue(rack->getHeight());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("topBottomNumbering"))
+   {
+      value = vm->createValue(rack->isTopBottomNumbering());
+   }
+   return value;
+}
+
+/**
  * ServiceRoot::createCollector() method
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createCollector)
@@ -5898,6 +5975,16 @@ NXSL_METHOD_DEFINITION(ServiceRoot, createNode)
 }
 
 /**
+ * ServiceRoot::createRack() method
+ */
+NXSL_METHOD_DEFINITION(ServiceRoot, createRack)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRackImpl(object, argc, argv, result, vm);
+}
+
+/**
  * ServiceRoot::createSensor() method
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createSensor)
@@ -5917,6 +6004,7 @@ NXSL_ServiceRootClass::NXSL_ServiceRootClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(ServiceRoot, createCollector, 1);
    NXSL_REGISTER_METHOD(ServiceRoot, createContainer, 1);
    NXSL_REGISTER_METHOD(ServiceRoot, createNode, -1);
+   NXSL_REGISTER_METHOD(ServiceRoot, createRack, -1);
    NXSL_REGISTER_METHOD(ServiceRoot, createSensor, -1);
 }
 
@@ -10796,6 +10884,7 @@ NXSL_NodeClass g_nxslNodeClass;
 NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
+NXSL_RackClass g_nxslRackClass;
 NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
 NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 NXSL_SensorClass g_nxslSensorClass;

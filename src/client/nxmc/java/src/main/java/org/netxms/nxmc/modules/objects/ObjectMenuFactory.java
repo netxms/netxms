@@ -160,6 +160,10 @@ public final class ObjectMenuFactory
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.AUTOBIND, viewPlacement);
       }
+      else if (object instanceof Rack)
+      {
+         addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
+      }
       else if (object instanceof AccessPoint)
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);

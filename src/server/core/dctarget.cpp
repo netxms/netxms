@@ -2840,6 +2840,108 @@ StringMap *DataCollectionTarget::getInstanceList(DCObject *dco)
 }
 
 /**
+ * Get list of instances for given data collection object. Instances are read from the DCI's source node
+ * if one is configured, and from this object itself otherwise. Intended for data collection targets that
+ * have no communication capabilities of their own (collectors, circuits, racks).
+ */
+StringMap *DataCollectionTarget::getInstanceListFromSourceNodeOrSelf(DCObject *dco)
+{
+   shared_ptr<Node> sourceNode;
+   uint32_t sourceNodeId = getEffectiveSourceNode(dco);
+   if (sourceNodeId != 0)
+   {
+      sourceNode = static_pointer_cast<Node>(FindObjectById(sourceNodeId, OBJECT_NODE));
+      if (sourceNode == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG_INSTANCE_POLL, 6, L"DataCollectionTarget::getInstanceListFromSourceNodeOrSelf(%s [%u]): source node [%u] not found",
+               dco->getName().cstr(), dco->getId(), sourceNodeId);
+         return nullptr;
+      }
+   }
+
+   StringList *instances = nullptr;
+   StringMap *instanceMap = nullptr;
+   shared_ptr<Table> instanceTable;
+   wchar_t tableName[MAX_DB_STRING], nameColumn[MAX_DB_STRING];
+   switch(dco->getInstanceDiscoveryMethod())
+   {
+      case IDM_AGENT_LIST:
+         if (sourceNode != nullptr)
+            sourceNode->getListFromAgent(dco->getInstanceDiscoveryData(), &instances);
+         break;
+      case IDM_AGENT_TABLE:
+         if (sourceNode != nullptr)
+         {
+            parseInstanceDiscoveryTableName(dco->getInstanceDiscoveryData(), tableName, nameColumn);
+            sourceNode->getTableFromAgent(tableName, &instanceTable);
+         }
+         break;
+      case IDM_INTERNAL_TABLE:
+         parseInstanceDiscoveryTableName(dco->getInstanceDiscoveryData(), tableName, nameColumn);
+         if (sourceNode != nullptr)
+         {
+            sourceNode->getInternalTable(tableName, &instanceTable);
+         }
+         else
+         {
+            getInternalTable(tableName, &instanceTable);
+         }
+         break;
+      case IDM_SCRIPT:
+         if (sourceNode != nullptr)
+         {
+            sourceNode->getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
+         }
+         else
+         {
+            getStringMapFromScript(dco->getInstanceDiscoveryData(), &instanceMap, this);
+         }
+         break;
+      case IDM_WEB_SERVICE:
+         if (sourceNode != nullptr)
+         {
+            sourceNode->getListFromWebService(dco->getInstanceDiscoveryData(), &instances);
+         }
+         break;
+      default:
+         break;
+   }
+   if ((instances == nullptr) && (instanceMap == nullptr) && (instanceTable == nullptr))
+      return nullptr;
+
+   if (instanceTable != nullptr)
+   {
+      instanceMap = new StringMap();
+      wchar_t buffer[1024];
+      int nameColumnIndex = (nameColumn[0] != 0) ? instanceTable->getColumnIndex(nameColumn) : -1;
+      for(int i = 0; i < instanceTable->getNumRows(); i++)
+      {
+         instanceTable->buildInstanceString(i, buffer, 1024);
+         if (nameColumnIndex != -1)
+         {
+            const wchar_t *name = instanceTable->getAsString(i, nameColumnIndex, buffer);
+            if (name != nullptr)
+               instanceMap->set(buffer, name);
+            else
+               instanceMap->set(buffer, buffer);
+         }
+         else
+         {
+            instanceMap->set(buffer, buffer);
+         }
+      }
+   }
+   else if (instanceMap == nullptr)
+   {
+      instanceMap = new StringMap;
+      for(int i = 0; i < instances->size(); i++)
+         instanceMap->set(instances->get(i), instances->get(i));
+   }
+   delete instances;
+   return instanceMap;
+}
+
+/**
  * Parse instance discovery data into table name and name of the column that provides instance name.
  */
 void DataCollectionTarget::parseInstanceDiscoveryTableName(const wchar_t *definition, wchar_t *tableName, wchar_t *nameColumn)

@@ -2977,6 +2977,8 @@ protected:
 
    static void parseInstanceDiscoveryTableName(const wchar_t *definition, wchar_t *tableName, wchar_t *nameColumn);
 
+   StringMap *getInstanceListFromSourceNodeOrSelf(DCObject *dco);
+
 public:
    DataCollectionTarget(uint32_t pollableFlags);
    DataCollectionTarget(const TCHAR *name, uint32_t pollableFlags);
@@ -5269,10 +5271,10 @@ public:
 /**
  * Rack object
  */
-class NXCORE_EXPORTABLE Rack : public AbstractContainer
+class NXCORE_EXPORTABLE Rack : public DataCollectionTarget, public ContainerBase
 {
 protected:
-   typedef AbstractContainer super;
+   typedef DataCollectionTarget super;
 
 protected:
    int m_height;   // Rack height in units
@@ -5283,6 +5285,8 @@ protected:
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
 
    virtual void prepareForDeletion() override;
+
+   virtual StringMap *getInstanceList(DCObject *dco) override;
 
 public:
    Rack();
@@ -5297,7 +5301,13 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
+   virtual void postLoad() override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+
    virtual bool showThresholdSummary() const override;
+
+   int getHeight() const { return m_height; }
+   bool isTopBottomNumbering() const { return m_topBottomNumbering; }
 
    String getRackPasiveElementDescription(uint32_t id);
 
@@ -5308,6 +5318,8 @@ public:
    uint32_t deletePassiveElement(uint32_t elementId);
 
    virtual json_t *toJson(bool includeSensitiveData = false) override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
 
 /**
@@ -6804,6 +6816,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxChassisById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxCircuitById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxCollectorById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxRackById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;

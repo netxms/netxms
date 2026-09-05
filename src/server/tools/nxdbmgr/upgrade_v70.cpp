@@ -24,6 +24,50 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.32 to 70.33
+ */
+static bool H_UpgradeFromV32()
+{
+   // Rack became a data collection target (issue #3625). Racks created before this version
+   // have no per-object data tables - create them (single table mode stores everything in
+   // shared idata/tdata tables and needs nothing).
+   if (!DBMgrMetaDataReadInt32(L"SingleTablePerfData", 0))
+   {
+      IntegerArray<uint32_t> racks;
+      DB_RESULT hResult = SQLSelect(L"SELECT id FROM racks");
+      if (hResult == nullptr)
+         return false;
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         racks.add(DBGetFieldULong(hResult, i, 0));
+      DBFreeResult(hResult);
+
+      for(int i = 0; i < racks.size(); i++)
+      {
+         uint32_t objectId = racks.get(i);
+         wchar_t table[64];
+
+         nx_swprintf(table, 64, L"idata_%u", objectId);
+         if (DBIsTableExist(g_dbHandle, table) != DBIsTableExist_Found)
+         {
+            WriteToTerminalEx(L"Creating missing table \x1b[1m%s\x1b[0m...\n", table);
+            CHK_EXEC(CreateIDataTable(objectId));
+         }
+
+         nx_swprintf(table, 64, L"tdata_%u", objectId);
+         if (DBIsTableExist(g_dbHandle, table) != DBIsTableExist_Found)
+         {
+            WriteToTerminalEx(L"Creating missing table \x1b[1m%s\x1b[0m...\n", table);
+            CHK_EXEC(CreateTDataTable(objectId));
+         }
+      }
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(33));
+   return true;
+}
+
+/**
  * Upgrade from 70.31 to 70.32
  */
 static bool H_UpgradeFromV31()
@@ -975,6 +1019,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 32, 70, 33, H_UpgradeFromV32 },
    { 31, 70, 32, H_UpgradeFromV31 },
    { 30, 70, 31, H_UpgradeFromV30 },
    { 29, 70, 30, H_UpgradeFromV29 },

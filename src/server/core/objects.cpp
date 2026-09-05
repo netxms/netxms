@@ -74,6 +74,7 @@ ObjectIndex g_idxTrafficObserverById;
 ObjectIndex g_idxObservationPointById;
 ObjectIndex g_idxAssetById;
 ObjectIndex g_idxCollectorById;
+ObjectIndex g_idxRackById;
 ObjectIndex g_idxCircuitById;
 
 /**
@@ -201,6 +202,7 @@ static void CacheLoadingThread()
 	UpdateDataCollectionCache(&g_idxClusterById);
    UpdateDataCollectionCache(&g_idxCollectorById);
    UpdateDataCollectionCache(&g_idxCircuitById);
+   UpdateDataCollectionCache(&g_idxRackById);
 	UpdateDataCollectionCache(&g_idxMobileDeviceById);
 	UpdateDataCollectionCache(&g_idxAccessPointById);
    UpdateDataCollectionCache(&g_idxChassisById);
@@ -317,7 +319,6 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
          case OBJECT_DASHBOARDGROUP:
 			case OBJECT_DASHBOARD:
 			case OBJECT_BUSINESSSERVICEROOT:
-			case OBJECT_RACK:
          case OBJECT_WIRELESSDOMAIN:
             break;
          case OBJECT_NODE:
@@ -361,6 +362,9 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
             break;
          case OBJECT_COLLECTOR:
             g_idxCollectorById.put(object->getId(), object);
+            break;
+         case OBJECT_RACK:
+            g_idxRackById.put(object->getId(), object);
             break;
 			case OBJECT_MOBILEDEVICE:
 				g_idxMobileDeviceById.put(object->getId(), object);
@@ -508,7 +512,6 @@ void NetObjDeleteFromIndexes(const NetObj& object)
       case OBJECT_DASHBOARDGROUP:
 		case OBJECT_DASHBOARD:
 		case OBJECT_BUSINESSSERVICEROOT:
-		case OBJECT_RACK:
 		case OBJECT_WIRELESSDOMAIN:
 			break;
       case OBJECT_NODE:
@@ -552,6 +555,9 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          break;
       case OBJECT_COLLECTOR:
          g_idxCollectorById.remove(object.getId());
+         break;
+      case OBJECT_RACK:
+         g_idxRackById.remove(object.getId());
          break;
       case OBJECT_MOBILEDEVICE:
 			g_idxMobileDeviceById.remove(object.getId());
@@ -1136,6 +1142,8 @@ static ObjectIndex* GetObjectIndexByClass(int objectClassHint)
          return &g_idxClusterById;
       case OBJECT_COLLECTOR:
          return &g_idxCollectorById;
+      case OBJECT_RACK:
+         return &g_idxRackById;
       case OBJECT_MOBILEDEVICE:
          return &g_idxMobileDeviceById;
       case OBJECT_NODE:
@@ -1600,6 +1608,7 @@ bool LoadObjects()
    g_idxCircuitById.setStartupMode(true);
 	g_idxClusterById.setStartupMode(true);
    g_idxCollectorById.setStartupMode(true);
+   g_idxRackById.setStartupMode(true);
 	g_idxMobileDeviceById.setStartupMode(true);
 	g_idxAccessPointById.setStartupMode(true);
 	g_idxConditionById.setStartupMode(true);
@@ -1662,6 +1671,7 @@ bool LoadObjects()
    g_idxSubnetById.setStartupMode(false);
 
    LoadObjectsFromTable<Rack>(_T("rack"), hdb, preparedStatements, _T("racks"));
+   g_idxRackById.setStartupMode(false);
    LoadObjectsFromTable<Chassis>(_T("chassis"), hdb, preparedStatements, _T("chassis"));
    g_idxChassisById.setStartupMode(false);
    LoadObjectsFromTable<MobileDevice>(_T("mobile device"), hdb, preparedStatements, _T("mobile_devices"));
@@ -2179,6 +2189,7 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_COLLECTOR) ||
              (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_MOBILEDEVICE) ||
+             (childClass == OBJECT_RACK) ||
              (childClass == OBJECT_SENSOR) ||
              (childClass == OBJECT_CLOUDDOMAIN) ||
              (childClass == OBJECT_RESOURCE) ||
@@ -2393,6 +2404,7 @@ bool NXCORE_EXPORTABLE IsEventSource(int objectClass)
           (objectClass == OBJECT_CONTAINER) ||
           (objectClass == OBJECT_MOBILEDEVICE) ||
           (objectClass == OBJECT_OBSERVATIONPOINT) ||
+          (objectClass == OBJECT_RACK) ||
           (objectClass == OBJECT_RESOURCE) ||
           (objectClass == OBJECT_SENSOR) ||
           (objectClass == OBJECT_TRAFFICOBSERVER);

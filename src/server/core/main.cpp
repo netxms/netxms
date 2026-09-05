@@ -1107,6 +1107,7 @@ static void RegenerateMaintenanceModeEvents()
    g_idxCloudDomainById.forEach(regenerate);
    g_idxResourceById.forEach(regenerate);
    g_idxTrafficObserverById.forEach(regenerate);
+   g_idxRackById.forEach(regenerate);
    g_idxObservationPointById.forEach(regenerate);
 
    ConfigDelete(L"Internal.MonitoringStateReset");

@@ -25,13 +25,16 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.PollState;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.client.objects.interfaces.HardwareEntity;
+import org.netxms.client.objects.interfaces.PollingTarget;
 
 /**
  * Rack object
  */
-public class Rack extends GenericObject
+public class Rack extends DataCollectionTarget implements PollingTarget
 {
    public final static int FRONT_SIDE_ONLY = 0x00010000;
 
@@ -158,5 +161,95 @@ public class Rack extends GenericObject
    public boolean isFrontSideOnly()
    {
       return (flags & FRONT_SIDE_ONLY) != 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getFlags()
+    */
+   @Override
+   public int getFlags()
+   {
+      return flags;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getIfXTablePolicy()
+    */
+   @Override
+   public int getIfXTablePolicy()
+   {
+      return 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getAgentCacheMode()
+    */
+   @Override
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return null;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollerNodeId()
+    */
+   @Override
+   public long getPollerNodeId()
+   {
+      return 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveAgent()
+    */
+   @Override
+   public boolean canHaveAgent()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveInterfaces()
+    */
+   @Override
+   public boolean canHaveInterfaces()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHavePollerNode()
+    */
+   @Override
+   public boolean canHavePollerNode()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseEtherNetIP()
+    */
+   @Override
+   public boolean canUseEtherNetIP()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseModbus()
+    */
+   @Override
+   public boolean canUseModbus()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
+    */
+   @Override
+   public PollState[] getPollStates()
+   {
+      return pollStates;
    }
 }

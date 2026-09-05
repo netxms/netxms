@@ -25,19 +25,21 @@
 /**
  * Default constructor
  */
-Rack::Rack() : super(), m_passiveElements(0, 16, Ownership::True)
+Rack::Rack() : super(Pollable::NONE), ContainerBase(this), m_passiveElements(0, 16, Ownership::True)
 {
 	m_height = 42;
 	m_topBottomNumbering = false;
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;   // No configuration poll, but has instance discovery
 }
 
 /**
  * Constructor for creating new object
  */
-Rack::Rack(const TCHAR *name, int height) : super(name), m_passiveElements(0, 16, Ownership::True)
+Rack::Rack(const TCHAR *name, int height) : super(name, Pollable::NONE), ContainerBase(this), m_passiveElements(0, 16, Ownership::True)
 {
 	m_height = (height > 0) ? height : 42;
    m_topBottomNumbering = false;
+   m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;   // No configuration poll, but has instance discovery
 }
 
 /**
@@ -45,8 +47,27 @@ Rack::Rack(const TCHAR *name, int height) : super(name), m_passiveElements(0, 16
  */
 bool Rack::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)
 {
+   m_id = id;
+
+   if (!loadCommonProperties(hdb, preparedStatements))
+      return false;
+
 	if (!super::loadFromDatabase(hdb, id, preparedStatements))
 		return false;
+
+   if (!Pollable::loadFromDatabase(hdb, id))
+      return false;
+
+   if (!m_isDeleted)
+      ContainerBase::loadFromDatabase(hdb, id);
+
+   // Load DCI and access list
+   loadACLFromDB(hdb, preparedStatements);
+   loadItemsFromDB(hdb, preparedStatements);
+   for(int i = 0; i < m_dcObjects.size(); i++)
+      if (!m_dcObjects.get(i)->loadThresholdsFromDB(hdb, preparedStatements))
+         return false;
+   loadDCIListForCleanup(hdb);
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height,top_bottom_num FROM racks WHERE id=?"));
 	if (hStmt == nullptr)
@@ -107,6 +128,9 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
 	if (!super::saveToDatabase(hdb))
 		return false;
 
+	if (!ContainerBase::saveToDatabase(hdb))
+		return false;
+
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("racks"), _T("id"), m_id))
 	{
@@ -143,12 +167,56 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = super::deleteFromDatabase(hdb);
    if (success)
+      success = ContainerBase::deleteFromDatabase(hdb);
+   if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM racks WHERE id=?"));
    if (success)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM rack_passive_elements WHERE rack_id=?"));
    for(int i = 0; i < m_passiveElements.size() && success; i++)
       success = m_passiveElements.get(i)->deleteChildren(hdb, m_id);
    return success;
+}
+
+/**
+ * Post-load hook
+ */
+void Rack::postLoad()
+{
+   super::postLoad();
+   ContainerBase::postLoad();
+}
+
+/**
+ * Calculate status for compound object based on children status. Rack with no children
+ * gets NORMAL status instead of UNKNOWN.
+ */
+void Rack::calculateCompoundStatus(bool forcedRecalc)
+{
+   super::calculateCompoundStatus(forcedRecalc);
+
+   lockProperties();
+   if ((m_status == STATUS_UNKNOWN) && (getChildCount() == 0))
+   {
+      m_status = STATUS_NORMAL;
+      setModified(MODIFY_RUNTIME);
+   }
+   unlockProperties();
+}
+
+/**
+ * Get instances for instance discovery DCO
+ */
+StringMap *Rack::getInstanceList(DCObject *dco)
+{
+   return getInstanceListFromSourceNodeOrSelf(dco);
+}
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *Rack::createNXSLObject(NXSL_VM *vm)
+{
+   return vm->createValue(vm->createObject(&g_nxslRackClass, new shared_ptr<Rack>(self())));
 }
 
 /**

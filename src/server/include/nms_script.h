@@ -193,6 +193,17 @@ public:
 };
 
 /**
+ * NXSL "Rack" class
+ */
+class NXSL_RackClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_RackClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
  * NXSL "ServiceRoot" class
  */
 class NXSL_ServiceRootClass : public NXSL_NetObjClass
@@ -912,6 +923,7 @@ extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 extern NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
+extern NXSL_RackClass g_nxslRackClass;
 extern NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
 extern NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 extern NXSL_SensorClass g_nxslSensorClass;

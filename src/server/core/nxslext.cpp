@@ -1216,7 +1216,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 
    shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(nxslParent->getData());
    if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
-            (parent->getObjectClass() != OBJECT_SERVICEROOT))
+            (parent->getObjectClass() != OBJECT_RACK) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    NXSL_Object *nxslChild = argv[1]->getValueAsObject();
@@ -1264,7 +1264,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
    NetObj *parent = static_cast<shared_ptr<NetObj>*>(nxslParent->getData())->get();
    if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
-            (parent->getObjectClass() != OBJECT_SERVICEROOT))
+            (parent->getObjectClass() != OBJECT_RACK) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    NXSL_Object *nxslChild = argv[1]->getValueAsObject();
