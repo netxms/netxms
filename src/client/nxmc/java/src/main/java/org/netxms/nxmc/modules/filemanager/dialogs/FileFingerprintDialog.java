@@ -14,13 +14,17 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.AgentFileFingerprint;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog to show file fingerprint in file manager
  */
 public class FileFingerprintDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(FileFingerprintDialog.class);
+
    private AgentFileFingerprint fp;
 
    /**
@@ -131,7 +135,7 @@ public class FileFingerprintDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("File Fingerprint");
+      newShell.setText(i18n.tr("File Fingerprint"));
    }
 
    /**

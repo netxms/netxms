@@ -171,7 +171,7 @@ public class SNMP extends AbstractDCIPropertyPage
       customSnmpPort.setLayoutData(gd);
 
       checkUseCustomSnmpVersion = new Button(pageArea, SWT.CHECK);
-      checkUseCustomSnmpVersion.setText("Use custom SNMP version:");
+      checkUseCustomSnmpVersion.setText(i18n.tr("Use custom SNMP version:"));
       checkUseCustomSnmpVersion.setSelection(dco.getSnmpVersion() != SnmpVersion.DEFAULT);
       checkUseCustomSnmpVersion.addSelectionListener(new SelectionAdapter() {
          @Override

@@ -321,7 +321,7 @@ public abstract class AbstractDashboardView extends ObjectView
       gc.dispose();
 
       FileDialog fd = new FileDialog(getWindow().getShell(), SWT.SAVE);
-      fd.setText("Save dashboard as image");
+      fd.setText(i18n.tr("Save dashboard as image"));
       String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
       fd.setFilterExtensions(filterExtensions);
       String[] filterNames = { ".png" };

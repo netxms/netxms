@@ -106,7 +106,7 @@ public class TwoFactorResponseDialog extends Dialog
          qrLabel.setLayoutData(gd);
 
          PasswordInputField secretText = new PasswordInputField(dialogArea, SWT.NONE, true);
-         secretText.setLabel("Secret as text");
+         secretText.setLabel(i18n.tr("Secret as text"));
          secretText.setText(qrText);
          secretText.setEditable(false);
          gd = new GridData(SWT.FILL, SWT.CENTER, true, false);

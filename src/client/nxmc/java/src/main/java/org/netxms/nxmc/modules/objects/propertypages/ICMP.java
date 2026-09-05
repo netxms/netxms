@@ -134,7 +134,7 @@ public class ICMP extends ObjectPropertyPage
       icmpProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       
       Group statCollectionGroup = new Group(dialogArea, SWT.NONE);
-      statCollectionGroup.setText("ICMP response statistic collection");
+      statCollectionGroup.setText(i18n.tr("ICMP response statistic collection"));
       layout = new GridLayout();
       layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.numColumns = 3;
@@ -158,7 +158,7 @@ public class ICMP extends ObjectPropertyPage
       radioIcmpStatCollectionOff.setSelection(node.getIcmpStatCollectionMode() == IcmpStatCollectionMode.OFF);
       
       Group icmpTargetGroup = new Group(dialogArea, SWT.NONE);
-      icmpTargetGroup.setText("Additional targets for ICMP response statistic collection");
+      icmpTargetGroup.setText(i18n.tr("Additional targets for ICMP response statistic collection"));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;

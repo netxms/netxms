@@ -93,7 +93,7 @@ public class EditDciSummaryTableColumnDlg extends Dialog
       dciName.setText(column.getDciName());
       
       checkDescriptionMatch = new Button(dialogArea, SWT.CHECK);
-      checkDescriptionMatch.setText("Match by description instead of name");
+      checkDescriptionMatch.setText(i18n.tr("Match by description instead of name"));
       checkDescriptionMatch.setSelection(column.isDescriptionMatch());
 
       checkRegexpMatch = new Button(dialogArea, SWT.CHECK);
@@ -101,7 +101,7 @@ public class EditDciSummaryTableColumnDlg extends Dialog
       checkRegexpMatch.setSelection(column.isRegexpMatch());
 
       checkMultivalued = new Button(dialogArea, SWT.CHECK);
-      checkMultivalued.setText("&Multivalued column");
+      checkMultivalued.setText(i18n.tr("&Multivalued column"));
       checkMultivalued.setSelection(column.isMultivalued());
       checkMultivalued.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -112,7 +112,7 @@ public class EditDciSummaryTableColumnDlg extends Dialog
       });
       
       separator = new LabeledText(dialogArea, SWT.NONE);
-      separator.setLabel("&Separator for multiple values");
+      separator.setLabel(i18n.tr("&Separator for multiple values"));
       separator.getTextControl().setTextLimit(15);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

@@ -21,16 +21,20 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Rack;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.modules.objects.widgets.PatchPanelSelector;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog to create/edit physical link object
  */
 public class PhysicalLinkEditDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(PhysicalLinkEditDialog.class);
+
    private final static String[] SIDE = { "FRONT", "BACK" };
 
    private PhysicalLink link;
@@ -110,7 +114,7 @@ public class PhysicalLinkEditDialog extends Dialog
       Set<Class<? extends AbstractObject>> filterSet = new HashSet<Class<? extends AbstractObject>>();
       objectSelectorLeft = new ObjectSelector(leftGroup, SWT.NONE, false);
       objectSelectorLeft.setObjectId(link.getLeftObjectId());
-      objectSelectorLeft.setLabel("Interface or rack");
+      objectSelectorLeft.setLabel(i18n.tr("Interface or rack"));
       objectSelectorLeft.setObjectClass(filterSet);
       gd = new GridData();
       gd.horizontalSpan = 2;
@@ -143,7 +147,7 @@ public class PhysicalLinkEditDialog extends Dialog
       AbstractObject obj = session.findObjectById(link.getLeftObjectId());
       patchPanelSelectorLeft = new PatchPanelSelector(leftGroup, SWT.NONE, obj instanceof Rack ? (Rack)obj : null);
       patchPanelSelectorLeft.setPatchPanelId(link.getLeftPatchPanelId());
-      patchPanelSelectorLeft.setLabel("Patch panel");
+      patchPanelSelectorLeft.setLabel(i18n.tr("Patch panel"));
       gd = new GridData();
       gd.horizontalSpan = 2;
       gd.grabExcessHorizontalSpace = true;
@@ -191,7 +195,7 @@ public class PhysicalLinkEditDialog extends Dialog
       filterSet.add(Rack.class);
       objectSelectorRight = new ObjectSelector(rightGroup, SWT.NONE, false);
       objectSelectorRight.setObjectId(link.getRightObjectId());
-      objectSelectorRight.setLabel("Interface or rack");
+      objectSelectorRight.setLabel(i18n.tr("Interface or rack"));
       objectSelectorRight.setObjectClass(filterSet);
       gd = new GridData();
       gd.horizontalSpan = 2;
@@ -224,7 +228,7 @@ public class PhysicalLinkEditDialog extends Dialog
 
       obj = session.findObjectById(link.getRightObjectId());
       patchPanelSelectorRight = new PatchPanelSelector(rightGroup, SWT.NONE, obj instanceof Rack ? (Rack)obj : null);
-      patchPanelSelectorRight.setLabel("Patch panel");
+      patchPanelSelectorRight.setLabel(i18n.tr("Patch panel"));
       gd = new GridData();
       gd.horizontalSpan = 2;
       gd.grabExcessHorizontalSpace = true;

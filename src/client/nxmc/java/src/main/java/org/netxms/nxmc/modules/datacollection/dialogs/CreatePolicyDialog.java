@@ -27,15 +27,19 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.AgentPolicy;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.helpers.PolicyLabelProvider;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Policy creation dialog
  */
 public class CreatePolicyDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(CreatePolicyDialog.class);
+
    private static final String[] POLICY_TYPE_ORDER = { AgentPolicy.AGENT_CONFIG, AgentPolicy.FILE_DELIVERY, AgentPolicy.LOG_PARSER, AgentPolicy.SUPPORT_APPLICATION };
 
 	private String policyName;
@@ -64,7 +68,7 @@ public class CreatePolicyDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Create new policy");
+		newShell.setText(i18n.tr("Create new policy"));
 	}
 	
    /**
@@ -92,7 +96,7 @@ public class CreatePolicyDialog extends Dialog
       }
       else
       {         
-         typeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Policy type", WidgetHelper.DEFAULT_LAYOUT_DATA);
+         typeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Policy type"), WidgetHelper.DEFAULT_LAYOUT_DATA);
          PolicyLabelProvider labelProvider = new PolicyLabelProvider();
          for(String t : POLICY_TYPE_ORDER)
             typeSelector.add(labelProvider.getPolicyTypeDisplayName(t));

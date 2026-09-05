@@ -206,9 +206,9 @@ public class Agent extends ObjectPropertyPage
       certMappingMethod = WidgetHelper.createLabeledCombo(certificateMappingGroup, SWT.DROP_DOWN | SWT.READ_ONLY, i18n.tr("Method"),
             new GridData(SWT.FILL, SWT.BOTTOM, false, false));
       certMappingMethod.add("Subject");
-      certMappingMethod.add("Public key");
-      certMappingMethod.add("Common name");
-      certMappingMethod.add("Template ID");
+      certMappingMethod.add(i18n.tr("Public key"));
+      certMappingMethod.add(i18n.tr("Common name"));
+      certMappingMethod.add(i18n.tr("Template ID"));
       certMappingMethod.select(node.getAgentCertificateMappingMethod().getValue());
 
       certMappingData = new LabeledText(certificateMappingGroup, SWT.NONE);

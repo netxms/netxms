@@ -80,7 +80,7 @@ public class ObjectQueryResultView extends ConfigurationView
     */
    public ObjectQueryResultView()
    {
-      super("Object Query Results", ResourceManager.getImageDescriptor("icons/config-views/object-query-results.png"), "object-query.results.none", false);
+      super(LocalizationHelper.getI18n(ObjectQueryResultView.class).tr("Object Query Results"), ResourceManager.getImageDescriptor("icons/config-views/object-query-results.png"), "object-query.results.none", false);
    }
 
    /**

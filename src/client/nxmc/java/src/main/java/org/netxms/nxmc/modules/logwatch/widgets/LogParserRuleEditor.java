@@ -408,7 +408,7 @@ public class LogParserRuleEditor extends DashboardComposite
          timeUnits.addModifyListener(listener);
 
          checkboxReset = new Button(matcherRepeatConf, SWT.CHECK);
-         checkboxReset.setText("Reset repeat count");
+         checkboxReset.setText(i18n.tr("Reset repeat count"));
          checkboxReset.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)

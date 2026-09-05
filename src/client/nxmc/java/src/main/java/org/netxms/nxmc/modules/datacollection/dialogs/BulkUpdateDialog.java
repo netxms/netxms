@@ -84,7 +84,7 @@ public class BulkUpdateDialog extends Dialog
       }));
       
       ArrayList<String> dataUnits = new ArrayList<String>();
-      dataUnits.add("No change");
+      dataUnits.add(i18n.tr("No change"));
       Collections.addAll(dataUnits, General.DATA_UNITS);
       BulkDciUpdateElementUI unitName = new BulkDciUpdateElementUI("Unit name", NXCPCodes.VID_UNITS_NAME, dataUnits.toArray(new String[dataUnits.size()]));
       unitName.setEditableDropdown(true);
@@ -131,7 +131,7 @@ public class BulkUpdateDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Bulk DCI update");
+      newShell.setText(i18n.tr("Bulk DCI update"));
    }
    
    /**

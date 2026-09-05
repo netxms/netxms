@@ -40,13 +40,17 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryList;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for selecting alarm category
  */
 public class AlarmCategorySelectionDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmCategorySelectionDialog.class);
+
    private static final String TABLE_CONFIG_PREFIX = "AlarmCategorySelectionDialog";
 
    private AlarmCategoryList alarmCategoryList;
@@ -71,7 +75,7 @@ public class AlarmCategorySelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select Alarm Category");
+      newShell.setText(i18n.tr("Select Alarm Category"));
       settings = PreferenceStore.getInstance();
       newShell.setSize(settings.getAsInteger(TABLE_CONFIG_PREFIX + ".cx", 600), settings.getAsInteger(TABLE_CONFIG_PREFIX + ".cy", 400));
    }

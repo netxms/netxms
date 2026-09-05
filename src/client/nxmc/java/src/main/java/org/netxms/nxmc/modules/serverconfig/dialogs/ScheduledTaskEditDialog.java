@@ -75,7 +75,7 @@ public class ScheduledTaskEditDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Edit Scheduled Task");
+      newShell.setText(i18n.tr("Edit Scheduled Task"));
    }
 
    /**
@@ -104,7 +104,7 @@ public class ScheduledTaskEditDialog extends Dialog
       taskType.setLayoutData(gd);
 
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      objectSelector.setLabel("Select execution object");
+      objectSelector.setLabel(i18n.tr("Select execution object"));
       objectSelector.setObjectClass(AbstractObject.class);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

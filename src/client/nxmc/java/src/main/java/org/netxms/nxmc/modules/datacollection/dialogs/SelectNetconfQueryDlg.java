@@ -40,14 +40,18 @@ import org.netxms.client.datacollection.NetconfQueryDefinition;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for selecting NETCONF query definition
  */
 public class SelectNetconfQueryDlg extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(SelectNetconfQueryDlg.class);
+
    boolean multiSelection;
    private TableViewer viewer;
    private List<NetconfQueryDefinition> selection;
@@ -83,7 +87,7 @@ public class SelectNetconfQueryDlg extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("NETCONF Query Definition Selection");
+      newShell.setText(i18n.tr("NETCONF Query Definition Selection"));
       PreferenceStore settings = PreferenceStore.getInstance();
       newShell.setSize(settings.getAsPoint("SelectNetconfQueryDlg.size", 400, 250)); 
       newShell.setLocation(settings.getAsPoint("SelectNetconfQueryDlg.location", 100, 100));

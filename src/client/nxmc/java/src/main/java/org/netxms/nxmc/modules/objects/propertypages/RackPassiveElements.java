@@ -52,12 +52,15 @@ import org.netxms.nxmc.modules.objects.dialogs.RackPassiveElementEditDialog;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.RackPassiveElementComparator;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.RackPassiveElementLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * "Rack passive elements" property page for rack object
  */
 public class RackPassiveElements extends ObjectPropertyPage
 {
+   private final I18n i18n = LocalizationHelper.getI18n(RackPassiveElements.class);
+
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_TYPE = 1;
    public static final int COLUMN_POSITION = 2;
@@ -157,7 +160,7 @@ public class RackPassiveElements extends ObjectPropertyPage
       buttons.setLayoutData(gridData);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("&Add...");
+      addButton.setText(i18n.tr("&Add..."));
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -176,7 +179,7 @@ public class RackPassiveElements extends ObjectPropertyPage
       });
 
       editButton = new Button(buttons, SWT.PUSH);
-      editButton.setText("&Edit...");
+      editButton.setText(i18n.tr("&Edit..."));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -198,7 +201,7 @@ public class RackPassiveElements extends ObjectPropertyPage
       });
 
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("&Delete...");
+      deleteButton.setText(i18n.tr("&Delete..."));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);

@@ -115,7 +115,7 @@ public class TitleConfigurator extends Composite
       foregroundColor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 1, 2));
 
       fontHeight = new LabeledSpinner(group, SWT.NONE);
-      fontHeight.setLabel("Font size adjustment");
+      fontHeight.setLabel(i18n.tr("Font size adjustment"));
       fontHeight.setRange(-20, 20);
       fontHeight.setSelection(config.getTitleFontSize());
       fontHeight.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));

@@ -38,14 +38,18 @@ import org.netxms.base.DiffMatchPatch.Diff;
 import org.netxms.client.log.LogRecordDetails;
 import org.netxms.nxmc.base.widgets.DiffViewer;
 import org.netxms.nxmc.base.widgets.StyledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for displaying audit log record details
  */
 public class AuditLogRecordDetailsDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(AuditLogRecordDetailsDialog.class);
+
    private LogRecordDetails data;
    private CTabFolder tabFolder;
 
@@ -68,7 +72,7 @@ public class AuditLogRecordDetailsDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Audit Log Record Details");
+      newShell.setText(i18n.tr("Audit Log Record Details"));
    }
 
    /**

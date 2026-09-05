@@ -24,13 +24,17 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.widgets.ExtendedColorSelector;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ThemeElement;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for editing theme elements
  */
 public class ThemeElementEditDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ThemeElementEditDialog.class);
+
    private ThemeElement element;
    private ExtendedColorSelector foreground;
    private ExtendedColorSelector background;
@@ -51,7 +55,7 @@ public class ThemeElementEditDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Edit Theme Element");
+      newShell.setText(i18n.tr("Edit Theme Element"));
    }
 
    /**

@@ -100,7 +100,7 @@ public class EditSSHCredentialsDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       password.setLayoutData(gd);
 
-      key = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "SSH Key", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      key = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("SSH Key"), WidgetHelper.DEFAULT_LAYOUT_DATA);
 
       key.add("");
       for(int i = 0; i < sshKeys.size(); i++)

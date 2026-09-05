@@ -82,7 +82,7 @@ public class LogParserFileEditor extends DashboardComposite
 		setLayout(layout);
 		
 		labelFileName = new LabeledText(this, SWT.NONE);
-      labelFileName.setLabel("File path");
+      labelFileName.setLabel(i18n.tr("File path"));
       labelFileName.setBackground(getBackground());
       labelFileName.setText((file != null) ? file.getFile() : "");
       GridData gd = new GridData();

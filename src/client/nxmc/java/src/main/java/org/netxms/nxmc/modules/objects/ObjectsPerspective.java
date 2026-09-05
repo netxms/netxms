@@ -362,7 +362,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       objectName.setFont(JFaceResources.getBannerFont());
       Menu objectNameMenu = new Menu(objectName);
       MenuItem menuItem = new MenuItem(objectNameMenu, SWT.PUSH);
-      menuItem.setText("&Copy");
+      menuItem.setText(i18n.tr("&Copy"));
       menuItem.setImage(SharedIcons.IMG_COPY);
       menuItem.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -405,7 +405,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
       ToolItem item = new ToolItem(perspectiveToolBar, SWT.DROP_DOWN);
       item.setImage(imageManageViews);
-      item.setToolTipText("Manage views");
+      item.setToolTipText(i18n.tr("Manage views"));
       item.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -864,7 +864,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private void createMenuToolItem(String name, final MenuManager menuManager, final Menu menu)
    {
       ToolItem item = new ToolItem(objectMenuBar, SWT.PUSH);
-      item.setText("  " + name + " \u25BE  ");
+      item.setText("  " + name + i18n.tr(" \u25BE  "));
       item.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

@@ -330,7 +330,7 @@ public class CreateNodeDialog extends Dialog
 		checkDisableSNMP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_SNMP) != 0);
 
       checkDisableSSH = new Button(optionsGroup, SWT.CHECK);
-      checkDisableSSH.setText("Disable usage of SSH for all polls");
+      checkDisableSSH.setText(i18n.tr("Disable usage of SSH for all polls"));
       checkDisableSSH.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_SSH) != 0);
 
       checkDisablePing = new Button(optionsGroup, SWT.CHECK);
