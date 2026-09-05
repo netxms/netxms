@@ -287,6 +287,7 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
  */
 void Rack::prepareForDeletion()
 {
+   super::prepareForDeletion();
    DeleteObjectFromPhysicalLinks(m_id);
 }
 
