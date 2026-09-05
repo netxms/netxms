@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.base.jobs.Job;
@@ -91,7 +92,7 @@ public class ObjectOverviewView extends ObjectView
    public boolean isValidForContext(Object context)
    {
       return (context != null) &&
-            ((context instanceof DataCollectionTarget) || (context instanceof Chassis) || (context instanceof Interface) || (context instanceof Subnet) || (context instanceof Zone));
+            (((context instanceof DataCollectionTarget) && !(context instanceof Rack)) || (context instanceof Chassis) || (context instanceof Interface) || (context instanceof Subnet) || (context instanceof Zone));
    }
 
    /**
