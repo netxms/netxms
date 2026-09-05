@@ -206,7 +206,7 @@ public class LinkGeneral extends LinkPropertyPage
       optionsGroup.setLayoutData(gd);
 
       checkExcludeFromAutomaticUpdate = new Button(optionsGroup, SWT.CHECK);
-      checkExcludeFromAutomaticUpdate.setText("Exclude from automatic updates");
+      checkExcludeFromAutomaticUpdate.setText(i18n.tr("Exclude from automatic updates"));
       checkExcludeFromAutomaticUpdate.setSelection(linkEditor.isExcludeFromAutomaticUpdates());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

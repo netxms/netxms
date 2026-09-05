@@ -93,7 +93,7 @@ public class RuleDowntimeControl extends RuleBasePropertyPage
          selectionDoNothing.setSelection(true);
       
       tag = new LabeledText(dialogArea, SWT.NONE);
-      tag.setLabel("Downtime tag");
+      tag.setLabel(i18n.tr("Downtime tag"));
       tag.setTextLimit(15);
       tag.setText(rule.getDowntimeTag());
       tag.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));

@@ -29,12 +29,16 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for selecting table column
  */
 public class TableColumnSelectionDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(TableColumnSelectionDialog.class);
+
    private TableViewer viewer;
    private String[] columnNames;
    private String selectedName;
@@ -58,7 +62,7 @@ public class TableColumnSelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select Column");
+      newShell.setText(i18n.tr("Select Column"));
    }
 
    /**

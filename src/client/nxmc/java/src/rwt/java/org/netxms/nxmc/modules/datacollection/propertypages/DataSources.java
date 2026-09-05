@@ -83,7 +83,7 @@ public class DataSources extends PreferencePage
     */
    public DataSources(GraphDefinition settings, boolean saveToDatabase)
    {
-      super("Data Source");
+      super(LocalizationHelper.getI18n(DataSources.class).tr("Data Source"));
       config = settings;
       this.saveToDatabase = saveToDatabase;
    }

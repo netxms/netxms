@@ -114,12 +114,12 @@ public class AlarmSounds extends PropertyPage
       typeGroup.setLayoutData(gd);
       
       isGeneralSound = new Button(typeGroup, SWT.RADIO);
-      isGeneralSound.setText("Play sound on all alarms");
+      isGeneralSound.setText(i18n.tr("Play sound on all alarms"));
       isGeneralSound.setLayoutData(new GridData());
       isGeneralSound.setSelection(!ps.getAsBoolean("AlarmNotifier.LocalSound", false));
       
       isLocalSound = new Button(typeGroup, SWT.RADIO);
-      isLocalSound.setText("Play sound as defined by active dashboard");
+      isLocalSound.setText(i18n.tr("Play sound as defined by active dashboard"));
       isLocalSound.setLayoutData(new GridData());
       isLocalSound.setSelection(ps.getAsBoolean("AlarmNotifier.LocalSound", false));
 

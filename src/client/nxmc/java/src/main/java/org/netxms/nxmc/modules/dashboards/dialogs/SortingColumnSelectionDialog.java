@@ -115,7 +115,7 @@ public class SortingColumnSelectionDialog extends Dialog
       columnSelector.setLayoutData(gd);
 
       checkDescending = new Button(dialogArea, SWT.CHECK);
-      checkDescending.setText("Descending order");
+      checkDescending.setText(i18n.tr("Descending order"));
       checkDescending.setSelection(descending);
 
       return dialogArea;

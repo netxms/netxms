@@ -80,7 +80,7 @@ public class UIAccessRules extends PropertyPage
       rules.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
       Button addButton = new Button(dialogArea, SWT.PUSH);
-      addButton.setText("&Add element...");
+      addButton.setText(i18n.tr("&Add element..."));
       addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

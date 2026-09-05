@@ -193,7 +193,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       instanceNameFormat.setEnabled(isOtlp);
 
       groupRetention = new Group(dialogArea, SWT.NONE);
-      groupRetention.setText("Instance retention");
+      groupRetention.setText(i18n.tr("Instance retention"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -207,8 +207,8 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      instanceRetentionMode = WidgetHelper.createLabeledCombo(groupRetention, SWT.READ_ONLY, "Instance retention mode", gd);
-      instanceRetentionMode.add("Server default");
+      instanceRetentionMode = WidgetHelper.createLabeledCombo(groupRetention, SWT.READ_ONLY, i18n.tr("Instance retention mode"), gd);
+      instanceRetentionMode.add(i18n.tr("Server default"));
       instanceRetentionMode.add("Custom");
       instanceRetentionMode.select(dco.getInstanceRetentionTime() == -1 ? 0 : 1);
       instanceRetentionMode.setEnabled(dco.getInstanceDiscoveryMethod() != DataCollectionObject.IDM_NONE);
@@ -223,7 +223,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      instanceRetentionTime = WidgetHelper.createLabeledSpinner(groupRetention, SWT.BORDER, "Instance retention time (days)", 0, 100,  new GridData());
+      instanceRetentionTime = WidgetHelper.createLabeledSpinner(groupRetention, SWT.BORDER, i18n.tr("Instance retention time (days)"), 0, 100,  new GridData());
       instanceRetentionTime.setSelection(dco.getInstanceRetentionTime());
       instanceRetentionTime.setEnabled(instanceRetentionMode.getSelectionIndex() > 0);
 

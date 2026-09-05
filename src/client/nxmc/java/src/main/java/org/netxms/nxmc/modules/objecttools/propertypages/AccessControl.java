@@ -72,7 +72,7 @@ public class AccessControl extends PropertyPage
     */
    public AccessControl(ObjectToolDetails toolDetails)
    {
-      super("Access Control");
+      super(LocalizationHelper.getI18n(AccessControl.class).tr("Access Control"));
       noDefaultAndApplyButton();
       objectTool = toolDetails;
    }

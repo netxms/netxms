@@ -38,14 +38,18 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.actions.views.helpers.DecoratingActionLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Action selection dialog
  */
 public class ActionSelectionDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ActionSelectionDialog.class);
+
    private Collection<ServerAction> localCache;
    private TableViewer viewer;
    private List<ServerAction> selection;
@@ -77,7 +81,7 @@ public class ActionSelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select action");
+      newShell.setText(i18n.tr("Select action"));
    }
 
    /**

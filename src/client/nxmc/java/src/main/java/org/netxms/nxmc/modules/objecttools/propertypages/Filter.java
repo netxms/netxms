@@ -233,7 +233,7 @@ public class Filter extends PropertyPage
 		if (action instanceof ObjectTool && action.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
 		{
    		checkMatchWorkstationOS = new Button(dialogArea, SWT.CHECK);
-   		checkMatchWorkstationOS.setText("Workstation OS name should match the following template (comma separated regular expression list)");
+   		checkMatchWorkstationOS.setText(i18n.tr("Workstation OS name should match the following template (comma separated regular expression list)"));
    		checkMatchWorkstationOS.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH) != 0);
    		checkMatchWorkstationOS.addSelectionListener(new SelectionListener() {         
             @Override
@@ -290,7 +290,7 @@ public class Filter extends PropertyPage
       textTemplate.setEnabled(checkMatchTemplate.getSelection());
 		
       checkMatchCustomAttributes = new Button(dialogArea, SWT.CHECK);
-      checkMatchCustomAttributes.setText("The following custom attribute(s) should exist");
+      checkMatchCustomAttributes.setText(i18n.tr("The following custom attribute(s) should exist"));
       checkMatchCustomAttributes.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_CUSTOM_ATTRIBUTE_MATCH) != 0);
       checkMatchCustomAttributes.addSelectionListener(new SelectionListener() {
          @Override

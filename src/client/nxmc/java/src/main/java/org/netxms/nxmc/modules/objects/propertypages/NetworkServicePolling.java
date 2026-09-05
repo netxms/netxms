@@ -136,7 +136,7 @@ public class NetworkServicePolling extends ObjectPropertyPage
 		port.setLayoutData(gd);
 		
 		ipAddress = new LabeledText(dialogArea, SWT.NONE);
-		ipAddress.setLabel("IP Address");
+		ipAddress.setLabel(i18n.tr("IP Address"));
       if (service.getIpAddress().isValidAddress())
          ipAddress.setText(service.getIpAddress().getHostAddress());
       gd = new GridData();

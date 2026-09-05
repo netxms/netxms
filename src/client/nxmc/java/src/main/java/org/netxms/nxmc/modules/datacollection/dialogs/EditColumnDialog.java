@@ -127,7 +127,7 @@ public class EditColumnDialog extends Dialog
 		checkInstanceColumn.setSelection(column.isInstanceColumn());
 
       checkSnmpHexString = new Button(dialogArea, SWT.CHECK);
-      checkSnmpHexString.setText("Convert SNMP value to &hexadecimal string");
+      checkSnmpHexString.setText(i18n.tr("Convert SNMP value to &hexadecimal string"));
       checkSnmpHexString.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       checkSnmpHexString.setSelection(column.isConvertSnmpStringToHex());
 

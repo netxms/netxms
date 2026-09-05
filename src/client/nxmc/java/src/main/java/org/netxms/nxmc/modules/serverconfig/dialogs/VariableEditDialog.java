@@ -118,11 +118,11 @@ public class VariableEditDialog extends Dialog
       {
          case BOOLEAN:
             trueValue = new Button(dialogArea, SWT.RADIO);
-            trueValue.setText("&True");
+            trueValue.setText(i18n.tr("&True"));
             trueValue.setSelection(variable.getValueAsBoolean());
 
             falseValue = new Button(dialogArea, SWT.RADIO);
-            falseValue.setText("&False");
+            falseValue.setText(i18n.tr("&False"));
             falseValue.setSelection(!trueValue.getSelection());
 
             if (variable.getName() != null)

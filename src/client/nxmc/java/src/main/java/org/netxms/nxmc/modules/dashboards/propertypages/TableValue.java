@@ -150,7 +150,7 @@ public class TableValue extends DashboardElementPropertyPage
       templateDciWidget.setEnabled(config.getObjectId() == AbstractObject.CONTEXT);
 
       Group goupSortingOrder = new Group(dialogArea, SWT.NONE);
-      goupSortingOrder.setText("Sorting order");
+      goupSortingOrder.setText(i18n.tr("Sorting order"));
       layout = new GridLayout();
       layout.marginTop = WidgetHelper.OUTER_SPACING;
       layout.marginBottom = WidgetHelper.OUTER_SPACING * 2;

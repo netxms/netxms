@@ -119,7 +119,7 @@ public class ObjectDetailsPropertyList extends DashboardElementPropertyPage
       dialogArea.setLayout(layout);
 
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Properties to display");
+      label.setText(i18n.tr("Properties to display"));
 
       final String[] names = { "Name", "Display name", "Type" };
       final int[] widths = { 150, 250, 90 };

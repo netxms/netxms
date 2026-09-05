@@ -38,13 +38,17 @@ import org.eclipse.swt.widgets.Label;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportingJob;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * "Notification" property page for schedule
  */
 public class Notifications extends PropertyPage
 {
+   private final I18n i18n = LocalizationHelper.getI18n(Notifications.class);
+
 	public static final String ID = "org.netxms.ui.eclipse.reporter.propertypages.Notification"; //$NON-NLS-1$
 
    private ReportingJob job;
@@ -75,7 +79,7 @@ public class Notifications extends PropertyPage
 		
 		sendNotify = new Button(dialogArea, SWT.CHECK);
 		sendNotify.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false, 2, 1));
-		sendNotify.setText("Send notification on job completion");
+		sendNotify.setText(i18n.tr("Send notification on job completion"));
 		sendNotify.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -149,7 +153,7 @@ public class Notifications extends PropertyPage
 		
 		sendReport = new Button(attachmentGroup, SWT.CHECK);
 		sendReport.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, true, false, 2, 1));
-		sendReport.setText("Attach rendered report to notification email as");
+		sendReport.setText(i18n.tr("Attach rendered report to notification email as"));
 		sendReport.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

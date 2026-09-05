@@ -31,14 +31,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Shows prompt for saving agent's policy
  */
 public class SavePolicyDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(SavePolicyDialog.class);
+
    public static final int SAVE_ID = 100;
    public static final int DISCARD_ID = 102;
 
@@ -57,7 +61,7 @@ public class SavePolicyDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Unsaved Changes");
+      newShell.setText(i18n.tr("Unsaved Changes"));
    }
 
    /**
@@ -98,7 +102,7 @@ public class SavePolicyDialog extends Dialog
       });
 
       final CLabel text = new CLabel(dialogArea, SWT.LEFT);
-      text.setText("Policy is not saved.\nDo you want to save it, discard changes, or return to the editor?");
+      text.setText(i18n.tr("Policy is not saved.\nDo you want to save it, discard changes, or return to the editor?"));
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;

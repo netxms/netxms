@@ -101,7 +101,7 @@ public class HistoricalDataSelectionDialog extends Dialog
 		dtsFrom.setValue(timeFrom);
 		dtsFrom.setEnabled(radioTimeFrame.getSelection());
 		
-		new Label(dialogArea, SWT.NONE).setText("  -  ");
+		new Label(dialogArea, SWT.NONE).setText(i18n.tr("  -  "));
 		
 		dtsTo = new DateTimeSelector(dialogArea, SWT.NONE);
 		dtsTo.setValue(timeTo);

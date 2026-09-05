@@ -73,7 +73,7 @@ public class WirelessStations extends NodeSubObjectView
     */
    public WirelessStations()
    {
-      super("Wireless Stations", ResourceManager.getImageDescriptor("icons/object-views/wireless-stations.png"), "objects.wireless-stations", true);
+      super(LocalizationHelper.getI18n(WirelessStations.class).tr("Wireless Stations"), ResourceManager.getImageDescriptor("icons/object-views/wireless-stations.png"), "objects.wireless-stations", true);
    }
 
    /**

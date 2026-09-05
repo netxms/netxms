@@ -89,7 +89,7 @@ public class DCIAutoBind extends ObjectPropertyPage
 
       // Enable/disable check box
       checkboxEnableBind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableBind.setText("Automatically add DCI selected by filter to this business service as check");
+      checkboxEnableBind.setText(i18n.tr("Automatically add DCI selected by filter to this business service as check"));
       checkboxEnableBind.setSelection(businessService.isDciAutoBindEnabled());
       checkboxEnableBind.addSelectionListener(new SelectionListener() {
 			@Override
@@ -118,7 +118,7 @@ public class DCIAutoBind extends ObjectPropertyPage
       });
       
       checkboxEnableUnbind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableUnbind.setText("Automatically remove DCI selected by filter from this business service");
+      checkboxEnableUnbind.setText(i18n.tr("Automatically remove DCI selected by filter from this business service"));
       checkboxEnableUnbind.setSelection(businessService.isDciAutoUnbindEnabled());
       checkboxEnableUnbind.setEnabled(businessService.isDciAutoBindEnabled());
 

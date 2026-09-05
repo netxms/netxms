@@ -462,7 +462,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
          protected void configureShell(Shell newShell)
          {
             super.configureShell(newShell);
-            newShell.setText("Properties for " + settings.getDisplayName());
+            newShell.setText(i18n.tr("Properties for ") + settings.getDisplayName());
          }
       };
       dlg.setBlockOnOpen(true);

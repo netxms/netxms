@@ -164,7 +164,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 
          zoneSelector = new ZoneSelector(headArea, SWT.NONE, true);
          zoneSelector.setEmptySelectionText("Global");
-         zoneSelector.setLabel("Select zone");
+         zoneSelector.setLabel(i18n.tr("Select zone"));
          zoneSelector.setBackground(headArea.getBackground());
 
          zoneSelector.addModifyListener(new ModifyListener() {

@@ -228,7 +228,7 @@ public class ServiceComponents extends DashboardElementPropertyPage
       checkShowStatusBkgnd.setSelection((config.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
       
       checkTranslucentLabelBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
-      checkTranslucentLabelBkgnd.setText("Translucent label background");
+      checkTranslucentLabelBkgnd.setText(i18n.tr("Translucent label background"));
       checkTranslucentLabelBkgnd.setSelection((config.getFlags() & NetworkMap.MF_TRANSLUCENT_LABEL_BKGND) != 0);
 
       /**** default link appearance ****/

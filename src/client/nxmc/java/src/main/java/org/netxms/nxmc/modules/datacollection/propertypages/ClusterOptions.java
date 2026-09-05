@@ -142,7 +142,7 @@ public class ClusterOptions extends AbstractDCIPropertyPage
    	checkAggregate.setSelection(editor.getObject().isAggregateOnCluster());
 
       checkAggregateWithErrors = new Button(aggregationGroup, SWT.CHECK);
-      checkAggregateWithErrors.setText("Use last known value for aggregation in case of data collection error");
+      checkAggregateWithErrors.setText(i18n.tr("Use last known value for aggregation in case of data collection error"));
       checkAggregateWithErrors.setSelection(editor.getObject().isAggregateWithErrors());
          
       checkRunScript = new Button(aggregationGroup, SWT.CHECK);

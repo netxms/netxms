@@ -111,7 +111,7 @@ public class WelcomePage extends Composite
       header.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       Label title = new Label(header, SWT.NONE);
-      title.setText("Welcome to NetXMS " + serverVersion);
+      title.setText(i18n.tr("Welcome to NetXMS ") + serverVersion);
       title.setFont(headerFontBold);
       title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 

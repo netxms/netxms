@@ -134,7 +134,7 @@ public class SelectLogParserRuleDlg extends Dialog
       column.setWidth(250);
 
       column = new TableColumn(viewer.getTable(), SWT.LEFT);
-      column.setText("Match Expression");
+      column.setText(i18n.tr("Match Expression"));
       column.setWidth(250);
 
       viewer.setContentProvider(new ArrayContentProvider());

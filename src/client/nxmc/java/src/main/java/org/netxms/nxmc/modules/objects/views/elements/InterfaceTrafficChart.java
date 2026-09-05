@@ -325,7 +325,7 @@ public class InterfaceTrafficChart extends OverviewPageElement implements Histor
    {
       if (items.getDciList()[itemBase] == 0 && items.getDciList()[itemBase + 1] == 0)
       {
-         label.setText("No data");
+         label.setText(i18n.tr("No data"));
          labelControl.moveAbove(null);
          return;
       }

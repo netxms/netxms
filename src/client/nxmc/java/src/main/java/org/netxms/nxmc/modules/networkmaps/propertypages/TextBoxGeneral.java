@@ -110,7 +110,7 @@ public class TextBoxGeneral extends PropertyPage
       borderColor.setColorValue(ColorConverter.rgbFromInt(textBoxElement.getBorderColor()));
 
       checkShowBorder = new Button(dialogArea, SWT.CHECK);
-      checkShowBorder.setText("Show border");
+      checkShowBorder.setText(i18n.tr("Show border"));
       checkShowBorder.setSelection(textBoxElement.isBorderRequired());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

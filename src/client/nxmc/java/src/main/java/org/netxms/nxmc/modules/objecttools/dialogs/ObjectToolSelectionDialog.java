@@ -34,14 +34,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Object tool selection dialog
  */
 public class ObjectToolSelectionDialog extends Dialog
 {   
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectToolSelectionDialog.class);
+
    private TableViewer viewer;
    private ObjectTool tool;
 
@@ -61,7 +65,7 @@ public class ObjectToolSelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select Tool");
+      newShell.setText(i18n.tr("Select Tool"));
    }
 
    /**

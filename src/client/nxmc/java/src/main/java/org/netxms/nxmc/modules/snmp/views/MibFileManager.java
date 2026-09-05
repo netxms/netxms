@@ -183,7 +183,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
       tabItem.setControl(outputViewer);
 
       tabItem = new CTabItem(outputTabFolder, SWT.NONE);
-      tabItem.setText("Error Log");
+      tabItem.setText(i18n.tr("Error Log"));
       tabItem.setImage(errorLogIcon);
 
       final String[] names = { i18n.tr("Severity"), i18n.tr("Location"), i18n.tr("Message") };
@@ -335,7 +335,7 @@ public class MibFileManager extends ConfigurationView implements SessionListener
    private void uploadFile()
    {
       FileDialog fd = new FileDialog(getWindow().getShell(), SWT.OPEN | SWT.MULTI);
-      fd.setText("Select Files");
+      fd.setText(i18n.tr("Select Files"));
       if (fd.open() == null)
          return;
 

@@ -33,14 +33,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Object tool selection dialog
  */
 public class SummaryTableSelectionDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(SummaryTableSelectionDialog.class);
+
    private TableViewer viewer;
    private List<DciSummaryTableDescriptor> selection;
    
@@ -59,7 +63,7 @@ public class SummaryTableSelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select DCI Summary Table");
+      newShell.setText(i18n.tr("Select DCI Summary Table"));
    }
 
    /* (non-Javadoc)

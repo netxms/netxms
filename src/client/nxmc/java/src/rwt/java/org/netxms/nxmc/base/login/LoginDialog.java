@@ -154,7 +154,7 @@ public class LoginDialog extends Dialog
       footer.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
       Label copyright = new Label(footer, SWT.LEFT);
-      copyright.setText("Copyright \u00a9 2013-2026 Raden Solutions");
+      copyright.setText(i18n.tr("Copyright \u00a9 2013-2026 Raden Solutions"));
       copyright.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, true, false));
 
       Label version = new Label(footer, SWT.RIGHT);
@@ -216,7 +216,7 @@ public class LoginDialog extends Dialog
 
       // Login label
       Label label = new Label(formArea, SWT.CENTER);
-      label.setText("Log in");
+      label.setText(i18n.tr("Log in"));
       label.setData(RWT.CUSTOM_VARIANT, "LoginHeader");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
