@@ -139,15 +139,15 @@ public class LocationControl extends ObjectPropertyPage
       dialogArea.setLayout(layout);
 
       checkGenerateEvent = new Button(dialogArea, SWT.CHECK);
-      checkGenerateEvent.setText("&Generate event when location changes");
+      checkGenerateEvent.setText(i18n.tr("&Generate event when location changes"));
       checkGenerateEvent.setSelection(dcTarget.isLocationChageEventGenerated());
       checkGenerateEvent.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
-      locationControlMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY | SWT.DROP_DOWN, "Location control mode",
+      locationControlMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY | SWT.DROP_DOWN, i18n.tr("Location control mode"),
             WidgetHelper.DEFAULT_LAYOUT_DATA);
-      locationControlMode.add("No control");
-      locationControlMode.add("Alert when within restricted area");
-      locationControlMode.add("Alert when outside allowed area");
+      locationControlMode.add(i18n.tr("No control"));
+      locationControlMode.add(i18n.tr("Alert when within restricted area"));
+      locationControlMode.add(i18n.tr("Alert when outside allowed area"));
       locationControlMode.select(dcTarget.getGeoLocationControlMode().getValue());
 
       Composite viewerComposite = new Composite(dialogArea, SWT.NONE);

@@ -397,7 +397,7 @@ public class General extends PropertyPage
 		checkShowOutput.setSelection((objectTool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0);
 
       checkSuppressSuccessMessage = new Button(outputGroup, SWT.CHECK);
-      checkSuppressSuccessMessage.setText("&Suppress notification of successful execution");
+      checkSuppressSuccessMessage.setText(i18n.tr("&Suppress notification of successful execution"));
       checkSuppressSuccessMessage.setSelection((objectTool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) != 0);
 	}
 

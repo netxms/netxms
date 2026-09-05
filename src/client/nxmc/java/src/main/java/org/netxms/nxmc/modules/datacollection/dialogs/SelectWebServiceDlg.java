@@ -41,14 +41,18 @@ import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for selecting web service definition
  */
 public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(SelectWebServiceDlg.class);
+
    boolean multiSelection;
    private TableViewer viewer;
    private List<WebServiceDefinition> selection;
@@ -84,7 +88,7 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Web Service Defenition Selection");
+      newShell.setText(i18n.tr("Web Service Defenition Selection"));
       PreferenceStore settings = PreferenceStore.getInstance();
       newShell.setSize(settings.getAsPoint("SelectWebServiceDlg.size", 400, 250)); 
       newShell.setLocation(settings.getAsPoint("SelectWebServiceDlg.location", 100, 100));

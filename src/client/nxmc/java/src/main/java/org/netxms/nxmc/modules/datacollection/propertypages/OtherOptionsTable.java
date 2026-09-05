@@ -85,7 +85,7 @@ public class OtherOptionsTable extends AbstractDCIPropertyPage
       agentCacheMode.select(dci.getCacheMode().getValue());
 
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
-      relatedObject.setLabel("Related object");
+      relatedObject.setLabel(i18n.tr("Related object"));
       relatedObject.setObjectClass(GenericObject.class);
       relatedObject.setObjectId(dci.getRelatedObject());
       GridData gd = new GridData();

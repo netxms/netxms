@@ -297,7 +297,7 @@ public class DciSummaryTable extends DashboardElementPropertyPage
       buttonAdd.setLayoutData(rd);
       
       buttonEdit = new Button(rightButtons, SWT.PUSH);
-      buttonEdit.setText("&Edit...");
+      buttonEdit.setText(i18n.tr("&Edit..."));
       buttonEdit.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

@@ -196,7 +196,7 @@ public class Authentication extends PropertyPage
 		comboMappingMethod.add(i18n.tr("Subject"));
 		comboMappingMethod.add(i18n.tr("Public key"));
       comboMappingMethod.add(i18n.tr("Common name"));
-      comboMappingMethod.add("Template ID");
+      comboMappingMethod.add(i18n.tr("Template ID"));
       comboMappingMethod.select(user.getCertMappingMethod().getValue());
 		gd = new GridData();
 		gd.horizontalAlignment = GridData.FILL;

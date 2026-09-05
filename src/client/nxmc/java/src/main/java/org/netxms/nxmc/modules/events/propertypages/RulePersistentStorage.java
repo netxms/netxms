@@ -104,7 +104,7 @@ public class RulePersistentStorage extends RuleBasePropertyPage
       keysToSetEditor.setLayoutData(gd);
 
       label = new Label(dialogArea, SWT.NONE);
-      label.setText("Delete persistent storage entries");
+      label.setText(i18n.tr("Delete persistent storage entries"));
       gd = new GridData();
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);

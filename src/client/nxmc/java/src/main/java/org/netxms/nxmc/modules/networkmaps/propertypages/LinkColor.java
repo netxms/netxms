@@ -171,7 +171,7 @@ public class LinkColor extends LinkPropertyPage
       remove.setEnabled(radioColorObject.getSelection());
 
       checkUseThresholds = new Button(nodeSelectionGroup, SWT.CHECK);
-      checkUseThresholds.setText("Include active &thresholds into calculation");
+      checkUseThresholds.setText(i18n.tr("Include active &thresholds into calculation"));
       checkUseThresholds.setEnabled(radioColorObject.getSelection());
       checkUseThresholds.setSelection(linkEditor.isUseActiveThresholds());
       gd = new GridData();
@@ -180,7 +180,7 @@ public class LinkColor extends LinkPropertyPage
       checkUseThresholds.setLayoutData(gd);
 
       checkUseUtilization = new Button(nodeSelectionGroup, SWT.CHECK);
-      checkUseUtilization.setText("Include interface &utilization into calculation");
+      checkUseUtilization.setText(i18n.tr("Include interface &utilization into calculation"));
       checkUseUtilization.setEnabled(radioColorObject.getSelection());
       checkUseUtilization.setSelection(linkEditor.isUseInterfaceUtilization());
       gd = new GridData();

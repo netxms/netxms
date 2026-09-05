@@ -140,7 +140,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
    private void createSecretSection(Composite dialogArea)
 	{      
       Group clientArea = new Group(dialogArea, SWT.NONE);
-      clientArea.setText("Shared secrets");
+      clientArea.setText(i18n.tr("Shared secrets"));
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       layout.numColumns = 2;
@@ -212,7 +212,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       buttonsRight.setLayoutData(gridData);
 
       secretAddButton = new Button(buttonsRight, SWT.PUSH);
-      secretAddButton.setText("&Add...");
+      secretAddButton.setText(i18n.tr("&Add..."));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       secretAddButton.setLayoutData(rd);
@@ -225,7 +225,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       });
       
       secretDeleteButton = new Button(buttonsRight, SWT.PUSH);
-      secretDeleteButton.setText("&Delete");
+      secretDeleteButton.setText(i18n.tr("&Delete"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       secretDeleteButton.setLayoutData(rd);
@@ -411,7 +411,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       buttonsRight.setLayoutData(gd);
 
       portAddButton = new Button(buttonsRight, SWT.PUSH);
-      portAddButton.setText("&Add...");
+      portAddButton.setText(i18n.tr("&Add..."));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       portAddButton.setLayoutData(rd);
@@ -424,7 +424,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       });
 
       portDeleteButton = new Button(buttonsRight, SWT.PUSH);
-      portDeleteButton.setText("&Delete");
+      portDeleteButton.setText(i18n.tr("&Delete"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       portDeleteButton.setLayoutData(rd);

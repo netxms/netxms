@@ -39,12 +39,16 @@ import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Geo area selection dialog
  */
 public class GeoAreaSelectionDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(GeoAreaSelectionDialog.class);
+
    private static final String TABLE_CONFIG_PREFIX = "GeoAreaSelectionDialog"; //$NON-NLS-1$
 
    private List<GeoArea> cachedAreaList;
@@ -70,7 +74,7 @@ public class GeoAreaSelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select Geo Area");
+      newShell.setText(i18n.tr("Select Geo Area"));
       PreferenceStore settings = PreferenceStore.getInstance();
       newShell.setSize(settings.getAsInteger(TABLE_CONFIG_PREFIX + ".cx", 300), settings.getAsInteger(TABLE_CONFIG_PREFIX + ".cy", 400));
    }

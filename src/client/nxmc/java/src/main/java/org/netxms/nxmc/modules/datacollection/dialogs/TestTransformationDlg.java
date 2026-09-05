@@ -148,7 +148,7 @@ public class TestTransformationDlg extends Dialog
       if ((owner == null) || !(owner instanceof DataCollectionTarget))
       {
          ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
-         dlg.setTitle("Select Execution Target");
+         dlg.setTitle(i18n.tr("Select Execution Target"));
          if (dlg.open() != Window.OK)
          {
             status.setText("Cancelled");
@@ -158,7 +158,7 @@ public class TestTransformationDlg extends Dialog
          owner = dlg.getSelectedObjects().get(0);
          if ((owner == null) || !(owner instanceof DataCollectionTarget))
          {
-            status.setText("Invalid execution target");
+            status.setText(i18n.tr("Invalid execution target"));
             status.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
             return;
          }

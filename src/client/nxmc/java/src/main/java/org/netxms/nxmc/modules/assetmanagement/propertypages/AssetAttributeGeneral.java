@@ -99,7 +99,7 @@ public class AssetAttributeGeneral extends PropertyPage
       textName.setEditable(createNew);
 
       textDisplayName = new LabeledText(dialogArea, SWT.NONE);
-      textDisplayName.setLabel("Display name");
+      textDisplayName.setLabel(i18n.tr("Display name"));
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalSpan = 2;
       textDisplayName.setLayoutData(gd);

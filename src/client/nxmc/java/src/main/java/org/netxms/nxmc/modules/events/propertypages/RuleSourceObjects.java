@@ -174,7 +174,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
       new Label(dialogArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Exclusions:");   
+      label.setText(i18n.tr("Exclusions:"));   
       
       excludeViewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       excludeViewer.setContentProvider(new ArrayContentProvider());

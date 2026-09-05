@@ -165,7 +165,7 @@ public class General extends AbstractDCIPropertyPage
       dialogArea.setLayout(layout);
 
       Group groupMetricConfig = new Group(dialogArea, SWT.NONE);
-      groupMetricConfig.setText("Metric to collect");
+      groupMetricConfig.setText(i18n.tr("Metric to collect"));
       layout = new GridLayout();
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
@@ -205,7 +205,7 @@ public class General extends AbstractDCIPropertyPage
       });
 
       sourceNode = new ObjectSelector(groupMetricConfig, SWT.NONE, true);
-      sourceNode.setLabel("Source node override");
+      sourceNode.setLabel(i18n.tr("Source node override"));
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dco.getSourceNode());
       sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH && dco.getOrigin() != DataOrigin.OTLP);
@@ -226,7 +226,7 @@ public class General extends AbstractDCIPropertyPage
       metricSelector.setLayoutData(gd);
 
       description = new LabeledText(groupMetricConfig, SWT.NONE);
-      description.setLabel("Display name");
+      description.setLabel(i18n.tr("Display name"));
       description.getTextControl().setTextLimit(255);
       description.setText(dco.getDescription());
       gd = new GridData();
@@ -287,7 +287,7 @@ public class General extends AbstractDCIPropertyPage
          }
          dataUnit.select(selection);
 
-         useMultipliers = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, "Use multipliers", new GridData());
+         useMultipliers = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, i18n.tr("Use multipliers"), new GridData());
          useMultipliers.add("Default");
          useMultipliers.add("Yes");
          useMultipliers.add("No");
@@ -297,7 +297,7 @@ public class General extends AbstractDCIPropertyPage
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
          gd.horizontalSpan = 3;
-         mappingTableSelector = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, "Display value mapping table", gd);
+         mappingTableSelector = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, i18n.tr("Display value mapping table"), gd);
          mappingTableSelector.add(i18n.tr("(none)"));
          mappingTableSelector.select(0);
          mappingTableSelector.setEnabled(false);
@@ -305,7 +305,7 @@ public class General extends AbstractDCIPropertyPage
       }
 
       Group groupPolling = new Group(dialogArea, SWT.NONE);
-      groupPolling.setText("Collection schedule");
+      groupPolling.setText(i18n.tr("Collection schedule"));
       layout = new GridLayout();
       layout.marginTop = WidgetHelper.OUTER_SPACING;
       layout.marginBottom = WidgetHelper.OUTER_SPACING * 2;
@@ -341,7 +341,7 @@ public class General extends AbstractDCIPropertyPage
       scheduleDefault.setLayoutData(gd);
 
       scheduleFixed = new Button(groupPolling, SWT.RADIO);
-      scheduleFixed.setText("Custom interval");
+      scheduleFixed.setText(i18n.tr("Custom interval"));
       scheduleFixed.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM);
       scheduleFixed.addSelectionListener(pollingButtons);
       scheduleFixed.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
@@ -364,7 +364,7 @@ public class General extends AbstractDCIPropertyPage
       pollingIntervalComposite.setLayoutData(gd);
 
       scheduleAdvanced = new Button(groupPolling, SWT.RADIO);
-      scheduleAdvanced.setText("Advanced schedule");
+      scheduleAdvanced.setText(i18n.tr("Advanced schedule"));
       scheduleAdvanced.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_ADVANCED);
       scheduleAdvanced.addSelectionListener(pollingButtons);
       scheduleAdvanced.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
@@ -387,7 +387,7 @@ public class General extends AbstractDCIPropertyPage
       scheduleLink.setVisible(scheduleAdvanced.getSelection());
 
       Group groupRetention = new Group(dialogArea, SWT.NONE);
-      groupRetention.setText("History retention period");
+      groupRetention.setText(i18n.tr("History retention period"));
       layout = new GridLayout();
       layout.marginTop = WidgetHelper.OUTER_SPACING;
       layout.marginBottom = WidgetHelper.OUTER_SPACING * 2;
@@ -448,7 +448,7 @@ public class General extends AbstractDCIPropertyPage
       retentionTimeComposite.setLayoutData(gd);
 
       storageNoStorage = new Button(groupRetention, SWT.RADIO);
-      storageNoStorage.setText("Do not save to the database");
+      storageNoStorage.setText(i18n.tr("Do not save to the database"));
       storageNoStorage.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_NONE);
       storageNoStorage.addSelectionListener(storageButtons);
 
@@ -467,7 +467,7 @@ public class General extends AbstractDCIPropertyPage
          sampleSaveComposite.setLayout(layout);
 
          Label sampleSaveLabel = new Label(sampleSaveComposite, SWT.NONE);
-         sampleSaveLabel.setText("Save every");
+         sampleSaveLabel.setText(i18n.tr("Save every"));
 
          sampleSaveInterval = new Spinner(sampleSaveComposite, SWT.BORDER);
          sampleSaveInterval.setMinimum(1);
@@ -483,7 +483,7 @@ public class General extends AbstractDCIPropertyPage
          sampleSaveComposite.setLayoutData(gd);
 
          checkSaveOnlyChangedValues = new Button(groupRetention, SWT.CHECK);
-         checkSaveOnlyChangedValues.setText("Save only &changed values");
+         checkSaveOnlyChangedValues.setText(i18n.tr("Save only &changed values"));
          checkSaveOnlyChangedValues.setSelection(dci.isStoreChangesOnly());
          gd = new GridData();
          gd.horizontalSpan = 2;

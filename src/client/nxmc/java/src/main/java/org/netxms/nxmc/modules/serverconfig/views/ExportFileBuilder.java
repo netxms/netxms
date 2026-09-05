@@ -531,11 +531,11 @@ public class ExportFileBuilder extends ConfigurationView
 		ruleViewer.getTable().setHeaderVisible(true);
 
       TableColumn column = new TableColumn(ruleViewer.getTable(), SWT.LEFT);
-      column.setText("Rule #");
+      column.setText(i18n.tr("Rule #"));
       column.setWidth(60);
 
       column = new TableColumn(ruleViewer.getTable(), SWT.LEFT);
-      column.setText("Rule Name");
+      column.setText(i18n.tr("Rule Name"));
       column.setWidth(250);
 
 		gd = new GridData();

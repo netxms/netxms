@@ -28,7 +28,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.base.GeoLocation;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Composite editor for a (latitude, longitude, zoom level) triple used by
@@ -46,6 +48,8 @@ import org.netxms.nxmc.tools.WidgetHelper;
  */
 public class LatLonZoomEditor extends Composite
 {
+   private final I18n i18n = LocalizationHelper.getI18n(LatLonZoomEditor.class);
+
    public static final int MIN_ZOOM = 1;
    public static final int MAX_ZOOM = 18;
 
@@ -104,7 +108,7 @@ public class LatLonZoomEditor extends Composite
       zoomRow.setLayoutData(gd);
 
       zoomLabel = new Label(zoomRow, SWT.NONE);
-      zoomLabel.setText("Zoom level"); //$NON-NLS-1$
+      zoomLabel.setText(i18n.tr("Zoom level")); //$NON-NLS-1$
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       gd.horizontalSpan = 2;

@@ -153,7 +153,7 @@ public class StatusMap extends DashboardElementPropertyPage
       checkGroupObjects.setSelection(config.isGroupObjects());
 
       checkHideObjectsInMaintenance = new Button(optionsGroup, SWT.CHECK);
-      checkHideObjectsInMaintenance.setText("Hide objects in &maintenance mode");
+      checkHideObjectsInMaintenance.setText(i18n.tr("Hide objects in &maintenance mode"));
       checkHideObjectsInMaintenance.setSelection(config.isHideObjectsInMaintenance());
 
 		checkShowFilter = new Button(optionsGroup, SWT.CHECK);

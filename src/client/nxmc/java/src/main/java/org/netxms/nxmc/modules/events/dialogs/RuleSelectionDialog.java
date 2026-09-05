@@ -123,11 +123,11 @@ public class RuleSelectionDialog extends Dialog
 		viewer.getTable().setHeaderVisible(true);
 
       TableColumn column = new TableColumn(viewer.getTable(), SWT.LEFT);
-      column.setText("Rule #");
+      column.setText(i18n.tr("Rule #"));
       column.setWidth(60);
 
       column = new TableColumn(viewer.getTable(), SWT.LEFT);
-      column.setText("Rule Name");
+      column.setText(i18n.tr("Rule Name"));
       column.setWidth(250);
 	      
 		viewer.setContentProvider(new ArrayContentProvider());

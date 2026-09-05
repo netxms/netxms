@@ -69,7 +69,7 @@ public class SelectAssetAttributeDlg extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select Asset Attributes");
+      newShell.setText(i18n.tr("Select Asset Attributes"));
    }
 
    /**

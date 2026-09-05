@@ -134,7 +134,7 @@ public class PhysicalContainerPlacement extends ObjectPropertyPage
       dialogArea.setLayout(layout);
       
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      objectSelector.setLabel("Rack or chassis");      
+      objectSelector.setLabel(i18n.tr("Rack or chassis"));      
       objectSelector.setObjectId(hardwareEntity.getPhysicalContainerId());
 
       Set<Class<? extends AbstractObject>> filter = new HashSet<Class<? extends AbstractObject>>();
@@ -230,7 +230,7 @@ public class PhysicalContainerPlacement extends ObjectPropertyPage
       chassisElements.setLayoutData(gd);
       
       chassisImageSelector = new ImageSelector(chassisElements, SWT.NONE);
-      chassisImageSelector.setLabel("Chassis image");
+      chassisImageSelector.setLabel(i18n.tr("Chassis image"));
       chassisImageSelector.setImageGuid(placement.getImage(), true);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -374,7 +374,7 @@ public class PhysicalContainerPlacement extends ObjectPropertyPage
       rackElements.setLayoutData(gd);
 
 	   rackImageFrontSelector = new ImageSelector(rackElements, SWT.NONE);
-      rackImageFrontSelector.setLabel("Rack front image");
+      rackImageFrontSelector.setLabel(i18n.tr("Rack front image"));
       rackImageFrontSelector.setImageGuid(hardwareEntity.getFrontRackImage(), true);
       rackImageFrontSelector.setEnabled(hardwareEntity.getRackOrientation() == RackOrientation.FRONT || hardwareEntity.getRackOrientation() == RackOrientation.FILL);
       gd = new GridData();
@@ -384,7 +384,7 @@ public class PhysicalContainerPlacement extends ObjectPropertyPage
       rackImageFrontSelector.setLayoutData(gd);
 
       rackImageRearSelector = new ImageSelector(rackElements, SWT.NONE);
-      rackImageRearSelector.setLabel("Rack rear image");
+      rackImageRearSelector.setLabel(i18n.tr("Rack rear image"));
       rackImageRearSelector.setImageGuid(hardwareEntity.getRearRackImage(), true);
       rackImageRearSelector.setEnabled(hardwareEntity.getRackOrientation() == RackOrientation.REAR || hardwareEntity.getRackOrientation() == RackOrientation.FILL);
       gd = new GridData();

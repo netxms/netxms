@@ -204,7 +204,7 @@ public class ZoneSSHCredentials extends ObjectPropertyPage
       });
       
       secretMoveDownButton = new Button(buttonsLeft, SWT.PUSH);
-      secretMoveDownButton.setText("&Down");
+      secretMoveDownButton.setText(i18n.tr("&Down"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       secretMoveDownButton.setLayoutData(rd);
@@ -429,7 +429,7 @@ public class ZoneSSHCredentials extends ObjectPropertyPage
       });
 
       portMoveDownButton = new Button(buttonsLeft, SWT.PUSH);
-      portMoveDownButton.setText("&Down");
+      portMoveDownButton.setText(i18n.tr("&Down"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       portMoveDownButton.setLayoutData(rd);

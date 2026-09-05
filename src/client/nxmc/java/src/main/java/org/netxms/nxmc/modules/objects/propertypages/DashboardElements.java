@@ -159,7 +159,7 @@ public class DashboardElements extends ObjectPropertyPage
       columnCount.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
 
       checkScrollable = new Button(dialogArea, SWT.CHECK);
-      checkScrollable.setText("&Scrollable content");
+      checkScrollable.setText(i18n.tr("&Scrollable content"));
       checkScrollable.setSelection(dashboard.isScrollable());
       checkScrollable.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
 

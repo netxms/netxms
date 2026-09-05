@@ -27,12 +27,16 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.log.LogRecordDetails;
 import org.netxms.nxmc.base.widgets.JsonViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for displaying event log record details
  */
 public class EventLogRecordDetailsDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(EventLogRecordDetailsDialog.class);
+
    private LogRecordDetails data;
    private JsonViewer text;
 
@@ -55,7 +59,7 @@ public class EventLogRecordDetailsDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Event Log Record Details");
+      newShell.setText(i18n.tr("Event Log Record Details"));
    }
 
    /**

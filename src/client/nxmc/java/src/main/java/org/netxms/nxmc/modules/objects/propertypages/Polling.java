@@ -159,7 +159,7 @@ public class Polling extends ObjectPropertyPage
       if (object instanceof AbstractNode)
       {
          pollCount = new LabeledSpinner(dialogArea, SWT.NONE);
-         pollCount.setLabel("Required poll count for status change");
+         pollCount.setLabel(i18n.tr("Required poll count for status change"));
          pollCount.setSelection(((AbstractNode)object).getRequredPollCount());
       }
 

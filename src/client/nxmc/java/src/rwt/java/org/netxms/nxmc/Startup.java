@@ -281,7 +281,7 @@ public class Startup implements EntryPoint, StartupParameters
                   Composite content = new Composite(parent, SWT.NONE);
                   content.setLayout(new GridLayout());
                   Label label = new Label(content, SWT.NONE);
-                  label.setText("Invalid resource ID");
+                  label.setText(i18n.tr("Invalid resource ID"));
                   label.setFont(JFaceResources.getBannerFont());
                   return content;
                }

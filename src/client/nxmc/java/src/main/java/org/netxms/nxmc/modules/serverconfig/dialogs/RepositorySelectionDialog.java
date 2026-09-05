@@ -36,14 +36,18 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.market.Repository;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Repository selection dialog
  */
 public class RepositorySelectionDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(RepositorySelectionDialog.class);
+
    private List<Repository> repositories;
    private Repository selection = null;
    private TableViewer viewer;
@@ -65,7 +69,7 @@ public class RepositorySelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select Repository");
+      newShell.setText(i18n.tr("Select Repository"));
    }
 
    /* (non-Javadoc)
@@ -83,7 +87,7 @@ public class RepositorySelectionDialog extends Dialog
       dialogArea.setLayout(layout);
       
       Label label = new Label(dialogArea, SWT.LEFT);
-      label.setText("Available repositories");
+      label.setText(i18n.tr("Available repositories"));
       
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.SINGLE | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
