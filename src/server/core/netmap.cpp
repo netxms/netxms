@@ -1156,7 +1156,7 @@ bool NetworkMap::buildTopologyGraph(NetworkMapObjectList *graph, int mapType)
             success = buildTopologyGraphFromSeed(static_pointer_cast<Node>(seed), graph, mapType);
          }
          else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_COLLECTOR) ||
-                  (seed->getObjectClass() == OBJECT_COLLECTOR) || (seed->getObjectClass() == OBJECT_CLUSTER) ||
+                  (seed->getObjectClass() == OBJECT_CHASSIS) || (seed->getObjectClass() == OBJECT_CLUSTER) ||
                   (seed->getObjectClass() == OBJECT_RACK))
          {
             nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::buildTopology(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seedObjectId);
