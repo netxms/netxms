@@ -87,6 +87,7 @@ SOURCES = \
 	tls_conn.cpp \
 	tools.cpp \
 	tp.cpp \
+	tzrule.cpp \
 	unicode.cpp \
 	unicode_case.cpp \
 	uuid.cpp \

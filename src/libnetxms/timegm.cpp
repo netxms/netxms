@@ -23,23 +23,12 @@
 
 #include "libnetxms.h"
 
-#if !HAVE_TIMEGM
-
-/**
- * Floor division (quotient rounded toward negative infinity)
- */
-static inline int64_t FloorDiv(int64_t a, int64_t b)
-{
-   int64_t q = a / b;
-   return ((a % b != 0) && ((a < 0) != (b < 0))) ? q - 1 : q;
-}
-
 /**
  * Days from civil date (proleptic Gregorian calendar) to days since the epoch
  * (1970-01-01). Month is 1-based, day is 1-based. Based on Howard Hinnant's
  * public domain calendar algorithms (https://howardhinnant.github.io/date_algorithms.html).
  */
-static int64_t DaysFromCivil(int64_t y, int m, int d)
+int64_t DaysFromCivil(int64_t y, int m, int d)
 {
    y -= (m <= 2);
    int64_t era = FloorDiv(y, 400);
@@ -52,7 +41,7 @@ static int64_t DaysFromCivil(int64_t y, int m, int d)
 /**
  * Civil date from days since the epoch (inverse of DaysFromCivil)
  */
-static void CivilFromDays(int64_t z, int64_t *year, int *month, int *day)
+void CivilFromDays(int64_t z, int64_t *year, int *month, int *day)
 {
    z += 719468;
    int64_t era = FloorDiv(z, 146097);
@@ -64,6 +53,8 @@ static void CivilFromDays(int64_t z, int64_t *year, int *month, int *day)
    *month = mp + ((mp < 10) ? 3 : -9);                              // [1, 12]
    *year = yoe + era * 400 + ((*month <= 2) ? 1 : 0);
 }
+
+#if !HAVE_TIMEGM
 
 /**
  * UTC version of mktime(). Conformant with POSIX.1-2024 / glibc semantics:

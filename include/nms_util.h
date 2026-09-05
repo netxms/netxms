@@ -6035,6 +6035,77 @@ int LIBNETXMS_EXPORTABLE InflateFileStream(FILE *source, ByteStream *output, boo
 TCHAR LIBNETXMS_EXPORTABLE *GetSystemTimeZone(TCHAR *buffer, size_t size, bool withName = true, bool forceFullOffset = false);
 
 /**
+ * POSIX timezone rule (TZ string without a leading colon, e.g. "EET-2EEST,M3.5.0/3,M10.5.0/4", "UTC0", "JST-9").
+ * Evaluates UTC offsets and local day boundaries with pure calendar arithmetic, independent of the C library
+ * timezone machinery and of the timezone database, so results are identical on all platforms.
+ *
+ * Supported: fixed offsets, quoted names ("<+03>-3"), DST transition rules in "Mm.w.d", "Jn" and "n" forms with
+ * optional "/time" (hours -167..167 as allowed by POSIX.1-2024), and DST offsets smaller than the standard offset
+ * (Europe/Dublin style). A DST name without both transition rules is rejected. All offsets returned by this class
+ * are in seconds east of UTC (the POSIX sign convention is inverted at parse time).
+ *
+ * An object that failed to parse is invalid and evaluates as UTC.
+ */
+class LIBNETXMS_EXPORTABLE TimeZoneRule
+{
+private:
+   /**
+    * DST transition day rule
+    */
+   struct Transition
+   {
+      char form;     // 'M' (month/week/day), 'J' (Julian day 1..365, no Feb 29), 'N' (day of year 0..365), 0 = none
+      int month;     // 1..12 (M form)
+      int week;      // 1..5, 5 = last (M form)
+      int day;       // weekday 0..6, Sunday = 0 (M form); day number (J and N forms)
+      int time;      // transition time in seconds after local midnight of the transition day, may be negative or exceed 24 hours
+
+      int64_t dayOfYear(int64_t year) const;   // days since epoch of the transition day in given year
+   };
+
+   char m_text[128];
+   char m_stdName[32];
+   char m_dstName[32];
+   int m_stdOffset;
+   int m_dstOffset;
+   bool m_hasDst;
+   Transition m_dstStart;
+   Transition m_dstEnd;
+   bool m_valid;
+
+   void reset();
+   bool parseName(const char **p, char *name, size_t size);
+   bool parseOffset(const char **p, int *offset, int maxHours, bool requireSign);
+   bool parseTransition(const char **p, Transition *t);
+   void transitionsForYear(int64_t year, time_t *dstStart, time_t *dstEnd) const;
+
+public:
+   TimeZoneRule()
+   {
+      reset();
+   }
+   TimeZoneRule(const char *rule)
+   {
+      parse(rule);
+   }
+
+   bool parse(const char *rule);
+   bool isValid() const { return m_valid; }
+   const char *toString() const { return m_text; }
+
+   int getStandardOffset() const { return m_stdOffset; }
+   int getDaylightOffset() const { return m_dstOffset; }
+   bool hasDaylightSaving() const { return m_hasDst; }
+   const char *getStandardName() const { return m_stdName; }
+   const char *getDaylightName() const { return m_dstName; }
+
+   bool isDaylightSavingAt(time_t t) const;
+   int offsetAt(time_t t) const;
+   void toLocalDate(time_t t, int *year, int *month, int *day) const;
+   time_t localDayStart(int year, int month, int day) const;
+};
+
+/**
  * Format timestamp as dd.mm.yyyy HH:MM:SS
  */
 static inline String FormatTimestamp(time_t t)

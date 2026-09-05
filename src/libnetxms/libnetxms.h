@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,12 +30,18 @@
 
 #define MAX_CODEPAGE_LEN		64
 
-
-//
-// Functions
-//
-
 void SEHInit(void);
 
+int64_t DaysFromCivil(int64_t y, int m, int d);
+void CivilFromDays(int64_t z, int64_t *year, int *month, int *day);
+
+/**
+ * Floor division (quotient rounded toward negative infinity).
+ */
+static inline int64_t FloorDiv(int64_t a, int64_t b)
+{
+   int64_t q = a / b;
+   return ((a % b != 0) && ((a < 0) != (b < 0))) ? q - 1 : q;
+}
 
 #endif   /* _libnetxms_h_ */

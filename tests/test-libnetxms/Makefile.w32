@@ -18,6 +18,7 @@ SOURCES = \
 	test-libnetxms.cpp \
 	threads.cpp \
 	tp.cpp \
+	tzrule.cpp \
 	websocket.cpp
 TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
 # RAND_bytes() is called directly by the hash map and crypto tests, so OpenSSL
