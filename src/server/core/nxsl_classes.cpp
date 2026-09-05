@@ -106,8 +106,7 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
       *result = vm->createValue(false);
       return 0;
    }
-   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
-            (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!argv[0]->isObject())
@@ -151,8 +150,7 @@ NXSL_METHOD_DEFINITION(NetObj, bindTo)
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(nxslParent->getData());
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
-            (parent->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!IsValidParentClass(thisObject->getObjectClass(), parent->getObjectClass()))
@@ -920,8 +918,7 @@ NXSL_METHOD_DEFINITION(NetObj, unbind)
       *result = vm->createValue(false);
       return 0;
    }
-   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
-            (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!argv[0]->isObject())
@@ -958,8 +955,7 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
       return NXSL_ERR_BAD_CLASS;
 
    NetObj *parent = static_cast<shared_ptr<NetObj>*>(nxslParent->getData())->get();
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
-            (parent->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    NetObj::unlinkObjects(parent, thisObject);
