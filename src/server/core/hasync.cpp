@@ -173,6 +173,7 @@ static bool IsRelationLoadedByParent(int parentClass)
       case OBJECT_ASSETROOT:
       case OBJECT_BUSINESSSERVICEROOT:
       case OBJECT_CONTAINER:
+      case OBJECT_RACK:
       case OBJECT_COLLECTOR:
       case OBJECT_CIRCUIT:
       case OBJECT_WIRELESSDOMAIN:
