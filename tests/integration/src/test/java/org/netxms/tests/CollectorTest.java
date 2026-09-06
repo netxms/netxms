@@ -19,7 +19,7 @@
 package org.netxms.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
@@ -56,6 +56,7 @@ public class CollectorTest extends AbstractSessionTest
    final String scriptNameForSearching = "InstanceScript";
    final String DUMMY = "Dummy";
    final String DCI_DESCRIPTION = "test DCI for Collector";
+   final String DCI_DESCRIPTION_NO_PERF_TAB = "test DCI for Collector without perf tab";
    final String TRANSORMATION_SCRIPT = "return 6;";
 
    /**
@@ -186,23 +187,39 @@ public class CollectorTest extends AbstractSessionTest
       assertNotNull(testCollector);
 
       TestHelper.findAndDeleteDci(session, testCollector, DCI_DESCRIPTION);
+      TestHelper.findAndDeleteDci(session, testCollector, DCI_DESCRIPTION_NO_PERF_TAB);
 
       DataCollectionConfiguration dcc = session.openDataCollectionConfiguration(testCollector.getObjectId());
 
       final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
-
       dci.setOrigin(DataOrigin.INTERNAL);
       dci.setDescription(DCI_DESCRIPTION);
       dci.setName(DUMMY);
       dci.setTransformationScript(TRANSORMATION_SCRIPT);
       dci.setPerfTabSettings("<config><enabled>true</enabled></config>");
+      long dciId = dcc.modifyObject(dci);
 
-      dcc.modifyObject(dci);
+      // Identical DCI without perf tab settings must not appear in perf tab list
+      final DataCollectionItem dciNoPerfTab = new DataCollectionItem(dcc, 0);
+      dciNoPerfTab.setOrigin(DataOrigin.INTERNAL);
+      dciNoPerfTab.setDescription(DCI_DESCRIPTION_NO_PERF_TAB);
+      dciNoPerfTab.setName(DUMMY);
+      dciNoPerfTab.setTransformationScript(TRANSORMATION_SCRIPT);
+      long dciNoPerfTabId = dcc.modifyObject(dciNoPerfTab);
+
       Thread.sleep(1000);
 
       List<PerfTabDci> perfTabList = session.getPerfTabItems(testCollector.getObjectId());
       assertNotNull(perfTabList);
-      assertFalse(perfTabList.isEmpty());
+
+      boolean found = false;
+      for(PerfTabDci p : perfTabList)
+      {
+         assertNotEquals(dciNoPerfTabId, p.getId(), "DCI without perf tab settings returned in perf tab list");
+         if (p.getId() == dciId)
+            found = true;
+      }
+      assertTrue(found, "DCI with perf tab settings not returned in perf tab list");
 
       dcc.close();
    }
