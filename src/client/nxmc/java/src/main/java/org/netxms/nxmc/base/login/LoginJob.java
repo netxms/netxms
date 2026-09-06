@@ -103,7 +103,15 @@ public class LoginJob implements IRunnableWithProgress
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
       monitor.beginTask(i18n.tr("Connecting..."), 9);
-      final InetSocketAddress serverAddress = NXCSession.parseConnectionAddress(server);
+      final InetSocketAddress serverAddress;
+      try
+      {
+         serverAddress = NXCSession.parseConnectionAddress(server);
+      }
+      catch(IllegalArgumentException e)
+      {
+         throw new InvocationTargetException(e);
+      }
       logger.info("Connecting to " + serverAddress.getHostString() + " port " + serverAddress.getPort());
 
       final NXCSession session = createSession(serverAddress);

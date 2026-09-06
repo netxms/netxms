@@ -202,8 +202,10 @@ public class Shell
          }
          catch(NumberFormatException e)
          {
-            // ignore
+            throw new IllegalArgumentException("Invalid port number \"" + optPort + "\"");
          }
+         if ((port <= 0) || (port > 65535))
+            throw new IllegalArgumentException("Port number " + port + " out of range (1-65535)");
       }
 
       final NXCSession session = new NXCSession(hostName, port, enableCompression);
