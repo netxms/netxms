@@ -81,6 +81,7 @@ private:
    Mutex m_lock;
    TLSConnection *m_connection;  // protected by m_lock
    SOCKET m_socket;              // cached copy of connection socket for polling without lock
+   bool m_disconnectRequested;   // protected by m_lock; set by disconnect() called while connection is being established
    bool m_verifyPeer;
    size_t m_maxMessageSize;
    char *m_extraHeaders;

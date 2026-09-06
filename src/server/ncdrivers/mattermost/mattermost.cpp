@@ -418,13 +418,14 @@ class MattermostChatBot : public ChatBotDriver
 private:
    char m_serverUrl[MAX_SERVER_URL_LEN];
    char m_token[MAX_TOKEN_LEN];
-   char m_botUserId[64];
+   char m_botUserId[64];               // populated on demand by reader thread or by sender threads without locking;
+                                       // safe because value is immutable and every writer stores the same string
    StringMap m_channels;               // channel aliases for outbound messages
    StringMap m_directChannels;         // peer user ID -> direct message channel ID
    Mutex m_directChannelsLock;
    ChatBotMessageSink *m_sink;
    THREAD m_readerThread;
-   WebSocketClient *m_webSocket;       // protected by m_webSocketLock, non-null only while reader thread owns a connection
+   WebSocketClient *m_webSocket;       // protected by m_webSocketLock, non-null only while reader thread is connecting or connected
    Mutex m_webSocketLock;
    Condition m_shutdownCondition;
    bool m_shutdownFlag;
@@ -524,7 +525,7 @@ void MattermostChatBot::stop()
    if (m_webSocket != nullptr)
    {
       m_webSocket->sendClose(WEBSOCKET_CLOSE_GOING_AWAY);
-      m_webSocket->disconnect();   // unblocks reader thread waiting in readMessage()
+      m_webSocket->disconnect();   // unblocks reader thread waiting in readMessage() or aborts connection attempt
    }
    m_webSocketLock.unlock();
 
@@ -609,6 +610,9 @@ bool MattermostChatBot::runConnection()
    if ((m_botUserId[0] == 0) && !fetchBotIdentity())
       return false;
 
+   if (m_shutdownFlag)
+      return false;
+
    char url[MAX_SERVER_URL_LEN + 32];
    strcpy(url, m_serverUrl);
    strcat(url, "api/v4/websocket");
@@ -620,16 +624,21 @@ bool MattermostChatBot::runConnection()
    strlcat(authHeader, m_token, sizeof(authHeader));
    webSocket.addHeader("Authorization", authHeader);
 
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Connecting to %hs"), url);
-   if (!webSocket.connect(url))
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("WebSocket connection failed (%s)"), webSocket.getErrorText());
-      return false;
-   }
-
+   // Publish client before connecting so that stop() can abort connection attempt in progress
    m_webSocketLock.lock();
    m_webSocket = &webSocket;
    m_webSocketLock.unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Connecting to %hs"), url);
+   if (!webSocket.connect(url))
+   {
+      if (!m_shutdownFlag)
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("WebSocket connection failed (%s)"), webSocket.getErrorText());
+      m_webSocketLock.lock();
+      m_webSocket = nullptr;
+      m_webSocketLock.unlock();
+      return false;
+   }
 
    // Authenticate session explicitly in addition to Authorization header in handshake
    json_t *challenge = json_object();

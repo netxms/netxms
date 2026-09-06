@@ -57,6 +57,7 @@ WebSocketClient::WebSocketClient(const TCHAR *debugTag) : m_readBuffer(RECEIVE_C
    _tcslcpy(m_debugTag, CHECK_NULL_EX(debugTag), sizeof(m_debugTag) / sizeof(TCHAR));
    m_connection = nullptr;
    m_socket = INVALID_SOCKET;
+   m_disconnectRequested = false;
    m_verifyPeer = false;
    m_maxMessageSize = WEBSOCKET_DEFAULT_MAX_MESSAGE_SIZE;
    m_extraHeaders = nullptr;
@@ -216,6 +217,10 @@ bool WebSocketClient::connect(const char *url, uint32_t timeout)
    if (timeout == 0)
       timeout = TLS_CONN_DEFAULT_TIMEOUT;
 
+   m_lock.lock();
+   m_disconnectRequested = false;
+   m_lock.unlock();
+
    InetAddress addr = InetAddress::resolveHostName(m_host);
    if (!addr.isValidUnicast() && !addr.isLoopback())
    {
@@ -247,6 +252,14 @@ bool WebSocketClient::connect(const char *url, uint32_t timeout)
    m_errorText[0] = 0;
 
    m_lock.lock();
+   if (m_disconnectRequested)
+   {
+      m_lock.unlock();
+      _tcslcpy(m_errorText, _T("Connection aborted"), sizeof(m_errorText) / sizeof(TCHAR));
+      nxlog_debug_tag(m_debugTag, 5, _T("%s"), m_errorText);
+      delete connection;
+      return false;
+   }
    m_connection = connection;
    m_socket = connection->getSocket();
    m_lock.unlock();
@@ -615,7 +628,8 @@ void WebSocketClient::close(uint16_t code, const char *reason, uint32_t timeout)
 
 /**
  * Shut down underlying socket without close handshake. Safe to call from any thread; causes readMessage()
- * in progress on the reader thread to return.
+ * or WebSocket handshake in progress on the reader thread to return. If called while connect() is still
+ * establishing transport connection, that connect() call fails as soon as transport connection is established.
  */
 void WebSocketClient::disconnect()
 {
@@ -624,6 +638,10 @@ void WebSocketClient::disconnect()
    {
       nxlog_debug_tag(m_debugTag, 6, _T("Shutting down connection socket"));
       shutdown(m_connection->getSocket(), SHUT_RDWR);
+   }
+   else
+   {
+      m_disconnectRequested = true;
    }
 }
 
