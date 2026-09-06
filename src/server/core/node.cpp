@@ -10386,7 +10386,7 @@ uint32_t Node::getMetricForClient(int origin, uint32_t userId, const wchar_t *na
             rc = getMetricFromSmclp(name, buffer, size);
          break;
       case DS_NETCONF:
-         if (checkAccessRights(userId, OBJECT_ACCESS_READ))
+         if (checkAccessRights(userId, OBJECT_ACCESS_READ_DEVICE_CONFIG))
             rc = getMetricFromNetconf(name, buffer, size);
          break;
       default:
