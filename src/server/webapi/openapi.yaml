@@ -4907,9 +4907,11 @@ paths:
         by `dciId` or by `dciName`. When a DCI is addressed by name and does not exist yet, the
         server attempts to create it through instance discovery.
 
-        The whole batch is validated before any value is pushed, so a request either applies
-        completely or has no effect at all. If validation fails, the response body identifies the
-        offending element by its position in the request array.
+        The whole batch is validated before any value is pushed, so values are either applied
+        completely or not at all. If validation fails, the response body identifies the offending
+        element by its position in the request array. Note that DCIs created through instance
+        discovery for elements addressed by `dciName` are created during validation and are not
+        removed if a later element fails.
 
         Requires `OBJECT_ACCESS_PUSH_DATA` on every target object.
       requestBody:
