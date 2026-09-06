@@ -1020,7 +1020,7 @@ static void CH_RenameFile(NXCPMessage *request, NXCPMessage *response, AbstractC
    ConvertPathToHost(newName, allowPathExpansion, session->isMasterServer());
 
    TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
-   if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
+   if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false, true) && session->isMasterServer())
    {
       if (ValidateFileChangeOperation(fullPathNew, allowOverwirite, response))
       {
@@ -1065,7 +1065,7 @@ static void CH_MoveFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
    ConvertPathToHost(newName, allowPathExpansion, session->isMasterServer());
 
    TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
-   if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
+   if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false, true) && session->isMasterServer())
    {
       if (ValidateFileChangeOperation(fullPathNew, allowOverwirite, response))
       {
@@ -1112,7 +1112,7 @@ static void CH_CopyFile(NXCPMessage *request, NXCPMessage *response, AbstractCom
    ConvertPathToHost(newName, allowPathExpansion, session->isMasterServer());
 
    TCHAR *fullPathOld = NULL, *fullPathNew = NULL;
-   if (CheckFullPath(oldName, &fullPathOld, false, true) && CheckFullPath(newName, &fullPathNew, false) && session->isMasterServer())
+   if (CheckFullPath(oldName, &fullPathOld, false) && CheckFullPath(newName, &fullPathNew, false, true) && session->isMasterServer())
    {
       if (ValidateFileChangeOperation(fullPathNew, allowOverwrite, response))
       {
@@ -1504,7 +1504,7 @@ static void CH_ChangeFilePermissions(NXCPMessage *request, NXCPMessage *response
    ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *fullPath;
-   if (CheckFullPath(fileName, &fullPath, false))
+   if (CheckFullPath(fileName, &fullPath, false, true))
    {
       uint16_t accessRights = request->getFieldAsUInt16(VID_FILE_PERMISSIONS);
       if (accessRights != 0)
@@ -1736,7 +1736,7 @@ static void CH_ChangeFileOwner(NXCPMessage *request, NXCPMessage *response, Abst
    ConvertPathToHost(fileName, request->getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *fullPath;
-   if (CheckFullPath(fileName, &fullPath, false))
+   if (CheckFullPath(fileName, &fullPath, false, true))
    {
 #if defined(_WIN32)
       // Only file owner can be changed on Windows - primary group is not used by access checks
