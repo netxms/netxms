@@ -464,8 +464,9 @@ static bool GetPushDataTimestamp(json_t *element, Timestamp *timestamp)
  * Handler for POST /v1/push-data
  * Request body is a JSON array of elements, each identifying target object by "objectId" or
  * "objectName", DCI by "dciId" or "dciName", and carrying "value" and optional "timestamp".
- * Whole batch is validated before any value is pushed, so request either applies completely or
- * has no effect at all.
+ * Whole batch is validated before any value is pushed, so values are either applied completely or
+ * not at all. DCIs created through instance discovery for elements addressed by name are created
+ * during validation and are not removed if a later element fails.
  */
 int H_PushData(Context *context)
 {
