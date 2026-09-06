@@ -52,6 +52,9 @@ public:
  */
 class NXSL_DCTargetClass : public NXSL_NetObjClass
 {
+protected:
+   NXSL_Value *getAutoBindAttr(NXSL_VM *vm, const AutoBindTarget& target, const NXSL_Identifier& attr);
+
 public:
    NXSL_DCTargetClass();
 
@@ -177,6 +180,39 @@ class NXSL_CollectorClass : public NXSL_DCTargetClass
 {
 public:
    NXSL_CollectorClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
+ * NXSL "Facility" class
+ */
+class NXSL_FacilityClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_FacilityClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
+ * NXSL "PowerDomain" class
+ */
+class NXSL_PowerDomainClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_PowerDomainClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
+ * NXSL "CoolingZone" class
+ */
+class NXSL_CoolingZoneClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_CoolingZoneClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
 };
@@ -902,6 +938,9 @@ extern NXSL_ClientSessionClass g_nxslClientSessionClass;
 extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_CollectorClass g_nxslCollectorClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
+extern NXSL_CoolingZoneClass g_nxslCoolingZoneClass;
+extern NXSL_FacilityClass g_nxslFacilityClass;
+extern NXSL_PowerDomainClass g_nxslPowerDomainClass;
 extern NXSL_DataPointClass g_nxslDataPointClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_DeploymentPackageClass g_nxslDeploymentPackageClass;

@@ -52,6 +52,9 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_SUBNET);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_FACILITY);
+      classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
       classFilter.add(AbstractObject.OBJECT_RACK);
@@ -190,6 +193,9 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_CIRCUIT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_FACILITY);
+      classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
@@ -221,6 +227,9 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_CIRCUIT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_FACILITY);
+      classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
@@ -252,6 +261,9 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_CLOUDDOMAIN);
       classFilter.add(AbstractObject.OBJECT_CLUSTER);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_FACILITY);
+      classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
       classFilter.add(AbstractObject.OBJECT_NETWORK);
@@ -278,6 +290,9 @@ public class ObjectSelectionFilterFactory
       HashSet<Integer> classFilter = new HashSet<Integer>(3);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_FACILITY);
+      classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       return classFilter;
    }
@@ -293,6 +308,9 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_CIRCUIT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_FACILITY);
+      classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       return classFilter;
    }
@@ -339,6 +357,9 @@ public class ObjectSelectionFilterFactory
       HashSet<Integer> classFilter = new HashSet<Integer>(4);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_FACILITY);
+      classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       return classFilter;
@@ -354,6 +375,9 @@ public class ObjectSelectionFilterFactory
       HashSet<Integer> classFilter = new HashSet<Integer>(4);
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_FACILITY);
+      classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
@@ -383,6 +407,9 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
       classFilter.add(AbstractObject.OBJECT_CIRCUIT);
       classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+      classFilter.add(AbstractObject.OBJECT_FACILITY);
+      classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+      classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
       classFilter.add(AbstractObject.OBJECT_CONTAINER);
       classFilter.add(AbstractObject.OBJECT_RACK);
       classFilter.add(AbstractObject.OBJECT_CHASSIS);

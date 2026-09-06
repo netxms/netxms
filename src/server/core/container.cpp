@@ -361,52 +361,7 @@ void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Starting autobind poll of container %s [%u]"), m_name, m_id);
    poller->setStatus(_T("checking objects"));
 
-   if (!isAutoBindEnabled())
-   {
-      sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
-      nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of container %s [%u])"), m_name, m_id);
-      pollerUnlock();
-      return;
-   }
-
-   NXSL_VM *cachedFilterVM = nullptr;
-   unique_ptr<SharedObjectArray<NetObj>> objects = getObjectsForAutoBind(_T("ContainerAutoBind"));
-   for (int i = 0; i < objects->size(); i++)
-   {
-      shared_ptr<NetObj> object = objects->getShared(i);
-
-      AutoBindDecision decision = isApplicable(&cachedFilterVM, object, this);
-      if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
-         continue;   // Decision cannot affect checks
-
-      if ((decision == AutoBindDecision_Bind) && !isDirectChild(object->getId()))
-      {
-         sendPollerMsg(_T("   Binding object %s\r\n"), object->getName());
-         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Container::autobindPoll(): binding object \"%s\" [%u] to container \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
-         linkObjects(self(), object);
-         EventBuilder(EVENT_CONTAINER_AUTOBIND, GetServerEventSourceId())
-            .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("nodeName"), object->getName())
-            .param(_T("containerId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("containerName"), m_name)
-            .post();
-         calculateCompoundStatus();
-      }
-      else if ((decision == AutoBindDecision_Unbind) && isDirectChild(object->getId()))
-      {
-         sendPollerMsg(_T("   Removing object %s\r\n"), object->getName());
-         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Container::autobindPoll(): removing object \"%s\" [%u] from container \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
-         unlinkObjects(this, object.get());
-         EventBuilder(EVENT_CONTAINER_AUTOUNBIND, GetServerEventSourceId())
-            .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("nodeName"), object->getName())
-            .param(_T("containerId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-            .param(_T("containerName"), m_name)
-            .post();
-         calculateCompoundStatus();
-      }
-   }
-   delete cachedFilterVM;
+   runContainerAutoBindPoll();
 
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of container %s [%u])"), m_name, m_id);

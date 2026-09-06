@@ -230,6 +230,7 @@ public final class RCC
    public static final int CHANNEL_PROVIDED_BY_CHAT_BOT = 195;
    public static final int INVALID_DATA = 196;
    public static final int EXEC_TIMEOUT = 197;
+   public static final int OBJECT_HIERARCHY_VIOLATION = 198;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

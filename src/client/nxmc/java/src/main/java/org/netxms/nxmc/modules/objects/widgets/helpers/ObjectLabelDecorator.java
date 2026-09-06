@@ -102,6 +102,9 @@ public class ObjectLabelDecorator implements ILabelDecorator
          case AbstractObject.OBJECT_CONTAINER:
          case AbstractObject.OBJECT_CIRCUIT:
          case AbstractObject.OBJECT_COLLECTOR:
+         case AbstractObject.OBJECT_FACILITY:
+         case AbstractObject.OBJECT_POWERDOMAIN:
+         case AbstractObject.OBJECT_COOLINGZONE:
          case AbstractObject.OBJECT_TEMPLATEGROUP:
          case AbstractObject.OBJECT_DASHBOARDGROUP:
          case AbstractObject.OBJECT_NETWORKMAPGROUP:

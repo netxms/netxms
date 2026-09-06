@@ -4017,7 +4017,7 @@ paths:
       operationId: updateObjectAutoBind
       summary: Update object auto-bind configuration
       description: |
-        Update the auto-bind filters of an auto-bind-capable object (Container, Collector,
+        Update the auto-bind filters of an auto-bind-capable object (Container, Collector, Facility, PowerDomain, CoolingZone,
         Circuit, Cluster, NetworkMap, Template, Dashboard, BusinessService and business
         service prototype). Each object supports up to two filter slots; entries in the
         `autoBindFilters` array are applied positionally to slots 0, 1, … Within each entry
@@ -4078,6 +4078,228 @@ paths:
                 $ref: '#/components/schemas/ObjectDetails'
         '400':
           description: Malformed request body, filter script compilation failure, or property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/facility:
+    get:
+      operationId: getObjectFacility
+      summary: Get facility configuration
+      description: |
+        Return the facility's energy reporting settings (the same shape accepted by the matching PATCH).
+
+        This property group applies to Facility objects only; requesting it for any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Facility configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityConfig'
+        '400':
+          description: Property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    patch:
+      operationId: updateObjectFacility
+      summary: Update facility configuration
+      description: |
+        Update the facility's energy reporting settings: settlement lag and computation provider selection (empty provider disables the engine). Merge-patch semantics: any subset of fields can be sent; omitted
+        fields are left unchanged.
+
+        This property group applies to Facility objects only; sending it to any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FacilityConfig'
+      responses:
+        '200':
+          description: Facility configuration updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body, invalid value, or property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/power-domain:
+    get:
+      operationId: getObjectPowerDomain
+      summary: Get power domain configuration
+      description: |
+        Return the power domain's settings (the same shape accepted by the matching PATCH).
+
+        This property group applies to Power domain objects only; requesting it for any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Power domain configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerDomainConfig'
+        '400':
+          description: Property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    patch:
+      operationId: updateObjectPowerDomain
+      summary: Update power domain configuration
+      description: |
+        Update the power domain's settings: domain type, feed tag and rated power. Merge-patch semantics: any subset of fields can be sent; omitted
+        fields are left unchanged.
+
+        This property group applies to Power domain objects only; sending it to any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PowerDomainConfig'
+      responses:
+        '200':
+          description: Power domain configuration updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body, invalid value, or property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/cooling-zone:
+    get:
+      operationId: getObjectCoolingZone
+      summary: Get cooling zone configuration
+      description: |
+        Return the cooling zone's settings (the same shape accepted by the matching PATCH).
+
+        This property group applies to Cooling zone objects only; requesting it for any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cooling zone configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoolingZoneConfig'
+        '400':
+          description: Property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    patch:
+      operationId: updateObjectCoolingZone
+      summary: Update cooling zone configuration
+      description: |
+        Update the cooling zone's settings: zone type and rated thermal capacity. Merge-patch semantics: any subset of fields can be sent; omitted
+        fields are left unchanged.
+
+        This property group applies to Cooling zone objects only; sending it to any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoolingZoneConfig'
+      responses:
+        '200':
+          description: Cooling zone configuration updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body, invalid value, or property group not applicable to object class.
         '401':
           description: Unauthorized
         '403':
@@ -5130,7 +5352,7 @@ paths:
         '404':
           description: Parent or child object with given ID does not exist
         '409':
-          description: Binding would create a loop, or conflicts with a template from the same exclusion group
+          description: Binding would create a loop, violates object hierarchy rules (for example a rack with a second cooling zone parent, or a power domain reachable from two facilities), or conflicts with a template from the same exclusion group
         '500':
           description: Errors occurred while copying data collection configuration from template
       security:
@@ -13496,9 +13718,11 @@ components:
         - Cluster
         - Condition
         - Container
+        - CoolingZone
         - Dashboard
         - DashboardGroup
         - DashboardRoot
+        - Facility
         - Generic
         - Interface
         - MobileDevice
@@ -13509,6 +13733,7 @@ components:
         - NetworkService
         - Node
         - NodeLink
+        - PowerDomain
         - Rack
         - Report
         - ReportGroup
@@ -13991,6 +14216,76 @@ components:
         sourceObject:
           type: integer
           description: ID of the object an inherited attribute originates from; 0 if defined directly on this object.
+    FacilityConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        Facility property group. Returned by GET /v1/objects/{id}/facility and embedded as
+        `ObjectDetails.facility`; accepted by PATCH /v1/objects/{id}/facility with merge-patch
+        semantics (omitted fields are left unchanged).
+      properties:
+        settlementLag:
+          type: integer
+          minimum: 0
+          description: Number of days a provisional day waits before settlement.
+        providerId:
+          type: string
+          nullable: true
+          description: Selected KPI computation provider. Empty or null disables the engine for this facility.
+        engineEnabled:
+          type: boolean
+          readOnly: true
+          description: True when a computation provider is selected.
+    PowerDomainConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        Power domain property group. Returned by GET /v1/objects/{id}/power-domain and embedded
+        as `ObjectDetails.powerDomain`; accepted by PATCH /v1/objects/{id}/power-domain with
+        merge-patch semantics (omitted fields are left unchanged).
+      properties:
+        domainType:
+          $ref: '#/components/schemas/PowerDomainType'
+        feedTag:
+          type: string
+          nullable: true
+          maxLength: 15
+          description: Free feed label, conventionally `A` or `B`. May be empty for grid entry domains.
+        ratedPower:
+          type: integer
+          minimum: 0
+          description: Nameplate power in watts; 0 means undeclared.
+    PowerDomainType:
+      type: string
+      description: Role of the power domain in the electrical distribution tree.
+      enum:
+        - GRID_ENTRY
+        - GENERATOR
+        - UPS
+        - PDU
+        - BUSWAY
+        - OTHER
+    CoolingZoneConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        Cooling zone property group. Returned by GET /v1/objects/{id}/cooling-zone and embedded
+        as `ObjectDetails.coolingZone`; accepted by PATCH /v1/objects/{id}/cooling-zone with
+        merge-patch semantics (omitted fields are left unchanged).
+      properties:
+        zoneType:
+          $ref: '#/components/schemas/CoolingZoneType'
+        ratedCapacity:
+          type: integer
+          minimum: 0
+          description: Rated thermal capacity in watts; 0 means undeclared.
+    CoolingZoneType:
+      type: string
+      description: Kind of cooling zone.
+      enum:
+        - PLANT
+        - ZONE
+        - OTHER
     PollingConfig:
       type: object
       additionalProperties: false
@@ -14292,6 +14587,9 @@ components:
             - Chassis
             - Sensor
             - CloudDomain
+            - Facility
+            - PowerDomain
+            - CoolingZone
         name:
           type: string
           description: Object name.
@@ -14468,6 +14766,29 @@ components:
         gracePeriod:
           type: integer
           description: (CloudDomain) Grace period in seconds before removing vanished resources.
+        settlementLag:
+          type: integer
+          description: (Facility) Number of days a provisional day waits before settlement (default 5).
+        providerId:
+          type: string
+          description: (Facility) Selected KPI computation provider; empty disables the engine.
+        domainType:
+          allOf:
+            - $ref: '#/components/schemas/PowerDomainType'
+          description: (PowerDomain) Domain type (default OTHER).
+        feedTag:
+          type: string
+          description: (PowerDomain) Feed label, conventionally `A` or `B`.
+        ratedPower:
+          type: integer
+          description: (PowerDomain) Nameplate power in watts; 0 means undeclared.
+        zoneType:
+          allOf:
+            - $ref: '#/components/schemas/CoolingZoneType'
+          description: (CoolingZone) Zone type (default OTHER).
+        ratedCapacity:
+          type: integer
+          description: (CoolingZone) Rated thermal capacity in watts; 0 means undeclared.
         assetProperties:
           type: object
           additionalProperties:

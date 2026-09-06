@@ -34,10 +34,10 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardTemplate;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.interfaces.AutoBindObject;
@@ -101,7 +101,7 @@ public class AutoBind extends ObjectPropertyPage
          checkboxEnableBind.setText(i18n.tr("Automatically add nodes selected by filter to this cluster"));
       else if (autoBindObject instanceof Circuit)
          checkboxEnableBind.setText(i18n.tr("Automatically add interfaces selected by filter to this circuit"));
-      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector)
+      else if (autoBindObject instanceof Container || autoBindObject instanceof DataCollectionContainer)
          checkboxEnableBind.setText(i18n.tr("Automatically bind objects selected by filter to this container"));
       else if (autoBindObject instanceof Dashboard)
          checkboxEnableBind.setText(i18n.tr("Automatically add this dashboard to objects selected by filter"));
@@ -133,7 +133,7 @@ public class AutoBind extends ObjectPropertyPage
          checkboxEnableUnbind.setText(i18n.tr("Automatically remove nodes from this cluster when they no longer passes filter"));
       else if (autoBindObject instanceof Circuit)
          checkboxEnableUnbind.setText(i18n.tr("Automatically remove interfaces from this circuit when they no longer passes filter"));
-      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector)
+      else if (autoBindObject instanceof Container || autoBindObject instanceof DataCollectionContainer)
          checkboxEnableUnbind.setText(i18n.tr("Automatically unbind objects from this container when they no longer passes filter"));
       else if (autoBindObject instanceof Dashboard)
          checkboxEnableUnbind.setText(i18n.tr("Automatically remove this dashboard from objects when they no longer passes filter"));
@@ -155,7 +155,7 @@ public class AutoBind extends ObjectPropertyPage
       String hints;
       if (autoBindObject instanceof Cluster)
          hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$cluster\tthis cluster object.\n\nReturn value: true to add node to this cluster, false to remove, null to make no changes.");
-      else if (autoBindObject instanceof Container || autoBindObject instanceof Collector)
+      else if (autoBindObject instanceof Container || autoBindObject instanceof DataCollectionContainer)
          hints = i18n.tr("Variables:\n\t$node\tnode being tested (null if object is not a node).\n\t$object\tobject being tested.\n\t$container\tthis container object.\n\nReturn value: true to bind node to this container, false to unbind, null to make no changes.");
       else if (autoBindObject instanceof Circuit)
          hints = i18n.tr("Variables:\n\t$object\tinterface being tested.\n\t$container\tthis container object.\n\nReturn value: true to bind interface to this container, false to unbind, null to make no changes.");

@@ -261,10 +261,12 @@ public class ObjectFinder extends View
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CONDITION, "Condition"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_COLLECTOR, "Collector"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CONTAINER, "Container"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_COOLINGZONE, "Cooling Zone"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARD, "Dashboard"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDGROUP, "Dashboard Group"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDROOT, "Dashboard Root"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDTEMPLATE, "Dashboard Template"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_FACILITY, "Facility"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_INTERFACE, "Interface"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_MOBILEDEVICE, "Mobile Device"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORK, "Network"));
@@ -273,6 +275,7 @@ public class ObjectFinder extends View
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORKMAPROOT, "Network Map Root"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORKSERVICE, "Network Service"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NODE, "Node"));
+      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_POWERDOMAIN, "Power Domain"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_RACK, "Rack"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SENSOR, "Sensor"));
       OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SERVICEROOT, "Service Root"));

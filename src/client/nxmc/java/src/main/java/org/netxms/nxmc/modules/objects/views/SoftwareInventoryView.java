@@ -40,8 +40,8 @@ import org.netxms.client.SoftwarePackage;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.actions.ViewerProvider;
@@ -117,7 +117,7 @@ public class SoftwareInventoryView extends ObjectView
       {
          return (((Node)context).getCapabilities() & Node.NC_IS_NATIVE_AGENT) != 0;
       }
-      return (context != null) && ((context instanceof Container) || (context instanceof Collector));
+      return (context != null) && ((context instanceof Container) || (context instanceof DataCollectionContainer));
    }
 
    /**

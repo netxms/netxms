@@ -42,7 +42,8 @@ static const WCHAR *s_classNameW[]=
       L"Circuit", L"MobileDevice", L"Rack", L"AccessPoint",
       L"WirelessDomain", L"Chassis", L"DashboardGroup",
       L"Sensor", L"CloudDomain", L"Resource",
-      L"TrafficObserver", L"ObservationPoint"
+      L"TrafficObserver", L"ObservationPoint", L"Facility",
+      L"PowerDomain", L"CoolingZone"
    };
 static const char *s_classNameA[]=
    {
@@ -58,7 +59,8 @@ static const char *s_classNameA[]=
       "Circuit", "MobileDevice", "Rack", "AccessPoint",
       "WirelessDomain", "Chassis", "DashboardGroup",
       "Sensor", "CloudDomain", "Resource",
-      "TrafficObserver", "ObservationPoint"
+      "TrafficObserver", "ObservationPoint", "Facility",
+      "PowerDomain", "CoolingZone"
    };
 
 /**
@@ -3373,6 +3375,16 @@ bool NetObj::isContainerObject() const
 }
 
 /**
+ * Validate binding of this object to given parent object beyond class compatibility
+ * (which is checked by IsValidParentClass()). Called before this object is linked to the
+ * parent, with no object locks held. Default implementation accepts any parent.
+ */
+uint32_t NetObj::validateParent(const NetObj& parent) const
+{
+   return RCC_SUCCESS;
+}
+
+/**
  * Get module data
  */
 ModuleData *NetObj::getModuleData(const TCHAR *module)
@@ -4830,6 +4842,7 @@ void NetObj::getEffectivePortStopList(IntegerArray<uint16_t> *tcpPorts, IntegerA
       NetObj *parent = parents->get(i);
       int objClass = parent->getObjectClass();
       if ((objClass != OBJECT_CONTAINER) && (objClass != OBJECT_COLLECTOR) &&
+          (objClass != OBJECT_FACILITY) && (objClass != OBJECT_POWERDOMAIN) && (objClass != OBJECT_COOLINGZONE) &&
           (objClass != OBJECT_CLUSTER) && (objClass != OBJECT_SUBNET))
          continue;
       if (visited.contains(parent->getId()))

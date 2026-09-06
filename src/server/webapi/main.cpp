@@ -175,9 +175,15 @@ int H_ObjectDashboardUpdate(Context *context);
 int H_ObjectDashboards(Context *context);
 int H_ObjectNetworkMap(Context *context);
 int H_ObjectNetworkMapUpdate(Context *context);
+int H_ObjectCoolingZoneGet(Context *context);
+int H_ObjectCoolingZoneUpdate(Context *context);
 int H_ObjectDetails(Context *context);
+int H_ObjectFacilityGet(Context *context);
+int H_ObjectFacilityUpdate(Context *context);
 int H_ObjectLocationUpdate(Context *context);
 int H_ObjectPollingGet(Context *context);
+int H_ObjectPowerDomainGet(Context *context);
+int H_ObjectPowerDomainUpdate(Context *context);
 int H_ObjectPollingUpdate(Context *context);
 int H_ObjectPropertiesUpdate(Context *context);
 int H_ObjectResponsibleUsers(Context *context);
@@ -741,6 +747,19 @@ static bool InitModule(Config *config)
 
    RouteBuilder("v1/objects/:object-id/auto-bind")
       .PATCH(H_ObjectAutoBindUpdate)
+      .build();
+
+   RouteBuilder("v1/objects/:object-id/facility")
+      .GET(H_ObjectFacilityGet)
+      .PATCH(H_ObjectFacilityUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/power-domain")
+      .GET(H_ObjectPowerDomainGet)
+      .PATCH(H_ObjectPowerDomainUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/cooling-zone")
+      .GET(H_ObjectCoolingZoneGet)
+      .PATCH(H_ObjectCoolingZoneUpdate)
       .build();
 
    RouteBuilder("v1/objects/:object-id/snmp")

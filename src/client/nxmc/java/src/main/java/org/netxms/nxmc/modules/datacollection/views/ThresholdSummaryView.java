@@ -38,8 +38,8 @@ import org.netxms.client.datacollection.ThresholdStateChange;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -113,7 +113,7 @@ public class ThresholdSummaryView extends ObjectView
    public boolean isValidForContext(Object context)
    {
       return (context instanceof EntireNetwork) || (context instanceof Zone) || (context instanceof Subnet) || (context instanceof ServiceRoot) || (context instanceof Container) ||
-            (context instanceof Rack) || (context instanceof Collector) || (context instanceof Cluster);
+            (context instanceof Rack) || (context instanceof DataCollectionContainer) || (context instanceof Cluster);
    }
 
    /**

@@ -459,7 +459,10 @@ struct AutoBindClassFilterData
    bool processAccessPoints;
    bool processClusters;
    bool processCollectors;
+   bool processCoolingZones;
    bool processMobileDevices;
+   bool processPowerDomains;
+   bool processRacks;
    bool processSensors;
 };
 
@@ -472,7 +475,10 @@ static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filter
          (filterData->processAccessPoints && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ||
          (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
          (filterData->processCollectors && (object->getObjectClass() == OBJECT_COLLECTOR)) ||
+         (filterData->processCoolingZones && (object->getObjectClass() == OBJECT_COOLINGZONE)) ||
          (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
+         (filterData->processPowerDomains && (object->getObjectClass() == OBJECT_POWERDOMAIN)) ||
+         (filterData->processRacks && (object->getObjectClass() == OBJECT_RACK)) ||
          (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
 }
 
@@ -485,9 +491,81 @@ unique_ptr<SharedObjectArray<NetObj>> AutoBindTarget::getObjectsForAutoBind(cons
    filterData.processAccessPoints = ConfigReadBoolean(StringBuffer(_T("Objects.AccessPoints.")).append(configurationSuffix), false);
    filterData.processClusters = ConfigReadBoolean(StringBuffer(_T("Objects.Clusters.")).append(configurationSuffix), false);
    filterData.processCollectors = ConfigReadBoolean(StringBuffer(_T("Objects.Collectors.")).append(configurationSuffix), false);
+   filterData.processCoolingZones = ConfigReadBoolean(StringBuffer(_T("Objects.CoolingZones.")).append(configurationSuffix), false);
    filterData.processMobileDevices = ConfigReadBoolean(StringBuffer(_T("Objects.MobileDevices.")).append(configurationSuffix), false);
+   filterData.processPowerDomains = ConfigReadBoolean(StringBuffer(_T("Objects.PowerDomains.")).append(configurationSuffix), false);
+   filterData.processRacks = ConfigReadBoolean(StringBuffer(_T("Objects.Racks.")).append(configurationSuffix), false);
    filterData.processSensors = ConfigReadBoolean(StringBuffer(_T("Objects.Sensors.")).append(configurationSuffix), false);
    return g_idxObjectById.getObjects(AutoBindObjectFilter, &filterData);
+}
+
+/**
+ * Run container auto-bind poll body for container-type object (this object is the container):
+ * evaluate auto-bind rules against candidate objects and bind or unbind them. Caller is
+ * responsible for poller locking. Candidates that cannot be bound to this object (class
+ * matrix or object-specific hierarchy rules) are skipped.
+ */
+void AutoBindTarget::runContainerAutoBindPoll()
+{
+   if (!isAutoBindEnabled())
+   {
+      m_this->sendPollerMsg(_T("Automatic object binding is disabled\r\n"));
+      return;
+   }
+
+   const TCHAR *className = m_this->getObjectClassName();
+   NXSL_VM *cachedFilterVM = nullptr;
+   unique_ptr<SharedObjectArray<NetObj>> objects = getObjectsForAutoBind(_T("ContainerAutoBind"));
+   for (int i = 0; i < objects->size(); i++)
+   {
+      shared_ptr<NetObj> object = objects->getShared(i);
+      if (object->getId() == m_this->getId())
+         continue;
+
+      AutoBindDecision decision = isApplicable(&cachedFilterVM, object, m_this);
+      if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
+         continue;   // Decision cannot affect checks
+
+      if ((decision == AutoBindDecision_Bind) && !m_this->isDirectChild(object->getId()))
+      {
+         uint32_t rcc = ValidateObjectBinding(*object, *m_this);
+         if (rcc != RCC_SUCCESS)
+         {
+            m_this->sendPollerMsg(_T("   Cannot bind object %s (%s)\r\n"), object->getName(),
+                  (rcc == RCC_OBJECT_HIERARCHY_VIOLATION) ? _T("object hierarchy violation") : _T("incompatible object class"));
+            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("AutoBindTarget::runContainerAutoBindPoll(): cannot bind object \"%s\" [%u] to %s \"%s\" [%u] (RCC=%u)"),
+                  object->getName(), object->getId(), className, m_this->getName(), m_this->getId(), rcc);
+            continue;
+         }
+
+         m_this->sendPollerMsg(_T("   Binding object %s\r\n"), object->getName());
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("AutoBindTarget::runContainerAutoBindPoll(): binding object \"%s\" [%u] to %s \"%s\" [%u]"),
+               object->getName(), object->getId(), className, m_this->getName(), m_this->getId());
+         NetObj::linkObjects(m_this->self(), object);
+         EventBuilder(EVENT_CONTAINER_AUTOBIND, GetServerEventSourceId())
+            .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("nodeName"), object->getName())
+            .param(_T("containerId"), m_this->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("containerName"), m_this->getName())
+            .post();
+         m_this->calculateCompoundStatus();
+      }
+      else if ((decision == AutoBindDecision_Unbind) && m_this->isDirectChild(object->getId()))
+      {
+         m_this->sendPollerMsg(_T("   Removing object %s\r\n"), object->getName());
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("AutoBindTarget::runContainerAutoBindPoll(): removing object \"%s\" [%u] from %s \"%s\" [%u]"),
+               object->getName(), object->getId(), className, m_this->getName(), m_this->getId());
+         NetObj::unlinkObjects(m_this, object.get());
+         EventBuilder(EVENT_CONTAINER_AUTOUNBIND, GetServerEventSourceId())
+            .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("nodeName"), object->getName())
+            .param(_T("containerId"), m_this->getId(), EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("containerName"), m_this->getName())
+            .post();
+         m_this->calculateCompoundStatus();
+      }
+   }
+   delete cachedFilterVM;
 }
 
 /**
@@ -520,7 +598,10 @@ AutoBindTarget *GetObjectAsAutoBindTarget(NetObj *object)
       case OBJECT_CLUSTER:
          return static_cast<Cluster*>(object);
       case OBJECT_COLLECTOR:
-         return static_cast<Collector*>(object);
+      case OBJECT_COOLINGZONE:
+      case OBJECT_FACILITY:
+      case OBJECT_POWERDOMAIN:
+         return static_cast<DataCollectionContainer*>(object);
       case OBJECT_CONTAINER:
          return static_cast<Container*>(object);
       case OBJECT_DASHBOARD:

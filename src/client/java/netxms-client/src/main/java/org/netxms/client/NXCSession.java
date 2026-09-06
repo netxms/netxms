@@ -173,6 +173,7 @@ import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Collector;
+import org.netxms.client.objects.CoolingZone;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
@@ -181,6 +182,7 @@ import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.DependentNode;
 import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.Facility;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
@@ -193,6 +195,7 @@ import org.netxms.client.objects.CloudDomain;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ObservationPoint;
 import org.netxms.client.objects.ObjectCategory;
+import org.netxms.client.objects.PowerDomain;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Resource;
 import org.netxms.client.objects.Sensor;
@@ -1744,6 +1747,15 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_COLLECTOR:
             object = new Collector(msg, this);
+            break;
+         case AbstractObject.OBJECT_COOLINGZONE:
+            object = new CoolingZone(msg, this);
+            break;
+         case AbstractObject.OBJECT_FACILITY:
+            object = new Facility(msg, this);
+            break;
+         case AbstractObject.OBJECT_POWERDOMAIN:
+            object = new PowerDomain(msg, this);
             break;
          case AbstractObject.OBJECT_CONDITION:
             object = new Condition(msg, this);
@@ -7421,6 +7433,19 @@ public class NXCSession
          case AbstractObject.OBJECT_RACK:
             msg.setFieldInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
             break;
+         case AbstractObject.OBJECT_FACILITY:
+            msg.setFieldInt32(NXCPCodes.VID_SETTLEMENT_LAG, data.getSettlementLag());
+            msg.setField(NXCPCodes.VID_PROVIDER_ID, data.getProviderId());
+            break;
+         case AbstractObject.OBJECT_POWERDOMAIN:
+            msg.setFieldInt16(NXCPCodes.VID_DOMAIN_TYPE, data.getDomainType().getValue());
+            msg.setField(NXCPCodes.VID_FEED_TAG, data.getFeedTag());
+            msg.setFieldInt32(NXCPCodes.VID_RATED_POWER, data.getRatedPower());
+            break;
+         case AbstractObject.OBJECT_COOLINGZONE:
+            msg.setFieldInt16(NXCPCodes.VID_ZONE_TYPE, data.getZoneType().getValue());
+            msg.setFieldInt32(NXCPCodes.VID_RATED_CAPACITY, data.getRatedCapacity());
+            break;
          case AbstractObject.OBJECT_SENSOR:
             msg.setFieldInt32(NXCPCodes.VID_SENSOR_FLAGS, data.getFlags());
             msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress());
@@ -8495,6 +8520,21 @@ public class NXCSession
 
       if (data.getSyncConfig() != null)
          msg.setField(NXCPCodes.VID_SYNC_CONFIG, data.getSyncConfig());
+
+      if (data.getSettlementLag() != null)
+         msg.setFieldInt32(NXCPCodes.VID_SETTLEMENT_LAG, data.getSettlementLag());
+      if (data.getProviderId() != null)
+         msg.setField(NXCPCodes.VID_PROVIDER_ID, data.getProviderId());
+      if (data.getDomainType() != null)
+         msg.setFieldInt16(NXCPCodes.VID_DOMAIN_TYPE, data.getDomainType().getValue());
+      if (data.getFeedTag() != null)
+         msg.setField(NXCPCodes.VID_FEED_TAG, data.getFeedTag());
+      if (data.getRatedPower() != null)
+         msg.setFieldInt32(NXCPCodes.VID_RATED_POWER, data.getRatedPower());
+      if (data.getZoneType() != null)
+         msg.setFieldInt16(NXCPCodes.VID_ZONE_TYPE, data.getZoneType().getValue());
+      if (data.getRatedCapacity() != null)
+         msg.setFieldInt32(NXCPCodes.VID_RATED_CAPACITY, data.getRatedCapacity());
 
       if (data.getInScope() != null)
          msg.setField(NXCPCodes.VID_IN_SCOPE, data.getInScope());

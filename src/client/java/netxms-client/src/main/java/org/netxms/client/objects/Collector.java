@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 RadenSolutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,197 +18,31 @@
  */
 package org.netxms.client.objects;
 
-import java.util.Set;
-import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
-import org.netxms.client.PollState;
-import org.netxms.client.constants.AgentCacheMode;
-import org.netxms.client.objects.interfaces.AutoBindObject;
-import org.netxms.client.objects.interfaces.PollingTarget;
 
 /**
  * Collector object
  */
-public class Collector extends DataCollectionTarget implements AutoBindObject, PollingTarget
-{	
-   private int autoBindFlags;
-	private String autoBindFilter;
-
-	/**
+public class Collector extends DataCollectionContainer
+{
+   /**
     * Create from NXCP message.
     *
     * @param msg NXCP message
     * @param session owning client session
-	 */
-	public Collector(NXCPMessage msg, NXCSession session)
-	{
-		super(msg, session);
-		autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
-      autoBindFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
-	}
-
-	/**
-	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
-	 */
-	@Override
-	public boolean isAllowedOnMap()
-	{
-		return true;
-	}
-
-   /**
-    * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
-   @Override
-   public boolean isAlarmsVisible()
+   public Collector(NXCPMessage msg, NXCSession session)
    {
-      return true;
+      super(msg, session);
    }
 
    /**
-    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoBindEnabled()
+    * @see org.netxms.client.objects.GenericObject#getObjectClassName()
     */
    @Override
-   public boolean isAutoBindEnabled()
+   public String getObjectClassName()
    {
-      return (autoBindFlags & OBJECT_BIND_FLAG) > 0;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoUnbindEnabled()
-    */
-   @Override
-   public boolean isAutoUnbindEnabled()
-   {
-      return (autoBindFlags & OBJECT_UNBIND_FLAG) > 0;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFilter()
-    */
-   @Override
-	public String getAutoBindFilter()
-	{
-		return autoBindFilter;
-	}
-
-	/**
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
-	 */
-	@Override
-	public String getObjectClassName()
-	{
-		return "Collector";
-	}
-
-	/**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getFlags()
-    */
-   @Override
-	public int getFlags()
-	{
-		return flags;
-	}
-
-   /**
-    * @see org.netxms.client.objects.AbstractObject#getStrings()
-    */
-   @Override
-   public Set<String> getStrings()
-   {
-      Set<String> strings = super.getStrings();
-      addString(strings, autoBindFilter);
-      return strings;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFlags()
-    */
-   @Override
-   public int getAutoBindFlags()
-   {
-      return autoBindFlags;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getIfXTablePolicy()
-    */
-   @Override
-   public int getIfXTablePolicy()
-   {
-      return 0;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getAgentCacheMode()
-    */
-   @Override
-   public AgentCacheMode getAgentCacheMode()
-   {
-      return null;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollerNodeId()
-    */
-   @Override
-   public long getPollerNodeId()
-   {
-      return 0;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveAgent()
-    */
-   @Override
-   public boolean canHaveAgent()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveInterfaces()
-    */
-   @Override
-   public boolean canHaveInterfaces()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canHavePollerNode()
-    */
-   @Override
-   public boolean canHavePollerNode()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseEtherNetIP()
-    */
-   @Override
-   public boolean canUseEtherNetIP()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseModbus()
-    */
-   @Override
-   public boolean canUseModbus()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
-    */
-   @Override
-   public PollState[] getPollStates()
-   {
-      return pollStates;
+      return "Collector";
    }
 }

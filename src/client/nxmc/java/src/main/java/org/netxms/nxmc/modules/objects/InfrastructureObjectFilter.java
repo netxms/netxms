@@ -43,6 +43,7 @@ public class InfrastructureObjectFilter implements ObjectFilter
    public boolean accept(AbstractObject o)
    {
       if (!o.hasParents() || (o.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (o.getObjectClass() == AbstractObject.OBJECT_COLLECTOR) ||
+            (o.getObjectClass() == AbstractObject.OBJECT_FACILITY) || (o.getObjectClass() == AbstractObject.OBJECT_POWERDOMAIN) || (o.getObjectClass() == AbstractObject.OBJECT_COOLINGZONE) ||
             (o.getObjectClass() == AbstractObject.OBJECT_CIRCUIT) || (o.getObjectClass() == AbstractObject.OBJECT_WIRELESSDOMAIN) || 
             (o.getObjectClass() == AbstractObject.OBJECT_CONDITION))
          return true;

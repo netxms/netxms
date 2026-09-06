@@ -10,15 +10,15 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			anomaly_profile.cpp alarm.cpp alarm_category.cpp asset.cpp \
 			asset_management.cpp audit.cpp authtokens.cpp beacon.cpp bizservice.cpp \
 			bizsvcbase.cpp bizsvccheck.cpp bizsvcproto.cpp cas_validator.cpp \
-			ccy.cpp cdp.cpp cert.cpp chassis.cpp chatbot.cpp circuit.cpp client.cpp cloud_connector.cpp cloud_domain.cpp cluster.cpp collector.cpp \
-			columnfilter.cpp condition.cpp config.cpp conn_history.cpp console.cpp container.cpp correlate.cpp \
+			ccy.cpp cdp.cpp cert.cpp chassis.cpp chatbot.cpp circuit.cpp client.cpp cloud_connector.cpp cloud_domain.cpp cluster.cpp collector.cpp cooling_zone.cpp \
+			columnfilter.cpp condition.cpp config.cpp conn_history.cpp console.cpp container.cpp correlate.cpp dc_container.cpp \
 			dashboard.cpp datacoll.cpp dbwrite.cpp dc_nxsl.cpp dcagg.cpp dci_data_query.cpp dci_recalc.cpp dcitem.cpp \
 			dcithreshold.cpp dcivalue.cpp dcobject.cpp dcowner.cpp dcst.cpp \
 			dctable.cpp dctarget.cpp dctcolumn.cpp dctthreshold.cpp debug.cpp devbackup.cpp devicecontext.cpp \
 			devdb.cpp dfile_info.cpp discovery.cpp discovery_nxsl.cpp \
 			download_task.cpp downtime.cpp ef.cpp ef_snmptrap.cpp eip.cpp entirenet.cpp epp.cpp \
 			event_forwarder.cpp events.cpp \
-			evproc.cpp export.cpp fdb.cpp filemonitoring.cpp ft.cpp geo_areas.cpp graph.cpp \
+			evproc.cpp export.cpp facility.cpp fdb.cpp filemonitoring.cpp ft.cpp geo_areas.cpp graph.cpp \
 			ha.cpp hachannel.cpp hajournal.cpp halease.cpp hasync.cpp hash_index.cpp hdlink.cpp hk.cpp hwcomponent.cpp icmpscan.cpp \
 			icmpstat.cpp id.cpp import.cpp import_legacy.cpp incident.cpp inaddr_index.cpp \
 			index.cpp interface.cpp isc.cpp layer2.cpp ldap.cpp lln.cpp \
@@ -29,7 +29,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			netsrv.cpp network_cred.cpp node.cpp notification_channel.cpp \
 			np.cpp nxsl_classes.cpp nxslext.cpp object_categories.cpp observation_point.cpp \
 			object_queries.cpp objects.cpp objtools.cpp ospf.cpp otellog.cpp package.cpp \
-			pds.cpp physical_link.cpp poll.cpp pollable.cpp ps.cpp rack.cpp \
+			pds.cpp physical_link.cpp poll.cpp pollable.cpp power_domain.cpp ps.cpp rack.cpp \
 			radius.cpp reporting.cpp resource.cpp rootobj.cpp sc_migration.cpp schedule.cpp script.cpp \
 			search_query.cpp sensor.cpp server_stats.cpp session.cpp skills.cpp \
 			snmp.cpp snmpd.cpp snmptrap.cpp snmptrapd.cpp ssh.cpp sshkeys.cpp stp.cpp \

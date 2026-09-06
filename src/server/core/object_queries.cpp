@@ -534,10 +534,12 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("COLLECTOR", vm->createValue(OBJECT_COLLECTOR));
    vm->addConstant("CONDITION", vm->createValue(OBJECT_CONDITION));
    vm->addConstant("CONTAINER", vm->createValue(OBJECT_CONTAINER));
+   vm->addConstant("COOLINGZONE", vm->createValue(OBJECT_COOLINGZONE));
    vm->addConstant("DASHBOARD", vm->createValue(OBJECT_DASHBOARD));
    vm->addConstant("DASHBOARDGROUP", vm->createValue(OBJECT_DASHBOARDGROUP));
    vm->addConstant("DASHBOARDROOT", vm->createValue(OBJECT_DASHBOARDROOT));
    vm->addConstant("DASHBOARDTEMPLATE", vm->createValue(OBJECT_DASHBOARDTEMPLATE));
+   vm->addConstant("FACILITY", vm->createValue(OBJECT_FACILITY));
    vm->addConstant("INTERFACE", vm->createValue(OBJECT_INTERFACE));
    vm->addConstant("MOBILEDEVICE", vm->createValue(OBJECT_MOBILEDEVICE));
    vm->addConstant("NETWORK", vm->createValue(OBJECT_NETWORK));
@@ -547,6 +549,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("NETWORKSERVICE", vm->createValue(OBJECT_NETWORKSERVICE));
    vm->addConstant("NODE", vm->createValue(OBJECT_NODE));
    vm->addConstant("OBSERVATIONPOINT", vm->createValue(OBJECT_OBSERVATIONPOINT));
+   vm->addConstant("POWERDOMAIN", vm->createValue(OBJECT_POWERDOMAIN));
    vm->addConstant("RACK", vm->createValue(OBJECT_RACK));
    vm->addConstant("RESOURCE", vm->createValue(OBJECT_RESOURCE));
    vm->addConstant("SENSOR", vm->createValue(OBJECT_SENSOR));

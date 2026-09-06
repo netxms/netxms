@@ -705,6 +705,11 @@ static int BindingErrorResponse(Context *context, uint32_t rcc, const NetObj& pa
       case RCC_OBJECT_LOOP:
          context->setErrorResponse("Binding would create a loop in the object hierarchy");
          return 409;
+      case RCC_OBJECT_HIERARCHY_VIOLATION:
+         _sntprintf(message, 512, L"Binding object %s [%u] to %s [%u] violates object hierarchy rules",
+            child.getName(), child.getId(), parent.getName(), parent.getId());
+         context->setErrorResponse(message);
+         return 409;
       case RCC_TEMPLATE_EXCLUSION_CONFLICT:
          _sntprintf(message, 512, L"Template conflicts with already applied template \"%s\" from the same exclusion group",
             conflictingTemplateName.cstr());

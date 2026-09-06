@@ -1713,6 +1713,7 @@ public:
    virtual bool isEventSource() const;
    virtual bool isDataCollectionTarget() const;
    virtual bool isContainerObject() const;
+   virtual uint32_t validateParent(const NetObj& parent) const;
 
    bool isPollable() const { return m_asPollable != nullptr; }
    Pollable *getAsPollable() { return m_asPollable; }
@@ -2032,6 +2033,7 @@ protected:
    json_t *createExportRecord();
 
    unique_ptr<SharedObjectArray<NetObj>> getObjectsForAutoBind(const TCHAR *configurationSuffix);
+   void runContainerAutoBindPoll();
 
 public:
    AutoBindTarget(NetObj *_this);
@@ -5296,6 +5298,7 @@ public:
    shared_ptr<const Rack> self() const { return static_pointer_cast<const Rack>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_RACK; }
+   virtual uint32_t validateParent(const NetObj& parent) const override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -5796,14 +5799,21 @@ public:
 };
 
 /**
- * Collector class
+ * Base class for data collection targets that are also containers with automatic binding
+ * (collector, facility, power domain, cooling zone)
  */
-class NXCORE_EXPORTABLE Collector : public DataCollectionTarget, public ContainerBase, public AutoBindTarget
+class NXCORE_EXPORTABLE DataCollectionContainer : public DataCollectionTarget, public ContainerBase, public AutoBindTarget
 {
 private:
    typedef DataCollectionTarget super;
 
 protected:
+   DataCollectionContainer() : super(Pollable::AUTOBIND), ContainerBase(this), AutoBindTarget(this) {}
+   DataCollectionContainer(const TCHAR *name) : super(name, Pollable::AUTOBIND), ContainerBase(this), AutoBindTarget(this)
+   {
+      setCreationTime();
+   }
+
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -5811,16 +5821,6 @@ protected:
    virtual StringMap *getInstanceList(DCObject *dco) override;
 
 public:
-   Collector() : super(Pollable::AUTOBIND), ContainerBase(this), AutoBindTarget(this) {}
-   Collector(const TCHAR *name) : super(name, Pollable::AUTOBIND), ContainerBase(this), AutoBindTarget(this)
-   {
-      setCreationTime();
-   }
-
-   shared_ptr<Collector> self() { return static_pointer_cast<Collector>(NObject::self()); }
-   shared_ptr<const Collector> self() const { return static_pointer_cast<const Collector>(NObject::self()); }
-
-   virtual int getObjectClass() const override { return OBJECT_COLLECTOR; }
    virtual bool isContainerObject() const override { return true; }
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
@@ -5835,8 +5835,167 @@ public:
    virtual void postLoad() override;
 
    virtual json_t *toJson(bool includeSensitiveData = false) override;
+};
+
+/**
+ * Collector object
+ */
+class NXCORE_EXPORTABLE Collector : public DataCollectionContainer
+{
+private:
+   typedef DataCollectionContainer super;
+
+public:
+   Collector() : super() {}
+   Collector(const TCHAR *name) : super(name) {}
+
+   shared_ptr<Collector> self() { return static_pointer_cast<Collector>(NObject::self()); }
+   shared_ptr<const Collector> self() const { return static_pointer_cast<const Collector>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_COLLECTOR; }
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+};
+
+/**
+ * Facility object - reporting boundary for data center energy monitoring
+ */
+class NXCORE_EXPORTABLE Facility : public DataCollectionContainer
+{
+private:
+   typedef DataCollectionContainer super;
+
+protected:
+   int32_t m_settlementLag;   // Days a provisional day waits before settlement
+   SharedString m_providerId; // Selected computation provider; empty = engine disabled
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
+
+public:
+   Facility();
+   Facility(const TCHAR *name, const NXCPMessage& request);
+   Facility(const TCHAR *name, json_t *json);
+
+   shared_ptr<Facility> self() { return static_pointer_cast<Facility>(NObject::self()); }
+   shared_ptr<const Facility> self() const { return static_pointer_cast<const Facility>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_FACILITY; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   json_t *facilityConfigToJson();
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   int32_t getSettlementLag() const { return m_settlementLag; }
+   SharedString getProviderId() const { return GetAttributeWithLock(m_providerId, NetObj::m_mutexProperties); }
+   bool isEngineEnabled() const { return !getProviderId().isEmpty(); }
+};
+
+/**
+ * Power domain object - electrical distribution node within a facility
+ */
+class NXCORE_EXPORTABLE PowerDomain : public DataCollectionContainer
+{
+private:
+   typedef DataCollectionContainer super;
+
+protected:
+   PowerDomainType m_domainType;
+   TCHAR m_feedTag[16];    // Free label, conventionally "A" / "B"
+   int32_t m_ratedPower;   // Nameplate power in watts; 0 = undeclared
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
+
+public:
+   PowerDomain();
+   PowerDomain(const TCHAR *name, const NXCPMessage& request);
+   PowerDomain(const TCHAR *name, json_t *json);
+
+   shared_ptr<PowerDomain> self() { return static_pointer_cast<PowerDomain>(NObject::self()); }
+   shared_ptr<const PowerDomain> self() const { return static_pointer_cast<const PowerDomain>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_POWERDOMAIN; }
+   virtual uint32_t validateParent(const NetObj& parent) const override;
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   json_t *powerDomainConfigToJson();
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   PowerDomainType getDomainType() const { return m_domainType; }
+   String getFeedTag() const { return GetStringAttributeWithLock(m_feedTag, NetObj::m_mutexProperties); }
+   int32_t getRatedPower() const { return m_ratedPower; }
+};
+
+/**
+ * Power domain type conversion helpers (symbolic names are used in JSON)
+ */
+const char NXCORE_EXPORTABLE *PowerDomainTypeName(PowerDomainType type);
+bool NXCORE_EXPORTABLE PowerDomainTypeFromName(const char *name, PowerDomainType *type);
+static inline PowerDomainType PowerDomainTypeFromInt(int n)
+{
+   return ((n >= POWER_DOMAIN_GRID_ENTRY) && (n <= POWER_DOMAIN_OTHER)) ? static_cast<PowerDomainType>(n) : POWER_DOMAIN_OTHER;
+}
+
+/**
+ * Cooling zone type conversion helpers (symbolic names are used in JSON)
+ */
+const char NXCORE_EXPORTABLE *CoolingZoneTypeName(CoolingZoneType type);
+bool NXCORE_EXPORTABLE CoolingZoneTypeFromName(const char *name, CoolingZoneType *type);
+static inline CoolingZoneType CoolingZoneTypeFromInt(int n)
+{
+   return ((n >= COOLING_ZONE_PLANT) && (n <= COOLING_ZONE_OTHER)) ? static_cast<CoolingZoneType>(n) : COOLING_ZONE_OTHER;
+}
+
+/**
+ * Cooling zone object - cooling plant or thermal zone within a facility
+ */
+class NXCORE_EXPORTABLE CoolingZone : public DataCollectionContainer
+{
+private:
+   typedef DataCollectionContainer super;
+
+protected:
+   CoolingZoneType m_zoneType;
+   int32_t m_ratedCapacity;   // Thermal capacity in watts; 0 = undeclared
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
+
+public:
+   CoolingZone();
+   CoolingZone(const TCHAR *name, const NXCPMessage& request);
+   CoolingZone(const TCHAR *name, json_t *json);
+
+   shared_ptr<CoolingZone> self() { return static_pointer_cast<CoolingZone>(NObject::self()); }
+   shared_ptr<const CoolingZone> self() const { return static_pointer_cast<const CoolingZone>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_COOLINGZONE; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   json_t *coolingZoneConfigToJson();
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   CoolingZoneType getZoneType() const { return m_zoneType; }
+   int32_t getRatedCapacity() const { return m_ratedCapacity; }
 };
 
 /**
@@ -6718,6 +6877,7 @@ void DeleteUserFromAllObjects(uint32_t userId);
 void ClearAllObjectsInheritedAccessCache();
 
 bool IsValidParentClass(int childClass, int parentClass);
+uint32_t NXCORE_EXPORTABLE ValidateObjectBinding(const NetObj& child, const NetObj& parent);
 
 uint32_t NXCORE_EXPORTABLE ChangeObjectBinding(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child, bool bind,
          bool forceApply, bool removeDataCollection, GenericClientSession *session, SharedString *conflictingTemplateName);
@@ -6816,6 +6976,9 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxChassisById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxCircuitById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxCollectorById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxFacilityById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxPowerDomainById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxCoolingZoneById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxRackById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;

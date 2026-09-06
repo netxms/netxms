@@ -34,7 +34,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Rack;
@@ -208,6 +208,6 @@ public class CreateAssetFromObjectAction extends ObjectAction<AbstractObject>
       Object object = selection.getFirstElement();
       if (object instanceof Rack)
          return true;
-      return (object instanceof DataCollectionTarget) && !(object instanceof Cluster) && !(object instanceof Collector) && !(object instanceof Circuit);
+      return (object instanceof DataCollectionTarget) && !(object instanceof Cluster) && !(object instanceof DataCollectionContainer) && !(object instanceof Circuit);
    }
 }

@@ -24,6 +24,44 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.33 to 70.34
+ */
+static bool H_UpgradeFromV33()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE facilities ("
+      L"  id integer not null,"
+      L"  settlement_lag integer not null,"
+      L"  provider_id varchar(63) null,"
+      L"  PRIMARY KEY(id))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE power_domains ("
+      L"  id integer not null,"
+      L"  domain_type integer not null,"
+      L"  feed_tag varchar(15) null,"
+      L"  rated_power integer not null,"
+      L"  PRIMARY KEY(id))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE cooling_zones ("
+      L"  id integer not null,"
+      L"  zone_type integer not null,"
+      L"  rated_capacity integer not null,"
+      L"  PRIMARY KEY(id))"));
+
+   CHK_EXEC(CreateConfigParam(L"Objects.CoolingZones.ContainerAutoBind", L"0", L"Enable/disable container auto binding for cooling zones.", nullptr, 'B', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Objects.CoolingZones.TemplateAutoApply", L"0", L"Enable/disable template auto apply for cooling zones.", nullptr, 'B', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Objects.PowerDomains.ContainerAutoBind", L"0", L"Enable/disable container auto binding for power domains.", nullptr, 'B', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Objects.PowerDomains.TemplateAutoApply", L"0", L"Enable/disable template auto apply for power domains.", nullptr, 'B', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Objects.Racks.ContainerAutoBind", L"0", L"Enable/disable container auto binding for racks.", nullptr, 'B', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Objects.Racks.TemplateAutoApply", L"0", L"Enable/disable template auto apply for racks.", nullptr, 'B', true, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(34));
+   return true;
+}
+
+/**
  * Upgrade from 70.32 to 70.33
  */
 static bool H_UpgradeFromV32()
@@ -1019,6 +1057,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 33, 70, 34, H_UpgradeFromV33 },
    { 32, 70, 33, H_UpgradeFromV32 },
    { 31, 70, 32, H_UpgradeFromV31 },
    { 30, 70, 31, H_UpgradeFromV30 },

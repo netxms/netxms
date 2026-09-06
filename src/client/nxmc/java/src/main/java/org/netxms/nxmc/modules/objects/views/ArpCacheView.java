@@ -253,6 +253,7 @@ public class ArpCacheView extends ObjectView
          long id = it.next();
          AbstractObject parent = session.findObjectById(id);
          if ((parent != null) && ((parent.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (parent.getObjectClass() == AbstractObject.OBJECT_COLLECTOR) ||
+               (parent.getObjectClass() == AbstractObject.OBJECT_FACILITY) || (parent.getObjectClass() == AbstractObject.OBJECT_POWERDOMAIN) || (parent.getObjectClass() == AbstractObject.OBJECT_COOLINGZONE) ||
                (parent.getObjectClass() == AbstractObject.OBJECT_SERVICEROOT)))
             return id;
       }

@@ -306,8 +306,11 @@ static void CleanTimescaleData(DB_HANDLE hdb)
    g_idxCloudDomainById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxClusterById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxCollectorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxCoolingZoneById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxFacilityById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxMobileDeviceById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxNodeById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxPowerDomainById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxRackById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxResourceById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxSensorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
@@ -579,8 +582,11 @@ static void HouseKeeper()
             g_idxCloudDomainById.getObjects(&objects);
             g_idxClusterById.getObjects(&objects);
             g_idxCollectorById.getObjects(&objects);
+            g_idxCoolingZoneById.getObjects(&objects);
+            g_idxFacilityById.getObjects(&objects);
             g_idxMobileDeviceById.getObjects(&objects);
             g_idxNodeById.getObjects(&objects);
+            g_idxPowerDomainById.getObjects(&objects);
             g_idxRackById.getObjects(&objects);
             g_idxResourceById.getObjects(&objects);
             g_idxSensorById.getObjects(&objects);

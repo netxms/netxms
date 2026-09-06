@@ -506,6 +506,9 @@ static void ItemPoller()
       g_idxCloudDomainById.forEach(QueueItems, &watchdogId);
       g_idxClusterById.forEach(QueueItems, &watchdogId);
       g_idxCollectorById.forEach(QueueItems, &watchdogId);
+      g_idxFacilityById.forEach(QueueItems, &watchdogId);
+      g_idxPowerDomainById.forEach(QueueItems, &watchdogId);
+      g_idxCoolingZoneById.forEach(QueueItems, &watchdogId);
 		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
       g_idxNodeById.forEach(QueueItems, &watchdogId);
       g_idxRackById.forEach(QueueItems, &watchdogId);
@@ -942,8 +945,11 @@ static void V5DataMigrationManager()
       g_idxCloudDomainById.getObjects(&objects, filter);
       g_idxClusterById.getObjects(&objects, filter);
       g_idxCollectorById.getObjects(&objects, filter);
+      g_idxCoolingZoneById.getObjects(&objects, filter);
+      g_idxFacilityById.getObjects(&objects, filter);
       g_idxMobileDeviceById.getObjects(&objects, filter);
       g_idxNodeById.getObjects(&objects, filter);
+      g_idxPowerDomainById.getObjects(&objects, filter);
       g_idxRackById.getObjects(&objects, filter);
       g_idxResourceById.getObjects(&objects, filter);
       g_idxSensorById.getObjects(&objects, filter);
@@ -1010,9 +1016,15 @@ void StartV5DataMigration()
    if (!hasV5Tables)
       g_idxCollectorById.forEach(callback);
    if (!hasV5Tables)
+      g_idxCoolingZoneById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxFacilityById.forEach(callback);
+   if (!hasV5Tables)
       g_idxMobileDeviceById.forEach(callback);
    if (!hasV5Tables)
       g_idxNodeById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxPowerDomainById.forEach(callback);
    if (!hasV5Tables)
       g_idxRackById.forEach(callback);
    if (!hasV5Tables)

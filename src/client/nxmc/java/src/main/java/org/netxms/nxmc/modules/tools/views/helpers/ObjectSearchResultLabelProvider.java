@@ -29,8 +29,8 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Zone;
@@ -154,7 +154,7 @@ public class ObjectSearchResultLabelProvider extends LabelProvider implements IT
       StringBuilder sb = new StringBuilder();
       for(AbstractObject o : object.getParentsAsArray())
       {
-         if ((o instanceof AbstractNode)|| (o instanceof Collector) || (o instanceof Container) || (o instanceof Rack) || (o instanceof Cluster))
+         if ((o instanceof AbstractNode)|| (o instanceof DataCollectionContainer) || (o instanceof Container) || (o instanceof Rack) || (o instanceof Cluster))
          {
             if (sb.length() > 0)
                sb.append(", ");

@@ -57,13 +57,13 @@ import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.DashboardTemplate;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NetworkMap;
@@ -581,10 +581,13 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_COLLECTOR);
             classFilter.add(AbstractObject.OBJECT_CONDITION);
             classFilter.add(AbstractObject.OBJECT_CONTAINER);
+            classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
+            classFilter.add(AbstractObject.OBJECT_FACILITY);
             classFilter.add(AbstractObject.OBJECT_INTERFACE);
             classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
             classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
             classFilter.add(AbstractObject.OBJECT_NODE);
+            classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
             classFilter.add(AbstractObject.OBJECT_RACK);
             classFilter.add(AbstractObject.OBJECT_SENSOR);
             classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
@@ -620,10 +623,14 @@ public class ObjectBrowser extends NavigationView
                classFilter.add(AbstractObject.OBJECT_ACCESSPOINT);
                classFilter.add(AbstractObject.OBJECT_CLUSTER);
                classFilter.add(AbstractObject.OBJECT_COLLECTOR);
+               classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
+               classFilter.add(AbstractObject.OBJECT_FACILITY);
                classFilter.add(AbstractObject.OBJECT_INTERFACE);
                classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
                classFilter.add(AbstractObject.OBJECT_NETWORKSERVICE);
                classFilter.add(AbstractObject.OBJECT_NODE);
+               classFilter.add(AbstractObject.OBJECT_POWERDOMAIN);
+               classFilter.add(AbstractObject.OBJECT_RACK);
                classFilter.add(AbstractObject.OBJECT_SENSOR);
                classFilter.add(AbstractObject.OBJECT_VPNCONNECTOR);
             }
@@ -687,10 +694,10 @@ public class ObjectBrowser extends NavigationView
                     (currentObject instanceof Rack) ||
                     (currentObject instanceof MobileDevice) ||
                     (currentObject instanceof Circuit) || 
-                    (currentObject instanceof Collector) || 
+                    (currentObject instanceof DataCollectionContainer) || 
                     (currentObject instanceof Container) || 
                     (currentObject instanceof Sensor)) &&
-                   ((parentObject instanceof Collector) || 
+                   ((parentObject instanceof DataCollectionContainer) || 
                     (parentObject instanceof Container) ||
                     (parentObject instanceof ServiceRoot)) ? true : false;
          case TEMPLATES:

@@ -66,10 +66,10 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardTemplate;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Rack;
@@ -505,7 +505,7 @@ public class ObjectTree extends Composite
    {
       if ((object instanceof ServiceRoot) || (object instanceof EntireNetwork))
          return 3;
-      if ((object instanceof Circuit) || (object instanceof Collector) || (object instanceof Container) || (object instanceof Cluster) || (object instanceof Chassis) || (object instanceof Rack))
+      if ((object instanceof Circuit) || (object instanceof DataCollectionContainer) || (object instanceof Container) || (object instanceof Cluster) || (object instanceof Chassis) || (object instanceof Rack))
          return 2;
       if ((object instanceof Zone) || (object instanceof Subnet))
          return 1;

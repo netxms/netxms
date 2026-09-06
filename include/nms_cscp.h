@@ -1806,6 +1806,13 @@ __PACK_END__
 #define VID_ALARM_CATEGORY_SCRIPT   ((uint32_t)1031)
 #define VID_NETCONF_QUERY_LIST      ((uint32_t)1032)
 #define VID_RULE_ERRORS             ((uint32_t)1033)
+#define VID_SETTLEMENT_LAG          ((uint32_t)1034)
+#define VID_PROVIDER_ID             ((uint32_t)1035)
+#define VID_DOMAIN_TYPE             ((uint32_t)1036)
+#define VID_FEED_TAG                ((uint32_t)1037)
+#define VID_RATED_POWER             ((uint32_t)1038)
+#define VID_ZONE_TYPE               ((uint32_t)1039)
+#define VID_RATED_CAPACITY          ((uint32_t)1040)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

@@ -49,11 +49,11 @@ import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.CloudDomain;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardTemplate;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Interface;
@@ -155,7 +155,7 @@ public final class ObjectMenuFactory
          addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
-      else if (object instanceof Collector || object instanceof Circuit)
+      else if (object instanceof DataCollectionContainer || object instanceof Circuit)
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.AUTOBIND, viewPlacement);
@@ -490,7 +490,7 @@ public final class ObjectMenuFactory
       final Object selectedElement = selection.getFirstElement();
       final AbstractObject baseObject = (selectedElement instanceof ObjectQueryResult) ? ((ObjectQueryResult)selectedElement).getObject() : (AbstractObject)selectedElement;
       if (!(baseObject instanceof Cluster) &&
-          !(baseObject instanceof Collector) && 
+          !(baseObject instanceof DataCollectionContainer) && 
           !(baseObject instanceof Container) && 
           !(baseObject instanceof EntireNetwork) && 
           !(baseObject instanceof ServiceRoot) && 

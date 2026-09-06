@@ -148,6 +148,32 @@
 #define OBJECT_RESOURCE              39
 #define OBJECT_TRAFFICOBSERVER       40
 #define OBJECT_OBSERVATIONPOINT      41
+#define OBJECT_FACILITY              42
+#define OBJECT_POWERDOMAIN           43
+#define OBJECT_COOLINGZONE           44
+
+/**
+ * Power domain types
+ */
+enum PowerDomainType
+{
+   POWER_DOMAIN_GRID_ENTRY = 0,
+   POWER_DOMAIN_GENERATOR = 1,
+   POWER_DOMAIN_UPS = 2,
+   POWER_DOMAIN_PDU = 3,
+   POWER_DOMAIN_BUSWAY = 4,
+   POWER_DOMAIN_OTHER = 5
+};
+
+/**
+ * Cooling zone types
+ */
+enum CoolingZoneType
+{
+   COOLING_ZONE_PLANT = 0,
+   COOLING_ZONE_ZONE = 1,
+   COOLING_ZONE_OTHER = 2
+};
 
 /** Base value for custom object classes */
 #define OBJECT_CUSTOM                10000
@@ -816,6 +842,7 @@ enum SessionState
 #define RCC_CHANNEL_PROVIDED_BY_CHAT_BOT  ((uint32_t)195)
 #define RCC_INVALID_DATA                  ((uint32_t)196)
 #define RCC_EXEC_TIMEOUT                  ((uint32_t)197)
+#define RCC_OBJECT_HIERARCHY_VIOLATION    ((uint32_t)198)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

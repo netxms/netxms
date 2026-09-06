@@ -787,7 +787,7 @@ void Dashboard::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
          if (object->isDataCollectionTarget())
             return true;
          int objectClass = object->getObjectClass();
-         return (objectClass == OBJECT_NETWORK) || (objectClass == OBJECT_SERVICEROOT) || (objectClass == OBJECT_SUBNET) || (objectClass == OBJECT_ZONE) || (objectClass == OBJECT_CONDITION) || (objectClass == OBJECT_CONTAINER) || (objectClass == OBJECT_COLLECTOR);
+         return (objectClass == OBJECT_NETWORK) || (objectClass == OBJECT_SERVICEROOT) || (objectClass == OBJECT_SUBNET) || (objectClass == OBJECT_ZONE) || (objectClass == OBJECT_CONDITION) || (objectClass == OBJECT_CONTAINER) || (objectClass == OBJECT_COLLECTOR) || (objectClass == OBJECT_FACILITY) || (objectClass == OBJECT_POWERDOMAIN) || (objectClass == OBJECT_COOLINGZONE);
       }, nullptr);
 
    for (int i = 0; i < objects->size(); i++)
@@ -1031,7 +1031,7 @@ void DashboardTemplate::autobindPoll(PollerInfo *poller, ClientSession *session,
          if (object->isDataCollectionTarget())
             return true;
          int objectClass = object->getObjectClass();
-         return (objectClass == OBJECT_NETWORK) || (objectClass == OBJECT_SERVICEROOT) || (objectClass == OBJECT_SUBNET) || (objectClass == OBJECT_ZONE) || (objectClass == OBJECT_CONDITION) || (objectClass == OBJECT_CONTAINER) || (objectClass == OBJECT_COLLECTOR);
+         return (objectClass == OBJECT_NETWORK) || (objectClass == OBJECT_SERVICEROOT) || (objectClass == OBJECT_SUBNET) || (objectClass == OBJECT_ZONE) || (objectClass == OBJECT_CONDITION) || (objectClass == OBJECT_CONTAINER) || (objectClass == OBJECT_COLLECTOR) || (objectClass == OBJECT_FACILITY) || (objectClass == OBJECT_POWERDOMAIN) || (objectClass == OBJECT_COOLINGZONE);
       }, nullptr);
 
    bool modified = false;

@@ -2672,8 +2672,9 @@ static bool ContainerSelectionFilter(NetObj *object, void *context)
       return false;
    if (object->getObjectClass() == OBJECT_CONTAINER)
       return static_cast<Container*>(object)->isAutoBindEnabled();
-   if (object->getObjectClass() == OBJECT_COLLECTOR)
-      return static_cast<Collector*>(object)->isAutoBindEnabled();
+   if ((object->getObjectClass() == OBJECT_COLLECTOR) || (object->getObjectClass() == OBJECT_FACILITY) ||
+       (object->getObjectClass() == OBJECT_POWERDOMAIN) || (object->getObjectClass() == OBJECT_COOLINGZONE))
+      return static_cast<DataCollectionContainer*>(object)->isAutoBindEnabled();
    return false;
 }
 
@@ -2691,22 +2692,10 @@ void DataCollectionTarget::updateContainerMembership()
    {
       NetObj *container = containers->get(i);
 
-      AutoBindTarget *abtInterface;
-      const wchar_t *className;
-      if (container->getObjectClass() == OBJECT_CONTAINER)
-      {
-         abtInterface = static_cast<Container*>(container);
-         className = L"container";
-      }
-      else if (container->getObjectClass() == OBJECT_COLLECTOR)
-      {
-         abtInterface = static_cast<Collector*>(container);
-         className = L"collector";
-      }
-      else
-      {
+      AutoBindTarget *abtInterface = GetObjectAsAutoBindTarget(container);
+      if (abtInterface == nullptr)
          continue;   // Should not happen
-      }
+      const wchar_t *className = container->getObjectClassName();
 
       NXSL_VM *cachedFilterVM = nullptr;
       AutoBindDecision decision = abtInterface->isApplicable(&cachedFilterVM, self());
@@ -2714,6 +2703,17 @@ void DataCollectionTarget::updateContainerMembership()
       {
          if (!container->isDirectChild(m_id))
          {
+            uint32_t rcc = ValidateObjectBinding(*this, *container);
+            if (rcc != RCC_SUCCESS)
+            {
+               sendPollerMsg(_T("   Cannot bind to %s %s (%s)\r\n"), className, container->getName(),
+                     (rcc == RCC_OBJECT_HIERARCHY_VIOLATION) ? _T("object hierarchy violation") : _T("incompatible object class"));
+               nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): cannot bind object \"%s\" [%u] to %s \"%s\" [%u] (RCC=%u)"),
+                         m_name, m_id, className, container->getName(), container->getId(), rcc);
+               delete cachedFilterVM;
+               continue;
+            }
+
             sendPollerMsg(_T("   Binding to %s %s\r\n"), className, container->getName());
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): binding object \"%s\" [%u] to %s \"%s\" [%u]"),
                       m_name, m_id, className, container->getName(), container->getId());

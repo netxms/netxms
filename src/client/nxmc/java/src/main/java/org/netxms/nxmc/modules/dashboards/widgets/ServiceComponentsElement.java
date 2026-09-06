@@ -27,9 +27,9 @@ import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
@@ -124,7 +124,7 @@ public class ServiceComponentsElement extends ElementWidget
          long objectId = it.next();
          AbstractObject child = session.findObjectById(objectId);
          if ((child != null) && 
-               ((child instanceof Collector) ||
+               ((child instanceof DataCollectionContainer) ||
                 (child instanceof Container) || 
                 (child instanceof Cluster) || 
                 (child instanceof Node) ||

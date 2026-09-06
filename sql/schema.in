@@ -819,6 +819,40 @@ CREATE TABLE object_containers
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+/**
+ * Facilities (data center energy reporting boundaries)
+ */
+CREATE TABLE facilities
+(
+  id integer not null,
+  settlement_lag integer not null,
+  provider_id varchar(63) null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Power domains (electrical distribution nodes within facility)
+ */
+CREATE TABLE power_domains
+(
+  id integer not null,
+  domain_type integer not null,
+  feed_tag varchar(15) null,
+  rated_power integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Cooling zones (cooling plants or thermal zones within facility)
+ */
+CREATE TABLE cooling_zones
+(
+  id integer not null,
+  zone_type integer not null,
+  rated_capacity integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
 /*
 ** Condition objects
 */

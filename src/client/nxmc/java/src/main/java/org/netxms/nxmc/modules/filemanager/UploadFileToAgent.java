@@ -29,8 +29,8 @@ import org.netxms.client.ScheduledTask;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -78,7 +78,7 @@ public class UploadFileToAgent extends ObjectAction<AbstractObject>
          {
             nodes.add(((AbstractObject)object).getObjectId());
          }
-         else if ((object instanceof Collector) || (object instanceof Container) || (object instanceof ServiceRoot) || 
+         else if ((object instanceof DataCollectionContainer) || (object instanceof Container) || (object instanceof ServiceRoot) || 
                (object instanceof Subnet)  || (object instanceof EntireNetwork))
          {
             Set<AbstractObject> set = ((AbstractObject)object).getAllChildren(AbstractObject.OBJECT_NODE);
@@ -154,7 +154,7 @@ public class UploadFileToAgent extends ObjectAction<AbstractObject>
          for (Object obj : ((IStructuredSelection)selection).toList())
          {
             if (!(((obj instanceof AbstractNode) && ((AbstractNode)obj).hasAgent()) || 
-                  (obj instanceof Collector) || (obj instanceof Container) || (obj instanceof ServiceRoot) || (obj instanceof Subnet) ||
+                  (obj instanceof DataCollectionContainer) || (obj instanceof Container) || (obj instanceof ServiceRoot) || (obj instanceof Subnet) ||
                 (obj instanceof EntireNetwork)))
             {
                return false;

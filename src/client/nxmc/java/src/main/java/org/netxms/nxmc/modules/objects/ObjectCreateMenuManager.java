@@ -37,13 +37,17 @@ import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.CoolingZone;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.Facility;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.PowerDomain;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
@@ -58,12 +62,14 @@ import org.netxms.nxmc.modules.businessservice.dialogs.CreateBusinessServiceProt
 import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateCloudDomainDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateClusterDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateCoolingZoneDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkMapDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkServiceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreatePowerDomainDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateRackDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateSensorDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateSubnetDialog;
@@ -94,15 +100,18 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateCloudDomain;
    private Action actionCreateCondition;
    private Action actionCreateContainer;
+   private Action actionCreateCoolingZone;
    private Action actionCreateDashboard;
    private Action actionCreateDashboardGroup;
    private Action actionCreateDashboardTemplate;
+   private Action actionCreateFacility;
    private Action actionCreateInterface;
    private Action actionCreateNetworkService;
    private Action actionCreateMobileDevice;
    private Action actionCreateNetworkMap;
    private Action actionCreateNetworkMapGroup;
    private Action actionCreateNode;
+   private Action actionCreatePowerDomain;
    private Action actionCreateRack;
    private Action actionCreateSensor;
    private Action actionCreateSubnet;
@@ -134,24 +143,27 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateAssetGroup, (AbstractObject o) -> (o instanceof AssetGroup) || (o instanceof AssetRoot));
       addAction(this, actionCreateBusinessService, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot) && !(o instanceof BusinessServicePrototype));
       addAction(this, actionCreateBusinessServicePrototype, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot));
-      addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCircuit, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCloudDomain, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCondition, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCollector, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateContainer, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateContainer, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof Facility) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateCoolingZone, (AbstractObject o) -> (o instanceof Facility) || (o instanceof CoolingZone));
       addAction(this, actionCreateDashboard, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
       addAction(this, actionCreateDashboardGroup, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
+      addAction(this, actionCreateFacility, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateDashboardTemplate, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
       addAction(this, actionCreateInterface, (AbstractObject o) -> o instanceof Node);
       addAction(this, actionCreateNetworkService, (AbstractObject o) -> o instanceof Node);
       addAction(this, actionCreateMobileDevice, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateNetworkMap, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
       addAction(this, actionCreateNetworkMapGroup, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
-      addAction(this, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateSensor, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
+      addAction(this, actionCreatePowerDomain, (AbstractObject o) -> (o instanceof Facility) || (o instanceof PowerDomain));
+      addAction(this, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateSensor, (AbstractObject o) -> (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
       addAction(this, actionCreateSubnet, (AbstractObject o) -> (o instanceof Zone) || ((o instanceof EntireNetwork) && !Registry.getSession().isZoningEnabled()));
       addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateTemplateGroup, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
@@ -340,6 +352,72 @@ public class ObjectCreateMenuManager extends MenuManager
       actionCreateDashboard = new GenericObjectCreationAction(i18n.tr("&Dashboard..."), AbstractObject.OBJECT_DASHBOARD, i18n.tr("Dashboard"));
       actionCreateDashboardTemplate = new GenericObjectCreationAction(i18n.tr("Dashboard &template..."), AbstractObject.OBJECT_DASHBOARDTEMPLATE, i18n.tr("Dashboard Template"));
       actionCreateDashboardGroup = new GenericObjectCreationAction(i18n.tr("Dashboard &group..."), AbstractObject.OBJECT_DASHBOARDGROUP, i18n.tr("Dashboard Group"));
+      actionCreateFacility = new GenericObjectCreationAction(i18n.tr("&Facility..."), AbstractObject.OBJECT_FACILITY, i18n.tr("Facility"));
+
+      actionCreatePowerDomain = new Action(i18n.tr("&Power domain...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreatePowerDomainDialog dlg = new CreatePowerDomainDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating power domain"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_POWERDOMAIN, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  cd.setDomainType(dlg.getDomainType());
+                  cd.setFeedTag(dlg.getFeedTag());
+                  cd.setRatedPower(dlg.getRatedPower());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create power domain object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
+
+      actionCreateCoolingZone = new Action(i18n.tr("Cooling &zone...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateCoolingZoneDialog dlg = new CreateCoolingZoneDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating cooling zone"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_COOLINGZONE, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  cd.setZoneType(dlg.getZoneType());
+                  cd.setRatedCapacity(dlg.getRatedCapacity());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create cooling zone object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
 
       actionCreateInterface = new Action(i18n.tr("&Interface...")) {
          @Override

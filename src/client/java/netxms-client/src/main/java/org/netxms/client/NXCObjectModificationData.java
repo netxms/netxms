@@ -41,6 +41,8 @@ import org.netxms.client.constants.GeoLocationControlMode;
 import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RackOrientation;
+import org.netxms.client.constants.CoolingZoneType;
+import org.netxms.client.constants.PowerDomainType;
 import org.netxms.client.constants.SensorDeviceClass;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
@@ -232,6 +234,13 @@ public class NXCObjectModificationData
    private String syncConfig;
    private Boolean inScope;
    private Integer zoneUIN;
+   private Integer settlementLag;
+   private String providerId;
+   private PowerDomainType domainType;
+   private String feedTag;
+   private Integer ratedPower;
+   private CoolingZoneType zoneType;
+   private Integer ratedCapacity;
 
    /**
     * Constructor for creating modification data for given object
@@ -3003,5 +3012,117 @@ public class NXCObjectModificationData
    public void setZoneUIN(int zoneUIN)
    {
       this.zoneUIN = zoneUIN;
+   }
+
+   /**
+    * @return the settlementLag
+    */
+   public Integer getSettlementLag()
+   {
+      return settlementLag;
+   }
+
+   /**
+    * @param settlementLag the settlementLag to set
+    */
+   public void setSettlementLag(int settlementLag)
+   {
+      this.settlementLag = settlementLag;
+   }
+
+   /**
+    * @return the providerId
+    */
+   public String getProviderId()
+   {
+      return providerId;
+   }
+
+   /**
+    * @param providerId the providerId to set
+    */
+   public void setProviderId(String providerId)
+   {
+      this.providerId = providerId;
+   }
+
+   /**
+    * @return the domainType
+    */
+   public PowerDomainType getDomainType()
+   {
+      return domainType;
+   }
+
+   /**
+    * @param domainType the domainType to set
+    */
+   public void setDomainType(PowerDomainType domainType)
+   {
+      this.domainType = domainType;
+   }
+
+   /**
+    * @return the feedTag
+    */
+   public String getFeedTag()
+   {
+      return feedTag;
+   }
+
+   /**
+    * @param feedTag the feedTag to set
+    */
+   public void setFeedTag(String feedTag)
+   {
+      this.feedTag = feedTag;
+   }
+
+   /**
+    * @return the ratedPower
+    */
+   public Integer getRatedPower()
+   {
+      return ratedPower;
+   }
+
+   /**
+    * @param ratedPower the ratedPower to set
+    */
+   public void setRatedPower(int ratedPower)
+   {
+      this.ratedPower = ratedPower;
+   }
+
+   /**
+    * @return the zoneType
+    */
+   public CoolingZoneType getZoneType()
+   {
+      return zoneType;
+   }
+
+   /**
+    * @param zoneType the zoneType to set
+    */
+   public void setZoneType(CoolingZoneType zoneType)
+   {
+      this.zoneType = zoneType;
+   }
+
+   /**
+    * @return the ratedCapacity
+    */
+   public Integer getRatedCapacity()
+   {
+      return ratedCapacity;
+   }
+
+   /**
+    * @param ratedCapacity the ratedCapacity to set
+    */
+   public void setRatedCapacity(int ratedCapacity)
+   {
+      this.ratedCapacity = ratedCapacity;
    }
 }

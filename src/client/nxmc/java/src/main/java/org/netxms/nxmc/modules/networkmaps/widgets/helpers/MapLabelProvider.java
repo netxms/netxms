@@ -239,6 +239,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
                   return imgCircuit;
                case AbstractObject.OBJECT_COLLECTOR:
                case AbstractObject.OBJECT_CONTAINER:
+               case AbstractObject.OBJECT_FACILITY:
+               case AbstractObject.OBJECT_POWERDOMAIN:
+               case AbstractObject.OBJECT_COOLINGZONE:
                   return imgService;
                case AbstractObject.OBJECT_CLUSTER:
                   return imgCluster;

@@ -513,8 +513,11 @@ static void CollectAllDCTargets(SharedObjectArray<NetObj> *objects)
    g_idxCloudDomainById.getObjects(objects);
    g_idxClusterById.getObjects(objects);
    g_idxCollectorById.getObjects(objects);
+   g_idxCoolingZoneById.getObjects(objects);
+   g_idxFacilityById.getObjects(objects);
    g_idxMobileDeviceById.getObjects(objects);
    g_idxNodeById.getObjects(objects);
+   g_idxPowerDomainById.getObjects(objects);
    g_idxRackById.getObjects(objects);
    g_idxResourceById.getObjects(objects);
    g_idxSensorById.getObjects(objects);

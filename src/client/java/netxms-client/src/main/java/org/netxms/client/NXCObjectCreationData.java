@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
+import org.netxms.client.constants.CoolingZoneType;
+import org.netxms.client.constants.PowerDomainType;
 import org.netxms.client.constants.SensorDeviceClass;
 import org.netxms.client.maps.MapCanvasType;
 import org.netxms.client.maps.MapType;
@@ -119,6 +121,13 @@ public class NXCObjectCreationData
    private String discoveryFilter;
    private int removalPolicy;
    private int gracePeriod;
+   private int settlementLag;
+   private String providerId;
+   private PowerDomainType domainType;
+   private String feedTag;
+   private int ratedPower;
+   private CoolingZoneType zoneType;
+   private int ratedCapacity;
 
 	/**
 	 * Constructor.
@@ -195,6 +204,13 @@ public class NXCObjectCreationData
       discoveryFilter = "";
       removalPolicy = 0;
       gracePeriod = 0;
+      settlementLag = 5;
+      providerId = "";
+      domainType = PowerDomainType.OTHER;
+      feedTag = "";
+      ratedPower = 0;
+      zoneType = CoolingZoneType.OTHER;
+      ratedCapacity = 0;
 	}
 
 	/**
@@ -290,6 +306,20 @@ public class NXCObjectCreationData
          removalPolicy = data.getRemovalPolicy();
       if (data.getGracePeriod() != null)
          gracePeriod = data.getGracePeriod();
+      if (data.getSettlementLag() != null)
+         settlementLag = data.getSettlementLag();
+      if (data.getProviderId() != null)
+         providerId = data.getProviderId();
+      if (data.getDomainType() != null)
+         domainType = data.getDomainType();
+      if (data.getFeedTag() != null)
+         feedTag = data.getFeedTag();
+      if (data.getRatedPower() != null)
+         ratedPower = data.getRatedPower();
+      if (data.getZoneType() != null)
+         zoneType = data.getZoneType();
+      if (data.getRatedCapacity() != null)
+         ratedCapacity = data.getRatedCapacity();
 	}
 
 	/**
@@ -1395,6 +1425,118 @@ public class NXCObjectCreationData
    }
 
    /**
+    * @return the settlementLag
+    */
+   public int getSettlementLag()
+   {
+      return settlementLag;
+   }
+
+   /**
+    * @param settlementLag the settlementLag to set
+    */
+   public void setSettlementLag(int settlementLag)
+   {
+      this.settlementLag = settlementLag;
+   }
+
+   /**
+    * @return the providerId
+    */
+   public String getProviderId()
+   {
+      return providerId;
+   }
+
+   /**
+    * @param providerId the providerId to set
+    */
+   public void setProviderId(String providerId)
+   {
+      this.providerId = providerId;
+   }
+
+   /**
+    * @return the domainType
+    */
+   public PowerDomainType getDomainType()
+   {
+      return domainType;
+   }
+
+   /**
+    * @param domainType the domainType to set
+    */
+   public void setDomainType(PowerDomainType domainType)
+   {
+      this.domainType = domainType;
+   }
+
+   /**
+    * @return the feedTag
+    */
+   public String getFeedTag()
+   {
+      return feedTag;
+   }
+
+   /**
+    * @param feedTag the feedTag to set
+    */
+   public void setFeedTag(String feedTag)
+   {
+      this.feedTag = feedTag;
+   }
+
+   /**
+    * @return the ratedPower
+    */
+   public int getRatedPower()
+   {
+      return ratedPower;
+   }
+
+   /**
+    * @param ratedPower the ratedPower to set
+    */
+   public void setRatedPower(int ratedPower)
+   {
+      this.ratedPower = ratedPower;
+   }
+
+   /**
+    * @return the zoneType
+    */
+   public CoolingZoneType getZoneType()
+   {
+      return zoneType;
+   }
+
+   /**
+    * @param zoneType the zoneType to set
+    */
+   public void setZoneType(CoolingZoneType zoneType)
+   {
+      this.zoneType = zoneType;
+   }
+
+   /**
+    * @return the ratedCapacity
+    */
+   public int getRatedCapacity()
+   {
+      return ratedCapacity;
+   }
+
+   /**
+    * @param ratedCapacity the ratedCapacity to set
+    */
+   public void setRatedCapacity(int ratedCapacity)
+   {
+      this.ratedCapacity = ratedCapacity;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -1411,6 +1553,7 @@ public class NXCObjectCreationData
             sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", model=" + model + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", gatewayNodeId=" +
             gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + ", linkedObjectId=" + linkedObjectId +
             ", connectorName=" + connectorName + ", credentials=" + credentials +
-            ", discoveryFilter=" + discoveryFilter + ", removalPolicy=" + removalPolicy + ", gracePeriod=" + gracePeriod + "]";
+            ", discoveryFilter=" + discoveryFilter + ", removalPolicy=" + removalPolicy + ", gracePeriod=" + gracePeriod + ", settlementLag=" + settlementLag + ", providerId=" + providerId +
+            ", domainType=" + domainType + ", feedTag=" + feedTag + ", ratedPower=" + ratedPower + ", zoneType=" + zoneType + ", ratedCapacity=" + ratedCapacity + "]";
    }
 }

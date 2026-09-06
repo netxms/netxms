@@ -121,7 +121,9 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
       *result = vm->createValue(false);
       return 0;
    }
-   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
+       (thisObject->getObjectClass() != OBJECT_FACILITY) && (thisObject->getObjectClass() != OBJECT_POWERDOMAIN) &&
+       (thisObject->getObjectClass() != OBJECT_COOLINGZONE) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!argv[0]->isObject())
@@ -132,8 +134,11 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<NetObj> child = *static_cast<shared_ptr<NetObj>*>(nxslChild->getData());
-   if (!IsValidParentClass(child->getObjectClass(), thisObject->getObjectClass()))
+   uint32_t rcc = ValidateObjectBinding(*child, *thisObject);
+   if (rcc == RCC_INCOMPATIBLE_OPERATION)
       return NXSL_ERR_BAD_CLASS;
+   if (rcc != RCC_SUCCESS)
+      return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
    if (child->isChild(thisObject->getId())) // prevent loops
       return NXSL_ERR_INVALID_OBJECT_OPERATION;
@@ -165,11 +170,16 @@ NXSL_METHOD_DEFINITION(NetObj, bindTo)
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(nxslParent->getData());
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
+       (parent->getObjectClass() != OBJECT_FACILITY) && (parent->getObjectClass() != OBJECT_POWERDOMAIN) &&
+       (parent->getObjectClass() != OBJECT_COOLINGZONE) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
-   if (!IsValidParentClass(thisObject->getObjectClass(), parent->getObjectClass()))
+   uint32_t rcc = ValidateObjectBinding(*thisObject, *parent);
+   if (rcc == RCC_INCOMPATIBLE_OPERATION)
       return NXSL_ERR_BAD_CLASS;
+   if (rcc != RCC_SUCCESS)
+      return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
    if (thisObject->isChild(parent->getId())) // prevent loops
       return NXSL_ERR_INVALID_OBJECT_OPERATION;
@@ -5512,6 +5522,92 @@ static int CreateCollectorImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
 }
 
 /**
+ * Create facility object - common method implementation
+ * Arguments: name
+ */
+static int CreateFacilityImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+   shared_ptr<Facility> facility = make_shared<Facility>();
+   facility->setName(argv[0]->getValueAsCString());
+   NetObjInsert(facility, true, false);
+   NetObj::linkObjects(thisObject, facility);
+   facility->publish();
+
+   *result = facility->createNXSLObject(vm);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Create power domain object - common method implementation
+ * Arguments: name, [domainType], [feedTag], [ratedPower]
+ */
+static int CreatePowerDomainImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() || ((argc > 2) && !argv[2]->isString()))
+      return NXSL_ERR_NOT_STRING;
+
+   if (((argc > 1) && !argv[1]->isInteger()) || ((argc > 3) && !argv[3]->isInteger()))
+      return NXSL_ERR_NOT_INTEGER;
+
+   json_t *json = json_object();
+   if (argc > 1)
+      json_object_set_new(json, "domainType", json_integer(argv[1]->getValueAsInt32()));
+   if (argc > 2)
+      json_object_set_new(json, "feedTag", json_string_t(argv[2]->getValueAsCString()));
+   if (argc > 3)
+      json_object_set_new(json, "ratedPower", json_integer(argv[3]->getValueAsInt32()));
+
+   shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+   shared_ptr<PowerDomain> domain = make_shared<PowerDomain>(argv[0]->getValueAsCString(), json);
+   json_decref(json);
+   NetObjInsert(domain, true, false);
+   NetObj::linkObjects(thisObject, domain);
+   domain->publish();
+
+   *result = domain->createNXSLObject(vm);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
+ * Create cooling zone object - common method implementation
+ * Arguments: name, [zoneType], [ratedCapacity]
+ */
+static int CreateCoolingZoneImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 3))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (((argc > 1) && !argv[1]->isInteger()) || ((argc > 2) && !argv[2]->isInteger()))
+      return NXSL_ERR_NOT_INTEGER;
+
+   json_t *json = json_object();
+   if (argc > 1)
+      json_object_set_new(json, "zoneType", json_integer(argv[1]->getValueAsInt32()));
+   if (argc > 2)
+      json_object_set_new(json, "ratedCapacity", json_integer(argv[2]->getValueAsInt32()));
+
+   shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+   shared_ptr<CoolingZone> zone = make_shared<CoolingZone>(argv[0]->getValueAsCString(), json);
+   json_decref(json);
+   NetObjInsert(zone, true, false);
+   NetObj::linkObjects(thisObject, zone);
+   zone->publish();
+
+   *result = zone->createNXSLObject(vm);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * Create rack object - common method implementation
  * Arguments: name, [height]
  */
@@ -5638,6 +5734,16 @@ NXSL_METHOD_DEFINITION(Container, createContainer)
 }
 
 /**
+ * Container::createFacility() method
+ */
+NXSL_METHOD_DEFINITION(Container, createFacility)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateFacilityImpl(object, argc, argv, result, vm);
+}
+
+/**
  * Container::createNode() method
  */
 NXSL_METHOD_DEFINITION(Container, createNode)
@@ -5710,6 +5816,7 @@ NXSL_ContainerClass::NXSL_ContainerClass() : NXSL_NetObjClass()
 
    NXSL_REGISTER_METHOD(Container, createCollector, 1);
    NXSL_REGISTER_METHOD(Container, createContainer, 1);
+   NXSL_REGISTER_METHOD(Container, createFacility, 1);
    NXSL_REGISTER_METHOD(Container, createNode, -1);
    NXSL_REGISTER_METHOD(Container, createRack, -1);
    NXSL_REGISTER_METHOD(Container, createSensor, -1);
@@ -5765,6 +5872,16 @@ NXSL_METHOD_DEFINITION(Collector, createContainer)
 }
 
 /**
+ * Collector::createFacility() method
+ */
+NXSL_METHOD_DEFINITION(Collector, createFacility)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateFacilityImpl(object, argc, argv, result, vm);
+}
+
+/**
  * Collector::createNode() method
  */
 NXSL_METHOD_DEFINITION(Collector, createNode)
@@ -5795,24 +5912,24 @@ NXSL_METHOD_DEFINITION(Collector, createSensor)
 }
 
 /**
- * Collector::setAutoBindMode() method
+ * Set auto bind mode on data collection container - common method implementation
  */
-NXSL_METHOD_DEFINITION(Collector, setAutoBindMode)
+static int SetAutoBindModeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    {
       *result = vm->createValue(false);
       return 0;
    }
-   static_cast<shared_ptr<Collector>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   static_cast<shared_ptr<DataCollectionContainer>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
    *result = vm->createValue();
    return 0;
 }
 
 /**
- * Collector::setAutoBindScript() method
+ * Set auto bind script on data collection container - common method implementation
  */
-NXSL_METHOD_DEFINITION(Collector, setAutoBindScript)
+static int SetAutoBindScriptImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    {
@@ -5823,9 +5940,48 @@ NXSL_METHOD_DEFINITION(Collector, setAutoBindScript)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<Collector>*>(object->getData())->get()->setAutoBindFilter(0, argv[0]->getValueAsCString());
+   static_cast<shared_ptr<DataCollectionContainer>*>(object->getData())->get()->setAutoBindFilter(0, argv[0]->getValueAsCString());
    *result = vm->createValue();
    return 0;
+}
+
+/**
+ * Get auto bind related attribute of data collection target with auto bind support.
+ * Returns nullptr if attribute name is not recognized.
+ */
+NXSL_Value *NXSL_DCTargetClass::getAutoBindAttr(NXSL_VM *vm, const AutoBindTarget& target, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = nullptr;
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("autoBindScript"))
+   {
+      const TCHAR *script = target.getAutoBindFilterSource();
+      value = vm->createValue(CHECK_NULL_EX(script));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAutoBindEnabled"))
+   {
+      value = vm->createValue(target.isAutoBindEnabled());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAutoUnbindEnabled"))
+   {
+      value = vm->createValue(target.isAutoUnbindEnabled());
+   }
+   return value;
+}
+
+/**
+ * Collector::setAutoBindMode() method
+ */
+NXSL_METHOD_DEFINITION(Collector, setAutoBindMode)
+{
+   return SetAutoBindModeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Collector::setAutoBindScript() method
+ */
+NXSL_METHOD_DEFINITION(Collector, setAutoBindScript)
+{
+   return SetAutoBindScriptImpl(object, argc, argv, result, vm);
 }
 
 /**
@@ -5837,6 +5993,7 @@ NXSL_CollectorClass::NXSL_CollectorClass() : NXSL_DCTargetClass()
 
    NXSL_REGISTER_METHOD(Collector, createCollector, 1);
    NXSL_REGISTER_METHOD(Collector, createContainer, 1);
+   NXSL_REGISTER_METHOD(Collector, createFacility, 1);
    NXSL_REGISTER_METHOD(Collector, createNode, -1);
    NXSL_REGISTER_METHOD(Collector, createRack, -1);
    NXSL_REGISTER_METHOD(Collector, createSensor, -1);
@@ -5852,21 +6009,334 @@ NXSL_Value *NXSL_CollectorClass::getAttr(NXSL_Object *object, const NXSL_Identif
    NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
    if (value != nullptr)
       return value;
+   return getAutoBindAttr(object->vm(), *SharedObjectFromData<Collector>(object), attr);
+}
+
+/**
+ * Facility::createContainer() method
+ */
+NXSL_METHOD_DEFINITION(Facility, createContainer)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateContainerImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Facility::createCoolingZone() method
+ */
+NXSL_METHOD_DEFINITION(Facility, createCoolingZone)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateCoolingZoneImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Facility::createNode() method
+ */
+NXSL_METHOD_DEFINITION(Facility, createNode)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateNodeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Facility::createPowerDomain() method
+ */
+NXSL_METHOD_DEFINITION(Facility, createPowerDomain)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreatePowerDomainImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Facility::createRack() method
+ */
+NXSL_METHOD_DEFINITION(Facility, createRack)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRackImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Facility::createSensor() method
+ */
+NXSL_METHOD_DEFINITION(Facility, createSensor)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateSensorImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Facility::setAutoBindMode() method
+ */
+NXSL_METHOD_DEFINITION(Facility, setAutoBindMode)
+{
+   return SetAutoBindModeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Facility::setAutoBindScript() method
+ */
+NXSL_METHOD_DEFINITION(Facility, setAutoBindScript)
+{
+   return SetAutoBindScriptImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * NXSL class "Facility" constructor
+ */
+NXSL_FacilityClass::NXSL_FacilityClass() : NXSL_DCTargetClass()
+{
+   setName(_T("Facility"));
+
+   NXSL_REGISTER_METHOD(Facility, createContainer, 1);
+   NXSL_REGISTER_METHOD(Facility, createCoolingZone, -1);
+   NXSL_REGISTER_METHOD(Facility, createNode, -1);
+   NXSL_REGISTER_METHOD(Facility, createPowerDomain, -1);
+   NXSL_REGISTER_METHOD(Facility, createRack, -1);
+   NXSL_REGISTER_METHOD(Facility, createSensor, -1);
+   NXSL_REGISTER_METHOD(Facility, setAutoBindMode, 2);
+   NXSL_REGISTER_METHOD(Facility, setAutoBindScript, 1);
+}
+
+/**
+ * NXSL class "Facility" attributes
+ */
+NXSL_Value *NXSL_FacilityClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
 
    NXSL_VM *vm = object->vm();
-   auto collector = SharedObjectFromData<Collector>(object);
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("autoBindScript"))
+   auto facility = SharedObjectFromData<Facility>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("isEngineEnabled"))
    {
-      const TCHAR *script = collector->getAutoBindFilterSource();
-      value = vm->createValue(CHECK_NULL_EX(script));
+      value = vm->createValue(facility->isEngineEnabled());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAutoBindEnabled"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("providerId"))
    {
-      value = vm->createValue(collector->isAutoBindEnabled());
+      value = vm->createValue(facility->getProviderId());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isAutoUnbindEnabled"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("settlementLag"))
    {
-      value = vm->createValue(collector->isAutoUnbindEnabled());
+      value = vm->createValue(facility->getSettlementLag());
+   }
+   else
+   {
+      value = getAutoBindAttr(vm, *facility, attr);
+   }
+   return value;
+}
+
+/**
+ * PowerDomain::createNode() method
+ */
+NXSL_METHOD_DEFINITION(PowerDomain, createNode)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateNodeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * PowerDomain::createPowerDomain() method
+ */
+NXSL_METHOD_DEFINITION(PowerDomain, createPowerDomain)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreatePowerDomainImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * PowerDomain::createRack() method
+ */
+NXSL_METHOD_DEFINITION(PowerDomain, createRack)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRackImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * PowerDomain::createSensor() method
+ */
+NXSL_METHOD_DEFINITION(PowerDomain, createSensor)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateSensorImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * PowerDomain::setAutoBindMode() method
+ */
+NXSL_METHOD_DEFINITION(PowerDomain, setAutoBindMode)
+{
+   return SetAutoBindModeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * PowerDomain::setAutoBindScript() method
+ */
+NXSL_METHOD_DEFINITION(PowerDomain, setAutoBindScript)
+{
+   return SetAutoBindScriptImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * NXSL class "PowerDomain" constructor
+ */
+NXSL_PowerDomainClass::NXSL_PowerDomainClass() : NXSL_DCTargetClass()
+{
+   setName(_T("PowerDomain"));
+
+   NXSL_REGISTER_METHOD(PowerDomain, createNode, -1);
+   NXSL_REGISTER_METHOD(PowerDomain, createPowerDomain, -1);
+   NXSL_REGISTER_METHOD(PowerDomain, createRack, -1);
+   NXSL_REGISTER_METHOD(PowerDomain, createSensor, -1);
+   NXSL_REGISTER_METHOD(PowerDomain, setAutoBindMode, 2);
+   NXSL_REGISTER_METHOD(PowerDomain, setAutoBindScript, 1);
+}
+
+/**
+ * NXSL class "PowerDomain" attributes
+ */
+NXSL_Value *NXSL_PowerDomainClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto domain = SharedObjectFromData<PowerDomain>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("domainType"))
+   {
+      value = vm->createValue(static_cast<int32_t>(domain->getDomainType()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("domainTypeName"))
+   {
+      value = vm->createValue(PowerDomainTypeName(domain->getDomainType()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("feedTag"))
+   {
+      value = vm->createValue(domain->getFeedTag());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ratedPower"))
+   {
+      value = vm->createValue(domain->getRatedPower());
+   }
+   else
+   {
+      value = getAutoBindAttr(vm, *domain, attr);
+   }
+   return value;
+}
+
+/**
+ * CoolingZone::createCoolingZone() method
+ */
+NXSL_METHOD_DEFINITION(CoolingZone, createCoolingZone)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateCoolingZoneImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * CoolingZone::createNode() method
+ */
+NXSL_METHOD_DEFINITION(CoolingZone, createNode)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateNodeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * CoolingZone::createRack() method
+ */
+NXSL_METHOD_DEFINITION(CoolingZone, createRack)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRackImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * CoolingZone::createSensor() method
+ */
+NXSL_METHOD_DEFINITION(CoolingZone, createSensor)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateSensorImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * CoolingZone::setAutoBindMode() method
+ */
+NXSL_METHOD_DEFINITION(CoolingZone, setAutoBindMode)
+{
+   return SetAutoBindModeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * CoolingZone::setAutoBindScript() method
+ */
+NXSL_METHOD_DEFINITION(CoolingZone, setAutoBindScript)
+{
+   return SetAutoBindScriptImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * NXSL class "CoolingZone" constructor
+ */
+NXSL_CoolingZoneClass::NXSL_CoolingZoneClass() : NXSL_DCTargetClass()
+{
+   setName(_T("CoolingZone"));
+
+   NXSL_REGISTER_METHOD(CoolingZone, createCoolingZone, -1);
+   NXSL_REGISTER_METHOD(CoolingZone, createNode, -1);
+   NXSL_REGISTER_METHOD(CoolingZone, createRack, -1);
+   NXSL_REGISTER_METHOD(CoolingZone, createSensor, -1);
+   NXSL_REGISTER_METHOD(CoolingZone, setAutoBindMode, 2);
+   NXSL_REGISTER_METHOD(CoolingZone, setAutoBindScript, 1);
+}
+
+/**
+ * NXSL class "CoolingZone" attributes
+ */
+NXSL_Value *NXSL_CoolingZoneClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto zone = SharedObjectFromData<CoolingZone>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("ratedCapacity"))
+   {
+      value = vm->createValue(zone->getRatedCapacity());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("zoneType"))
+   {
+      value = vm->createValue(static_cast<int32_t>(zone->getZoneType()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("zoneTypeName"))
+   {
+      value = vm->createValue(CoolingZoneTypeName(zone->getZoneType()));
+   }
+   else
+   {
+      value = getAutoBindAttr(vm, *zone, attr);
    }
    return value;
 }
@@ -5951,6 +6421,16 @@ NXSL_METHOD_DEFINITION(ServiceRoot, createCollector)
 }
 
 /**
+ * ServiceRoot::createFacility() method
+ */
+NXSL_METHOD_DEFINITION(ServiceRoot, createFacility)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateFacilityImpl(object, argc, argv, result, vm);
+}
+
+/**
  * ServiceRoot::createContainer() method
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createContainer)
@@ -5999,6 +6479,7 @@ NXSL_ServiceRootClass::NXSL_ServiceRootClass() : NXSL_NetObjClass()
 
    NXSL_REGISTER_METHOD(ServiceRoot, createCollector, 1);
    NXSL_REGISTER_METHOD(ServiceRoot, createContainer, 1);
+   NXSL_REGISTER_METHOD(ServiceRoot, createFacility, 1);
    NXSL_REGISTER_METHOD(ServiceRoot, createNode, -1);
    NXSL_REGISTER_METHOD(ServiceRoot, createRack, -1);
    NXSL_REGISTER_METHOD(ServiceRoot, createSensor, -1);
@@ -10858,6 +11339,7 @@ NXSL_ClientSessionClass g_nxslClientSessionClass;
 NXSL_ClusterClass g_nxslClusterClass;
 NXSL_CollectorClass g_nxslCollectorClass;
 NXSL_ContainerClass g_nxslContainerClass;
+NXSL_CoolingZoneClass g_nxslCoolingZoneClass;
 NXSL_DataPointClass g_nxslDataPointClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_DCTargetClass g_nxslDCTargetClass;
@@ -10865,6 +11347,7 @@ NXSL_DeploymentPackageClass g_nxslDeploymentPackageClass;
 NXSL_DowntimeInfoClass g_nxslDowntimeInfoClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_HardwareComponent g_nxslHardwareComponent;
+NXSL_FacilityClass g_nxslFacilityClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;
 NXSL_LinkDataSourceClass g_nxslLinkDataSourceClass;
 NXSL_MaintenanceJournalRecordClass g_nxslMaintenanceJournalRecordClass;
@@ -10880,6 +11363,7 @@ NXSL_NodeClass g_nxslNodeClass;
 NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
+NXSL_PowerDomainClass g_nxslPowerDomainClass;
 NXSL_RackClass g_nxslRackClass;
 NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
 NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;

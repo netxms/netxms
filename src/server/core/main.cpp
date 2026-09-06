@@ -1099,6 +1099,9 @@ static void RegenerateMaintenanceModeEvents()
    g_idxNodeById.forEach(regenerate);
    g_idxClusterById.forEach(regenerate);
    g_idxCollectorById.forEach(regenerate);
+   g_idxFacilityById.forEach(regenerate);
+   g_idxPowerDomainById.forEach(regenerate);
+   g_idxCoolingZoneById.forEach(regenerate);
    g_idxMobileDeviceById.forEach(regenerate);
    g_idxAccessPointById.forEach(regenerate);
    g_idxSensorById.forEach(regenerate);

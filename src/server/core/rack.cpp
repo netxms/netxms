@@ -178,6 +178,29 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
+ * Validate binding to given parent. Rack may have at most one cooling zone parent.
+ */
+uint32_t Rack::validateParent(const NetObj& parent) const
+{
+   if (parent.getObjectClass() != OBJECT_COOLINGZONE)
+      return RCC_SUCCESS;
+
+   uint32_t rcc = RCC_SUCCESS;
+   readLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
+   {
+      NetObj *p = getParentList().get(i);
+      if ((p->getObjectClass() == OBJECT_COOLINGZONE) && (p->getId() != parent.getId()))
+      {
+         rcc = RCC_OBJECT_HIERARCHY_VIOLATION;
+         break;
+      }
+   }
+   unlockParentList();
+   return rcc;
+}
+
+/**
  * Post-load hook
  */
 void Rack::postLoad()

@@ -41,8 +41,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -117,7 +117,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 	private void buildFlatView()
 	{
       AbstractObject root = session.findObjectById(rootObjectId);
-      if ((root == null) || !((root instanceof Collector) || (root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster) || (root instanceof Rack) || (root instanceof Chassis)))
+      if ((root == null) || !((root instanceof DataCollectionContainer) || (root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster) || (root instanceof Rack) || (root instanceof Chassis)))
 			return;
 
       List<AbstractObject> objects = new ArrayList<AbstractObject>(
@@ -157,7 +157,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 	private void buildSection(long rootId, String namePrefix)
 	{
 		AbstractObject root = session.findObjectById(rootId);
-      if ((root == null) || !((root instanceof Collector) || (root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster) || (root instanceof Rack) || (root instanceof Chassis)))
+      if ((root == null) || !((root instanceof DataCollectionContainer) || (root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster) || (root instanceof Rack) || (root instanceof Chassis)))
 			return;
 
 		List<AbstractObject> objects = new ArrayList<AbstractObject>(Arrays.asList(root.getChildrenAsArray()));

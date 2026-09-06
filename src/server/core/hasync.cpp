@@ -95,6 +95,9 @@ static int GetClassLoadRank(int objectClass)
       case OBJECT_VPNCONNECTOR: return 14;
       case OBJECT_CLUSTER: return 15;
       case OBJECT_COLLECTOR: return 16;
+      case OBJECT_FACILITY: return 16;
+      case OBJECT_POWERDOMAIN: return 16;
+      case OBJECT_COOLINGZONE: return 16;
       case OBJECT_CIRCUIT: return 17;
       case OBJECT_ASSET: return 18;
       case OBJECT_ASSETGROUP: return 19;
@@ -139,6 +142,9 @@ static shared_ptr<NetObj> CreateObjectInstance(int objectClass)
       case OBJECT_VPNCONNECTOR: return make_shared<VPNConnector>();
       case OBJECT_CLUSTER: return make_shared<Cluster>();
       case OBJECT_COLLECTOR: return make_shared<Collector>();
+      case OBJECT_FACILITY: return make_shared<Facility>();
+      case OBJECT_POWERDOMAIN: return make_shared<PowerDomain>();
+      case OBJECT_COOLINGZONE: return make_shared<CoolingZone>();
       case OBJECT_CIRCUIT: return make_shared<Circuit>();
       case OBJECT_ASSET: return make_shared<Asset>();
       case OBJECT_ASSETGROUP: return make_shared<AssetGroup>();
@@ -175,6 +181,9 @@ static bool IsRelationLoadedByParent(int parentClass)
       case OBJECT_CONTAINER:
       case OBJECT_RACK:
       case OBJECT_COLLECTOR:
+      case OBJECT_FACILITY:
+      case OBJECT_POWERDOMAIN:
+      case OBJECT_COOLINGZONE:
       case OBJECT_CIRCUIT:
       case OBJECT_WIRELESSDOMAIN:
       case OBJECT_TEMPLATEGROUP:
