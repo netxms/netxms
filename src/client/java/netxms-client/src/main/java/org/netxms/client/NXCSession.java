@@ -1600,11 +1600,11 @@ public class NXCSession
 
    /**
     * Parse server address given in "host", "host:port", "[ipv6]", or "[ipv6]:port" format. Unbracketed address containing more
-    * than one colon is interpreted as IPv6 literal without port. Default port (4701) is used if port is not present or cannot be
-    * parsed as valid TCP port number.
+    * than one colon is interpreted as IPv6 literal without port. Default port (4701) is used if port is not present.
     *
     * @param address server address, optionally with TCP port
     * @return unresolved socket address with server host name and TCP port
+    * @throws IllegalArgumentException if port is present but is not a valid TCP port number
     */
    public static InetSocketAddress parseConnectionAddress(String address)
    {
@@ -1645,14 +1645,14 @@ public class NXCSession
       {
          try
          {
-            int n = Integer.parseInt(portText);
-            if ((n > 0) && (n <= 65535))
-               port = n;
+            port = Integer.parseInt(portText);
          }
          catch(NumberFormatException e)
          {
-            // ignore
+            throw new IllegalArgumentException("Invalid port number \"" + portText + "\" in server address \"" + address + "\"");
          }
+         if ((port <= 0) || (port > 65535))
+            throw new IllegalArgumentException("Port number " + port + " out of range (1-65535) in server address \"" + address + "\"");
       }
       return InetSocketAddress.createUnresolved(hostName, port);
    }
