@@ -1606,7 +1606,7 @@ static void CH_MergeFiles(const NXCPMessage& request, NXCPMessage *response, Abs
    ConvertPathToHost(destinationFileName, request.getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
 
    TCHAR *destinationFullPath;
-   if (CheckFullPath(destinationFileName, &destinationFullPath, false))
+   if (CheckFullPath(destinationFileName, &destinationFullPath, false, true))
    {
       size_t size;
       const BYTE *md5 = request.getBinaryFieldPtr(VID_HASH_MD5, &size);
@@ -1623,7 +1623,7 @@ static void CH_MergeFiles(const NXCPMessage& request, NXCPMessage *response, Abs
                _tcslcpy(sourceFileName, partFiles.get(i), MAX_PATH);
                ConvertPathToHost(sourceFileName, request.getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
                TCHAR *sourceFullPath;
-               if (CheckFullPath(sourceFileName, &sourceFullPath, false))
+               if (CheckFullPath(sourceFileName, &sourceFullPath, false, true))
                {
                   if (!MergeFiles(sourceFullPath, destinationFullPath))
                   {
@@ -1647,7 +1647,7 @@ static void CH_MergeFiles(const NXCPMessage& request, NXCPMessage *response, Abs
                   _tcslcpy(sourceFileName, partFiles.get(i), MAX_PATH);
                   ConvertPathToHost(sourceFileName, request.getFieldAsBoolean(VID_ALLOW_PATH_EXPANSION), session->isMasterServer());
                   TCHAR *sourceFullPath;
-                  if (CheckFullPath(sourceFileName, &sourceFullPath, false))
+                  if (CheckFullPath(sourceFileName, &sourceFullPath, false, true))
                   {
                      Delete(sourceFullPath);
                      MemFree(sourceFullPath);
