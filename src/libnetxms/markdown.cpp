@@ -657,7 +657,14 @@ public:
    virtual void linkStart(const char *url, size_t urlLen) override
    {
       m_out.push_back('<');
-      AppendHTMLEscaped(m_out, url, urlLen);
+      // Slack uses | as URL/label separator inside <url|label>, so it must be percent-encoded within the URL
+      for(size_t i = 0; i < urlLen; i++)
+      {
+         if (url[i] == '|')
+            m_out.append("%7C");
+         else
+            AppendHTMLEscaped(m_out, &url[i], 1);
+      }
       m_out.push_back('|');
    }
    virtual void linkEnd(const char *url, size_t urlLen, bool urlSameAsText) override
@@ -1047,6 +1054,51 @@ static void ParseInline(const char *s, size_t len, MarkdownRenderer& renderer)
          renderer.text(&s[textStart], i - textStart);
    };
 
+   // Closer searches are memoized per delimiter type: search start positions only increase within
+   // this call, so a previous result at or beyond the new start is still the first match, and a
+   // previous failure means there is no match now either. This keeps runs of unmatched openers linear.
+   // Cache value: -2 unknown, -1 known not found, >= 0 position of first match from an earlier start
+   ssize_t cacheBoldItalic = -2, cacheBold = -2, cacheItalicStar = -2, cacheItalicUnderscore = -2, cacheStrike = -2, cacheBracket = -2, cacheParen = -2;
+   auto cachedFindSequence = [&] (ssize_t& cache, size_t from, const char *seq, size_t seqLen) -> ssize_t
+   {
+      if ((cache == -1) || ((cache >= 0) && (static_cast<size_t>(cache) >= from)))
+         return cache;
+      cache = FindSequence(s, len, from, seq, seqLen);
+      return cache;
+   };
+   // Closing single asterisk: not part of a double run, not preceded by space
+   auto findItalicStarCloser = [&] (size_t from) -> ssize_t
+   {
+      if ((cacheItalicStar == -1) || ((cacheItalicStar >= 0) && (static_cast<size_t>(cacheItalicStar) >= from)))
+         return cacheItalicStar;
+      cacheItalicStar = -1;
+      for(size_t k = from; k < len; k++)
+      {
+         if ((s[k] == '*') && (s[k - 1] != '*') && (s[k - 1] != ' ') && ((k + 1 >= len) || (s[k + 1] != '*')))
+         {
+            cacheItalicStar = static_cast<ssize_t>(k);
+            break;
+         }
+      }
+      return cacheItalicStar;
+   };
+   // Closing underscore: not preceded by space, at word boundary
+   auto findItalicUnderscoreCloser = [&] (size_t from) -> ssize_t
+   {
+      if ((cacheItalicUnderscore == -1) || ((cacheItalicUnderscore >= 0) && (static_cast<size_t>(cacheItalicUnderscore) >= from)))
+         return cacheItalicUnderscore;
+      cacheItalicUnderscore = -1;
+      for(size_t k = from; k < len; k++)
+      {
+         if ((s[k] == '_') && (s[k - 1] != ' ') && ((k + 1 >= len) || !isalnum(static_cast<unsigned char>(s[k + 1]))))
+         {
+            cacheItalicUnderscore = static_cast<ssize_t>(k);
+            break;
+         }
+      }
+      return cacheItalicUnderscore;
+   };
+
    while(i < len)
    {
       char c = s[i];
@@ -1105,7 +1157,7 @@ static void ParseInline(const char *s, size_t len, MarkdownRenderer& renderer)
       {
          if ((i + 2 < len) && (s[i + 1] == '*') && (s[i + 2] == '*'))
          {
-            ssize_t j = FindSequence(s, len, i + 3, "***", 3);
+            ssize_t j = cachedFindSequence(cacheBoldItalic, i + 3, "***", 3);
             if (j > static_cast<ssize_t>(i + 3))
             {
                flushText();
@@ -1122,7 +1174,7 @@ static void ParseInline(const char *s, size_t len, MarkdownRenderer& renderer)
          }
          if ((i + 1 < len) && (s[i + 1] == '*'))
          {
-            ssize_t j = FindSequence(s, len, i + 2, "**", 2);
+            ssize_t j = cachedFindSequence(cacheBold, i + 2, "**", 2);
             if ((j > static_cast<ssize_t>(i + 2)))
             {
                flushText();
@@ -1138,16 +1190,7 @@ static void ParseInline(const char *s, size_t len, MarkdownRenderer& renderer)
          }
          if ((i + 1 < len) && (s[i + 1] != ' ') && (s[i + 1] != '*'))
          {
-            // Find closing single asterisk (not part of a double run, not preceded by space)
-            ssize_t j = -1;
-            for(size_t k = i + 2; k < len; k++)
-            {
-               if ((s[k] == '*') && (s[k - 1] != '*') && (s[k - 1] != ' ') && ((k + 1 >= len) || (s[k + 1] != '*')))
-               {
-                  j = static_cast<ssize_t>(k);
-                  break;
-               }
-            }
+            ssize_t j = findItalicStarCloser(i + 2);
             if (j > 0)
             {
                flushText();
@@ -1170,15 +1213,7 @@ static void ParseInline(const char *s, size_t len, MarkdownRenderer& renderer)
                             (i + 1 < len) && (s[i + 1] != ' ') && (s[i + 1] != '_');
          if (openerValid)
          {
-            ssize_t j = -1;
-            for(size_t k = i + 2; k < len; k++)
-            {
-               if ((s[k] == '_') && (s[k - 1] != ' ') && ((k + 1 >= len) || !isalnum(static_cast<unsigned char>(s[k + 1]))))
-               {
-                  j = static_cast<ssize_t>(k);
-                  break;
-               }
-            }
+            ssize_t j = findItalicUnderscoreCloser(i + 2);
             if (j > 0)
             {
                flushText();
@@ -1197,7 +1232,7 @@ static void ParseInline(const char *s, size_t len, MarkdownRenderer& renderer)
       // Strikethrough
       if ((c == '~') && (i + 1 < len) && (s[i + 1] == '~'))
       {
-         ssize_t j = FindSequence(s, len, i + 2, "~~", 2);
+         ssize_t j = cachedFindSequence(cacheStrike, i + 2, "~~", 2);
          if (j > static_cast<ssize_t>(i + 2))
          {
             flushText();
@@ -1245,10 +1280,10 @@ static void ParseInline(const char *s, size_t len, MarkdownRenderer& renderer)
       // Link [text](url)
       if (c == '[')
       {
-         ssize_t closeBracket = FindSequence(s, len, i + 1, "]", 1);
+         ssize_t closeBracket = cachedFindSequence(cacheBracket, i + 1, "]", 1);
          if ((closeBracket > 0) && (static_cast<size_t>(closeBracket) + 1 < len) && (s[closeBracket + 1] == '('))
          {
-            ssize_t closeParen = FindSequence(s, len, closeBracket + 2, ")", 1);
+            ssize_t closeParen = cachedFindSequence(cacheParen, closeBracket + 2, ")", 1);
             if (closeParen > 0)
             {
                flushText();
@@ -1549,14 +1584,15 @@ void MarkdownParser::processLine(const char *line, size_t len)
       size_t run = 0;
       while((run < rem) && (p[run] == *p))
          run++;
-      if (run >= 3)
+      // Info string of a backtick fence may not contain backticks (line like ```cmd``` failed is a paragraph with code span)
+      if ((run >= 3) && ((*p != '`') || (memchr(&p[run], '`', rem - run) == nullptr)))
       {
          // Language identifier follows the fence
          size_t langStart = run;
          while((langStart < rem) && (p[langStart] == ' '))
             langStart++;
          size_t langEnd = langStart;
-         while((langEnd < rem) && (p[langEnd] != ' ') && (p[langEnd] != '`'))
+         while((langEnd < rem) && (p[langEnd] != ' '))
             langEnd++;
          closeAllBlocks();
          m_renderer.codeBlockStart(&p[langStart], langEnd - langStart);

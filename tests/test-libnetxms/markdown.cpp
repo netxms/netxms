@@ -120,6 +120,14 @@ void TestMarkdown()
    CheckGeneric("See [docs](https://netxms.org) now", "<p>See <a href=\"https://netxms.org\">docs</a> now</p>");
    CheckSlack("See [docs](https://netxms.org) now", "See <https://netxms.org|docs> now");
    CheckPlain("[https://netxms.org](https://netxms.org)", "https://netxms.org");
+   // Slack uses | as URL/label separator, so it must be percent-encoded inside the URL
+   CheckSlack("[label](https://a.example/x|y)", "<https://a.example/x%7Cy|label>");
+   EndTest();
+
+   StartTest(_T("Markdown - HTML attribute escaping"));
+   CheckGeneric("[x](https://a.example/?q=\"><b>y)", "<p><a href=\"https://a.example/?q=&quot;&gt;&lt;b&gt;y\">x</a></p>");
+   CheckTelegram("[x](https://a.example/?a=1&b=2)", "<a href=\"https://a.example/?a=1&amp;b=2\">x</a>");
+   CheckGeneric("```js\"><b>\ncode\n```", "<pre><code class=\"language-js&quot;&gt;&lt;b&gt;\">code\n</code></pre>");
    EndTest();
 
    StartTest(_T("Markdown - autolinks"));
@@ -189,6 +197,12 @@ void TestMarkdown()
    CheckGeneric("```json\n{ \"a\": 1 }\n```", "<pre><code class=\"language-json\">{ \"a\": 1 }\n</code></pre>");
    CheckTelegram("```\n**not bold**\n```", "<pre>**not bold**</pre>");
    CheckPlain("```\ndangling", "dangling");
+   // Only first word of info string is the language; remaining text is ignored
+   CheckGeneric("```json extra text\n{}\n```", "<pre><code class=\"language-json\">{}\n</code></pre>");
+   // Backtick fence info string may not contain backticks - such line is a paragraph with code span, not a fence
+   CheckGeneric("```exec_command``` failed\nnext line", "<p><code>exec_command</code> failed<br/>\nnext line</p>");
+   CheckPlain("```exec_command``` failed\nnext line", "exec_command failed\nnext line");
+   CheckGeneric("~~~js`x\ncode\n~~~", "<pre><code class=\"language-js`x\">code\n</code></pre>");
    EndTest();
 
    StartTest(_T("Markdown - blockquotes"));
@@ -362,5 +376,28 @@ void TestMarkdown()
    CheckEscapeAndRoundTrip("1. not a list item", "1\\. not a list item");
    CheckEscapeAndRoundTrip("| not | a table |", "\\| not | a table |");
    CheckEscapeAndRoundTrip("Reboot in 5 minutes. Node 1. is down", "Reboot in 5 minutes. Node 1. is down");
+   EndTest();
+
+   StartTest(_T("Markdown - pathological nesting"));
+   // Inline parser recurses into span content; same-family delimiters cannot nest because the outer span
+   // always ends at the first closer, so recursion depth stays bounded regardless of input length
+   static const char *patterns[] = { "*a ", "**a ", "_a ", "~~a ", "[a ", "*a _b ", "*a **b ", "_a ~~b ", nullptr };
+   for(int i = 0; patterns[i] != nullptr; i++)
+   {
+      StringBuffer input;
+      for(int j = 0; j < 50000; j++)
+         input.appendUtf8String(patterns[i]);
+      for(int j = 0; j < 50000; j++)
+         input.appendUtf8String("z](u)");
+      char *utf8 = input.getUTF8String();
+      char *r = MarkdownToHTML(utf8, MarkdownHTMLDialect::GENERIC);
+      AssertNotNull(r);
+      MemFree(r);
+      r = MarkdownToSlackText(utf8);
+      AssertNotNull(r);
+      MemFree(r);
+      MemFree(utf8);
+   }
+   CheckGeneric("[[[[a](u1)](u2)](u3)](u4)", "<p><a href=\"u1\">[[[a</a>](u2)](u3)](u4)</p>");
    EndTest();
 }
