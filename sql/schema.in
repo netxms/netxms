@@ -3583,6 +3583,8 @@ CREATE TABLE ai_operator_instances
    memento SQL_TEXT null,
    observation_retention_days integer not null,
    observation_max_records integer not null,
+   instructions SQL_TEXT null,
+   instructions_locked char(1) not null,
    last_execution_time integer not null,
    next_execution_time integer not null,
    iteration integer not null,
@@ -3590,6 +3592,52 @@ CREATE TABLE ai_operator_instances
    modified integer not null,
    PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+/**
+ * AI operator standing checks - NXSL scripts run by the scheduler without LLM involvement
+ */
+CREATE TABLE ai_operator_checks
+(
+   id integer not null,
+   instance_id integer not null,
+   name varchar(63) not null,
+   description varchar(255) null,
+   enabled char(1) not null,
+   locked char(1) not null,
+   created_by char(1) not null, // M=model, H=human
+   source SQL_TEXT null,
+   check_interval integer not null,
+   object_id integer not null,
+   check_action char(1) not null, // W=wake, O=observe
+   cooldown integer not null,
+   renotify_interval integer not null,
+   last_run integer not null,
+   last_verdict char(1) not null, // N=never run, Q=quiet, F=fired, E=error
+   last_fire integer not null,
+   last_payload SQL_TEXT null,
+   consecutive_errors integer not null,
+   run_count integer not null,
+   created integer not null,
+   modified integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_op_checks_instance_id ON ai_operator_checks(instance_id);
+
+/**
+ * AI operator standing instructions history
+ */
+CREATE TABLE ai_operator_instr_history
+(
+   record_id SQL_INT64 not null,
+   instance_id integer not null,
+   iteration integer not null,
+   change_timestamp integer not null,
+   previous_text SQL_TEXT null,
+   PRIMARY KEY(record_id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_ai_op_instr_hist_instance_id ON ai_operator_instr_history(instance_id);
 
 /**
  * AI operator observations
@@ -3637,7 +3685,7 @@ CREATE TABLE ai_operator_execution_log
 #endif
    instance_id integer not null,
    instance_name varchar(63) null,
-   status char(1) not null, // C=completed, F=failed, S=skipped
+   status char(1) not null, // C=completed, F=failed, S=skipped, K=check fired, E=check error
    iteration integer not null,
    duration_ms integer not null,
    input_tokens integer not null,

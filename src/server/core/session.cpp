@@ -2227,6 +2227,18 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_SET_AI_OBSERVATION_STATE:
          setAiObservationState(*request);
          break;
+      case CMD_GET_AI_OPERATOR_CHECKS:
+         getAiOperatorChecks(*request);
+         break;
+      case CMD_MODIFY_AI_OPERATOR_CHECK:
+         modifyAiOperatorCheck(*request);
+         break;
+      case CMD_DELETE_AI_OPERATOR_CHECK:
+         deleteAiOperatorCheck(*request);
+         break;
+      case CMD_GET_AI_OPERATOR_INSTR_HISTORY:
+         getAiOperatorInstructionsHistory(*request);
+         break;
       case CMD_GET_CLOUD_CONNECTOR_NAMES:
          getCloudConnectorNames(*request);
          break;
@@ -20817,6 +20829,8 @@ void ClientSession::getAiOperators(const NXCPMessage& request)
  * VID_PROMPT           Persona prompt (optional)
  * VID_RETENTION_TIME   Observation retention days, 0 = server default (optional)
  * VID_MAX_RECORDS      Observation record cap, 0 = server default (optional)
+ * VID_INSTRUCTIONS     Standing instructions (optional)
+ * VID_LOCKED           Standing instructions lock flag (optional)
  *
  * Return values:
  * VID_RCC              Request completion code
@@ -20836,6 +20850,7 @@ void ClientSession::modifyAiOperator(const NXCPMessage& request)
          { VID_FILTER, "scopeFilter" },
          { VID_AI_MODEL_SLOT, "modelSlot" },
          { VID_PROMPT, "personaPrompt" },
+         { VID_INSTRUCTIONS, "instructions" },
          { 0, nullptr }
       };
       for(int i = 0; stringFields[i].tag != nullptr; i++)
@@ -20850,6 +20865,8 @@ void ClientSession::modifyAiOperator(const NXCPMessage& request)
 
       if (request.isFieldExist(VID_ENABLED))
          json_object_set_new(config, "enabled", json_boolean(request.getFieldAsBoolean(VID_ENABLED)));
+      if (request.isFieldExist(VID_LOCKED))
+         json_object_set_new(config, "instructionsLocked", json_boolean(request.getFieldAsBoolean(VID_LOCKED)));
       if (request.isFieldExist(VID_MIN_INTERVAL))
          json_object_set_new(config, "minInterval", json_integer(request.getFieldAsUInt32(VID_MIN_INTERVAL)));
       if (request.isFieldExist(VID_MAX_INTERVAL))
@@ -20969,6 +20986,183 @@ void ClientSession::setAiObservationState(const NXCPMessage& request)
    else
    {
       response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Get standing checks of AI operator instance
+ *
+ * Called by:
+ * CMD_GET_AI_OPERATOR_CHECKS
+ *
+ * Expected input parameters:
+ * VID_AI_OPERATOR_ID   Instance ID
+ */
+void ClientSession::getAiOperatorChecks(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      response.setField(VID_RCC, FillAIOperatorCheckListMessage(request.getFieldAsUInt32(VID_AI_OPERATOR_ID), &response));
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Create or modify standing check of AI operator instance
+ *
+ * Called by:
+ * CMD_MODIFY_AI_OPERATOR_CHECK
+ *
+ * Expected input parameters:
+ * VID_AI_OPERATOR_ID     Instance ID
+ * VID_CHECK_ID           Check ID (0 to create new check)
+ * VID_NAME               Check name (optional on modify)
+ * VID_DESCRIPTION        Description (optional)
+ * VID_ENABLED            Enable flag (optional)
+ * VID_LOCKED             Lock flag (optional)
+ * VID_SCRIPT             NXSL source (optional on modify)
+ * VID_POLLING_INTERVAL   Run interval in seconds (optional)
+ * VID_OBJECT_ID          Bound object ID, 0 = none (optional)
+ * VID_ACTION_TYPE        Action: 0 = wake, 1 = observe (optional)
+ * VID_COOLDOWN           Cooldown in seconds (optional)
+ * VID_RENOTIFY_INTERVAL  Renotify interval in seconds (optional)
+ *
+ * Return values:
+ * VID_RCC                Request completion code
+ * VID_CHECK_ID           Check ID (on success)
+ * VID_ERROR_TEXT         Diagnostic message (on validation or compilation failure)
+ */
+void ClientSession::modifyAiOperatorCheck(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t instanceId = request.getFieldAsUInt32(VID_AI_OPERATOR_ID);
+   uint32_t checkId = request.getFieldAsUInt32(VID_CHECK_ID);
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      json_t *config = json_object();
+
+      static const struct { uint32_t fieldId; const char *tag; } stringFields[] =
+      {
+         { VID_NAME, "name" },
+         { VID_DESCRIPTION, "description" },
+         { VID_SCRIPT, "source" },
+         { 0, nullptr }
+      };
+      for(int i = 0; stringFields[i].tag != nullptr; i++)
+      {
+         if (request.isFieldExist(stringFields[i].fieldId))
+         {
+            char *value = request.getFieldAsUtf8String(stringFields[i].fieldId);
+            json_object_set_new(config, stringFields[i].tag, json_string(CHECK_NULL_EX_A(value)));
+            MemFree(value);
+         }
+      }
+
+      static const struct { uint32_t fieldId; const char *tag; } integerFields[] =
+      {
+         { VID_POLLING_INTERVAL, "interval" },
+         { VID_OBJECT_ID, "objectId" },
+         { VID_ACTION_TYPE, "action" },
+         { VID_COOLDOWN, "cooldown" },
+         { VID_RENOTIFY_INTERVAL, "renotifyInterval" },
+         { 0, nullptr }
+      };
+      for(int i = 0; integerFields[i].tag != nullptr; i++)
+      {
+         if (request.isFieldExist(integerFields[i].fieldId))
+            json_object_set_new(config, integerFields[i].tag, json_integer(request.getFieldAsUInt32(integerFields[i].fieldId)));
+      }
+
+      if (request.isFieldExist(VID_ENABLED))
+         json_object_set_new(config, "enabled", json_boolean(request.getFieldAsBoolean(VID_ENABLED)));
+      if (request.isFieldExist(VID_LOCKED))
+         json_object_set_new(config, "locked", json_boolean(request.getFieldAsBoolean(VID_LOCKED)));
+
+      bool create = (checkId == 0);
+      MutableString errorText;
+      uint32_t rcc = create ?
+         CreateAIOperatorCheck(instanceId, config, false, &checkId, &errorText) :
+         ModifyAIOperatorCheck(instanceId, checkId, config, false, &errorText);
+      json_decref(config);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+      {
+         response.setField(VID_CHECK_ID, checkId);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Standing check [%u] of AI operator instance [%u] %s", checkId, instanceId, create ? L"created" : L"modified");
+      }
+      else if (!errorText.isEmpty())
+      {
+         response.setField(VID_ERROR_TEXT, errorText);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on changing standing check of AI operator instance [%u]", instanceId);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Delete standing check of AI operator instance
+ *
+ * Called by:
+ * CMD_DELETE_AI_OPERATOR_CHECK
+ *
+ * Expected input parameters:
+ * VID_AI_OPERATOR_ID   Instance ID
+ * VID_CHECK_ID         Check ID
+ */
+void ClientSession::deleteAiOperatorCheck(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t instanceId = request.getFieldAsUInt32(VID_AI_OPERATOR_ID);
+   uint32_t checkId = request.getFieldAsUInt32(VID_CHECK_ID);
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      uint32_t rcc = DeleteAIOperatorCheck(instanceId, checkId, false);
+      response.setField(VID_RCC, rcc);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Standing check [%u] of AI operator instance [%u] deleted", checkId, instanceId);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting standing check [%u] of AI operator instance [%u]", checkId, instanceId);
+   }
+   sendMessage(response);
+}
+
+/**
+ * Get standing instructions history of AI operator instance
+ *
+ * Called by:
+ * CMD_GET_AI_OPERATOR_INSTR_HISTORY
+ *
+ * Expected input parameters:
+ * VID_AI_OPERATOR_ID   Instance ID
+ *
+ * Return values:
+ * VID_RCC              Request completion code
+ * VID_NUM_ELEMENTS     Number of history records
+ * Records starting at VID_ELEMENT_LIST_BASE with stride 10: record ID, iteration, timestamp, previous text
+ */
+void ClientSession::getAiOperatorInstructionsHistory(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      response.setField(VID_RCC, FillAIOperatorInstructionsHistoryMessage(request.getFieldAsUInt32(VID_AI_OPERATOR_ID), &response));
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
    sendMessage(response);
 }

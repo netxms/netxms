@@ -1009,6 +1009,10 @@ private:
    void deleteAiOperator(const NXCPMessage& request);
    void resetAiOperator(const NXCPMessage& request);
    void setAiObservationState(const NXCPMessage& request);
+   void getAiOperatorChecks(const NXCPMessage& request);
+   void modifyAiOperatorCheck(const NXCPMessage& request);
+   void deleteAiOperatorCheck(const NXCPMessage& request);
+   void getAiOperatorInstructionsHistory(const NXCPMessage& request);
    void getSmclpProperties(const NXCPMessage& request);
    void getInterfaceTrafficDcis(const NXCPMessage& request);
    void autoConnectNetworkMapNodes(const NXCPMessage& request);

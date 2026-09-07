@@ -758,6 +758,10 @@ __PACK_END__
 #define CMD_DELETE_CHAT_BOT               0x0228
 #define CMD_RENAME_CHAT_BOT               0x0229
 #define CMD_GET_CHAT_BOT_DRIVERS          0x022A
+#define CMD_GET_AI_OPERATOR_CHECKS        0x022B
+#define CMD_MODIFY_AI_OPERATOR_CHECK      0x022C
+#define CMD_DELETE_AI_OPERATOR_CHECK      0x022D
+#define CMD_GET_AI_OPERATOR_INSTR_HISTORY 0x022E
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1813,6 +1817,10 @@ __PACK_END__
 #define VID_RATED_POWER             ((uint32_t)1038)
 #define VID_ZONE_TYPE               ((uint32_t)1039)
 #define VID_RATED_CAPACITY          ((uint32_t)1040)
+#define VID_LOCKED                  ((uint32_t)1041)
+#define VID_COOLDOWN                ((uint32_t)1042)
+#define VID_RENOTIFY_INTERVAL       ((uint32_t)1043)
+#define VID_INSTRUCTIONS            ((uint32_t)1044)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

@@ -322,6 +322,10 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
                return i18n.tr("Failed");
             if ("S".equals(value))
                return i18n.tr("Skipped");
+            if ("K".equals(value))
+               return i18n.tr("Check fired");
+            if ("E".equals(value))
+               return i18n.tr("Check error");
             return value;
          case LogColumn.LC_OBSERVATION_STATE:
             try

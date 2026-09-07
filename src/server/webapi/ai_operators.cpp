@@ -181,6 +181,193 @@ int H_AiOperatorResetMemento(Context *context)
 }
 
 /**
+ * Map RCC from standing check management functions to HTTP status code
+ */
+static int MapAICheckRCC(Context *context, uint32_t rcc, const MutableString& errorText)
+{
+   char *text = UTF8StringFromWideString(errorText);
+   int status;
+   switch(rcc)
+   {
+      case RCC_SUCCESS:
+         status = 200;
+         break;
+      case RCC_INVALID_TASK_ID:
+         context->setErrorResponse("AI operator instance not found");
+         status = 404;
+         break;
+      case RCC_NO_SUCH_RECORD:
+         context->setErrorResponse("Standing check not found");
+         status = 404;
+         break;
+      case RCC_RESOURCE_NOT_AVAILABLE:
+         context->setErrorResponse((*text != 0) ? text : "Check limit reached");
+         status = 409;
+         break;
+      case RCC_NXSL_COMPILATION_ERROR:
+         context->setErrorResponse(std::string("Script compilation error: ").append(text).c_str());
+         status = 400;
+         break;
+      case RCC_INVALID_ARGUMENT:
+         context->setErrorResponse((*text != 0) ? std::string("Invalid configuration: ").append(text).c_str() : "Invalid configuration");
+         status = 400;
+         break;
+      default:
+         context->setErrorResponse("Internal server error");
+         status = 500;
+         break;
+   }
+   MemFree(text);
+   return status;
+}
+
+/**
+ * Handler for GET /v1/ai/operators/:operator-id/checks - list standing checks of AI operator instance
+ */
+int H_AiOperatorChecks(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+      return 403;
+
+   json_t *output = GetAIOperatorChecksAsJson(context->getPlaceholderValueAsUInt32(L"operator-id"));
+   if (output == nullptr)
+   {
+      context->setErrorResponse("AI operator instance not found");
+      return 404;
+   }
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for POST /v1/ai/operators/:operator-id/checks - create standing check
+ */
+int H_AiOperatorCheckCreate(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+      return 403;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Request body is required");
+      return 400;
+   }
+
+   uint32_t instanceId = context->getPlaceholderValueAsUInt32(L"operator-id");
+   uint32_t checkId;
+   MutableString errorText;
+   uint32_t rcc = CreateAIOperatorCheck(instanceId, request, false, &checkId, &errorText);
+   if (rcc != RCC_SUCCESS)
+      return MapAICheckRCC(context, rcc, errorText);
+
+   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Standing check [%u] of AI operator instance [%u] created", checkId, instanceId);
+
+   shared_ptr<AIOperatorCheck> check = GetAIOperatorCheck(instanceId, checkId);
+   if (check == nullptr)   // deleted concurrently
+      return 201;
+   json_t *output = check->toJson();
+   context->setResponseData(output);
+   json_decref(output);
+   return 201;
+}
+
+/**
+ * Handler for GET /v1/ai/operators/:operator-id/checks/:check-id - get standing check details
+ */
+int H_AiOperatorCheckDetails(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+      return 403;
+
+   shared_ptr<AIOperatorCheck> check = GetAIOperatorCheck(context->getPlaceholderValueAsUInt32(L"operator-id"), context->getPlaceholderValueAsUInt32(L"check-id"));
+   if (check == nullptr)
+   {
+      context->setErrorResponse("Standing check not found");
+      return 404;
+   }
+
+   json_t *output = check->toJson();
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for PATCH /v1/ai/operators/:operator-id/checks/:check-id - modify standing check (partial update)
+ */
+int H_AiOperatorCheckUpdate(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+      return 403;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Request body is required");
+      return 400;
+   }
+
+   uint32_t instanceId = context->getPlaceholderValueAsUInt32(L"operator-id");
+   uint32_t checkId = context->getPlaceholderValueAsUInt32(L"check-id");
+   MutableString errorText;
+   uint32_t rcc = ModifyAIOperatorCheck(instanceId, checkId, request, false, &errorText);
+   if (rcc != RCC_SUCCESS)
+      return MapAICheckRCC(context, rcc, errorText);
+
+   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Standing check [%u] of AI operator instance [%u] modified", checkId, instanceId);
+
+   shared_ptr<AIOperatorCheck> check = GetAIOperatorCheck(instanceId, checkId);
+   if (check == nullptr)   // deleted concurrently
+   {
+      context->setErrorResponse("Standing check not found");
+      return 404;
+   }
+   json_t *output = check->toJson();
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for DELETE /v1/ai/operators/:operator-id/checks/:check-id - delete standing check
+ */
+int H_AiOperatorCheckDelete(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+      return 403;
+
+   uint32_t instanceId = context->getPlaceholderValueAsUInt32(L"operator-id");
+   uint32_t checkId = context->getPlaceholderValueAsUInt32(L"check-id");
+   uint32_t rcc = DeleteAIOperatorCheck(instanceId, checkId, false);
+   if (rcc != RCC_SUCCESS)
+      return MapAICheckRCC(context, rcc, MutableString());
+
+   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Standing check [%u] of AI operator instance [%u] deleted", checkId, instanceId);
+   return 204;
+}
+
+/**
+ * Handler for GET /v1/ai/operators/:operator-id/instructions-history - standing instructions history
+ */
+int H_AiOperatorInstructionsHistory(Context *context)
+{
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+      return 403;
+
+   json_t *output = GetAIOperatorInstructionsHistoryAsJson(context->getPlaceholderValueAsUInt32(L"operator-id"));
+   if (output == nullptr)
+   {
+      context->setErrorResponse("AI operator instance not found");
+      return 404;
+   }
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
  * Observation state code to symbolic name
  */
 static const char *ObservationStateName(int state)

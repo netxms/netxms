@@ -25,7 +25,8 @@ import org.netxms.base.NXCPMessage;
 /**
  * AI operator instance - perpetual adaptive monitoring loop. Configuration fields have setters
  * and can be changed by the client; adaptive state fields (current focus, watch list, memento)
- * are managed by the operator itself and are read-only.
+ * are managed by the operator itself and are read-only. Standing instructions are written by the
+ * operator itself but can be edited or locked by an administrator.
  */
 public class AiOperator
 {
@@ -47,6 +48,8 @@ public class AiOperator
    private String memento;
    private int observationRetentionDays;
    private int observationMaxRecords;
+   private String instructions;
+   private boolean instructionsLocked;
    private Date lastExecutionTime;
    private Date nextExecutionTime;
    private int iteration;
@@ -80,6 +83,8 @@ public class AiOperator
       memento = "";
       observationRetentionDays = 0;
       observationMaxRecords = 0;
+      instructions = "";
+      instructionsLocked = false;
       lastExecutionTime = null;
       nextExecutionTime = null;
       iteration = 0;
@@ -122,6 +127,8 @@ public class AiOperator
       lastExplanation = msg.getFieldAsString(baseId + 22);
       creationTime = msg.getFieldAsDate(baseId + 23);
       modificationTime = msg.getFieldAsDate(baseId + 24);
+      instructions = msg.getFieldAsString(baseId + 25);
+      instructionsLocked = msg.getFieldAsBoolean(baseId + 26);
    }
 
    /**
@@ -143,6 +150,8 @@ public class AiOperator
       msg.setField(NXCPCodes.VID_PROMPT, personaPrompt);
       msg.setFieldInt32(NXCPCodes.VID_RETENTION_TIME, observationRetentionDays);
       msg.setFieldInt32(NXCPCodes.VID_MAX_RECORDS, observationMaxRecords);
+      msg.setField(NXCPCodes.VID_INSTRUCTIONS, instructions);
+      msg.setField(NXCPCodes.VID_LOCKED, instructionsLocked);
    }
 
    /**
@@ -431,5 +440,37 @@ public class AiOperator
    public Date getModificationTime()
    {
       return modificationTime;
+   }
+
+   /**
+    * @return standing instructions authored by the operator itself
+    */
+   public String getInstructions()
+   {
+      return instructions;
+   }
+
+   /**
+    * @param instructions standing instructions to set (empty string clears)
+    */
+   public void setInstructions(String instructions)
+   {
+      this.instructions = instructions;
+   }
+
+   /**
+    * @return true if standing instructions are locked against updates by the operator
+    */
+   public boolean isInstructionsLocked()
+   {
+      return instructionsLocked;
+   }
+
+   /**
+    * @param instructionsLocked true to lock standing instructions against updates by the operator
+    */
+   public void setInstructionsLocked(boolean instructionsLocked)
+   {
+      this.instructionsLocked = instructionsLocked;
    }
 }

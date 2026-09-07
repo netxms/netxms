@@ -569,6 +569,10 @@ public class NXCPCodes
    public static final int CMD_DELETE_CHAT_BOT = 0x0228;
    public static final int CMD_RENAME_CHAT_BOT = 0x0229;
    public static final int CMD_GET_CHAT_BOT_DRIVERS = 0x022A;
+   public static final int CMD_GET_AI_OPERATOR_CHECKS = 0x022B;
+   public static final int CMD_MODIFY_AI_OPERATOR_CHECK = 0x022C;
+   public static final int CMD_DELETE_AI_OPERATOR_CHECK = 0x022D;
+   public static final int CMD_GET_AI_OPERATOR_INSTR_HISTORY = 0x022E;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1616,6 +1620,10 @@ public class NXCPCodes
    public static final long VID_RATED_POWER = 1038;
    public static final long VID_ZONE_TYPE = 1039;
    public static final long VID_RATED_CAPACITY = 1040;
+   public static final long VID_LOCKED = 1041;
+   public static final long VID_COOLDOWN = 1042;
+   public static final long VID_RENOTIFY_INTERVAL = 1043;
+   public static final long VID_INSTRUCTIONS = 1044;
 
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_SNMP_AGENT_LIST_BASE = 0x79000000L;

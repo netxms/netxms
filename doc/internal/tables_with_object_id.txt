@@ -46,3 +46,5 @@ slm_service_history			service_id
 job_history						node_id
 reports							id
 report_results					report_id
+ai_operator_checks			object_id
+ai_operator_observations	object_id

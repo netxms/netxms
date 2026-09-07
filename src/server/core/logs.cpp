@@ -30,7 +30,8 @@ static NXCORE_LOG s_logs[] =
 {
    { L"AIOperatorExecutionLog", L"ai_operator_execution_log", L"record_id", nullptr, SYSTEM_ACCESS_VIEW_EVENT_LOG,
       "AI operator execution log. Tracks AI operator instance executions (monitoring iterations) including instance name, "
-      "status (completed, failed, skipped), iteration number, duration, token usage, and explanation of results or errors.",
+      "status (completed, failed, skipped, check fired, check error), iteration number, duration, token usage, and explanation of results or errors. "
+      "Standing check runs are logged only when a check fires or fails.",
       {
          { L"record_id", L"Record ID", LC_INTEGER, LCF_RECORD_ID },
          { L"execution_timestamp", L"Timestamp", LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },

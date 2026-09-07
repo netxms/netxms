@@ -24,6 +24,72 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.34 to 70.35
+ */
+static bool H_UpgradeFromV34()
+{
+   CHK_EXEC(SQLQuery(L"ALTER TABLE ai_operator_instances ADD instructions $SQL:TEXT null"));
+   CHK_EXEC(SQLQuery(L"ALTER TABLE ai_operator_instances ADD instructions_locked char(1)"));
+   CHK_EXEC(SQLQuery(L"UPDATE ai_operator_instances SET instructions_locked='0'"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"ai_operator_instances", L"instructions_locked"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE ai_operator_checks ("
+      L"   id integer not null,"
+      L"   instance_id integer not null,"
+      L"   name varchar(63) not null,"
+      L"   description varchar(255) null,"
+      L"   enabled char(1) not null,"
+      L"   locked char(1) not null,"
+      L"   created_by char(1) not null,"
+      L"   source $SQL:TEXT null,"
+      L"   check_interval integer not null,"
+      L"   object_id integer not null,"
+      L"   check_action char(1) not null,"
+      L"   cooldown integer not null,"
+      L"   renotify_interval integer not null,"
+      L"   last_run integer not null,"
+      L"   last_verdict char(1) not null,"
+      L"   last_fire integer not null,"
+      L"   last_payload $SQL:TEXT null,"
+      L"   consecutive_errors integer not null,"
+      L"   run_count integer not null,"
+      L"   created integer not null,"
+      L"   modified integer not null,"
+      L"   PRIMARY KEY(id))"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_checks_instance_id ON ai_operator_checks(instance_id)"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE ai_operator_instr_history ("
+      L"   record_id $SQL:INT64 not null,"
+      L"   instance_id integer not null,"
+      L"   iteration integer not null,"
+      L"   change_timestamp integer not null,"
+      L"   previous_text $SQL:TEXT null,"
+      L"   PRIMARY KEY(record_id))"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_instr_hist_instance_id ON ai_operator_instr_history(instance_id)"));
+
+   CHK_EXEC(CreateConfigParam(L"AIOperator.Checks.ExecutionTimeLimit", L"10",
+      L"Maximum execution time for a single run of an AI operator standing check script.",
+      L"seconds", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AIOperator.Checks.MaxConsecutiveErrors", L"5",
+      L"Number of consecutive script errors after which an AI operator standing check is automatically disabled.",
+      nullptr, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AIOperator.Checks.MaxPerInstance", L"32",
+      L"Maximum number of standing checks per AI operator instance.",
+      nullptr, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AIOperator.Instructions.HistoryDepth", L"20",
+      L"Number of standing instructions history records kept per AI operator instance.",
+      nullptr, 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AIOperator.Instructions.MaxSize", L"8192",
+      L"Maximum size of AI operator standing instructions text. Longer text returned by the model is truncated.",
+      L"characters", 'I', true, false, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(35));
+   return true;
+}
+
+/**
  * Upgrade from 70.33 to 70.34
  */
 static bool H_UpgradeFromV33()
@@ -1057,6 +1123,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 34, 70, 35, H_UpgradeFromV34 },
    { 33, 70, 34, H_UpgradeFromV33 },
    { 32, 70, 33, H_UpgradeFromV32 },
    { 31, 70, 32, H_UpgradeFromV31 },

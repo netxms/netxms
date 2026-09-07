@@ -1058,14 +1058,213 @@ paths:
         - BearerAuth: []
       tags:
         - AI Operators
+  /v1/ai/operators/{operator-id}/checks:
+    get:
+      operationId: listAiOperatorChecks
+      summary: List standing checks of AI operator instance
+      description: >-
+        Retrieve all standing checks owned by the instance. A standing check is
+        an NXSL script the server runs on schedule without LLM involvement;
+        checks are authored by the operator itself or by administrators.
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of standing checks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiOperatorCheck'
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+    post:
+      operationId: createAiOperatorCheck
+      summary: Create standing check
+      description: >-
+        Create a standing check for the instance. The source is compiled before
+        the check is stored; a compilation error is reported with status 400.
+        Creation is refused with status 409 when the per-instance check limit
+        (AIOperator.Checks.MaxPerInstance) is reached.
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiOperatorCheckConfig'
+      responses:
+        '201':
+          description: Check created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiOperatorCheck'
+        '400':
+          description: Invalid configuration or script compilation error
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance not found
+        '409':
+          description: Check limit reached
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+  /v1/ai/operators/{operator-id}/checks/{check-id}:
+    get:
+      operationId: getAiOperatorCheck
+      summary: Get standing check details
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: check-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Check details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiOperatorCheck'
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance or check not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+    patch:
+      operationId: updateAiOperatorCheck
+      summary: Modify standing check
+      description: >-
+        Partial update of a standing check. Only fields present in the request
+        are changed; a changed source is compiled first. Administrators can
+        modify locked checks and change the lock flag.
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: check-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiOperatorCheckConfig'
+      responses:
+        '200':
+          description: Check updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiOperatorCheck'
+        '400':
+          description: Invalid configuration or script compilation error
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance or check not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+    delete:
+      operationId: deleteAiOperatorCheck
+      summary: Delete standing check
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: check-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Check deleted
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance or check not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
+  /v1/ai/operators/{operator-id}/instructions-history:
+    get:
+      operationId: getAiOperatorInstructionsHistory
+      summary: Get standing instructions history
+      description: >-
+        Retrieve previous versions of the instance's standing instructions,
+        most recent first. A record is written whenever the instructions
+        change (model update, administrator edit, or reset). The number of
+        records kept per instance is limited by AIOperator.Instructions.HistoryDepth.
+      parameters:
+        - name: operator-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: History records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiOperatorInstructionsHistoryRecord'
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Instance not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Operators
   /v1/ai/operators/{operator-id}/reset-memento:
     post:
       operationId: resetAiOperatorMemento
       summary: Reset AI operator accumulated state
       description: >-
         Clear the instance's accumulated adaptive state (memento, current
-        focus, watch list, and iteration counter). The next execution starts
-        from a clean slate.
+        focus, watch list, standing instructions, and iteration counter). The
+        next execution starts from a clean slate. Standing checks are not
+        affected.
       parameters:
         - name: operator-id
           in: path
@@ -11087,6 +11286,12 @@ components:
         observationMaxRecords:
           type: integer
           description: Observation record cap override (0 = server default)
+        instructions:
+          type: string
+          description: Standing instructions authored by the operator itself, injected into its system prompt after the persona prompt
+        instructionsLocked:
+          type: boolean
+          description: True if an administrator locked the standing instructions; updates returned by the model are ignored while set
         lastExecutionTime:
           type: string
           format: date-time
@@ -11119,6 +11324,8 @@ components:
         "name" is required on creation. Adaptive state fields (currentFocus,
         watchList, memento) are managed by the operator itself and cannot be
         set through this schema — use the reset-memento endpoint to clear them.
+        Standing instructions are normally written by the operator but can be
+        edited or locked here.
       properties:
         name:
           type: string
@@ -11153,6 +11360,147 @@ components:
         observationMaxRecords:
           type: integer
           description: Observation record cap override (0 = server default)
+        instructions:
+          type: string
+          description: Standing instructions text (empty string clears)
+        instructionsLocked:
+          type: boolean
+          description: Lock standing instructions against updates by the operator
+    AiOperatorCheck:
+      type: object
+      description: Standing check of an AI operator instance
+      properties:
+        id:
+          type: integer
+          description: Unique check identifier
+        instanceId:
+          type: integer
+          description: Owning AI operator instance
+        name:
+          type: string
+          description: Check name
+        description:
+          type: string
+          description: What the check watches and why
+        enabled:
+          type: boolean
+          description: True if the check is scheduled
+        locked:
+          type: boolean
+          description: True if an administrator locked the check; the operator cannot modify or delete a locked check
+        createdBy:
+          type: string
+          enum: [model, human]
+          description: Who created the check
+        source:
+          type: string
+          description: NXSL source code
+        interval:
+          type: integer
+          description: Run interval in seconds (minimum 30)
+        objectId:
+          type: integer
+          description: Object bound as $object (0 = none)
+        action:
+          type: string
+          enum: [wake, observe]
+          description: Action applied when the check fires
+        cooldown:
+          type: integer
+          description: Minimum seconds between two action applications
+        renotifyInterval:
+          type: integer
+          description: Seconds after which the action is applied again while the check stays fired (0 = only on the quiet-to-fired edge)
+        lastRun:
+          type: string
+          format: date-time
+          description: Time of the last run
+        lastVerdict:
+          type: string
+          enum: [never, quiet, fired, error]
+          description: Verdict of the last run
+        lastFire:
+          type: string
+          format: date-time
+          description: Time the check last fired
+        lastPayload:
+          type: string
+          description: JSON payload (title, severity, details) of the last fired run, or error of the last failed run
+        consecutiveErrors:
+          type: integer
+          description: Consecutive failed runs; the check is disabled when AIOperator.Checks.MaxConsecutiveErrors is reached
+        runCount:
+          type: integer
+          description: Total number of runs
+        compileError:
+          type: string
+          description: Compilation diagnostic if the stored source no longer compiles (empty otherwise)
+        created:
+          type: string
+          format: date-time
+          description: Creation time
+        modified:
+          type: string
+          format: date-time
+          description: Last modification time
+    AiOperatorCheckConfig:
+      type: object
+      description: >-
+        Standing check configuration. All fields are optional on update;
+        "name" and "source" are required on creation.
+      properties:
+        name:
+          type: string
+          description: Check name (required on creation)
+        description:
+          type: string
+          description: What the check watches and why
+        enabled:
+          type: boolean
+          description: Enable or disable the check
+        locked:
+          type: boolean
+          description: Lock the check against modification by the operator
+        source:
+          type: string
+          description: >-
+            NXSL source (required on creation). Contract: $object is bound to
+            the check's object or null; return null or false when quiet; return
+            a string (title) or a hash with title, severity, and details to fire;
+            any other value is a check error.
+        interval:
+          type: integer
+          description: Run interval in seconds (floor 30)
+        objectId:
+          type: integer
+          description: Object bound as $object (0 = none); must be readable by the AI operator account
+        action:
+          type: string
+          enum: [wake, observe]
+          description: Action applied when the check fires
+        cooldown:
+          type: integer
+          description: Minimum seconds between two action applications
+        renotifyInterval:
+          type: integer
+          description: Seconds after which the action is applied again while the check stays fired (0 = edge only)
+    AiOperatorInstructionsHistoryRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Record identifier
+        iteration:
+          type: integer
+          description: Instance iteration at which the instructions changed
+        timestamp:
+          type: string
+          format: date-time
+          description: Time of the change
+        previousText:
+          type: string
+          description: Standing instructions text before the change
     AiSavedPrompt:
       type: object
       properties:

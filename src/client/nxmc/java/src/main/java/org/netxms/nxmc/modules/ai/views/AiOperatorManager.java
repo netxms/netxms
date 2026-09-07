@@ -25,6 +25,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -35,10 +37,13 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ai.AiOperator;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.ai.dialogs.AiOperatorEditDialog;
+import org.netxms.nxmc.modules.ai.propertypages.AiOperatorChecks;
+import org.netxms.nxmc.modules.ai.propertypages.AiOperatorGeneral;
+import org.netxms.nxmc.modules.ai.propertypages.AiOperatorInstructions;
 import org.netxms.nxmc.modules.ai.views.helpers.AiOperatorComparator;
 import org.netxms.nxmc.modules.ai.views.helpers.AiOperatorFilter;
 import org.netxms.nxmc.modules.ai.views.helpers.AiOperatorLabelProvider;
@@ -293,11 +298,9 @@ public class AiOperatorManager extends ConfigurationView
     */
    private void createOperator()
    {
-      final AiOperatorEditDialog dlg = new AiOperatorEditDialog(getWindow().getShell(), null);
-      if (dlg.open() != Window.OK)
-         return;
-
-      saveOperator(dlg.getOperator());
+      AiOperator operator = new AiOperator("");
+      if (showEditDialog(operator, true))
+         saveOperator(operator);
    }
 
    /**
@@ -309,11 +312,27 @@ public class AiOperatorManager extends ConfigurationView
       if (selection.size() != 1)
          return;
 
-      final AiOperatorEditDialog dlg = new AiOperatorEditDialog(getWindow().getShell(), (AiOperator)selection.getFirstElement());
-      if (dlg.open() != Window.OK)
-         return;
+      AiOperator operator = (AiOperator)selection.getFirstElement();
+      if (showEditDialog(operator, false))
+         saveOperator(operator);
+   }
 
-      saveOperator(dlg.getOperator());
+   /**
+    * Show operator instance configuration dialog.
+    *
+    * @param operator operator instance
+    * @param isNew true if instance is being created
+    * @return true if OK was pressed
+    */
+   private boolean showEditDialog(AiOperator operator, boolean isNew)
+   {
+      PreferenceManager pm = new PreferenceManager();
+      pm.addToRoot(new PreferenceNode("general", new AiOperatorGeneral(operator)));
+      pm.addToRoot(new PreferenceNode("instructions", new AiOperatorInstructions(operator)));
+      if (!isNew)
+         pm.addToRoot(new PreferenceNode("checks", new AiOperatorChecks(operator)));
+      PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, isNew ? i18n.tr("Create AI Operator") : i18n.tr("Edit AI Operator"));
+      return dlg.open() == Window.OK;
    }
 
    /**
@@ -349,7 +368,7 @@ public class AiOperatorManager extends ConfigurationView
          return;
 
       if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Delete"),
-            i18n.tr("Selected AI operator instances and all their observations will be deleted. Are you sure?")))
+            i18n.tr("Selected AI operator instances with all their observations and standing checks will be deleted. Are you sure?")))
          return;
 
       final Object[] objects = selection.toArray();
@@ -413,7 +432,7 @@ public class AiOperatorManager extends ConfigurationView
          return;
 
       if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Reset"),
-            i18n.tr("Accumulated state (memento, current focus, watch list, and iteration counter) of selected AI operator instances will be cleared. Are you sure?")))
+            i18n.tr("Accumulated state (memento, current focus, watch list, standing instructions, and iteration counter) of selected AI operator instances will be cleared. Standing checks are kept. Are you sure?")))
          return;
 
       final Object[] objects = selection.toArray();

@@ -16,17 +16,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.ai.dialogs;
+package org.netxms.nxmc.modules.ai.propertypages;
 
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.ai.AiOperator;
+import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -36,14 +35,13 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * AI operator instance edit dialog
+ * "General" property page for AI operator instance
  */
-public class AiOperatorEditDialog extends Dialog
+public class AiOperatorGeneral extends PropertyPage
 {
-   private final I18n i18n = LocalizationHelper.getI18n(AiOperatorEditDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(AiOperatorGeneral.class);
 
    private AiOperator operator;
-   private boolean isNew;
    private LabeledText textName;
    private LabeledText textDescription;
    private LabeledText textScopeFilter;
@@ -57,39 +55,28 @@ public class AiOperatorEditDialog extends Dialog
    private Button checkEnabled;
 
    /**
-    * Create AI operator edit dialog.
+    * Create page.
     *
-    * @param parentShell parent shell
-    * @param operator operator instance to edit (null to create new)
+    * @param operator operator instance to edit
     */
-   public AiOperatorEditDialog(Shell parentShell, AiOperator operator)
+   public AiOperatorGeneral(AiOperator operator)
    {
-      super(parentShell);
-      isNew = (operator == null);
-      this.operator = isNew ? new AiOperator("") : operator;
+      super(LocalizationHelper.getI18n(AiOperatorGeneral.class).tr("General"));
+      noDefaultAndApplyButton();
+      this.operator = operator;
    }
 
    /**
-    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
-   protected void configureShell(Shell newShell)
+   protected Control createContents(Composite parent)
    {
-      super.configureShell(newShell);
-      newShell.setText(isNew ? i18n.tr("Create AI Operator") : i18n.tr("Edit AI Operator"));
-   }
-
-   /**
-    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-    */
-   @Override
-   protected Control createDialogArea(Composite parent)
-   {
-      Composite dialogArea = (Composite)super.createDialogArea(parent);
+      Composite dialogArea = new Composite(parent, SWT.NONE);
 
       GridLayout layout = new GridLayout();
-      layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.numColumns = 2;
@@ -173,32 +160,32 @@ public class AiOperatorEditDialog extends Dialog
       gd.horizontalSpan = 2;
       checkEnabled.setLayoutData(gd);
 
-      if (isNew)
+      if (operator.getId() == 0)
          textName.setFocus();
 
       return dialogArea;
    }
 
    /**
-    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
     */
    @Override
-   protected void okPressed()
+   protected boolean applyChanges(boolean isApply)
    {
       String name = textName.getText().trim();
       if (name.isEmpty())
       {
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Instance name cannot be empty"));
-         return;
+         return false;
       }
 
       if (!minInterval.validate() || !maxInterval.validate())
-         return;
+         return false;
 
       if (maxInterval.getValue() < minInterval.getValue())
       {
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Maximum interval cannot be less than minimum interval"));
-         return;
+         return false;
       }
 
       operator.setName(name);
@@ -212,16 +199,6 @@ public class AiOperatorEditDialog extends Dialog
       operator.setObservationRetentionDays(spinnerRetentionDays.getSelection());
       operator.setObservationMaxRecords(spinnerMaxRecords.getSelection());
       operator.setEnabled(checkEnabled.getSelection());
-      super.okPressed();
-   }
-
-   /**
-    * Get edited operator instance.
-    *
-    * @return edited operator instance
-    */
-   public AiOperator getOperator()
-   {
-      return operator;
+      return true;
    }
 }

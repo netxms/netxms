@@ -186,6 +186,157 @@ enum class AIObservationState
 };
 
 /**
+ * Action applied when a standing check fires
+ */
+enum class AICheckAction
+{
+   WAKE = 0,      // Queue an out-of-schedule iteration of the owning instance
+   OBSERVE = 1    // Record an observation directly, without LLM involvement
+};
+
+/**
+ * Standing check verdict
+ */
+enum class AICheckVerdict
+{
+   NONE = 0,      // Check was never run
+   QUIET = 1,
+   FIRED = 2,
+   FAILED = 3     // Script returned an unexpected value or failed at runtime
+};
+
+/**
+ * Result of a single standing check run. Text fields are UTF-8.
+ */
+struct AICheckResult
+{
+   AICheckVerdict verdict;
+   std::string title;
+   int severity;
+   std::string details;
+   std::string error;   // Set when verdict is FAILED
+
+   AICheckResult() : verdict(AICheckVerdict::QUIET), severity(SEVERITY_WARNING)
+   {
+   }
+};
+
+/**
+ * State transition decided after a standing check run
+ */
+enum class AICheckTransition
+{
+   NONE = 0,            // Nothing to do (verdict recorded)
+   SUPPRESSED = 1,      // Fired on the edge but inside cooldown - action deferred, previous verdict kept
+   CLEAR = 2,           // Fired -> quiet
+   FIRE_EDGE = 3,       // Quiet -> fired
+   FIRE_RENOTIFY = 4,   // Still fired and renotify interval elapsed
+   FAILURE = 5          // Script error
+};
+
+class NXSL_Value;
+
+/**
+ * Evaluate value returned by a standing check script: null, false, 0, and empty string are quiet;
+ * a string or a hash { title, severity, details } fires; anything else is a check error.
+ */
+AICheckResult NXCORE_EXPORTABLE EvaluateAICheckResult(NXSL_Value *value, const wchar_t *checkName);
+
+/**
+ * Decide state transition for a standing check given its previous verdict and the current run result
+ */
+AICheckTransition NXCORE_EXPORTABLE EvaluateAICheckTransition(AICheckVerdict previous, time_t lastFire, time_t now,
+   uint32_t cooldown, uint32_t renotifyInterval, AICheckVerdict current);
+
+/**
+ * AI operator standing check - NXSL script run by the scheduler without LLM involvement.
+ * All fields are protected by the owning instance's lock; the script itself runs outside the lock.
+ */
+class NXCORE_EXPORTABLE AIOperatorCheck
+{
+private:
+   uint32_t m_id;
+   uint32_t m_instanceId;
+   wchar_t m_name[64];
+   MutableString m_description;
+   bool m_enabled;
+   bool m_locked;             // Set by a human; the model cannot modify or delete a locked check
+   bool m_createdByModel;
+   std::string m_source;      // NXSL source (UTF-8)
+   uint32_t m_interval;       // Seconds between runs
+   uint32_t m_objectId;       // Object bound as $object (0 = none)
+   AICheckAction m_action;
+   uint32_t m_cooldown;       // Minimum seconds between two action applications
+   uint32_t m_renotifyInterval;  // Re-apply action while still fired (0 = only on the quiet->fired edge)
+   time_t m_lastRun;
+   AICheckVerdict m_lastVerdict;
+   time_t m_lastFire;
+   std::string m_lastPayload; // JSON (UTF-8) of the last fired result
+   uint32_t m_consecutiveErrors;
+   uint32_t m_runCount;
+   time_t m_creationTime;
+   time_t m_modificationTime;
+
+   // Runtime state (not persisted)
+   shared_ptr<NXSL_Program> m_program;  // Compiled at create/modify/load; null if compilation failed
+   MutableString m_compileError;
+   bool m_running;
+
+
+public:
+   AIOperatorCheck(uint32_t instanceId, bool createdByModel);
+   AIOperatorCheck(DB_RESULT hResult, int row);
+
+   uint32_t getId() const { return m_id; }
+   uint32_t getInstanceId() const { return m_instanceId; }
+   const wchar_t *getName() const { return m_name; }
+   bool isEnabled() const { return m_enabled; }
+   bool isLocked() const { return m_locked; }
+   bool isCreatedByModel() const { return m_createdByModel; }
+   uint32_t getInterval() const { return m_interval; }
+   uint32_t getObjectId() const { return m_objectId; }
+   AICheckAction getAction() const { return m_action; }
+   uint32_t getCooldown() const { return m_cooldown; }
+   uint32_t getRenotifyInterval() const { return m_renotifyInterval; }
+   time_t getLastRun() const { return m_lastRun; }
+   AICheckVerdict getLastVerdict() const { return m_lastVerdict; }
+   time_t getLastFire() const { return m_lastFire; }
+   uint32_t getConsecutiveErrors() const { return m_consecutiveErrors; }
+   const shared_ptr<NXSL_Program>& getProgram() const { return m_program; }
+   const String& getCompileError() const { return m_compileError; }
+   bool isRunning() const { return m_running; }
+
+   bool isDue(time_t now) const { return m_enabled && !m_running && (m_lastRun + static_cast<time_t>(m_interval) <= now); }
+   void setRunning(bool running) { m_running = running; }
+   void setEnabled(bool enabled) { m_enabled = enabled; m_modificationTime = time(nullptr); }
+
+   /**
+    * Record outcome of a run. Returns true if persistent state changed and the check should be saved.
+    */
+   bool recordRun(time_t now, const AICheckResult& result, AICheckTransition transition);
+
+   uint32_t modifyFromJSON(json_t *config, bool byModel, MutableString *errorText);
+
+   void saveToDatabase() const;
+   void deleteFromDatabase();
+
+   json_t *toJson() const;
+   json_t *toPromptJson() const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+};
+
+/**
+ * Pending interrupt raised by a fired standing check with "wake" action
+ */
+struct AIOperatorInterrupt
+{
+   uint32_t checkId;
+   std::string checkName;   // UTF-8
+   std::string payload;     // JSON (UTF-8)
+   time_t timestamp;
+};
+
+/**
  * AI operator instance - perpetual adaptive monitoring loop
  */
 class NXCORE_EXPORTABLE AIOperatorInstance
@@ -210,6 +361,8 @@ private:
    std::string m_memento;
    uint32_t m_observationRetentionDays;  // 0 = server default
    uint32_t m_observationMaxRecords;     // 0 = server default
+   std::string m_instructions;   // Standing instructions authored by the model (UTF-8)
+   bool m_instructionsLocked;    // Set by a human; model updates are ignored while set
    time_t m_lastExecutionTime;
    time_t m_nextExecutionTime;
    uint32_t m_iteration;
@@ -220,12 +373,18 @@ private:
    bool m_executing;    // protected by instance list lock
    int m_consecutiveFailures;
    StringBuffer m_lastExplanation;
+   SharedObjectArray<AIOperatorCheck> m_checks;
+   std::vector<AIOperatorInterrupt> m_pendingInterrupts;
+   bool m_interruptPending;   // mirrors !m_pendingInterrupts.empty() for lock-free scheduler checks
 
    bool processResponse(const char *response, time_t now);
    void handleFailure(const char *error, time_t now);
-   void logExecution(wchar_t status, uint32_t durationMs, int64_t inputTokens, int64_t outputTokens);
+   void logExecution(wchar_t status, uint32_t durationMs, int64_t inputTokens, int64_t outputTokens, const wchar_t *explanation);
    void clearExecutingState();
    void saveToDatabase() const;   // must be called with instance lock held
+   size_t setInstructions(const char *text, time_t now);  // must be called with instance lock held; returns number of characters kept if text was truncated, 0 otherwise
+   int findCheckIndex(uint32_t checkId) const;   // must be called with instance lock held
+   void appendChecksToPrompt(std::string& prompt) const;   // must be called with instance lock held
 
 public:
    AIOperatorInstance(const wchar_t *name, uint32_t ownerUserId);
@@ -259,10 +418,25 @@ public:
    std::string getWatchList() const { return GetAttributeWithLock(m_watchList, m_mutex); }
    std::string getMemento() const { return GetAttributeWithLock(m_memento, m_mutex); }
    String getLastExplanation() const { return GetAttributeWithLock<String>(m_lastExplanation, m_mutex); }
+   std::string getInstructions() const { return GetAttributeWithLock(m_instructions, m_mutex); }
+   bool isInstructionsLocked() const { return m_instructionsLocked; }
+   bool hasPendingInterrupts() const { return m_interruptPending; }
 
    uint32_t modifyFromJSON(json_t *config);
    void setEnabled(bool enabled);
    void resetMemento();
+
+   // Standing checks
+   uint32_t createCheck(json_t *config, bool byModel, uint32_t *checkId, MutableString *errorText);
+   uint32_t modifyCheck(uint32_t checkId, json_t *config, bool byModel, MutableString *errorText);
+   uint32_t deleteCheck(uint32_t checkId, bool byModel);
+   shared_ptr<AIOperatorCheck> getCheck(uint32_t checkId) const;
+   void getChecks(SharedObjectArray<AIOperatorCheck> *checks) const;
+   int getCheckCount(int *enabledCount) const;
+   void loadCheck(const shared_ptr<AIOperatorCheck>& check) { m_checks.add(check); }  // startup only, no locking
+   void collectDueChecks(time_t now, std::vector<shared_ptr<AIOperatorCheck>> *checks);
+   void dropPendingInterrupts();
+   void runCheck(shared_ptr<AIOperatorCheck> check);
 
    void deleteFromDatabase();
 
@@ -286,7 +460,7 @@ uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t own
 uint32_t NXCORE_EXPORTABLE ModifyAIOperatorInstance(uint32_t instanceId, json_t *config);
 
 /**
- * Delete AI operator instance (also deletes its observations)
+ * Delete AI operator instance (also deletes its observations, standing checks, and instructions history)
  */
 uint32_t NXCORE_EXPORTABLE DeleteAIOperatorInstance(uint32_t instanceId);
 
@@ -319,6 +493,49 @@ json_t NXCORE_EXPORTABLE *GetAIOperatorInstancesAsJson();
  * Fill NXCP message with all AI operator instances
  */
 void FillAIOperatorListMessage(NXCPMessage *msg);
+
+/**
+ * Create standing check for AI operator instance. Check ID is returned via checkId; on compilation failure
+ * or validation error a diagnostic message is returned via errorText (when provided).
+ */
+uint32_t NXCORE_EXPORTABLE CreateAIOperatorCheck(uint32_t instanceId, json_t *config, bool byModel, uint32_t *checkId, MutableString *errorText);
+
+/**
+ * Modify standing check of AI operator instance
+ */
+uint32_t NXCORE_EXPORTABLE ModifyAIOperatorCheck(uint32_t instanceId, uint32_t checkId, json_t *config, bool byModel, MutableString *errorText);
+
+/**
+ * Delete standing check of AI operator instance
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAIOperatorCheck(uint32_t instanceId, uint32_t checkId, bool byModel);
+
+/**
+ * Get standing check of AI operator instance
+ */
+shared_ptr<AIOperatorCheck> NXCORE_EXPORTABLE GetAIOperatorCheck(uint32_t instanceId, uint32_t checkId);
+
+/**
+ * Get standing checks of AI operator instance as JSON array (caller must call json_decref on result).
+ * Returns nullptr if instance does not exist.
+ */
+json_t NXCORE_EXPORTABLE *GetAIOperatorChecksAsJson(uint32_t instanceId);
+
+/**
+ * Fill NXCP message with standing checks of AI operator instance
+ */
+uint32_t FillAIOperatorCheckListMessage(uint32_t instanceId, NXCPMessage *msg);
+
+/**
+ * Get standing instructions history of AI operator instance as JSON array (caller must call json_decref on result).
+ * Returns nullptr if instance does not exist.
+ */
+json_t NXCORE_EXPORTABLE *GetAIOperatorInstructionsHistoryAsJson(uint32_t instanceId);
+
+/**
+ * Fill NXCP message with standing instructions history of AI operator instance
+ */
+uint32_t FillAIOperatorInstructionsHistoryMessage(uint32_t instanceId, NXCPMessage *msg);
 
 /**
  * Update AI operator observation state (acknowledge/dismiss)

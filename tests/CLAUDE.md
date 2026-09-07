@@ -27,6 +27,7 @@ column below.
 | `test-libnxsnmp/` | SNMP library tests | via `@TEST_MODULES@` |
 | `test-libnxsl/` | NXSL interpreter tests | via `@TEST_MODULES@` |
 | `test-libnxsrv/` | Server library tests (NObject hierarchy, drivers, mock SNMP transport, …) | via `@TEST_MODULES@` |
+| `test-ai-checks/` | AI operator standing check logic tests — compiles the real `src/server/core/ai_check_logic.cpp`; covers script result evaluation and quiet/fired/error transitions with cooldown and renotify | via `@TEST_MODULES@` |
 | `test-authtokens/` | Authentication token tests — compiles the real `src/server/core/authtokens.cpp` and stubs four core symbols; covers the validate/consume split and the single-use claim race | via `@TEST_MODULES@` |
 | `test-ncd-webhook/` | Webhook notification-channel driver tests | via `@TEST_MODULES@` |
 | `agent/unit/*` | Per-subagent unit tests: `entsoe`, `extcheck`, `weather`, `linux-cpu-usage-collector` | via `@AGENT_UNIT_TESTS@` |

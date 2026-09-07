@@ -38,8 +38,10 @@
 static SharedHashMap<uint32_t, AIOperatorInstance> s_instances;
 static Mutex s_instancesLock;
 static VolatileCounter s_instanceId = 0;    // Last used instance ID
+static VolatileCounter s_checkId = 0;       // Last used standing check ID
 static VolatileCounter64 s_observationId = 0;  // Last used observation ID
 static VolatileCounter64 s_logRecordId = 0;    // Last used execution log record ID
+static VolatileCounter64 s_instructionsHistoryId = 0;   // Last used instructions history record ID
 static uint32_t s_operatorUserId = INVALID_UID;
 static ThreadPool *s_threadPool = nullptr;
 static std::string s_systemPrompt;
@@ -68,19 +70,21 @@ AIOperatorInstance::AIOperatorInstance(const wchar_t *name, uint32_t ownerUserId
    m_currentFocus[0] = 0;
    m_observationRetentionDays = 0;
    m_observationMaxRecords = 0;
+   m_instructionsLocked = false;
    m_lastExecutionTime = 0;
    m_nextExecutionTime = 0;
    m_iteration = 0;
    m_creationTime = m_modificationTime = time(nullptr);
    m_executing = false;
    m_consecutiveFailures = 0;
+   m_interruptPending = false;
 }
 
 /**
  * Create AI operator instance from database row. Expected column order:
  * id,name,description,owner_user_id,enabled,scope_filter,model_slot,min_interval,max_interval,daily_token_budget,
  * tokens_used,usage_day,persona_prompt,current_focus,watch_list,memento,observation_retention_days,
- * observation_max_records,last_execution_time,next_execution_time,iteration,created,modified
+ * observation_max_records,instructions,instructions_locked,last_execution_time,next_execution_time,iteration,created,modified
  */
 AIOperatorInstance::AIOperatorInstance(DB_RESULT hResult, int row)
 {
@@ -112,13 +116,19 @@ AIOperatorInstance::AIOperatorInstance(DB_RESULT hResult, int row)
    MemFree(text);
    m_observationRetentionDays = DBGetFieldUInt32(hResult, row, 16);
    m_observationMaxRecords = DBGetFieldUInt32(hResult, row, 17);
-   m_lastExecutionTime = DBGetFieldUInt32(hResult, row, 18);
-   m_nextExecutionTime = DBGetFieldUInt32(hResult, row, 19);
-   m_iteration = DBGetFieldUInt32(hResult, row, 20);
-   m_creationTime = DBGetFieldUInt32(hResult, row, 21);
-   m_modificationTime = DBGetFieldUInt32(hResult, row, 22);
+   text = DBGetFieldUTF8(hResult, row, 18, nullptr, 0);
+   m_instructions = CHECK_NULL_EX_A(text);
+   MemFree(text);
+   DBGetField(hResult, row, 19, flag, 2);
+   m_instructionsLocked = (flag[0] == '1');
+   m_lastExecutionTime = DBGetFieldUInt32(hResult, row, 20);
+   m_nextExecutionTime = DBGetFieldUInt32(hResult, row, 21);
+   m_iteration = DBGetFieldUInt32(hResult, row, 22);
+   m_creationTime = DBGetFieldUInt32(hResult, row, 23);
+   m_modificationTime = DBGetFieldUInt32(hResult, row, 24);
    m_executing = false;
    m_consecutiveFailures = 0;
+   m_interruptPending = false;
 }
 
 /**
@@ -131,8 +141,8 @@ void AIOperatorInstance::saveToDatabase() const
    static const wchar_t *mergeColumns[] = {
       L"name", L"description", L"owner_user_id", L"enabled", L"scope_filter", L"model_slot", L"min_interval",
       L"max_interval", L"daily_token_budget", L"tokens_used", L"usage_day", L"persona_prompt", L"current_focus",
-      L"watch_list", L"memento", L"observation_retention_days", L"observation_max_records", L"last_execution_time",
-      L"next_execution_time", L"iteration", L"created", L"modified", nullptr
+      L"watch_list", L"memento", L"observation_retention_days", L"observation_max_records", L"instructions",
+      L"instructions_locked", L"last_execution_time", L"next_execution_time", L"iteration", L"created", L"modified", nullptr
    };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"ai_operator_instances", L"id", m_id, mergeColumns);
    if (hStmt != nullptr)
@@ -154,12 +164,14 @@ void AIOperatorInstance::saveToDatabase() const
       DBBind(hStmt, 15, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_memento.c_str(), DB_BIND_STATIC);
       DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_observationRetentionDays);
       DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_observationMaxRecords);
-      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastExecutionTime));
-      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_nextExecutionTime));
-      DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_iteration);
-      DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
-      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_modificationTime));
-      DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 18, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_instructions.c_str(), DB_BIND_STATIC);
+      DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_instructionsLocked ? L"1" : L"0", DB_BIND_STATIC);
+      DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastExecutionTime));
+      DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_nextExecutionTime));
+      DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_iteration);
+      DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
+      DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_modificationTime));
+      DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_id);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -168,20 +180,22 @@ void AIOperatorInstance::saveToDatabase() const
 }
 
 /**
- * Delete AI operator instance and its observations from database
+ * Delete AI operator instance, its observations, standing checks, and instructions history from database
  */
 void AIOperatorInstance::deleteFromDatabase()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM ai_operator_instances WHERE id=?");
    ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM ai_operator_observations WHERE instance_id=?");
+   ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM ai_operator_checks WHERE instance_id=?");
+   ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM ai_operator_instr_history WHERE instance_id=?");
    DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**
  * Log AI operator execution to database. Must be called with instance lock held.
  */
-void AIOperatorInstance::logExecution(wchar_t status, uint32_t durationMs, int64_t inputTokens, int64_t outputTokens)
+void AIOperatorInstance::logExecution(wchar_t status, uint32_t durationMs, int64_t inputTokens, int64_t outputTokens, const wchar_t *explanation)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -201,7 +215,7 @@ void AIOperatorInstance::logExecution(wchar_t status, uint32_t durationMs, int64
       DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, durationMs);
       DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, static_cast<int32_t>(inputTokens));
       DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<int32_t>(outputTokens));
-      DBBind(hStmt, 10, DB_SQLTYPE_TEXT, m_lastExplanation, DB_BIND_STATIC);
+      DBBind(hStmt, 10, DB_SQLTYPE_TEXT, explanation, DB_BIND_STATIC);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -274,6 +288,23 @@ bool AIOperatorInstance::processResponse(const char *response, time_t now)
    m_lastExplanation.clear();
    m_lastExplanation.appendUtf8String(json_object_get_string_utf8(json, "explanation", ""));
 
+   // Standing instructions: omitted = keep, empty string = clear, string = replace
+   json_t *instructions = json_object_get(json, "instructions");
+   if (json_is_string(instructions))
+   {
+      if (m_instructionsLocked)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\" returned standing instructions but they are locked, update ignored", m_id, m_name);
+         m_lastExplanation.append(L"\n[standing instructions update ignored: locked by administrator]");
+      }
+      else
+      {
+         size_t truncatedTo = setInstructions(json_string_value(instructions), now);
+         if (truncatedTo > 0)
+            m_lastExplanation.appendFormattedString(L"\n[standing instructions truncated to %u characters]", static_cast<uint32_t>(truncatedTo));
+      }
+   }
+
    json_decref(json);
 
    nxlog_debug_tag(DEBUG_TAG, 5, L"AI operator [%u] \"%s\" iteration %u completed, next execution at %s",
@@ -323,6 +354,12 @@ void AIOperatorInstance::execute()
 
    m_mutex.lock();
 
+   // Interrupts raised by standing checks are consumed by this iteration; if the iteration cannot run
+   // they are dropped rather than queued indefinitely
+   std::vector<AIOperatorInterrupt> interrupts;
+   interrupts.swap(m_pendingInterrupts);
+   m_interruptPending = false;
+
    // Reset token usage counter on day boundary (UTC)
    uint32_t today = static_cast<uint32_t>(now / 86400);
    if (m_usageDay != today)
@@ -338,7 +375,10 @@ void AIOperatorInstance::execute()
       m_lastExplanation = L"Daily token budget exhausted";
       nxlog_debug_tag(DEBUG_TAG, 5, L"AI operator [%u] \"%s\" skipped (daily token budget exhausted), next execution at %s",
          m_id, m_name, FormatTimestamp(m_nextExecutionTime).cstr());
-      logExecution('S', 0, 0, 0);
+      if (!interrupts.empty())
+         nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\" dropped %d pending check interrupt(s) because daily token budget is exhausted",
+            m_id, m_name, static_cast<int>(interrupts.size()));
+      logExecution('S', 0, 0, 0, m_lastExplanation);
       saveToDatabase();
       m_mutex.unlock();
       clearExecutingState();
@@ -348,7 +388,7 @@ void AIOperatorInstance::execute()
    if ((GetEffectiveSystemRights(s_operatorUserId) & SYSTEM_ACCESS_USE_AI_ASSISTANT) == 0)
    {
       handleFailure("AI operator account does not have AI assistant access right", now);
-      logExecution('F', 0, 0, 0);
+      logExecution('F', 0, 0, 0, m_lastExplanation);
       saveToDatabase();
       m_mutex.unlock();
       clearExecutingState();
@@ -363,6 +403,11 @@ void AIOperatorInstance::execute()
    {
       systemPrompt.append("\n\nOPERATOR PERSONA:\n");
       systemPrompt.append(m_personaPrompt);
+   }
+   if (!m_instructions.empty())
+   {
+      systemPrompt.append("\n\nSTANDING INSTRUCTIONS (written by you on earlier iterations; persona and system rules above take precedence):\n");
+      systemPrompt.append(m_instructions);
    }
 
    std::string prompt("Perform one monitoring iteration now according to your instructions.\n<current_time>");
@@ -400,6 +445,27 @@ void AIOperatorInstance::execute()
       prompt.append("\n<memento>");
       prompt.append(m_memento);
       prompt.append("</memento>");
+   }
+   appendChecksToPrompt(prompt);
+   if (!interrupts.empty())
+   {
+      json_t *list = json_array();
+      for(const AIOperatorInterrupt& interrupt : interrupts)
+      {
+         json_t *element = json_object();
+         json_object_set_new(element, "id", json_integer(interrupt.checkId));
+         json_object_set_new(element, "name", json_string(interrupt.checkName.c_str()));
+         json_object_set_new(element, "fired_at", json_string(FormatISO8601Timestamp(interrupt.timestamp).c_str()));
+         json_t *payload = json_loads(interrupt.payload.c_str(), 0, nullptr);
+         json_object_set_new(element, "payload", (payload != nullptr) ? payload : json_string(interrupt.payload.c_str()));
+         json_array_append_new(list, element);
+      }
+      char *text = json_dumps(list, JSON_COMPACT);
+      prompt.append("\n<triggered_checks>");
+      prompt.append(CHECK_NULL_EX_A(text));
+      prompt.append("</triggered_checks>");
+      MemFree(text);
+      json_decref(list);
    }
 
    char slot[64];
@@ -439,7 +505,7 @@ void AIOperatorInstance::execute()
    if (success)
       m_consecutiveFailures = 0;
 
-   logExecution(success ? 'C' : 'F', durationMs, tokenUsage.inputTokens, tokenUsage.outputTokens);
+   logExecution(success ? 'C' : 'F', durationMs, tokenUsage.inputTokens, tokenUsage.outputTokens, m_lastExplanation);
    m_mutex.unlock();
 
    // Do not re-create database record if instance was deleted while executing.
@@ -509,6 +575,14 @@ uint32_t AIOperatorInstance::modifyFromJSON(json_t *config)
    if ((personaPrompt != nullptr) && !json_is_string(personaPrompt) && !json_is_null(personaPrompt))
       return RCC_INVALID_ARGUMENT;
 
+   json_t *instructions = json_object_get(config, "instructions");
+   if ((instructions != nullptr) && !json_is_string(instructions) && !json_is_null(instructions))
+      return RCC_INVALID_ARGUMENT;
+
+   bool instructionsLocked = m_instructionsLocked;
+   if (!json_object_update_boolean(config, "instructionsLocked", &instructionsLocked))
+      return RCC_INVALID_ARGUMENT;
+
    char modelSlot[64];
    memcpy(modelSlot, m_modelSlot, sizeof(modelSlot));
    uint32_t minInterval = m_minInterval;
@@ -542,6 +616,9 @@ uint32_t AIOperatorInstance::modifyFromJSON(json_t *config)
       m_scopeFilter = json_is_string(scopeFilter) ? json_string_value(scopeFilter) : "";
    if (personaPrompt != nullptr)
       m_personaPrompt = json_is_string(personaPrompt) ? json_string_value(personaPrompt) : "";
+   m_instructionsLocked = instructionsLocked;
+   if (instructions != nullptr)
+      setInstructions(json_is_string(instructions) ? json_string_value(instructions) : "", time(nullptr));
    memcpy(m_modelSlot, modelSlot, sizeof(m_modelSlot));
    m_minInterval = minInterval;
    m_maxInterval = maxInterval;
@@ -585,11 +662,13 @@ void AIOperatorInstance::setEnabled(bool enabled)
 }
 
 /**
- * Reset accumulated state (memento, focus, watch list, iteration counter)
+ * Reset accumulated state (memento, focus, watch list, standing instructions, iteration counter).
+ * Standing checks are deliberately left intact - they are delegated work, not state.
  */
 void AIOperatorInstance::resetMemento()
 {
    LockGuard lockGuard(m_mutex);
+   setInstructions("", time(nullptr));
    m_memento.clear();
    m_watchList.clear();
    m_currentFocus[0] = 0;
@@ -624,6 +703,8 @@ json_t *AIOperatorInstance::toJson() const
    json_object_set_new(json, "memento", json_string(m_memento.c_str()));
    json_object_set_new(json, "observationRetentionDays", json_integer(m_observationRetentionDays));
    json_object_set_new(json, "observationMaxRecords", json_integer(m_observationMaxRecords));
+   json_object_set_new(json, "instructions", json_string(m_instructions.c_str()));
+   json_object_set_new(json, "instructionsLocked", json_boolean(m_instructionsLocked));
    json_object_set_new(json, "lastExecutionTime", json_time_string(m_lastExecutionTime));
    json_object_set_new(json, "nextExecutionTime", json_time_string(m_nextExecutionTime));
    json_object_set_new(json, "iteration", json_integer(m_iteration));
@@ -665,6 +746,8 @@ void AIOperatorInstance::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setField(baseId + 22, m_lastExplanation);
    msg->setFieldFromTime(baseId + 23, m_creationTime);
    msg->setFieldFromTime(baseId + 24, m_modificationTime);
+   msg->setFieldFromUtf8String(baseId + 25, m_instructions.c_str());
+   msg->setField(baseId + 26, m_instructionsLocked);
 }
 
 /**
@@ -991,6 +1074,1362 @@ void CleanAIOperatorObservations(DB_HANDLE hdb, time_t cycleStartTime)
 }
 
 /**
+ * Set error text if output pointer is provided
+ */
+static inline void SetErrorText(MutableString *errorText, const wchar_t *text)
+{
+   if (errorText != nullptr)
+      *errorText = text;
+}
+
+/**
+ * Convert verdict to database/protocol character
+ */
+static inline wchar_t VerdictToChar(AICheckVerdict verdict)
+{
+   switch(verdict)
+   {
+      case AICheckVerdict::QUIET:
+         return L'Q';
+      case AICheckVerdict::FIRED:
+         return L'F';
+      case AICheckVerdict::FAILED:
+         return L'E';
+      default:
+         return L'N';
+   }
+}
+
+/**
+ * Convert verdict to symbolic name
+ */
+static inline const char *VerdictToName(AICheckVerdict verdict)
+{
+   switch(verdict)
+   {
+      case AICheckVerdict::QUIET:
+         return "quiet";
+      case AICheckVerdict::FIRED:
+         return "fired";
+      case AICheckVerdict::FAILED:
+         return "error";
+      default:
+         return "never";
+   }
+}
+
+/**
+ * Serialize fired check result as JSON payload
+ */
+static std::string CheckResultToJson(const AICheckResult& result)
+{
+   json_t *json = json_object();
+   if (result.verdict == AICheckVerdict::FAILED)
+   {
+      json_object_set_new(json, "error", json_string(result.error.c_str()));
+   }
+   else
+   {
+      json_object_set_new(json, "title", json_string(result.title.c_str()));
+      json_object_set_new(json, "severity", json_integer(result.severity));
+      if (!result.details.empty())
+         json_object_set_new(json, "details", json_string(result.details.c_str()));
+   }
+   return JsonToString(json);   // JsonToString releases the object
+}
+
+/**
+ * Compile standing check source. Returns nullptr and sets error text on failure.
+ */
+static NXSL_Program *CompileCheckSource(const char *source, MutableString *errorText)
+{
+   NXSL_ServerEnv env;
+   NXSL_CompilationDiagnostic diag;
+   NXSL_Program *program = NXSLCompile(source, &env, &diag);
+   if ((program == nullptr) && (errorText != nullptr))
+      *errorText = diag.errorText;
+   return program;
+}
+
+/**
+ * Token shared between a running check script and its watchdog. The watchdog stops the VM only while
+ * the run is still in progress; the runner clears the VM pointer before destroying it.
+ */
+struct AICheckRunToken
+{
+   Mutex mutex;
+   NXSL_VM *vm;
+
+   AICheckRunToken(NXSL_VM *_vm) : vm(_vm)
+   {
+   }
+};
+
+/**
+ * Watchdog: stop check script that exceeded execution time limit
+ */
+static void AbortCheckRun(const shared_ptr<AICheckRunToken>& token)
+{
+   LockGuard lockGuard(token->mutex);
+   if (token->vm != nullptr)
+      token->vm->stop();
+}
+
+/**
+ * Execute compiled standing check script under the AI operator account's security context.
+ * Must not be called with instance lock held.
+ */
+static AICheckResult ExecuteCheckScript(const shared_ptr<NXSL_Program>& program, uint32_t objectId, const wchar_t *checkName, uint32_t timeLimit)
+{
+   AICheckResult result;
+
+   shared_ptr<NetObj> object;
+   if (objectId != 0)
+   {
+      object = FindObjectById(objectId);
+      if (object == nullptr)
+      {
+         result.verdict = AICheckVerdict::FAILED;
+         char buffer[64];
+         result.error = std::string("bound object [").append(IntegerToString(objectId, buffer)).append("] does not exist");
+         return result;
+      }
+   }
+
+   NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv());
+   if (!vm->load(program.get()))
+   {
+      result.verdict = AICheckVerdict::FAILED;
+      char *error = UTF8StringFromWideString(vm->getErrorText());
+      result.error = std::string("cannot load script: ").append(error);
+      MemFree(error);
+      delete vm;
+      return result;
+   }
+
+   if (object != nullptr)
+      SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
+   else
+      vm->setGlobalVariable("$object", vm->createValue());
+   vm->setSecurityContext(new NXSL_UserSecurityContext(s_operatorUserId));
+
+   auto token = make_shared<AICheckRunToken>(vm);
+   if (timeLimit > 0)
+      ThreadPoolScheduleRelative(s_threadPool, timeLimit * 1000, AbortCheckRun, token);
+
+   bool success = vm->run();
+
+   token->mutex.lock();
+   token->vm = nullptr;
+   token->mutex.unlock();
+
+   if (success)
+   {
+      result = EvaluateAICheckResult(vm->getResult(), checkName);
+   }
+   else
+   {
+      result.verdict = AICheckVerdict::FAILED;
+      if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
+      {
+         result.error = "execution time limit exceeded";
+      }
+      else
+      {
+         char *error = UTF8StringFromWideString(vm->getErrorText());
+         result.error = error;
+         MemFree(error);
+      }
+   }
+   delete vm;
+   return result;
+}
+
+/**
+ * Create new standing check
+ */
+AIOperatorCheck::AIOperatorCheck(uint32_t instanceId, bool createdByModel)
+{
+   m_id = InterlockedIncrement(&s_checkId);
+   m_instanceId = instanceId;
+   m_name[0] = 0;
+   m_enabled = true;
+   m_locked = false;
+   m_createdByModel = createdByModel;
+   m_interval = 300;
+   m_objectId = 0;
+   m_action = AICheckAction::WAKE;
+   m_cooldown = 0;
+   m_renotifyInterval = 0;
+   m_lastRun = 0;
+   m_lastVerdict = AICheckVerdict::NONE;
+   m_lastFire = 0;
+   m_consecutiveErrors = 0;
+   m_runCount = 0;
+   m_creationTime = m_modificationTime = time(nullptr);
+   m_running = false;
+}
+
+/**
+ * Create standing check from database row. Expected column order:
+ * id,instance_id,name,description,enabled,locked,created_by,source,check_interval,object_id,check_action,cooldown,
+ * renotify_interval,last_run,last_verdict,last_fire,last_payload,consecutive_errors,run_count,created,modified
+ */
+AIOperatorCheck::AIOperatorCheck(DB_RESULT hResult, int row)
+{
+   m_id = DBGetFieldUInt32(hResult, row, 0);
+   m_instanceId = DBGetFieldUInt32(hResult, row, 1);
+   DBGetField(hResult, row, 2, m_name, 64);
+   m_description = DBGetFieldAsString(hResult, row, 3);
+   wchar_t flag[2];
+   DBGetField(hResult, row, 4, flag, 2);
+   m_enabled = (flag[0] == '1');
+   DBGetField(hResult, row, 5, flag, 2);
+   m_locked = (flag[0] == '1');
+   DBGetField(hResult, row, 6, flag, 2);
+   m_createdByModel = (flag[0] == 'M');
+   char *text = DBGetFieldUTF8(hResult, row, 7, nullptr, 0);
+   m_source = CHECK_NULL_EX_A(text);
+   MemFree(text);
+   m_interval = DBGetFieldUInt32(hResult, row, 8);
+   m_objectId = DBGetFieldUInt32(hResult, row, 9);
+   DBGetField(hResult, row, 10, flag, 2);
+   m_action = (flag[0] == 'O') ? AICheckAction::OBSERVE : AICheckAction::WAKE;
+   m_cooldown = DBGetFieldUInt32(hResult, row, 11);
+   m_renotifyInterval = DBGetFieldUInt32(hResult, row, 12);
+   m_lastRun = DBGetFieldUInt32(hResult, row, 13);
+   DBGetField(hResult, row, 14, flag, 2);
+   switch(flag[0])
+   {
+      case 'Q':
+         m_lastVerdict = AICheckVerdict::QUIET;
+         break;
+      case 'F':
+         m_lastVerdict = AICheckVerdict::FIRED;
+         break;
+      case 'E':
+         m_lastVerdict = AICheckVerdict::FAILED;
+         break;
+      default:
+         m_lastVerdict = AICheckVerdict::NONE;
+         break;
+   }
+   m_lastFire = DBGetFieldUInt32(hResult, row, 15);
+   text = DBGetFieldUTF8(hResult, row, 16, nullptr, 0);
+   m_lastPayload = CHECK_NULL_EX_A(text);
+   MemFree(text);
+   m_consecutiveErrors = DBGetFieldUInt32(hResult, row, 17);
+   m_runCount = DBGetFieldUInt32(hResult, row, 18);
+   m_creationTime = DBGetFieldUInt32(hResult, row, 19);
+   m_modificationTime = DBGetFieldUInt32(hResult, row, 20);
+   m_running = false;
+
+   m_program = shared_ptr<NXSL_Program>(CompileCheckSource(m_source.c_str(), &m_compileError));
+}
+
+/**
+ * Save standing check to database. Must be called with instance lock held.
+ */
+void AIOperatorCheck::saveToDatabase() const
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   static const wchar_t *mergeColumns[] = {
+      L"instance_id", L"name", L"description", L"enabled", L"locked", L"created_by", L"source", L"check_interval",
+      L"object_id", L"check_action", L"cooldown", L"renotify_interval", L"last_run", L"last_verdict", L"last_fire",
+      L"last_payload", L"consecutive_errors", L"run_count", L"created", L"modified", nullptr
+   };
+   DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"ai_operator_checks", L"id", m_id, mergeColumns);
+   if (hStmt != nullptr)
+   {
+      wchar_t verdict[2] = { VerdictToChar(m_lastVerdict), 0 };
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_instanceId);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, 63);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, 255);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_enabled ? L"1" : L"0", DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_locked ? L"1" : L"0", DB_BIND_STATIC);
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_createdByModel ? L"M" : L"H", DB_BIND_STATIC);
+      DBBind(hStmt, 7, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_source.c_str(), DB_BIND_STATIC);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_interval);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_objectId);
+      DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, (m_action == AICheckAction::OBSERVE) ? L"O" : L"W", DB_BIND_STATIC);
+      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_cooldown);
+      DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_renotifyInterval);
+      DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastRun));
+      DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, verdict, DB_BIND_STATIC);
+      DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastFire));
+      DBBind(hStmt, 16, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_lastPayload.c_str(), DB_BIND_STATIC);
+      DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_consecutiveErrors);
+      DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_runCount);
+      DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
+      DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_modificationTime));
+      DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_id);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Delete standing check from database
+ */
+void AIOperatorCheck::deleteFromDatabase()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM ai_operator_checks WHERE id=?");
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Record outcome of a run. Returns true if persistent state changed and the check should be saved.
+ */
+bool AIOperatorCheck::recordRun(time_t now, const AICheckResult& result, AICheckTransition transition)
+{
+   m_lastRun = now;
+   m_runCount++;
+
+   switch(transition)
+   {
+      case AICheckTransition::FIRE_EDGE:
+      case AICheckTransition::FIRE_RENOTIFY:
+         m_lastVerdict = AICheckVerdict::FIRED;
+         m_lastFire = now;
+         m_lastPayload = CheckResultToJson(result);
+         m_consecutiveErrors = 0;
+         return true;
+      case AICheckTransition::CLEAR:
+         m_lastVerdict = AICheckVerdict::QUIET;
+         m_consecutiveErrors = 0;
+         return true;
+      case AICheckTransition::FAILURE:
+         m_lastVerdict = AICheckVerdict::FAILED;
+         m_lastPayload = CheckResultToJson(result);
+         m_consecutiveErrors++;
+         return true;
+      case AICheckTransition::SUPPRESSED:
+         // Action deferred until cooldown expires; previous verdict kept so the next run is still an edge
+         m_consecutiveErrors = 0;
+         return false;
+      default:
+         {
+            bool changed = (m_lastVerdict != result.verdict) || (m_consecutiveErrors != 0);
+            m_lastVerdict = result.verdict;
+            m_consecutiveErrors = 0;
+            return changed;
+         }
+   }
+}
+
+/**
+ * Modify standing check from JSON configuration. Compiles the source before committing any change,
+ * so a rejected request never leaves the check partially modified.
+ */
+uint32_t AIOperatorCheck::modifyFromJSON(json_t *config, bool byModel, MutableString *errorText)
+{
+   if (byModel && m_locked)
+   {
+      SetErrorText(errorText, L"check is locked");
+      return RCC_ACCESS_DENIED;
+   }
+
+   bool updateName = false;
+   wchar_t name[64];
+   json_t *jname = json_object_get(config, "name");
+   if (jname != nullptr)
+   {
+      if (!json_is_string(jname) || (*json_string_value(jname) == 0))
+      {
+         SetErrorText(errorText, L"name must be a non-empty string");
+         return RCC_INVALID_ARGUMENT;
+      }
+      utf8_to_wchar(json_string_value(jname), -1, name, 64);
+      name[63] = 0;
+      updateName = true;
+   }
+
+   json_t *description = json_object_get(config, "description");
+   if ((description != nullptr) && !json_is_string(description) && !json_is_null(description))
+   {
+      SetErrorText(errorText, L"description must be a string");
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   const char *source = nullptr;
+   json_t *jsource = json_object_get(config, "source");
+   if (jsource != nullptr)
+   {
+      if (!json_is_string(jsource) || (*json_string_value(jsource) == 0))
+      {
+         SetErrorText(errorText, L"source must be a non-empty string");
+         return RCC_INVALID_ARGUMENT;
+      }
+      if (m_source.compare(json_string_value(jsource)) != 0)
+         source = json_string_value(jsource);
+   }
+
+   uint32_t interval = m_interval;
+   uint32_t objectId = m_objectId;
+   uint32_t cooldown = m_cooldown;
+   uint32_t renotifyInterval = m_renotifyInterval;
+   if (!json_object_update_integer(config, "interval", &interval) ||
+       !json_object_update_integer(config, "objectId", &objectId) ||
+       !json_object_update_integer(config, "cooldown", &cooldown) ||
+       !json_object_update_integer(config, "renotifyInterval", &renotifyInterval))
+   {
+      SetErrorText(errorText, L"interval, objectId, cooldown, and renotifyInterval must be integers");
+      return RCC_INVALID_ARGUMENT;
+   }
+   if (interval < 30)
+      interval = 30;
+
+   AICheckAction action = m_action;
+   json_t *jaction = json_object_get(config, "action");
+   if (json_is_string(jaction))
+   {
+      const char *text = json_string_value(jaction);
+      if (!stricmp(text, "wake"))
+         action = AICheckAction::WAKE;
+      else if (!stricmp(text, "observe"))
+         action = AICheckAction::OBSERVE;
+      else
+      {
+         SetErrorText(errorText, L"action must be 'wake' or 'observe'");
+         return RCC_INVALID_ARGUMENT;
+      }
+   }
+   else if (json_is_integer(jaction))
+   {
+      json_int_t value = json_integer_value(jaction);
+      if ((value < 0) || (value > 1))
+      {
+         SetErrorText(errorText, L"action must be 'wake' or 'observe'");
+         return RCC_INVALID_ARGUMENT;
+      }
+      action = static_cast<AICheckAction>(value);
+   }
+   else if (jaction != nullptr)
+   {
+      SetErrorText(errorText, L"action must be 'wake' or 'observe'");
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   bool enabled = m_enabled;
+   if (!json_object_update_boolean(config, "enabled", &enabled))
+   {
+      SetErrorText(errorText, L"enabled must be a boolean");
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   // Lock can only be changed by a human
+   bool locked = m_locked;
+   if (!byModel && !json_object_update_boolean(config, "locked", &locked))
+   {
+      SetErrorText(errorText, L"locked must be a boolean");
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   // Bound object must exist and be readable by the AI operator account, so that the script sees
+   // exactly what the operator's tool calls see
+   if ((objectId != 0) && (objectId != m_objectId))
+   {
+      shared_ptr<NetObj> object = FindObjectById(objectId);
+      if (object == nullptr)
+      {
+         SetErrorText(errorText, L"object does not exist");
+         return RCC_INVALID_ARGUMENT;
+      }
+      if ((s_operatorUserId != INVALID_UID) && !object->checkAccessRights(s_operatorUserId, OBJECT_ACCESS_READ))
+      {
+         SetErrorText(errorText, L"AI operator account has no read access to object");
+         return RCC_INVALID_ARGUMENT;
+      }
+   }
+
+   NXSL_Program *program = nullptr;
+   if (source != nullptr)
+   {
+      program = CompileCheckSource(source, errorText);
+      if (program == nullptr)
+         return RCC_NXSL_COMPILATION_ERROR;
+   }
+
+   // All checks passed - commit staged values
+   if (updateName)
+      wcscpy(m_name, name);
+   if (description != nullptr)
+      m_description = String(json_is_string(description) ? json_string_value(description) : "", "utf8");
+   if (source != nullptr)
+   {
+      m_source = source;
+      m_program = shared_ptr<NXSL_Program>(program);
+      m_compileError = L"";
+   }
+   m_interval = interval;
+   m_objectId = objectId;
+   m_action = action;
+   m_cooldown = cooldown;
+   m_renotifyInterval = renotifyInterval;
+   m_enabled = enabled;
+   m_locked = locked;
+   m_modificationTime = time(nullptr);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Serialize standing check to JSON
+ */
+json_t *AIOperatorCheck::toJson() const
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "id", json_integer(m_id));
+   json_object_set_new(json, "instanceId", json_integer(m_instanceId));
+   json_object_set_new(json, "name", json_string_w(m_name));
+   json_object_set_new(json, "description", json_string_t(m_description));
+   json_object_set_new(json, "enabled", json_boolean(m_enabled));
+   json_object_set_new(json, "locked", json_boolean(m_locked));
+   json_object_set_new(json, "createdBy", json_string(m_createdByModel ? "model" : "human"));
+   json_object_set_new(json, "source", json_string(m_source.c_str()));
+   json_object_set_new(json, "interval", json_integer(m_interval));
+   json_object_set_new(json, "objectId", json_integer(m_objectId));
+   json_object_set_new(json, "action", json_string((m_action == AICheckAction::OBSERVE) ? "observe" : "wake"));
+   json_object_set_new(json, "cooldown", json_integer(m_cooldown));
+   json_object_set_new(json, "renotifyInterval", json_integer(m_renotifyInterval));
+   json_object_set_new(json, "lastRun", json_time_string(m_lastRun));
+   json_object_set_new(json, "lastVerdict", json_string(VerdictToName(m_lastVerdict)));
+   json_object_set_new(json, "lastFire", json_time_string(m_lastFire));
+   json_object_set_new(json, "lastPayload", json_string(m_lastPayload.c_str()));
+   json_object_set_new(json, "consecutiveErrors", json_integer(m_consecutiveErrors));
+   json_object_set_new(json, "runCount", json_integer(m_runCount));
+   json_object_set_new(json, "compileError", json_string_t(m_compileError));
+   json_object_set_new(json, "created", json_time_string(m_creationTime));
+   json_object_set_new(json, "modified", json_time_string(m_modificationTime));
+   return json;
+}
+
+/**
+ * Serialize standing check as compact JSON for the <checks> prompt block
+ */
+json_t *AIOperatorCheck::toPromptJson() const
+{
+   json_t *json = json_object();
+   json_object_set_new(json, "id", json_integer(m_id));
+   json_object_set_new(json, "name", json_string_w(m_name));
+   if (!m_description.isEmpty())
+      json_object_set_new(json, "description", json_string_t(m_description));
+   json_object_set_new(json, "interval", json_integer(m_interval));
+   if (m_objectId != 0)
+      json_object_set_new(json, "object_id", json_integer(m_objectId));
+   json_object_set_new(json, "action", json_string((m_action == AICheckAction::OBSERVE) ? "observe" : "wake"));
+   json_object_set_new(json, "enabled", json_boolean(m_enabled));
+   json_object_set_new(json, "locked", json_boolean(m_locked));
+   json_object_set_new(json, "last_verdict", json_string(VerdictToName(m_lastVerdict)));
+   if (m_lastRun != 0)
+      json_object_set_new(json, "last_run", json_string(FormatISO8601Timestamp(m_lastRun).c_str()));
+   if (m_lastFire != 0)
+      json_object_set_new(json, "last_fire", json_string(FormatISO8601Timestamp(m_lastFire).c_str()));
+   if (m_consecutiveErrors != 0)
+      json_object_set_new(json, "consecutive_errors", json_integer(m_consecutiveErrors));
+   if ((m_lastVerdict == AICheckVerdict::FAILED) && !m_lastPayload.empty())
+   {
+      json_t *payload = json_loads(m_lastPayload.c_str(), 0, nullptr);
+      if (payload != nullptr)
+         json_object_set_new(json, "last_error", json_incref(json_object_get(payload, "error")));
+      json_decref(payload);
+   }
+   return json;
+}
+
+/**
+ * Fill NXCP message with standing check data
+ */
+void AIOperatorCheck::fillMessage(NXCPMessage *msg, uint32_t baseId) const
+{
+   msg->setField(baseId, m_id);
+   msg->setField(baseId + 1, m_instanceId);
+   msg->setField(baseId + 2, m_name);
+   msg->setField(baseId + 3, m_description);
+   msg->setField(baseId + 4, m_enabled);
+   msg->setField(baseId + 5, m_locked);
+   msg->setField(baseId + 6, m_createdByModel);
+   msg->setFieldFromUtf8String(baseId + 7, m_source.c_str());
+   msg->setField(baseId + 8, m_interval);
+   msg->setField(baseId + 9, m_objectId);
+   msg->setField(baseId + 10, static_cast<int16_t>(m_action));
+   msg->setField(baseId + 11, m_cooldown);
+   msg->setField(baseId + 12, m_renotifyInterval);
+   msg->setFieldFromTime(baseId + 13, m_lastRun);
+   msg->setField(baseId + 14, static_cast<int16_t>(m_lastVerdict));
+   msg->setFieldFromTime(baseId + 15, m_lastFire);
+   msg->setFieldFromUtf8String(baseId + 16, m_lastPayload.c_str());
+   msg->setField(baseId + 17, m_consecutiveErrors);
+   msg->setField(baseId + 18, m_runCount);
+   msg->setFieldFromTime(baseId + 19, m_creationTime);
+   msg->setFieldFromTime(baseId + 20, m_modificationTime);
+   msg->setField(baseId + 21, m_compileError);
+}
+
+/**
+ * Update standing instructions. Previous text is written to history, new text is truncated to configured
+ * maximum size. Returns number of characters kept if the text was truncated, 0 otherwise.
+ * Must be called with instance lock held.
+ */
+size_t AIOperatorInstance::setInstructions(const char *text, time_t now)
+{
+   std::string value(CHECK_NULL_EX_A(text));
+   size_t truncatedTo = 0;
+   size_t maxSize = ConfigReadULong(L"AIOperator.Instructions.MaxSize", 8192);
+   if ((maxSize > 0) && (value.length() > maxSize))
+   {
+      // Do not split a multi-byte UTF-8 sequence
+      size_t cut = maxSize;
+      while((cut > 0) && ((static_cast<unsigned char>(value[cut]) & 0xC0) == 0x80))
+         cut--;
+      value.resize(cut);
+      truncatedTo = cut;
+   }
+
+   if (value == m_instructions)
+      return truncatedTo;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO ai_operator_instr_history (record_id,instance_id,iteration,change_timestamp,previous_text) VALUES (?,?,?,?,?)");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, InterlockedIncrement64(&s_instructionsHistoryId));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_iteration);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(now));
+      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_instructions.c_str(), DB_BIND_STATIC);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+
+   uint32_t depth = ConfigReadULong(L"AIOperator.Instructions.HistoryDepth", 20);
+   if (depth > 0)
+   {
+      wchar_t query[256];
+      nx_swprintf(query, 256, L"SELECT record_id FROM ai_operator_instr_history WHERE instance_id=%u ORDER BY record_id DESC", m_id);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > static_cast<int>(depth))
+         {
+            int64_t cutoffId = DBGetFieldInt64(hResult, depth, 0);
+            nx_swprintf(query, 256, L"DELETE FROM ai_operator_instr_history WHERE instance_id=%u AND record_id<=" INT64_FMT, m_id, cutoffId);
+            DBQuery(hdb, query);
+         }
+         DBFreeResult(hResult);
+      }
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   m_instructions = value;
+   m_modificationTime = now;
+   nxlog_debug_tag(DEBUG_TAG, 5, L"AI operator [%u] \"%s\" standing instructions %s (%d characters)", m_id, m_name,
+      value.empty() ? L"cleared" : L"updated", static_cast<int>(value.length()));
+   return truncatedTo;
+}
+
+/**
+ * Find index of standing check by ID. Must be called with instance lock held.
+ */
+int AIOperatorInstance::findCheckIndex(uint32_t checkId) const
+{
+   for(int i = 0; i < m_checks.size(); i++)
+      if (m_checks.get(i)->getId() == checkId)
+         return i;
+   return -1;
+}
+
+/**
+ * Append <checks> block to iteration prompt. Must be called with instance lock held.
+ */
+void AIOperatorInstance::appendChecksToPrompt(std::string& prompt) const
+{
+   if (m_checks.size() == 0)
+      return;
+
+   json_t *list = json_array();
+   for(int i = 0; i < m_checks.size(); i++)
+      json_array_append_new(list, m_checks.get(i)->toPromptJson());
+   char *text = json_dumps(list, JSON_COMPACT);
+   prompt.append("\n<checks>");
+   prompt.append(CHECK_NULL_EX_A(text));
+   prompt.append("</checks>");
+   MemFree(text);
+   json_decref(list);
+}
+
+/**
+ * Create standing check
+ */
+uint32_t AIOperatorInstance::createCheck(json_t *config, bool byModel, uint32_t *checkId, MutableString *errorText)
+{
+   const char *name = json_object_get_string_utf8(config, "name", nullptr);
+   if ((name == nullptr) || (*name == 0))
+   {
+      SetErrorText(errorText, L"name is required");
+      return RCC_INVALID_ARGUMENT;
+   }
+   const char *source = json_object_get_string_utf8(config, "source", nullptr);
+   if ((source == nullptr) || (*source == 0))
+   {
+      SetErrorText(errorText, L"source is required");
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   LockGuard lockGuard(m_mutex);
+
+   int limit = ConfigReadInt(L"AIOperator.Checks.MaxPerInstance", 32);
+   if ((limit > 0) && (m_checks.size() >= limit))
+   {
+      SetErrorText(errorText, L"check limit for this instance is reached; delete a check that is no longer needed first");
+      return RCC_RESOURCE_NOT_AVAILABLE;
+   }
+
+   shared_ptr<AIOperatorCheck> check = make_shared<AIOperatorCheck>(m_id, byModel);
+   uint32_t rcc = check->modifyFromJSON(config, byModel, errorText);
+   if (rcc != RCC_SUCCESS)
+      return rcc;
+
+   m_checks.add(check);
+   check->saveToDatabase();
+   ConfigWriteInt(L"AIOperator.LastCheckId", s_checkId, true, false, true);
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\": standing check [%u] \"%s\" created by %s", m_id, m_name,
+      check->getId(), check->getName(), byModel ? L"model" : L"user");
+   if (checkId != nullptr)
+      *checkId = check->getId();
+   return RCC_SUCCESS;
+}
+
+/**
+ * Modify standing check
+ */
+uint32_t AIOperatorInstance::modifyCheck(uint32_t checkId, json_t *config, bool byModel, MutableString *errorText)
+{
+   LockGuard lockGuard(m_mutex);
+   int index = findCheckIndex(checkId);
+   if (index == -1)
+      return RCC_NO_SUCH_RECORD;
+
+   AIOperatorCheck *check = m_checks.get(index);
+   uint32_t rcc = check->modifyFromJSON(config, byModel, errorText);
+   if (rcc != RCC_SUCCESS)
+      return rcc;
+
+   check->saveToDatabase();
+   nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\": standing check [%u] \"%s\" modified by %s", m_id, m_name,
+      check->getId(), check->getName(), byModel ? L"model" : L"user");
+   return RCC_SUCCESS;
+}
+
+/**
+ * Delete standing check
+ */
+uint32_t AIOperatorInstance::deleteCheck(uint32_t checkId, bool byModel)
+{
+   m_mutex.lock();
+   int index = findCheckIndex(checkId);
+   if (index == -1)
+   {
+      m_mutex.unlock();
+      return RCC_NO_SUCH_RECORD;
+   }
+
+   shared_ptr<AIOperatorCheck> check = m_checks.getShared(index);
+   if (byModel && check->isLocked())
+   {
+      m_mutex.unlock();
+      return RCC_ACCESS_DENIED;
+   }
+   m_checks.remove(index);
+   m_mutex.unlock();
+
+   check->deleteFromDatabase();
+   nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\": standing check [%u] \"%s\" deleted by %s", m_id, m_name,
+      check->getId(), check->getName(), byModel ? L"model" : L"user");
+   return RCC_SUCCESS;
+}
+
+/**
+ * Get standing check by ID
+ */
+shared_ptr<AIOperatorCheck> AIOperatorInstance::getCheck(uint32_t checkId) const
+{
+   LockGuard lockGuard(m_mutex);
+   int index = findCheckIndex(checkId);
+   return (index != -1) ? m_checks.getShared(index) : shared_ptr<AIOperatorCheck>();
+}
+
+/**
+ * Get all standing checks
+ */
+void AIOperatorInstance::getChecks(SharedObjectArray<AIOperatorCheck> *checks) const
+{
+   LockGuard lockGuard(m_mutex);
+   checks->addAll(m_checks);
+}
+
+/**
+ * Get number of standing checks (total and enabled)
+ */
+int AIOperatorInstance::getCheckCount(int *enabledCount) const
+{
+   LockGuard lockGuard(m_mutex);
+   int enabled = 0;
+   for(int i = 0; i < m_checks.size(); i++)
+      if (m_checks.get(i)->isEnabled())
+         enabled++;
+   if (enabledCount != nullptr)
+      *enabledCount = enabled;
+   return m_checks.size();
+}
+
+/**
+ * Collect standing checks that are due and mark them as running
+ */
+void AIOperatorInstance::collectDueChecks(time_t now, std::vector<shared_ptr<AIOperatorCheck>> *checks)
+{
+   LockGuard lockGuard(m_mutex);
+   for(int i = 0; i < m_checks.size(); i++)
+   {
+      const shared_ptr<AIOperatorCheck>& check = m_checks.getShared(i);
+      if (check->isDue(now))
+      {
+         check->setRunning(true);
+         checks->push_back(check);
+      }
+   }
+}
+
+/**
+ * Drop pending check interrupts (instance is disabled)
+ */
+void AIOperatorInstance::dropPendingInterrupts()
+{
+   LockGuard lockGuard(m_mutex);
+   if (!m_pendingInterrupts.empty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\" dropped %d pending check interrupt(s) because instance is disabled",
+         m_id, m_name, static_cast<int>(m_pendingInterrupts.size()));
+      m_pendingInterrupts.clear();
+   }
+   m_interruptPending = false;
+}
+
+/**
+ * Run standing check: execute script, evaluate transition, apply action
+ */
+void AIOperatorInstance::runCheck(shared_ptr<AIOperatorCheck> check)
+{
+   int64_t startTime = GetCurrentTimeMs();
+   uint32_t timeLimit = ConfigReadULong(L"AIOperator.Checks.ExecutionTimeLimit", 10);
+
+   m_mutex.lock();
+   shared_ptr<NXSL_Program> program = check->getProgram();
+   String compileError = check->getCompileError();
+   uint32_t objectId = check->getObjectId();
+   wchar_t checkName[64];
+   wcscpy(checkName, check->getName());
+   m_mutex.unlock();
+
+   AICheckResult result;
+   if (program != nullptr)
+   {
+      result = ExecuteCheckScript(program, objectId, checkName, timeLimit);
+   }
+   else
+   {
+      result.verdict = AICheckVerdict::FAILED;
+      char *error = UTF8StringFromWideString(compileError);
+      result.error = std::string("compilation error: ").append(error);
+      MemFree(error);
+   }
+
+   time_t now = time(nullptr);
+   uint32_t durationMs = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);
+
+   m_mutex.lock();
+   AICheckTransition transition = EvaluateAICheckTransition(check->getLastVerdict(), check->getLastFire(), now,
+      check->getCooldown(), check->getRenotifyInterval(), result.verdict);
+   bool persist = check->recordRun(now, result, transition);
+
+   bool checkDisabled = false;
+   if (transition == AICheckTransition::FAILURE)
+   {
+      uint32_t maxErrors = ConfigReadULong(L"AIOperator.Checks.MaxConsecutiveErrors", 5);
+      if ((maxErrors > 0) && (check->getConsecutiveErrors() >= maxErrors))
+      {
+         check->setEnabled(false);
+         checkDisabled = true;
+      }
+   }
+   AICheckAction action = check->getAction();
+   bool instanceEnabled = m_enabled;
+   uint32_t consecutiveErrors = check->getConsecutiveErrors();
+
+   StringBuffer text;
+   switch(transition)
+   {
+      case AICheckTransition::FIRE_EDGE:
+      case AICheckTransition::FIRE_RENOTIFY:
+         text.appendFormattedString(L"Check [%u] \"%s\" %s: %hs", check->getId(), checkName,
+            (transition == AICheckTransition::FIRE_EDGE) ? L"fired" : L"re-notified", result.title.c_str());
+         logExecution('K', durationMs, 0, 0, text);
+         break;
+      case AICheckTransition::FAILURE:
+         text.appendFormattedString(L"Check [%u] \"%s\" failed: %hs", check->getId(), checkName, result.error.c_str());
+         if (checkDisabled)
+            text.appendFormattedString(L" (check disabled after %u consecutive errors)", consecutiveErrors);
+         logExecution('E', durationMs, 0, 0, text);
+         break;
+      default:
+         break;
+   }
+   m_mutex.unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, (transition == AICheckTransition::NONE) ? 7 : 5,
+      L"AI operator [%u] \"%s\": standing check [%u] \"%s\" run completed in %u ms (verdict=%hs, transition=%d)",
+      m_id, m_name, check->getId(), checkName, durationMs, VerdictToName(result.verdict), static_cast<int>(transition));
+
+   // Side effects are applied without holding the instance lock
+   if ((transition == AICheckTransition::FIRE_EDGE) || (transition == AICheckTransition::FIRE_RENOTIFY))
+   {
+      if (action == AICheckAction::OBSERVE)
+      {
+         char buffer[64];
+         char *name = UTF8StringFromWideString(checkName);
+         json_t *refs = json_array();
+         json_array_append_new(refs, json_string(std::string("check:").append(IntegerToString(check->getId(), buffer)).append(":").append(name).c_str()));
+         std::string refsText = JsonToString(refs);   // JsonToString releases the array
+         MemFree(name);
+         RecordObservation(this, result.severity, result.title.c_str(), result.details.empty() ? nullptr : result.details.c_str(), objectId, refsText.c_str());
+      }
+      else if (instanceEnabled)
+      {
+         AIOperatorInterrupt interrupt;
+         interrupt.checkId = check->getId();
+         char *name = UTF8StringFromWideString(checkName);
+         interrupt.checkName = name;
+         MemFree(name);
+         interrupt.payload = CheckResultToJson(result);
+         interrupt.timestamp = now;
+
+         m_mutex.lock();
+         m_pendingInterrupts.push_back(interrupt);
+         m_interruptPending = true;
+         m_mutex.unlock();
+         nxlog_debug_tag(DEBUG_TAG, 5, L"AI operator [%u] \"%s\": interrupt queued by standing check [%u] \"%s\"", m_id, m_name, check->getId(), checkName);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\": interrupt from standing check [%u] \"%s\" dropped because instance is disabled",
+            m_id, m_name, check->getId(), checkName);
+      }
+   }
+   else if (checkDisabled)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Standing check [%u] \"%s\" of AI operator instance [%u] \"%s\" disabled after %u consecutive errors (last error: %hs)",
+         check->getId(), checkName, m_id, m_name, consecutiveErrors, result.error.c_str());
+
+      char buffer[64];
+      char *name = UTF8StringFromWideString(checkName);
+      std::string title = std::string("Standing check \"").append(name).append("\" disabled after ").append(IntegerToString(consecutiveErrors, buffer)).append(" consecutive errors");
+      json_t *refs = json_array();
+      json_array_append_new(refs, json_string(std::string("check:").append(IntegerToString(check->getId(), buffer)).append(":").append(name).c_str()));
+      std::string refsText = JsonToString(refs);   // JsonToString releases the array
+      MemFree(name);
+      RecordObservation(this, SEVERITY_WARNING, title.c_str(), result.error.c_str(), objectId, refsText.c_str());
+   }
+
+   // Persist unless instance or check was deleted while the script was running.
+   // Lock order is always instance list lock -> AIOperatorInstance::m_mutex, never the reverse.
+   s_instancesLock.lock();
+   bool registered = s_instances.contains(m_id);
+   s_instancesLock.unlock();
+
+   m_mutex.lock();
+   if (persist && registered && (findCheckIndex(check->getId()) != -1))
+      check->saveToDatabase();
+   check->setRunning(false);
+   m_mutex.unlock();
+}
+
+/**
+ * Create standing check for AI operator instance
+ */
+uint32_t NXCORE_EXPORTABLE CreateAIOperatorCheck(uint32_t instanceId, json_t *config, bool byModel, uint32_t *checkId, MutableString *errorText)
+{
+   shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
+   if (instance == nullptr)
+      return RCC_INVALID_TASK_ID;
+   return instance->createCheck(config, byModel, checkId, errorText);
+}
+
+/**
+ * Modify standing check of AI operator instance
+ */
+uint32_t NXCORE_EXPORTABLE ModifyAIOperatorCheck(uint32_t instanceId, uint32_t checkId, json_t *config, bool byModel, MutableString *errorText)
+{
+   shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
+   if (instance == nullptr)
+      return RCC_INVALID_TASK_ID;
+   return instance->modifyCheck(checkId, config, byModel, errorText);
+}
+
+/**
+ * Delete standing check of AI operator instance
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAIOperatorCheck(uint32_t instanceId, uint32_t checkId, bool byModel)
+{
+   shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
+   if (instance == nullptr)
+      return RCC_INVALID_TASK_ID;
+   return instance->deleteCheck(checkId, byModel);
+}
+
+/**
+ * Get standing check of AI operator instance
+ */
+shared_ptr<AIOperatorCheck> NXCORE_EXPORTABLE GetAIOperatorCheck(uint32_t instanceId, uint32_t checkId)
+{
+   shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
+   return (instance != nullptr) ? instance->getCheck(checkId) : shared_ptr<AIOperatorCheck>();
+}
+
+/**
+ * Get standing checks of AI operator instance as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetAIOperatorChecksAsJson(uint32_t instanceId)
+{
+   shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
+   if (instance == nullptr)
+      return nullptr;
+
+   SharedObjectArray<AIOperatorCheck> checks;
+   instance->getChecks(&checks);
+
+   json_t *output = json_array();
+   for(int i = 0; i < checks.size(); i++)
+      json_array_append_new(output, checks.get(i)->toJson());
+   return output;
+}
+
+/**
+ * Fill NXCP message with standing checks of AI operator instance
+ */
+uint32_t FillAIOperatorCheckListMessage(uint32_t instanceId, NXCPMessage *msg)
+{
+   shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
+   if (instance == nullptr)
+      return RCC_INVALID_TASK_ID;
+
+   SharedObjectArray<AIOperatorCheck> checks;
+   instance->getChecks(&checks);
+
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < checks.size(); i++)
+   {
+      checks.get(i)->fillMessage(msg, fieldId);
+      fieldId += 30;
+   }
+   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(checks.size()));
+   return RCC_SUCCESS;
+}
+
+/**
+ * Read standing instructions history of AI operator instance. Callback receives record ID, iteration,
+ * change timestamp, and previous text (UTF-8).
+ */
+static void ReadInstructionsHistory(uint32_t instanceId, std::function<void (int64_t, uint32_t, time_t, const char*)> callback)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT record_id,iteration,change_timestamp,previous_text FROM ai_operator_instr_history WHERE instance_id=? ORDER BY record_id DESC");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, instanceId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            char *text = DBGetFieldUTF8(hResult, i, 3, nullptr, 0);
+            callback(DBGetFieldInt64(hResult, i, 0), DBGetFieldUInt32(hResult, i, 1), static_cast<time_t>(DBGetFieldInt64(hResult, i, 2)), CHECK_NULL_EX_A(text));
+            MemFree(text);
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Get standing instructions history of AI operator instance as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetAIOperatorInstructionsHistoryAsJson(uint32_t instanceId)
+{
+   if (GetAIOperatorInstance(instanceId) == nullptr)
+      return nullptr;
+
+   json_t *output = json_array();
+   ReadInstructionsHistory(instanceId,
+      [output] (int64_t recordId, uint32_t iteration, time_t timestamp, const char *text)
+      {
+         json_t *record = json_object();
+         json_object_set_new(record, "id", json_integer(recordId));
+         json_object_set_new(record, "iteration", json_integer(iteration));
+         json_object_set_new(record, "timestamp", json_time_string(timestamp));
+         json_object_set_new(record, "previousText", json_string(text));
+         json_array_append_new(output, record);
+      });
+   return output;
+}
+
+/**
+ * Fill NXCP message with standing instructions history of AI operator instance
+ */
+uint32_t FillAIOperatorInstructionsHistoryMessage(uint32_t instanceId, NXCPMessage *msg)
+{
+   if (GetAIOperatorInstance(instanceId) == nullptr)
+      return RCC_INVALID_TASK_ID;
+
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   uint32_t count = 0;
+   ReadInstructionsHistory(instanceId,
+      [msg, &fieldId, &count] (int64_t recordId, uint32_t iteration, time_t timestamp, const char *text)
+      {
+         msg->setField(fieldId, recordId);
+         msg->setField(fieldId + 1, iteration);
+         msg->setFieldFromTime(fieldId + 2, timestamp);
+         msg->setFieldFromUtf8String(fieldId + 3, text);
+         fieldId += 10;
+         count++;
+      });
+   msg->setField(VID_NUM_ELEMENTS, count);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Build standing check configuration from AI function arguments. Returns false and sets error message on failure.
+ */
+static bool BuildCheckConfigFromArguments(json_t *arguments, json_t *config, uint32_t userId, std::string *error)
+{
+   static const char *stringFields[] = { "name", "description", "source", "action", nullptr };
+   for(int i = 0; stringFields[i] != nullptr; i++)
+   {
+      json_t *value = json_object_get(arguments, stringFields[i]);
+      if (value != nullptr)
+         json_object_set(config, stringFields[i], value);
+   }
+
+   static const struct { const char *argument; const char *tag; } integerFields[] =
+   {
+      { "interval", "interval" },
+      { "cooldown", "cooldown" },
+      { "renotify_interval", "renotifyInterval" },
+      { nullptr, nullptr }
+   };
+   for(int i = 0; integerFields[i].argument != nullptr; i++)
+   {
+      json_t *value = json_object_get(arguments, integerFields[i].argument);
+      if (value != nullptr)
+         json_object_set_new(config, integerFields[i].tag, json_integer(json_object_get_int32(arguments, integerFields[i].argument, 0)));
+   }
+
+   json_t *enabled = json_object_get(arguments, "enabled");
+   if (enabled != nullptr)
+      json_object_set_new(config, "enabled", json_boolean(json_object_get_boolean(arguments, "enabled", true)));
+
+   json_t *objectElement = json_object_get(arguments, "object");
+   if (objectElement != nullptr)
+   {
+      const char *objectName = json_object_get_string_utf8(arguments, "object", "");
+      if ((*objectName == 0) || !stricmp(objectName, "none"))
+      {
+         json_object_set_new(config, "objectId", json_integer(0));
+      }
+      else
+      {
+         shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+         if (object == nullptr)
+         {
+            *error = "Error: object not found";
+            return false;
+         }
+         if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         {
+            *error = "Error: access to object denied";
+            return false;
+         }
+         json_object_set_new(config, "objectId", json_integer(object->getId()));
+      }
+   }
+   return true;
+}
+
+/**
+ * Convert RCC from standing check management to AI function result message
+ */
+static std::string CheckRccToMessage(uint32_t rcc, const String& errorText)
+{
+   std::string message;
+   switch(rcc)
+   {
+      case RCC_SUCCESS:
+         return std::string("OK");
+      case RCC_NO_SUCH_RECORD:
+         return std::string("Error: check with given ID does not exist in this instance");
+      case RCC_ACCESS_DENIED:
+         return std::string("Error: check is locked by administrator and cannot be modified or deleted");
+      case RCC_RESOURCE_NOT_AVAILABLE:
+         message = "Error: ";
+         break;
+      case RCC_NXSL_COMPILATION_ERROR:
+         message = "Error: script compilation failed: ";
+         break;
+      default:
+         message = "Error: invalid check configuration: ";
+         break;
+   }
+   char *text = UTF8StringFromWideString(errorText);
+   message.append(text);
+   MemFree(text);
+   return message;
+}
+
+/**
+ * AI assistant function: create-check
+ */
+static std::string F_CreateCheck(json_t *arguments, uint32_t userId)
+{
+   AIOperatorInstance *instance = s_currentInstance;
+   if (instance == nullptr)
+      return std::string("Error: this function can only be used during AI operator execution");
+
+   json_t *config = json_object();
+   std::string error;
+   if (!BuildCheckConfigFromArguments(arguments, config, userId, &error))
+   {
+      json_decref(config);
+      return error;
+   }
+
+   uint32_t checkId;
+   MutableString errorText;
+   uint32_t rcc = instance->createCheck(config, true, &checkId, &errorText);
+   json_decref(config);
+   if (rcc != RCC_SUCCESS)
+      return CheckRccToMessage(rcc, errorText);
+
+   char buffer[64];
+   return std::string("Check created with ID ").append(IntegerToString(checkId, buffer));
+}
+
+/**
+ * AI assistant function: update-check
+ */
+static std::string F_UpdateCheck(json_t *arguments, uint32_t userId)
+{
+   AIOperatorInstance *instance = s_currentInstance;
+   if (instance == nullptr)
+      return std::string("Error: this function can only be used during AI operator execution");
+
+   uint32_t checkId = json_object_get_uint32(arguments, "id", 0);
+   if (checkId == 0)
+      return std::string("Error: id parameter is required");
+
+   json_t *config = json_object();
+   std::string error;
+   if (!BuildCheckConfigFromArguments(arguments, config, userId, &error))
+   {
+      json_decref(config);
+      return error;
+   }
+
+   MutableString errorText;
+   uint32_t rcc = instance->modifyCheck(checkId, config, true, &errorText);
+   json_decref(config);
+   if (rcc != RCC_SUCCESS)
+      return CheckRccToMessage(rcc, errorText);
+
+   char buffer[64];
+   return std::string("Check ").append(IntegerToString(checkId, buffer)).append(" updated");
+}
+
+/**
+ * AI assistant function: delete-check
+ */
+static std::string F_DeleteCheck(json_t *arguments, uint32_t userId)
+{
+   AIOperatorInstance *instance = s_currentInstance;
+   if (instance == nullptr)
+      return std::string("Error: this function can only be used during AI operator execution");
+
+   uint32_t checkId = json_object_get_uint32(arguments, "id", 0);
+   if (checkId == 0)
+      return std::string("Error: id parameter is required");
+
+   uint32_t rcc = instance->deleteCheck(checkId, true);
+   if (rcc != RCC_SUCCESS)
+      return CheckRccToMessage(rcc, MutableString());
+
+   char buffer[64];
+   return std::string("Check ").append(IntegerToString(checkId, buffer)).append(" deleted");
+}
+
+/**
+ * AI assistant function: test-check
+ */
+static std::string F_TestCheck(json_t *arguments, uint32_t userId)
+{
+   AIOperatorInstance *instance = s_currentInstance;
+   if (instance == nullptr)
+      return std::string("Error: this function can only be used during AI operator execution");
+
+   const char *source = json_object_get_string_utf8(arguments, "source", nullptr);
+   if ((source == nullptr) || (*source == 0))
+      return std::string("Error: source parameter is required");
+
+   uint32_t objectId = 0;
+   if (json_object_get(arguments, "object") != nullptr)
+   {
+      shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+      if (object == nullptr)
+         return std::string("Error: object not found");
+      if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+         return std::string("Error: access to object denied");
+      objectId = object->getId();
+   }
+
+   MutableString errorText;
+   NXSL_Program *program = CompileCheckSource(source, &errorText);
+   if (program == nullptr)
+      return CheckRccToMessage(RCC_NXSL_COMPILATION_ERROR, errorText);
+
+   AICheckResult result = ExecuteCheckScript(shared_ptr<NXSL_Program>(program), objectId, L"test", ConfigReadULong(L"AIOperator.Checks.ExecutionTimeLimit", 10));
+
+   std::string output("verdict=");
+   output.append(VerdictToName(result.verdict));
+   if (result.verdict == AICheckVerdict::FIRED)
+   {
+      output.append("\ntitle=").append(result.title);
+      char buffer[32];
+      output.append("\nseverity=").append(IntegerToString(result.severity, buffer));
+      if (!result.details.empty())
+         output.append("\ndetails=").append(result.details);
+   }
+   else if (result.verdict == AICheckVerdict::FAILED)
+   {
+      output.append("\nerror=").append(result.error);
+   }
+   return output;
+}
+
+/**
  * AI assistant function: record-observation
  */
 static std::string F_RecordObservation(json_t *arguments, uint32_t userId)
@@ -1079,25 +2518,50 @@ static void AIOperatorSchedulerThread()
 
       time_t now = time(nullptr);
       std::vector<shared_ptr<AIOperatorInstance>> instancesToExecute;
+      std::vector<std::pair<shared_ptr<AIOperatorInstance>, shared_ptr<AIOperatorCheck>>> checksToRun;
 
-      // Mark selected instances as executing at enqueue time to prevent double dispatch
+      // Mark selected instances and checks as executing at enqueue time to prevent double dispatch.
+      // An instance with pending check interrupts is due regardless of its next execution time.
       s_instancesLock.lock();
       for(const shared_ptr<AIOperatorInstance>& instance : s_instances)
       {
-         if (instance->isEnabled() && !instance->isExecuting() && (instance->getNextExecutionTime() <= now))
+         if (!instance->isEnabled())
+         {
+            if (instance->hasPendingInterrupts())
+               instance->dropPendingInterrupts();
+            continue;
+         }
+
+         if (!instance->isExecuting() && ((instance->getNextExecutionTime() <= now) || instance->hasPendingInterrupts()))
          {
             instance->setExecuting();
             instancesToExecute.push_back(instance);
          }
+
+         std::vector<shared_ptr<AIOperatorCheck>> dueChecks;
+         instance->collectDueChecks(now, &dueChecks);
+         for(const shared_ptr<AIOperatorCheck>& check : dueChecks)
+            checksToRun.push_back({ instance, check });
       }
       s_instancesLock.unlock();
+
+      for(const auto& entry : checksToRun)
+      {
+         if (g_flags & AF_SHUTDOWN)
+            break;
+
+         nxlog_debug_tag(DEBUG_TAG, 7, L"Running standing check [%u] \"%s\" of AI operator instance [%u]",
+            entry.second->getId(), entry.second->getName(), entry.first->getId());
+         ThreadPoolExecute(s_threadPool, entry.first, &AIOperatorInstance::runCheck, entry.second);
+      }
 
       for(const shared_ptr<AIOperatorInstance>& instance : instancesToExecute)
       {
          if (g_flags & AF_SHUTDOWN)
             break;
 
-         nxlog_debug_tag(DEBUG_TAG, 5, L"Executing AI operator instance [%u] \"%s\"", instance->getId(), instance->getName());
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Executing AI operator instance [%u] \"%s\"%s", instance->getId(), instance->getName(),
+            instance->hasPendingInterrupts() ? L" (triggered by standing check)" : L"");
          ThreadPoolExecute(s_threadPool, instance, &AIOperatorInstance::execute);
       }
    }
@@ -1110,22 +2574,25 @@ static void AIOperatorSchedulerThread()
  */
 void ShowAIOperators(ServerConsole *console)
 {
-   ConsolePrintf(console, L" %-6s | %-24s | %-8s | %-9s | %-20s | %-20s | %9s | %12s\n",
-      L"ID", L"Name", L"Enabled", L"State", L"Last execution", L"Next execution", L"Iteration", L"Tokens today");
-   ConsolePrintf(console, L"--------+--------------------------+----------+-----------+----------------------+----------------------+-----------+-------------\n");
+   ConsolePrintf(console, L" %-6s | %-24s | %-8s | %-9s | %-20s | %-20s | %9s | %12s | %-7s\n",
+      L"ID", L"Name", L"Enabled", L"State", L"Last execution", L"Next execution", L"Iteration", L"Tokens today", L"Checks");
+   ConsolePrintf(console, L"--------+--------------------------+----------+-----------+----------------------+----------------------+-----------+--------------+--------\n");
 
    s_instancesLock.lock();
    s_instances.forEach(
       [console] (const uint32_t& key, const shared_ptr<AIOperatorInstance>& instance) -> EnumerationCallbackResult
       {
-         ConsolePrintf(console, L" %-6u | %-24s | %-8s | %-9s | %-20s | %-20s | %9u | %12u\n",
+         int enabledChecks;
+         int totalChecks = instance->getCheckCount(&enabledChecks);
+         ConsolePrintf(console, L" %-6u | %-24s | %-8s | %-9s | %-20s | %-20s | %9u | %12u | %3d/%-3d\n",
             instance->getId(), instance->getName(),
             instance->isEnabled() ? L"yes" : L"no",
             instance->isExecuting() ? L"running" : L"idle",
             (instance->getLastExecutionTime() > 0) ? FormatTimestamp(instance->getLastExecutionTime()).cstr() : L"never",
             instance->isEnabled() ? FormatTimestamp(instance->getNextExecutionTime()).cstr() : L"never",
             instance->getIteration(),
-            static_cast<uint32_t>(instance->getTokensUsedToday()));
+            static_cast<uint32_t>(instance->getTokensUsedToday()),
+            enabledChecks, totalChecks);
          return _CONTINUE;
       });
    s_instancesLock.unlock();
@@ -1162,10 +2629,20 @@ void InitAIOperators()
    }
    s_logRecordId += HAGetRecordIdGap();
 
+   hResult = DBSelect(hdb, L"SELECT max(record_id) FROM ai_operator_instr_history");
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_instructionsHistoryId = DBGetFieldInt64(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+   s_instructionsHistoryId += HAGetRecordIdGap();
+
    hResult = DBSelect(hdb,
       L"SELECT id,name,description,owner_user_id,enabled,scope_filter,model_slot,min_interval,max_interval,daily_token_budget,"
       L"tokens_used,usage_day,persona_prompt,current_focus,watch_list,memento,observation_retention_days,"
-      L"observation_max_records,last_execution_time,next_execution_time,iteration,created,modified FROM ai_operator_instances ORDER BY id");
+      L"observation_max_records,instructions,instructions_locked,last_execution_time,next_execution_time,iteration,created,modified "
+      L"FROM ai_operator_instances ORDER BY id");
    if (hResult != nullptr)
    {
       uint32_t maxId = 0;
@@ -1181,6 +2658,40 @@ void InitAIOperators()
 
       if (maxId > static_cast<uint32_t>(s_instanceId))
          s_instanceId = maxId;
+   }
+
+   s_checkId = ConfigReadInt(L"AIOperator.LastCheckId", 0);
+   hResult = DBSelect(hdb,
+      L"SELECT id,instance_id,name,description,enabled,locked,created_by,source,check_interval,object_id,check_action,cooldown,"
+      L"renotify_interval,last_run,last_verdict,last_fire,last_payload,consecutive_errors,run_count,created,modified "
+      L"FROM ai_operator_checks ORDER BY id");
+   if (hResult != nullptr)
+   {
+      uint32_t maxId = 0;
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         shared_ptr<AIOperatorCheck> check = make_shared<AIOperatorCheck>(hResult, i);
+         shared_ptr<AIOperatorInstance> instance = s_instances.getShared(check->getInstanceId());
+         if (instance != nullptr)
+         {
+            instance->loadCheck(check);
+            if (!check->getCompileError().isEmpty())
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Standing check [%u] \"%s\" of AI operator instance [%u] failed to compile: %s",
+                  check->getId(), check->getName(), instance->getId(), check->getCompileError().cstr());
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 3, L"Standing check [%u] \"%s\" refers to non-existing AI operator instance [%u] and will be ignored",
+               check->getId(), check->getName(), check->getInstanceId());
+         }
+         if (check->getId() > maxId)
+            maxId = check->getId();
+      }
+      DBFreeResult(hResult);
+
+      if (maxId > static_cast<uint32_t>(s_checkId))
+         s_checkId = maxId;
    }
 
    DBConnectionPoolReleaseConnection(hdb);
@@ -1201,8 +2712,30 @@ void InitAIOperators()
       "- <memento> tag contains data preserved from previous iteration (if any)\n"
       "- <current_time> tag contains current server time in ISO 8601 format\n"
       "- <interval_bounds> tag contains allowed range for next execution delay in seconds\n"
+      "- <checks> tag (if present) lists your standing checks with their state\n"
+      "- <triggered_checks> tag (if present) lists standing checks with 'wake' action that fired since your last iteration, "
+      "with their payloads; this iteration was started because of them, so investigate them first\n"
       "- Use available functions to assess current operational status, alarms, events, and metrics\n"
       "- Load skills using load-skill function when you need specialized capabilities\n\n"
+      "STANDING CHECKS:\n"
+      "- A standing check is an NXSL script the server runs for you on its own schedule, without LLM cost and with consistent verdicts\n"
+      "- Prefer a standing check for anything you would otherwise re-poll on every iteration\n"
+      "- Manage checks with create-check, update-check, delete-check, and test-check functions; validate a script with test-check "
+      "before creating it\n"
+      "- Script contract: $object is bound to the check's object (or null); return null or false when everything is fine; "
+      "return a string (used as title) or a hash with 'title', 'severity' (normal, warning, minor, major, critical) and 'details' "
+      "to fire; any other return value is a check error\n"
+      "- Use 'observe' action when a fired check is an unambiguous finding that can be recorded as an observation directly; "
+      "use 'wake' when a fired check needs your investigation\n"
+      "- Keep the check list small and relevant: review <checks> on every iteration, retire checks that are no longer useful, "
+      "and do not re-poll conditions already covered by a check\n"
+      "- Checks failing repeatedly are disabled automatically; fix or delete them\n\n"
+      "STANDING INSTRUCTIONS:\n"
+      "- You may keep standing instructions for yourself: guidance injected into your system prompt on every iteration "
+      "after the operator persona\n"
+      "- Return them in the 'instructions' response field: omit the field to keep the current text, return an empty string "
+      "to clear it, or return the complete new text to replace it\n"
+      "- Keep them short and actionable; persona and system rules always take precedence\n\n"
       "RECORDING FINDINGS:\n"
       "- Use record-observation to record any notable finding (anomaly, degradation, recovery, notable trend)\n"
       "- Observations form a persistent stream reviewed by human operators - record only meaningful findings\n"
@@ -1224,6 +2757,7 @@ void InitAIOperators()
       "- 'current_focus': short summary of what you will focus on next (optional, replaces current)\n"
       "- 'watch_list': updated list of items you are watching (optional, string or array, replaces current)\n"
       "- 'memento': data to preserve until next iteration (optional, string or object; omit to keep previous value)\n"
+      "- 'instructions': updated standing instructions (optional, string; omit to keep, empty string to clear)\n"
       "- 'explanation': brief summary of this iteration and reasoning behind your decisions (required)\n";
    ENUMERATE_MODULES(pfGetAIAgentInstructions)
    {
@@ -1243,6 +2777,61 @@ void InitAIOperators()
          { "references", "Optional: array of references supporting the observation (alarm IDs, event IDs, DCI IDs, etc.)", "array", "string" }
       },
       F_RecordObservation);
+
+   RegisterAIAssistantFunction(
+      "create-check",
+      "Create a standing check for this AI operator instance (available only during AI operator execution). "
+      "A standing check is an NXSL script run by the server on schedule without LLM involvement. "
+      "Script contract: $object is bound to the check's object (or null); return null or false when everything is fine; "
+      "return a string (title) or a hash with 'title', 'severity', and 'details' to fire; any other value is an error. "
+      "Source is compiled first; compilation errors are returned.",
+      {
+         { "name", "Short check name (max 63 chars)" },
+         { "description", "Optional: what the check watches and why" },
+         { "source", "NXSL source code of the check" },
+         { "interval", "Run interval in seconds (minimum 30, default 300)", "integer" },
+         { "object", "Optional: name or ID of the object bound as $object" },
+         { "action", "Action when the check fires: 'wake' (start an iteration with the payload) or 'observe' (record observation directly); default 'wake'" },
+         { "cooldown", "Optional: minimum seconds between two action applications (default 0)", "integer" },
+         { "renotify_interval", "Optional: seconds after which the action is applied again while the check stays fired (default 0 = only on the quiet->fired edge)", "integer" }
+      },
+      F_CreateCheck);
+
+   RegisterAIAssistantFunction(
+      "update-check",
+      "Update a standing check of this AI operator instance (available only during AI operator execution). "
+      "Only provided fields are changed; changed source is compiled first. Locked checks cannot be updated.",
+      {
+         { "id", "Check ID", "integer" },
+         { "name", "Optional: new name" },
+         { "description", "Optional: new description" },
+         { "source", "Optional: new NXSL source code" },
+         { "interval", "Optional: new run interval in seconds (minimum 30)", "integer" },
+         { "object", "Optional: name or ID of the object bound as $object ('none' to unbind)" },
+         { "action", "Optional: 'wake' or 'observe'" },
+         { "cooldown", "Optional: new cooldown in seconds", "integer" },
+         { "renotify_interval", "Optional: new renotify interval in seconds", "integer" },
+         { "enabled", "Optional: enable or disable the check", "boolean" }
+      },
+      F_UpdateCheck);
+
+   RegisterAIAssistantFunction(
+      "delete-check",
+      "Delete a standing check of this AI operator instance (available only during AI operator execution). Locked checks cannot be deleted.",
+      {
+         { "id", "Check ID", "integer" }
+      },
+      F_DeleteCheck);
+
+   RegisterAIAssistantFunction(
+      "test-check",
+      "Run standing check source once with the real security context and return its verdict without creating a check or recording anything "
+      "(available only during AI operator execution). Use it to validate a script before create-check or update-check.",
+      {
+         { "source", "NXSL source code to test" },
+         { "object", "Optional: name or ID of the object bound as $object" }
+      },
+      F_TestCheck);
 
    s_threadPool = ThreadPoolCreate(AI_OPERATOR_COMPONENT,
       ConfigReadInt(L"ThreadPool.AIOperator.BaseSize", 4),

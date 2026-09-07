@@ -81,6 +81,8 @@ import org.netxms.client.ai.AiDisabledItem;
 import org.netxms.client.ai.AiFunctionCall;
 import org.netxms.client.ai.AiMessage;
 import org.netxms.client.ai.AiOperator;
+import org.netxms.client.ai.AiOperatorCheck;
+import org.netxms.client.ai.AiOperatorInstructionsHistoryRecord;
 import org.netxms.client.ai.AiQuestion;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.businessservices.BusinessServiceCheck;
@@ -17483,7 +17485,7 @@ public class NXCSession
    }
 
    /**
-    * Delete AI operator instance (also deletes its observations).
+    * Delete AI operator instance (also deletes its observations, standing checks, and instructions history).
     *
     * @param operatorId instance ID
     * @throws IOException if socket I/O error occurs
@@ -17498,7 +17500,8 @@ public class NXCSession
    }
 
    /**
-    * Reset AI operator instance accumulated state (memento, current focus, watch list, and iteration counter).
+    * Reset AI operator instance accumulated state (memento, current focus, watch list, standing instructions, and iteration
+    * counter). Standing checks are not affected.
     *
     * @param operatorId instance ID
     * @throws IOException if socket I/O error occurs
@@ -17510,6 +17513,92 @@ public class NXCSession
       msg.setFieldUInt32(NXCPCodes.VID_AI_OPERATOR_ID, operatorId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get standing checks of AI operator instance.
+    *
+    * @param operatorId instance ID
+    * @return list of standing checks
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AiOperatorCheck> getAiOperatorChecks(int operatorId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_OPERATOR_CHECKS);
+      msg.setFieldUInt32(NXCPCodes.VID_AI_OPERATOR_ID, operatorId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<AiOperatorCheck> checks = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         checks.add(new AiOperatorCheck(response, fieldId));
+         fieldId += 30;
+      }
+      return checks;
+   }
+
+   /**
+    * Create or modify standing check of AI operator instance. Check with ID 0 will be created on the server.
+    * The source is compiled by the server first; on compilation failure the thrown exception carries the
+    * diagnostic message as additional information.
+    *
+    * @param check standing check configuration
+    * @return check ID (assigned by server for new checks)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public int modifyAiOperatorCheck(AiOperatorCheck check) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_AI_OPERATOR_CHECK);
+      check.fillMessage(msg);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt32(NXCPCodes.VID_CHECK_ID);
+   }
+
+   /**
+    * Delete standing check of AI operator instance.
+    *
+    * @param operatorId instance ID
+    * @param checkId check ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteAiOperatorCheck(int operatorId, int checkId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_OPERATOR_CHECK);
+      msg.setFieldUInt32(NXCPCodes.VID_AI_OPERATOR_ID, operatorId);
+      msg.setFieldUInt32(NXCPCodes.VID_CHECK_ID, checkId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get standing instructions history of AI operator instance (most recent first).
+    *
+    * @param operatorId instance ID
+    * @return list of history records
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AiOperatorInstructionsHistoryRecord> getAiOperatorInstructionsHistory(int operatorId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_OPERATOR_INSTR_HISTORY);
+      msg.setFieldUInt32(NXCPCodes.VID_AI_OPERATOR_ID, operatorId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<AiOperatorInstructionsHistoryRecord> records = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         records.add(new AiOperatorInstructionsHistoryRecord(response, fieldId));
+         fieldId += 10;
+      }
+      return records;
    }
 
    /**

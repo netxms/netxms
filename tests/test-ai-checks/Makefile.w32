@@ -1,0 +1,14 @@
+#
+# Makefile.w32 - test-ai-checks (AI operator standing check logic unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = test-ai-checks
+SOURCES = test-ai-checks.cpp ai_check_logic.cpp
+# nms_core.h pulls in netxms-webapi.h, which includes <microhttpd.h>
+TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/tests/include -I$(MICROHTTPD_ROOT)/include -DNXCORE_EXPORTS
+TOOL_LIBS = -lnxsrv -lnxsnmp -lnxsl -lnxdb -lnxagent -lnetxms -lnxjansson
+
+vpath %.cpp $(TOPDIR)/src/server/core
+
+include $(TOPDIR)/build/tool-common.mk
