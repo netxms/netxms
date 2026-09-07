@@ -205,7 +205,7 @@ std::string F_GetBackupList(json_t *arguments, uint32_t userId)
 std::string F_GetBackupContent(json_t *arguments, uint32_t userId)
 {
    std::string error;
-   shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ, &error);
+   shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ_DEVICE_CONFIG, &error);
    if (node == nullptr)
       return error;
 
@@ -265,7 +265,7 @@ std::string F_StartBackup(json_t *arguments, uint32_t userId)
 std::string F_CompareBackups(json_t *arguments, uint32_t userId)
 {
    std::string error;
-   shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ, &error);
+   shared_ptr<Node> node = FindAndValidateNode(arguments, userId, OBJECT_ACCESS_READ_DEVICE_CONFIG, &error);
    if (node == nullptr)
       return error;
 
