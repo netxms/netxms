@@ -1541,7 +1541,6 @@ DataCollectionTarget::ScriptExecutionResult DataCollectionTarget::runDataCollect
    bool loaded = (vm != nullptr);
    if (loaded)
    {
-      SetRestrictedSecurityContext(vm);
       ObjectRefArray<NXSL_Value> args(16, 16);
       if ((p != nullptr) && !ParseValueList(vm, &p, args, true))
       {
