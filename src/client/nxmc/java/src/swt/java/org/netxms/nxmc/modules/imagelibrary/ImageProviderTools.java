@@ -27,6 +27,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.ui.svg.SVGImage;
+import org.netxms.ui.svg.ScaleMode;
 
 /**
  * Platform-specific image provider tools (SWT desktop version).
@@ -71,17 +72,43 @@ public class ImageProviderTools
    }
 
    /**
-    * Rasterize SVG image to an off-screen SWT Image at the given dimensions with transparent background.
+    * Create scaled copy of raster image using GC with high quality interpolation.
+    *
+    * @param source source image (not disposed)
+    * @param width target width in pixels
+    * @param height target height in pixels
+    * @return new scaled image
+    */
+   public static Image scaleImage(Image source, int width, int height)
+   {
+      Rectangle bounds = source.getBounds();
+      Image scaled = new Image(source.getDevice(), width, height);
+      GC gc = new GC(scaled);
+      gc.setInterpolation(SWT.HIGH);
+      gc.drawImage(source, 0, 0, bounds.width, bounds.height, 0, 0, width, height);
+      gc.dispose();
+      return scaled;
+   }
+
+   /**
+    * Rasterize SVG image to an off-screen SWT Image at the given base dimensions with transparent background. The image is
+    * re-rasterized from vector data for each device zoom level SWT asks for, so it stays sharp on HiDPI displays.
     *
     * @param display display to create image on
     * @param svgImage parsed SVG image
-    * @param width target width in pixels
-    * @param height target height in pixels
-    * @return rasterized SWT image or null on failure
+    * @param width target width in pixels at 100% zoom
+    * @param height target height in pixels at 100% zoom
+    * @return rasterized SWT image
     */
    public static Image rasterizeSVG(Display display, SVGImage svgImage, int width, int height)
    {
-      return svgImage.rasterize(display, width, height);
+      return new Image(display, new ImageDataProvider() {
+         @Override
+         public ImageData getImageData(int zoom)
+         {
+            return svgImage.rasterizeToImageData(Math.max(1, width * zoom / 100), Math.max(1, height * zoom / 100), null, ScaleMode.UNIFORM);
+         }
+      });
    }
 
    /**

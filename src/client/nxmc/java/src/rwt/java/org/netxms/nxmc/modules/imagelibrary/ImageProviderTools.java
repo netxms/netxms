@@ -46,17 +46,31 @@ public class ImageProviderTools
    }
 
    /**
-    * Rasterize SVG image. Not supported on RWT (no off-screen drawing).
+    * Create scaled copy of raster image. RWT GC cannot draw onto an image, so scaling is done on image data.
     *
-    * @param display display
+    * @param source source image (not disposed)
+    * @param width target width in pixels
+    * @param height target height in pixels
+    * @return new scaled image
+    */
+   public static Image scaleImage(Image source, int width, int height)
+   {
+      return new Image(source.getDevice(), source.getImageData().scaledTo(width, height));
+   }
+
+   /**
+    * Rasterize SVG image to an off-screen image at the given dimensions with transparent background. Rasterization is done
+    * through Java2D inside the SVG renderer, so it does not depend on RWT GC capabilities.
+    *
+    * @param display display to create image on
     * @param svgImage parsed SVG image
-    * @param width target width
-    * @param height target height
-    * @return always null on RWT
+    * @param width target width in pixels
+    * @param height target height in pixels
+    * @return rasterized image
     */
    public static Image rasterizeSVG(Display display, SVGImage svgImage, int width, int height)
    {
-      return null;
+      return svgImage.rasterize(display, width, height);
    }
 
    /**

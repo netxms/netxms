@@ -358,7 +358,7 @@ public class ImageProvider
    // ==================== Mode 2: Rasterized ====================
 
    /**
-    * Get image rasterized at specific dimensions. For SVG, rasterizes at exact size (SWT only). For raster, scales to fit. Returns
+    * Get image rasterized at specific dimensions. For SVG, rasterizes at exact size. For raster, scales to fit. Returns
     * missing image placeholder if not yet loaded from server.
     *
     * @param guid image GUID
@@ -426,10 +426,7 @@ public class ImageProvider
       if ((bounds.width == width) && (bounds.height == height))
          return source;
 
-      Image scaled = new Image(display, width, height);
-      GC gc = new GC(scaled);
-      gc.drawImage(source, 0, 0, bounds.width, bounds.height, 0, 0, width, height);
-      gc.dispose();
+      Image scaled = ImageProviderTools.scaleImage(source, width, height);
       source.dispose();
       return scaled;
    }
@@ -438,7 +435,8 @@ public class ImageProvider
 
    /**
     * Render image directly to a GC at the specified position and size. Works on both SWT and RWT. For SVG, renders vector paths
-    * directly to the GC for optimal quality. For raster, scales to fit the target area.
+    * directly to the GC for optimal quality. For raster, draws the original image scaled to the target area by the GC itself, so
+    * no per-size copies are created.
     *
     * @param guid image GUID
     * @param gc target graphics context
@@ -466,24 +464,19 @@ public class ImageProvider
       }
       else
       {
-         // Try raster cache first, then create from data
-         String key = rasterCacheKey(guid, width, height);
-         Image cached = rasterCache.get(key);
-         if (cached != null)
+         // Original-size raster image (key with 0x0 means "original size"), scaled by GC while drawing
+         String key = rasterCacheKey(guid, 0, 0);
+         Image image = rasterCache.get(key);
+         if ((image == null) && imageDataCache.containsKey(guid))
          {
-            gc.drawImage(cached, x, y);
-            return;
-         }
-
-         if (imageDataCache.containsKey(guid))
-         {
-            Image image = createRasterizedImage(guid, width, height);
+            image = createRasterFromData(guid);
             if (image != null)
-            {
                rasterCache.put(key, image);
-               gc.drawImage(image, x, y);
-               return;
-            }
+         }
+         if (image != null)
+         {
+            ImageProviderTools.renderImage(gc, image, null, x, y, width, height);
+            return;
          }
       }
 
