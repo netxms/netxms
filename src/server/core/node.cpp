@@ -17401,3 +17401,16 @@ void Node::decommission(time_t expirationTime, bool clearIpAddresses)
    nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node %s [%u] decommissioned, expiration time %u"),
       m_name, m_id, static_cast<uint32_t>(expirationTime));
 }
+
+/**
+ * Get agent's certificate fingerprint
+ */
+String Node::getAgentCertificateFingerprint() const
+{
+   LockGuard lockGuard(m_mutexProperties);
+   if (!m_agentCertFingerprintSet)
+      return String();
+
+   TCHAR buffer[SHA256_DIGEST_SIZE * 2 + 1];
+   return String(BinToStr(m_agentCertFingerprint, SHA256_DIGEST_SIZE, buffer));
+}

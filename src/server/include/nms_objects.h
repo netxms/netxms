@@ -4707,13 +4707,7 @@ public:
    const uuid& getTunnelId() const { return m_tunnelId; }
    const TCHAR *getAgentCertificateSubject() const { return m_agentCertSubject; }
    int16_t getAgentTlsMode() const { return m_agentTlsMode; }
-   String getAgentCertificateFingerprint() const
-   {
-      if (!m_agentCertFingerprintSet)
-         return String();
-      TCHAR buffer[SHA256_DIGEST_SIZE * 2 + 1];
-      return String(BinToStr(m_agentCertFingerprint, SHA256_DIGEST_SIZE, buffer));
-   }
+   String getAgentCertificateFingerprint() const;
    CertificateMappingMethod getAgentCertificateMappingMethod() const { return m_agentCertMappingMethod; }
    const TCHAR *getAgentCertificateMappingData() const { return m_agentCertMappingData; }
    uint32_t getRequiredPollCount() const { return m_requiredPollCount; }
