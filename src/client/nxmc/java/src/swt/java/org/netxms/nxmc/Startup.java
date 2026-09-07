@@ -133,6 +133,9 @@ public class Startup
       logger.info("Language: " + language);
       Locale.setDefault(LocalizationHelper.localeFromLanguageCode(language));
 
+      // SVG rasterization goes through Java2D; keep AWT headless so it never attaches to the Cocoa main thread owned by SWT
+      System.setProperty("java.awt.headless", "true");
+
       // Important: create display only after locale is in place
       display = new Display();
       logger.info("Device DPI = " + display.getDPI() + "; zoom = " + DPIUtil.getDeviceZoom());
