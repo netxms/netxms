@@ -242,15 +242,6 @@ bool WebSocketClient::connect(const char *url, uint32_t timeout)
       return false;
    }
 
-   m_readBuffer.clear();
-   m_messageBuffer.clear();
-   m_messageInProgress = false;
-   m_closeSent = false;
-   m_closeReceived = false;
-   m_closeCode = WEBSOCKET_CLOSE_ABNORMAL;
-   m_closeReason[0] = 0;
-   m_errorText[0] = 0;
-
    m_lock.lock();
    if (m_disconnectRequested)
    {
@@ -260,6 +251,15 @@ bool WebSocketClient::connect(const char *url, uint32_t timeout)
       delete connection;
       return false;
    }
+   // Reset per-connection state under lock so that sendClose() from another thread cannot interleave with it
+   m_readBuffer.clear();
+   m_messageBuffer.clear();
+   m_messageInProgress = false;
+   m_closeSent = false;
+   m_closeReceived = false;
+   m_closeCode = WEBSOCKET_CLOSE_ABNORMAL;
+   m_closeReason[0] = 0;
+   m_errorText[0] = 0;
    m_connection = connection;
    m_socket = connection->getSocket();
    m_lock.unlock();
@@ -590,10 +590,15 @@ bool WebSocketClient::sendPing(const void *data, size_t size)
  */
 bool WebSocketClient::sendClose(uint16_t code, const char *reason)
 {
+   m_lock.lock();
    if (m_closeSent)
+   {
+      m_lock.unlock();
       return true;
-   nxlog_debug_tag(m_debugTag, 6, _T("Sending close frame (code=%u)"), code);
+   }
    m_closeSent = true;
+   m_lock.unlock();
+   nxlog_debug_tag(m_debugTag, 6, _T("Sending close frame (code=%u)"), code);
    return sendCloseFrame(code, reason);
 }
 
@@ -663,11 +668,7 @@ void WebSocketClient::failConnection(uint16_t closeCode, const TCHAR *errorText)
 {
    _tcslcpy(m_errorText, errorText, sizeof(m_errorText) / sizeof(TCHAR));
    nxlog_debug_tag(m_debugTag, 5, _T("Connection failed: %s"), errorText);
-   if (!m_closeSent)
-   {
-      m_closeSent = true;
-      sendCloseFrame(closeCode, nullptr);
-   }
+   sendClose(closeCode, nullptr);
    dropConnection();
 }
 
@@ -781,11 +782,7 @@ WebSocketReadResult WebSocketClient::processFrame(ByteStream *message, WebSocket
                m_closeReason[0] = 0;
             }
             nxlog_debug_tag(m_debugTag, 6, _T("Close frame received (code=%u reason=\"%hs\")"), m_closeCode, m_closeReason);
-            if (!m_closeSent)
-            {
-               m_closeSent = true;
-               sendCloseFrame((size >= 2) ? m_closeCode : WEBSOCKET_CLOSE_NORMAL, nullptr);
-            }
+            sendClose((size >= 2) ? m_closeCode : WEBSOCKET_CLOSE_NORMAL, nullptr);
             result = WebSocketReadResult::CLOSED;
             break;
          case WS_OPCODE_PING:

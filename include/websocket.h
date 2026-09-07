@@ -93,7 +93,7 @@ private:
    ByteStream m_messageBuffer;   // fragments of message being reassembled
    WebSocketMessageType m_messageType;
    bool m_messageInProgress;
-   bool m_closeSent;
+   bool m_closeSent;             // protected by m_lock; may be set by sendClose() from any thread
    bool m_closeReceived;
    uint16_t m_closeCode;
    char m_closeReason[124];
