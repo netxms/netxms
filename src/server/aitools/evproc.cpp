@@ -640,20 +640,6 @@ static const char *EppServerActionTypeName(int t)
 }
 
 /**
- * Reads a snapshot of the current event processing policy. *version receives
- * the policy version. The returned JSON's "rules" array carries the rules in
- * export format suitable for round-tripping through EPRule(json_t*, ImportContext*).
- * Caller owns the returned json_t.
- */
-static json_t *EppReadPolicySnapshot(uint32_t *version)
-{
-   json_t *snapshot = GetEventProcessingPolicy()->toJson();
-   if (snapshot != nullptr)
-      *version = json_object_get_uint32(snapshot, "version", 0);
-   return snapshot;
-}
-
-/**
  * Parse a JSON array of rules (export format) into a SharedObjectArray<EPRule>.
  * Returns nullptr with *error populated on parse failure.
  */
@@ -698,15 +684,82 @@ static int EppFindRuleIndexByGuid(json_t *rulesArray, const uuid& guid)
 }
 
 /**
- * Save policy with optimistic concurrency check. Returns RCC code; on success,
- * *newVersion receives the new policy version.
+ * Find chain entry in policy snapshot by name (case-insensitive) or numeric ID. Empty reference
+ * selects the main chain (ID 0). Returns nullptr if not found.
  */
-static uint32_t EppSavePolicy(uint32_t userId, const SharedObjectArray<EPRule>& rules, uint32_t expectedVersion, uint32_t *newVersion)
+static json_t *EppFindChainJson(json_t *snapshot, const char *ref)
+{
+   char *eptr;
+   long refId = ((ref == nullptr) || (ref[0] == 0)) ? 0 : strtol(ref, &eptr, 10);
+   bool refIsId = (ref == nullptr) || (ref[0] == 0) || (*eptr == 0);
+   size_t i;
+   json_t *chain;
+   json_array_foreach(json_object_get(snapshot, "chains"), i, chain)
+   {
+      if (refIsId && (json_object_get_int32(chain, "id", -1) == refId))
+         return chain;
+      if (!refIsId && (stricmp(json_object_get_string_utf8(chain, "name", ""), ref) == 0))
+         return chain;
+   }
+   return nullptr;
+}
+
+/**
+ * Select the chain to operate on within a policy snapshot. When ruleGuid is given, the chain containing
+ * that rule is selected; otherwise chainRef (chain name or ID, empty for the main chain) selects it.
+ * On success *chainId, *version, and *rulesArray describe the selected chain (rulesArray is borrowed
+ * from the snapshot). Returns false with *error populated if the rule or chain cannot be found.
+ */
+static bool EppSelectChainRules(json_t *snapshot, const char *chainRef, const uuid *ruleGuid,
+   uint32_t *chainId, uint32_t *version, json_t **rulesArray, std::string *error)
+{
+   json_t *chain = nullptr;
+   if (ruleGuid != nullptr)
+   {
+      size_t i;
+      json_t *c;
+      json_array_foreach(json_object_get(snapshot, "chains"), i, c)
+      {
+         if (EppFindRuleIndexByGuid(json_object_get(c, "rules"), *ruleGuid) >= 0)
+         {
+            chain = c;
+            break;
+         }
+      }
+      if (chain == nullptr)
+      {
+         json_t *errJson = json_object();
+         json_object_set_new(errJson, "error", json_string("rule not found"));
+         json_object_set_new(errJson, "guid", ruleGuid->toJson());
+         *error = JsonToString(errJson);
+         return false;
+      }
+   }
+   else
+   {
+      chain = EppFindChainJson(snapshot, chainRef);
+      if (chain == nullptr)
+      {
+         *error = EppFilterError("chain not found", "chain", chainRef);
+         return false;
+      }
+   }
+   *chainId = json_object_get_uint32(chain, "id", 0);
+   *version = json_object_get_uint32(chain, "version", 0);
+   *rulesArray = json_object_get(chain, "rules");
+   return true;
+}
+
+/**
+ * Save rules of one chain with optimistic concurrency check. Returns RCC code; on success,
+ * *newVersion receives the new chain version.
+ */
+static uint32_t EppSavePolicy(uint32_t userId, uint32_t chainId, const SharedObjectArray<EPRule>& rules, uint32_t expectedVersion, uint32_t *newVersion)
 {
    uuid userGuid = GetUserGuidById(userId);
    wchar_t userName[MAX_USER_NAME];
    ResolveUserId(userId, userName, true);
-   return GetEventProcessingPolicy()->replaceAllRules(rules, true, expectedVersion, userGuid, userName, newVersion);
+   return GetEventProcessingPolicy()->replaceAllRules(chainId, rules, true, expectedVersion, userGuid, userName, newVersion);
 }
 
 /**
@@ -723,15 +776,15 @@ static std::string EppConflictError(uint32_t currentVersion)
 }
 
 /**
- * Orchestrate the read-modify-write cycle for EPP rule mutations with single
- * retry-on-conflict and audit-log emission.
+ * Orchestrate the read-modify-write cycle for EPP rule mutations on one chain with single
+ * retry-on-conflict and audit-log emission. The chain is the one containing `ruleGuid` when
+ * given, otherwise the one named by `chainRef` (main chain when empty).
  *
- * `mutate` is invoked with the current rules JSON array (export shape) and
- * the policy version. It must update the array in place to express the desired
- * new state and return RCC_SUCCESS to proceed with the save. To abort (e.g.
- * rule not found, validation failure), it must set *errorOut and return any
- * other RCC. On RCC_EPP_CONFLICT from the save, the wrapper re-reads the
- * policy and re-invokes `mutate` once before giving up.
+ * `mutate` is invoked with the policy snapshot and the selected chain's rules JSON array
+ * (export shape). It must update the array in place to express the desired new state and
+ * return RCC_SUCCESS to proceed with the save. To abort (e.g. rule not found, validation
+ * failure), it must set *errorOut and return any other RCC. On RCC_EPP_CONFLICT from the
+ * save, the wrapper re-reads the policy and re-invokes `mutate` once before giving up.
  *
  * `auditDetail` is written by the mutator (e.g. "rule {abc} - fields: x, y") and
  * appended to the audit log line by the wrapper.
@@ -739,21 +792,28 @@ static std::string EppConflictError(uint32_t currentVersion)
  * Returns the AI tool's response string (success JSON or error JSON).
  */
 static std::string EppReadModifyWrite(
-   uint32_t userId, const char *auditAction,
-   std::function<uint32_t(json_t *rulesArray, uint32_t version, std::string *errorOut, wchar_t *auditDetail, size_t auditDetailSize)> mutate)
+   uint32_t userId, const char *auditAction, const char *chainRef, const uuid *ruleGuid,
+   std::function<uint32_t(json_t *snapshot, json_t *rulesArray, std::string *errorOut, wchar_t *auditDetail, size_t auditDetailSize)> mutate)
 {
    wchar_t auditDetail[512] = L"";
    json_t *snapshot = nullptr;
    for (int attempt = 0; attempt < 2; attempt++)
    {
-      uint32_t version = 0;
-      snapshot = EppReadPolicySnapshot(&version);
+      snapshot = GetEventProcessingPolicy()->toJson();
       if (snapshot == nullptr)
          return std::string("Failed to read event processing policy");
-      json_t *rulesArray = json_object_get(snapshot, "rules");
 
       std::string err;
-      uint32_t mutateRcc = mutate(rulesArray, version, &err, auditDetail, sizeof(auditDetail) / sizeof(auditDetail[0]));
+      uint32_t chainId = 0;
+      uint32_t version = 0;
+      json_t *rulesArray = nullptr;
+      if (!EppSelectChainRules(snapshot, chainRef, ruleGuid, &chainId, &version, &rulesArray, &err))
+      {
+         json_decref(snapshot);
+         return err;
+      }
+
+      uint32_t mutateRcc = mutate(snapshot, rulesArray, &err, auditDetail, sizeof(auditDetail) / sizeof(auditDetail[0]));
       if (mutateRcc != RCC_SUCCESS)
       {
          json_decref(snapshot);
@@ -769,17 +829,18 @@ static std::string EppReadModifyWrite(
       }
 
       uint32_t newVersion = 0;
-      uint32_t saveRcc = EppSavePolicy(userId, *rules, version, &newVersion);
+      uint32_t saveRcc = EppSavePolicy(userId, chainId, *rules, version, &newVersion);
       delete rules;
 
       if (saveRcc == RCC_SUCCESS)
       {
-         WriteAuditLog(AUDIT_SYSCFG, true, userId, nullptr, 0, 0, L"AI agent %hs: %s (policy version %u)",
-            auditAction, auditDetail, newVersion);
+         WriteAuditLog(AUDIT_SYSCFG, true, userId, nullptr, 0, 0, L"AI agent %hs: %s (chain %u version %u)",
+            auditAction, auditDetail, chainId, newVersion);
          json_t *response = json_object();
          json_object_set_new(response, "status", json_string("ok"));
          json_object_set_new(response, "operation", json_string(auditAction));
-         json_object_set_new(response, "policy_version", json_integer(newVersion));
+         json_object_set_new(response, "chain_id", json_integer(chainId));
+         json_object_set_new(response, "chain_version", json_integer(newVersion));
          // Caller may want to attach the affected rule's new JSON; we leave that
          // to per-tool functions which can re-call this helper and merge in.
          std::string result = JsonToString(response);
@@ -1036,7 +1097,7 @@ static uint32_t EppResolvePosition(json_t *arguments, json_t *rulesArray, int de
  * fields actually present in `arguments` produce updates. Returns false with
  * *error populated on a validation failure.
  */
-static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, std::string *error)
+static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, json_t *snapshot, std::string *error)
 {
    json_t *v;
 
@@ -1217,6 +1278,47 @@ static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, std::string *
       json_object_set_new(rule, p.outFieldName, obj);
    }
 
+   // Chain calls: chain names or IDs resolved against the policy snapshot (not resolved when no snapshot is given)
+   if ((snapshot != nullptr) && (json_object_get(arguments, "chain_calls") != nullptr))
+   {
+      json_t *src = json_object_get_array_ex(arguments, "chain_calls");
+      if (src == nullptr)
+      {
+         *error = EppFilterError("expected array (or array literal as JSON string)", "chain_calls", nullptr);
+         return false;
+      }
+      json_t *dest = json_array();
+      size_t i;
+      json_t *v;
+      json_array_foreach(src, i, v)
+      {
+         char idText[16];
+         const char *ref;
+         if (json_is_integer(v))
+         {
+            snprintf(idText, sizeof(idText), "%d", static_cast<int>(json_integer_value(v)));
+            ref = idText;
+         }
+         else
+         {
+            ref = json_is_string(v) ? json_string_value(v) : "";
+         }
+         json_t *chain = EppFindChainJson(snapshot, ref);
+         if (chain == nullptr)
+         {
+            char fieldPath[64];
+            snprintf(fieldPath, sizeof(fieldPath), "chain_calls[%zu]", i);
+            *error = EppFilterError("chain not found", fieldPath, ref);
+            json_decref(dest);
+            json_decref(src);
+            return false;
+         }
+         json_array_append(dest, json_object_get(chain, "id"));
+      }
+      json_decref(src);
+      json_object_set_new(rule, "chainCalls", dest);
+   }
+
    return true;
 }
 
@@ -1264,7 +1366,7 @@ std::string F_CreateEppRule(json_t *arguments, uint32_t userId)
    // here lets us reject bad inputs without burning an EPP snapshot read.
    json_t *prepRule = EppBuildDefaultRuleJson();
    std::string prepErr;
-   if (!EppApplyAiPatchToRule(prepRule, arguments, &prepErr))
+   if (!EppApplyAiPatchToRule(prepRule, arguments, nullptr, &prepErr))
    {
       json_decref(prepRule);
       return prepErr;
@@ -1273,8 +1375,8 @@ std::string F_CreateEppRule(json_t *arguments, uint32_t userId)
    uuid newGuid = uuid::parseA(json_object_get_string_utf8(prepRule, "guid", ""));
    json_decref(prepRule);
 
-   return EppReadModifyWrite(userId, "create-epp-rule",
-      [arguments, newGuid](json_t *rulesArray, uint32_t version, std::string *errorOut,
+   return EppReadModifyWrite(userId, "create-epp-rule", json_object_get_string_utf8(arguments, "chain", nullptr), nullptr,
+      [arguments, newGuid](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
                            wchar_t *auditDetail, size_t auditDetailSize) -> uint32_t
       {
          // Resolve target position against the current rules array.
@@ -1293,7 +1395,7 @@ std::string F_CreateEppRule(json_t *arguments, uint32_t userId)
          json_t *rule = EppBuildDefaultRuleJson();
          json_object_set_new(rule, "guid", newGuid.toJson()); // keep stable GUID across retries
          std::string err;
-         if (!EppApplyAiPatchToRule(rule, arguments, &err))
+         if (!EppApplyAiPatchToRule(rule, arguments, snapshot, &err))
          {
             json_decref(rule);
             *errorOut = err;
@@ -1325,8 +1427,8 @@ std::string F_ModifyEppRule(json_t *arguments, uint32_t userId)
    if (!EppParseRuleGuidArg(arguments, "guid", &ruleGuid, &err))
       return err;
 
-   return EppReadModifyWrite(userId, "modify-epp-rule",
-      [ruleGuid, arguments](json_t *rulesArray, uint32_t version, std::string *errorOut,
+   return EppReadModifyWrite(userId, "modify-epp-rule", nullptr, &ruleGuid,
+      [ruleGuid, arguments](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
                             wchar_t *auditDetail, size_t auditDetailSize) -> uint32_t
       {
          int idx = EppFindRuleIndexByGuid(rulesArray, ruleGuid);
@@ -1339,7 +1441,7 @@ std::string F_ModifyEppRule(json_t *arguments, uint32_t userId)
             return RCC_INVALID_ARGUMENT;
          }
          json_t *rule = json_array_get(rulesArray, idx);
-         if (!EppApplyAiPatchToRule(rule, arguments, errorOut))
+         if (!EppApplyAiPatchToRule(rule, arguments, snapshot, errorOut))
             return RCC_INVALID_ARGUMENT;
          nx_swprintf(auditDetail, auditDetailSize, L"modified rule %s", ruleGuid.toString().cstr());
          return RCC_SUCCESS;
@@ -1360,8 +1462,8 @@ std::string F_DeleteEppRule(json_t *arguments, uint32_t userId)
    if (!EppParseRuleGuidArg(arguments, "guid", &ruleGuid, &err))
       return err;
 
-   return EppReadModifyWrite(userId, "delete-epp-rule",
-      [ruleGuid](json_t *rulesArray, uint32_t version, std::string *errorOut,
+   return EppReadModifyWrite(userId, "delete-epp-rule", nullptr, &ruleGuid,
+      [ruleGuid](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
                  wchar_t *auditDetail, size_t auditDetailSize) -> uint32_t
       {
          int idx = EppFindRuleIndexByGuid(rulesArray, ruleGuid);
@@ -1390,8 +1492,8 @@ static std::string EppToggleRuleDisabled(json_t *arguments, uint32_t userId, boo
       return err;
 
    const char *opName = disable ? "disable-epp-rule" : "enable-epp-rule";
-   return EppReadModifyWrite(userId, opName,
-      [ruleGuid, disable, opName](json_t *rulesArray, uint32_t version, std::string *errorOut,
+   return EppReadModifyWrite(userId, opName, nullptr, &ruleGuid,
+      [ruleGuid, disable, opName](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
                                   wchar_t *auditDetail, size_t auditDetailSize) -> uint32_t
       {
          int idx = EppFindRuleIndexByGuid(rulesArray, ruleGuid);
@@ -1464,8 +1566,8 @@ std::string F_MoveEppRule(json_t *arguments, uint32_t userId)
        ((positionStr == nullptr) || positionStr[0] == 0))
       return EppFilterError("specify one of after_guid, before_guid, position", "position", nullptr);
 
-   return EppReadModifyWrite(userId, "move-epp-rule",
-      [ruleGuid, arguments](json_t *rulesArray, uint32_t version, std::string *errorOut,
+   return EppReadModifyWrite(userId, "move-epp-rule", nullptr, &ruleGuid,
+      [ruleGuid, arguments](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
                             wchar_t *auditDetail, size_t auditDetailSize) -> uint32_t
       {
          int currentIdx = EppFindRuleIndexByGuid(rulesArray, ruleGuid);

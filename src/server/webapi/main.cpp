@@ -259,9 +259,14 @@ int H_QuerySummaryTable(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
 int H_GetMibNode(Context *context);
-int H_EventProcessingPolicy(Context *context);
+int H_EventProcessingPolicyChain(Context *context);
+int H_EventProcessingPolicyChainCallers(Context *context);
+int H_EventProcessingPolicyChainCreate(Context *context);
+int H_EventProcessingPolicyChainDelete(Context *context);
+int H_EventProcessingPolicyChainRulesUpdate(Context *context);
+int H_EventProcessingPolicyChains(Context *context);
+int H_EventProcessingPolicyChainUpdate(Context *context);
 int H_EventProcessingPolicyRule(Context *context);
-int H_EventProcessingPolicyUpdate(Context *context);
 int H_EventTemplates(Context *context);
 int H_EventTemplateDetails(Context *context);
 int H_EventTemplateCreate(Context *context);
@@ -485,9 +490,20 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/cloud-connectors")
       .GET(H_CloudConnectors)
       .build();
-   RouteBuilder("v1/event-processing-policy")
-      .GET(H_EventProcessingPolicy)
-      .PUT(H_EventProcessingPolicyUpdate)
+   RouteBuilder("v1/event-processing-policy/chains")
+      .GET(H_EventProcessingPolicyChains)
+      .POST(H_EventProcessingPolicyChainCreate)
+      .build();
+   RouteBuilder("v1/event-processing-policy/chains/:chain-id")
+      .GET(H_EventProcessingPolicyChain)
+      .PUT(H_EventProcessingPolicyChainUpdate)
+      .DELETE(H_EventProcessingPolicyChainDelete)
+      .build();
+   RouteBuilder("v1/event-processing-policy/chains/:chain-id/callers")
+      .GET(H_EventProcessingPolicyChainCallers)
+      .build();
+   RouteBuilder("v1/event-processing-policy/chains/:chain-id/rules")
+      .PUT(H_EventProcessingPolicyChainRulesUpdate)
       .build();
    RouteBuilder("v1/event-processing-policy/rules/:rule-guid")
       .GET(H_EventProcessingPolicyRule)

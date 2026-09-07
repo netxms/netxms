@@ -22,10 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
-import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
@@ -50,7 +51,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.NORMAL); // Changing the event severity
@@ -92,7 +93,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.NORMAL); // Changing the event severity
@@ -131,7 +132,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.CRITICAL); // Changing the event severity
@@ -171,7 +172,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.CRITICAL); // Changing the event severity
@@ -209,7 +210,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.WARNING); // Changing the event severity
@@ -249,7 +250,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.WARNING); // Changing the event severity
@@ -287,7 +288,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.MINOR); // Changing the event severity
@@ -327,7 +328,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.MINOR); // Changing the event severity
@@ -365,7 +366,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.MAJOR); // Changing the event severity
@@ -405,7 +406,7 @@ public class EppSeverityCondition  extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, TEMPLATE_NAME);
       eventTestTemplate.setSeverity(Severity.MAJOR); // Changing the event severity
@@ -432,4 +433,14 @@ public class EppSeverityCondition  extends AbstractSessionTest
 
    }
 
+   /**
+    * Remove everything the test creates on the server, whether it passed or failed
+    */
+   @AfterEach
+   void removeTestData() throws Exception
+   {
+      NXCSession session = connectAndLogin();
+      TestHelperForEpp.deleteRules(session, COMMENT_FOR_SEARCHING_RULE);
+      session.deletePersistentStorageValue(PS_KEY);
+   }
 }

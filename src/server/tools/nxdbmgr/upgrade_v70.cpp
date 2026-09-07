@@ -24,6 +24,84 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.35 to 70.36
+ */
+static bool H_UpgradeFromV35()
+{
+   // Event processing policy rule chains
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE event_policy_chain ("
+      L"  chain_id integer not null,"
+      L"  chain_guid varchar(36) not null,"
+      L"  name varchar(63) not null,"
+      L"  description varchar(255) null,"
+      L"  PRIMARY KEY(chain_id))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE policy_chain_call_list ("
+      L"  chain_id integer not null,"
+      L"  rule_id integer not null,"
+      L"  target_chain_id integer not null,"
+      L"  sequence_number integer not null,"
+      L"  PRIMARY KEY(chain_id,rule_id,sequence_number))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE policy_chain_acl ("
+      L"  chain_id integer not null,"
+      L"  user_id integer not null,"
+      L"  access_rights integer not null,"
+      L"  PRIMARY KEY(chain_id,user_id))"));
+
+   // Reserved main chain (entry point for event processing)
+   CHK_EXEC(SQLQuery(L"INSERT INTO event_policy_chain (chain_id,chain_guid,name,description) VALUES (0,'a7f4c1e2-3b8d-4f6a-9c5e-1d2b3a4c5e6f','Main','Main rule chain')"));
+
+   // Add chain_id to event_policy and all its child tables; existing rules belong to the main chain (0)
+   CHK_EXEC(DBRenameColumn(g_dbHandle, L"alarm_category_map", L"alarm_id", L"rule_id"));
+   static const struct
+   {
+      const wchar_t *table;
+      const wchar_t *primaryKey;
+   } chainTables[] =
+   {
+      { L"event_policy", L"chain_id,rule_id" },
+      { L"policy_source_list", L"chain_id,rule_id,object_id,exclusion" },
+      { L"policy_event_list", L"chain_id,rule_id,event_code" },
+      { L"policy_time_frame_list", L"chain_id,rule_id,time_frame_id" },
+      { L"policy_action_list", L"chain_id,record_id,rule_id" },
+      { L"policy_timer_cancellation_list", L"chain_id,rule_id,timer_key" },
+      { L"policy_pstorage_actions", L"chain_id,rule_id,ps_key,action" },
+      { L"policy_cattr_actions", L"chain_id,rule_id,attribute_name,action" },
+      { L"alarm_category_map", L"chain_id,rule_id,category_id" },
+      { nullptr, nullptr }
+   };
+   for(int i = 0; chainTables[i].table != nullptr; i++)
+   {
+      CHK_EXEC(DBDropPrimaryKey(g_dbHandle, chainTables[i].table));
+      wchar_t query[256];
+      nx_swprintf(query, 256, L"ALTER TABLE %s ADD chain_id integer", chainTables[i].table);
+      CHK_EXEC(SQLQuery(query));
+      nx_swprintf(query, 256, L"UPDATE %s SET chain_id=0", chainTables[i].table);
+      CHK_EXEC(SQLQuery(query));
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, chainTables[i].table, L"chain_id"));
+      CHK_EXEC(DBAddPrimaryKey(g_dbHandle, chainTables[i].table, chainTables[i].primaryKey));
+   }
+
+   CHK_EXEC(CreateEventTemplate(EVENT_EPP_CHAIN_LOOP, L"SYS_EPP_CHAIN_LOOP",
+            EVENT_SEVERITY_WARNING, EF_LOG, L"c3e1b9d4-6f2a-4b8c-a7e5-9d0f1a2b3c4d",
+            L"Event processing rule chain loop detected (chain \"%2\" called from rule %3 in chain \"%1\" is already active)",
+            L"Generated when the event processing policy detects a loop while entering rule chains during event processing.\r\n"
+            L"The chain that would be reentered is skipped to break the loop. The event is generated at most once per day for each calling rule.\r\n"
+            L"Parameters:\r\n"
+            L"   1) callingChainName - Calling chain name\r\n"
+            L"   2) targetChainName - Target chain name (skipped)\r\n"
+            L"   3) ruleNumber - Calling rule number within its chain\r\n"
+            L"   4) ruleGuid - Calling rule GUID"));
+
+   CHK_EXEC(SetMinorSchemaVersion(36));
+   return true;
+}
+
+/**
  * Upgrade from 70.34 to 70.35
  */
 static bool H_UpgradeFromV34()
@@ -1123,6 +1201,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 35, 70, 36, H_UpgradeFromV35 },
    { 34, 70, 35, H_UpgradeFromV34 },
    { 33, 70, 34, H_UpgradeFromV33 },
    { 32, 70, 33, H_UpgradeFromV32 },

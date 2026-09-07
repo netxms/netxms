@@ -139,11 +139,13 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.BulkAlarmStateChangeData;
+import org.netxms.client.events.EPPChainCaller;
 import org.netxms.client.events.EPPConflict;
 import org.netxms.client.events.EPPSaveResult;
 import org.netxms.client.events.Event;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventReference;
 import org.netxms.client.events.EventTemplate;
@@ -9603,52 +9605,116 @@ public class NXCSession
    }
 
    /**
-    * Get event processing policy.
+    * Get event processing policy chain registry: every chain readable by the current user, without rules. Use
+    * {@link #getEventProcessingPolicyChain(int)} to load the rules of a chain.
     *
-    * @return Event processing policy
+    * @return Event processing policy chain registry
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public EventProcessingPolicy getEventProcessingPolicy() throws IOException, NXCException
+   public EventProcessingPolicy getEventProcessingPolicyChains() throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EPP);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
 
-      int numRules = response.getFieldAsInt32(NXCPCodes.VID_NUM_RULES);
-      int policyVersion = response.getFieldAsInt32(NXCPCodes.VID_EPP_VERSION);
-      final EventProcessingPolicy policy = new EventProcessingPolicy(numRules, policyVersion);
+      return readEppChainRegistry(response);
+   }
 
-      for(int i = 0; i < numRules; i++)
-      {
-         response = waitForMessage(NXCPCodes.CMD_EPP_RECORD, msg.getMessageId());
-         policy.addRule(new EventProcessingPolicyRule(response, i + 1));
-      }
-
+   /**
+    * Get event processing policy with rules of every readable chain loaded (one request per chain).
+    *
+    * @return Event processing policy with all chains loaded
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public EventProcessingPolicy getEventProcessingPolicy() throws IOException, NXCException
+   {
+      EventProcessingPolicy policy = getEventProcessingPolicyChains();
+      for(EventProcessingPolicyChain chain : new ArrayList<>(policy.getChains()))
+         policy.putChain(getEventProcessingPolicyChain(chain.getId()));
       return policy;
    }
 
    /**
-    * Save event processing policy with optimistic concurrency control.
+    * Read chain registry entries and chain ACLs from EPP load response
     *
-    * @param epp Modified event processing policy
+    * @param response EPP load response
+    * @return policy with chain registry entries (rules are not loaded)
+    */
+   private static EventProcessingPolicy readEppChainRegistry(NXCPMessage response)
+   {
+      EventProcessingPolicy policy = new EventProcessingPolicy();
+      int chainCount = response.getFieldAsInt32(NXCPCodes.VID_NUM_CHAINS);
+      long fieldId = NXCPCodes.VID_CHAIN_LIST_BASE;
+      for(int i = 0; i < chainCount; i++, fieldId += 10)
+         policy.addChain(new EventProcessingPolicyChain(response, fieldId));
+
+      // Chain ACLs (sent only to callers with the global EPP right)
+      int aclCount = response.getFieldAsInt32(NXCPCodes.VID_CHAIN_ACL_COUNT);
+      fieldId = NXCPCodes.VID_CHAIN_ACL_LIST_BASE;
+      for(int i = 0; i < aclCount; i++)
+      {
+         EventProcessingPolicyChain chain = policy.findChain(response.getFieldAsInt32(fieldId++));
+         int userId = response.getFieldAsInt32(fieldId++);
+         int accessRights = response.getFieldAsInt32(fieldId++);
+         if (chain != null)
+            chain.getAccessList().add(new AccessListElement(userId, accessRights));
+      }
+      return policy;
+   }
+
+   /**
+    * Get one event processing policy chain with its rules.
+    *
+    * @param chainId chain ID (0 = main chain)
+    * @return chain with rules loaded
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public EventProcessingPolicyChain getEventProcessingPolicyChain(int chainId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EPP);
+      msg.setFieldInt32(NXCPCodes.VID_CHAIN_ID, chainId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+
+      EventProcessingPolicyChain chain = readEppChainRegistry(response).findChain(chainId);
+      if (chain == null)
+         throw new NXCException(RCC.INVALID_ARGUMENT);
+
+      int numRules = response.getFieldAsInt32(NXCPCodes.VID_NUM_RULES);
+      List<EventProcessingPolicyRule> rules = new ArrayList<>(numRules);
+      for(int i = 0; i < numRules; i++)
+      {
+         response = waitForMessage(NXCPCodes.CMD_EPP_RECORD, msg.getMessageId());
+         rules.add(new EventProcessingPolicyRule(response, i + 1));
+      }
+      chain.setRules(rules, chain.getVersion());
+      return chain;
+   }
+
+   /**
+    * Save rules of one event processing policy chain with optimistic concurrency control. The chain must be loaded.
+    *
+    * @param chain chain to save
     * @return Save result indicating success or conflicts
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an unexpected error (other than conflict)
     */
-   public EPPSaveResult saveEventProcessingPolicy(EventProcessingPolicy epp) throws IOException, NXCException
+   public EPPSaveResult saveEventProcessingPolicy(EventProcessingPolicyChain chain) throws IOException, NXCException
    {
-      final List<EventProcessingPolicyRule> rules = epp.getRules();
-      final List<EventProcessingPolicy.DeletedRuleInfo> deletedRules = epp.getDeletedRules();
+      final List<EventProcessingPolicyRule> rules = chain.getRules();
 
       NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_EPP);
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.size());
-      msg.setFieldInt32(NXCPCodes.VID_BASE_VERSION, epp.getVersion());
+      msg.setFieldInt32(NXCPCodes.VID_CHAIN_ID, chain.getId());
+      msg.setFieldInt32(NXCPCodes.VID_BASE_VERSION, chain.getVersion());
 
       // Send deleted rules info
-      msg.setFieldInt32(NXCPCodes.VID_DELETED_RULE_COUNT, deletedRules.size());
+      msg.setFieldInt32(NXCPCodes.VID_DELETED_RULE_COUNT, chain.getDeletedRules().size());
       long fieldId = NXCPCodes.VID_DELETED_RULE_LIST_BASE;
-      for(EventProcessingPolicy.DeletedRuleInfo deleted : deletedRules)
+      for(EventProcessingPolicyChain.DeletedRuleInfo deleted : chain.getDeletedRules())
       {
          msg.setField(fieldId, deleted.getGuid());
          msg.setFieldInt32(fieldId + 1, deleted.getVersion());
@@ -9682,11 +9748,14 @@ public class NXCSession
          rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
       }
 
+      if (rcc != RCC.SUCCESS && rcc != RCC.EPP_CONFLICT)
+         throw new NXCException(rcc);
+
       if (rcc == RCC.SUCCESS)
       {
          int newVersion = response.getFieldAsInt32(NXCPCodes.VID_EPP_VERSION);
-         epp.setVersion(newVersion);
-         epp.clearDeletedRules();
+         chain.setVersion(newVersion);
+         chain.clearDeletedRules();
 
          // Update rule versions from server response
          int ruleVersionCount = response.getFieldAsInt32(NXCPCodes.VID_RULE_VERSION_COUNT);
@@ -9709,7 +9778,7 @@ public class NXCSession
          }
          return EPPSaveResult.success(newVersion);
       }
-      else if (rcc == RCC.EPP_CONFLICT)
+      else
       {
          int serverVersion = response.getFieldAsInt32(NXCPCodes.VID_EPP_VERSION);
          int conflictCount = response.getFieldAsInt32(NXCPCodes.VID_CONFLICT_COUNT);
@@ -9724,9 +9793,118 @@ public class NXCSession
 
          return EPPSaveResult.conflict(serverVersion, conflicts);
       }
-      else
+   }
+
+   /**
+    * Create new event processing policy chain. Requires the global EPP system right.
+    *
+    * @param name chain name
+    * @param description chain description
+    * @param acl initial access control list (may be null or empty)
+    * @return created chain
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public EventProcessingPolicyChain createEppChain(String name, String description, Collection<AccessListElement> acl) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_EPP_CHAIN);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+      setEppChainAcl(msg, acl);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new EventProcessingPolicyChain(response.getFieldAsInt32(NXCPCodes.VID_CHAIN_ID),
+            response.getFieldAsUUID(NXCPCodes.VID_CHAIN_GUID), name, description);
+   }
+
+   /**
+    * Modify event processing policy chain metadata and optionally its access control list.
+    * Requires the global EPP system right.
+    *
+    * @param chainId chain ID
+    * @param name chain name
+    * @param description chain description
+    * @param acl new access control list or null to keep the current one
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void modifyEppChain(int chainId, String name, String description, Collection<AccessListElement> acl) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_EPP_CHAIN);
+      msg.setFieldInt32(NXCPCodes.VID_CHAIN_ID, chainId);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+      setEppChainAcl(msg, acl);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get rules calling given event processing policy chain. Requires the global EPP system right.
+    *
+    * @param chainId chain ID
+    * @return list of calling rules (empty if the chain is not called)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<EPPChainCaller> getEppChainCallers(int chainId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_EPP_CHAIN_CALLERS);
+      msg.setFieldInt32(NXCPCodes.VID_CHAIN_ID, chainId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_CHAIN_CALL_COUNT);
+      List<EPPChainCaller> callers = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_CHAIN_CALL_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 10)
+         callers.add(new EPPChainCaller(response, fieldId));
+      return callers;
+   }
+
+   /**
+    * Delete event processing policy chain together with its rules. Calls to the chain are removed from rules in
+    * other chains, and each chain that lost a call gets a new version. Requires the global EPP system right.
+    *
+    * @param chainId chain ID
+    * @return new versions of chains whose rules lost a call to the deleted chain (chain ID to version, 0 = main chain)
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<Integer, Integer> deleteEppChain(int chainId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_EPP_CHAIN);
+      msg.setFieldInt32(NXCPCodes.VID_CHAIN_ID, chainId);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_CHAINS);
+      Map<Integer, Integer> updatedChains = new HashMap<>(count);
+      long fieldId = NXCPCodes.VID_CHAIN_LIST_BASE;
+      for(int i = 0; i < count; i++)
       {
-         throw new NXCException(rcc);
+         int id = response.getFieldAsInt32(fieldId++);
+         int version = response.getFieldAsInt32(fieldId++);
+         updatedChains.put(id, version);
+      }
+      return updatedChains;
+   }
+
+   /**
+    * Set EPP chain ACL fields in chain modification message (ACL absent means "keep current").
+    *
+    * @param msg NXCP message
+    * @param acl access control list or null
+    */
+   private static void setEppChainAcl(NXCPMessage msg, Collection<AccessListElement> acl)
+   {
+      if (acl == null)
+         return;
+      msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, acl.size());
+      long userId = NXCPCodes.VID_ACL_USER_BASE;
+      long rights = NXCPCodes.VID_ACL_RIGHTS_BASE;
+      for(AccessListElement e : acl)
+      {
+         msg.setFieldInt32(userId++, e.getUserId());
+         msg.setFieldInt32(rights++, (int)e.getAccessRights());
       }
    }
 

@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Result of EPP save operation with optimistic concurrency.
+ * Result of EPP save operation with optimistic concurrency. Versions refer to the saved chain.
  */
 public class EPPSaveResult
 {
@@ -33,7 +33,7 @@ public class EPPSaveResult
    /**
     * Create a successful result.
     *
-    * @param newVersion new policy version after successful save
+    * @param newVersion new chain version after successful save
     * @return successful save result
     */
    public static EPPSaveResult success(int newVersion)
@@ -48,7 +48,7 @@ public class EPPSaveResult
    /**
     * Create a conflict result.
     *
-    * @param serverVersion current server version
+    * @param serverVersion current chain version on server
     * @param conflicts list of conflicts
     * @return conflict result
     */

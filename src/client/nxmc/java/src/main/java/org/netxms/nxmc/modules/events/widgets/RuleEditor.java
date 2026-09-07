@@ -44,6 +44,7 @@ import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.DropTargetListener;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
@@ -61,6 +62,7 @@ import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.client.events.AlarmCategory;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.TimeFrame;
@@ -89,6 +91,7 @@ import org.netxms.nxmc.modules.events.propertypages.RuleServerActions;
 import org.netxms.nxmc.modules.events.propertypages.RuleSeverityFilter;
 import org.netxms.nxmc.modules.events.propertypages.RuleSourceObjects;
 import org.netxms.nxmc.modules.events.propertypages.RuleTimeFilter;
+import org.netxms.nxmc.modules.events.propertypages.RuleChainCalls;
 import org.netxms.nxmc.modules.events.propertypages.RuleTimerCancellations;
 import org.netxms.nxmc.modules.events.views.EventProcessingPolicyEditor;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
@@ -335,7 +338,7 @@ public class RuleEditor extends Composite
 
    /**
     * Create popup menu for given controls
-    * 
+    *
     * @param controls
     */
    private void createPopupMenu(final Control[] controls)
@@ -536,7 +539,7 @@ public class RuleEditor extends Composite
 
    /**
     * Configure layout for child element
-    * 
+    *
     * @param ctrl child control
     */
    private void configureLayout(Control ctrl)
@@ -550,7 +553,7 @@ public class RuleEditor extends Composite
 
    /**
     * Create mouse listener for elements
-    * 
+    *
     * @param pageId property page ID to be opened on double click
     * @return
     */
@@ -577,7 +580,7 @@ public class RuleEditor extends Composite
 
    /**
     * Create condition summary control
-    * 
+    *
     * @param parent
     * @param rule
     * @return
@@ -625,7 +628,7 @@ public class RuleEditor extends Composite
             clabel.setText(object.getObjectName());
             clabel.setImage(editor.getObjectLabelProvider().getImage(object));
          }
-         
+
          if (rule.getSourceExclusions().size() > 0)
             addConditionGroupLabel(clientArea, "except:", needAnd, rule.isSourceInverted(), listener);
          sortedObjects = session.findMultipleObjects(rule.getSourceExclusions(), true);
@@ -690,7 +693,7 @@ public class RuleEditor extends Composite
          final MouseListener listener = createMouseListener("TimeFilter");
          addConditionGroupLabel(clientArea, "current time is within:", needAnd, rule.isTimeFramesInverted(), listener);
 
-         final DateFormat dfTime = DateFormatFactory.getShortTimeFormat();    
+         final DateFormat dfTime = DateFormatFactory.getShortTimeFormat();
          for(TimeFrame tf : rule.getTimeFrames())
          {
             CLabel clabel = createCLabel(clientArea, 2, false);
@@ -746,7 +749,7 @@ public class RuleEditor extends Composite
 
    /**
     * Create label with given text and indent
-    * 
+    *
     * @param parent
     * @param indent
     * @param bold
@@ -772,7 +775,7 @@ public class RuleEditor extends Composite
 
    /**
     * Create CLable with given indent
-    * 
+    *
     * @param parent
     * @param indent
     * @param bold
@@ -793,7 +796,7 @@ public class RuleEditor extends Composite
 
    /**
     * Add condition group opening text
-    * 
+    *
     * @param parent parent composite
     * @param title group's title
     * @param needAnd true if AND clause have to be added
@@ -809,7 +812,7 @@ public class RuleEditor extends Composite
 
    /**
     * Add severity label
-    * 
+    *
     * @param parent parent composite
     * @param severity severity code
     */
@@ -823,7 +826,7 @@ public class RuleEditor extends Composite
 
    /**
     * Create action summary control
-    * 
+    *
     * @param parent
     * @param rule
     * @return
@@ -873,7 +876,7 @@ public class RuleEditor extends Composite
             if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
                createLabel(clientArea, 1, false, i18n.tr("(use regular expression for alarm resolve)"), listener);
          }
-         
+
          if ((rule.getAlarmCategoryScriptName() != null) && !rule.getAlarmCategoryScriptName().isEmpty())
          {
             createLabel(clientArea, 1, false, String.format(i18n.tr("with categories selected by script \"%s\""), rule.getAlarmCategoryScriptName()), listener);
@@ -992,7 +995,7 @@ public class RuleEditor extends Composite
                createLabel(clientArea, 2, false, customAttributeList.get(i), listener);
             }
          }
-         
+
       }
 
       /* actions */
@@ -1072,6 +1075,20 @@ public class RuleEditor extends Composite
          }
       }
 
+      /* chain calls */
+      if (!rule.getChainCalls().isEmpty())
+      {
+         final MouseListener listener = createMouseListener("ChainCalls");
+         addActionGroupLabel(clientArea, i18n.tr("Call chains:"), editor.getImageExecute(), listener);
+         for(Integer calledChainId : rule.getChainCalls())
+         {
+            EventProcessingPolicyChain chain = editor.findChain(calledChainId);
+            CLabel clabel = createCLabel(clientArea, 1, false);
+            clabel.setText((chain != null) ? chain.getName() : String.format(i18n.tr("[%d] (unresolved)"), calledChainId));
+            clabel.addMouseListener(listener);
+         }
+      }
+
       /* AI agent instructions */
       if (!rule.getAiAgentInstructions().isBlank())
       {
@@ -1112,7 +1129,7 @@ public class RuleEditor extends Composite
 
    /**
     * Add condition group opening text
-    * 
+    *
     * @param parent parent composite
     * @param title group's title
     * @param needAnd true if AND clause have to be added
@@ -1161,7 +1178,7 @@ public class RuleEditor extends Composite
 
    /**
     * Check if widget is in collapsed state.
-    * 
+    *
     * @return true if widget is in collapsed state
     */
    public boolean isCollapsed()
@@ -1171,7 +1188,7 @@ public class RuleEditor extends Composite
 
    /**
     * Set widget's to collapsed or expanded state
-    * 
+    *
     * @param collapsed true to collapse widget, false to expand
     * @param doLayout if set to true, view layout will be updated
     */
@@ -1210,6 +1227,7 @@ public class RuleEditor extends Composite
       pm.addTo("Action", new PreferenceNode("ServerActions", new RuleServerActions(this)));
       pm.addTo("Action", new PreferenceNode("ActionScript", new RuleActionScript(this)));
       pm.addTo("Action", new PreferenceNode("TimerCancellations", new RuleTimerCancellations(this)));
+      pm.addTo("Action", new PreferenceNode("ChainCalls", new RuleChainCalls(this)));
       pm.addTo("Action", new PreferenceNode("AIAgentInstructions", new RuleAiAgentInstructions(this)));
       pm.addToRoot(new PreferenceNode("Comments", new RuleComments(this)));
 
@@ -1277,7 +1295,7 @@ public class RuleEditor extends Composite
 
    /**
     * Process mouse click on rule number
-    * 
+    *
     * @param e mouse event
     */
    private void processRuleMouseEvent(MouseEvent e)
@@ -1312,7 +1330,7 @@ public class RuleEditor extends Composite
 
    /**
     * Set selection status
-    * 
+    *
     * @param selected the selected to set
     */
    public void setSelected(boolean selected)
@@ -1325,7 +1343,7 @@ public class RuleEditor extends Composite
 
    /**
     * Enable or disable rule
-    * 
+    *
     * @param enabled true to enable rule
     */
    public void enableRule(boolean enabled)
@@ -1486,11 +1504,11 @@ public class RuleEditor extends Composite
       {
          if (!(event.data instanceof IStructuredSelection))
             return;
-         
+
          Object object = ((IStructuredSelection)event.data).getFirstElement();
          if (!(object instanceof RuleEditor))
             return;
-         
+
          RuleEditor.this.editor.moveSelection(RuleEditor.this);
       }
    }

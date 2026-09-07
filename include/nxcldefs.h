@@ -640,6 +640,9 @@ enum SessionState
 #define NX_NOTIFY_MIB_UPDATED                 65
 #define NX_NOTIFY_EVENT_FORWARDER_CHANGED     66
 #define NX_NOTIFY_CHATBOT_CHANGED             67
+#define NX_NOTIFY_EPP_RULES_CHANGED           68
+#define NX_NOTIFY_EPP_CHAIN_UPDATED           69
+#define NX_NOTIFY_EPP_CHAIN_DELETED           70
 
 /**
  * Request completion codes
@@ -1000,6 +1003,12 @@ enum SessionState
 #define OBJECT_ACCESS_READ_DEVICE_CONFIG   _ULL(0x20000000)
 #define OBJECT_ACCESS_READ_DC_CONFIG       _ULL(0x40000000)
 #define OBJECT_ACCESS_EXECUTE_SCRIPT       _ULL(0x80000000)
+
+/**
+ * Event processing policy chain access rights
+ */
+#define EPP_CHAIN_ACCESS_READ          0x00000001
+#define EPP_CHAIN_ACCESS_EDIT          0x00000002
 
 /**
  * Object sync flags

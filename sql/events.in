@@ -1526,7 +1526,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   5) policyId - Policy ID' CONCAT CRLF CONCAT
       '   6) additionalInfo - Additional info'
    );
-   
+
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
       EVENT_TUNNEL_SETUP_ERROR, 'SYS_TUNNEL_SETUP_ERROR', '50792874-0b2e-4eca-8c54-274b7d5e3aa2',
@@ -1535,7 +1535,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Generated on agent tunnel setup error.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
       '   1) Source IP address (ipAddress)' CONCAT CRLF CONCAT
-      '   2) Error message (error)' 
+      '   2) Error message (error)'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1687,7 +1687,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Parameters:' CONCAT CRLF CONCAT
       '   No event-specific parameters'
 	);
-	
+
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_SSH_UNREACHABLE, 'SYS_SSH_UNREACHABLE', '55a6a26e-e1f0-4196-b325-833d8a1311fe',
@@ -1697,7 +1697,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Parameters:' CONCAT CRLF CONCAT
       '   No event-specific parameters'
 	);
-	
+
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_NETCONF_OK, 'SYS_NETCONF_OK', '1cddc65e-4e92-4e9c-a785-fb2d94357e42',
@@ -1707,7 +1707,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Parameters:' CONCAT CRLF CONCAT
       '   No event-specific parameters'
 	);
-	
+
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_NETCONF_UNREACHABLE, 'SYS_NETCONF_UNREACHABLE', '3183eb51-d148-4c86-bde6-621fa5c1837e',
@@ -1717,7 +1717,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Parameters:' CONCAT CRLF CONCAT
       '   No event-specific parameters'
 	);
-	
+
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_ASSET_AUTO_UPDATE_FAILED, 'SYS_ASSET_AUTO_UPDATE_FAILED', 'f4ae5e79-9d39-41d0-b74c-b6c591930d08',
@@ -1758,7 +1758,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
       EVENT_ASSET_LINK_CONFLICT, 'SYS_ASSET_LINK_CONFLICT', '2bfd6557-1b88-4cf0-801b-78cffb2afc3c',
-      EVENT_SEVERITY_MINOR, 1, 
+      EVENT_SEVERITY_MINOR, 1,
       'Automatic linking of asset %<assetName> failed because it is already linked with node %<currentNodeName>',
       'Generated when asset cannot be automatically linked with a node because of conflict.'  CONCAT CRLF CONCAT
       'Parameters:'  CONCAT CRLF CONCAT
@@ -1771,15 +1771,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
       EVENT_CONFIGURATION_ERROR, 'SYS_CONFIGURATION_ERROR', '762c581c-e9bf-11ed-a05b-0242ac120003',
-      EVENT_SEVERITY_MINOR, 1, 
+      EVENT_SEVERITY_MINOR, 1,
       'System configuration error (%<description>)',
       'Generated on any system configuration error.'   CONCAT CRLF CONCAT
       'Parameters:'   CONCAT CRLF CONCAT
       '   1) subsystem - The subsystem which has the error'   CONCAT CRLF CONCAT
       '   2) tag - Related tag for the error'   CONCAT CRLF CONCAT
-      '   3) descriptipon - Description of the error'      
+      '   3) descriptipon - Description of the error'
    );
-   
+
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_MODBUS_UNREACHABLE, 'SYS_MODBUS_UNREACHABLE', 'f8dc0d5f-0e46-4bbf-a91d-bb3c0412db2e',
@@ -1803,7 +1803,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
       EVENT_IF_STP_STATE_CHANGED, 'SYS_IF_STP_STATE_CHANGED', '977a5634-d0ec-44a0-a7a5-6e193ca57c38',
-      EVENT_SEVERITY_NORMAL, 1, 
+      EVENT_SEVERITY_NORMAL, 1,
       'Interface %<ifName> STP state changed from %<oldStateText> to %<newStateText>',
       'Generated when system detects interface Spanning Tree state change.'   CONCAT CRLF CONCAT
       'Parameters:'   CONCAT CRLF CONCAT
@@ -1818,7 +1818,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
       EVENT_IF_SPEED_CHANGED, 'SYS_IF_SPEED_CHANGED', '3967eab5-71c0-4ba7-aeb9-eb70bcf5caa9',
-      EVENT_SEVERITY_NORMAL, 1, 
+      EVENT_SEVERITY_NORMAL, 1,
       'Interface %<ifName> speed changed from %<oldSpeedText> to %<newSpeedText>',
       'Generated when system detects interface speed change.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
@@ -1835,7 +1835,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
       EVENT_IF_SPEED_BELOW_MAXIMUM, 'SYS_IF_SPEED_BELOW_MAXIMUM', 'c020c587-ab9f-4834-ba3c-91583c2871b1',
-      EVENT_SEVERITY_WARNING, 1, 
+      EVENT_SEVERITY_WARNING, 1,
       'Interface %<ifName> speed %<speedText> is below maximum %<maxSpeedText>',
       'Generated when system detects that interface speed is below maximum.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
@@ -2294,6 +2294,20 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   2) error - Error message'
 	);
 
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_EPP_CHAIN_LOOP, 'SYS_EPP_CHAIN_LOOP', 'c3e1b9d4-6f2a-4b8c-a7e5-9d0f1a2b3c4d',
+		EVENT_SEVERITY_WARNING, 1,
+		'Event processing rule chain loop detected (chain "%2" called from rule %3 in chain "%1" is already active)',
+		'Generated when the event processing policy detects a loop while entering rule chains during event processing.' CONCAT CRLF CONCAT
+		'The chain that would be reentered is skipped to break the loop. The event is generated at most once per day for each calling rule.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   1) callingChainName - Calling chain name' CONCAT CRLF CONCAT
+		'   2) targetChainName - Target chain name (skipped)' CONCAT CRLF CONCAT
+		'   3) ruleNumber - Calling rule number within its chain' CONCAT CRLF CONCAT
+		'   4) ruleGuid - Calling rule GUID'
+	);
+
 /*
 ** SNMP traps
 */
@@ -2371,4 +2385,4 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Default event for discarded SNMP traps.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) SNMP trap OID'
-	);   
+	);

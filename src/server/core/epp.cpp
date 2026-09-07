@@ -30,6 +30,11 @@
 
 #define DEBUG_TAG _T("event.policy")
 
+/**
+ * Minimal interval (in seconds) between SYS_EPP_CHAIN_LOOP events posted for the same chain call
+ */
+#define EPP_CHAIN_LOOP_REPORT_INTERVAL 86400
+
 void StartDowntime(uint32_t objectId, String tag);
 void EndDowntime(uint32_t objectId, String tag);
 
@@ -38,7 +43,7 @@ void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object,
 /**
  * Default event policy rule constructor
  */
-EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+EPRule::EPRule(uint32_t id) : m_chainCalls(0, 4, Ownership::True), m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -46,6 +51,8 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
    m_modified = false;
    m_modificationTime = 0;
    m_flags = 0;
+   m_chainId = 0;
+   m_chainName = L"Main";
    m_comments = nullptr;
    m_alarmSeverity = 0;
    m_alarmKey = nullptr;
@@ -71,7 +78,7 @@ EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0,
 /**
  * Create rule from config entry
  */
-EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) : m_chainCalls(0, 4, Ownership::True), m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_id = 0;
    m_guid = config.getSubEntryValueAsUUID(_T("guid"));
@@ -81,6 +88,8 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    m_modified = false;
    m_modificationTime = 0;
    m_flags = config.getSubEntryValueAsUInt(_T("flags"));
+   m_chainId = 0;
+   m_chainName = L"Main";
 
 	ConfigEntry *eventsRoot = config.findEntry(_T("events"));
    if (eventsRoot != nullptr)
@@ -208,10 +217,10 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    }
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
-      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%s::%u"), m_chainName.cstr(), m_id + 1);
       if (m_filterScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u"), m_id + 1);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u in chain \"%s\""), m_id + 1, m_chainName.cstr());
       }
    }
    else
@@ -230,10 +239,10 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
    }
    if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
    {
-      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%s::%u"), m_chainName.cstr(), m_id + 1);
       if (m_actionScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u"), m_id + 1);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u in chain \"%s\""), m_id + 1, m_chainName.cstr());
       }
    }
    else
@@ -306,7 +315,7 @@ EPRule::EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5) :
  * Create rule from JSON object. Import context is optional - if not provided (e.g. when called from
  * the web API), a throwaway context is used so warnings are still written to the server log.
  */
-EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+EPRule::EPRule(json_t *json, ImportContext *context) : m_chainCalls(0, 4, Ownership::True), m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    ImportContext localImportContext;
    if (context == nullptr)
@@ -320,6 +329,37 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
    m_modified = false;
    m_modificationTime = 0;
    m_flags = json_object_get_uint32(json, "flags");
+   m_chainId = 0;   // Owning chain is set by the caller (import driver resolves it by GUID, chain save by chain being saved)
+   m_chainName = L"Main";
+
+   // Chain calls: chain IDs (API form) or chain GUIDs (export record form); calls to unknown chains are dropped
+   json_t *chainCallsArray = json_object_get(json, "chainCalls");
+   if (json_is_array(chainCallsArray))
+   {
+      EventProcessingPolicy *policy = GetEventProcessingPolicy();
+      size_t chainCallIndex;
+      json_t *chainCallItem;
+      json_array_foreach(chainCallsArray, chainCallIndex, chainCallItem)
+      {
+         if (json_is_integer(chainCallItem))
+         {
+            uint32_t chainId = static_cast<uint32_t>(json_integer_value(chainCallItem));
+            if (policy->chainExists(chainId))
+               m_chainCalls.add(new EPRuleChainCall(chainId));
+            else
+               context->log(NXLOG_WARNING, _T("EPRule::EPRule()"), _T("Event processing rule %s calls unknown chain [%u] - the call is dropped"), m_guid.toString().cstr(), chainId);
+         }
+         else if (json_is_string(chainCallItem))
+         {
+            uuid targetGuid = uuid::parse(String(json_string_value(chainCallItem), "utf8"));
+            int32_t chainId = targetGuid.isNull() ? -1 : policy->findChainIdByGuid(targetGuid);
+            if (chainId >= 0)
+               m_chainCalls.add(new EPRuleChainCall(static_cast<uint32_t>(chainId)));
+            else
+               context->log(NXLOG_WARNING, _T("EPRule::EPRule()"), _T("Event processing rule %s calls unknown chain %hs - the call is dropped"), m_guid.toString().cstr(), json_string_value(chainCallItem));
+         }
+      }
+   }
 
    // Import events - JSON format uses event objects with name property
    json_t *eventsArray = json_object_get(json, "events");
@@ -643,7 +683,7 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
    m_filterScriptSource = MemCopyString(filterScriptSource);
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
-      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%s::%u"), m_chainName.cstr(), m_id + 1);
       if (m_filterScript == nullptr)
       {
          context->log(NXLOG_ERROR, _T("EPRule::EPRule()"), _T("Failed to compile evaluation script for event processing policy rule %s"), m_guid.toString().cstr());
@@ -658,7 +698,7 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
    m_actionScriptSource = MemCopyString(actionScriptSource);
    if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
    {
-      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%s::%u"), m_chainName.cstr(), m_id + 1);
       if (m_actionScript == nullptr)
       {
          context->log(NXLOG_ERROR, _T("EPRule::EPRule()"), _T("Failed to compile action script for event processing policy rule %s"), m_guid.toString().cstr());
@@ -685,73 +725,80 @@ EPRule::EPRule(json_t *json, ImportContext *context) : m_timeFrames(0, 16, Owner
 /**
  * Construct event policy rule from database record
  * Assuming the following field order:
- * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
+ * chain_id,rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
  * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact,action_script,
  * downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,
  * incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time,
  * alarm_category_script
  */
-EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+EPRule::EPRule(DB_RESULT hResult, int row, const wchar_t *chainName) : m_chainCalls(0, 4, Ownership::True), m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
-   m_id = DBGetFieldULong(hResult, row, 0);
-   m_guid = DBGetFieldGUID(hResult, row, 1);
+   m_chainId = DBGetFieldULong(hResult, row, 0);
+   m_chainName = chainName;
+   m_id = DBGetFieldULong(hResult, row, 1);
+   m_guid = DBGetFieldGUID(hResult, row, 2);
    m_version = 1;
    m_modified = false;
-   m_flags = DBGetFieldULong(hResult, row, 2);
-   m_comments = DBGetField(hResult, row, 3, nullptr, 0);
-   m_alarmMessage = DBGetField(hResult, row, 4, nullptr, 0);
-   m_alarmSeverity = DBGetFieldLong(hResult, row, 5);
-   m_alarmKey = DBGetField(hResult, row, 6, nullptr, 0);
-   m_filterScriptSource = DBGetField(hResult, row, 7, nullptr, 0);
+   m_flags = DBGetFieldULong(hResult, row, 3);
+   m_comments = DBGetField(hResult, row, 4, nullptr, 0);
+   m_alarmMessage = DBGetField(hResult, row, 5, nullptr, 0);
+   m_alarmSeverity = DBGetFieldLong(hResult, row, 6);
+   m_alarmKey = DBGetField(hResult, row, 7, nullptr, 0);
+   m_filterScriptSource = DBGetField(hResult, row, 8, nullptr, 0);
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
-      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%s::%u"), m_chainName.cstr(), m_id + 1);
       if (m_filterScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u"), m_id + 1);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u in chain \"%s\""), m_id + 1, m_chainName.cstr());
       }
    }
    else
    {
       m_filterScript = nullptr;
    }
-	m_alarmTimeout = DBGetFieldULong(hResult, row, 8);
-	m_alarmTimeoutEvent = DBGetFieldULong(hResult, row, 9);
-	m_rcaScriptName = DBGetField(hResult, row, 10, nullptr, 0);
-   m_alarmImpact = DBGetField(hResult, row, 11, nullptr, 0);
-   m_actionScriptSource = DBGetField(hResult, row, 12, nullptr, 0);
+	m_alarmTimeout = DBGetFieldULong(hResult, row, 9);
+	m_alarmTimeoutEvent = DBGetFieldULong(hResult, row, 10);
+	m_rcaScriptName = DBGetField(hResult, row, 11, nullptr, 0);
+   m_alarmImpact = DBGetField(hResult, row, 12, nullptr, 0);
+   m_actionScriptSource = DBGetField(hResult, row, 13, nullptr, 0);
    if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
    {
-      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%s::%u"), m_chainName.cstr(), m_id + 1);
       if (m_actionScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u"), m_id + 1);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u in chain \"%s\""), m_id + 1, m_chainName.cstr());
       }
    }
    else
    {
       m_actionScript = nullptr;
    }
-   DBGetField(hResult, row, 13, m_downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
-   m_aiAgentInstructions = DBGetField(hResult, row, 14, nullptr, 0);
-   m_incidentDelay = DBGetFieldUInt32(hResult, row, 15);
-   m_incidentTitle = DBGetField(hResult, row, 16, nullptr, 0);
-   m_incidentDescription = DBGetField(hResult, row, 17, nullptr, 0);
-   m_incidentAIAnalysisDepth = DBGetFieldInt32(hResult, row, 18);
-   m_incidentAIPrompt = DBGetField(hResult, row, 19, nullptr, 0);
-   m_modifiedByGuid = DBGetFieldGUID(hResult, row, 20);
-   m_modifiedByName = DBGetFieldAsString(hResult, row, 21);
-   m_modificationTime = static_cast<time_t>(DBGetFieldULong(hResult, row, 22));
-   m_alarmCategoryScriptName = DBGetField(hResult, row, 23, nullptr, 0);
+   DBGetField(hResult, row, 14, m_downtimeTag, MAX_DOWNTIME_TAG_LENGTH);
+   m_aiAgentInstructions = DBGetField(hResult, row, 15, nullptr, 0);
+   m_incidentDelay = DBGetFieldUInt32(hResult, row, 16);
+   m_incidentTitle = DBGetField(hResult, row, 17, nullptr, 0);
+   m_incidentDescription = DBGetField(hResult, row, 18, nullptr, 0);
+   m_incidentAIAnalysisDepth = DBGetFieldInt32(hResult, row, 19);
+   m_incidentAIPrompt = DBGetField(hResult, row, 20, nullptr, 0);
+   m_modifiedByGuid = DBGetFieldGUID(hResult, row, 21);
+   m_modifiedByName = DBGetFieldAsString(hResult, row, 22);
+   m_modificationTime = static_cast<time_t>(DBGetFieldULong(hResult, row, 23));
+   m_alarmCategoryScriptName = DBGetField(hResult, row, 24, nullptr, 0);
 }
 
 /**
  * Construct event policy rule from NXCP message
  */
-EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
+EPRule::EPRule(const NXCPMessage& msg, const wchar_t *chainName) : m_chainCalls(0, 4, Ownership::True), m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_flags = msg.getFieldAsUInt32(VID_FLAGS);
    m_id = 0;  // ID will be assigned by server based on final rule order after merge
+   m_chainId = msg.getFieldAsUInt32(VID_CHAIN_ID);
+   m_chainName = chainName;
+   int chainCallCount = msg.getFieldAsInt32(VID_CHAIN_CALL_COUNT);
+   for(int i = 0; i < chainCallCount; i++)
+      m_chainCalls.add(new EPRuleChainCall(msg.getFieldAsUInt32(VID_CHAIN_CALL_LIST_BASE + i)));
    m_guid = msg.getFieldAsGUID(VID_GUID);
    m_version = msg.getFieldAsUInt32(VID_RULE_VERSION);
    m_modified = msg.getFieldAsBoolean(VID_RULE_MODIFIED);
@@ -823,10 +870,10 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    m_filterScriptSource = msg.getFieldAsString(VID_SCRIPT);
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
-      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%u"), m_id + 1);
+      m_filterScript = CompileServerScript(m_filterScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Filter::%s::%u"), m_chainName.cstr(), m_id + 1);
       if (m_filterScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u"), m_id + 1);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u in chain \"%s\""), m_id + 1, m_chainName.cstr());
       }
    }
    else
@@ -837,10 +884,10 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    m_actionScriptSource = msg.getFieldAsString(VID_ACTION_SCRIPT);
    if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
    {
-      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%u"), m_id + 1);
+      m_actionScript = CompileServerScript(m_actionScriptSource, SCRIPT_CONTEXT_EVENT_PROC, nullptr, 0, _T("EPP::Action::%s::%u"), m_chainName.cstr(), m_id + 1);
       if (m_actionScript == nullptr)
       {
-         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u"), m_id + 1);
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u in chain \"%s\""), m_id + 1, m_chainName.cstr());
       }
    }
    else
@@ -1177,8 +1224,8 @@ bool EPRule::executeActionScript(Event *event, StringBuffer *errorText) const
    {
       if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
       {
-         ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, _T("Script load failed"), _T("EPP::%d"), m_id + 1);
-         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create NXSL VM for action script for event processing policy rule #%u"), m_id + 1);
+         ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, _T("Script load failed"), _T("EPP::%s::%u"), m_chainName.cstr(), m_id + 1);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create NXSL VM for action script for event processing policy rule #%u in chain \"%s\""), m_id + 1, m_chainName.cstr());
          if (errorText != nullptr)
             errorText->append(L"Script load failed");
          return false;
@@ -1199,8 +1246,8 @@ bool EPRule::executeActionScript(Event *event, StringBuffer *errorText) const
    NXSL_VariableSystem *globals = nullptr;
    if (!vm->run(args, &globals))
    {
-      ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, vm->getErrorText(), _T("EPP::%d"), m_id + 1);
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to execute action script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
+      ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, vm->getErrorText(), _T("EPP::%s::%u"), m_chainName.cstr(), m_id + 1);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to execute action script for event processing policy rule #%u in chain \"%s\" (%s)"), m_id + 1, m_chainName.cstr(), vm->getErrorText());
       if (errorText != nullptr)
          errorText->append(vm->getErrorText());
       success = false;
@@ -1233,8 +1280,8 @@ bool EPRule::matchScript(Event *event) const
    {
       if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
       {
-         ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, _T("Script load failed"), _T("EPP::%d"), m_id + 1);
-         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create NXSL VM for evaluation script for event processing policy rule #%u"), m_id + 1);
+         ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, _T("Script load failed"), _T("EPP::%s::%u"), m_chainName.cstr(), m_id + 1);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create NXSL VM for evaluation script for event processing policy rule #%u in chain \"%s\""), m_id + 1, m_chainName.cstr());
       }
       return true;
    }
@@ -1273,8 +1320,8 @@ bool EPRule::matchScript(Event *event) const
    }
    else
    {
-      ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, vm->getErrorText(), _T("EPP::%d"), m_id + 1);
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to execute filter script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
+      ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, vm->getErrorText(), _T("EPP::%s::%u"), m_chainName.cstr(), m_id + 1);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to execute filter script for event processing policy rule #%u in chain \"%s\" (%s)"), m_id + 1, m_chainName.cstr(), vm->getErrorText());
    }
    delete globals;
    vm.destroy();
@@ -1295,10 +1342,11 @@ static EnumerationCallbackResult ExecutePstorageSetAction(const TCHAR *key, cons
 }
 
 /**
- * Check if event match to rule and perform required actions if yes
- * Method will return TRUE if event matched and RF_STOP_PROCESSING flag is set
+ * Check if event match to rule and perform required actions if yes.
+ * Method will return TRUE if event processing should stop - either this rule matched with
+ * RF_STOP_PROCESSING flag set, or a rule inside a called chain did.
  */
-bool EPRule::processEvent(Event *event) const
+bool EPRule::processEvent(Event *event, EventProcessingContext *context) const
 {
    if (m_flags & RF_DISABLED)
       return false;
@@ -1309,7 +1357,7 @@ bool EPRule::processEvent(Event *event) const
    // Check if rule has no filters at all
    if (isFilterEmpty())
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("EPP rule %u ignored because filter is empty"), m_id + 1);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("EPP rule %u in chain \"%s\" ignored because filter is empty"), m_id + 1, m_chainName.cstr());
       return false;
    }
 
@@ -1330,7 +1378,7 @@ bool EPRule::processEvent(Event *event) const
    if (!matchTime(&currLocal) || !matchScript(event))
       return false;
 
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %u"), event->getId(), m_id + 1);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %u in chain \"%s\""), event->getId(), m_id + 1, m_chainName.cstr());
 
    EventRuleExecution *rec = event->recordRuleExecution(this);   // nullptr if metadata recording is disabled
 
@@ -1522,7 +1570,80 @@ bool EPRule::processEvent(Event *event) const
          rec->recordEffect("log-flag", L"clear");
    }
 
+   // Enter called chains in sequence order; stop inside a sub-chain halts the entire event's processing
+   for(int i = 0; i < m_chainCalls.size(); i++)
+   {
+      EPRuleChainCall *call = m_chainCalls.get(i);
+      EventPolicyChain *chain = context->policy->getChain(call->targetChainId);
+      if (chain == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"EPP: call to unknown chain [%u] from rule %u in chain \"%s\" ignored",
+               call->targetChainId, m_id + 1, context->chainName);
+         continue;
+      }
+      if (context->isChainActive(call->targetChainId))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"EPP: loop detected while processing event " UINT64_FMT L" - chain \"%s\" called from rule %u in chain \"%s\" is already active, call skipped",
+               event->getId(), chain->getName(), m_id + 1, context->chainName);
+         if (rec != nullptr)
+            rec->recordEffect("chain-call-loop", chain->getName());
+         reportChainLoop(call, context->chainName, chain->getName());
+         continue;
+      }
+      if (rec != nullptr)
+         rec->recordEffect("chain-call", chain->getName());
+      if (context->policy->enterChain(chain, event, context))
+         return true;
+   }
+
    return (m_flags & RF_STOP_PROCESSING) ? true : false;
+}
+
+/**
+ * Remove call to given chain. Returns true if the rule had such call.
+ */
+bool EPRule::removeChainCall(uint32_t chainId)
+{
+   bool removed = false;
+   for(int i = m_chainCalls.size() - 1; i >= 0; i--)
+   {
+      if (m_chainCalls.get(i)->targetChainId == chainId)
+      {
+         m_chainCalls.remove(i);
+         removed = true;
+      }
+   }
+   return removed;
+}
+
+/**
+ * Check if rule calls given chain
+ */
+bool EPRule::isChainCalled(uint32_t chainId) const
+{
+   for(int i = 0; i < m_chainCalls.size(); i++)
+      if (m_chainCalls.get(i)->targetChainId == chainId)
+         return true;
+   return false;
+}
+
+/**
+ * Post SYS_EPP_CHAIN_LOOP for given chain call unless it was already reported within the report interval.
+ * The report time is kept in memory only, so a loop that survives a server restart is reported again.
+ */
+void EPRule::reportChainLoop(EPRuleChainCall *call, const wchar_t *callingChainName, const wchar_t *targetChainName) const
+{
+   int64_t now = static_cast<int64_t>(time(nullptr));
+   int64_t last = call->lastLoopReport.load();
+   if ((now - last < EPP_CHAIN_LOOP_REPORT_INTERVAL) || !call->lastLoopReport.compare_exchange_strong(last, now))
+      return;
+
+   EventBuilder(EVENT_EPP_CHAIN_LOOP, g_dwMgmtNode)
+      .param(L"callingChainName", callingChainName)
+      .param(L"targetChainName", targetChainName)
+      .param(L"ruleNumber", m_id + 1)
+      .param(L"ruleGuid", m_guid)
+      .post();
 }
 
 /**
@@ -1644,8 +1765,8 @@ bool EPRule::resolveAlarmCategories(Event *event, IntegerArray<uint32_t> *catego
    if (!vm.isValid())
    {
       ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, vm.failureReasonText(), m_alarmCategoryScriptName);
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot create NXSL VM for alarm category script \"%s\" in event processing policy rule #%u (%s)",
-               m_alarmCategoryScriptName, m_id + 1, vm.failureReasonText());
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot create NXSL VM for alarm category script \"%s\" in event processing policy rule #%u in chain \"%s\" (%s)",
+               m_alarmCategoryScriptName, m_id + 1, m_chainName.cstr(), vm.failureReasonText());
       return false;
    }
 
@@ -1655,7 +1776,7 @@ bool EPRule::resolveAlarmCategories(Event *event, IntegerArray<uint32_t> *catego
    if (!vm->run())
    {
       ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, vm->getErrorText(), m_alarmCategoryScriptName);
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Failed to execute alarm category script for event processing policy rule #%u (%s)", m_id + 1, vm->getErrorText());
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Failed to execute alarm category script for event processing policy rule #%u in chain \"%s\" (%s)", m_id + 1, m_chainName.cstr(), vm->getErrorText());
       vm.destroy();
       return false;
    }
@@ -1673,7 +1794,7 @@ bool EPRule::resolveAlarmCategories(Event *event, IntegerArray<uint32_t> *catego
    }
    vm.destroy();
 
-   nxlog_debug_tag(DEBUG_TAG, 6, L"Alarm category script in event processing policy rule #%u selected %d categories", m_id + 1, categories->size());
+   nxlog_debug_tag(DEBUG_TAG, 6, L"Alarm category script in event processing policy rule #%u in chain \"%s\" selected %d categories", m_id + 1, m_chainName.cstr(), categories->size());
    return true;
 }
 
@@ -1721,7 +1842,7 @@ uint32_t EPRule::generateAlarm(Event *event, EventRuleExecution *rec) const
 	         else
 	         {
 	            ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, vm->getErrorText(), m_rcaScriptName);
-	            nxlog_write(NXLOG_ERROR, _T("Failed to execute root cause analysis script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
+	            nxlog_write(NXLOG_ERROR, _T("Failed to execute root cause analysis script for event processing policy rule #%u in chain \"%s\" (%s)"), m_id + 1, m_chainName.cstr(), vm->getErrorText());
 	         }
 	         delete vm;
 	      }
@@ -1763,7 +1884,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    bool bSuccess = true;
 
    // Load rule's sources
-   _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d and exclusion='0'"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE chain_id=%d AND rule_id=%d and exclusion='0'"), m_chainId, m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1778,7 +1899,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load rule's sources exclusions
-   _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d and exclusion='1'"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE chain_id=%d AND rule_id=%d and exclusion='1'"), m_chainId, m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1793,7 +1914,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load rule's events
-   _sntprintf(szQuery, 256, _T("SELECT event_code FROM policy_event_list WHERE rule_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT event_code FROM policy_event_list WHERE chain_id=%d AND rule_id=%d"), m_chainId, m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1808,7 +1929,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load rule's events
-   _sntprintf(szQuery, 256, _T("SELECT time_filter,date_filter FROM policy_time_frame_list WHERE rule_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT time_filter,date_filter FROM policy_time_frame_list WHERE chain_id=%d AND rule_id=%d"), m_chainId, m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1825,7 +1946,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load rule's actions
-   _sntprintf(szQuery, 256, _T("SELECT action_id,timer_delay,timer_key,blocking_timer_key,snooze_time,active FROM policy_action_list WHERE rule_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT action_id,timer_delay,timer_key,blocking_timer_key,snooze_time,active FROM policy_action_list WHERE chain_id=%d AND rule_id=%d"), m_chainId, m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1848,7 +1969,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load timer cancellations
-   _sntprintf(szQuery, 256, _T("SELECT timer_key FROM policy_timer_cancellation_list WHERE rule_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT timer_key FROM policy_timer_cancellation_list WHERE chain_id=%d AND rule_id=%d"), m_chainId, m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1865,7 +1986,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load pstorage actions
-   _sntprintf(szQuery, 256, _T("SELECT ps_key,action,value FROM policy_pstorage_actions WHERE rule_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT ps_key,action,value FROM policy_pstorage_actions WHERE chain_id=%d AND rule_id=%d"), m_chainId, m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1891,7 +2012,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load custom attributes actions
-   _sntprintf(szQuery, 256, _T("SELECT attribute_name,action,value FROM policy_cattr_actions WHERE rule_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT attribute_name,action,value FROM policy_cattr_actions WHERE chain_id=%d AND rule_id=%d"), m_chainId, m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1917,7 +2038,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load alarm categories
-   _sntprintf(szQuery, 256, _T("SELECT category_id FROM alarm_category_map WHERE alarm_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT category_id FROM alarm_category_map WHERE chain_id=%d AND rule_id=%d"), m_chainId, m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1925,6 +2046,23 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
       for(int i = 0; i < count; i++)
       {
          m_alarmCategoryList.add(DBGetFieldULong(hResult, i, 0));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      bSuccess = false;
+   }
+
+   // Load chain calls (target chains entered when this rule matches), ordered by sequence
+   _sntprintf(szQuery, 256, _T("SELECT target_chain_id FROM policy_chain_call_list WHERE chain_id=%d AND rule_id=%d ORDER BY sequence_number"), m_chainId, m_id);
+   hResult = DBSelect(hdb, szQuery);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         m_chainCalls.add(new EPRuleChainCall(DBGetFieldULong(hResult, i, 0)));
       }
       DBFreeResult(hResult);
    }
@@ -1959,8 +2097,8 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
                                   _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,")
                                   _T("action_script,downtime_tag,ai_instructions,incident_delay,incident_title,incident_description,")
                                   _T("incident_ai_depth,incident_ai_prompt,modified_by_guid,modified_by_name,modification_time,")
-                                  _T("alarm_category_script) ")
-                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+                                  _T("alarm_category_script,chain_id) ")
+                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1987,6 +2125,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
       DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, modifiedByName, DB_BIND_STATIC, 63);
       DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(modificationTime));
       DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_alarmCategoryScriptName, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_chainId);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -1998,10 +2137,11 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
    // Actions
    if (success && !m_actions.isEmpty())
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_action_list (rule_id,action_id,timer_delay,timer_key,blocking_timer_key,snooze_time,active,record_id) VALUES (?,?,?,?,?,?,?,?)"), m_actions.size() > 1);
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_action_list (rule_id,action_id,timer_delay,timer_key,blocking_timer_key,snooze_time,active,record_id,chain_id) VALUES (?,?,?,?,?,?,?,?,?)"), m_actions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_chainId);
          for(int i = 0; i < m_actions.size() && success; i++)
          {
             const ActionExecutionConfiguration *a = m_actions.get(i);
@@ -2025,10 +2165,11 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
    // Timer cancellations
    if (success && !m_timerCancellations.isEmpty())
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_timer_cancellation_list (rule_id,timer_key) VALUES (?,?)"), m_timerCancellations.size() > 1);
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_timer_cancellation_list (rule_id,timer_key,chain_id) VALUES (?,?,?)"), m_timerCancellations.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_chainId);
          for(int i = 0; i < m_timerCancellations.size() && success; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_timerCancellations.get(i), DB_BIND_STATIC, 127);
@@ -2047,7 +2188,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
    {
       for(int i = 0; i < m_events.size() && success; i++)
       {
-         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), m_id, m_events.get(i));
+         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code,chain_id) VALUES (%d,%d,%d)"), m_id, m_events.get(i), m_chainId);
          success = DBQuery(hdb, pszQuery);
       }
    }
@@ -2055,10 +2196,11 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
    // Time frames
    if (success && !m_timeFrames.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_time_frame_list (rule_id,time_frame_id,time_filter,date_filter) VALUES (?,?,?,?)"), m_timeFrames.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_time_frame_list (rule_id,time_frame_id,time_filter,date_filter,chain_id) VALUES (?,?,?,?,?)"), m_timeFrames.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_chainId);
          int i = 0;
          for(TimeFrame *frame : m_timeFrames)
          {
@@ -2080,7 +2222,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
    {
       for(int i = 0; i < m_sources.size() && success; i++)
       {
-         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion) VALUES (%d,%d,'0')"), m_id, m_sources.get(i));
+         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion,chain_id) VALUES (%d,%d,'0',%d)"), m_id, m_sources.get(i), m_chainId);
          success = DBQuery(hdb, pszQuery);
       }
    }
@@ -2090,7 +2232,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
    {
       for(int i = 0; i < m_sourceExclusions.size() && success; i++)
       {
-         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion) VALUES (%d,%d,'1')"), m_id, m_sourceExclusions.get(i));
+         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion,chain_id) VALUES (%d,%d,'1',%d)"), m_id, m_sourceExclusions.get(i), m_chainId);
          success = DBQuery(hdb, pszQuery);
       }
    }
@@ -2098,10 +2240,11 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
 	// Persistent storage actions
    if (success && !m_pstorageSetActions.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key,value) VALUES (?,'1',?,?)"), m_pstorageSetActions.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key,value,chain_id) VALUES (?,'1',?,?,?)"), m_pstorageSetActions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_chainId);
          success = _STOP != m_pstorageSetActions.forEach(SaveEppActions, hStmt);
          DBFreeStatement(hStmt);
       }
@@ -2109,10 +2252,11 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
 
    if (success && !m_pstorageDeleteActions.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key) VALUES (?,'2',?)"), m_pstorageDeleteActions.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key,chain_id) VALUES (?,'2',?,?)"), m_pstorageDeleteActions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_chainId);
          for(int i = 0; i < m_pstorageDeleteActions.size() && success; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_pstorageDeleteActions.get(i), DB_BIND_STATIC, 127);
@@ -2125,10 +2269,11 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
    // Custom attribute actions
    if (success && !m_customAttributeSetActions.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cattr_actions (rule_id,action,attribute_name,value) VALUES (?,'1',?,?)"), m_customAttributeSetActions.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cattr_actions (rule_id,action,attribute_name,value,chain_id) VALUES (?,'1',?,?,?)"), m_customAttributeSetActions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_chainId);
          success = _STOP != m_customAttributeSetActions.forEach(SaveEppActions, hStmt);
          DBFreeStatement(hStmt);
       }
@@ -2136,10 +2281,11 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
 
    if (success && !m_customAttributeDeleteActions.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cattr_actions (rule_id,action,attribute_name) VALUES (?,'2',?)"), m_pstorageDeleteActions.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cattr_actions (rule_id,action,attribute_name,chain_id) VALUES (?,'2',?,?)"), m_pstorageDeleteActions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_chainId);
          for(int i = 0; i < m_customAttributeDeleteActions.size() && success; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_customAttributeDeleteActions.get(i), DB_BIND_STATIC, 127);
@@ -2152,16 +2298,39 @@ bool EPRule::saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* mo
    // Alarm categories
    if (success && !m_alarmCategoryList.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_map (alarm_id,category_id) VALUES (?,?)"), m_alarmCategoryList.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_map (rule_id,category_id,chain_id) VALUES (?,?,?)"), m_alarmCategoryList.size() > 1);
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER && success, m_id);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_chainId);
          for(int i = 0; (i < m_alarmCategoryList.size()) && success; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_alarmCategoryList.get(i));
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
+      }
+   }
+
+   // Chain calls (target chains entered when this rule matches); sequence_number = index
+   if (success && (m_chainCalls.size() > 0))
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_chain_call_list (chain_id,rule_id,target_chain_id,sequence_number) VALUES (?,?,?,?)"), m_chainCalls.size() > 1);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_chainId);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; (i < m_chainCalls.size()) && success; i++)
+         {
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_chainCalls.get(i)->targetChainId);
+            DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, i);
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
       }
    }
 
@@ -2175,6 +2344,10 @@ void EPRule::fillMessage(NXCPMessage *msg) const
 {
    msg->setField(VID_FLAGS, m_flags);
    msg->setField(VID_RULE_ID, m_id);
+   msg->setField(VID_CHAIN_ID, m_chainId);
+   msg->setField(VID_CHAIN_CALL_COUNT, static_cast<uint32_t>(m_chainCalls.size()));
+   for(int i = 0; i < m_chainCalls.size(); i++)
+      msg->setField(VID_CHAIN_CALL_LIST_BASE + i, m_chainCalls.get(i)->targetChainId);
    msg->setField(VID_GUID, m_guid);
    msg->setField(VID_RULE_ERRORS, getErrors());
    msg->setField(VID_RULE_VERSION, m_version);
@@ -2325,6 +2498,11 @@ json_t *EPRule::toJson(bool assistantMode) const
 {
    json_t *root = json_object();
    json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "chainId", json_integer(m_chainId));
+   json_t *chainCalls = json_array();
+   for(int i = 0; i < m_chainCalls.size(); i++)
+      json_array_append_new(chainCalls, json_integer(m_chainCalls.get(i)->targetChainId));
+   json_object_set_new(root, "chainCalls", chainCalls);
    json_object_set_new(root, "sources", m_sources.toJson());
    json_object_set_new(root, "sourceExclusions", m_sourceExclusions.toJson());
    json_object_set_new(root, "events", m_events.toJson());
@@ -2440,6 +2618,141 @@ bool EPRule::isActionInUse(UINT32 actionId) const
 }
 
 /**
+ * Construct event policy chain from chain registry database record.
+ * Field order: chain_id,chain_guid,name,description
+ */
+EventPolicyChain::EventPolicyChain(DB_RESULT hResult, int row)
+{
+   m_id = DBGetFieldULong(hResult, row, 0);
+   m_guid = DBGetFieldGUID(hResult, row, 1);
+   m_name = DBGetField(hResult, row, 2, nullptr, 0);
+   m_description = DBGetField(hResult, row, 3, nullptr, 0);
+   m_version = 1;
+}
+
+/**
+ * Construct new event policy chain with generated GUID
+ */
+EventPolicyChain::EventPolicyChain(uint32_t id, const wchar_t *name, const wchar_t *description)
+{
+   m_id = id;
+   m_guid = uuid::generate();
+   m_name = MemCopyStringW(name);
+   m_description = MemCopyStringW(description);
+   m_version = 1;
+}
+
+/**
+ * Construct event policy chain with known GUID (import)
+ */
+EventPolicyChain::EventPolicyChain(uint32_t id, const uuid& guid, const wchar_t *name, const wchar_t *description)
+{
+   m_id = id;
+   m_guid = guid;
+   m_name = MemCopyStringW(name);
+   m_description = MemCopyStringW(description);
+   m_version = 1;
+}
+
+/**
+ * Event policy chain destructor
+ */
+EventPolicyChain::~EventPolicyChain()
+{
+   MemFree(m_name);
+   MemFree(m_description);
+}
+
+/**
+ * Add access control list element
+ */
+void EventPolicyChain::addAccessElement(uint32_t userId, uint32_t accessRights)
+{
+   ACL_ELEMENT element;
+   element.userId = userId;
+   element.accessRights = accessRights;
+   m_acl.add(element);
+}
+
+/**
+ * Replace access control list
+ */
+void EventPolicyChain::replaceACL(const StructArray<ACL_ELEMENT>& acl)
+{
+   m_acl.clear();
+   for(int i = 0; i < acl.size(); i++)
+      m_acl.add(acl.get(i));
+}
+
+/**
+ * Get user's rights on this chain: explicit user entry wins, otherwise combined rights of user's groups
+ */
+uint32_t EventPolicyChain::getUserRights(uint32_t userId) const
+{
+   for(int i = 0; i < m_acl.size(); i++)
+      if (m_acl.get(i)->userId == userId)
+         return m_acl.get(i)->accessRights;
+
+   uint32_t rights = 0;
+   for(int i = 0; i < m_acl.size(); i++)
+   {
+      const ACL_ELEMENT *e = m_acl.get(i);
+      if ((e->userId & GROUP_FLAG) && CheckUserMembership(userId, e->userId))
+         rights |= e->accessRights;
+   }
+   return rights;
+}
+
+/**
+ * Check if any rule of this chain calls given chain
+ */
+bool EventPolicyChain::isRuleCallingChain(uint32_t chainId) const
+{
+   for (auto& rule : m_rules)
+      if (rule->isChainCalled(chainId))
+         return true;
+   return false;
+}
+
+/**
+ * Serialize chain to JSON. Caller must hold policy lock.
+ */
+json_t *EventPolicyChain::toJson(bool includeRules, uint32_t callerCount) const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "name", json_string_w(m_name));
+   json_object_set_new(root, "description", json_string_w(CHECK_NULL_EX(m_description)));
+   json_object_set_new(root, "version", json_integer(m_version));
+   json_t *acl = json_array();
+   for(int i = 0; i < m_acl.size(); i++)
+   {
+      json_t *e = json_object();
+      json_object_set_new(e, "userId", json_integer(m_acl.get(i)->userId));
+      json_object_set_new(e, "accessRights", json_integer(m_acl.get(i)->accessRights));
+      json_array_append_new(acl, e);
+   }
+   json_object_set_new(root, "accessList", acl);
+   json_object_set_new(root, "ruleCount", json_integer(m_rules.size()));
+   json_object_set_new(root, "callerCount", json_integer(callerCount));
+   if (includeRules)
+   {
+      json_t *rules = json_array();
+      int ruleNum = 1;
+      for (auto& rule : m_rules)
+      {
+         json_t *r = rule->toJson();
+         json_object_set_new(r, "ruleNumber", json_integer(ruleNum++));
+         json_array_append_new(rules, r);
+      }
+      json_object_set_new(root, "rules", rules);
+   }
+   return root;
+}
+
+
+/**
  * Load event processing policy from database
  */
 bool EventProcessingPolicy::loadFromDB()
@@ -2448,31 +2761,78 @@ bool EventProcessingPolicy::loadFromDB()
    bool success = false;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, L"SELECT rule_id,rule_guid,flags,comments,alarm_message,"
-                           L"alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,"
-                           L"rca_script_name,alarm_impact,action_script,downtime_tag,ai_instructions,"
-                           L"incident_delay,incident_title,incident_description,"
-                           L"incident_ai_depth,incident_ai_prompt,"
-                           L"modified_by_guid,modified_by_name,modification_time,"
-                           L"alarm_category_script "
-                           L"FROM event_policy ORDER BY rule_id");
+
+   // Chain registry (the main chain is row 0)
+   hResult = DBSelect(hdb, L"SELECT chain_id,chain_guid,name,description FROM event_policy_chain");
    if (hResult != nullptr)
    {
       success = true;
       int count = DBGetNumRows(hResult);
-      for(int i = 0; (i < count) && success; i++)
-      {
-         auto rule = make_shared<EPRule>(hResult, i);
-         success = rule->loadFromDB(hdb);
-         if (success)
-            m_rules.add(rule);
-      }
+      for(int i = 0; i < count; i++)
+         m_chains.set(DBGetFieldULong(hResult, i, 0), new EventPolicyChain(hResult, i));
       DBFreeResult(hResult);
+   }
+
+   // Chain access control lists
+   if (success)
+   {
+      hResult = DBSelect(hdb, L"SELECT chain_id,user_id,access_rights FROM policy_chain_acl");
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            EventPolicyChain *chain = m_chains.get(DBGetFieldULong(hResult, i, 0));
+            if (chain != nullptr)
+               chain->addAccessElement(DBGetFieldULong(hResult, i, 1), DBGetFieldULong(hResult, i, 2));
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   // Rules, routed to their chains by chain_id (first column)
+   if (success)
+   {
+      hResult = DBSelect(hdb, L"SELECT chain_id,rule_id,rule_guid,flags,comments,alarm_message,"
+                              L"alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,"
+                              L"rca_script_name,alarm_impact,action_script,downtime_tag,ai_instructions,"
+                              L"incident_delay,incident_title,incident_description,"
+                              L"incident_ai_depth,incident_ai_prompt,"
+                              L"modified_by_guid,modified_by_name,modification_time,"
+                              L"alarm_category_script "
+                              L"FROM event_policy ORDER BY chain_id,rule_id");
+      if (hResult != nullptr)
+      {
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; (i < count) && success; i++)
+         {
+            EventPolicyChain *chain = m_chains.get(DBGetFieldULong(hResult, i, 0));
+            if (chain == nullptr)
+            {
+               nxlog_debug_tag(DEBUG_TAG, 3, L"EPP rule %u references unknown chain %u", DBGetFieldULong(hResult, i, 1), DBGetFieldULong(hResult, i, 0));
+               continue;
+            }
+            auto rule = make_shared<EPRule>(hResult, i, chain->getName());
+            success = rule->loadFromDB(hdb);
+            if (success)
+               chain->getRules().add(rule);
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         success = false;
+      }
    }
 
    DBConnectionPoolReleaseConnection(hdb);
    return success;
 }
+
 
 /**
  * Save event processing policy to database
@@ -2492,17 +2852,64 @@ bool EventProcessingPolicy::saveToDB(const uuid& modifiedByGuid, const TCHAR* mo
                 DBQuery(hdb, L"DELETE FROM policy_source_list") &&
                 DBQuery(hdb, L"DELETE FROM policy_pstorage_actions") &&
                 DBQuery(hdb, L"DELETE FROM policy_cattr_actions") &&
-                DBQuery(hdb, L"DELETE FROM alarm_category_map");
+                DBQuery(hdb, L"DELETE FROM alarm_category_map") &&
+                DBQuery(hdb, L"DELETE FROM policy_chain_call_list") &&
+                DBQuery(hdb, L"DELETE FROM policy_chain_acl") &&
+                DBQuery(hdb, L"DELETE FROM event_policy_chain");
 
       if (success)
       {
          readLock();
-         for (auto& rule : m_rules)
+
+         // Every chain: registry row, ACL, and rules
          {
-            success = rule->saveToDB(hdb, modifiedByGuid, modifiedByName, modificationTime);
-            if (!success)
-               break;
+            success = (_STOP != m_chains.forEach(
+               [hdb, &modifiedByGuid, modifiedByName, modificationTime, &success](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+               {
+                  DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO event_policy_chain (chain_id,chain_guid,name,description) VALUES (?,?,?,?)");
+                  if (hStmt != nullptr)
+                  {
+                     DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, chain->getId());
+                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, chain->getGuid());
+                     DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, chain->getName(), DB_BIND_STATIC, 63);
+                     DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, chain->getDescription(), DB_BIND_STATIC, 255);
+                     success = DBExecute(hStmt);
+                     DBFreeStatement(hStmt);
+                  }
+                  else
+                  {
+                     success = false;
+                  }
+
+                  const StructArray<ACL_ELEMENT>& acl = chain->getACL();
+                  if (success && (acl.size() > 0))
+                  {
+                     hStmt = DBPrepare(hdb, L"INSERT INTO policy_chain_acl (chain_id,user_id,access_rights) VALUES (?,?,?)", acl.size() > 1);
+                     if (hStmt != nullptr)
+                     {
+                        DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, chain->getId());
+                        for(int i = 0; (i < acl.size()) && success; i++)
+                        {
+                           DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, acl.get(i)->userId);
+                           DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, acl.get(i)->accessRights);
+                           success = DBExecute(hStmt);
+                        }
+                        DBFreeStatement(hStmt);
+                     }
+                     else
+                     {
+                        success = false;
+                     }
+                  }
+
+                  const SharedObjectArray<EPRule>& rules = chain->getRules();
+                  for(int i = 0; (i < rules.size()) && success; i++)
+                     success = rules.get(i)->saveToDB(hdb, modifiedByGuid, modifiedByName, modificationTime);
+
+                  return success ? _CONTINUE : _STOP;
+               }));
          }
+
          unlock();
       }
 
@@ -2514,6 +2921,63 @@ bool EventProcessingPolicy::saveToDB(const uuid& modifiedByGuid, const TCHAR* mo
 	DBConnectionPoolReleaseConnection(hdb);
 	return success;
 }
+
+/**
+ * Delete one chain's rows from all rule tables
+ */
+static bool DeleteChainRuleRows(DB_HANDLE hdb, uint32_t chainId)
+{
+   static const wchar_t *ruleTables[] =
+   {
+      L"event_policy", L"policy_source_list", L"policy_event_list", L"policy_time_frame_list",
+      L"policy_action_list", L"policy_timer_cancellation_list", L"policy_pstorage_actions",
+      L"policy_cattr_actions", L"alarm_category_map", L"policy_chain_call_list", nullptr
+   };
+
+   bool success = true;
+   for(int i = 0; (ruleTables[i] != nullptr) && success; i++)
+   {
+      wchar_t query[128];
+      nx_swprintf(query, 128, L"DELETE FROM %s WHERE chain_id=%u", ruleTables[i], chainId);
+      success = DBQuery(hdb, query);
+   }
+   return success;
+}
+
+/**
+ * Save one chain's rules to database. Other chains, the chain registry, and chain ACLs are left intact.
+ */
+bool EventProcessingPolicy::saveChainToDB(uint32_t chainId, const uuid& modifiedByGuid, const TCHAR *modifiedByName) const
+{
+   time_t modificationTime = time(nullptr);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool success = DBBegin(hdb);
+   if (success)
+   {
+      success = DeleteChainRuleRows(hdb, chainId);
+
+      if (success)
+      {
+         readLock();
+         EventPolicyChain *chain = m_chains.get(chainId);   // Chain could be deleted by concurrent session
+         if (chain != nullptr)
+         {
+            const SharedObjectArray<EPRule>& rules = chain->getRules();
+            for(int i = 0; (i < rules.size()) && success; i++)
+               success = rules.get(i)->saveToDB(hdb, modifiedByGuid, modifiedByName, modificationTime);
+         }
+         unlock();
+      }
+
+      if (success)
+         DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
+}
+
 
 /**
  * Fill NXCP message with conflict information
@@ -2545,26 +3009,39 @@ void EPPConflict::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 }
 
 /**
- * Save event processing policy with optimistic concurrency merge
+ * Save one chain of the event processing policy with optimistic concurrency merge.
+ * Other chains and the chain registry are left intact.
  */
-uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const SharedObjectArray<EPRule>& clientRules,
+uint32_t EventProcessingPolicy::saveWithMerge(uint32_t chainId, uint32_t baseVersion, const SharedObjectArray<EPRule>& clientRules,
    uint32_t numDeletedRules, DeletedRuleInfo *deletedRules, const uuid& userGuid, const TCHAR* userName,
    ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion)
 {
    writeLock();
 
-   nxlog_debug_tag(DEBUG_TAG, 6, L"saveWithMerge: baseVersion=%u, serverVersion=%u, clientRules=%u, deletedRules=%u",
-      baseVersion, m_version, static_cast<uint32_t>(clientRules.size()), numDeletedRules);
+   EventPolicyChain *chain = m_chains.get(chainId);
+   if (chain == nullptr)
+   {
+      unlock();
+      nxlog_debug_tag(DEBUG_TAG, 4, L"saveWithMerge: unknown chain %u", chainId);
+      return RCC_INVALID_ARGUMENT;
+   }
+   SharedObjectArray<EPRule>& serverRules = chain->getRules();
+   uint32_t serverVersion = chain->getVersion();
+   const wchar_t *chainName = chain->getName();
+
+   nxlog_debug_tag(DEBUG_TAG, 6, L"saveWithMerge: chainId=%u, baseVersion=%u, serverVersion=%u, clientRules=%u, deletedRules=%u",
+      chainId, baseVersion, serverVersion, static_cast<uint32_t>(clientRules.size()), numDeletedRules);
 
    // Fast path: no concurrent changes
-   if (baseVersion == m_version)
+   if (baseVersion == serverVersion)
    {
       nxlog_debug_tag(DEBUG_TAG, 6, L"saveWithMerge: fast path (no concurrent changes)");
       time_t modTime = time(nullptr);
-      m_rules.clear();
+      serverRules.clear();
       for (size_t i = 0; i < clientRules.size(); i++)
       {
          shared_ptr<EPRule> rule = clientRules.getShared(i);
+         rule->setChainId(chainId, chainName);
          rule->setId(static_cast<uint32_t>(i));
          if (rule->isModified())
          {
@@ -2572,23 +3049,24 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const Shared
             rule->setModificationInfo(userGuid, userName, modTime);
             rule->clearModified();
          }
-         m_rules.add(rule);
+         serverRules.add(rule);
       }
-      m_version++;
-      *newVersion = m_version;
+      chain->incrementVersion();
+      *newVersion = chain->getVersion();
       unlock();
 
-      if (!saveToDB(userGuid, userName))
+      if (!saveChainToDB(chainId, userGuid, userName))
          return RCC_DB_FAILURE;
+      NotifyClientSessions(NX_NOTIFY_EPP_RULES_CHANGED, chainId);
       return RCC_SUCCESS;
    }
 
    // Slow path: concurrent changes - perform merge using server order as base
-   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: slow path (merge required), serverRules=%d"), static_cast<int>(m_rules.size()));
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: slow path (merge required), serverRules=%d"), static_cast<int>(serverRules.size()));
 
    // Build server rule map for GUID lookup
    std::unordered_map<uuid, shared_ptr<EPRule>, uuid_hash, uuid_equal> serverRuleMap;
-   for (auto& rule : m_rules)
+   for (auto& rule : serverRules)
       serverRuleMap[rule->getGuid()] = rule;
 
    // Build client rule map for lookup and collect new client rules with their predecessors
@@ -2639,7 +3117,7 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const Shared
    std::vector<shared_ptr<EPRule>> mergedRules;
 
    // Process server rules in server order (preserves server's rule ordering)
-   for (auto& serverRule : m_rules)
+   for (auto& serverRule : serverRules)
    {
       // Check if deleted by client
       if (deletedGuids.find(serverRule->getGuid()) != deletedGuids.end())
@@ -2775,10 +3253,11 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const Shared
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: no conflicts, applying %d rules"), static_cast<int>(mergedRules.size()));
       time_t modTime = time(nullptr);
-      m_rules.clear();
+      serverRules.clear();
       for (size_t i = 0; i < mergedRules.size(); i++)
       {
          auto& rule = mergedRules[i];
+         rule->setChainId(chainId, chainName);
          rule->setId(static_cast<uint32_t>(i));
          nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: rule[%d] guid=%s version=%u modified=%s"),
             static_cast<int>(i), rule->getGuid().toString().cstr(), rule->getVersion(), BooleanToString(rule->isModified()));
@@ -2788,131 +3267,659 @@ uint32_t EventProcessingPolicy::saveWithMerge(uint32_t baseVersion, const Shared
             rule->setModificationInfo(userGuid, userName, modTime);
             rule->clearModified();
          }
-         m_rules.add(rule);
+         serverRules.add(rule);
       }
-      m_version++;
-      *newVersion = m_version;
+      chain->incrementVersion();
+      *newVersion = chain->getVersion();
       unlock();
 
       nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: saving to database"));
-      if (!saveToDB(userGuid, userName))
+      if (!saveChainToDB(chainId, userGuid, userName))
          return RCC_DB_FAILURE;
       nxlog_debug_tag(DEBUG_TAG, 6, _T("saveWithMerge: save successful, newVersion=%u"), *newVersion);
+      NotifyClientSessions(NX_NOTIFY_EPP_RULES_CHANGED, chainId);
       return RCC_SUCCESS;
    }
    else
    {
-      *newVersion = m_version;
+      *newVersion = serverVersion;
       unlock();
       return RCC_EPP_CONFLICT;
    }
 }
 
 /**
- * Replace all rules in the policy with the given list. If checkVersion is true, expectedVersion must match
- * the current policy version, otherwise RCC_EPP_CONFLICT is returned and the policy is left unchanged.
- * On success the new policy version is returned via newVersion and the policy is persisted to the database.
+ * Replace all rules of given chain with the given list. If checkVersion is true, expectedVersion must match
+ * the current chain version, otherwise RCC_EPP_CONFLICT is returned and the chain is left unchanged.
+ * On success the new chain version is returned via newVersion and the chain is persisted to the database.
  */
-uint32_t EventProcessingPolicy::replaceAllRules(const SharedObjectArray<EPRule>& rules, bool checkVersion, uint32_t expectedVersion,
+uint32_t EventProcessingPolicy::replaceAllRules(uint32_t chainId, const SharedObjectArray<EPRule>& rules, bool checkVersion, uint32_t expectedVersion,
    const uuid& userGuid, const wchar_t *userName, uint32_t *newVersion)
 {
    writeLock();
 
-   if (checkVersion && (expectedVersion != m_version))
+   EventPolicyChain *chain = m_chains.get(chainId);
+   if (chain == nullptr)
    {
-      *newVersion = m_version;
+      unlock();
+      return RCC_INVALID_ARGUMENT;
+   }
+   SharedObjectArray<EPRule>& chainRules = chain->getRules();
+   uint32_t currentVersion = chain->getVersion();
+   const wchar_t *chainName = chain->getName();
+
+   if (checkVersion && (expectedVersion != currentVersion))
+   {
+      *newVersion = currentVersion;
       unlock();
       return RCC_EPP_CONFLICT;
    }
 
-   m_rules.clear();
+   chainRules.clear();
    for(size_t i = 0; i < rules.size(); i++)
    {
       shared_ptr<EPRule> rule = rules.getShared(i);
+      rule->setChainId(chainId, chainName);
       rule->setId(static_cast<uint32_t>(i));
-      m_rules.add(rule);
+      chainRules.add(rule);
    }
-   m_version++;
-   *newVersion = m_version;
+   chain->incrementVersion();
+   *newVersion = chain->getVersion();
    unlock();
 
-   if (!saveToDB(userGuid, userName))
+   if (!saveChainToDB(chainId, userGuid, userName))
       return RCC_DB_FAILURE;
+   NotifyClientSessions(NX_NOTIFY_EPP_RULES_CHANGED, chainId);
    return RCC_SUCCESS;
 }
 
 /**
- * Fill message with current rule GUIDs and versions (for client sync after save)
+ * Fill message with current rule GUIDs and versions of given chain (for client sync after save)
  */
-void EventProcessingPolicy::fillRuleVersions(NXCPMessage *msg) const
+void EventProcessingPolicy::fillRuleVersions(NXCPMessage *msg, uint32_t chainId) const
 {
    readLock();
-   msg->setField(VID_RULE_VERSION_COUNT, static_cast<uint32_t>(m_rules.size()));
+   EventPolicyChain *chain = m_chains.get(chainId);
+   uint32_t count = 0;
    uint32_t fieldId = VID_RULE_VERSION_LIST_BASE;
-   for (auto& rule : m_rules)
+   if (chain != nullptr)
    {
-      msg->setField(fieldId++, rule->getGuid());
-      msg->setField(fieldId++, rule->getVersion());
+      for (auto& rule : chain->getRules())
+      {
+         msg->setField(fieldId++, rule->getGuid());
+         msg->setField(fieldId++, rule->getVersion());
+         count++;
+      }
    }
+   msg->setField(VID_RULE_VERSION_COUNT, count);
    unlock();
 }
 
 /**
- * Pass event through policy
+ * Call callback for every rule of every chain until it returns _STOP. Caller must hold policy lock.
+ */
+void EventProcessingPolicy::forEachRule(std::function<EnumerationCallbackResult (const shared_ptr<EPRule>& rule, const EventPolicyChain& chain)> callback) const
+{
+   m_chains.forEach(
+      [&callback](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+      {
+         for (auto& rule : chain->getRules())
+            if (callback(rule, *chain) == _STOP)
+               return _STOP;
+         return _CONTINUE;
+      });
+}
+
+/**
+ * Count rules (in any chain) calling given chain. Caller must hold policy lock.
+ */
+uint32_t EventProcessingPolicy::countChainCallers(uint32_t chainId) const
+{
+   uint32_t count = 0;
+   forEachRule(
+      [chainId, &count](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
+      {
+         if (rule->isChainCalled(chainId))
+            count++;
+         return _CONTINUE;
+      });
+   return count;
+}
+
+
+/**
+ * Find chain by GUID. Caller must hold policy lock.
+ */
+EventPolicyChain *EventProcessingPolicy::findChainByGuid(const uuid& guid) const
+{
+   EventPolicyChain *result = nullptr;
+   m_chains.forEach(
+      [&guid, &result](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+      {
+         if (chain->getGuid().equals(guid))
+         {
+            result = chain.get();
+            return _STOP;
+         }
+         return _CONTINUE;
+      });
+   return result;
+}
+
+/**
+ * Process event through given rule list. Returns true if a matching rule requested stop of processing.
+ */
+bool EventProcessingPolicy::processRuleList(const SharedObjectArray<EPRule>& rules, Event *event, EventProcessingContext *context)
+{
+   for (auto& rule : rules)
+   {
+      if (rule->processEvent(event, context))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 7, L"EPP: got \"stop processing\" flag for event " UINT64_FMT L" at rule %u in chain \"%s\"", event->getId(), rule->getId() + 1, context->chainName);
+         return true;
+      }
+   }
+   return false;
+}
+
+/**
+ * Enter chain called from a matched rule. Returns true if a rule inside requested stop of processing
+ * (halts the entire event's processing). The calling rule checks the active call stack before entering.
+ */
+bool EventProcessingPolicy::enterChain(EventPolicyChain *chain, Event *event, EventProcessingContext *context)
+{
+   nxlog_debug_tag(DEBUG_TAG, 7, L"EPP: event " UINT64_FMT L" entering chain \"%s\" (called from chain \"%s\")", event->getId(), chain->getName(), context->chainName);
+   context->chainStack.add(chain->getId());
+   const wchar_t *callerChainName = context->chainName;
+   context->chainName = chain->getName();
+   bool stop = processRuleList(chain->getRules(), event, context);
+   context->chainName = callerChainName;
+   context->chainStack.remove(context->chainStack.size() - 1);
+   return stop;
+}
+
+/**
+ * Pass event through policy, starting from the main chain
  */
 void EventProcessingPolicy::processEvent(Event *pEvent)
 {
 	nxlog_debug_tag(DEBUG_TAG, 7, L"EPP: processing event " UINT64_FMT, pEvent->getId());
    readLock();
-   int ruleNum = 1;
-   for (auto& rule : m_rules)
+   EventPolicyChain *mainChain = m_chains.get(0);
+   if (mainChain != nullptr)
    {
-      if (rule->processEvent(pEvent))
-      {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("EPP: got \"stop processing\" flag for event ") UINT64_FMT _T(" at rule %d"), pEvent->getId(), ruleNum);
-         break;   // EPRule::ProcessEvent() return TRUE if we should stop processing this event
-      }
-      ruleNum++;
+      EventProcessingContext context;
+      context.policy = this;
+      context.chainName = mainChain->getName();
+      context.chainStack.add(0);
+      processRuleList(mainChain->getRules(), pEvent, &context);
    }
    unlock();
 }
 
+
 /**
- * Send event policy to client
+ * Get chain name by ID (empty string if the chain does not exist)
  */
-void EventProcessingPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
+String EventProcessingPolicy::getChainName(uint32_t chainId) const
+{
+   readLock();
+   EventPolicyChain *chain = m_chains.get(chainId);
+   String name((chain != nullptr) ? chain->getName() : L"");
+   unlock();
+   return name;
+}
+
+/**
+ * Check if chain with given ID exists
+ */
+bool EventProcessingPolicy::chainExists(uint32_t chainId) const
+{
+   readLock();
+   bool exists = (m_chains.get(chainId) != nullptr);
+   unlock();
+   return exists;
+}
+
+
+/**
+ * Get user's rights on a chain from the chain's access control list (0 if the chain does not exist;
+ * always 0 for the main chain, which is accessible only with the global EPP right).
+ * Callers holding the global EPP right must not consult this - they have full access to every chain.
+ */
+uint32_t EventProcessingPolicy::getEffectiveChainRights(uint32_t chainId, uint32_t userId) const
+{
+   readLock();
+   EventPolicyChain *chain = m_chains.get(chainId);
+   uint32_t rights = (chain != nullptr) ? chain->getUserRights(userId) : 0;
+   unlock();
+   return rights;
+}
+
+
+
+/**
+ * Fill chain registry response: every chain the user can read (stride 10 per entry: id, GUID, name,
+ * description, version, effective rights, rule count, caller count) and, for callers with the global
+ * EPP right, the chain access control lists. Returns RCC_ACCESS_DENIED if no chain is readable.
+ */
+uint32_t EventProcessingPolicy::fillChainRegistry(NXCPMessage *response, uint32_t userId, bool globalRights) const
+{
+   readLock();
+   uint32_t chainCount = 0;
+   uint32_t fieldId = VID_CHAIN_LIST_BASE;
+   m_chains.forEach(
+      [this, response, &chainCount, &fieldId, userId, globalRights](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+      {
+         uint32_t rights = globalRights ? (EPP_CHAIN_ACCESS_READ | EPP_CHAIN_ACCESS_EDIT) : chain->getUserRights(userId);
+         if (!(rights & EPP_CHAIN_ACCESS_READ))
+            return _CONTINUE;
+         response->setField(fieldId, chain->getId());
+         response->setField(fieldId + 1, chain->getGuid());
+         response->setField(fieldId + 2, chain->getName());
+         response->setField(fieldId + 3, CHECK_NULL_EX(chain->getDescription()));
+         response->setField(fieldId + 4, chain->getVersion());
+         response->setField(fieldId + 5, rights);
+         response->setField(fieldId + 6, static_cast<uint32_t>(chain->getRules().size()));
+         response->setField(fieldId + 7, countChainCallers(chain->getId()));
+         fieldId += 10;
+         chainCount++;
+         return _CONTINUE;
+      });
+   response->setField(VID_NUM_CHAINS, chainCount);
+
+   // Chain ACLs (for the chain management UI) - only for callers with the global EPP right
+   if (globalRights)
+   {
+      uint32_t aclCount = 0;
+      uint32_t aclFieldId = VID_CHAIN_ACL_LIST_BASE;
+      m_chains.forEach(
+         [response, &aclCount, &aclFieldId](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+         {
+            const StructArray<ACL_ELEMENT>& acl = chain->getACL();
+            for(int i = 0; i < acl.size(); i++)
+            {
+               response->setField(aclFieldId++, chain->getId());
+               response->setField(aclFieldId++, acl.get(i)->userId);
+               response->setField(aclFieldId++, acl.get(i)->accessRights);
+               aclCount++;
+            }
+            return _CONTINUE;
+         });
+      response->setField(VID_CHAIN_ACL_COUNT, aclCount);
+   }
+   unlock();
+   return (chainCount > 0) ? RCC_SUCCESS : RCC_ACCESS_DENIED;
+}
+
+/**
+ * Fill single chain load response header: the chain's version and rule count plus its registry entry
+ * and ACL. The main chain is readable only with the global EPP right; other chains also with chain-level Read.
+ */
+uint32_t EventProcessingPolicy::fillChainLoadResponse(NXCPMessage *response, uint32_t chainId, uint32_t userId, bool globalRights) const
+{
+   uint32_t rcc;
+   readLock();
+   EventPolicyChain *chain = m_chains.get(chainId);
+   if (chain == nullptr)
+   {
+      rcc = RCC_INVALID_ARGUMENT;
+   }
+   else if (globalRights || (!chain->isMain() && (chain->getUserRights(userId) & EPP_CHAIN_ACCESS_READ)))
+   {
+      response->setField(VID_EPP_VERSION, chain->getVersion());
+      response->setField(VID_NUM_RULES, static_cast<uint32_t>(chain->getRules().size()));
+
+      // Registry entry of this chain, in the same layout as in the registry response
+      response->setField(VID_NUM_CHAINS, static_cast<uint32_t>(1));
+      response->setField(VID_CHAIN_LIST_BASE, chain->getId());
+      response->setField(VID_CHAIN_LIST_BASE + 1, chain->getGuid());
+      response->setField(VID_CHAIN_LIST_BASE + 2, chain->getName());
+      response->setField(VID_CHAIN_LIST_BASE + 3, CHECK_NULL_EX(chain->getDescription()));
+      response->setField(VID_CHAIN_LIST_BASE + 4, chain->getVersion());
+      response->setField(VID_CHAIN_LIST_BASE + 5, globalRights ? (EPP_CHAIN_ACCESS_READ | EPP_CHAIN_ACCESS_EDIT) : chain->getUserRights(userId));
+      response->setField(VID_CHAIN_LIST_BASE + 6, static_cast<uint32_t>(chain->getRules().size()));
+      response->setField(VID_CHAIN_LIST_BASE + 7, countChainCallers(chainId));
+      if (globalRights)
+      {
+         const StructArray<ACL_ELEMENT>& acl = chain->getACL();
+         uint32_t aclFieldId = VID_CHAIN_ACL_LIST_BASE;
+         for(int i = 0; i < acl.size(); i++)
+         {
+            response->setField(aclFieldId++, chain->getId());
+            response->setField(aclFieldId++, acl.get(i)->userId);
+            response->setField(aclFieldId++, acl.get(i)->accessRights);
+         }
+         response->setField(VID_CHAIN_ACL_COUNT, static_cast<uint32_t>(acl.size()));
+      }
+      rcc = RCC_SUCCESS;
+   }
+   else
+   {
+      rcc = RCC_ACCESS_DENIED;
+   }
+   unlock();
+   return rcc;
+}
+
+/**
+ * Send rules of one chain to client. Must follow a successful fillChainLoadResponse for the same
+ * chain so the rule stream matches the announced count.
+ */
+void EventProcessingPolicy::sendChainRules(ClientSession *session, uint32_t requestId, uint32_t chainId) const
 {
    NXCPMessage msg(CMD_EPP_RECORD, requestId);
-
    readLock();
-   for (auto& rule : m_rules)
+   EventPolicyChain *chain = m_chains.get(chainId);
+   if (chain != nullptr)
    {
-      rule->fillMessage(&msg);
-      session->sendMessage(msg);
-      msg.deleteAllFields();
+      for (auto& rule : chain->getRules())
+      {
+         rule->fillMessage(&msg);
+         session->sendMessage(msg);
+         msg.deleteAllFields();
+      }
    }
    unlock();
 }
 
+
+
+
 /**
- * Replace policy with new one
+ * Insert chain ACL rows
  */
-void EventProcessingPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
+static bool InsertChainACL(DB_HANDLE hdb, uint32_t chainId, const StructArray<ACL_ELEMENT>& acl)
 {
-   writeLock();
-   m_rules.clear();
-   if (ruleList != nullptr)
+   if (acl.size() == 0)
+      return true;
+
+   bool success = false;
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO policy_chain_acl (chain_id,user_id,access_rights) VALUES (?,?,?)", acl.size() > 1);
+   if (hStmt != nullptr)
    {
-      for (uint32_t i = 0; i < numRules; i++)
+      success = true;
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, chainId);
+      for(int i = 0; (i < acl.size()) && success; i++)
       {
-         // Take ownership via shared_ptr
-         auto rule = shared_ptr<EPRule>(ruleList[i]);
-         rule->setId(i);
-         m_rules.add(rule);
-         ruleList[i] = nullptr;  // Ownership transferred
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, acl.get(i)->userId);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, acl.get(i)->accessRights);
+         success = DBExecute(hStmt);
       }
+      DBFreeStatement(hStmt);
+   }
+   return success;
+}
+
+/**
+ * Create new sub-chain. On success chainId and chainGuid receive the new chain's identity.
+ */
+uint32_t EventProcessingPolicy::createChain(const wchar_t *name, const wchar_t *description, const StructArray<ACL_ELEMENT>& acl, uint32_t *chainId, uuid *chainGuid)
+{
+   if ((name == nullptr) || (*name == 0))
+      return RCC_INVALID_ARGUMENT;
+
+   // Database work runs without the policy lock so event processing is not stalled;
+   // two concurrent creates may allocate the same ID, the second then fails on the primary key
+   writeLock();
+   uint32_t id = 1;
+   m_chains.forEach(
+      [&id](const uint32_t& existingId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+      {
+         if (existingId >= id)
+            id = existingId + 1;
+         return _CONTINUE;
+      });
+   unlock();
+
+   auto chain = make_shared<EventPolicyChain>(id, name, description);
+   for(int i = 0; i < acl.size(); i++)
+      chain->addAccessElement(acl.get(i)->userId, acl.get(i)->accessRights);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool success = DBBegin(hdb);
+   if (success)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO event_policy_chain (chain_id,chain_guid,name,description) VALUES (?,?,?,?)");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, chain->getGuid());
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, chain->getName(), DB_BIND_STATIC, 63);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, chain->getDescription(), DB_BIND_STATIC, 255);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+
+      if (success)
+         success = InsertChainACL(hdb, id, chain->getACL());
+
+      if (success)
+         DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   if (!success)
+      return RCC_DB_FAILURE;
+
+   writeLock();
+   m_chains.set(id, chain);
+   unlock();
+   *chainId = id;
+   *chainGuid = chain->getGuid();
+   nxlog_debug_tag(DEBUG_TAG, 4, L"EPP chain \"%s\" [%u] created", name, id);
+   NotifyClientSessions(NX_NOTIFY_EPP_CHAIN_UPDATED, id);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Modify chain name and description and optionally replace its ACL (acl == nullptr keeps the current one)
+ */
+uint32_t EventProcessingPolicy::modifyChain(uint32_t chainId, const wchar_t *name, const wchar_t *description, const StructArray<ACL_ELEMENT> *acl)
+{
+   if ((chainId == 0) || (name == nullptr) || (*name == 0))
+      return RCC_INVALID_ARGUMENT;   // Main chain has fixed name and no access control list
+
+   readLock();
+   bool exists = (m_chains.get(chainId) != nullptr);
+   unlock();
+   if (!exists)
+      return RCC_INVALID_ARGUMENT;
+
+   // Database work runs without the policy lock so event processing is not stalled
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool success = DBBegin(hdb);
+   if (success)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"UPDATE event_policy_chain SET name=?,description=? WHERE chain_id=?");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC, 63);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, description, DB_BIND_STATIC, 255);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, chainId);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+
+      if (success && (acl != nullptr))
+      {
+         wchar_t query[128];
+         nx_swprintf(query, 128, L"DELETE FROM policy_chain_acl WHERE chain_id=%u", chainId);
+         success = DBQuery(hdb, query) && InsertChainACL(hdb, chainId, *acl);
+      }
+
+      if (success)
+         DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   if (!success)
+      return RCC_DB_FAILURE;
+
+   writeLock();
+   EventPolicyChain *chain = m_chains.get(chainId);   // Chain could be deleted by concurrent session
+   if (chain != nullptr)
+   {
+      chain->setName(name);
+      chain->setDescription(description);
+      if (acl != nullptr)
+         chain->replaceACL(*acl);
+      for (auto& rule : chain->getRules())
+         rule->setChainId(chainId, name);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"EPP chain \"%s\" [%u] modified", name, chainId);
    }
    unlock();
+   NotifyClientSessions(NX_NOTIFY_EPP_CHAIN_UPDATED, chainId);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Call callback for each rule (in any chain) calling given chain. Returns false if there is no such chain.
+ */
+bool EventProcessingPolicy::enumerateChainCallers(uint32_t chainId, std::function<void (const EPRule& rule, uint32_t ownerId)> callback) const
+{
+   readLock();
+   bool found = (m_chains.get(chainId) != nullptr);
+   if (found)
+   {
+      forEachRule(
+         [chainId, &callback](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
+         {
+            if (rule->isChainCalled(chainId))
+               callback(*rule, chain.getId());
+            return _CONTINUE;
+         });
+   }
+   unlock();
+   return found;
+}
+
+
+/**
+ * Fill message with rules calling given chain (for confirmation before chain deletion).
+ * Stride 10 per entry: rule GUID, owning chain ID, rule number, rule comments.
+ */
+uint32_t EventProcessingPolicy::fillChainCallers(NXCPMessage *msg, uint32_t chainId) const
+{
+   uint32_t count = 0;
+   uint32_t fieldId = VID_CHAIN_CALL_LIST_BASE;
+   bool found = enumerateChainCallers(chainId,
+      [msg, &count, &fieldId](const EPRule& rule, uint32_t ownerId)
+      {
+         msg->setField(fieldId, rule.getGuid());
+         msg->setField(fieldId + 1, ownerId);
+         msg->setField(fieldId + 2, rule.getId() + 1);
+         msg->setField(fieldId + 3, CHECK_NULL_EX(rule.getComments()));
+         fieldId += 10;
+         count++;
+      });
+   if (!found)
+      return RCC_INVALID_ARGUMENT;
+   msg->setField(VID_CHAIN_CALL_COUNT, count);
+   return RCC_SUCCESS;
+}
+
+
+/**
+ * Get rules calling given chain as JSON array (nullptr if no such chain)
+ */
+json_t *EventProcessingPolicy::getChainCallersAsJson(uint32_t chainId) const
+{
+   json_t *callers = json_array();
+   bool found = enumerateChainCallers(chainId,
+      [callers](const EPRule& rule, uint32_t ownerId)
+      {
+         json_t *c = json_object();
+         json_object_set_new(c, "ruleGuid", rule.getGuid().toJson());
+         json_object_set_new(c, "chainId", json_integer(ownerId));
+         json_object_set_new(c, "ruleNumber", json_integer(rule.getId() + 1));
+         json_object_set_new(c, "comments", json_string_w(CHECK_NULL_EX(rule.getComments())));
+         json_array_append_new(callers, c);
+      });
+   if (!found)
+   {
+      json_decref(callers);
+      return nullptr;
+   }
+   return callers;
+}
+
+
+/**
+ * Delete sub-chain and all its rules. Calls to the deleted chain are removed from all other rules;
+ * chains whose rules lost a call get a new version, reported in updatedChains.
+ */
+uint32_t EventProcessingPolicy::deleteChain(uint32_t chainId, StructArray<EPPChainVersion> *updatedChains)
+{
+   if (chainId == 0)
+      return RCC_INVALID_ARGUMENT;   // Main chain cannot be deleted
+
+   if (!chainExists(chainId))
+      return RCC_INVALID_ARGUMENT;
+
+   // Database work runs without the policy lock so event processing is not stalled
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool success = DBBegin(hdb);
+   if (success)
+   {
+      success = DeleteChainRuleRows(hdb, chainId);
+      static const wchar_t *queries[] =
+      {
+         L"DELETE FROM policy_chain_acl WHERE chain_id=%u",
+         L"DELETE FROM event_policy_chain WHERE chain_id=%u",
+         L"DELETE FROM policy_chain_call_list WHERE target_chain_id=%u",
+         nullptr
+      };
+      for(int i = 0; (queries[i] != nullptr) && success; i++)
+      {
+         wchar_t query[128];
+         nx_swprintf(query, 128, queries[i], chainId);
+         success = DBQuery(hdb, query);
+      }
+
+      if (success)
+         DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   if (!success)
+      return RCC_DB_FAILURE;
+
+   writeLock();
+   m_chains.remove(chainId);
+   m_chains.forEach(
+      [chainId, updatedChains](const uint32_t& id, const shared_ptr<EventPolicyChain>& c) -> EnumerationCallbackResult
+      {
+         bool changed = false;
+         for (auto& rule : c->getRules())
+            if (rule->removeChainCall(chainId))
+               changed = true;
+         if (changed)
+         {
+            c->incrementVersion();
+            EPPChainVersion v = { id, c->getVersion() };
+            updatedChains->add(v);
+         }
+         return _CONTINUE;
+      });
+   unlock();
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"EPP chain [%u] deleted, calls removed from rules in %d chain(s)", chainId, updatedChains->size());
+   NotifyClientSessions(NX_NOTIFY_EPP_CHAIN_DELETED, chainId);
+   for(int i = 0; i < updatedChains->size(); i++)
+      NotifyClientSessions(NX_NOTIFY_EPP_RULES_CHANGED, updatedChains->get(i)->chainId);
+   return RCC_SUCCESS;
 }
 
 /**
@@ -2921,50 +3928,69 @@ void EventProcessingPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 void EventProcessingPolicy::validateConfig() const
 {
    readLock();
-   for (auto& rule : m_rules)
-      rule->validateConfig();
+   forEachRule(
+      [](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
+      {
+         rule->validateConfig();
+         return _CONTINUE;
+      });
    unlock();
 }
+
 
 /**
  * Check if given action is used in policy
  */
 bool EventProcessingPolicy::isActionInUse(uint32_t actionId) const
 {
-   bool bResult = false;
-
+   bool result = false;
    readLock();
-   for (auto& rule : m_rules)
-   {
-      if (rule->isActionInUse(actionId))
+   forEachRule(
+      [actionId, &result](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
       {
-         bResult = true;
-         break;
-      }
-   }
+         result = rule->isActionInUse(actionId);
+         return result ? _STOP : _CONTINUE;
+      });
    unlock();
-   return bResult;
+   return result;
 }
+
 
 /**
  * Check if given category is used in policy
  */
 bool EventProcessingPolicy::isCategoryInUse(uint32_t categoryId) const
 {
-   bool bResult = false;
-
+   bool result = false;
    readLock();
-   for (auto& rule : m_rules)
-   {
-      if (rule->isCategoryInUse(categoryId))
+   forEachRule(
+      [categoryId, &result](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
       {
-         bResult = true;
-         break;
-      }
-   }
+         result = rule->isCategoryInUse(categoryId);
+         return result ? _STOP : _CONTINUE;
+      });
    unlock();
-   return bResult;
+   return result;
 }
+
+
+/**
+ * Find rule by GUID in any chain. Caller must hold policy lock.
+ */
+shared_ptr<EPRule> EventProcessingPolicy::findRuleByGuid(const uuid& guid) const
+{
+   shared_ptr<EPRule> result;
+   forEachRule(
+      [&guid, &result](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
+      {
+         if (!guid.equals(rule->getGuid()))
+            return _CONTINUE;
+         result = rule;
+         return _STOP;
+      });
+   return result;
+}
+
 
 /**
  * Get rule details as JSON
@@ -2973,13 +3999,18 @@ json_t *EventProcessingPolicy::getRuleDetails(const uuid& ruleId) const
 {
    json_t *details = nullptr;
    readLock();
-   for (auto& rule : m_rules)
+   shared_ptr<EPRule> rule = findRuleByGuid(ruleId);
+   if (rule != nullptr)
    {
-      if (ruleId.equals(rule->getGuid()))
+      details = rule->toJson(true);
+      json_object_set_new(details, "chainName", json_string_w(rule->getChainName()));
+      json_t *calledChains = json_array();
+      for(int i = 0; i < rule->getChainCallCount(); i++)
       {
-         details = rule->toJson(true);
-         break;
+         EventPolicyChain *chain = m_chains.get(rule->getChainCall(i));
+         json_array_append_new(calledChains, json_string_w((chain != nullptr) ? chain->getName() : L"(unknown chain)"));
       }
+      json_object_set_new(details, "calledChains", calledChains);
    }
    unlock();
    return details;
@@ -2993,83 +4024,208 @@ json_t *EventProcessingPolicy::getRuleAsJson(const uuid& guid) const
 {
    json_t *result = nullptr;
    readLock();
-   for (auto& rule : m_rules)
-   {
-      if (guid.equals(rule->getGuid()))
-      {
-         result = rule->toJson();
-         break;
-      }
-   }
+   shared_ptr<EPRule> rule = findRuleByGuid(guid);
+   if (rule != nullptr)
+      result = rule->toJson();
    unlock();
    return result;
 }
 
 /**
- * Export rule to JSON
+ * Export rule to JSON. Chains are referenced by GUID in export records (the owning chain in "chain",
+ * omitted for the main chain; called chains in "chainCalls") because numeric chain IDs are local to a server.
  */
 json_t *EventProcessingPolicy::exportRule(const uuid& guid) const
 {
    json_t *ruleJson = nullptr;
    readLock();
-   for (auto& rule : m_rules)
-   {
-      if (guid.equals(rule->getGuid()))
+   forEachRule(
+      [this, &guid, &ruleJson](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
       {
+         if (!guid.equals(rule->getGuid()))
+            return _CONTINUE;
          ruleJson = rule->createExportRecord();
-         break;
-      }
-   }
+         if (!chain.isMain())
+            json_object_set_new(ruleJson, "chain", chain.getGuid().toJson());
+         json_t *chainCalls = json_array();
+         for(int i = 0; i < rule->getChainCallCount(); i++)
+         {
+            EventPolicyChain *target = m_chains.get(rule->getChainCall(i));
+            if (target != nullptr)
+               json_array_append_new(chainCalls, target->getGuid().toJson());
+         }
+         json_object_set_new(ruleJson, "chainCalls", chainCalls);
+         return _STOP;
+      });
    unlock();
    return ruleJson;
 }
 
+
 /**
- * Export rules ordering to JSON
+ * Export rules ordering to JSON (all chains; relative order within each chain is what matters on import)
  */
 json_t *EventProcessingPolicy::exportRuleOrdering() const
 {
    json_t *ordering = json_array();
    readLock();
-   for (auto& rule : m_rules)
-      json_array_append_new(ordering, json_string_t(rule->getGuid().toString()));
+   forEachRule(
+      [ordering](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
+      {
+         json_array_append_new(ordering, json_string_t(rule->getGuid().toString()));
+         return _CONTINUE;
+      });
    unlock();
    return ordering;
 }
 
+
 /**
- * Finds rule index by guid and adds index shift if found
+ * Export registry entries for all chains referenced by given exported rules (as owner or call target)
  */
-int EventProcessingPolicy::findRuleIndexByGuid(const uuid& guid, int shift) const
+json_t *EventProcessingPolicy::exportChains(json_t *rulesArray) const
 {
-   for (size_t i = 0; i < m_rules.size(); i++)
+   json_t *chains = json_array();
+
+   std::unordered_set<uuid, uuid_hash, uuid_equal> referencedChains;
+   size_t index;
+   json_t *rule;
+   json_array_foreach(rulesArray, index, rule)
    {
-      if (guid.equals(m_rules.get(i)->getGuid()))
+      uuid chainGuid = json_object_get_uuid(rule, "chain");
+      if (!chainGuid.isNull())
+         referencedChains.insert(chainGuid);
+      json_t *chainCalls = json_object_get(rule, "chainCalls");
+      if (json_is_array(chainCalls))
+      {
+         size_t callIndex;
+         json_t *callItem;
+         json_array_foreach(chainCalls, callIndex, callItem)
+         {
+            if (json_is_string(callItem))
+            {
+               uuid targetGuid = uuid::parse(String(json_string_value(callItem), "utf8"));
+               if (!targetGuid.isNull())
+                  referencedChains.insert(targetGuid);
+            }
+         }
+      }
+   }
+
+   readLock();
+   for(const uuid& chainGuid : referencedChains)
+   {
+      EventPolicyChain *chain = findChainByGuid(chainGuid);
+      if (chain != nullptr)
+      {
+         json_t *entry = json_object();
+         json_object_set_new(entry, "guid", chain->getGuid().toJson());
+         json_object_set_new(entry, "name", json_string_w(chain->getName()));
+         json_object_set_new(entry, "description", json_string_w(CHECK_NULL_EX(chain->getDescription())));
+         json_array_append_new(chains, entry);
+      }
+   }
+   unlock();
+   return chains;
+}
+
+/**
+ * Find chain ID by GUID (-1 if no such chain)
+ */
+int32_t EventProcessingPolicy::findChainIdByGuid(const uuid& guid) const
+{
+   readLock();
+   EventPolicyChain *chain = findChainByGuid(guid);
+   int32_t chainId = (chain != nullptr) ? static_cast<int32_t>(chain->getId()) : -1;
+   unlock();
+   return chainId;
+}
+
+/**
+ * Import chain: return existing chain's id if a chain with given GUID exists (updating its name and
+ * description when overwrite is set), otherwise create it. Changes are persisted by the policy save
+ * that concludes the import.
+ */
+uint32_t EventProcessingPolicy::importChain(const uuid& guid, const wchar_t *name, const wchar_t *description, bool overwrite)
+{
+   writeLock();
+   EventPolicyChain *chain = findChainByGuid(guid);
+   if (chain != nullptr)
+   {
+      uint32_t chainId = chain->getId();
+      if (overwrite)
+      {
+         chain->setName(name);
+         chain->setDescription(description);
+         for (auto& rule : chain->getRules())
+            rule->setChainId(chainId, name);
+      }
+      unlock();
+      return chainId;
+   }
+
+   uint32_t id = 1;
+   m_chains.forEach(
+      [&id](const uint32_t& existingId, const shared_ptr<EventPolicyChain>& c) -> EnumerationCallbackResult
+      {
+         if (existingId >= id)
+            id = existingId + 1;
+         return _CONTINUE;
+      });
+   m_chains.set(id, make_shared<EventPolicyChain>(id, guid, name, description));
+   nxlog_debug_tag(DEBUG_TAG, 4, L"EPP chain \"%s\" [%u] created on import", name, id);
+   unlock();
+   return id;
+}
+
+/**
+ * Finds rule index by guid within given rule list and adds index shift if found
+ */
+static int FindRuleIndexByGuid(const SharedObjectArray<EPRule>& rules, const uuid& guid, int shift = 0)
+{
+   for (size_t i = 0; i < rules.size(); i++)
+   {
+      if (guid.equals(rules.get(i)->getGuid()))
          return static_cast<int>(i) + shift;
    }
    return -1;
 }
 
 /**
- * Import rule
+ * Import rule into the chain set by its chain id. Returns true if the chain was changed
+ * (an existing rule with the same GUID is left as is unless overwrite is set).
  */
-void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering)
+bool EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering)
 {
    writeLock();
 
    // Wrap in shared_ptr for ownership management
    auto rulePtr = shared_ptr<EPRule>(rule);
 
+   EventPolicyChain *chain = m_chains.get(rule->getChainId());
+   if (chain == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, L"EPP rule %s import: unknown chain %u, importing into main chain",
+            rule->getGuid().toString().cstr(), rule->getChainId());
+      chain = m_chains.get(0);
+      rulePtr->setChainId(0, chain->getName());
+   }
+   SharedObjectArray<EPRule>& rules = chain->getRules();
+
    // Find rule with same GUID and replace it if found
-   int ruleIndex = findRuleIndexByGuid(rule->getGuid());
+   bool changed = true;
+   int ruleIndex = FindRuleIndexByGuid(rules, rule->getGuid());
    if (ruleIndex != -1)
    {
       if (overwrite)
       {
          rulePtr->setId(ruleIndex);
-         m_rules.replace(ruleIndex, rulePtr);
+         rules.replace(ruleIndex, rulePtr);
       }
-      // If not overwriting, shared_ptr will delete the rule when it goes out of scope
+      else
+      {
+         changed = false;   // shared_ptr deletes the rule when it goes out of scope
+      }
    }
    else // insert new rule
    {
@@ -3089,60 +4245,100 @@ void EventProcessingPolicy::importRule(EPRule *rule, bool overwrite, ObjectArray
          {
             // Find rule before this rule
             if (newRulePrevIndex > 0)
-               ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(newRulePrevIndex - 1), 1);
+               ruleIndex = FindRuleIndexByGuid(rules, *ruleOrdering->get(newRulePrevIndex - 1), 1);
 
             // If rule after this rule if before not found
             if (ruleIndex == -1 && (newRulePrevIndex + 1) < ruleOrdering->size())
-               ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(newRulePrevIndex + 1));
+               ruleIndex = FindRuleIndexByGuid(rules, *ruleOrdering->get(newRulePrevIndex + 1));
 
             // Check if any rule before this rule already exist if before not found
             for (int i = newRulePrevIndex - 2; ruleIndex == -1 && i >= 0; i--)
-               ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(i), 1);
+               ruleIndex = FindRuleIndexByGuid(rules, *ruleOrdering->get(i), 1);
 
             // Check if any rule after this rule already exist if before not found
             for (int i = newRulePrevIndex + 2; ruleIndex == -1 && i < ruleOrdering->size(); i++)
-               ruleIndex = findRuleIndexByGuid(*ruleOrdering->get(i));
+               ruleIndex = FindRuleIndexByGuid(rules, *ruleOrdering->get(i));
          }
       }
 
       if (ruleIndex == -1) // Add new rule at the end
       {
-         rulePtr->setId(static_cast<uint32_t>(m_rules.size()));
-         m_rules.add(rulePtr);
+         rulePtr->setId(static_cast<uint32_t>(rules.size()));
+         rules.add(rulePtr);
       }
       else
       {
          rulePtr->setId(ruleIndex);
-         m_rules.insert(ruleIndex, rulePtr);
-         for (size_t i = ruleIndex + 1; i < m_rules.size(); i++)
-            m_rules.get(i)->setId(static_cast<uint32_t>(i));
+         rules.insert(ruleIndex, rulePtr);
+         for (size_t i = ruleIndex + 1; i < rules.size(); i++)
+            rules.get(i)->setId(static_cast<uint32_t>(i));
       }
    }
 
+   if (changed)
+      chain->incrementVersion();
    unlock();
+   return changed;
 }
 
 /**
- * Create JSON representation
+ * Create JSON representation: every chain with its rules, the main chain first
  */
 json_t *EventProcessingPolicy::toJson() const
 {
-   json_t *root = json_object();
-   json_t *rulesJson = json_array();
+   json_t *chainsJson = json_array();
    readLock();
-   json_object_set_new(root, "version", json_integer(m_version));
-   json_object_set_new(root, "ruleCount", json_integer(m_rules.size()));
-   int ruleNum = 1;
-   for (auto& rule : m_rules)
-   {
-      json_t *r = rule->toJson();
-      json_object_set_new(r, "ruleNumber", json_integer(ruleNum++));
-      json_array_append_new(rulesJson, r);
-   }
+   EventPolicyChain *mainChain = m_chains.get(0);
+   if (mainChain != nullptr)
+      json_array_append_new(chainsJson, mainChain->toJson(true, countChainCallers(0)));
+   m_chains.forEach(
+      [this, chainsJson](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+      {
+         if (chainId != 0)
+            json_array_append_new(chainsJson, chain->toJson(true, countChainCallers(chainId)));
+         return _CONTINUE;
+      });
    unlock();
-   json_object_set_new(root, "rules", rulesJson);
+   json_t *root = json_object();
+   json_object_set_new(root, "chains", chainsJson);
    return root;
 }
+
+
+/**
+ * Get chain registry as JSON array (all chains without rules, the main chain first)
+ */
+json_t *EventProcessingPolicy::getChainsAsJson() const
+{
+   json_t *chains = json_array();
+   readLock();
+   EventPolicyChain *mainChain = m_chains.get(0);
+   if (mainChain != nullptr)
+      json_array_append_new(chains, mainChain->toJson(false, countChainCallers(0)));
+   m_chains.forEach(
+      [this, chains](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+      {
+         if (chainId != 0)
+            json_array_append_new(chains, chain->toJson(false, countChainCallers(chainId)));
+         return _CONTINUE;
+      });
+   unlock();
+   return chains;
+}
+
+
+/**
+ * Get chain with its rules as JSON (nullptr if no such chain)
+ */
+json_t *EventProcessingPolicy::getChainAsJson(uint32_t chainId) const
+{
+   readLock();
+   EventPolicyChain *chain = m_chains.get(chainId);
+   json_t *json = (chain != nullptr) ? chain->toJson(true, countChainCallers(chainId)) : nullptr;
+   unlock();
+   return json;
+}
+
 
 /**
  * Collects information about all EPRules that are using specified event
@@ -3150,15 +4346,16 @@ json_t *EventProcessingPolicy::toJson() const
 void EventProcessingPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const
 {
    readLock();
-   int ruleNum = 1;
-   for (auto& rule : m_rules)
-   {
-      if (rule->isUsingEvent(eventCode))
-         eventReferences->add(new EventReference(EventReferenceType::EP_RULE, ruleNum, rule->getGuid(), rule->getComments()));
-      ruleNum++;
-   }
+   forEachRule(
+      [eventCode, eventReferences](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
+      {
+         if (rule->isUsingEvent(eventCode))
+            eventReferences->add(new EventReference(EventReferenceType::EP_RULE, rule->getId() + 1, rule->getGuid(), rule->getComments()));
+         return _CONTINUE;
+      });
    unlock();
 }
+
 
 /**
  * Show rules on server console
@@ -3167,24 +4364,30 @@ void EventProcessingPolicy::showRules(ServerConsole *console) const
 {
    readLock();
 
-   console->printf(_T(" \x1b[1mID\x1b[0m  | \x1b[1mGUID\x1b[0m                                 | \x1b[1mVersion\x1b[0m | \x1b[1mComment\x1b[0m\n"));
-   console->printf(_T("-----+--------------------------------------+---------+------------------------------------------\n"));
+   console->printf(_T(" \x1b[1mChain\x1b[0m | \x1b[1mID\x1b[0m  | \x1b[1mGUID\x1b[0m                                 | \x1b[1mVersion\x1b[0m | \x1b[1mComment\x1b[0m\n"));
+   console->printf(_T("-------+-----+--------------------------------------+---------+------------------------------------------\n"));
 
-   for (auto& rule : m_rules)
-   {
-      TCHAR guidText[64];
-      const wchar_t *comment = rule->getComments();
-      console->printf(_T(" %3d | %s | %7u | %s\n"),
-         rule->getId() + 1,
-         rule->getGuid().toString(guidText),
-         rule->getVersion(),
-         (comment != nullptr && *comment != 0) ? comment : _T(""));
-   }
+   int total = 0;
+   forEachRule(
+      [console, &total](const shared_ptr<EPRule>& rule, const EventPolicyChain& chain) -> EnumerationCallbackResult
+      {
+         TCHAR guidText[64];
+         const wchar_t *comment = rule->getComments();
+         console->printf(_T(" %5u | %3d | %s | %7u | %s\n"),
+            chain.getId(),
+            rule->getId() + 1,
+            rule->getGuid().toString(guidText),
+            rule->getVersion(),
+            (comment != nullptr && *comment != 0) ? comment : _T(""));
+         total++;
+         return _CONTINUE;
+      });
 
-   console->printf(_T("\n%d rules total\n\n"), static_cast<int>(m_rules.size()));
+   console->printf(_T("\n%d rules total\n\n"), total);
 
    unlock();
 }
+
 
 /**
  * Get script dependencies for rules identified by GUIDs
@@ -3194,32 +4397,28 @@ void EventProcessingPolicy::getScriptDependencies(uint32_t count, const uuid *gu
    readLock();
    for (uint32_t i = 0; i < count; i++)
    {
-      for (int j = 0; j < m_rules.size(); j++)
-      {
-         if (guids[i].equals(m_rules.get(j)->getGuid()))
-         {
-            m_rules.get(j)->getScriptDependencies(dependencies);
-            break;
-         }
-      }
+      shared_ptr<EPRule> rule = findRuleByGuid(guids[i]);
+      if (rule != nullptr)
+         rule->getScriptDependencies(dependencies);
    }
    unlock();
 }
 
+
 /**
- * Update event processing policy from JSON document. Input document format:
+ * Replace rules of one chain (main chain when chainId is 0) from JSON document. Input document format:
  *   { "version": <optional integer>, "rules": [ <rule>, ... ] }
  * where each rule is in the form produced by EPRule::toJson() (export records produced by
  * EPRule::createExportRecord() are also accepted, as they are a superset of that form).
  *
- * If "version" is present it must match the current policy version, otherwise RCC_EPP_CONFLICT is
- * returned and *response is set to { "currentVersion": <n> }. If "version" is omitted the policy is
- * replaced unconditionally. On success *response is set to { "version": <new>, "ruleCount": <n>,
- * "warnings": <text> (only if there were import warnings) } and RCC_SUCCESS is returned. Returns
- * RCC_INVALID_ARGUMENT for malformed input and RCC_DB_FAILURE on database error. *response is set only
- * when RCC_SUCCESS or RCC_EPP_CONFLICT is returned.
+ * If "version" is present it must match the current chain version, otherwise RCC_EPP_CONFLICT is
+ * returned and *response is set to { "currentVersion": <n> }. If "version" is omitted the chain is
+ * replaced unconditionally. On success *response is set to { "chainId": <id>, "version": <new>,
+ * "ruleCount": <n>, "warnings": <text> (only if there were import warnings) } and RCC_SUCCESS is
+ * returned. Returns RCC_INVALID_ARGUMENT for malformed input or unknown chain and RCC_DB_FAILURE on
+ * database error. *response is set only when RCC_SUCCESS or RCC_EPP_CONFLICT is returned.
  */
-uint32_t UpdateEventProcessingPolicyFromJson(json_t *request, uint32_t userId, json_t **response)
+uint32_t UpdateEventProcessingPolicyFromJson(json_t *request, uint32_t chainId, uint32_t userId, json_t **response)
 {
    if (!json_is_object(request))
       return RCC_INVALID_ARGUMENT;
@@ -3251,10 +4450,11 @@ uint32_t UpdateEventProcessingPolicyFromJson(json_t *request, uint32_t userId, j
    ResolveUserId(userId, userName, true);
 
    uint32_t newVersion = 0;
-   uint32_t rcc = GetEventProcessingPolicy()->replaceAllRules(rules, checkVersion, expectedVersion, userGuid, userName, &newVersion);
+   uint32_t rcc = GetEventProcessingPolicy()->replaceAllRules(chainId, rules, checkVersion, expectedVersion, userGuid, userName, &newVersion);
    if (rcc == RCC_SUCCESS)
    {
       *response = json_object();
+      json_object_set_new(*response, "chainId", json_integer(chainId));
       json_object_set_new(*response, "version", json_integer(newVersion));
       json_object_set_new(*response, "ruleCount", json_integer(rules.size()));
       if (!importContext.isEmpty())

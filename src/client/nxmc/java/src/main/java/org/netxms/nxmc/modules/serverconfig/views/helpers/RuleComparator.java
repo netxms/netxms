@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,16 +23,38 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.netxms.client.events.EventProcessingPolicyRule;
 
 /**
- * Comparator for event processing policy rules - sort them alphabetically
+ * Comparator for event processing policy rule lists: main chain first, other chains by name, rules by number within a chain
  */
 public class RuleComparator extends ViewerComparator
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   private final RuleLabelProvider labelProvider;
+
+   /**
+    * @param labelProvider label provider resolving chain names
+    */
+   public RuleComparator(RuleLabelProvider labelProvider)
+   {
+      this.labelProvider = labelProvider;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-      return ((EventProcessingPolicyRule)e1).getRuleNumber() - ((EventProcessingPolicyRule)e2).getRuleNumber();
+      EventProcessingPolicyRule r1 = (EventProcessingPolicyRule)e1;
+      EventProcessingPolicyRule r2 = (EventProcessingPolicyRule)e2;
+      if (r1.getChainId() != r2.getChainId())
+      {
+         if (r1.getChainId() == 0)
+            return -1;
+         if (r2.getChainId() == 0)
+            return 1;
+         int result = labelProvider.getChainName(r1).compareToIgnoreCase(labelProvider.getChainName(r2));
+         if (result != 0)
+            return result;
+      }
+      return r1.getRuleNumber() - r2.getRuleNumber();
 	}
 }

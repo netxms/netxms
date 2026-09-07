@@ -573,6 +573,10 @@ public class NXCPCodes
    public static final int CMD_MODIFY_AI_OPERATOR_CHECK = 0x022C;
    public static final int CMD_DELETE_AI_OPERATOR_CHECK = 0x022D;
    public static final int CMD_GET_AI_OPERATOR_INSTR_HISTORY = 0x022E;
+   public static final int CMD_CREATE_EPP_CHAIN = 0x022F;
+   public static final int CMD_MODIFY_EPP_CHAIN = 0x0230;
+   public static final int CMD_DELETE_EPP_CHAIN = 0x0231;
+   public static final int CMD_GET_EPP_CHAIN_CALLERS = 0x0232;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1624,7 +1628,15 @@ public class NXCPCodes
    public static final long VID_COOLDOWN = 1042;
    public static final long VID_RENOTIFY_INTERVAL = 1043;
    public static final long VID_INSTRUCTIONS = 1044;
+   public static final long VID_CHAIN_ID = 1045;
+   public static final long VID_CHAIN_CALL_COUNT = 1046;
+   public static final long VID_NUM_CHAINS = 1047;
+   public static final long VID_CHAIN_GUID = 1048;
+   public static final long VID_CHAIN_ACL_COUNT = 1049;
 
+   public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
+   public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;
+   public static final long VID_CHAIN_CALL_LIST_BASE = 0x79000000L;
    public static final long VID_SKILL_LIST_BASE = 0x50000000L;
    public static final long VID_SNMP_AGENT_LIST_BASE = 0x79000000L;
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,149 +23,102 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * This class represents NetXMS event processing policy.
+ * Event processing policy: the registry of rule chains readable by the current user. The main chain has ID 0. Rules of each
+ * chain are loaded separately.
  */
 public class EventProcessingPolicy
 {
-   /**
-    * Information about a deleted rule for conflict detection
-    */
-   public static class DeletedRuleInfo
-   {
-      private UUID guid;
-      private int version;
-
-      /**
-       * Create deleted rule info.
-       *
-       * @param guid rule GUID
-       * @param version rule version when deleted
-       */
-      public DeletedRuleInfo(UUID guid, int version)
-      {
-         this.guid = guid;
-         this.version = version;
-      }
-
-      /**
-       * Get rule GUID.
-       *
-       * @return rule GUID
-       */
-      public UUID getGuid()
-      {
-         return guid;
-      }
-
-      /**
-       * Get rule version when it was deleted.
-       *
-       * @return rule version
-       */
-      public int getVersion()
-      {
-         return version;
-      }
-   }
-
-   private List<EventProcessingPolicyRule> rules;
-   private int version;
-   private List<DeletedRuleInfo> deletedRules;
+   private List<EventProcessingPolicyChain> chains = new ArrayList<>();
 
    /**
-    * Create new policy object.
+    * Add chain to registry
     *
-    * @param numRules Expected number of rules
-    * @param version Policy version from server
+    * @param chain chain to add
     */
-   public EventProcessingPolicy(int numRules, int version)
+   public void addChain(EventProcessingPolicyChain chain)
    {
-      rules = new ArrayList<EventProcessingPolicyRule>(numRules);
-      this.version = version;
-      deletedRules = new ArrayList<>();
+      chains.add(chain);
    }
-	
-	/**
-	 * Add new rule.
-	 * 
-	 * @param rule Rule to add
-	 */
-	public void addRule(EventProcessingPolicyRule rule)
-	{
-		rules.add(rule);
-	}
-	
-	/**
-	 * Insert rule before rule at given position
-	 * 
-	 * @param rule rule to insert
-	 * @param index position to insert at
-	 */
-	public void insertRule(EventProcessingPolicyRule rule, int index)
-	{
-		rules.add(index, rule);
-	}
 
    /**
-    * Delete rule.
+    * Replace registry entry of a chain with given object (same chain ID), or add it if not present
     *
-    * @param rule rule object to be remove
+    * @param chain chain object
     */
-   public void deleteRule(EventProcessingPolicyRule rule)
+   public void putChain(EventProcessingPolicyChain chain)
    {
-      if (rules.remove(rule))
-      {
-         // Track deletion for conflict detection (only if rule has a server version)
-         if (rule.getVersion() > 0)
-         {
-            deletedRules.add(new DeletedRuleInfo(rule.getGuid(), rule.getVersion()));
-         }
-      }
+      chains.removeIf(c -> c.getId() == chain.getId());
+      chains.add(chain);
    }
 
    /**
-    * @return the rules
+    * Remove chain from registry
+    *
+    * @param chainId chain ID
     */
-   public List<EventProcessingPolicyRule> getRules()
+   public void removeChain(int chainId)
    {
+      chains.removeIf(c -> c.getId() == chainId);
+   }
+
+   /**
+    * @return all chains readable by current user
+    */
+   public List<EventProcessingPolicyChain> getChains()
+   {
+      return chains;
+   }
+
+   /**
+    * @return the main chain, or null if it is not readable by current user
+    */
+   public EventProcessingPolicyChain getMainChain()
+   {
+      return findChain(0);
+   }
+
+   /**
+    * Find chain by ID
+    *
+    * @param chainId chain ID
+    * @return chain or null
+    */
+   public EventProcessingPolicyChain findChain(int chainId)
+   {
+      for(EventProcessingPolicyChain chain : chains)
+         if (chain.getId() == chainId)
+            return chain;
+      return null;
+   }
+
+   /**
+    * Find chain by GUID
+    *
+    * @param guid chain GUID
+    * @return chain or null
+    */
+   public EventProcessingPolicyChain findChain(UUID guid)
+   {
+      for(EventProcessingPolicyChain chain : chains)
+         if (chain.getGuid().equals(guid))
+            return chain;
+      return null;
+   }
+
+   /**
+    * Get rules of all loaded chains (main chain first)
+    *
+    * @return rules of all loaded chains
+    */
+   public List<EventProcessingPolicyRule> getLoadedRules()
+   {
+      List<EventProcessingPolicyRule> rules = new ArrayList<>();
+      EventProcessingPolicyChain mainChain = getMainChain();
+      if ((mainChain != null) && mainChain.isLoaded())
+         rules.addAll(mainChain.getRules());
+      for(EventProcessingPolicyChain chain : chains)
+         if (!chain.isMain() && chain.isLoaded())
+            rules.addAll(chain.getRules());
       return rules;
-   }
-
-   /**
-    * Get policy version for optimistic concurrency control.
-    *
-    * @return policy version
-    */
-   public int getVersion()
-   {
-      return version;
-   }
-
-   /**
-    * Set policy version.
-    *
-    * @param version new version
-    */
-   public void setVersion(int version)
-   {
-      this.version = version;
-   }
-
-   /**
-    * Get list of deleted rules.
-    *
-    * @return list of deleted rules
-    */
-   public List<DeletedRuleInfo> getDeletedRules()
-   {
-      return deletedRules;
-   }
-
-   /**
-    * Clear deleted rules list.
-    */
-   public void clearDeletedRules()
-   {
-      deletedRules.clear();
    }
 }

@@ -557,16 +557,17 @@ static void CreateAssistantSkillList()
             F_GetEventTemplate),
          AssistantFunction(
             "get-event-processing-policy",
-            "Get the complete event processing policy configuration. The policy defines rules for how events are processed, including conditions, actions, and correlations.",
+            "Get the complete event processing policy configuration. The policy defines rules for how events are processed, including conditions, actions, and correlations. Every chain with its rules is in 'chains'; the main chain (the entry point of event processing) has ID 0.",
             {},
             F_GetEventProcessingPolicy),
          AssistantFunction(
             "create-epp-rule",
-            "Create a new event processing policy rule. Returns the created rule (with its assigned GUID) and the new policy version. Position the rule with after_guid / before_guid / position (default: append at end).",
+            "Create a new event processing policy rule in the main chain or in the chain given by 'chain'. Returns the created rule (with its assigned GUID) and the new chain version. Position the rule with after_guid / before_guid / position (default: append at end).",
             {
                { "after_guid", "place the new rule immediately after this rule GUID (optional)" },
                { "before_guid", "place the new rule immediately before this rule GUID (optional)" },
                { "position", "explicit position: 'first' or 'last' (default: 'last' if no after/before given)" },
+               { "chain", "name or ID of the chain to create the rule in (optional; default: main chain)" },
                { "comments", "human-readable comments describing the rule (optional)" },
                { "events", "array of event codes or names that the rule matches (optional; empty = match any event)", "array", "string" },
                { "sources", "array of object IDs or names; rule applies to events from these objects (optional; empty = any source)", "array", "string" },
@@ -579,6 +580,7 @@ static void CreateAssistantSkillList()
                { "actions", "array of {id, timer_delay?, timer_key?, blocking_timer_key?, snooze_time?, active?}; id is action ID or name (optional)", "array", "object" },
                { "action_script", "NXSL action script (optional)" },
                { "timer_cancellations", "array of timer keys to cancel (optional)", "array", "string" },
+               { "chain_calls", "array of chain names or IDs entered in this order when the rule matches (optional)", "array", "string" },
                { "stop_processing", "if true, stop EPP processing after this rule matches (optional, default false)", "boolean" },
                { "generate_alarm", "if true, generate an alarm on match (optional, default false)", "boolean" },
                { "alarm_severity", "alarm severity: info, warning, minor, major, critical, normal, 'same as event', resolve, terminate (optional)" },
@@ -612,7 +614,7 @@ static void CreateAssistantSkillList()
             F_CreateEppRule),
          AssistantFunction(
             "modify-epp-rule",
-            "Modify an existing event processing policy rule. Only fields actually provided are changed - any field omitted is left unchanged. Use get-event-processing-policy first to find the rule GUID and review its current settings.",
+            "Modify an existing event processing policy rule. Only fields actually provided are changed - any field omitted is left unchanged. Use get-event-processing-policy first to find the rule GUID and review its current settings. The rule may belong to any chain.",
             {
                { "guid", "GUID of the rule to modify (mandatory)" },
                { "comments", "new comments (optional)" },
@@ -627,6 +629,7 @@ static void CreateAssistantSkillList()
                { "actions", "new actions list (optional, replaces current)", "array", "object" },
                { "action_script", "new NXSL action script (optional; empty string clears)" },
                { "timer_cancellations", "new timer cancellations list (optional, replaces current)", "array", "string" },
+               { "chain_calls", "new list of chain names or IDs entered when the rule matches (optional, replaces current)", "array", "string" },
                { "stop_processing", "new stop_processing flag (optional)", "boolean" },
                { "generate_alarm", "new generate_alarm flag (optional)", "boolean" },
                { "alarm_severity", "new alarm severity (optional)" },
@@ -660,28 +663,28 @@ static void CreateAssistantSkillList()
             F_ModifyEppRule),
          AssistantFunction(
             "delete-epp-rule",
-            "Delete an event processing policy rule.",
+            "Delete an event processing policy rule. The rule may belong to any chain.",
             {
                { "guid", "GUID of the rule to delete (mandatory)" }
             },
             F_DeleteEppRule),
          AssistantFunction(
             "enable-epp-rule",
-            "Enable a previously disabled event processing policy rule.",
+            "Enable a previously disabled event processing policy rule. The rule may belong to any chain.",
             {
                { "guid", "GUID of the rule to enable (mandatory)" }
             },
             F_EnableEppRule),
          AssistantFunction(
             "disable-epp-rule",
-            "Disable an event processing policy rule. The rule remains in the policy but is skipped during event processing.",
+            "Disable an event processing policy rule. The rule remains in the policy but is skipped during event processing. The rule may belong to any chain.",
             {
                { "guid", "GUID of the rule to disable (mandatory)" }
             },
             F_DisableEppRule),
          AssistantFunction(
             "move-epp-rule",
-            "Move an event processing policy rule to a new position. Rules are evaluated top-to-bottom, so order can be functionally significant (especially with stop_processing).",
+            "Move an event processing policy rule to a new position within its chain. Rules are evaluated top-to-bottom, so order can be functionally significant (especially with stop_processing).",
             {
                { "guid", "GUID of the rule to move (mandatory)" },
                { "after_guid", "place the rule immediately after this rule GUID (optional)" },

@@ -25,6 +25,7 @@
 
 #include <nxevent.h>
 #include <nxcore_schedule.h>
+#include <atomic>
 
 /**
  * Event origins
@@ -179,7 +180,8 @@ struct EventProcessingEffect
  */
 struct EventRuleExecution
 {
-   uint32_t ruleNumber;   // 1-based rule position (rule id + 1)
+   uint32_t ruleNumber;   // 1-based rule position within its chain (rule id + 1)
+   uint32_t chainId;
    uuid ruleGuid;
    wchar_t *ruleComments; // owned
    ObjectArray<EventProcessingEffect> effects;
@@ -714,6 +716,32 @@ public:
    uint64_t getDateFilter() const { return m_dateFilter; }
 };
 
+class EventProcessingPolicy;
+
+/**
+ * Event processing execution context - tracks the chain call stack of the event being processed
+ */
+struct EventProcessingContext
+{
+   EventProcessingPolicy *policy;
+   const wchar_t *chainName;              // Name of the chain currently being processed
+   IntegerArray<uint32_t> chainStack;     // IDs of chains on the active call stack (loop guard)
+
+   bool isChainActive(uint32_t chainId) const { return chainStack.contains(chainId); }
+};
+
+/**
+ * Chain call from event policy rule (target chain entered when the rule matches)
+ */
+class EPRuleChainCall
+{
+public:
+   uint32_t targetChainId;
+   std::atomic<int64_t> lastLoopReport;   // Time when SYS_EPP_CHAIN_LOOP was last posted for this call (in-memory only)
+
+   EPRuleChainCall(uint32_t chainId) : targetChainId(chainId), lastLoopReport(0) { }
+};
+
 /**
  * Event policy rule
  */
@@ -728,6 +756,9 @@ private:
    MutableString m_modifiedByName;  // Name of user who last modified (from DB)
    time_t m_modificationTime;       // Timestamp of last modification (from DB)
    uint32_t m_flags;
+   uint32_t m_chainId;              // Chain this rule belongs to (0 = main chain)
+   MutableString m_chainName;       // Name of owning chain (for diagnostics)
+   ObjectArray<EPRuleChainCall> m_chainCalls;  // Chains entered when rule matches, in call order
    IntegerArray<uint32_t> m_sources;
    IntegerArray<uint32_t> m_sourceExclusions;
    IntegerArray<uint32_t> m_events;
@@ -772,6 +803,7 @@ private:
    bool matchEvent(uint32_t eventCode) const;
    bool matchSeverity(uint32_t severity) const;
    bool matchScript(Event *event) const;
+   void reportChainLoop(EPRuleChainCall *call, const wchar_t *callingChainName, const wchar_t *targetChainName) const;
    bool matchTime(struct tm *localTime) const;
 
    uint32_t generateAlarm(Event *event, EventRuleExecution *rec) const;
@@ -789,8 +821,8 @@ private:
 
 public:
    EPRule(uint32_t id);
-   EPRule(DB_RESULT hResult, int row);
-   EPRule(const NXCPMessage& msg);
+   EPRule(DB_RESULT hResult, int row, const wchar_t *chainName);
+   EPRule(const NXCPMessage& msg, const wchar_t *chainName);
    EPRule(const ConfigEntry& config, ImportContext *context, bool nxslV5);
    EPRule(json_t *json, ImportContext *context);
    ~EPRule();
@@ -798,6 +830,16 @@ public:
    uint32_t getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
    void setId(uint32_t newId) { m_id = newId; }
+
+   // Chain membership and chain calls
+   uint32_t getChainId() const { return m_chainId; }
+   const wchar_t *getChainName() const { return m_chainName.cstr(); }
+   void setChainId(uint32_t chainId, const wchar_t *chainName) { m_chainId = chainId; m_chainName = chainName; }
+   int getChainCallCount() const { return m_chainCalls.size(); }
+   uint32_t getChainCall(int index) const { return m_chainCalls.get(index)->targetChainId; }
+   void addChainCall(uint32_t chainId) { m_chainCalls.add(new EPRuleChainCall(chainId)); }
+   bool removeChainCall(uint32_t chainId);
+   bool isChainCalled(uint32_t chainId) const;
 
    // Version tracking for optimistic concurrency
    uint32_t getVersion() const { return m_version; }
@@ -812,7 +854,7 @@ public:
 
    bool loadFromDB(DB_HANDLE hdb);
    bool saveToDB(DB_HANDLE hdb, const uuid& modifiedByGuid, const TCHAR* modifiedByName, time_t modificationTime) const;
-   bool processEvent(Event *event) const;
+   bool processEvent(Event *event, EventProcessingContext *context) const;
    void fillMessage(NXCPMessage *msg) const;
 
    json_t *createExportRecord() const;
@@ -923,11 +965,65 @@ public:
 };
 
 /**
+ * Event processing policy rule chain. Chain 0 is the main chain - the entry point of event
+ * processing; it cannot be deleted, renamed, or given an access control list. Each chain holds
+ * its own rule list and in-memory optimistic-concurrency version (not persisted).
+ */
+class NXCORE_EXPORTABLE EventPolicyChain
+{
+private:
+   uint32_t m_id;
+   uuid m_guid;
+   wchar_t *m_name;
+   wchar_t *m_description;
+   uint32_t m_version;   // In-memory version for optimistic concurrency (not persisted)
+   SharedObjectArray<EPRule> m_rules;
+   StructArray<ACL_ELEMENT> m_acl;
+
+public:
+   EventPolicyChain(DB_RESULT hResult, int row);
+   EventPolicyChain(uint32_t id, const wchar_t *name, const wchar_t *description);
+   EventPolicyChain(uint32_t id, const uuid& guid, const wchar_t *name, const wchar_t *description);
+   ~EventPolicyChain();
+
+   uint32_t getId() const { return m_id; }
+   bool isMain() const { return m_id == 0; }
+   const uuid& getGuid() const { return m_guid; }
+   const wchar_t *getName() const { return m_name; }
+   const wchar_t *getDescription() const { return m_description; }
+   uint32_t getVersion() const { return m_version; }
+   void incrementVersion() { m_version++; }
+
+   void setName(const wchar_t *name) { MemFree(m_name); m_name = MemCopyStringW(name); }
+   void setDescription(const wchar_t *description) { MemFree(m_description); m_description = MemCopyStringW(description); }
+
+   SharedObjectArray<EPRule>& getRules() { return m_rules; }
+   const SharedObjectArray<EPRule>& getRules() const { return m_rules; }
+
+   void addAccessElement(uint32_t userId, uint32_t accessRights);
+   void replaceACL(const StructArray<ACL_ELEMENT>& acl);
+   const StructArray<ACL_ELEMENT>& getACL() const { return m_acl; }
+   uint32_t getUserRights(uint32_t userId) const;
+
+   bool isRuleCallingChain(uint32_t chainId) const;
+   json_t *toJson(bool includeRules, uint32_t callerCount) const;
+};
+
+/**
  * Information about a rule deleted by client (for optimistic concurrency)
  */
 struct DeletedRuleInfo
 {
    uuid guid;
+   uint32_t version;
+};
+
+/**
+ * Chain ID with its in-memory version
+ */
+struct EPPChainVersion
+{
+   uint32_t chainId;
    uint32_t version;
 };
 
@@ -956,41 +1052,58 @@ public:
 class NXCORE_EXPORTABLE EventProcessingPolicy
 {
 private:
-   SharedObjectArray<EPRule> m_rules;
+   SharedHashMap<uint32_t, EventPolicyChain> m_chains;   // All chains keyed by chain_id, including the main chain (0)
    RWLock m_rwlock;
-   uint32_t m_version;   // Policy version for optimistic concurrency (in-memory only)
 
    void readLock() const { m_rwlock.readLock(); }
    void writeLock() { m_rwlock.writeLock(); }
    void unlock() const { m_rwlock.unlock(); }
-   int findRuleIndexByGuid(const uuid& guid, int shift = 0) const;
+   shared_ptr<EPRule> findRuleByGuid(const uuid& guid) const;
+   EventPolicyChain *findChainByGuid(const uuid& guid) const;
+   bool processRuleList(const SharedObjectArray<EPRule>& rules, Event *event, EventProcessingContext *context);
+   void forEachRule(std::function<EnumerationCallbackResult (const shared_ptr<EPRule>& rule, const EventPolicyChain& chain)> callback) const;
+   uint32_t countChainCallers(uint32_t chainId) const;
+   bool saveChainToDB(uint32_t chainId, const uuid& modifiedByGuid, const TCHAR *modifiedByName) const;
+   bool enumerateChainCallers(uint32_t chainId, std::function<void (const EPRule& rule, uint32_t ownerId)> callback) const;
 
 public:
-   EventProcessingPolicy() : m_version(0) { }
-
-   uint32_t getNumRules() const { return static_cast<uint32_t>(m_rules.size()); }
-   uint32_t getVersion() const { return m_version; }
-   void incrementVersion() { m_version++; }
-
    bool loadFromDB();
    bool saveToDB(const uuid& modifiedByGuid, const TCHAR* modifiedByName) const;
    bool saveToDB() const { return saveToDB(uuid::NULL_UUID, _T("System")); }  // Convenience for imports
    void processEvent(Event *pEvent);
-   void sendToClient(ClientSession *session, uint32_t requestId) const;
-   void replacePolicy(uint32_t numRules, EPRule **ruleList);
+   EventPolicyChain *getChain(uint32_t chainId) const { return m_chains.get(chainId); }   // Caller must hold policy lock
+   bool enterChain(EventPolicyChain *chain, Event *event, EventProcessingContext *context);
+   uint32_t fillChainRegistry(NXCPMessage *response, uint32_t userId, bool globalRights) const;
+   uint32_t fillChainLoadResponse(NXCPMessage *response, uint32_t chainId, uint32_t userId, bool globalRights) const;
+   void sendChainRules(ClientSession *session, uint32_t requestId, uint32_t chainId) const;
+   String getChainName(uint32_t chainId) const;
+   bool chainExists(uint32_t chainId) const;
+   uint32_t getEffectiveChainRights(uint32_t chainId, uint32_t userId) const;
 
    // Optimistic concurrency support
-   uint32_t saveWithMerge(uint32_t baseVersion, const SharedObjectArray<EPRule>& clientRules,
+   uint32_t saveWithMerge(uint32_t chainId, uint32_t baseVersion, const SharedObjectArray<EPRule>& clientRules,
                           uint32_t numDeletedRules, DeletedRuleInfo *deletedRules,
                           const uuid& userGuid, const TCHAR* userName,
                           ObjectArray<EPPConflict> *conflicts, uint32_t *newVersion);
-   uint32_t replaceAllRules(const SharedObjectArray<EPRule>& rules, bool checkVersion, uint32_t expectedVersion,
+   uint32_t replaceAllRules(uint32_t chainId, const SharedObjectArray<EPRule>& rules, bool checkVersion, uint32_t expectedVersion,
                             const uuid& userGuid, const wchar_t *userName, uint32_t *newVersion);
-   void fillRuleVersions(NXCPMessage *msg) const;
+   void fillRuleVersions(NXCPMessage *msg, uint32_t chainId) const;
+
+   // Chain management
+   uint32_t createChain(const wchar_t *name, const wchar_t *description, const StructArray<ACL_ELEMENT>& acl, uint32_t *chainId, uuid *chainGuid);
+   uint32_t modifyChain(uint32_t chainId, const wchar_t *name, const wchar_t *description, const StructArray<ACL_ELEMENT> *acl);
+   uint32_t deleteChain(uint32_t chainId, StructArray<EPPChainVersion> *updatedChains);
+   uint32_t fillChainCallers(NXCPMessage *msg, uint32_t chainId) const;
+   json_t *getChainCallersAsJson(uint32_t chainId) const;
+   json_t *getChainsAsJson() const;
+   json_t *getChainAsJson(uint32_t chainId) const;
 
    json_t *exportRule(const uuid& guid) const;
    json_t *exportRuleOrdering() const;
-   void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
+   json_t *exportChains(json_t *rulesArray) const;
+   int32_t findChainIdByGuid(const uuid& guid) const;
+   uint32_t importChain(const uuid& guid, const wchar_t *name, const wchar_t *description, bool overwrite);
+   bool importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
    json_t *getRuleDetails(const uuid& ruleId) const;
    json_t *getRuleAsJson(const uuid& guid) const;
    json_t *toJson() const;
@@ -1035,7 +1148,7 @@ const wchar_t NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
 const wchar_t NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state);
 
 EventProcessingPolicy NXCORE_EXPORTABLE *GetEventProcessingPolicy();
-uint32_t NXCORE_EXPORTABLE UpdateEventProcessingPolicyFromJson(json_t *request, uint32_t userId, json_t **response);
+uint32_t NXCORE_EXPORTABLE UpdateEventProcessingPolicyFromJson(json_t *request, uint32_t chainId, uint32_t userId, json_t **response);
 
 /**
  * Global variables

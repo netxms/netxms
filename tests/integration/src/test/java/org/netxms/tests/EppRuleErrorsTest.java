@@ -34,7 +34,7 @@ import org.netxms.client.ServerAction;
 import org.netxms.client.constants.ServerActionType;
 import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.client.events.AlarmCategory;
-import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.Node;
@@ -67,7 +67,7 @@ public class EppRuleErrorsTest extends AbstractSessionTest
    private static final String INVALID_SCRIPT = "return (1 +;";
 
    private NXCSession session;
-   private EventProcessingPolicy policy;
+   private EventProcessingPolicyChain policy;
    private EventProcessingPolicyRule rule;
    private UUID ruleGuid;
    private long createdActionId = 0;
@@ -86,7 +86,7 @@ public class EppRuleErrorsTest extends AbstractSessionTest
       Node node = TestHelper.findManagementServer(session);
       EventTemplate eventTemplate = TestHelperForEpp.findOrCreateEvent(session, EVENT_NAME);
 
-      policy = session.getEventProcessingPolicy();
+      policy = session.getEventProcessingPolicyChain(0);
       rule = TestHelperForEpp.findOrCreateRule(session, policy, RULE_COMMENT, eventTemplate, node);
       // Reset every reference in case a previous failed run left the rule behind
       rule.setSources(Collections.singletonList(node.getObjectId()));
@@ -114,7 +114,7 @@ public class EppRuleErrorsTest extends AbstractSessionTest
          return;
 
       // Drop references from the rule before deleting referenced entities, then drop the rule itself
-      EventProcessingPolicy currentPolicy = session.getEventProcessingPolicy();
+      EventProcessingPolicyChain currentPolicy = session.getEventProcessingPolicyChain(0);
       EventProcessingPolicyRule currentRule = findRule(currentPolicy);
       if (currentRule != null)
       {
@@ -133,7 +133,7 @@ public class EppRuleErrorsTest extends AbstractSessionTest
    /**
     * Find test rule in given policy by GUID.
     */
-   private EventProcessingPolicyRule findRule(EventProcessingPolicy p)
+   private EventProcessingPolicyRule findRule(EventProcessingPolicyChain p)
    {
       for(EventProcessingPolicyRule r : p.getRules())
       {
@@ -149,7 +149,7 @@ public class EppRuleErrorsTest extends AbstractSessionTest
     */
    private EventProcessingPolicyRule reloadRule() throws Exception
    {
-      policy = session.getEventProcessingPolicy();
+      policy = session.getEventProcessingPolicyChain(0);
       EventProcessingPolicyRule r = findRule(policy);
       assertNotNull(r, "test rule not found in reloaded policy");
       return r;

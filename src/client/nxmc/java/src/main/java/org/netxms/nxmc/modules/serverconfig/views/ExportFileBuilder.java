@@ -65,6 +65,7 @@ import org.netxms.client.datacollection.NetconfQueryDefinition;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.client.events.ActionExecutionConfiguration;
+import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
@@ -129,6 +130,7 @@ public class ExportFileBuilder extends ConfigurationView
    private TableViewer actionViewer;
    private TableViewer eventViewer;
    private TableViewer ruleViewer;
+   private RuleLabelProvider ruleLabelProvider;
    private TableViewer scriptViewer;
    private TableViewer summaryTableViewer;
    private TableViewer mappingTableViewer;
@@ -160,7 +162,7 @@ public class ExportFileBuilder extends ConfigurationView
    private Map<UUID, LogParserRule> otelLogParsers = new HashMap<>();
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
-	private List<EventProcessingPolicyRule> rulesCache = null;
+   private EventProcessingPolicy policyCache = null;
    private List<ServerAction> actionsCache = null;
    private LogParser syslogLogParserCache = null;
    private LogParser windowsLogParserCache = null;
@@ -531,11 +533,15 @@ public class ExportFileBuilder extends ConfigurationView
 		ruleViewer.getTable().setHeaderVisible(true);
 
       TableColumn column = new TableColumn(ruleViewer.getTable(), SWT.LEFT);
-      column.setText("Rule #");
+      column.setText(i18n.tr("Chain"));
+      column.setWidth(120);
+
+      column = new TableColumn(ruleViewer.getTable(), SWT.LEFT);
+      column.setText(i18n.tr("Rule #"));
       column.setWidth(60);
 
       column = new TableColumn(ruleViewer.getTable(), SWT.LEFT);
-      column.setText("Rule Name");
+      column.setText(i18n.tr("Rule Name"));
       column.setWidth(250);
 
 		gd = new GridData();
@@ -546,8 +552,9 @@ public class ExportFileBuilder extends ConfigurationView
 		gd.heightHint = 200;
 		ruleViewer.getTable().setLayoutData(gd);
 		ruleViewer.setContentProvider(new ArrayContentProvider());
-		ruleViewer.setLabelProvider(new RuleLabelProvider());
-		ruleViewer.setComparator(new RuleComparator());
+      ruleLabelProvider = new RuleLabelProvider(null);
+      ruleViewer.setLabelProvider(ruleLabelProvider);
+      ruleViewer.setComparator(new RuleComparator(ruleLabelProvider));
 		ruleViewer.getTable().setSortDirection(SWT.UP);
 
       Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
@@ -572,15 +579,19 @@ public class ExportFileBuilder extends ConfigurationView
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				if (rulesCache == null)
+            if (policyCache == null)
 				{
 					new Job(i18n.tr("Loading event processing policy"), ExportFileBuilder.this) {
 						@Override
 						protected void run(IProgressMonitor monitor) throws Exception
 						{
-							rulesCache = session.getEventProcessingPolicy().getRules();
+                     final EventProcessingPolicy policy = session.getEventProcessingPolicy();
                      actionsCache = session.getActions();
-                     runInUIThread(() -> addRules());
+                     runInUIThread(() -> {
+                        policyCache = policy;
+                        ruleLabelProvider.setPolicy(policy);
+                        addRules();
+                     });
 						}
 
 						@Override
@@ -2063,7 +2074,7 @@ public class ExportFileBuilder extends ConfigurationView
 	 */
 	private void addRules()
 	{
-		RuleSelectionDialog dlg = new RuleSelectionDialog(getWindow().getShell(), rulesCache);
+      RuleSelectionDialog dlg = new RuleSelectionDialog(getWindow().getShell(), policyCache);
 		if (dlg.open() == Window.OK)
 		{
          Set<String> allMatches = new HashSet<>();

@@ -9989,21 +9989,23 @@ paths:
         '426':
           description: Upgrade required - request did not ask for a protocol upgrade to WebSocket.
       security: []
-  /v1/event-processing-policy:
+  /v1/event-processing-policy/chains:
     get:
-      operationId: getEventProcessingPolicy
-      summary: Get event processing policy
+      operationId: listEventProcessingPolicyChains
+      summary: List event processing policy chains
       description: |
-        Retrieve the complete event processing policy as an ordered list of rules. The returned
-        `version` value should be sent back unchanged in a subsequent update request to detect
-        concurrent modifications (optimistic concurrency control).
+        Retrieve the chain registry: every rule chain without its rules. Chain `0` is the main chain,
+        the entry point of event processing. Rules of a chain are retrieved with
+        `GET /v1/event-processing-policy/chains/{chain-id}`.
       responses:
         '200':
-          description: Event processing policy retrieved successfully
+          description: Chains retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventProcessingPolicy'
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventProcessingPolicyChain'
         '401':
           description: Unauthorized
         '403':
@@ -10012,19 +10014,185 @@ paths:
         - BearerAuth: []
       tags:
         - Event Processing Policy
+    post:
+      operationId: createEventProcessingPolicyChain
+      summary: Create event processing policy chain
+      description: Create a new empty chain. Rules are added with `PUT /v1/event-processing-policy/chains/{chain-id}/rules`; a chain is entered when a rule in another chain lists its ID in `chainCalls`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventProcessingPolicyChainInput'
+            example:
+              name: Network devices
+              description: Rules for switches and routers
+              accessList:
+                - userId: 1073741825
+                  accessRights: 3
+      responses:
+        '201':
+          description: Chain created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventProcessingPolicyChain'
+        '400':
+          description: Chain name missing or access list malformed
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EPP access right
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Processing Policy
+  /v1/event-processing-policy/chains/{chain-id}:
+    get:
+      operationId: getEventProcessingPolicyChain
+      summary: Get event processing policy chain
+      description: Retrieve a chain together with its rules in evaluation order. The returned `version` should be sent back unchanged when replacing the chain's rules to detect concurrent modifications.
+      parameters:
+        - name: chain-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chain ID (0 = main chain)
+      responses:
+        '200':
+          description: Chain retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventProcessingPolicyChain'
+        '400':
+          description: Chain ID is not a number
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EPP access right
+        '404':
+          description: Chain not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Processing Policy
     put:
-      operationId: updateEventProcessingPolicy
-      summary: Replace event processing policy
+      operationId: updateEventProcessingPolicyChain
+      summary: Update event processing policy chain
+      description: Change the name, description, or access list of a chain. Fields absent from the request body keep their current values; an `accessList` that is present replaces the whole list. Rules are not affected. The main chain (ID 0) cannot be changed.
+      parameters:
+        - name: chain-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chain ID (0 = main chain)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventProcessingPolicyChainInput'
+      responses:
+        '200':
+          description: Chain updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventProcessingPolicyChain'
+        '400':
+          description: Chain ID is not a number, chain name empty, or access list malformed
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EPP access right
+        '404':
+          description: Chain not found
+        '405':
+          description: Main chain cannot be changed
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Processing Policy
+    delete:
+      operationId: deleteEventProcessingPolicyChain
+      summary: Delete event processing policy chain
       description: |
-        Replace the entire event processing policy with the supplied ordered list of rules.
-        If `version` is present in the request body it must match the current policy version,
-        otherwise the request is rejected with status 409 and the body contains the current
-        `currentVersion`. If `version` is omitted the policy is replaced unconditionally.
+        Delete a chain together with all its rules. Calls to the deleted chain are removed from rules
+        in every other chain; each chain that lost a call gets a new version, reported in
+        `updatedChains`. Use `GET /v1/event-processing-policy/chains/{chain-id}/callers` beforehand to
+        see which rules are affected. The main chain (ID 0) cannot be deleted.
+      parameters:
+        - name: chain-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chain ID (0 = main chain)
+      responses:
+        '200':
+          description: Chain deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedChains:
+                    type: array
+                    description: Chains whose rules lost a call to the deleted chain, with their new versions
+                    items:
+                      type: object
+                      properties:
+                        chainId:
+                          type: integer
+                          description: Chain ID (0 = main chain)
+                        version:
+                          type: integer
+                          description: New chain version
+        '400':
+          description: Chain ID is not a number
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EPP access right
+        '404':
+          description: Chain not found
+        '405':
+          description: Main chain cannot be deleted
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Processing Policy
+  /v1/event-processing-policy/chains/{chain-id}/rules:
+    put:
+      operationId: updateEventProcessingPolicyChainRules
+      summary: Replace chain rules
+      description: |
+        Replace the rules of a chain (including the main chain, ID 0) with the supplied ordered list.
+        Other chains are not affected. If `version` is present in the request body it must match the
+        current chain version, otherwise the request is rejected with status 409 and the body contains
+        the current `currentVersion`. If `version` is omitted the chain is replaced unconditionally.
 
-        Each rule may be supplied either in the form produced by this API (object IDs and event
-        codes as plain integers) or as a configuration export record (object/event references as
-        objects carrying name and GUID); the latter form is resolved on import and any references
-        that cannot be resolved are dropped, with details returned in the optional `warnings` field.
+        Each rule may be supplied either in the form produced by this API (object IDs, event codes,
+        and called chain IDs as plain integers) or as a configuration export record (object/event
+        references as objects carrying name and GUID, called chains as GUIDs); the latter form is
+        resolved on import and any references that cannot be resolved are dropped, with details
+        returned in the optional `warnings` field.
+      parameters:
+        - name: chain-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chain ID (0 = main chain)
       requestBody:
         required: true
         content:
@@ -10033,19 +10201,21 @@ paths:
               $ref: '#/components/schemas/EventProcessingPolicyUpdateRequest'
       responses:
         '200':
-          description: Event processing policy updated successfully
+          description: Chain rules updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventProcessingPolicyUpdateResult'
         '400':
-          description: Invalid event processing policy data
+          description: Chain ID is not a number or rule data is invalid
         '401':
           description: Unauthorized
         '403':
           description: User does not have EPP access right
+        '404':
+          description: Chain not found
         '409':
-          description: Version conflict - the policy was modified by another client
+          description: Version conflict - the chain was modified by another client
           content:
             application/json:
               schema:
@@ -10055,9 +10225,42 @@ paths:
                     type: string
                   currentVersion:
                     type: integer
-                    description: Current policy version on the server
+                    description: Current chain version on the server
         '500':
           description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Event Processing Policy
+  /v1/event-processing-policy/chains/{chain-id}/callers:
+    get:
+      operationId: getEventProcessingPolicyChainCallers
+      summary: Get rules calling a chain
+      description: List the rules (in any chain) whose `chainCalls` include the given chain.
+      parameters:
+        - name: chain-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Chain ID (0 = main chain)
+      responses:
+        '200':
+          description: Calling rules retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventProcessingPolicyChainCaller'
+        '400':
+          description: Chain ID is not a number
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have EPP access right
+        '404':
+          description: Chain not found
       security:
         - BearerAuth: []
       tags:
@@ -13251,51 +13454,116 @@ components:
             Optional human-readable token description, limited to 127 characters; a longer value
             is rejected with 400. The limit is the width of the database column a persistent token
             is stored in, and is applied to all token types.
-    EventProcessingPolicy:
+    EventProcessingPolicyChain:
       type: object
-      description: Event processing policy - an ordered list of rules plus a version for optimistic concurrency control
+      description: A rule chain. Chain 0 is the main chain, the entry point of event processing. Event processing enters another chain when a rule lists the chain's ID in `chainCalls`; a "stop processing" rule inside the chain ends processing of the event, otherwise evaluation continues after the calling rule.
       properties:
+        id:
+          type: integer
+          description: Chain ID (0 = main chain)
+        guid:
+          type: string
+          format: uuid
+          description: Chain GUID (used only in configuration export files, where numeric IDs would not be portable)
+        name:
+          type: string
+          description: Chain name
+        description:
+          type: string
+          description: Chain description
         version:
           type: integer
-          description: Policy version, incremented on every change. Send this value back when updating the policy to detect concurrent modifications.
+          description: Chain version, incremented on every change of its rules. Send this value back when replacing the chain's rules to detect concurrent modifications.
+        accessList:
+          type: array
+          description: Chain-level access control list for users without the global EPP right (always empty for the main chain)
+          items:
+            $ref: '#/components/schemas/EventProcessingPolicyChainAccessElement'
         ruleCount:
           type: integer
-          description: Number of rules in the policy
+          description: Number of rules in the chain
+        callerCount:
+          type: integer
+          description: Number of rules (in any chain) calling this chain
         rules:
           type: array
-          description: Rules in evaluation order
+          description: Chain rules in evaluation order (absent from the chain list)
           items:
             $ref: '#/components/schemas/EventProcessingPolicyRule'
+    EventProcessingPolicyChainAccessElement:
+      type: object
+      properties:
+        userId:
+          type: integer
+          description: User or group ID (groups have bit 30 set)
+        accessRights:
+          type: integer
+          description: "Access rights bitmask: 0x0001 read chain, 0x0002 edit chain rules"
+    EventProcessingPolicyChainInput:
+      type: object
+      description: Chain properties for creation or update
+      properties:
+        name:
+          type: string
+          description: Chain name (required on creation, up to 63 characters)
+        description:
+          type: string
+          description: Chain description (up to 255 characters)
+        accessList:
+          type: array
+          description: Chain-level access control list. On update, replaces the current list when present.
+          items:
+            $ref: '#/components/schemas/EventProcessingPolicyChainAccessElement'
+    EventProcessingPolicyChainCaller:
+      type: object
+      description: A rule that calls a chain
+      properties:
+        ruleGuid:
+          type: string
+          format: uuid
+          description: Calling rule GUID
+        chainId:
+          type: integer
+          description: ID of the chain containing the calling rule (0 = main chain)
+        ruleNumber:
+          type: integer
+          description: 1-based position of the calling rule in its chain
+        comments:
+          type: string
+          description: Calling rule description
     EventProcessingPolicyUpdateRequest:
       type: object
-      description: Request body for replacing the entire event processing policy
+      description: Request body for replacing the rules of one chain
       required:
         - rules
       properties:
         version:
           type: integer
           description: |
-            Expected current policy version. If present, the update is applied only if it matches the
+            Expected current chain version. If present, the update is applied only if it matches the
             server-side version, otherwise the request is rejected with status 409. If omitted, the
-            policy is replaced unconditionally.
+            chain is replaced unconditionally.
         rules:
           type: array
-          description: New rule list in evaluation order (the existing policy is fully replaced)
+          description: New rule list in evaluation order (the chain's existing rules are fully replaced)
           items:
             $ref: '#/components/schemas/EventProcessingPolicyRule'
     EventProcessingPolicyUpdateResult:
       type: object
-      description: Result of a successful event processing policy update
+      description: Result of a successful chain rules update
       properties:
+        chainId:
+          type: integer
+          description: ID of the updated chain (0 = main chain)
         version:
           type: integer
-          description: New policy version
+          description: New chain version
         ruleCount:
           type: integer
-          description: Number of rules now in the policy
+          description: Number of rules now in the chain
         warnings:
           type: string
-          description: Human-readable text describing any issues encountered while applying the rules (e.g. references to objects that no longer exist). Present only if there were warnings.
+          description: Human-readable text describing any issues encountered while applying the rules (e.g. references to objects or chains that no longer exist). Present only if there were warnings.
     EventProcessingPolicyRule:
       type: object
       description: |
@@ -13309,7 +13577,7 @@ components:
           description: Rule GUID. A new random GUID is generated on input if omitted.
         ruleNumber:
           type: integer
-          description: 1-based position of the rule in the policy (output only; ignored on input - array order is authoritative)
+          description: 1-based position of the rule in its chain (output only; ignored on input - array order is authoritative)
         errors:
           type: object
           readOnly: true
@@ -13338,6 +13606,14 @@ components:
             actionScriptCompilationError:
               type: boolean
               description: Action script cannot be compiled and will not be executed
+        chainId:
+          type: integer
+          description: ID of the chain containing the rule, 0 for the main chain (output only; on input the rule belongs to the chain being updated)
+        chainCalls:
+          type: array
+          description: IDs of chains entered when the rule matches, in order. Calls are made after the rule's own actions; a call to a chain that is already active for the event is skipped and reported by the SYS_EPP_CHAIN_LOOP event.
+          items:
+            type: integer
         flags:
           type: integer
           description: |

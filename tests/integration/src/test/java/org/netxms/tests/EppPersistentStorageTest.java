@@ -30,7 +30,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
@@ -45,7 +45,7 @@ public class EppPersistentStorageTest extends AbstractSessionTest
    private final String pStoragekey = "TestKey";
 
    private NXCSession session;
-   private EventProcessingPolicy policy = null;
+   private EventProcessingPolicyChain policy = null;
    private EventProcessingPolicyRule testRule = null;
 
    /**
@@ -64,7 +64,7 @@ public class EppPersistentStorageTest extends AbstractSessionTest
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
-      policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed;
+      policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed;
 
       testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
@@ -109,20 +109,13 @@ public class EppPersistentStorageTest extends AbstractSessionTest
    }
 
    /**
-    * Function will restore all data to initial state for test run next time
-    *
-    * @throws IOException
-    * @throws NXCException
+    * Remove everything the test creates on the server, whether it passed or failed
     */
    @AfterEach
-   void resetDataForTest() throws IOException, NXCException
+   void removeTestData() throws Exception
    {
-      if (policy != null && testRule != null)
-      {
-         testRule.setPStorageDelete(new ArrayList<String>());
-         testRule.setPStorageSet(new HashMap<String, String>());
-         session.deletePersistentStorageValue(pStoragekey);
-         session.saveEventProcessingPolicy(policy);
-      }
+      NXCSession session = connectAndLogin();
+      TestHelperForEpp.deleteRules(session, "Rule for testing persistant storage");
+      session.deletePersistentStorageValue(pStoragekey);
    }
 }

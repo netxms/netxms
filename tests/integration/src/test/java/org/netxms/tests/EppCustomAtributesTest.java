@@ -25,9 +25,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.Node;
@@ -55,7 +57,7 @@ public class EppCustomAtributesTest extends AbstractSessionTest
 
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearching, eventTestTemplate, node);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
@@ -104,5 +106,20 @@ public class EppCustomAtributesTest extends AbstractSessionTest
       session.saveEventProcessingPolicy(policy);
       session.sendEvent(0, templateName, node.getObjectId(), new String[] {}, null, null, null);
 
+   }
+
+   /**
+    * Remove everything the test creates on the server, whether it passed or failed
+    */
+   @AfterEach
+   void removeTestData() throws Exception
+   {
+      NXCSession session = connectAndLogin();
+      TestHelperForEpp.deleteRules(session, "Rule for testing custom atributes");
+      session.syncObjects();
+      Node node = TestHelper.findManagementServer(session);
+      Map<String, CustomAttribute> attributes = new HashMap<>(node.getCustomAttributes());
+      if (attributes.remove("CA name") != null)
+         session.setObjectCustomAttributes(node.getObjectId(), attributes);
    }
 }

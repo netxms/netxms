@@ -25,11 +25,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.Node;
@@ -87,7 +88,7 @@ public class EppAlarmTest extends AbstractSessionTest
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateNameEventDown);
       EventTemplate eventTestTemplate2 = TestHelperForEpp.findOrCreateEvent(session, templateNameEventUp);
 
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       // Searching for the alarm generation test rule based on the specified comment; if not found, creates a new one.
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, ruleEventDownComment, eventTestTemplate, node);
@@ -160,5 +161,16 @@ public class EppAlarmTest extends AbstractSessionTest
       Thread.sleep(1000);
       alarm = findAlarmByKey(session, alarmKey);
       assertNull(alarm); // checking that cannot find the alarm in the list of alarms, indicating that it is terminated
+   }
+
+   /**
+    * Remove everything the test creates on the server, whether it passed or failed
+    */
+   @AfterEach
+   void removeTestData() throws Exception
+   {
+      NXCSession session = connectAndLogin();
+      TestHelperForEpp.deleteRules(session, "test comment for TestEvent");
+      TestHelperForEpp.terminateAlarms(session, "Test Key for TestEventDown event");
    }
 }

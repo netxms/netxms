@@ -25,11 +25,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
@@ -178,7 +179,7 @@ public class EppSourceObjects extends AbstractSessionTest
     * @return EPP rule for test
     * @throws Exception
     */
-   public static EventProcessingPolicyRule createTestRule (NXCSession session, AbstractObject node, EventProcessingPolicy policy, String templateName, String commentForSearch) throws Exception
+   public static EventProcessingPolicyRule createTestRule (NXCSession session, AbstractObject node, EventProcessingPolicyChain policy, String templateName, String commentForSearch) throws Exception
    {
       EventTemplate eventTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
 
@@ -195,7 +196,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -256,7 +257,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -313,7 +314,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -369,7 +370,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -430,7 +431,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -487,7 +488,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -547,7 +548,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -607,7 +608,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -663,7 +664,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -714,7 +715,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -775,7 +776,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -832,7 +833,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -892,7 +893,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -942,7 +943,7 @@ public class EppSourceObjects extends AbstractSessionTest
    {
       final NXCSession session = connectAndLogin();
       session.syncObjects();
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       checkContainerACreated(session);
       checkContainerBCreated(session);
@@ -994,4 +995,17 @@ public class EppSourceObjects extends AbstractSessionTest
 
    }
 
+   /**
+    * Remove everything the test creates on the server, whether it passed or failed
+    */
+   @AfterEach
+   void removeTestData() throws Exception
+   {
+      NXCSession session = connectAndLogin();
+      TestHelperForEpp.deleteRules(session, COMMENT_FOR_SEARCHING_RULE);
+      session.syncObjects();
+      for(String nodeName : new String[] { TEST_NODE_A, TEST_NODE_AB, TEST_NODE_B, TEST_NODE_B1 })
+         if (session.findObjectByName(nodeName) != null)
+            deleteCaListFromNode(session, nodeName);
+   }
 }

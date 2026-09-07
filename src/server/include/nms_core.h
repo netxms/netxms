@@ -552,7 +552,8 @@ private:
    SynchronizedCountingHashSet<uint32_t> m_openDataCollectionConfigurations; // List of nodes with DCI lists open
    uint32_t m_eppExpectedRuleCount;  // Number of rules expected to be uploaded
    SharedObjectArray<EPRule> m_eppRuleList;   // List of loaded EPP rules
-   uint32_t m_eppBaseVersion;        // Base version for EPP optimistic concurrency
+   uint32_t m_eppChainId;            // Chain being saved by current EPP upload
+   uint32_t m_eppBaseVersion;        // Base version of that chain for EPP optimistic concurrency
    DeletedRuleInfo *m_eppDeletedRules;  // Deleted rules info for EPP optimistic concurrency
    uint32_t m_eppDeletedRuleCount;   // Number of deleted rules
    SynchronizedHashMap<uint32_t, ServerDownloadFileInfo> m_downloadFileMap;
@@ -985,6 +986,10 @@ private:
    void compileMibs(const NXCPMessage& request);
    void getEventProcessingPolicy(const NXCPMessage& request);
    void saveEventProcessingPolicy(const NXCPMessage& request);
+   void createEppChain(const NXCPMessage& request);
+   void modifyEppChain(const NXCPMessage& request);
+   void deleteEppChain(const NXCPMessage& request);
+   void getEppChainCallers(const NXCPMessage& request);
    void processEventProcessingPolicyRecord(const NXCPMessage& request);
    void finishEPPSave(uint32_t requestId);
    void explainEventProcessingPolicyRule(const NXCPMessage& request);

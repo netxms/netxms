@@ -762,6 +762,10 @@ __PACK_END__
 #define CMD_MODIFY_AI_OPERATOR_CHECK      0x022C
 #define CMD_DELETE_AI_OPERATOR_CHECK      0x022D
 #define CMD_GET_AI_OPERATOR_INSTR_HISTORY 0x022E
+#define CMD_CREATE_EPP_CHAIN              0x022F
+#define CMD_MODIFY_EPP_CHAIN              0x0230
+#define CMD_DELETE_EPP_CHAIN              0x0231
+#define CMD_GET_EPP_CHAIN_CALLERS         0x0232
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1821,6 +1825,11 @@ __PACK_END__
 #define VID_COOLDOWN                ((uint32_t)1042)
 #define VID_RENOTIFY_INTERVAL       ((uint32_t)1043)
 #define VID_INSTRUCTIONS            ((uint32_t)1044)
+#define VID_CHAIN_ID                ((uint32_t)1045)
+#define VID_CHAIN_CALL_COUNT        ((uint32_t)1046)
+#define VID_NUM_CHAINS              ((uint32_t)1047)
+#define VID_CHAIN_GUID              ((uint32_t)1048)
+#define VID_CHAIN_ACL_COUNT         ((uint32_t)1049)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)
@@ -1830,6 +1839,11 @@ __PACK_END__
 #define VID_RESOURCE_TAG_LIST_BASE  ((uint32_t)0x7D000000)
 #define VID_CONFLICT_LIST_BASE      ((uint32_t)0x7B000000)
 #define VID_RULE_VERSION_LIST_BASE  ((uint32_t)0x7C000000)
+
+// Base values for EPP rule chains
+#define VID_CHAIN_LIST_BASE         ((uint32_t)0x48000000)
+#define VID_CHAIN_ACL_LIST_BASE     ((uint32_t)0x47000000)
+#define VID_CHAIN_CALL_LIST_BASE    ((uint32_t)0x79000000)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((uint32_t)0x00800000)

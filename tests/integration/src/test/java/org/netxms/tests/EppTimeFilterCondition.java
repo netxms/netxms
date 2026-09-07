@@ -25,9 +25,10 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.events.TimeFrame;
@@ -61,7 +62,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
     * @return EPP rule for test
     * @throws Exception
     */
-   public EventProcessingPolicyRule createTestRule(NXCSession session, AbstractObject node, EventProcessingPolicy policy, String templateName, String commentForSearch) throws Exception
+   public EventProcessingPolicyRule createTestRule(NXCSession session, AbstractObject node, EventProcessingPolicyChain policy, String templateName, String commentForSearch) throws Exception
    {
       EventTemplate eventTestTemplate = TestHelperForEpp.findOrCreateEvent(session, templateName);
       EventProcessingPolicyRule testRule = TestHelperForEpp.findOrCreateRule(session, policy, commentForSearch, eventTestTemplate, node);
@@ -127,7 +128,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
 
       EventProcessingPolicyRule testRule = createTestRule(session, node, policy, TEMPLATE_NAME, COMMENT_FOR_SEARCHING_RULE);
       Map<String, String> rulePsSetList = new HashMap<>();
@@ -181,7 +182,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       session.syncObjects();
       Calendar calendar = Calendar.getInstance();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
       int startHour = calendar.get(Calendar.HOUR_OF_DAY);
       int startMinute = calendar.get(Calendar.MINUTE);
 
@@ -250,7 +251,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
 
       int startHour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -324,7 +325,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
 
       int endHour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -393,7 +394,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
 
       boolean[] daysOfWeek = setCurrentDayOfTheWeek(calendar);
@@ -469,7 +470,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
 
       String daysOfMonth = Integer.toString(calendar.get(calendar.DAY_OF_MONTH));
@@ -536,7 +537,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
       final NXCSession session = connectAndLogin();
       session.syncObjects();
       AbstractObject node = TestHelper.findManagementServer(session);
-      EventProcessingPolicy policy = session.getEventProcessingPolicy();// To make this work, EPP rules must be closed
+      EventProcessingPolicyChain policy = session.getEventProcessingPolicyChain(0);// To make this work, EPP rules must be closed
       Calendar calendar = Calendar.getInstance();
 
       boolean[] CurrentMonthArray = setCurrentMonth(calendar);
@@ -571,7 +572,7 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       //Setting the month that will be outside the bounds of the time rule
       calendar = Calendar.getInstance();
-      int currentMonth = calendar.get(Calendar.DAY_OF_MONTH);
+      int currentMonth = calendar.get(Calendar.MONTH);
       int nextMonth = (currentMonth + 1) % 12;
 
       boolean[] nextMonthArray = new boolean[12];
@@ -592,5 +593,16 @@ public class EppTimeFilterCondition extends AbstractSessionTest
 
       assertNull(TestHelperForEpp.findPsValueByKey(session, PS_KEY));
 
+   }
+
+   /**
+    * Remove everything the test creates on the server, whether it passed or failed
+    */
+   @AfterEach
+   void removeTestData() throws Exception
+   {
+      NXCSession session = connectAndLogin();
+      TestHelperForEpp.deleteRules(session, COMMENT_FOR_SEARCHING_RULE);
+      session.deletePersistentStorageValue(PS_KEY);
    }
 }

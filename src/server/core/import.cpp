@@ -22,6 +22,7 @@
 **/
 
 #include "nxcore.h"
+#include <set>
 #include <nxcore_websvc.h>
 #include <nxcore_netconf.h>
 #include <asset_management.h>
@@ -903,9 +904,32 @@ static uint32_t ImportJsonRules(json_t *rules, json_t *root, uint32_t flags, Imp
       return RCC_SUCCESS;
    }
 
+   EventProcessingPolicy *epp = GetEventProcessingPolicy();
+   bool overwrite = (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0;
+
+   // Create chains referenced by imported rules (registry entries exported alongside the rules)
+   std::set<uint32_t> importedChains;
+   json_t *chainsArray = json_object_get(root, "chains");
+   if (json_is_array(chainsArray))
+   {
+      size_t chainIndex;
+      json_t *chainEntry;
+      json_array_foreach(chainsArray, chainIndex, chainEntry)
+      {
+         uuid chainGuid = json_object_get_uuid(chainEntry, "guid");
+         String chainName = json_object_get_string(chainEntry, "name", nullptr);
+         if (!chainGuid.isNull() && !chainName.isEmpty())
+         {
+            String chainDescription = json_object_get_string(chainEntry, "description", L"");
+            importedChains.insert(epp->importChain(chainGuid, chainName, chainDescription, overwrite));
+         }
+      }
+   }
+
    // Get rule ordering from the root JSON object
    ObjectArray<uuid> *ruleOrdering = GetRuleOrderingFromJson(root);
 
+   std::set<uint32_t> changedChains;
    size_t index;
    json_t *rule;
    json_array_foreach(rules, index, rule)
@@ -921,18 +945,43 @@ static uint32_t ImportJsonRules(json_t *rules, json_t *root, uint32_t flags, Imp
 
       context->log(NXLOG_INFO, _T("ImportJsonRules()"), _T("Processing event processing rule with GUID %s"), guid.toString().cstr());
       EPRule *newRule = new EPRule(rule, context);
-      GetEventProcessingPolicy()->importRule(newRule, (flags & CFG_IMPORT_REPLACE_EPP_RULES) != 0, ruleOrdering);
+
+      // Resolve owning chain by GUID; unresolvable rules go to the main chain
+      uuid chainGuid = json_object_get_uuid(rule, "chain");
+      if (!chainGuid.isNull())
+      {
+         int32_t chainId = epp->findChainIdByGuid(chainGuid);
+         if (chainId > 0)
+         {
+            newRule->setChainId(chainId, epp->getChainName(chainId).cstr());
+         }
+         else
+         {
+            context->log(NXLOG_WARNING, _T("ImportJsonRules()"),
+               _T("Event processing rule %s belongs to unknown chain %s - importing into the main chain"),
+               guid.toString().cstr(), chainGuid.toString().cstr());
+         }
+      }
+
+      uint32_t chainId = newRule->getChainId();
+      if (epp->importRule(newRule, overwrite, ruleOrdering))
+         changedChains.insert(chainId);
    }
 
    // Clean up rule ordering
    delete ruleOrdering;
 
    // Save policy to database
-   if (!GetEventProcessingPolicy()->saveToDB())
+   if (!epp->saveToDB())
    {
       context->log(NXLOG_ERROR, _T("ImportJsonRules()"), _T("Unable to save event processing policy rules to database"));
       return RCC_DB_FAILURE;
    }
+
+   for(uint32_t chainId : importedChains)
+      NotifyClientSessions(NX_NOTIFY_EPP_CHAIN_UPDATED, chainId);
+   for(uint32_t chainId : changedChains)
+      NotifyClientSessions(NX_NOTIFY_EPP_RULES_CHANGED, chainId);
 
    context->log(NXLOG_INFO, _T("ImportJsonRules()"), _T("Event processing rules import completed"));
    return RCC_SUCCESS;

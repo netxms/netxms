@@ -758,6 +758,7 @@ json_t *EventProcessingEffect::toJson() const
 EventRuleExecution::EventRuleExecution(const EPRule *rule) : ruleGuid(rule->getGuid()), effects(0, 16, Ownership::True)
 {
    ruleNumber = rule->getId() + 1;
+   chainId = rule->getChainId();
    ruleComments = MemCopyString(rule->getComments());
 }
 
@@ -768,6 +769,7 @@ json_t *EventRuleExecution::toJson() const
 {
    json_t *root = json_object();
    json_object_set_new(root, "rule", json_integer(ruleNumber));
+   json_object_set_new(root, "chainId", json_integer(chainId));
    json_object_set_new(root, "guid", ruleGuid.toJson());
    json_object_set_new(root, "comments", json_string_t(ruleComments));
    json_object_set_new(root, "effects", json_object_array(effects));

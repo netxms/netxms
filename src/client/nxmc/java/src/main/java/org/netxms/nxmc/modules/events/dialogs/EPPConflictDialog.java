@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.netxms.client.events.EPPConflict;
-import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -51,7 +51,7 @@ public class EPPConflictDialog extends Dialog
 
    private final I18n i18n = LocalizationHelper.getI18n(EPPConflictDialog.class);
    private List<EPPConflict> conflicts;
-   private EventProcessingPolicy policy;
+   private EventProcessingPolicyChain chain;
    private TableViewer viewer;
 
    /**
@@ -59,14 +59,14 @@ public class EPPConflictDialog extends Dialog
     *
     * @param parentShell parent shell
     * @param conflicts list of conflicts
-    * @param policy the event processing policy (for looking up rule info)
+    * @param chain the chain being saved (for looking up rule info)
     */
-   public EPPConflictDialog(Shell parentShell, List<EPPConflict> conflicts, EventProcessingPolicy policy)
+   public EPPConflictDialog(Shell parentShell, List<EPPConflict> conflicts, EventProcessingPolicyChain chain)
    {
       super(parentShell);
       setShellStyle(getShellStyle() | SWT.RESIZE);
       this.conflicts = conflicts;
-      this.policy = policy;
+      this.chain = chain;
    }
 
    /**
@@ -217,7 +217,7 @@ public class EPPConflictDialog extends Dialog
     */
    private EventProcessingPolicyRule findRule(UUID guid)
    {
-      for(EventProcessingPolicyRule rule : policy.getRules())
+      for(EventProcessingPolicyRule rule : chain.getRules())
       {
          if (rule.getGuid().equals(guid))
             return rule;
@@ -226,7 +226,7 @@ public class EPPConflictDialog extends Dialog
    }
 
    /**
-    * Find rule number by GUID.
+    * Find rule number (position within its chain) by GUID.
     *
     * @param guid rule GUID
     * @return rule number (1-based) or -1 if not found
@@ -234,9 +234,9 @@ public class EPPConflictDialog extends Dialog
    private int findRuleNumber(UUID guid)
    {
       int num = 1;
-      for(EventProcessingPolicyRule rule : policy.getRules())
+      for(EventProcessingPolicyRule r : chain.getRules())
       {
-         if (rule.getGuid().equals(guid))
+         if (r.getGuid().equals(guid))
             return num;
          num++;
       }

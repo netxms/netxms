@@ -20,7 +20,7 @@ package org.netxms.tests;
 
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.EventProcessingPolicy;
+import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 
 /**
@@ -33,7 +33,7 @@ public class EventProcessingPolicyTest extends AbstractSessionTest
 	{
 		final NXCSession session = connectAndLogin();
 
-		EventProcessingPolicy p = session.getEventProcessingPolicy();
+		EventProcessingPolicyChain p = session.getEventProcessingPolicyChain(0);
 		for(EventProcessingPolicyRule r : p.getRules())
 			System.out.println("  " + r.getGuid() + " " + r.getComments());
 	}

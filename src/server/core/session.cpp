@@ -241,6 +241,7 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_eppExpectedRuleCount = 0;
    m_eppDeletedRules = nullptr;
    m_eppDeletedRuleCount = 0;
+   m_eppChainId = 0;
    m_eppBaseVersion = 0;
    m_refCount = 0;
    m_encryptionRqId = 0;
@@ -2166,6 +2167,18 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_SAVE_EPP:
          saveEventProcessingPolicy(*request);
+         break;
+      case CMD_CREATE_EPP_CHAIN:
+         createEppChain(*request);
+         break;
+      case CMD_MODIFY_EPP_CHAIN:
+         modifyEppChain(*request);
+         break;
+      case CMD_DELETE_EPP_CHAIN:
+         deleteEppChain(*request);
+         break;
+      case CMD_GET_EPP_CHAIN_CALLERS:
+         getEppChainCallers(*request);
          break;
       case CMD_EXPLAIN_EPP_RULE:
          explainEventProcessingPolicyRule(*request);
@@ -6424,29 +6437,24 @@ void ClientSession::getEventProcessingPolicy(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   bool success = false;
-   if (checkSystemAccessRights(SYSTEM_ACCESS_EPP))
-   {
-      EventProcessingPolicy *epp = GetEventProcessingPolicy();
-      response.setField(VID_RCC, RCC_SUCCESS);
-      response.setField(VID_EPP_VERSION, epp->getVersion());
-      response.setField(VID_NUM_RULES, epp->getNumRules());
-      success = true;
+   // Without VID_CHAIN_ID the request loads the chain registry; with it, the rules of one chain
+   bool singleChain = request.isFieldExist(VID_CHAIN_ID);
+   uint32_t chainId = request.getFieldAsUInt32(VID_CHAIN_ID);
+
+   // A user without the global EPP right may still read chains they have chain-level access to
+   bool globalRights = checkSystemAccessRights(SYSTEM_ACCESS_EPP);
+   EventProcessingPolicy *epp = GetEventProcessingPolicy();
+   uint32_t rcc = singleChain ? epp->fillChainLoadResponse(&response, chainId, m_userId, globalRights) : epp->fillChainRegistry(&response, m_userId, globalRights);
+   response.setField(VID_RCC, rcc);
+   if (rcc == RCC_SUCCESS)
       writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Open event processing policy"));
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   else if (rcc == RCC_ACCESS_DENIED)
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on opening event processing policy"));
-   }
 
    sendMessage(response);
 
-   // Send policy to client
-   if (success)
-   {
-      GetEventProcessingPolicy()->sendToClient(this, request.getId());
-   }
+   if ((rcc == RCC_SUCCESS) && singleChain)
+      epp->sendChainRules(this, request.getId(), chainId);
 }
 
 /**
@@ -6456,9 +6464,27 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
+   // Each save request covers exactly one existing chain; a request without VID_CHAIN_ID is malformed
+   // rather than a main chain save, so a stale client cannot overwrite the main chain by accident
+   EventProcessingPolicy *epp = GetEventProcessingPolicy();
+   m_eppChainId = request.getFieldAsUInt32(VID_CHAIN_ID);
+   m_eppBaseVersion = request.getFieldAsUInt32(VID_BASE_VERSION);
+   if (!request.isFieldExist(VID_CHAIN_ID) || !epp->chainExists(m_eppChainId))
    {
-      m_eppBaseVersion = request.getFieldAsUInt32(VID_BASE_VERSION);
+      debugPrintf(4, L"saveEventProcessingPolicy: chain ID %s", request.isFieldExist(VID_CHAIN_ID) ? L"refers to unknown chain" : L"missing");
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      sendMessage(response);
+      return;
+   }
+
+   // Global EPP right grants edit on every chain; otherwise chain-level Edit is required
+   // (the main chain requires the global right)
+   bool allowed = (m_systemAccessRights & SYSTEM_ACCESS_EPP) != 0;
+   if (!allowed && (m_eppChainId != 0))
+      allowed = (epp->getEffectiveChainRights(m_eppChainId, m_userId) & EPP_CHAIN_ACCESS_EDIT) != 0;
+
+   if (allowed)
+   {
       m_eppExpectedRuleCount = request.getFieldAsUInt32(VID_NUM_RULES);
       m_eppRuleList.clear();
 
@@ -6487,7 +6513,7 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
       {
          InterlockedOr(&m_flags, CSF_EPP_UPLOAD);
          response.setField(VID_RCC, RCC_SUCCESS);
-         debugPrintf(5, _T("Accepted EPP upload request for %u rules (base version %u)"), m_eppExpectedRuleCount, m_eppBaseVersion);
+         debugPrintf(5, _T("Accepted EPP upload request for %u rules in chain %u (base version %u)"), m_eppExpectedRuleCount, m_eppChainId, m_eppBaseVersion);
          sendMessage(response);
       }
    }
@@ -6509,7 +6535,7 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
    {
       if (m_eppRuleList.size() < m_eppExpectedRuleCount)
       {
-         m_eppRuleList.add(make_shared<EPRule>(request));
+         m_eppRuleList.add(make_shared<EPRule>(request, GetEventProcessingPolicy()->getChainName(m_eppChainId).cstr()));
          if (m_eppRuleList.size() == m_eppExpectedRuleCount)
          {
             InterlockedAnd(&m_flags, ~CSF_EPP_UPLOAD);
@@ -6526,7 +6552,7 @@ void ClientSession::processEventProcessingPolicyRecord(const NXCPMessage& reques
 }
 
 /**
- * Finish EPP save with optimistic concurrency merge
+ * Finish EPP save of one chain with optimistic concurrency merge. Other chains are not touched.
  */
 void ClientSession::finishEPPSave(uint32_t requestId)
 {
@@ -6536,30 +6562,76 @@ void ClientSession::finishEPPSave(uint32_t requestId)
    wchar_t userName[MAX_USER_NAME];
    ResolveUserId(m_userId, userName, true);
 
-   ObjectArray<EPPConflict> conflicts(0, 16, Ownership::True);
-   uint32_t newVersion;
-
    EventProcessingPolicy *epp = GetEventProcessingPolicy();
    json_t *oldVersion = epp->toJson();
 
-   uint32_t rcc = epp->saveWithMerge(
-      m_eppBaseVersion, m_eppRuleList,
-      m_eppDeletedRuleCount, m_eppDeletedRules,
-      userGuid, userName, &conflicts, &newVersion);
+   // Every uploaded rule must belong to the chain being saved
+   uint32_t rcc = RCC_SUCCESS;
+   for (int i = 0; (i < m_eppRuleList.size()) && (rcc == RCC_SUCCESS); i++)
+   {
+      uint32_t chainId = m_eppRuleList.get(i)->getChainId();
+      if (chainId != m_eppChainId)
+      {
+         debugPrintf(4, L"finishEPPSave: rule %s belongs to chain %u but chain %u is being saved",
+            m_eppRuleList.get(i)->getGuid().toString().cstr(), chainId, m_eppChainId);
+         rcc = RCC_INVALID_ARGUMENT;
+      }
+   }
+
+   // Every chain call must target an existing chain (the target may have been deleted since the client loaded the rules)
+   for (int i = 0; (i < m_eppRuleList.size()) && (rcc == RCC_SUCCESS); i++)
+   {
+      const EPRule *rule = m_eppRuleList.get(i);
+      for (int j = 0; (j < rule->getChainCallCount()) && (rcc == RCC_SUCCESS); j++)
+      {
+         if (!epp->chainExists(rule->getChainCall(j)))
+         {
+            debugPrintf(4, L"finishEPPSave: rule %s calls unknown chain [%u]", rule->getGuid().toString().cstr(), rule->getChainCall(j));
+            rcc = RCC_INVALID_ARGUMENT;
+         }
+      }
+   }
+
+   // Without the global EPP right, a rule may only call chains the user can read
+   if ((rcc == RCC_SUCCESS) && !checkSystemAccessRights(SYSTEM_ACCESS_EPP))
+   {
+      for (int i = 0; (i < m_eppRuleList.size()) && (rcc == RCC_SUCCESS); i++)
+      {
+         const EPRule *rule = m_eppRuleList.get(i);
+         for (int j = 0; (j < rule->getChainCallCount()) && (rcc == RCC_SUCCESS); j++)
+         {
+            if (!(epp->getEffectiveChainRights(rule->getChainCall(j), m_userId) & EPP_CHAIN_ACCESS_READ))
+            {
+               debugPrintf(4, L"finishEPPSave: rule %s calls chain [%u] which user has no read access to",
+                  rule->getGuid().toString().cstr(), rule->getChainCall(j));
+               writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on adding event processing policy chain call"));
+               rcc = RCC_ACCESS_DENIED;
+            }
+         }
+      }
+   }
+
+   ObjectArray<EPPConflict> conflicts(0, 16, Ownership::True);
+   uint32_t newVersion = 0;
+   if (rcc == RCC_SUCCESS)
+   {
+      rcc = epp->saveWithMerge(m_eppChainId, m_eppBaseVersion, m_eppRuleList,
+         m_eppDeletedRuleCount, m_eppDeletedRules, userGuid, userName, &conflicts, &newVersion);
+   }
 
    response.setField(VID_RCC, rcc);
+   if ((rcc == RCC_SUCCESS) || (rcc == RCC_EPP_CONFLICT))
+      response.setField(VID_EPP_VERSION, newVersion);   // New chain version on success, current server version on conflict
 
    if (rcc == RCC_SUCCESS)
    {
-      response.setField(VID_EPP_VERSION, newVersion);
-      epp->fillRuleVersions(&response);  // Send updated rule versions for client sync
+      epp->fillRuleVersions(&response, m_eppChainId);  // Send updated rule versions for client sync
       json_t *newVersionJson = epp->toJson();
       writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldVersion, newVersionJson, _T("Event processing policy updated"));
       json_decref(newVersionJson);
    }
    else if (rcc == RCC_EPP_CONFLICT)
    {
-      response.setField(VID_EPP_VERSION, newVersion);
       response.setField(VID_CONFLICT_COUNT, static_cast<uint32_t>(conflicts.size()));
       for (int i = 0; i < conflicts.size(); i++)
       {
@@ -6574,6 +6646,144 @@ void ClientSession::finishEPPSave(uint32_t requestId)
    m_eppRuleList.clear();
    MemFreeAndNull(m_eppDeletedRules);
    m_eppDeletedRuleCount = 0;
+
+   sendMessage(response);
+}
+
+/**
+ * Read chain ACL from request into given array
+ */
+static void ReadEppChainAcl(const NXCPMessage& request, StructArray<ACL_ELEMENT> *acl)
+{
+   uint32_t aclSize = request.getFieldAsUInt32(VID_ACL_SIZE);
+   for (uint32_t i = 0; i < aclSize; i++)
+   {
+      ACL_ELEMENT element;
+      element.userId = request.getFieldAsUInt32(VID_ACL_USER_BASE + i);
+      element.accessRights = request.getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i);
+      acl->add(element);
+   }
+}
+
+/**
+ * Create event processing policy chain. Response carries ID and GUID of the new chain.
+ */
+void ClientSession::createEppChain(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
+   {
+      wchar_t name[64];
+      request.getFieldAsString(VID_NAME, name, 64);
+      wchar_t *description = request.getFieldAsString(VID_DESCRIPTION);
+      StructArray<ACL_ELEMENT> acl;
+      ReadEppChainAcl(request, &acl);
+
+      uint32_t chainId;
+      uuid chainGuid;
+      uint32_t rcc = GetEventProcessingPolicy()->createChain(name, description, acl, &chainId, &chainGuid);
+      if (rcc == RCC_SUCCESS)
+      {
+         response.setField(VID_CHAIN_ID, chainId);
+         response.setField(VID_CHAIN_GUID, chainGuid);
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Event processing policy chain \"%s\" created", name);
+      }
+      response.setField(VID_RCC, rcc);
+      MemFree(description);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on event processing policy chain creation");
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Modify name and description of event processing policy chain; ACL is replaced when VID_ACL_SIZE is present
+ * and kept otherwise. The main chain (ID 0) cannot be modified.
+ */
+void ClientSession::modifyEppChain(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
+   {
+      wchar_t name[64];
+      request.getFieldAsString(VID_NAME, name, 64);
+      wchar_t *description = request.getFieldAsString(VID_DESCRIPTION);
+      StructArray<ACL_ELEMENT> acl;
+      ReadEppChainAcl(request, &acl);
+
+      uint32_t rcc = GetEventProcessingPolicy()->modifyChain(request.getFieldAsUInt32(VID_CHAIN_ID), name, description,
+            request.isFieldExist(VID_ACL_SIZE) ? &acl : nullptr);
+      if (rcc == RCC_SUCCESS)
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Event processing policy chain \"%s\" modified", name);
+      response.setField(VID_RCC, rcc);
+      MemFree(description);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on event processing policy chain change");
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Delete event processing policy chain with its rules. Calls to the chain are removed from other rules;
+ * response lists the new version of every chain that lost a call.
+ */
+void ClientSession::deleteEppChain(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
+   {
+      uint32_t chainId = request.getFieldAsUInt32(VID_CHAIN_ID);
+      StructArray<EPPChainVersion> updatedChains;
+      uint32_t rcc = GetEventProcessingPolicy()->deleteChain(chainId, &updatedChains);
+      if (rcc == RCC_SUCCESS)
+      {
+         writeAuditLog(AUDIT_SYSCFG, true, 0, L"Event processing policy chain [%u] deleted", chainId);
+         response.setField(VID_NUM_CHAINS, static_cast<uint32_t>(updatedChains.size()));
+         uint32_t fieldId = VID_CHAIN_LIST_BASE;
+         for (int i = 0; i < updatedChains.size(); i++)
+         {
+            response.setField(fieldId++, updatedChains.get(i)->chainId);
+            response.setField(fieldId++, updatedChains.get(i)->version);
+         }
+      }
+      response.setField(VID_RCC, rcc);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on event processing policy chain deletion");
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get rules calling event processing policy chain
+ */
+void ClientSession::getEppChainCallers(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (m_systemAccessRights & SYSTEM_ACCESS_EPP)
+   {
+      response.setField(VID_RCC, GetEventProcessingPolicy()->fillChainCallers(&response, request.getFieldAsUInt32(VID_CHAIN_ID)));
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on reading event processing policy chain callers");
+   }
 
    sendMessage(response);
 }
@@ -11901,7 +12111,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             }
             json_object_set_new(root, "rules", rules);
 
-            // Export rule ordering only if there are rules to export
+            // Export rule ordering and referenced chain registry entries only if there are rules to export
             if (json_array_size(rules) > 0)
             {
                json_t *ruleOrdering = epp->exportRuleOrdering();
@@ -11913,6 +12123,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
                {
                   json_object_set_new(root, "ruleOrdering", json_array());
                }
+               json_object_set_new(root, "chains", epp->exportChains(rules));
             }
 
             // Export scripts

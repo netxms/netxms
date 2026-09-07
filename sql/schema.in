@@ -1759,7 +1759,8 @@ CREATE TABLE actions
  */
 CREATE TABLE event_policy
 (
-  rule_id integer not null,   // Rule number
+  chain_id integer not null,  // Owning rule chain (0 = main chain)
+  rule_id integer not null,   // Rule number (position within chain)
   rule_guid varchar(36) not null,
   flags integer not null,
   comments SQL_TEXT null,
@@ -1783,7 +1784,42 @@ CREATE TABLE event_policy
   modified_by_guid varchar(36) null,
   modified_by_name varchar(63) null,
   modification_time integer null,
-  PRIMARY KEY(rule_id)
+  PRIMARY KEY(chain_id,rule_id)
+) TABLE_TYPE;
+
+/**
+ * Event processing policy rule chains
+ */
+CREATE TABLE event_policy_chain
+(
+  chain_id integer not null,
+  chain_guid varchar(36) not null,
+  name varchar(63) not null,
+  description varchar(255) null,
+  PRIMARY KEY(chain_id)
+) TABLE_TYPE;
+
+/**
+ * Event processing policy rule chain calls (rule -> chains it enters)
+ */
+CREATE TABLE policy_chain_call_list
+(
+  chain_id integer not null,        // Owning chain of the calling rule
+  rule_id integer not null,         // Calling rule (position within chain)
+  target_chain_id integer not null,  // Chain entered when the rule matches
+  sequence_number integer not null, // Order in which a rule's called chains run
+  PRIMARY KEY(chain_id,rule_id,sequence_number)
+) TABLE_TYPE;
+
+/**
+ * Event processing policy rule chain access control list
+ */
+CREATE TABLE policy_chain_acl
+(
+  chain_id integer not null,
+  user_id integer not null,
+  access_rights integer not null,   // Bitmask: read, edit
+  PRIMARY KEY(chain_id,user_id)
 ) TABLE_TYPE;
 
 /**
@@ -1791,10 +1827,11 @@ CREATE TABLE event_policy
  */
 CREATE TABLE policy_source_list
 (
+  chain_id integer not null,
   rule_id integer not null,
   object_id integer not null,
   exclusion char(1) not null,
-  PRIMARY KEY(rule_id,object_id,exclusion)
+  PRIMARY KEY(chain_id,rule_id,object_id,exclusion)
 ) TABLE_TYPE;
 
 /**
@@ -1802,9 +1839,10 @@ CREATE TABLE policy_source_list
  */
 CREATE TABLE policy_event_list
 (
+  chain_id integer not null,
   rule_id integer not null,
   event_code integer not null,
-  PRIMARY KEY(rule_id,event_code)
+  PRIMARY KEY(chain_id,rule_id,event_code)
 ) TABLE_TYPE;
 
 /**
@@ -1812,11 +1850,12 @@ CREATE TABLE policy_event_list
  */
 CREATE TABLE policy_time_frame_list
 (
+  chain_id integer not null,
   rule_id integer not null,
   time_frame_id integer not null,
   date_filter SQL_INT64 not null,
   time_filter integer not null,
-  PRIMARY KEY(rule_id,time_frame_id)
+  PRIMARY KEY(chain_id,rule_id,time_frame_id)
 ) TABLE_TYPE;
 
 /**
@@ -1824,6 +1863,7 @@ CREATE TABLE policy_time_frame_list
  */
 CREATE TABLE policy_action_list
 (
+  chain_id integer not null,
   record_id integer not null,
   rule_id integer not null,
   action_id integer not null,
@@ -1832,7 +1872,7 @@ CREATE TABLE policy_action_list
   blocking_timer_key varchar(127) null,
   snooze_time varchar(127) null,
   active char(1) not null,
-  PRIMARY KEY(record_id,rule_id)
+  PRIMARY KEY(chain_id,record_id,rule_id)
 ) TABLE_TYPE;
 
 /**
@@ -1840,9 +1880,10 @@ CREATE TABLE policy_action_list
  */
 CREATE TABLE policy_timer_cancellation_list
 (
+  chain_id integer not null,
   rule_id integer not null,
   timer_key varchar(127) not null,
-  PRIMARY KEY(rule_id,timer_key)
+  PRIMARY KEY(chain_id,rule_id,timer_key)
 ) TABLE_TYPE;
 
 /**
@@ -1850,11 +1891,12 @@ CREATE TABLE policy_timer_cancellation_list
  */
 CREATE TABLE policy_pstorage_actions
 (
+  chain_id integer not null,
   rule_id integer not null,
   ps_key varchar(127) not null,
   action char(1) not null,
   value varchar(2000) null,
-  PRIMARY KEY(rule_id,ps_key,action)
+  PRIMARY KEY(chain_id,rule_id,ps_key,action)
 ) TABLE_TYPE;
 
 /**
@@ -1862,11 +1904,12 @@ CREATE TABLE policy_pstorage_actions
  */
 CREATE TABLE policy_cattr_actions
 (
+  chain_id integer not null,
   rule_id integer not null,
   attribute_name varchar(127) not null,
   action char(1) not null,
   value varchar(2000) null,
-  PRIMARY KEY(rule_id,attribute_name,action)
+  PRIMARY KEY(chain_id,rule_id,attribute_name,action)
 ) TABLE_TYPE;
 
 /*
@@ -1966,13 +2009,14 @@ CREATE TABLE alarm_category_acl
 ) TABLE_TYPE;
 
 /**
- * Alarm-category map
+ * Alarm categories assigned by event processing policy rules
  */
 CREATE TABLE alarm_category_map
 (
-  alarm_id integer not null,
+  chain_id integer not null,
+  rule_id integer not null,
   category_id integer not null,
-  PRIMARY KEY(alarm_id,category_id)
+  PRIMARY KEY(chain_id,rule_id,category_id)
 ) TABLE_TYPE;
 
 /**

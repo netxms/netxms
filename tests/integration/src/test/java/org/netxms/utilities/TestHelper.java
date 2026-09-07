@@ -18,6 +18,8 @@
  */
 package org.netxms.utilities;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -366,6 +368,34 @@ public class TestHelper
     * @return
     * @throws Exception
     */
+   /**
+    * Server call expected to fail
+    */
+   public interface FailingCall
+   {
+      void run() throws Exception;
+   }
+
+   /**
+    * Assert that server call fails with given RCC
+    *
+    * @param expectedRcc expected RCC
+    * @param call server call
+    */
+   public static void assertRcc(int expectedRcc, FailingCall call) throws Exception
+   {
+      try
+      {
+         call.run();
+      }
+      catch(NXCException e)
+      {
+         assertEquals(expectedRcc, e.getErrorCode(), "unexpected RCC");
+         return;
+      }
+      fail("Expected RCC " + expectedRcc);
+   }
+
    public static User findOrCreateUser(NXCSession session, String name, String password) throws Exception
    {
       session.syncUserDatabase();

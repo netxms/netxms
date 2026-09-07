@@ -98,6 +98,8 @@ public class EventProcessingPolicyRule
    private String aiAgentInstructions;
    private String comments;
    private int ruleNumber;
+   private int chainId;
+   private List<Integer> chainCalls;
 
    // Errors in rule configuration as detected by server (bit mask of ERROR_xxx constants)
    private int errors;
@@ -146,6 +148,8 @@ public class EventProcessingPolicyRule
       comments = "";
       ruleNumber = 0;
       errors = 0;
+      chainId = 0;
+      chainCalls = new ArrayList<Integer>(0);
 
       // New rules are inherently modified
       version = 0;
@@ -157,7 +161,7 @@ public class EventProcessingPolicyRule
 
    /**
     * Copy constructor
-    * 
+    *
     * @param src source rule
     */
    public EventProcessingPolicyRule(EventProcessingPolicyRule src)
@@ -198,6 +202,8 @@ public class EventProcessingPolicyRule
       comments = src.comments;
       ruleNumber = src.ruleNumber;
       errors = src.errors; // Copy has same references as source rule, so it has same errors
+      chainId = src.chainId;
+      chainCalls = new ArrayList<Integer>(src.chainCalls);
 
       // Copy is essentially a new rule (has new GUID)
       version = 0;
@@ -226,7 +232,7 @@ public class EventProcessingPolicyRule
       for(int i = 0; i < frameCount; i++)
       {
          timeFrames.add(new TimeFrame(msg.getFieldAsInt32(fieldId++), msg.getFieldAsInt64(fieldId++)));
-      }  
+      }
       flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
       alarmKey = msg.getFieldAsString(NXCPCodes.VID_ALARM_KEY);
       alarmMessage = msg.getFieldAsString(NXCPCodes.VID_ALARM_MESSAGE);
@@ -264,6 +270,12 @@ public class EventProcessingPolicyRule
 
       this.ruleNumber = ruleNumber;
       errors = msg.getFieldAsInt32(NXCPCodes.VID_RULE_ERRORS);
+
+      chainId = msg.getFieldAsInt32(NXCPCodes.VID_CHAIN_ID);
+      int chainCallCount = msg.getFieldAsInt32(NXCPCodes.VID_CHAIN_CALL_COUNT);
+      chainCalls = new ArrayList<Integer>(chainCallCount);
+      for(int i = 0; i < chainCallCount; i++)
+         chainCalls.add(msg.getFieldAsInt32(NXCPCodes.VID_CHAIN_CALL_LIST_BASE + i));
 
       // Read version tracking fields
       version = msg.getFieldAsInt32(NXCPCodes.VID_RULE_VERSION);
@@ -327,6 +339,12 @@ public class EventProcessingPolicyRule
 
       msg.setFieldsFromStringMap(customAttributeStorageSet, NXCPCodes.VID_CUSTOM_ATTR_SET_LIST_BASE, NXCPCodes.VID_CUSTOM_ATTR_SET_COUNT);
       msg.setFieldsFromStringCollection(customAttributeStorageDelete, NXCPCodes.VID_CUSTOM_ATTR_DEL_LIST_BASE, NXCPCodes.VID_CUSTOM_ATTR_DEL_COUNT);
+
+      msg.setFieldInt32(NXCPCodes.VID_CHAIN_ID, chainId);
+      msg.setFieldInt32(NXCPCodes.VID_CHAIN_CALL_COUNT, chainCalls.size());
+      fieldId = NXCPCodes.VID_CHAIN_CALL_LIST_BASE;
+      for(Integer calledChainId : chainCalls)
+         msg.setFieldInt32(fieldId++, calledChainId);
 
       // Send version tracking info
       msg.setFieldInt32(NXCPCodes.VID_RULE_VERSION, version);
@@ -492,7 +510,7 @@ public class EventProcessingPolicyRule
 
    /**
     * Remove specific alarm category from categories list
-    * 
+    *
     * @param categoryId alarm category ID
     */
    public void removeAlarmCategory(Long categoryId)
@@ -532,7 +550,7 @@ public class EventProcessingPolicyRule
 
    /**
     * Get name of root cause analysis script.
-    * 
+    *
     * @return name of root cause analysis script (can be null or empty string if not set)
     */
    public String getRcaScriptName()
@@ -757,6 +775,48 @@ public class EventProcessingPolicyRule
    public void setRuleNumber(int ruleNumber)
    {
       this.ruleNumber = ruleNumber;
+   }
+
+   /**
+    * Get ID of the chain this rule belongs to (0 = main chain).
+    *
+    * @return chain ID
+    */
+   public int getChainId()
+   {
+      return chainId;
+   }
+
+   /**
+    * Set ID of the chain this rule belongs to.
+    *
+    * @param chainId chain ID (0 = main chain)
+    */
+   public void setChainId(int chainId)
+   {
+      this.chainId = chainId;
+      this.modified = true;
+   }
+
+   /**
+    * Get IDs of chains entered when this rule matches, in execution order.
+    *
+    * @return list of chain IDs
+    */
+   public List<Integer> getChainCalls()
+   {
+      return chainCalls;
+   }
+
+   /**
+    * Set chains entered when this rule matches.
+    *
+    * @param chainCalls list of chain IDs in execution order
+    */
+   public void setChainCalls(List<Integer> chainCalls)
+   {
+      this.chainCalls = chainCalls;
+      this.modified = true;
    }
 
    /**

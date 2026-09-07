@@ -78,6 +78,7 @@ public class SharedIcons
 	public static ImageDescriptor RESTART;
    public static ImageDescriptor RESTORE;
 	public static ImageDescriptor SAVE;
+   public static ImageDescriptor SAVE_ALL;
    public static ImageDescriptor SAVE_AS;
    public static ImageDescriptor SAVE_AS_IMAGE;
    public static ImageDescriptor SEND;
@@ -149,6 +150,7 @@ public class SharedIcons
 	public static Image IMG_RESTART;
    public static Image IMG_RESTORE;
 	public static Image IMG_SAVE;
+   public static Image IMG_SAVE_ALL;
    public static Image IMG_SAVE_AS;
    public static Image IMG_SAVE_AS_IMAGE;
    public static Image IMG_SEND;
@@ -225,6 +227,7 @@ public class SharedIcons
       RESTART = ResourceManager.getImageDescriptor("icons/restart.gif");
       RESTORE = ResourceManager.getImageDescriptor("icons/restore.png");
       SAVE = ResourceManager.getImageDescriptor("icons/save.png");
+      SAVE_ALL = ResourceManager.getImageDescriptor("icons/save-all.png");
       SAVE_AS = ResourceManager.getImageDescriptor("icons/save-as.png");
       SAVE_AS_IMAGE = ResourceManager.getImageDescriptor("icons/image_obj.png");
       SEND = ResourceManager.getImageDescriptor("icons/send.png");
@@ -296,6 +299,7 @@ public class SharedIcons
 		IMG_RESTART = RESTART.createImage();
       IMG_RESTORE = RESTORE.createImage();
 		IMG_SAVE = SAVE.createImage();
+      IMG_SAVE_ALL = SAVE_ALL.createImage();
       IMG_SAVE_AS = SAVE_AS.createImage();
       IMG_SAVE_AS_IMAGE = SAVE_AS_IMAGE.createImage();
       IMG_SEND = SEND.createImage();
