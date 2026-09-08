@@ -1658,6 +1658,15 @@ static void TestParseTimestamp()
    AssertEquals(static_cast<int64_t>(ParseTimestamp("1700000000")), static_cast<int64_t>(1700000000));
    AssertEquals(static_cast<int64_t>(ParseTimestamp("1970-01-01T00:00:00Z")), static_cast<int64_t>(0));
    AssertEquals(static_cast<int64_t>(ParseTimestamp("2023-11-14T22:13:20Z")), static_cast<int64_t>(1700000000));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("2023-11-14T22:13:20.500Z")), static_cast<int64_t>(1700000000));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("2023-11-15T01:13:20+03:00")), static_cast<int64_t>(1700000000));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("2023-11-15T01:13:20+0300")), static_cast<int64_t>(1700000000));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("2023-11-14T17:43:20-04:30")), static_cast<int64_t>(1700000000));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("2023-11-14 22:13:20Z")), static_cast<int64_t>(1700000000));
+
+   // ISO 8601 without zone designator is local time (round trip through local formatter)
+   AssertEquals(static_cast<int64_t>(ParseTimestamp(FormatISO8601LocalTimestamp(1700000000).substr(0, 19).c_str())), static_cast<int64_t>(1700000000));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp(FormatISO8601LocalTimestamp(1700000000).c_str())), static_cast<int64_t>(1700000000));
 
    // Relative timestamps (clock may move by a second between the calls)
    time_t now = time(nullptr);
@@ -1667,6 +1676,8 @@ static void TestParseTimestamp()
    AssertTrue((t >= now - 3600) && (t <= now - 3599));
    t = ParseTimestamp("+30");   // no suffix means minutes
    AssertTrue((t >= now + 1800) && (t <= now + 1801));
+   t = ParseTimestamp("-1w");
+   AssertTrue((t >= now - 604800) && (t <= now - 604799));
 
    // Invalid input returns default value
    AssertEquals(static_cast<int64_t>(ParseTimestamp("abc")), static_cast<int64_t>(0));
@@ -1675,6 +1686,8 @@ static void TestParseTimestamp()
    AssertEquals(static_cast<int64_t>(ParseTimestamp("", -1)), static_cast<int64_t>(-1));
    AssertEquals(static_cast<int64_t>(ParseTimestamp("-", -1)), static_cast<int64_t>(-1));
    AssertEquals(static_cast<int64_t>(ParseTimestamp("+", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("2023-11-14T22:13:20X", -1)), static_cast<int64_t>(-1));
+   AssertEquals(static_cast<int64_t>(ParseTimestamp("2023-11-14T22:13:20+3", -1)), static_cast<int64_t>(-1));
 
    // Epoch is a valid input and is not affected by default value
    AssertEquals(static_cast<int64_t>(ParseTimestamp("0", -1)), static_cast<int64_t>(0));

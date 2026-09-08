@@ -84,24 +84,13 @@ uint32_t Context::getQueryParameterAsUInt32(const char *name, uint32_t defaultVa
 }
 
 /**
- * Get query parameter as time value
+ * Get query parameter as time value. Accepts all formats supported by ParseTimestamp()
+ * (UNIX timestamp, ISO 8601, relative offsets like "-1h", "now").
  */
 time_t Context::getQueryParameterAsTime(const char *name, time_t defaultValue) const
 {
    const char *v = getQueryParameter(name);
-   if (v == nullptr)
-      return defaultValue;
-
-   char *eptr;
-   int64_t n = strtoll(v, &eptr, 10);
-   if (*eptr == 0)
-      return static_cast<time_t>(n);   // Assume UNIX timestamp
-
-   struct tm t;
-   if (strptime(v, "%Y-%m-%dT%H:%M:%SZ", &t) == nullptr)
-      return defaultValue;
-
-   return timegm(&t);
+   return (v != nullptr) ? ParseTimestamp(v, defaultValue) : defaultValue;
 }
 
 /**

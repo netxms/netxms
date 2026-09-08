@@ -410,9 +410,7 @@ void AIOperatorInstance::execute()
       systemPrompt.append(m_instructions);
    }
 
-   std::string prompt("Perform one monitoring iteration now according to your instructions.\n<current_time>");
-   prompt.append(FormatISO8601Timestamp(now));
-   prompt.append("</current_time>\n<iteration>");
+   std::string prompt("Perform one monitoring iteration now according to your instructions.\n<iteration>");
    char buffer[32];
    prompt.append(IntegerToString(m_iteration, buffer));
    prompt.append("</iteration>\n<interval_bounds>min=");
@@ -2710,7 +2708,6 @@ void InitAIOperators()
       "- <current_focus> tag contains the focus you set on the previous iteration\n"
       "- <watch_list> tag contains the list of items you decided to watch\n"
       "- <memento> tag contains data preserved from previous iteration (if any)\n"
-      "- <current_time> tag contains current server time in ISO 8601 format\n"
       "- <interval_bounds> tag contains allowed range for next execution delay in seconds\n"
       "- <checks> tag (if present) lists your standing checks with their state\n"
       "- <triggered_checks> tag (if present) lists standing checks with 'wake' action that fired since your last iteration, "
