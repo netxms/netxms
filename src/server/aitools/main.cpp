@@ -76,6 +76,16 @@ std::string F_GetNodeHardwareComponents(json_t *arguments, uint32_t userId);
 std::string F_GetNodeInterfaces(json_t *arguments, uint32_t userId);
 std::string F_GetNodeSoftwarePackages(json_t *arguments, uint32_t userId);
 std::string F_GetNotificationChannels(json_t *arguments, uint32_t userId);
+std::string F_GetNodeTrafficContext(json_t *arguments, uint32_t userId);
+std::string F_GetNodeTrafficL7Breakdown(json_t *arguments, uint32_t userId);
+std::string F_GetNodeTrafficPeers(json_t *arguments, uint32_t userId);
+std::string F_GetObservationPointActiveHosts(json_t *arguments, uint32_t userId);
+std::string F_GetObservationPointDSCPBreakdown(json_t *arguments, uint32_t userId);
+std::string F_GetObservationPointL7Breakdown(json_t *arguments, uint32_t userId);
+std::string F_GetObservationPointStatistics(json_t *arguments, uint32_t userId);
+std::string F_GetObservationPointTopTalkers(json_t *arguments, uint32_t userId);
+std::string F_GetObservationPoints(json_t *arguments, uint32_t userId);
+std::string F_GetTrafficObservers(json_t *arguments, uint32_t userId);
 std::string F_GetObject(json_t *arguments, uint32_t userId);
 std::string F_GetObjectAIData(json_t *arguments, uint32_t userId);
 std::string F_ListObjectAIDataKeys(json_t *arguments, uint32_t userId);
@@ -756,6 +766,92 @@ static void CreateAssistantSkillList()
                { "filter", "optional filter to select specific packages by name or description (partial names allowed)" }
             },
             F_GetNodeSoftwarePackages)
+      }
+   );
+
+   RegisterAIAssistantSkill(
+      "traffic-analysis",
+      "Provides access to network traffic analyzer data collected through traffic observers (ntopng and similar backends). Use this skill to see which hosts a node communicates with, per-application (L7) traffic breakdown, top talkers, active hosts, throughput, drops and retransmits on an observed network segment. Intended for root cause analysis, anomaly investigation, and identifying unexpected traffic sources or destinations.",
+      "@traffic-analysis.md",
+      {
+         AssistantFunction(
+            "get-traffic-observers",
+            "List configured traffic observers (traffic analyzer instances) with connection state, backend product and version, and supported capabilities. Call this first to check whether traffic data is available at all.",
+            {},
+            F_GetTrafficObservers),
+         AssistantFunction(
+            "get-observation-points",
+            "List observation points (monitored interfaces or segments of a traffic analyzer) with state, scope, local networks, sampling rate, and number of matched nodes.",
+            {
+               { "observer", "optional name or ID of a traffic observer to restrict the list" }
+            },
+            F_GetObservationPoints),
+         AssistantFunction(
+            "get-node-traffic-context",
+            "Check whether a node is seen by any observation point and return current host-level traffic counters (bytes, packets, active flows, TCP retransmits, backend alerts) from each point that observes it. Use this as the entry point when investigating a node.",
+            {
+               { "object", "name or ID of a node (mandatory)" }
+            },
+            F_GetNodeTrafficContext),
+         AssistantFunction(
+            "get-node-traffic-peers",
+            "Get hosts the node is currently communicating with (conversation peers), with role (client or server), bytes sent and received, and flow count. Peers that are monitored nodes are annotated with node ID and name. Returns most active peers first.",
+            {
+               { "object", "name or ID of a node (mandatory)" },
+               { "point", "optional name or ID of an observation point when the node is seen by several" },
+               { "limit", "maximum number of peers to return per observation point (default 50)", "integer" }
+            },
+            F_GetNodeTrafficPeers),
+         AssistantFunction(
+            "get-node-traffic-l7-breakdown",
+            "Get per-application (layer 7 protocol) breakdown of the node's traffic: bytes sent and received, packets, and flows per detected application.",
+            {
+               { "object", "name or ID of a node (mandatory)" },
+               { "point", "optional name or ID of an observation point when the node is seen by several" },
+               { "limit", "maximum number of applications to return (default 50)", "integer" }
+            },
+            F_GetNodeTrafficL7Breakdown),
+         AssistantFunction(
+            "get-observation-point-statistics",
+            "Get current aggregate statistics of an observation point: throughput in and out, cumulative bytes and packets, active hosts and flows, dropped packets, and TCP retransmits.",
+            {
+               { "point", "name or ID of an observation point (mandatory)" }
+            },
+            F_GetObservationPointStatistics),
+         AssistantFunction(
+            "get-observation-point-top-talkers",
+            "Get hosts generating most traffic on an observation point. Hosts that are monitored nodes are annotated with node ID and name.",
+            {
+               { "point", "name or ID of an observation point (mandatory)" },
+               { "limit", "maximum number of hosts to return (default 50)", "integer" }
+            },
+            F_GetObservationPointTopTalkers),
+         AssistantFunction(
+            "get-observation-point-l7-breakdown",
+            "Get per-application (layer 7 protocol) traffic breakdown for the whole observation point.",
+            {
+               { "point", "name or ID of an observation point (mandatory)" },
+               { "limit", "maximum number of applications to return (default 50)", "integer" }
+            },
+            F_GetObservationPointL7Breakdown),
+         AssistantFunction(
+            "get-observation-point-dscp-breakdown",
+            "Get traffic breakdown by DSCP (QoS) class for an observation point.",
+            {
+               { "point", "name or ID of an observation point (mandatory)" },
+               { "limit", "maximum number of classes to return (default 50)", "integer" }
+            },
+            F_GetObservationPointDSCPBreakdown),
+         AssistantFunction(
+            "get-observation-point-active-hosts",
+            "List hosts currently active on an observation point with IP, VLAN, MAC, name, first and last seen time, and the matched NetXMS node if any. Use the filter to narrow large host sets; unmatched hosts are devices seen on the wire that are not monitored by NetXMS.",
+            {
+               { "point", "name or ID of an observation point (mandatory)" },
+               { "filter", "optional IP address, CIDR subnet, or substring of host or node name" },
+               { "unmatched_only", "set to true to return only hosts not matched to any monitored node", "boolean" },
+               { "limit", "maximum number of hosts to return (default 50)", "integer" }
+            },
+            F_GetObservationPointActiveHosts)
       }
    );
 
