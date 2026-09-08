@@ -24,6 +24,39 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.36 to 70.37
+ */
+static bool H_UpgradeFromV36()
+{
+   // Add SYSTEM_ACCESS_HTTP_REQUESTS (bit 59 = 0x800000000000000 = 576460752303423488) to Admins group
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+576460752303423488 WHERE id=1073741825 AND BITAND(system_access, 576460752303423488)=0"));
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+576460752303423488 WHERE id=1073741825 AND (CAST(system_access AS bigint) & CAST(576460752303423488 AS bigint))=0"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+576460752303423488 WHERE id=1073741825 AND (system_access & 576460752303423488)=0"));
+   }
+
+   CHK_EXEC(CreateConfigParam(L"NXSL.HttpRequests.Enabled", L"1",
+      L"Enable/disable HTTP client classes (HttpRequest, HttpSession) in server-side NXSL scripts.",
+      nullptr, 'B', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"NXSL.HttpRequests.DefaultTimeout", L"30",
+      L"Timeout for HTTP requests issued from NXSL scripts when script does not set one.",
+      L"seconds", 'I', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"NXSL.HttpRequests.MaxTimeout", L"300",
+      L"Maximum timeout for HTTP requests issued from NXSL scripts (larger values set by scripts are reduced to this limit).",
+      L"seconds", 'I', true, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(37));
+   return true;
+}
+
+/**
  * Upgrade from 70.35 to 70.36
  */
 static bool H_UpgradeFromV35()
@@ -1201,6 +1234,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 36, 70, 37, H_UpgradeFromV36 },
    { 35, 70, 36, H_UpgradeFromV35 },
    { 34, 70, 35, H_UpgradeFromV34 },
    { 33, 70, 34, H_UpgradeFromV33 },

@@ -219,6 +219,9 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NotificationLog.RetentionTime','90','90',1,0,'I','Retention time in days for the records in notification log. All records older than specified will be deleted by housekeeping process.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NXSL.EnableContainerFunctions','1','1',1,0,'B','Enable/disable server-side NXSL functions for containers (such as CreateContainer, BindObject, etc.).','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NXSL.EnableFileIOFunctions','0','0',1,1,'B','Enable/disable server-side NXSL functions for file I/O (such as OpenFile, DeleteFile, etc.).','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NXSL.HttpRequests.Enabled','1','1',1,0,'B','Enable/disable HTTP client classes (HttpRequest, HttpSession) in server-side NXSL scripts.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NXSL.HttpRequests.DefaultTimeout','30','30',1,0,'I','Timeout for HTTP requests issued from NXSL scripts when script does not set one.','seconds');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('NXSL.HttpRequests.MaxTimeout','300','300',1,0,'I','Maximum timeout for HTTP requests issued from NXSL scripts (larger values set by scripts are reduced to this limit).','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Scripts.RestrictWriteAccess','1','1',1,0,'B','Restrict write access for transformation, filter, predicate, and analysis scripts (DCI transformations, autobind filters, thresholds, conditions, RCA, etc.). When enabled, such scripts cannot modify objects.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.AccessPoints.ContainerAutoBind','0','0',1,0,'B','Enable/disable container auto binding for access points.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.AccessPoints.RetentionTime','72','72',1,0,'I','Retention time for disappeared access points.','hours');
@@ -596,7 +599,7 @@ INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description
  * Default "Admins" group
  */
 INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description,guid,created)
-   VALUES (1073741825, 'Admins', 576460752303423487, '*', 0, 'Default administrative group',
+   VALUES (1073741825, 'Admins', 1152921504606846975, '*', 0, 'Default administrative group',
            '00000000-0000-0000-0000-000000000000',0
           );
 

@@ -694,6 +694,7 @@ static void LoadGlobalConfig()
       g_flags |= AF_ENABLE_NXSL_FILE_IO_FUNCTIONS;
       nxlog_debug_tag(_T("nxsl"), 3, _T("NXSL file I/O functions enabled"));
    }
+   LoadNXSLHttpRequestsConfiguration();
    if (ConfigReadBoolean(_T("Scripts.RestrictWriteAccess"), true))
    {
       g_flags |= AF_RESTRICT_SCRIPT_WRITES;

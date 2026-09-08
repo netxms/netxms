@@ -194,6 +194,7 @@ ntopng		ntopng traffic connector
 
 nxsagent	Session agent (nxsagent)
 
+nxsl.http	NXSL HTTP client classes (HttpRequest, HttpSession)
 nxsl.security	NXSL security context access validation
 nxsl.ssh	NXSL SSH session operations
 

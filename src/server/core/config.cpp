@@ -861,6 +861,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       UpdateServerFlag(AF_ENABLE_NXSL_CONTAINER_FUNCTIONS, value);
    }
+   else if (!wcsncmp(name, L"NXSL.HttpRequests.", 18))
+   {
+      LoadNXSLHttpRequestsConfiguration();
+   }
    else if (!wcscmp(name, L"Scripts.RestrictWriteAccess"))
    {
       UpdateServerFlag(AF_RESTRICT_SCRIPT_WRITES, value);

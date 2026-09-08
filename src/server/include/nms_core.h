@@ -1714,6 +1714,7 @@ void OnWindowsEventsConfigurationChange(const TCHAR *name, const TCHAR *value);
 void InitializeOtelLogParser();
 void OnOtelLogsConfigurationChange(const TCHAR *name, const TCHAR *value);
 void OnAIConfigurationChange(const TCHAR *name, const TCHAR *value);
+void LoadNXSLHttpRequestsConfiguration();
 
 void EscapeString(StringBuffer &str);
 

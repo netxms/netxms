@@ -43,6 +43,9 @@ int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, 
 
 int F_GetServerQueueNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
+int F_HttpRequest(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_HttpSession(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
 /**
  * Calculate downtime for given period
  * Arguments: object/objectId, tag, periodStart, periodEnd
@@ -2619,6 +2622,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
 	{ "map", F_map, -1 },
    { "mapList", F_mapList, -1 },
+   { "__new@HttpRequest", F_HttpRequest, -1 },
+   { "__new@HttpSession", F_HttpSession, 0 },
    { "AgentExecuteCommand", F_AgentExecuteCommand, -1, true },
    { "AgentExecuteCommandWithOutput", F_AgentExecuteCommandWithOutput, -1, true },
 	{ "AgentReadList", F_AgentReadList, 2, true },

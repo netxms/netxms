@@ -837,6 +837,59 @@ public:
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
+struct HttpClientSettings;
+
+/**
+ * Base class for NXSL classes "HttpRequest" and "HttpSession" (common client settings)
+ */
+class NXSL_HttpClientClass : public NXSL_Class
+{
+protected:
+   NXSL_Value *getSettingsAttr(NXSL_VM *vm, const HttpClientSettings *settings, const NXSL_Identifier& attr);
+   bool setSettingsAttr(HttpClientSettings *settings, const NXSL_Identifier& attr, NXSL_Value *value);
+
+public:
+   NXSL_HttpClientClass();
+};
+
+/**
+ * NXSL "HttpRequest" class
+ */
+class NXSL_HttpRequestClass : public NXSL_HttpClientClass
+{
+public:
+   NXSL_HttpRequestClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
+ * NXSL "HttpResponse" class
+ */
+class NXSL_HttpResponseClass : public NXSL_Class
+{
+public:
+   NXSL_HttpResponseClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
+ * NXSL "HttpSession" class
+ */
+class NXSL_HttpSessionClass : public NXSL_HttpClientClass
+{
+public:
+   NXSL_HttpSessionClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual bool setAttr(NXSL_Object *object, const NXSL_Identifier& attr, NXSL_Value *value) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -940,6 +993,9 @@ extern NXSL_CollectorClass g_nxslCollectorClass;
 extern NXSL_ContainerClass g_nxslContainerClass;
 extern NXSL_CoolingZoneClass g_nxslCoolingZoneClass;
 extern NXSL_FacilityClass g_nxslFacilityClass;
+extern NXSL_HttpRequestClass g_nxslHttpRequestClass;
+extern NXSL_HttpResponseClass g_nxslHttpResponseClass;
+extern NXSL_HttpSessionClass g_nxslHttpSessionClass;
 extern NXSL_PowerDomainClass g_nxslPowerDomainClass;
 extern NXSL_DataPointClass g_nxslDataPointClass;
 extern NXSL_DciClass g_nxslDciClass;

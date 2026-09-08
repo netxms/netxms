@@ -83,6 +83,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, i18n.tr("Configure event templates")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EPP, i18n.tr("Edit event processing policy")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EXTERNAL_INTEGRATION, i18n.tr("External tool integration account")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_HTTP_REQUESTS, i18n.tr("Execute HTTP requests from scripts")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_IMPORT_CONFIGURATION, i18n.tr("Import configuration")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_2FA_METHODS, i18n.tr("Manage two-factor authentication methods")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, i18n.tr("Configure server actions")));
