@@ -401,6 +401,10 @@ DataCollectionError DCTable::processNewValue(Timestamp timestamp, const shared_p
  */
 DataCollectionError DCTable::transform(const shared_ptr<Table>& value)
 {
+   // Values of computed DCIs are written by server-side engines in final form, transformation script is not applied
+   if (m_source == DS_COMPUTED)
+      return DCE_SUCCESS;
+
    if (m_transformationScript == nullptr)
    {
       // Return error if transformation script is present but cannot be compiled

@@ -752,13 +752,14 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
          if (generateEvent && IsEventSource(owner->getObjectClass()))
          {
             static uint32_t eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-            static const wchar_t *originName[16] =
+            static const wchar_t *originName[] =
             {
                L"Internal", L"NetXMS Agent", L"SNMP",
                L"Web Service", L"Push", L"WinPerf",
                L"iLO", L"Script", L"SSH", L"MQTT",
                L"Device Driver", L"Modbus", L"EtherNet/IP",
-               L"Cloud Connector", L"OTLP", L"Computed"
+               L"Cloud Connector", L"OTLP", L"Traffic Observer",
+               L"NETCONF", L"Computed"
             };
             EventBuilder(eventCode[status], owner->getId())
                .dci(m_id)
@@ -766,7 +767,7 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
                .param(L"metric", m_name)
                .param(L"description", m_description)
                .param(L"originCode", m_source)
-               .param(L"origin", originName[m_source])
+               .param(L"origin", (m_source <= DS_COMPUTED) ? originName[m_source] : L"Unknown")
                .post();
          }
       }
