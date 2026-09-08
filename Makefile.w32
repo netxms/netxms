@@ -173,7 +173,7 @@ TESTS_DIRS = \
     tests/agent/unit/extcheck \
     tests/agent/unit/weather
 ifeq ($(BUILD_SERVER),1)
-TESTS_DIRS += tests/test-libnxsrv tests/test-ai-checks tests/test-authtokens
+TESTS_DIRS += tests/test-libnxsrv tests/test-ai-checks tests/test-authtokens tests/test-physical-placement
 endif
 endif
 

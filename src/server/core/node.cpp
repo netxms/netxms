@@ -11733,6 +11733,90 @@ uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *sessio
          return rcc;
    }
 
+   json_t *physicalPlacement = json_object_get(json, "physicalPlacement");
+   if (physicalPlacement != nullptr)
+   {
+      if (!json_is_object(physicalPlacement))
+         return RCC_INVALID_ARGUMENT;
+
+      // Validate the nested chassis geometry - both its own type and every key inside it -
+      // before anything is committed
+      json_t *chassisPlacement = json_object_get(physicalPlacement, "chassisPlacement");
+      if (chassisPlacement != nullptr)
+      {
+         if (!json_is_null(chassisPlacement) && !json_is_object(chassisPlacement))
+            return RCC_INVALID_ARGUMENT;
+         if (!json_is_null(chassisPlacement))
+         {
+            uint32_t rcc = ValidateChassisPlacementJson(chassisPlacement);
+            if (rcc != RCC_SUCCESS)
+               return rcc;
+         }
+      }
+
+      // ModifyPhysicalPlacementFromJson calls NetObj::isChild, which read locks the child list of
+      // this object and of every descendant. Holding the property lock across that call would
+      // establish properties -> child list, the reverse of the order the configuration poll uses
+      // when it scans interface addresses for EtherNet/IP, and a thread waiting for the child list
+      // write lock would deadlock the two. Stage every field into a local and drop the property
+      // lock for the duration of the call, the same way the primary host name check above does;
+      // the group still commits all or nothing because nothing is written until it succeeds.
+      uint32_t containerId = m_physicalContainer;
+      int16_t position = m_rackPosition;
+      int16_t height = m_rackHeight;
+      RackOrientation orientation = m_rackOrientation;
+      uuid imageFront = m_rackImageFront;
+      uuid imageRear = m_rackImageRear;
+      PhysicalPlacementRef placementRef = { &containerId, &position, &height, &orientation, &imageFront, &imageRear };
+      unlockProperties(); // removing possible deadlock
+      uint32_t rcc = ModifyPhysicalPlacementFromJson(physicalPlacement, this, placementRef, true);
+      lockProperties();
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+      m_physicalContainer = containerId;
+      m_rackPosition = position;
+      m_rackHeight = height;
+      m_rackOrientation = orientation;
+      m_rackImageFront = imageFront;
+      m_rackImageRear = imageRear;
+
+      // Relink at the point the container id is committed, exactly as modifyFromMessageInternal
+      // does. The caller marks the object as modified regardless of the result code, so the new
+      // container id reaches the database even when a later property of the same document is
+      // rejected; a rebind deferred until after that result code would then be skipped, leaving
+      // the node naming a container it is not a child of.
+      if (json_object_get(physicalPlacement, "containerId") != nullptr)
+         ThreadPoolExecute(g_mainThreadPool, this, &Node::updatePhysicalContainerBinding, m_physicalContainer);
+
+      if (chassisPlacement != nullptr)
+      {
+         if (json_is_null(chassisPlacement))
+         {
+            MemFree(m_chassisPlacementConf);
+            m_chassisPlacementConf = nullptr;
+         }
+         else
+         {
+            // Merge onto the current geometry so a partial update does not zero the rest. A node
+            // with no stored geometry has no orientation to merge onto, and an orientation of 0
+            // matches neither the front nor the rear chassis view, so the node would be linked
+            // under the chassis but drawn in neither. Seed the base with the front view, the
+            // same default the Java ChassisPlacement class uses.
+            json_t *merged = chassisPlacementToJsonLocked();
+            if (merged == nullptr)
+            {
+               merged = json_object();
+               json_object_set_new(merged, "orientation", json_integer(FRONT));
+            }
+            json_object_update(merged, chassisPlacement);
+            char *xml = ChassisPlacementToXml(merged);
+            json_decref(merged);
+            MemFree(m_chassisPlacementConf);
+            m_chassisPlacementConf = xml;
+         }
+      }
+   }
+
    return super::modifyFromJSONInternal(json, session);
 }
 
@@ -16003,6 +16087,16 @@ void Node::updatePhysicalContainerBinding(uint32_t containerId)
          nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): incorrect object %s [%d] class"),
                      m_name, m_id, container->getName(), containerId);
       }
+      else if (isChild(containerId))
+      {
+         // Re-checked here because the front door check runs when the container id is accepted,
+         // while this task runs later on the main pool: a controller binding request accepted in
+         // between can make this node a parent of the container, and linking it now would close a
+         // cycle that clearInheritedAccessCache walks until the stack is gone. ChangeObjectBinding
+         // guards the generic bind path the same way.
+         nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): container %s [%d] is a descendant, binding skipped"),
+                     m_name, m_id, container->getName(), containerId);
+      }
       else
       {
          nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): add binding %s [%d]"), m_name, m_id, container->getName(), container->getId());
@@ -16671,6 +16765,14 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "physicalContainerId", json_integer(m_physicalContainer));
    json_object_set_new(root, "rackImageFront", m_rackImageFront.toJson());
    json_object_set_new(root, "rackImageRear", m_rackImageRear.toJson());
+
+   // Physical placement property group. Same shape as the group accepted on the write path,
+   // and always emitted so a client never has to tell "absent" from "unplaced".
+   PhysicalPlacementRef placementRef = { &m_physicalContainer, &m_rackPosition, &m_rackHeight, &m_rackOrientation, &m_rackImageFront, &m_rackImageRear };
+   json_t *physicalPlacement = PhysicalPlacementToJson(placementRef);
+   json_t *chassisPlacement = chassisPlacementToJsonLocked();
+   json_object_set_new(physicalPlacement, "chassisPlacement", (chassisPlacement != nullptr) ? json_incref(chassisPlacement) : json_null());
+   json_object_set_new(root, "physicalPlacement", physicalPlacement);
    json_object_set_new(root, "syslogMessageCount", json_integer(m_syslogMessageCount));
    json_object_set_new(root, "snmpTrapCount", json_integer(m_snmpTrapCount));
    if (includeSensitiveData)
@@ -16708,9 +16810,10 @@ json_t *Node::toJson(bool includeSensitiveData)
    json_object_set_new(root, "snmp", snmpConfigToJson(includeSensitiveData));
    json_object_set_new(root, "agent", agentConfigToJson(includeSensitiveData));
 
-   json_t *decodedChassisPlacement = getChassisPlacement();
-   if (decodedChassisPlacement != nullptr)
-      json_object_set_new(root, "chassisPlacementConfig", decodedChassisPlacement);
+   // chassisPlacement was decoded once above; hand that same reference to the legacy
+   // top-level key rather than parsing the XML a second time
+   if (chassisPlacement != nullptr)
+      json_object_set_new(root, "chassisPlacementConfig", chassisPlacement);
 
    m_topologyMutex.lock();
    shared_ptr<VlanList> vlans = m_vlans;
@@ -16749,22 +16852,17 @@ int Node::getRackPlacement(json_t *element) const
 }
 
 /**
- * Parse chassis placement configuration into JSON object.
- * Returns nullptr if this node is not placed in a chassis (no placement configuration).
+ * Parse chassis placement configuration into JSON object. Must be called with object
+ * properties locked. Returns nullptr if this node is not placed in a chassis (no placement
+ * configuration).
  */
-json_t *Node::getChassisPlacement() const
+json_t *Node::chassisPlacementToJsonLocked() const
 {
-   lockProperties();
    if ((m_chassisPlacementConf == nullptr) || (*m_chassisPlacementConf == 0))
-   {
-      unlockProperties();
       return nullptr;
-   }
 
    Config config;
-   bool parsed = config.loadXmlConfigFromMemory(m_chassisPlacementConf, strlen(m_chassisPlacementConf), nullptr, "placement", false);
-   unlockProperties();
-   if (!parsed)
+   if (!config.loadXmlConfigFromMemory(m_chassisPlacementConf, strlen(m_chassisPlacementConf), nullptr, "placement", false))
       return nullptr;
 
    json_t *placement = json_object();
@@ -16778,6 +16876,18 @@ json_t *Node::getChassisPlacement() const
    json_object_set_new(placement, "positionWidth", json_integer(config.getValueAsInt(L"/positionWidth", 0)));
    json_object_set_new(placement, "positionWidthUnits", json_integer(config.getValueAsInt(L"/positionWidthUnits", 0)));
    json_object_set_new(placement, "orientation", json_integer(config.getValueAsInt(L"/oritentaiton", 0)));
+   return placement;
+}
+
+/**
+ * Parse chassis placement configuration into JSON object.
+ * Returns nullptr if this node is not placed in a chassis (no placement configuration).
+ */
+json_t *Node::getChassisPlacement() const
+{
+   lockProperties();
+   json_t *placement = chassisPlacementToJsonLocked();
+   unlockProperties();
    return placement;
 }
 

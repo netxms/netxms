@@ -79,6 +79,29 @@ int H_ObjectLocationUpdate(Context *context)
 }
 
 /**
+ * Handler for PATCH /v1/objects/:object-id/physical-placement - rack or chassis placement.
+ * Requires modify access on the placed object only, matching the NXCP path (placing a device
+ * into a rack does not require modify access on the rack).
+ */
+int H_ObjectPhysicalPlacementUpdate(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForModify(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   if ((object->getObjectClass() != OBJECT_NODE) && (object->getObjectClass() != OBJECT_CHASSIS))
+   {
+      wchar_t message[256];
+      nx_swprintf(message, 256, L"Property group physicalPlacement does not apply to object class %s", object->getObjectClassName());
+      context->setErrorResponse(message);
+      return 400;
+   }
+
+   return ApplyJsonPatch(context, object.get(), "physicalPlacement", L"Modified physical placement of object %s [%u]");
+}
+
+/**
  * Handler for PATCH /v1/objects/:object-id/status-calculation -
  * status calculation/propagation algorithms and thresholds.
  */

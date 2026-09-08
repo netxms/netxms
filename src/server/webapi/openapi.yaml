@@ -3883,6 +3883,24 @@ paths:
                     the node's interfaces, that address must not already be used by another
                     node or subnet (this check is skipped for an external gateway). A name that
                     does not resolve is accepted.
+                physicalPlacement:
+                  allOf:
+                    - $ref: '#/components/schemas/PhysicalPlacement'
+                  description: >-
+                    Node and Chassis only. Placement in a rack or chassis. Prefer
+                    `PATCH /v1/objects/{object-id}/physical-placement`, which lets a client
+                    detect whether the server supports this at all.
+                controllerId:
+                  type: integer
+                  nullable: true
+                  description: >-
+                    Chassis only. ID of the node that manages the chassis. This is
+                    separate from `physicalPlacement`: it says which node controls the
+                    chassis, not where the chassis is placed. `null` or `0` clears the
+                    controller and unbinds the chassis from it. A non-zero value is
+                    rejected with `400` if it does not resolve to an existing node, and
+                    with `409` if that node is a descendant of the chassis, which would
+                    create a loop.
       responses:
         '200':
           description: Object updated; full updated object returned.
@@ -3904,7 +3922,8 @@ paths:
         '409':
           description: >-
             IP address resolved from the new primary host name is already used by another
-            node or subnet.
+            node or subnet, or the requested `physicalPlacement.containerId` or
+            `controllerId` would create a loop in the object tree.
       security:
         - BearerAuth: []
       tags:
@@ -4040,6 +4059,75 @@ paths:
           description: User does not have modify access to the object
         '404':
           description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/physical-placement:
+    patch:
+      operationId: updateObjectPhysicalPlacement
+      summary: Update object placement in a rack or chassis
+      description: |
+        Place a node or chassis into a rack, place a node into a chassis, move one that is
+        already placed, or remove it from its container. Body uses JSON merge-patch
+        semantics: properties present are applied and properties omitted are left untouched.
+        `null` clears the value only for `containerId`, `imageFront`, `imageRear` and
+        `chassisPlacement`; sending `null` for `position`, `height` or `orientation` is
+        rejected with `400`. Setting `containerId` to `null` or `0` removes the object from
+        its container.
+
+        A node may be placed in a rack or in a chassis; a chassis may only be placed in a
+        rack. When the container is a rack, `position` and `height` must leave the object
+        entirely within the rack's unit range. That range is checked only when the document
+        supplies `containerId`, `position` or `height`, so an object already stored at an
+        out-of-range position stays patchable in other respects. Placing an object into a
+        rack therefore requires a valid `position`, either sent in the same document or
+        already stored: an object that has never been placed has `position` 0 and must be
+        given one, otherwise the request is rejected with `400`. Overlapping placements are
+        **not** rejected: the model has always allowed them and some installations rely on it.
+
+        Requires modify access on the object being placed. Modify access on the target
+        container is not required, matching the behaviour of the native client protocol.
+
+        The same property group is also accepted as the `physicalPlacement` property of
+        `PATCH /v1/objects/{object-id}`. Clients should prefer this sub-resource: a server
+        that predates it answers `404`, which is a usable feature check, whereas the
+        top-level patch silently ignores property groups it does not recognise.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhysicalPlacement'
+      responses:
+        '200':
+          description: Placement updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: >-
+            Malformed request body, invalid value (height below 1, orientation outside
+            0-2, position leaving the object outside the rack), a malformed image GUID,
+            a `containerId` that does not exist or is not a rack or chassis, or property
+            group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+        '409':
+          description: >-
+            The requested `containerId` is a descendant of the object being placed, so
+            the placement would create a loop in the object tree.
       security:
         - BearerAuth: []
       tags:
@@ -11872,7 +11960,10 @@ components:
         image:
           type: string
           format: uuid
-          description: GUID of the image representing the component
+          nullable: true
+          description: >-
+            GUID of the image representing the component. `null` clears it. A string that is
+            not a well formed GUID is rejected with `400`.
         height:
           type: integer
           description: Component height
@@ -11900,6 +11991,58 @@ components:
         orientation:
           type: integer
           description: Orientation (1=front, 2=rear)
+    PhysicalPlacement:
+      type: object
+      description: >-
+        Placement of an object inside a rack or a chassis. Returned on nodes and chassis, and
+        accepted as a merge-patch on the same objects: properties present are applied and
+        properties omitted are left untouched. `null` clears the value only for the nullable
+        properties `containerId`, `imageFront`, `imageRear` and `chassisPlacement`; sending
+        `null` for `position`, `height` or `orientation` is rejected with `400`. Always
+        present on read, with `containerId` 0 for an object that is not placed anywhere.
+      properties:
+        containerId:
+          type: integer
+          nullable: true
+          description: >-
+            ID of the rack or chassis holding the object. `null` or `0` removes it from its
+            current container. A node may be placed in a rack or a chassis; a chassis may
+            only be placed in a rack. A container that is a descendant of the object being
+            placed is rejected with `409`, since it would create a loop in the object tree.
+        position:
+          type: integer
+          description: >-
+            Rack unit occupied by the object, counted from 1. Meaningful only when the
+            container is a rack. With top-to-bottom rack numbering this is the object's
+            topmost unit, otherwise its bottommost unit. Must leave the object entirely
+            within the rack.
+        height:
+          type: integer
+          minimum: 1
+          description: Object height in rack units.
+        orientation:
+          type: integer
+          enum: [0, 1, 2]
+          description: Mounting orientation (0 = fill, 1 = front, 2 = rear).
+        imageFront:
+          type: string
+          format: uuid
+          nullable: true
+          description: Image library GUID used to draw the object's front face. `null` clears it.
+        imageRear:
+          type: string
+          format: uuid
+          nullable: true
+          description: Image library GUID used to draw the object's rear face. `null` clears it.
+        chassisPlacement:
+          allOf:
+            - $ref: '#/components/schemas/ChassisPlacement'
+          type: object
+          nullable: true
+          description: >-
+            Node only. Geometry of the node within its parent chassis. Merge-patched against
+            the current geometry, so a partial document leaves the remaining members alone;
+            `null` removes the geometry entirely.
     InetAddress:
       type: object
       properties:
@@ -15567,6 +15710,12 @@ components:
         name:
           type: string
           description: Object name
+        physicalPlacement:
+          allOf:
+            - $ref: '#/components/schemas/PhysicalPlacement'
+          description: >-
+            Placement in a rack or chassis. Present on nodes and chassis; `containerId` is 0
+            when the object is not placed anywhere.
         responsibleUsers:
           type: array
           description: Users or groups responsible for the object (the object's own list; entries inherited from parent objects are not included).
