@@ -4385,7 +4385,10 @@ paths:
     get:
       operationId: getDciCurrentValues
       summary: Get current DCI values
-      description: Retrieve current values for all data collection items (DCIs) of a given object.
+      description: |
+        Retrieve current values for all data collection items (DCIs) of a given object.
+        Table DCIs are listed with `dataType` 6 (null) and an empty `value` - the table content itself is not returned,
+        use `/v1/objects/{object-id}/data-collection/{dci-id}/table-value` to retrieve it.
       parameters:
         - name: object-id
           in: path
@@ -4577,6 +4580,62 @@ paths:
           description: Object or DCI with given ID does not exist
         '500':
           description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
+  /v1/objects/{object-id}/data-collection/{dci-id}/table-value:
+    get:
+      operationId: getDciTableValue
+      summary: Get last collected value of table DCI
+      description: |
+        Retrieve last collected value of a table DCI (Data Collection Item) together with its collection timestamp.
+        If no value has been collected yet, both `timestamp` and `table` are `null`.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: Object ID
+        - name: dci-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            description: DCI (Data Collection Item) ID
+      responses:
+        '200':
+          description: Last collected table value retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: DCI ID
+                  description:
+                    type: string
+                    description: DCI description
+                  timestamp:
+                    type: string
+                    format: date-time
+                    nullable: true
+                    description: Collection timestamp of the returned value (ISO 8601), `null` if no value collected yet
+                  table:
+                    nullable: true
+                    allOf:
+                      - $ref: '#/components/schemas/TableData'
+                    description: Last collected table value, `null` if no value collected yet
+        '400':
+          description: Object is not data collection target or DCI is not a table DCI
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object or DCI with given ID does not exist
       security:
         - BearerAuth: []
       tags:

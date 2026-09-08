@@ -1033,7 +1033,7 @@ public:
    int getColumnDataType(const TCHAR *name) const;
    virtual int getThresholdSeverity() const override;
    const ObjectArray<DCTableColumn>& getColumns() const { return *m_columns; }
-   shared_ptr<Table> getLastValue();
+   shared_ptr<Table> getLastValue(Timestamp *timestamp = nullptr);
    void getThresholdIdList(IntegerArray<uint32_t> *idList) const;
    int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
    DCTableThreshold *getThreshold(int index) const { return (m_thresholds != nullptr && index >= 0 && index < m_thresholds->size()) ? m_thresholds->get(index) : nullptr; }

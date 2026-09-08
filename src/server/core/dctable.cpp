@@ -1006,12 +1006,15 @@ int DCTable::getColumnDataType(const TCHAR *name) const
 }
 
 /**
- * Get last collected value
+ * Get last collected value. If timestamp pointer is not null, timestamp of the last collected value is
+ * stored there together with the value (both read under lock, so they always match).
  */
-shared_ptr<Table> DCTable::getLastValue()
+shared_ptr<Table> DCTable::getLastValue(Timestamp *timestamp)
 {
    lock();
    shared_ptr<Table> value = m_lastValue;
+   if (timestamp != nullptr)
+      *timestamp = m_lastValueTimestamp;
    unlock();
    return value;
 }
