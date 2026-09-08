@@ -303,9 +303,9 @@ static bool H_UpgradeFromV24()
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"interfaces", L"last_known_speed"));
 
-   // Add interface speed parameters to interface state change events
+   // Add interface speed parameters to interface state change events.
+   // Message is only updated if it still has the default text, so customized messages are preserved.
    CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
-      L"message='Interface \"%2\" changed state to UP (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
       L"description='Generated when interface goes up.\r\n"
       L"Please note that source of event is node, not an interface itself.\r\n"
       L"Parameters:\r\n"
@@ -317,9 +317,10 @@ static bool H_UpgradeFromV24()
       L"   6) interfaceSpeed - Interface speed in bits per second\r\n"
       L"   7) interfaceSpeedText - Interface speed (human-readable)'"
       L" WHERE event_code=4"));   // SYS_IF_UP
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET message='Interface \"%2\" changed state to UP (IP Addr: %3/%4, IfIndex: %5, Speed: %7)'"
+      L" WHERE event_code=4 AND message='Interface \"%2\" changed state to UP (IP Addr: %3/%4, IfIndex: %5)'"));
 
    CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
-      L"message='Interface \"%2\" changed state to DOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
       L"description='Generated when interface goes down.\r\n"
       L"Please note that source of event is node, not an interface itself.\r\n"
       L"Parameters:\r\n"
@@ -331,9 +332,10 @@ static bool H_UpgradeFromV24()
       L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
       L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
       L" WHERE event_code=5"));   // SYS_IF_DOWN
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET message='Interface \"%2\" changed state to DOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)'"
+      L" WHERE event_code=5 AND message='Interface \"%2\" changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)'"));
 
    CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
-      L"message='Interface \"%2\" changed state to UNKNOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
       L"description='Generated when interface goes to unknown state.\r\n"
       L"Please note that source of event is node, not an interface itself.\r\n"
       L"Parameters:\r\n"
@@ -345,9 +347,10 @@ static bool H_UpgradeFromV24()
       L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
       L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
       L" WHERE event_code=45"));   // SYS_IF_UNKNOWN
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET message='Interface \"%2\" changed state to UNKNOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)'"
+      L" WHERE event_code=45 AND message='Interface \"%2\" changed state to UNKNOWN (IP Addr: %3/%4, IfIndex: %5)'"));
 
    CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
-      L"message='Interface \"%2\" disabled (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
       L"description='Generated when interface administratively disabled.\r\n"
       L"Please note that source of event is node, not an interface itself.\r\n"
       L"Parameters:\r\n"
@@ -359,9 +362,10 @@ static bool H_UpgradeFromV24()
       L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
       L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
       L" WHERE event_code=46"));   // SYS_IF_DISABLED
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET message='Interface \"%2\" disabled (IP Addr: %3/%4, IfIndex: %5, Speed: %7)'"
+      L" WHERE event_code=46 AND message='Interface \"%2\" disabled (IP Addr: %3/%4, IfIndex: %5)'"));
 
    CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
-      L"message='Interface \"%2\" is testing (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
       L"description='Generated when interface goes to testing state.\r\n"
       L"Please note that source of event is node, not an interface itself.\r\n"
       L"Parameters:\r\n"
@@ -373,9 +377,10 @@ static bool H_UpgradeFromV24()
       L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
       L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
       L" WHERE event_code=47"));   // SYS_IF_TESTING
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET message='Interface \"%2\" is testing (IP Addr: %3/%4, IfIndex: %5, Speed: %7)'"
+      L" WHERE event_code=47 AND message='Interface \"%2\" is testing (IP Addr: %3/%4, IfIndex: %5)'"));
 
    CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
-      L"message='Interface \"%2\" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
       L"description='Generated when interface goes up but it''s expected state set to DOWN.\r\n"
       L"Please note that source of event is node, not an interface itself.\r\n"
       L"Parameters:\r\n"
@@ -387,9 +392,10 @@ static bool H_UpgradeFromV24()
       L"   6) interfaceSpeed - Interface speed in bits per second\r\n"
       L"   7) interfaceSpeedText - Interface speed (human-readable)'"
       L" WHERE event_code=62"));   // SYS_IF_UNEXPECTED_UP
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET message='Interface \"%2\" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5, Speed: %7)'"
+      L" WHERE event_code=62 AND message='Interface \"%2\" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5)'"));
 
    CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET "
-      L"message='Interface \"%2\" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)',"
       L"description='Generated when interface goes down and it''s expected state is DOWN.\r\n"
       L"Please note that source of event is node, not an interface itself.\r\n"
       L"Parameters:\r\n"
@@ -401,6 +407,8 @@ static bool H_UpgradeFromV24()
       L"   6) interfaceSpeed - Last known interface speed in bits per second\r\n"
       L"   7) interfaceSpeedText - Last known interface speed (human-readable)'"
       L" WHERE event_code=63"));   // SYS_IF_EXPECTED_DOWN
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET message='Interface \"%2\" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5, Speed: %7)'"
+      L" WHERE event_code=63 AND message='Interface \"%2\" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)'"));
 
    CHK_EXEC(SetMinorSchemaVersion(25));
    return true;
