@@ -225,7 +225,7 @@ private:
    Mutex m_writeLock;
    bool m_outbound;
    std::atomic<bool> m_authenticated;
-   std::atomic<bool> m_stopped;
+   std::atomic<int32_t> m_stopped;  // word-sized: byte atomic RMW (exchange) not available on all POWER targets
    BYTE m_challenge[CLUSTER_SECRET_LENGTH];
    time_t m_lastMessageTime;
    THREAD m_thread;
@@ -242,7 +242,7 @@ public:
 
    bool sendMessage(const NXCPMessage& msg);
    bool isAuthenticated() const { return m_authenticated.load(); }
-   bool isStopped() const { return m_stopped.load(); }
+   bool isStopped() const { return m_stopped.load() != 0; }
 };
 
 /**
@@ -262,7 +262,7 @@ HAChannelSession::HAChannelSession(SOCKET socket, SSL_CTX *context, SSL *ssl, bo
    m_ssl = ssl;
    m_outbound = outbound;
    m_authenticated = false;
-   m_stopped = false;
+   m_stopped = 0;
    m_lastMessageTime = time(nullptr);
    m_thread = INVALID_THREAD_HANDLE;
    GenerateRandomBytes(m_challenge, CLUSTER_SECRET_LENGTH);
@@ -307,7 +307,7 @@ void HAChannelSession::start()
  */
 void HAChannelSession::stop()
 {
-   if (m_stopped.exchange(true))
+   if (m_stopped.exchange(1) != 0)
       return;
    m_authenticated = false;
    if (m_socket != INVALID_SOCKET)
@@ -319,7 +319,7 @@ void HAChannelSession::stop()
  */
 bool HAChannelSession::sendMessage(const NXCPMessage& msg)
 {
-   if (m_stopped.load())
+   if (m_stopped.load() != 0)
       return false;
 
    NXCP_MESSAGE *data = msg.serialize(false);
@@ -361,7 +361,7 @@ void HAChannelSession::readLoop()
 {
    ThreadSetName("HAChannel");
    TlsMessageReceiver receiver(m_socket, m_ssl, &m_sslLock, 8192, MAX_CHANNEL_MSG_SIZE);
-   while(!m_stopped.load() && !s_shutdown.load())
+   while((m_stopped.load() == 0) && !s_shutdown.load())
    {
       MessageReceiverResult result;
       NXCPMessage *msg = receiver.readMessage(5000, &result);
@@ -387,7 +387,7 @@ void HAChannelSession::readLoop()
       }
    }
    m_authenticated = false;
-   m_stopped = true;
+   m_stopped = 1;
 }
 
 /**

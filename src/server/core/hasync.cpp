@@ -46,15 +46,16 @@
  * truncated past our watermark, unsupported object class). A dirty standby
  * must not activate from its warm state; the activation path restarts the
  * process into a fresh standby instead.
+ * Word-sized: byte-sized atomic RMW (exchange) is not available on all POWER targets (AIX XL C++)
  */
-static std::atomic<bool> s_dirty(false);
+static std::atomic<int32_t> s_dirty(0);
 
 /**
  * Mark warm state as dirty
  */
 void HASyncSetDirty(const wchar_t *reason)
 {
-   if (!s_dirty.exchange(true))
+   if (s_dirty.exchange(1) == 0)
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Standby warm state marked as inconsistent (%s); this node will rebuild its state before activating", reason);
 }
 
@@ -63,7 +64,7 @@ void HASyncSetDirty(const wchar_t *reason)
  */
 bool HASyncIsDirty()
 {
-   return s_dirty.load();
+   return s_dirty.load() != 0;
 }
 
 /**

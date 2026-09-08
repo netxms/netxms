@@ -364,8 +364,8 @@ static bool RunHookCommand(const wchar_t *command, uint32_t waitTime)
  */
 static void RunDemoteHook()
 {
-   static std::atomic<bool> executed(false);
-   if (!executed.exchange(true))
+   static std::atomic<int32_t> executed(0);  // word-sized: byte atomic RMW not available on all POWER targets
+   if (executed.exchange(1) == 0)
       RunHookCommand(s_onDemoteCommand, 10000);
 }
 
