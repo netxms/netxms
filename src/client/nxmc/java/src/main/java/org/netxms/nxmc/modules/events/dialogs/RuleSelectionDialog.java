@@ -182,6 +182,16 @@ public class RuleSelectionDialog extends Dialog
          {
             return (element instanceof EventProcessingPolicyChain) && !((EventProcessingPolicyChain)element).getRules().isEmpty();
          }
+
+         @Override
+         public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
+         {
+         }
+
+         @Override
+         public void dispose()
+         {
+         }
       });
       viewer.setLabelProvider(new RuleTreeLabelProvider());
       viewer.setComparator(new ViewerComparator() {
