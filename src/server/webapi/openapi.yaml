@@ -6057,6 +6057,7 @@ paths:
                     nullable: true
                     description: Collection timestamp of the returned value (ISO 8601), `null` if no value collected yet
                   table:
+                    type: object
                     nullable: true
                     allOf:
                       - $ref: '#/components/schemas/TableData'
