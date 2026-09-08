@@ -1733,7 +1733,10 @@ static inline void ConvertValue(ItemValue& value, int destinationDataType, int s
  */
 DataCollectionError DCItem::transform(ItemValue &value, int64_t elapsedTime)
 {
-   if ((m_transformationScript == nullptr) && !m_transformationScriptSource.isNull() && !IsBlankString(m_transformationScriptSource))
+   // Values of computed DCIs are written by server-side engines in final form, transformation script is not applied
+   bool applyScript = (m_source != DS_COMPUTED);
+
+   if (applyScript && (m_transformationScript == nullptr) && !m_transformationScriptSource.isNull() && !IsBlankString(m_transformationScriptSource))
       return DCE_COLLECTION_ERROR;  // Transformation script present but cannot be compiled
 
    bool success = true;
@@ -1917,7 +1920,7 @@ DataCollectionError DCItem::transform(ItemValue &value, int64_t elapsedTime)
       return DCE_COLLECTION_ERROR;
 
    DataCollectionError error = DCE_SUCCESS;
-   if (m_transformationScript != nullptr)
+   if (applyScript && (m_transformationScript != nullptr))
    {
       ScriptVMHandle vm = CreateServerScriptVM(m_transformationScript.get(), m_owner.lock(), createDescriptorInternal());
       if (vm.isValid())
@@ -2120,7 +2123,7 @@ void DCItem::updateCacheSizeInternal(bool allowLoad)
       if (allowLoad &&
           (m_ownerId != 0) &&
           (((m_requiredCacheSize - m_cacheSize) * getEffectivePollingInterval() > 300) ||
-           (m_source == DS_PUSH_AGENT) || (m_source == DS_OTLP) ||
+           (m_source == DS_PUSH_AGENT) || (m_source == DS_OTLP) || (m_source == DS_COMPUTED) ||
            (m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED)))
       {
          m_cacheLoaded = false;

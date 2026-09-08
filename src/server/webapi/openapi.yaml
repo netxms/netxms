@@ -15669,7 +15669,7 @@ components:
           description: Human-readable DCI description
         origin:
           type: string
-          enum: [internal, nxagent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp]
+          enum: [internal, nxagent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp, trafficobserver, netconf, computed]
           description: Data origin
         status:
           type: string

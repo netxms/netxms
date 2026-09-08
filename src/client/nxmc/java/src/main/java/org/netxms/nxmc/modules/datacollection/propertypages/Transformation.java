@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import java.util.Arrays;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -27,6 +28,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
@@ -35,6 +37,7 @@ import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.TestTransformationDlg;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.WidgetFactory;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -49,6 +52,7 @@ public class Transformation extends AbstractDCIPropertyPage
    private static final String[] DCI_FUNCTIONS = { "FindDCIByName", "FindDCIByDescription", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName" };
    private static final String[] DCI_VARIABLES = { "$dci", "$node" };
 
+   private CLabel computedOriginNote;
    private LabeledCombo transformedDataType;
    private LabeledCombo deltaCalculation;
 	private ScriptEditor transformationScript;
@@ -77,6 +81,12 @@ public class Transformation extends AbstractDCIPropertyPage
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       dialogArea.setLayout(layout);
+
+      computedOriginNote = new CLabel(dialogArea, SWT.LEFT);
+      computedOriginNote.setImage(SharedIcons.IMG_INFORMATION);
+      computedOriginNote.setText(i18n.tr("Transformation script is not applied to DCIs with origin \"Computed\""));
+      computedOriginNote.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      updateComputedOriginNote();
 
       if (editor.getObject() instanceof DataCollectionItem)
       {
@@ -144,6 +154,28 @@ public class Transformation extends AbstractDCIPropertyPage
       }
 
       return dialogArea;
+   }
+
+   /**
+    * Show or hide note about transformation script not being applied, depending on origin currently selected in editor.
+    */
+   private void updateComputedOriginNote()
+   {
+      boolean show = (editor.getOrigin() == DataOrigin.COMPUTED);
+      computedOriginNote.setVisible(show);
+      ((GridData)computedOriginNote.getLayoutData()).exclude = !show;
+      computedOriginNote.getParent().layout(true, true);
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.DialogPage#setVisible(boolean)
+    */
+   @Override
+   public void setVisible(boolean visible)
+   {
+      super.setVisible(visible);
+      if (visible && (computedOriginNote != null))
+         updateComputedOriginNote();
    }
 
 	/**

@@ -70,6 +70,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
       statusImages[DataCollectionObjectStatus.UNSUPPORTED.getValue()] = ResourceManager.getImageDescriptor("icons/dci/unsupported.gif").createImage(); //$NON-NLS-1$
 
       originTexts.put(DataOrigin.AGENT, i18n.tr("NetXMS Agent"));
+      originTexts.put(DataOrigin.COMPUTED, i18n.tr("Computed"));
       originTexts.put(DataOrigin.DEVICE_DRIVER, i18n.tr("Network Device Driver"));
       originTexts.put(DataOrigin.INTERNAL, i18n.tr("Internal"));
       originTexts.put(DataOrigin.MODBUS, i18n.tr("Modbus"));

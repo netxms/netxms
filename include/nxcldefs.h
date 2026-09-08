@@ -1191,6 +1191,7 @@ enum HistoricalDataType
 #define DS_OTLP               14
 #define DS_TRAFFIC_OBSERVER   15
 #define DS_NETCONF            16
+#define DS_COMPUTED           17
 
 /**
  * Resource state

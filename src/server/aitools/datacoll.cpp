@@ -136,6 +136,8 @@ static int ParseOrigin(const char *str)
       return DS_INTERNAL;
    if (!stricmp(str, "netconf"))
       return DS_NETCONF;
+   if (!stricmp(str, "computed"))
+      return DS_COMPUTED;
    return -1;
 }
 
@@ -163,6 +165,7 @@ static const char *OriginToString(int origin)
       case DS_OTLP: return "otlp";
       case DS_TRAFFIC_OBSERVER: return "trafficObserver";
       case DS_NETCONF: return "netconf";
+      case DS_COMPUTED: return "computed";
       default: return "unknown";
    }
 }
@@ -588,7 +591,7 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
 
    int origin = ParseOrigin(json_object_get_string_utf8(arguments, "origin", "agent"));
    if (origin < 0)
-      return std::string("Invalid origin specified. Supported: agent, snmp, script, ssh, push, webService, deviceDriver, mqtt, modbus, internal");
+      return std::string("Invalid origin specified. Supported: agent, snmp, script, ssh, push, webService, deviceDriver, mqtt, modbus, internal, netconf, computed");
 
    int dataType = ParseDataType(json_object_get_string_utf8(arguments, "dataType", "string"));
    if (dataType < 0)

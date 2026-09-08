@@ -2814,6 +2814,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       // DCI data source (origin)
       NXSL_ENV_CONSTANT("DataSource::AGENT", DS_NATIVE_AGENT);
       NXSL_ENV_CONSTANT("DataSource::CLOUD_CONNECTOR", DS_CLOUD_CONNECTOR);
+      NXSL_ENV_CONSTANT("DataSource::COMPUTED", DS_COMPUTED);
       NXSL_ENV_CONSTANT("DataSource::DEVICE_DRIVER", DS_DEVICE_DRIVER);
       NXSL_ENV_CONSTANT("DataSource::ETHERNET_IP", DS_ETHERNET_IP);
       NXSL_ENV_CONSTANT("DataSource::INTERNAL", DS_INTERNAL);

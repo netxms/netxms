@@ -44,7 +44,8 @@ public enum DataOrigin
    CLOUD_CONNECTOR(13),
    OTLP(14),
    TRAFFIC_OBSERVER(15),
-   NETCONF(16);
+   NETCONF(16),
+   COMPUTED(17);
 
    private static Logger logger = LoggerFactory.getLogger(DataOrigin.class);
    private static Map<Integer, DataOrigin> lookupTable = new HashMap<Integer, DataOrigin>();

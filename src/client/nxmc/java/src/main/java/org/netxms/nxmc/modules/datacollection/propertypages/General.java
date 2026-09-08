@@ -195,6 +195,7 @@ public class General extends AbstractDCIPropertyPage
       origin.add(i18n.tr("OTLP"));
       origin.add(i18n.tr("Traffic Observer"));
       origin.add(i18n.tr("NETCONF"));
+      origin.add(i18n.tr("Computed"));
       origin.select(dco.getOrigin().getValue());
       origin.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -208,7 +209,7 @@ public class General extends AbstractDCIPropertyPage
       sourceNode.setLabel("Source node override");
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dco.getSourceNode());
-      sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH && dco.getOrigin() != DataOrigin.OTLP);
+      sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH && dco.getOrigin() != DataOrigin.OTLP && dco.getOrigin() != DataOrigin.COMPUTED);
       sourceNode.addModifyListener((e) -> editor.setSourceNode(sourceNode.getObjectId()));
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -355,7 +356,7 @@ public class General extends AbstractDCIPropertyPage
       pollingInterval = new Text(pollingIntervalComposite, SWT.BORDER);
       pollingInterval.setText(dco.getPollingInterval() != null ? dco.getPollingInterval() : "");
       pollingInterval.setToolTipText(i18n.tr("Interval in seconds or with unit suffix: s, m, h, d, w (for example 90, 5m, 2h 30m)"));
-      pollingInterval.setEnabled((dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dco.getOrigin() != DataOrigin.PUSH) && (dco.getOrigin() != DataOrigin.OTLP));
+      pollingInterval.setEnabled((dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dco.getOrigin() != DataOrigin.PUSH) && (dco.getOrigin() != DataOrigin.OTLP) && (dco.getOrigin() != DataOrigin.COMPUTED));
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       pollingInterval.setLayoutData(gd);
 
@@ -500,9 +501,10 @@ public class General extends AbstractDCIPropertyPage
 	private void onOriginChange()
 	{
       DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
-		sourceNode.setEnabled(dataOrigin != DataOrigin.PUSH && dataOrigin != DataOrigin.OTLP);
+      boolean pollable = (dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.OTLP) && (dataOrigin != DataOrigin.COMPUTED);
+		sourceNode.setEnabled(pollable);
 
-      boolean enableSchedule = (dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.OTLP);
+      boolean enableSchedule = pollable;
 		scheduleDefault.setEnabled(enableSchedule);
       scheduleFixed.setEnabled(enableSchedule);
       scheduleAdvanced.setEnabled(enableSchedule);

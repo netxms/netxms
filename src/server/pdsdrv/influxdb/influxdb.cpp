@@ -238,6 +238,9 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, Ti
    const TCHAR *ds; // Data sources
    switch (dci->getDataSource())
    {
+      case DS_COMPUTED:
+         ds = _T("computed");
+         break;
       case DS_DEVICE_DRIVER:
          ds = _T("device");
          break;

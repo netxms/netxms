@@ -304,6 +304,9 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, 
    // Data sources
    switch (dci->getDataSource())
    {
+      case DS_COMPUTED:
+         record.dataSource = "computed";
+         break;
       case DS_DEVICE_DRIVER:
          record.dataSource = "device";
          break;

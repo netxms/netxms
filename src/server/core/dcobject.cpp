@@ -71,7 +71,7 @@ CodeLookupElement g_dciOriginNames[] =
    { DS_WEB_SERVICE, L"websvc" }, { DS_PUSH_AGENT, L"push" }, { DS_WINPERF, L"winperf" },
    { DS_SMCLP, L"smclp" }, { DS_SCRIPT, L"script" }, { DS_SSH, L"ssh" }, { DS_MQTT, L"mqtt" },
    { DS_DEVICE_DRIVER, L"driver" }, { DS_MODBUS, L"modbus" }, { DS_ETHERNET_IP, L"ethernetip" },
-   { DS_CLOUD_CONNECTOR, L"cloud" }, { DS_OTLP, L"otlp" }, { DS_TRAFFIC_OBSERVER, L"trafficobserver" }, { DS_NETCONF, L"netconf" }, { 0, nullptr }
+   { DS_CLOUD_CONNECTOR, L"cloud" }, { DS_OTLP, L"otlp" }, { DS_TRAFFIC_OBSERVER, L"trafficobserver" }, { DS_NETCONF, L"netconf" }, { DS_COMPUTED, L"computed" }, { 0, nullptr }
 };
 CodeLookupElement g_dciStatusNames[] =
 {
@@ -896,7 +896,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    if (m_doForcePoll && !m_busy)
    {
       if ((m_status != ITEM_STATUS_DISABLED) &&
-          isCacheLoaded() && (m_source != DS_PUSH_AGENT) && (m_source != DS_OTLP) &&
+          isCacheLoaded() && (m_source != DS_PUSH_AGENT) && (m_source != DS_OTLP) && (m_source != DS_COMPUTED) &&
           matchClusterResource() && hasValue()) // Ignore agent cache mode for forced polls and always request data as if cache is off
       {
          unlock();
@@ -915,7 +915,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
 
    bool result;
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
-       isCacheLoaded() && (m_source != DS_PUSH_AGENT) && (m_source != DS_OTLP) &&
+       isCacheLoaded() && (m_source != DS_PUSH_AGENT) && (m_source != DS_OTLP) && (m_source != DS_COMPUTED) &&
        matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF) &&
        (m_nextPollTime <= currTime))
    {
@@ -2294,8 +2294,8 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
  */
 const wchar_t *DCObject::getDataProviderName(int dataProvider)
 {
-   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", L"cloud", L"otlp", L"trafficobserver", L"netconf" };
-   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_NETCONF)) ? names[dataProvider] : L"unknown";
+   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", L"cloud", L"otlp", L"trafficobserver", L"netconf", L"computed" };
+   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_COMPUTED)) ? names[dataProvider] : L"unknown";
 }
 
 /**
