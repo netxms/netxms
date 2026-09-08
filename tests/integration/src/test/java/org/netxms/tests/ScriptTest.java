@@ -48,10 +48,12 @@ import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.client.mt.MappingTable;
 import org.netxms.client.mt.MappingTableEntry;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.utilities.TestHelper;
+import org.netxms.utilities.TestHelperForEpp;
 
 /**
  * Tests for scripting functions
@@ -279,8 +281,11 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       AbstractObject managementNode = TestHelper.findManagementServer(session);
       assertNotNull(managementNode);
 
+      EventTemplate eventTemplate = TestHelperForEpp.findOrCreateEvent(session, "TestNXSLEventFunctions");
+
       List<String> params = new ArrayList<String>();
       params.add(Long.toString(managementNode.getObjectId()));
+      params.add(eventTemplate.getName());
 
       executeScript("/eventFunctions.nxsl", params);
    }

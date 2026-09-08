@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCObjectCreationData;
@@ -268,7 +269,8 @@ public class CollectorTest extends AbstractSessionTest
 
       for(DciValue value : list)
       {
-         assertEquals(id, value.getTemplateDciId()); // checking that instances are created from the test DCI
+         if (value.getDescription().startsWith(DCI_DESCRIPTION))
+            assertEquals(id, value.getTemplateDciId()); // checking that instances are created from the test DCI
       }
 
       for(PollState status : testCollector.getPollStates())
@@ -337,6 +339,23 @@ public class CollectorTest extends AbstractSessionTest
       }
       assertTrue(found);
 
+      dcc.close();
+   }
+
+   /**
+    * Remove every DCI created by the tests from the test collector, whether the test passed or failed
+    */
+   @AfterEach
+   void removeTestDcis() throws Exception
+   {
+      NXCSession session = connectAndLogin();
+      session.syncObjects();
+      Collector testCollector = findOrCreateCollector(session, COLLECTOR_NAME);
+      DataCollectionConfiguration dcc = session.openDataCollectionConfiguration(testCollector.getObjectId());
+      // Instances discovered from a test DCI are removed together with it
+      for(DataCollectionObject dco : dcc.getItems())
+         if (dco.getDescription().startsWith(DCI_DESCRIPTION) && (dco.getTemplateItemId() == 0))
+            dcc.deleteObject(dco.getId());
       dcc.close();
    }
 }

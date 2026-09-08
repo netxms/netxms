@@ -226,17 +226,20 @@ public class SingleUseTokenTest extends AbstractSessionTest
    public void testTokenListingReportsEachTokenSeparately() throws Exception
    {
       NXCSession issuer = connectAndLogin();
-      AuthenticationToken singleUseToken = issuer.requestAuthenticationToken(false, TOKEN_VALIDITY_TIME, "listing test (single-use)", 0, true);
-      AuthenticationToken ephemeralToken = issuer.requestAuthenticationToken(false, TOKEN_VALIDITY_TIME, "listing test (ephemeral)", 0);
+      // Listing carries neither token values nor IDs of non-persistent tokens, so tokens are told apart by description
+      String singleUseDescription = "listing test (single-use) " + System.currentTimeMillis();
+      String ephemeralDescription = "listing test (ephemeral) " + System.currentTimeMillis();
+      issuer.requestAuthenticationToken(false, TOKEN_VALIDITY_TIME, singleUseDescription, 0, true);
+      issuer.requestAuthenticationToken(false, TOKEN_VALIDITY_TIME, ephemeralDescription, 0);
 
       List<AuthenticationToken> tokens = issuer.getAuthenticationTokens(issuer.getUserId());
       AuthenticationToken listedSingleUse = null;
       AuthenticationToken listedEphemeral = null;
       for(AuthenticationToken t : tokens)
       {
-         if (singleUseToken.getValue().equals(t.getValue()))
+         if (singleUseDescription.equals(t.getDescription()))
             listedSingleUse = t;
-         else if (ephemeralToken.getValue().equals(t.getValue()))
+         else if (ephemeralDescription.equals(t.getDescription()))
             listedEphemeral = t;
       }
 
@@ -246,8 +249,6 @@ public class SingleUseTokenTest extends AbstractSessionTest
       assertFalse(listedSingleUse.isPersistent());
       assertFalse(listedEphemeral.isSingleUse());
       assertFalse(listedEphemeral.isPersistent());
-      assertEquals("listing test (single-use)", listedSingleUse.getDescription());
-      assertEquals("listing test (ephemeral)", listedEphemeral.getDescription());
    }
 
    @Test

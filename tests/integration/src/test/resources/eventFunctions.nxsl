@@ -1,16 +1,16 @@
 /*
-* This script requires:
-*     existing event id
-*     any existing node id
+* Parameters:
+*     $1 - node id
+*     $2 - name of an existing event template
 */
 nodeId = $1;
 parameterName = "Custom parameter";
 parameterValue = "Custom parameter value";
 node = FindObject(nodeId);
 
-assert(!PostEvent(node, 200000));
+assert(!PostEvent(node, "EVENT_THAT_DOES_NOT_EXIST"));
 
-assert(PostEvent(node, 100000));
+assert(PostEvent(node, $2));
 assert(PostEvent(node, 28, "my tag", "param1", "param2"));
 assert(PostEvent(node, "SYS_NODE_ADDED", null, "param1"));
 sleep(2000);//wait for alarm
