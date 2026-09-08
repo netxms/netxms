@@ -3376,6 +3376,52 @@ enum RackOrientation
 };
 
 /**
+ * References to an object's physical placement properties. Node and Chassis own the same
+ * property set under different member names and share no common base class that holds it,
+ * so the shared read and write code addresses the owner's members through this structure.
+ */
+struct PhysicalPlacementRef
+{
+   uint32_t *containerId;
+   int16_t *position;
+   int16_t *height;
+   RackOrientation *orientation;
+   uuid *imageFront;
+   uuid *imageRear;
+};
+
+/**
+ * Serialize physical placement property group.
+ */
+json_t NXCORE_EXPORTABLE *PhysicalPlacementToJson(const PhysicalPlacementRef& placement);
+
+/**
+ * Apply physical placement property group as JSON merge-patch. Keys present in the document
+ * are applied, omitted keys are left untouched, and null clears. Nothing is written to the
+ * target unless every field validates. Set allowChassisContainer for objects that can be
+ * placed inside a chassis as well as a rack. The object being placed is used to reject a
+ * container that is one of its own descendants with RCC_OBJECT_LOOP.
+ */
+uint32_t NXCORE_EXPORTABLE ModifyPhysicalPlacementFromJson(json_t *group, const NetObj *object, const PhysicalPlacementRef& placement, bool allowChassisContainer);
+
+/**
+ * Check that a device of given height placed at given rack unit fits inside the rack.
+ */
+bool NXCORE_EXPORTABLE IsValidRackExtent(int position, int height, int rackHeight, bool topBottomNumbering);
+
+/**
+ * Serialize chassis placement geometry into the <placement> XML document format.
+ * Returns a MemAlloc'ed UTF-8 string; caller takes ownership.
+ */
+char NXCORE_EXPORTABLE *ChassisPlacementToXml(json_t *placement);
+
+/**
+ * Validate the type of every key in a chassis placement geometry document without
+ * mutating anything. Returns RCC_SUCCESS or RCC_INVALID_ARGUMENT.
+ */
+uint32_t NXCORE_EXPORTABLE ValidateChassisPlacementJson(json_t *placement);
+
+/**
  * Chassis (represents physical chassis)
  */
 class NXCORE_EXPORTABLE Chassis : public DataCollectionTarget
@@ -3394,6 +3440,7 @@ protected:
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
    virtual void updateFlags(uint32_t flags, uint32_t mask) override;
 
    virtual void onObjectDelete(const NetObj& object) override;
@@ -4403,7 +4450,7 @@ protected:
    IcmpStatCollectionMode m_icmpStatCollectionMode;
    StringObjectMap<IcmpStatCollector> *m_icmpStatCollectors;
    InetAddressList m_icmpTargets;
-   char *m_chassisPlacementConf;   // Chassis placement configuration (opaque UTF-8 XML, stored and forwarded without processing)
+   char *m_chassisPlacementConf;   // Chassis placement configuration (UTF-8 XML, parsed/merged/re-serialized on the JSON write path)
    uint16_t m_eipPort;  // EtherNet/IP port
    InetAddress m_eipAddress;  // EtherNet/IP address (if different from primary)
    uint16_t m_cipDeviceType;
@@ -4431,6 +4478,7 @@ protected:
    virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
    uint32_t modifyJsonSnmpConfig(json_t *snmp);
    uint32_t modifyJsonAgentConfig(json_t *agent);
+   json_t *chassisPlacementToJsonLocked() const;
    virtual void updateFlags(uint32_t flags, uint32_t mask) override;
 
    virtual void onDataCollectionChange() override;

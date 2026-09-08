@@ -102,6 +102,12 @@ int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const
          case RCC_SUBNET_OVERLAP:
             context->setErrorResponse("Subnet overlaps with existing one");
             return 409;
+         case RCC_INVALID_OBJECT_ID:
+            context->setErrorResponse("Request references an object that does not exist or is not of the required class");
+            return 400;
+         case RCC_OBJECT_LOOP:
+            context->setErrorResponse("Requested change would create a loop in the object tree");
+            return 409;
          default:
             context->setErrorResponse("Invalid property values in request");
             return 400;

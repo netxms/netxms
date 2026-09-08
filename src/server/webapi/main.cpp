@@ -187,6 +187,7 @@ int H_ObjectDetails(Context *context);
 int H_ObjectFacilityGet(Context *context);
 int H_ObjectFacilityUpdate(Context *context);
 int H_ObjectLocationUpdate(Context *context);
+int H_ObjectPhysicalPlacementUpdate(Context *context);
 int H_ObjectPollingGet(Context *context);
 int H_ObjectPowerDomainGet(Context *context);
 int H_ObjectPowerDomainUpdate(Context *context);
@@ -741,6 +742,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/location")
       .PATCH(H_ObjectLocationUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/physical-placement")
+      .PATCH(H_ObjectPhysicalPlacementUpdate)
       .build();
    RouteBuilder("v1/objects/:object-id/status-calculation")
       .PATCH(H_ObjectStatusCalculationUpdate)

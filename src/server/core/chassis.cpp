@@ -134,13 +134,22 @@ void Chassis::updateControllerBinding()
    if ((m_flags & CHF_BIND_UNDER_CONTROLLER) && !controllerFound)
    {
       shared_ptr<NetObj> controller = FindObjectById(m_controllerId, OBJECT_NODE);
-      if (controller != nullptr)
+      if (controller == nullptr)
       {
-         linkObjects(controller, self());
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 4, _T("Chassis::updateControllerBinding(%s [%u]): controller node with ID %u not found"), m_name, m_id, m_controllerId);
+      }
+      else if (isChild(m_controllerId))
+      {
+         // Re-checked here because the front door check runs when the id is accepted, while this
+         // task runs later on the main pool: a placement request accepted in between can make this
+         // chassis a parent of the controller, and linking it now would close a cycle that
+         // clearInheritedAccessCache walks until the stack is gone. ChangeObjectBinding guards the
+         // generic bind path the same way.
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("Chassis::updateControllerBinding(%s [%u]): controller node %s [%u] is a descendant, binding skipped"), m_name, m_id, controller->getName(), m_controllerId);
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 4, _T("Chassis::updateControllerBinding(%s [%u]): controller node with ID %u not found"), m_name, m_id, m_controllerId);
+         linkObjects(controller, self());
       }
    }
 
@@ -193,6 +202,93 @@ uint32_t Chassis::modifyFromMessageInternal(const NXCPMessage& msg, ClientSessio
       m_rackOrientation = static_cast<RackOrientation>(msg.getFieldAsInt16(VID_RACK_ORIENTATION));
 
    return super::modifyFromMessageInternal(msg, session);
+}
+
+/**
+ * Modify chassis from JSON document (WebAPI path). Handles the controlling node and the
+ * "physicalPlacement" property group; all other fields are delegated to the base class
+ * implementation. Runs under the property lock (see NetObj::modifyFromJSON), released around
+ * the two child list walks below.
+ *
+ * Both the rack binding and the controller binding are rescheduled at the point their id is
+ * committed, exactly as modifyFromMessageInternal and updateFlags do. The caller marks the
+ * object as modified regardless of the result code, so a committed id reaches the database
+ * even when a later property of the same document is rejected; a rebind deferred until after
+ * that result code would then be skipped, leaving the chassis naming a parent it is not a
+ * child of.
+ */
+uint32_t Chassis::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   // Stage into a local so a subsequent rejection of the placement group leaves m_controllerId untouched
+   uint32_t controllerId = m_controllerId;
+   if (!json_object_update_integer(json, "controllerId", &controllerId))
+      return RCC_INVALID_ARGUMENT;
+   // Validate only when the document actually carries the key: json_object_update_integer leaves
+   // controllerId at the stored value when the property is absent, and a stored value can legitimately
+   // fail both checks below. A chassis can hold a controller id pointing at a node that is placed in
+   // it (consistent while CHF_BIND_UNDER_CONTROLLER is clear, since no link is made), or an id left
+   // by CMD_CREATE_OBJECT / modifyFromMessageInternal / a deleted controller row that resolves to
+   // nothing. Such an object must stay patchable, the same rule the placement code states.
+   if ((json_object_get(json, "controllerId") != nullptr) && (controllerId != 0))
+   {
+      // A controller id that does not resolve to a node would be committed and then dropped by
+      // updateControllerBinding, which unbinds the current controller and logs the miss at debug
+      // level only. The chassis would be left with no controller parent and an id pointing at
+      // nothing, silently stopping data collection that resolves through getEffectiveSourceNode.
+      if (FindObjectById(controllerId, OBJECT_NODE) == nullptr)
+         return RCC_INVALID_OBJECT_ID;
+
+      // Binding the chassis under one of its own descendants would close a cycle in the object
+      // tree, the same crash the placement path rejects with RCC_OBJECT_LOOP. Checked regardless
+      // of CHF_BIND_UNDER_CONTROLLER: no link is made while the flag is clear, but setting it later
+      // over NXCP makes one through updateFlags, and this is the only place that can report 409.
+      // isChild read locks the child list of this object and of every descendant, so the property
+      // lock must be dropped around it - see the note on the placement call below.
+      unlockProperties();
+      bool loop = isChild(controllerId);
+      lockProperties();
+      if (loop)
+         return RCC_OBJECT_LOOP;
+   }
+
+   json_t *physicalPlacement = json_object_get(json, "physicalPlacement");
+   if (physicalPlacement != nullptr)
+   {
+      // ModifyPhysicalPlacementFromJson calls NetObj::isChild, which read locks the child list of
+      // this object and of every descendant. Holding the property lock across that call would
+      // establish properties -> child list, the reverse of the order the configuration poll uses,
+      // and a thread waiting for the child list write lock would deadlock the two. Stage every
+      // field into a local and drop the property lock for the duration of the call; the group
+      // still commits all or nothing because nothing is written until it succeeds.
+      uint32_t rackId = m_rackId;
+      int16_t position = m_rackPosition;
+      int16_t height = m_rackHeight;
+      RackOrientation orientation = m_rackOrientation;
+      uuid imageFront = m_rackImageFront;
+      uuid imageRear = m_rackImageRear;
+      PhysicalPlacementRef placementRef = { &rackId, &position, &height, &orientation, &imageFront, &imageRear };
+      unlockProperties(); // removing possible deadlock
+      // A chassis can only be placed in a rack, never inside another chassis
+      uint32_t rcc = ModifyPhysicalPlacementFromJson(physicalPlacement, this, placementRef, false);
+      lockProperties();
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+      m_rackId = rackId;
+      m_rackPosition = position;
+      m_rackHeight = height;
+      m_rackOrientation = orientation;
+      m_rackImageFront = imageFront;
+      m_rackImageRear = imageRear;
+
+      if (json_object_get(physicalPlacement, "containerId") != nullptr)
+         ThreadPoolExecute(g_mainThreadPool, this, &Chassis::updateRackBinding);
+   }
+
+   m_controllerId = controllerId;
+   if (json_object_get(json, "controllerId") != nullptr)
+      ThreadPoolExecute(g_mainThreadPool, this, &Chassis::updateControllerBinding);
+
+   return super::modifyFromJSONInternal(json, session);
 }
 
 /**
@@ -432,6 +528,11 @@ json_t *Chassis::toJson(bool includeSensitiveData)
    json_object_set_new(root, "rackId", json_integer(m_rackId));
    json_object_set_new(root, "rackImageFront", m_rackImageFront.toJson());
    json_object_set_new(root, "rackImageRear", m_rackImageRear.toJson());
+
+   // Physical placement property group. Same shape as the group accepted on the write path,
+   // and always emitted so a client never has to tell "absent" from "unplaced".
+   PhysicalPlacementRef placementRef = { &m_rackId, &m_rackPosition, &m_rackHeight, &m_rackOrientation, &m_rackImageFront, &m_rackImageRear };
+   json_object_set_new(root, "physicalPlacement", PhysicalPlacementToJson(placementRef));
    unlockProperties();
 
    return root;

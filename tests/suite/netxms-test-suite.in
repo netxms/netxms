@@ -32,6 +32,12 @@ if [ -x $BINDIR/test-authtokens ]; then
 	$BINDIR/test-authtokens || exit 1
 fi
 
+if [ -x $BINDIR/test-physical-placement ]; then
+	echo ""
+	echo "********** test-physical-placement **********"
+	$BINDIR/test-physical-placement || exit 1
+fi
+
 if [ -x $BINDIR/test-libethernetip ]; then
 	echo ""
 	echo "********** test-libethernetip **********"
