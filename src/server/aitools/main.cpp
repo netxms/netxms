@@ -423,8 +423,8 @@ static void CreateAssistantSkillList()
             {
                { "object", "name or ID of an object (mandatory)" },
                { "metric", "name of the metric/DCI to analyze (mandatory)" },
-               { "timeFrom", "start time (ISO format or negative number of minutes, like '-60' for an our ago)" },
-               { "timeTo", "end time (optional, ISO format, defaults to now)" },
+               { "timeFrom", "start time as string: ISO 8601 (server local time unless Z or UTC offset is given), UNIX timestamp, or relative like '-60' (minutes ago), '-2h', '-7d' (default: -1440, i.e. last 24 hours)" },
+               { "timeTo", "end time as string in the same formats as timeFrom (optional, defaults to now)" },
                { "maxDataPoints", "optional maximum number of data points to return; if set, data will be aggregated into time buckets with min/max/avg values; default is 500; set to 0 for raw data", "integer" }
             },
             F_GetHistoricalData),

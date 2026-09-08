@@ -409,13 +409,15 @@ static inline void MultiByteToWideCharSysLocale(const char *src, WCHAR *dst, siz
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestamp(time_t t, TCHAR *buffer);
 TCHAR LIBNETXMS_EXPORTABLE *FormatTimestampMs(int64_t timestamp, TCHAR *buffer);
 std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t);
+std::string LIBNETXMS_EXPORTABLE FormatISO8601LocalTimestamp(time_t t);
 std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t);
 
 /**
  * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
- * as well as relative timestamps in format [+|-]<number>[s|m|h|d]. Returns defaultValue if string
- * cannot be parsed. Valid representations of epoch (like "0") are parsed into 0, so caller that has
- * to tell parsing errors from epoch should pass non-zero default value.
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d|w]. ISO 8601 timestamp without "Z"
+ * or explicit UTC offset is interpreted as local time. Returns defaultValue if string cannot be parsed.
+ * Valid representations of epoch (like "0") are parsed into 0, so caller that has to tell parsing
+ * errors from epoch should pass non-zero default value.
  */
 time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue = 0);
 

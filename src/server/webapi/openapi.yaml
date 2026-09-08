@@ -4457,13 +4457,15 @@ paths:
         - name: timeFrom
           in: query
           schema:
-            type: integer
-            description: Start time for data retrieval (Unix timestamp)
+            type: string
+            description: >-
+              Start time for data retrieval. UNIX timestamp, ISO 8601 (server local time unless Z or
+              UTC offset is given), relative offset such as `-1h`, or `now`.
         - name: timeTo
           in: query
           schema:
-            type: integer
-            description: End time for data retrieval (Unix timestamp)
+            type: string
+            description: End time for data retrieval, same formats as `timeFrom`.
         - name: maxRows
           in: query
           schema:

@@ -1114,6 +1114,34 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601Timestamp(time_t t)
 }
 
 /**
+ * Format timestamp in ISO 8601 format as local time with explicit UTC offset (for example 2024-01-01T12:00:00+03:00)
+ */
+std::string LIBNETXMS_EXPORTABLE FormatISO8601LocalTimestamp(time_t t)
+{
+   struct tm *localTime;
+#if HAVE_LOCALTIME_R
+   struct tm localTimeBuffer;
+   localTime = localtime_r(&t, &localTimeBuffer);
+#else
+   localTime = localtime(&t);
+#endif
+   if (localTime == nullptr)
+      return std::string("(invalid-timestamp)");
+
+   char text[64];
+   strftime(text, 64, "%Y-%m-%dT%H:%M:%S", localTime);
+
+   // Offset is derived from broken-down local time rather than strftime("%z"), which is not portable
+   struct tm localTimeCopy = *localTime;
+   int offset = static_cast<int>(timegm(&localTimeCopy) - t);  // seconds east of UTC
+   char sign = (offset < 0) ? '-' : '+';
+   if (offset < 0)
+      offset = -offset;
+   snprintf(&text[19], 45, "%c%02d:%02d", sign, offset / 3600, (offset % 3600) / 60);
+   return std::string(text);
+}
+
+/**
  * Format milliseconds timestamp in ISO 8601 format
  */
 std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t)
@@ -1138,8 +1166,11 @@ std::string LIBNETXMS_EXPORTABLE FormatISO8601TimestampMs(int64_t t)
 
 /**
  * Parse timestamp from string. Supports absolute timestamps in ISO 8601 format or as UNIX timestamp,
- * as well as relative timestamps in format [+|-]<number>[s|m|h|d] or word "now". Returns defaultValue
- * if string cannot be parsed, including empty string and a sign without a number.
+ * as well as relative timestamps in format [+|-]<number>[s|m|h|d|w] or word "now". ISO 8601 timestamps
+ * are written as YYYY-MM-DDTHH:MM:SS (space is accepted instead of T, fractional seconds are ignored)
+ * optionally followed by "Z" for UTC or by explicit UTC offset in form +HH:MM, -HH:MM, or +HHMM;
+ * timestamp without zone designator is interpreted as local time. Returns defaultValue if string
+ * cannot be parsed, including empty string and a sign without a number.
  */
 time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue)
 {
@@ -1159,6 +1190,8 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue)
             offset *= 3600;
          else if (stricmp(eptr, "d") == 0)
             offset *= 86400;
+         else if (stricmp(eptr, "w") == 0)
+            offset *= 86400 * 7;
          else if (stricmp(eptr, "s") != 0)
             return defaultValue;  // invalid format
       }
@@ -1179,10 +1212,52 @@ time_t LIBNETXMS_EXPORTABLE ParseTimestamp(const char *ts, time_t defaultValue)
       return static_cast<time_t>(n);   // Assume UNIX timestamp
 
    struct tm t;
-   if (strptime(ts, "%Y-%m-%dT%H:%M:%SZ", &t) == nullptr)
+   memset(&t, 0, sizeof(t));
+   const char *p = strptime(ts, "%Y-%m-%dT%H:%M:%S", &t);
+   if (p == nullptr)
+      p = strptime(ts, "%Y-%m-%d %H:%M:%S", &t);
+   if (p == nullptr)
       return defaultValue;
 
-   return timegm(&t);
+   // Skip fractional seconds
+   if (*p == '.')
+   {
+      p++;
+      while(isdigit(*p))
+         p++;
+   }
+
+   if (*p == 0)
+   {
+      // No zone designator - local time
+      t.tm_isdst = -1;
+      return mktime(&t);
+   }
+
+   if (((*p == 'Z') || (*p == 'z')) && (p[1] == 0))
+      return timegm(&t);
+
+   if ((*p == '+') || (*p == '-'))
+   {
+      // Explicit UTC offset: +HH:MM, +HHMM, or +HH
+      int sign = (*p == '-') ? -1 : 1;
+      p++;
+      if (!isdigit(p[0]) || !isdigit(p[1]))
+         return defaultValue;
+      int offset = ((p[0] - '0') * 10 + (p[1] - '0')) * 3600;
+      p += 2;
+      if (*p == ':')
+         p++;
+      if (*p != 0)
+      {
+         if (!isdigit(p[0]) || !isdigit(p[1]) || (p[2] != 0))
+            return defaultValue;
+         offset += ((p[0] - '0') * 10 + (p[1] - '0')) * 60;
+      }
+      return timegm(&t) - sign * offset;
+   }
+
+   return defaultValue;
 }
 
 /**

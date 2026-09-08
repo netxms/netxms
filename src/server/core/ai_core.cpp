@@ -275,11 +275,13 @@ static const char *s_systemPrompt =
          "- Before suggesting user how to use UI, check if you can use available skills or functions to perform the task directly\n"
          "- Create background tasks for complex or time-consuming operations\n\n"
          "TIMESTAMP FORMATS:\n"
-         "All functions accepting timestamp arguments support the following formats:\n"
-         "- Relative: [+|-]<number>[s|m|h|d] where s=seconds, m=minutes, h=hours, d=days (no suffix defaults to minutes)\n"
+         "All functions accepting timestamp arguments support the following formats (always pass them as strings):\n"
+         "- Relative: [+|-]<number>[s|m|h|d|w] where s=seconds, m=minutes, h=hours, d=days, w=weeks (no suffix defaults to minutes)\n"
          "  Examples: -30m (30 minutes ago), +2h (2 hours in future), -1d (1 day ago), -30 (30 minutes ago)\n"
-         "- UNIX timestamp: numeric value representing seconds since epoch (e.g., 1704067200)\n"
-         "- ISO 8601: YYYY-MM-DDTHH:MM:SSZ in UTC (e.g., 2024-01-01T12:00:00Z)\n\n"
+         "- UNIX timestamp: seconds since epoch (e.g., 1704067200)\n"
+         "- ISO 8601: YYYY-MM-DDTHH:MM:SS optionally followed by Z for UTC or by UTC offset (e.g., 2024-01-01T12:00:00Z, 2024-01-01T15:00:00+03:00); "
+         "without Z or offset the time is interpreted as server local time\n"
+         "Current server time is given at the end of this prompt; use it as the reference point for time ranges.\n\n"
          "SKILL MANAGEMENT AND DISCOVERY:\n"
          "- When you lack capabilities for ANY user request, IMMEDIATELY check available skills using get-available-skills\n"
          "- Skills are your primary method for extending capabilities - they are NOT optional extras\n"
@@ -345,11 +347,13 @@ static const char *s_systemPromptBackground =
          "- Before suggesting user how to use UI, check if you can use available skills or functions to perform the task directly\n"
          "- Create background tasks for complex or time-consuming operations\n\n"
          "TIMESTAMP FORMATS:\n"
-         "All functions accepting timestamp arguments support the following formats:\n"
-         "- Relative: [+|-]<number>[s|m|h|d] where s=seconds, m=minutes, h=hours, d=days (no suffix defaults to minutes)\n"
+         "All functions accepting timestamp arguments support the following formats (always pass them as strings):\n"
+         "- Relative: [+|-]<number>[s|m|h|d|w] where s=seconds, m=minutes, h=hours, d=days, w=weeks (no suffix defaults to minutes)\n"
          "  Examples: -30m (30 minutes ago), +2h (2 hours in future), -1d (1 day ago), -30 (30 minutes ago)\n"
-         "- UNIX timestamp: numeric value representing seconds since epoch (e.g., 1704067200)\n"
-         "- ISO 8601: YYYY-MM-DDTHH:MM:SSZ in UTC (e.g., 2024-01-01T12:00:00Z)\n\n"
+         "- UNIX timestamp: seconds since epoch (e.g., 1704067200)\n"
+         "- ISO 8601: YYYY-MM-DDTHH:MM:SS optionally followed by Z for UTC or by UTC offset (e.g., 2024-01-01T12:00:00Z, 2024-01-01T15:00:00+03:00); "
+         "without Z or offset the time is interpreted as server local time\n"
+         "Current server time is given at the end of this prompt; use it as the reference point for time ranges.\n\n"
          "SKILL MANAGEMENT AND DISCOVERY:\n"
          "- When you lack capabilities for ANY task, IMMEDIATELY check available skills using get-available-skills\n"
          "- Skills are your primary method for extending capabilities - they are NOT optional extras\n"
@@ -1305,7 +1309,7 @@ void Chat::enableVisualizationOutput()
       "```netxms-viz\n"
       "{\"type\":\"dci-chart\",\"title\":\"...\",\"chartType\":\"line|area\","
       "\"series\":[{\"nodeId\":142,\"dciId\":8501,\"label\":\"Server A\"}],"
-      "\"timeFrom\":1709856000,\"timeTo\":1709942400}\n"
+      "\"timeFrom\":\"-24h\",\"timeTo\":\"now\"}\n"
       "```\n"
       "IMPORTANT: Use dci-chart instead of regular chart when the user asks to show/display/plot "
       "historical DCI data and you do NOT need to analyze or process the data. "
@@ -1315,8 +1319,8 @@ void Chat::enableVisualizationOutput()
       "CRITICAL: nodeId and dciId in each series element MUST be valid numeric IDs obtained from function calls "
       "(e.g. get-metrics). NEVER generate a dci-chart with null or guessed IDs - always call get-metrics first "
       "to resolve the actual DCI ID for the metric, then use the returned IDs in the visualization block.\n"
-      "For time range, use either timeFrom/timeTo (UNIX timestamps in seconds) or "
-      "a timeRange shorthand like \"last-1h\", \"last-24h\", \"last-7d\", \"last-30d\".\n\n"
+      "Time range is given by timeFrom and timeTo; both accept any of the TIMESTAMP FORMATS described above "
+      "(relative like \"-24h\", UNIX timestamp, or ISO 8601). Always specify both, using \"now\" for timeTo when the range ends at present time.\n\n"
       "6. NETWORK ROUTE - trace path visualization:\n"
       "```netxms-viz\n"
       "{\"type\":\"route\",\"title\":\"Path: SourceNode -> DestNode\","
@@ -1793,11 +1797,17 @@ char *Chat::sendRequest(const char *prompt, const char *context)
    int maxIterations = m_isInteractive ? s_maxInteractiveIterations : s_maxBackgroundIterations;
    int iterations = maxIterations;
    bool finalAttempt = false;   // set when the tool-call limit was reached and the model is given one last chance to answer without tools
+   // Current time is appended to the system prompt for each request so long-lived chats never see a stale value
+   std::string systemPrompt(m_systemPrompt);
+   systemPrompt.append("\n\nCURRENT TIME: ");
+   systemPrompt.append(FormatISO8601LocalTimestamp(time(nullptr)));
+   systemPrompt.append(" (server local time with UTC offset)");
+
    char *answer = nullptr;
    while(iterations-- > 0)
    {
       // Provider handles request building and response parsing
-      json_t *message = provider->chat(m_systemPrompt.c_str(), m_messages, m_functionDeclarations);
+      json_t *message = provider->chat(systemPrompt.c_str(), m_messages, m_functionDeclarations);
       m_lastUpdateTime = time(nullptr);
 
       if (message == nullptr)
