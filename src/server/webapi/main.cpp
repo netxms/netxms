@@ -106,6 +106,7 @@ int H_CloudConnectors(Context *context);
 int H_GetConnectionHistory(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
 int H_DataCollectionHistory(Context *context);
+int H_DataCollectionTableValue(Context *context);
 int H_PerformanceViewDCIs(Context *context);
 int H_DataCollectionConfigList(Context *context);
 int H_DataCollectionConfigGet(Context *context);
@@ -793,6 +794,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/:dci-id/history")
       .GET(H_DataCollectionHistory)
+      .build();
+   RouteBuilder("v1/objects/:object-id/data-collection/:dci-id/table-value")
+      .GET(H_DataCollectionTableValue)
       .build();
    RouteBuilder("v1/objects/:object-id/data-collection/performance-view")
       .GET(H_PerformanceViewDCIs)

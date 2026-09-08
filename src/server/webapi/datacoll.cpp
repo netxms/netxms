@@ -300,6 +300,68 @@ int H_DataCollectionHistory(Context *context)
 }
 
 /**
+ * Handler for /v1/objects/:object-id/data-collection/:dci-id/table-value
+ * Returns last collected value of table DCI
+ */
+int H_DataCollectionTableValue(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      return 403;
+
+   if (!object->isDataCollectionTarget())
+   {
+      context->setErrorResponse("Object is not data collection target");
+      return 400;
+   }
+
+   uint32_t dciId = context->getPlaceholderValueAsUInt32(_T("dci-id"));
+   if (dciId == 0)
+      return 400;
+
+   shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, context->getUserId());
+   if (dci == nullptr)
+   {
+      context->setErrorResponse("Invalid DCI ID");
+      return 404;
+   }
+
+   if (dci->getType() != DCO_TYPE_TABLE)
+   {
+      context->setErrorResponse("This endpoint can be used only for table DCIs");
+      return 400;
+   }
+
+   Timestamp timestamp = Timestamp::fromTime(0);
+   shared_ptr<Table> table = static_cast<DCTable&>(*dci).getLastValue(&timestamp);
+
+   json_t *response = json_object();
+   json_object_set_new(response, "id", json_integer(dciId));
+   json_object_set_new(response, "description", json_string_t(dci->getDescription()));
+   if (table != nullptr)
+   {
+      json_object_set_new(response, "timestamp", timestamp.asJson());
+      json_object_set_new(response, "table", table->toJson());
+   }
+   else
+   {
+      json_object_set_new(response, "timestamp", json_null());
+      json_object_set_new(response, "table", json_null());
+   }
+
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
  * Handler for /v1/objects/:object-id/data-collection/current-values
  * Returns current values for all DCIs of given object
  */
