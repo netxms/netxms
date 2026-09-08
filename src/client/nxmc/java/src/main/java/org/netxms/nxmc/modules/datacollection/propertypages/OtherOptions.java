@@ -139,17 +139,17 @@ public class OtherOptions extends AbstractDCIPropertyPage
 
       multiplierDegree = new LabeledCombo(dialogArea, SWT.NONE);
       multiplierDegree.setLabel(i18n.tr("Multiplier degree"));
-      multiplierDegree.add("Fixed to P");
-      multiplierDegree.add("Fixed to T");
-      multiplierDegree.add("Fixed to G");
-      multiplierDegree.add("Fixed to M");
-      multiplierDegree.add("Fixed to K");
+      multiplierDegree.add(i18n.tr("Fixed to P"));
+      multiplierDegree.add(i18n.tr("Fixed to T"));
+      multiplierDegree.add(i18n.tr("Fixed to G"));
+      multiplierDegree.add(i18n.tr("Fixed to M"));
+      multiplierDegree.add(i18n.tr("Fixed to K"));
       multiplierDegree.add("Default");
-      multiplierDegree.add("Fixed to m");
-      multiplierDegree.add("Fixed to μ");
-      multiplierDegree.add("Fixed to n");
-      multiplierDegree.add("Fixed to p");
-      multiplierDegree.add("Fixed to f");
+      multiplierDegree.add(i18n.tr("Fixed to m"));
+      multiplierDegree.add(i18n.tr("Fixed to μ"));
+      multiplierDegree.add(i18n.tr("Fixed to n"));
+      multiplierDegree.add(i18n.tr("Fixed to p"));
+      multiplierDegree.add(i18n.tr("Fixed to f"));
       multiplierDegree.select(5 - dci.getMultiplier());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -157,7 +157,7 @@ public class OtherOptions extends AbstractDCIPropertyPage
       multiplierDegree.setLayoutData(gd);
 
       relatedObject = new ObjectSelector(dialogArea, SWT.NONE, true);
-      relatedObject.setLabel("Related object");
+      relatedObject.setLabel(i18n.tr("Related object"));
       relatedObject.setObjectClass(GenericObject.class);
       relatedObject.setObjectId(dci.getRelatedObject());
       gd = new GridData();

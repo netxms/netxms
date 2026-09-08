@@ -371,7 +371,7 @@ public class AbstractChart extends DashboardElementPropertyPage
       if (!(config instanceof LineChartConfig))
       {
          drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
-         drillDownObject.setLabel("Drill-down object");
+         drillDownObject.setLabel(i18n.tr("Drill-down object"));
          drillDownObject.setObjectClass(AbstractObject.class);
          drillDownObject.setClassFilter(ObjectSelectionDialog.createDashboardAndNetworkMapSelectionFilter());
          drillDownObject.setObjectId(config.getDrillDownObjectId());

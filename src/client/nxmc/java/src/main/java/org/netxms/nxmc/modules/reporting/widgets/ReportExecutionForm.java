@@ -457,7 +457,7 @@ public class ReportExecutionForm extends Composite
       if (parameters.isEmpty())
       {
          Label label = new Label(parent, SWT.NONE);
-         label.setText("This report does not have parameters");
+         label.setText(i18n.tr("This report does not have parameters"));
          return;
       }
 

@@ -154,7 +154,7 @@ public class ZoneSNMPCredentials extends ObjectPropertyPage
    private void createCommunitySection(Composite dialogArea)
    {
       Group clientArea = new Group(dialogArea, SWT.NONE);
-      clientArea.setText("Community strings");
+      clientArea.setText(i18n.tr("Community strings"));
       clientArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -199,7 +199,7 @@ public class ZoneSNMPCredentials extends ObjectPropertyPage
       });
 
       commMoveDownButton = new Button(buttonsLeft, SWT.PUSH);
-      commMoveDownButton.setText("&Down");
+      commMoveDownButton.setText(i18n.tr("&Down"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       commMoveDownButton.setLayoutData(rd);
@@ -394,7 +394,7 @@ public class ZoneSNMPCredentials extends ObjectPropertyPage
    private void createUSMCredentialsSection(Composite dialogArea)
    {
       Group clientArea = new Group(dialogArea, SWT.NONE);
-      clientArea.setText("USM credentials");
+      clientArea.setText(i18n.tr("USM credentials"));
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       clientArea.setLayout(layout);
@@ -450,7 +450,7 @@ public class ZoneSNMPCredentials extends ObjectPropertyPage
       });
 
       usmMoveDownButton = new Button(buttonsLeft, SWT.PUSH);
-      usmMoveDownButton.setText("&Down");
+      usmMoveDownButton.setText(i18n.tr("&Down"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       usmMoveDownButton.setLayoutData(rd);
@@ -683,7 +683,7 @@ public class ZoneSNMPCredentials extends ObjectPropertyPage
       });
 
       portMoveDownButton = new Button(buttonsLeft, SWT.PUSH);
-      portMoveDownButton.setText("&Down");
+      portMoveDownButton.setText(i18n.tr("&Down"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       portMoveDownButton.setLayoutData(rd);

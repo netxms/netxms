@@ -86,7 +86,7 @@ public class TemplateDataSources extends PreferencePage
     */
    public TemplateDataSources(GraphDefinition settings, boolean saveToDatabase)
    {
-      super("Template Data Source");
+      super(LocalizationHelper.getI18n(TemplateDataSources.class).tr("Template Data Source"));
       config = settings;
       this.saveToDatabase = saveToDatabase;
    }

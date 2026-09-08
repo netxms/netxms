@@ -103,12 +103,12 @@ public class EditTableThresholdDialog extends Dialog
 		deactivationEvent.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		sampleCount = new LabeledSpinner(dialogArea, SWT.NONE);
-		sampleCount.setLabel("Sample count");
+		sampleCount.setLabel(i18n.tr("Sample count"));
 		sampleCount.setRange(1, 100000);
 		sampleCount.setSelection(threshold.getSampleCount());
 
 		deactivationSampleCount = new LabeledSpinner(dialogArea, SWT.NONE);
-		deactivationSampleCount.setLabel("Deactivation sample count");
+		deactivationSampleCount.setLabel(i18n.tr("Deactivation sample count"));
 		deactivationSampleCount.setRange(1, 100000);
 		deactivationSampleCount.setSelection(threshold.getDeactivationSampleCount());
 

@@ -174,7 +174,7 @@ public class MapBackground extends ObjectPropertyPage
       sizeGroup.setLayout(layout);
 
       fitToScreen = new Button(sizeGroup, SWT.CHECK);
-      fitToScreen.setText("Fit to scrren");
+      fitToScreen.setText(i18n.tr("Fit to scrren"));
       fitToScreen.setSelection(map.isFitToScreen());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -261,7 +261,7 @@ public class MapBackground extends ObjectPropertyPage
       image.setLayoutData(gd);
       
       comboImageFit = new LabeledCombo(graphContainer, SWT.NONE);
-      comboImageFit.setLabel("Image fit");
+      comboImageFit.setLabel(i18n.tr("Image fit"));
       comboImageFit.add("Default");
       comboImageFit.add("Center");
       comboImageFit.add("Fit");

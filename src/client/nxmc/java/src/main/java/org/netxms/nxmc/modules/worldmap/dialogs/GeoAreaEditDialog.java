@@ -106,7 +106,7 @@ public class GeoAreaEditDialog extends Dialog
       comments.setLayoutData(gd);
 
       border = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-      border.setLabel("Border points (one point per line)");
+      border.setLabel(i18n.tr("Border points (one point per line)"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

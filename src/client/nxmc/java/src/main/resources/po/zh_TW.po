@@ -24486,3 +24486,923 @@ msgstr ""
 "\n"
 "如需協助，請聯絡您的網路管理員或 NetXMS 伺服器的擁有者。\n"
 "\n"
+
+#: src/main/java/org/netxms/nxmc/base/dialogs/ThemeElementEditDialog.java:58
+msgid "Edit Theme Element"
+msgstr "編輯佈景主題元素"
+
+#: src/main/java/org/netxms/nxmc/base/login/TwoFactorResponseDialog.java:109
+msgid "Secret as text"
+msgstr "密鑰文字"
+
+#: src/main/java/org/netxms/nxmc/base/widgets/LatLonZoomEditor.java:111
+msgid "Zoom level"
+msgstr "縮放層級"
+
+#: src/main/java/org/netxms/nxmc/modules/actions/dialogs/ActionSelectionDialog.java:84
+msgid "Select action"
+msgstr "選取動作"
+
+#: src/main/java/org/netxms/nxmc/modules/alarms/dialogs/AlarmCategorySelectionDialog.java:78
+msgid "Select Alarm Category"
+msgstr "選取警報類別"
+
+#: src/main/java/org/netxms/nxmc/modules/alarms/views/AlarmDetails.java:573
+msgid "No DCI associated with this alarm"
+msgstr "此警報未關聯任何 DCI"
+
+#: src/main/java/org/netxms/nxmc/modules/assetmanagement/dialogs/SelectAssetAttributeDlg.java:72
+msgid "Select Asset Attributes"
+msgstr "選取資產屬性"
+
+#: src/main/java/org/netxms/nxmc/modules/assetmanagement/views/AssetManagementSchemaManager.java:287
+msgid "Asset Attribute Properties"
+msgstr "資產屬性內容"
+
+#: src/main/java/org/netxms/nxmc/modules/businessservice/propertypages/DCIAutoBind.java:92
+msgid "Automatically add DCI selected by filter to this business service as check"
+msgstr "自動將篩選所選取的 DCI 加入此業務服務作為檢查"
+
+#: src/main/java/org/netxms/nxmc/modules/businessservice/propertypages/DCIAutoBind.java:121
+msgid "Automatically remove DCI selected by filter from this business service"
+msgstr "當 DCI 不再通過篩選時自動將其從此業務服務移除"
+
+#: src/main/java/org/netxms/nxmc/modules/businessservice/propertypages/ObjectAutoBind.java:94
+msgid "Automatically add objects selected by filter to this business service as check"
+msgstr "自動將篩選所選取的物件加入此業務服務作為檢查"
+
+#: src/main/java/org/netxms/nxmc/modules/businessservice/propertypages/ObjectAutoBind.java:123
+msgid "Automatically remove objects selected by filter from this business service"
+msgstr "當物件不再通過篩選時自動將其從此業務服務移除"
+
+#: src/main/java/org/netxms/nxmc/modules/businessservice/views/BusinessServiceChecksView.java:351
+msgid "Add o&bject checks..."
+msgstr "新增物件檢查(&B)..."
+
+#: src/main/java/org/netxms/nxmc/modules/businessservice/views/BusinessServiceChecksView.java:359
+msgid "Add D&CI checks..."
+msgstr "新增 DCI 檢查(&C)..."
+
+#: src/main/java/org/netxms/nxmc/modules/businessservice/views/BusinessServiceChecksView.java:532
+msgid "Select Objects"
+msgstr "選取物件"
+
+#: src/main/java/org/netxms/nxmc/modules/businessservice/views/BusinessServiceChecksView.java:586
+msgid "Creating business service checks"
+msgstr "正在建立業務服務檢查"
+
+#: src/main/java/org/netxms/nxmc/modules/businessservice/views/BusinessServiceChecksView.java:597
+msgid "Cannot create business service checks"
+msgstr "無法建立業務服務檢查"
+
+#: src/main/java/org/netxms/nxmc/modules/dashboards/dialogs/SortingColumnSelectionDialog.java:118
+msgid "Descending order"
+msgstr "遞減排序"
+
+#: src/main/java/org/netxms/nxmc/modules/dashboards/dialogs/TableColumnSelectionDialog.java:65
+msgid "Select Column"
+msgstr "選取欄位"
+
+#: src/main/java/org/netxms/nxmc/modules/dashboards/propertypages/AvailabilityChart.java:155
+msgid "Period length (days)"
+msgstr "期間長度（天）"
+
+#: src/main/java/org/netxms/nxmc/modules/dashboards/propertypages/ObjectDetailsPropertyList.java:122
+msgid "Properties to display"
+msgstr "要顯示的屬性"
+
+#: src/main/java/org/netxms/nxmc/modules/dashboards/propertypages/StatusMap.java:156
+msgid "Hide objects in &maintenance mode"
+msgstr "隱藏維護模式中的物件(&M)"
+
+#: src/main/java/org/netxms/nxmc/modules/dashboards/propertypages/TableValue.java:153
+msgid "Sorting order"
+msgstr "排序方式"
+
+#: src/main/java/org/netxms/nxmc/modules/dashboards/widgets/TitleConfigurator.java:118
+msgid "Font size adjustment"
+msgstr "字型大小調整"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/BulkUpdateDialog.java:134
+msgid "Bulk DCI update"
+msgstr "DCI 大量更新"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/CreatePolicyDialog.java:71
+msgid "Create new policy"
+msgstr "建立新原則"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/CreatePolicyDialog.java:99
+msgid "Policy type"
+msgstr "原則類型"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/DisableThresholdsDialog.java:68
+msgid "Disable DCI Threshold processing"
+msgstr "停用 DCI 臨界值處理"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditColumnDialog.java:130
+msgid "Convert SNMP value to &hexadecimal string"
+msgstr "將 SNMP 值轉換為十六進位字串(&H)"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditDciSummaryTableColumnDlg.java:96
+msgid "Match by description instead of name"
+msgstr "以描述而非名稱進行比對"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditDciSummaryTableColumnDlg.java:104
+msgid "&Multivalued column"
+msgstr "多值欄位(&M)"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditDciSummaryTableColumnDlg.java:115
+msgid "&Separator for multiple values"
+msgstr "多個值的分隔字元(&S)"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditTableThresholdDialog.java:106
+msgid "Sample count"
+msgstr "取樣數"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/EditTableThresholdDialog.java:111
+msgid "Deactivation sample count"
+msgstr "解除取樣數"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/HistoricalDataSelectionDialog.java:104
+msgid "  -  "
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/SavePolicyDialog.java:105
+msgid ""
+"Policy is not saved.\n"
+"Do you want to save it, discard changes, or return to the editor?"
+msgstr ""
+"原則尚未儲存。\n"
+"要儲存、捨棄變更，還是返回編輯器？"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/SelectNetconfQueryDlg.java:90
+msgid "NETCONF Query Definition Selection"
+msgstr "選取 NETCONF 查詢定義"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/SelectWebServiceDlg.java:91
+msgid "Web Service Defenition Selection"
+msgstr "選取 Web 服務定義"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/TestTransformationDlg.java:151
+msgid "Select Execution Target"
+msgstr "選取執行目標"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/dialogs/TestTransformationDlg.java:161
+msgid "Invalid execution target"
+msgstr "執行目標無效"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/ClusterOptions.java:145
+msgid "Use last known value for aggregation in case of data collection error"
+msgstr "資料收集發生錯誤時使用最後已知的值進行彙總"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:168
+msgid "Metric to collect"
+msgstr "要收集的量測項目"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:208
+msgid "Source node override"
+msgstr "來源節點覆寫"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:300
+msgid "Display value mapping table"
+msgstr "顯示值對應表"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:308
+msgid "Collection schedule"
+msgstr "收集排程"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:344
+msgid "Custom interval"
+msgstr "自訂間隔"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:367
+msgid "Advanced schedule"
+msgstr "進階排程"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:390
+msgid "History retention period"
+msgstr "歷程保留期間"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:451
+msgid "Do not save to the database"
+msgstr "不儲存至資料庫"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:470
+msgid "Save every"
+msgstr "每隔"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/General.java:486
+msgid "Save only &changed values"
+msgstr "僅儲存變動的值(&C)"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/InstanceDiscovery.java:196
+msgid "Instance retention"
+msgstr "執行個體保留"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/InstanceDiscovery.java:210
+msgid "Instance retention mode"
+msgstr "執行個體保留模式"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/InstanceDiscovery.java:226
+msgid "Instance retention time (days)"
+msgstr "執行個體保留時間（天）"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:142
+msgid "Fixed to P"
+msgstr "固定為 P"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:143
+msgid "Fixed to T"
+msgstr "固定為 T"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:144
+msgid "Fixed to G"
+msgstr "固定為 G"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:145
+msgid "Fixed to M"
+msgstr "固定為 M"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:146
+msgid "Fixed to K"
+msgstr "固定為 K"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:148
+msgid "Fixed to m"
+msgstr "固定為 m"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:149
+msgid "Fixed to μ"
+msgstr "固定為 μ"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:150
+msgid "Fixed to n"
+msgstr "固定為 n"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:151
+msgid "Fixed to p"
+msgstr "固定為 p"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/OtherOptions.java:152
+msgid "Fixed to f"
+msgstr "固定為 f"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/SNMP.java:174
+msgid "Use custom SNMP version:"
+msgstr "使用自訂 SNMP 版本："
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/propertypages/SummaryTableAccessControl.java:99
+msgid "Users allowed to use this summary table"
+msgstr "允許使用此摘要表的使用者"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/views/TemplateGraphView.java:465
+msgid "Properties for "
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/AgentConfigPolicyEditor.java:71
+msgid "Expand macro"
+msgstr "展開巨集"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:173
+msgid "Color schema"
+msgstr "色彩配置"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:184
+msgid "Use custom color schema"
+msgstr "使用自訂色彩配置"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:211
+msgid "Welcome message"
+msgstr "歡迎訊息"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:215
+msgid "Tooltip message"
+msgstr "工具提示訊息"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:219
+msgid "Window behavior"
+msgstr "視窗行為"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:226
+msgid "Close on &deactivate"
+msgstr "失去焦點時關閉(&D)"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:235
+msgid "Top - Left"
+msgstr "上方 - 靠左"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:236
+msgid "Top - Center"
+msgstr "上方 - 置中"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:237
+msgid "Top - Right"
+msgstr "上方 - 靠右"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:238
+msgid "Middle - Left"
+msgstr "中間 - 靠左"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:239
+msgid "Middle - Center"
+msgstr "中間 - 置中"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:240
+msgid "Middle - Right"
+msgstr "中間 - 靠右"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:241
+msgid "Bottom - Left"
+msgstr "下方 - 靠左"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:242
+msgid "Bottom - Center"
+msgstr "下方 - 置中"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:243
+msgid "Bottom - Right"
+msgstr "下方 - 靠右"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:247
+msgid "Notification timeout"
+msgstr "通知逾時"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:252
+msgid "Desktop wallpaper file name"
+msgstr "桌布檔案名稱"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/SupportAppPolicyEditor.java:363
+msgid "Application Icon"
+msgstr "應用程式圖示"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/helpers/DataCollectionDisplayInfo.java:59
+msgid "<< ACCESS DENIED >>"
+msgstr "<< 拒絕存取 >>"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/helpers/DataCollectionDisplayInfo.java:61
+msgid "<< COMM ERROR >>"
+msgstr "<< 通訊錯誤 >>"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/helpers/DataCollectionDisplayInfo.java:63
+msgid "<< INVALID DATA >>"
+msgstr "<< 資料無效 >>"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/helpers/DataCollectionDisplayInfo.java:65
+msgid "<< NO SUCH INSTANCE >>"
+msgstr "<< 無此執行個體 >>"
+
+#: src/main/java/org/netxms/nxmc/modules/datacollection/widgets/helpers/DataCollectionDisplayInfo.java:67
+msgid "<< NOT SUPPORTED >>"
+msgstr "<< 不支援 >>"
+
+#: src/main/java/org/netxms/nxmc/modules/events/dialogs/RuleSelectionDialog.java:130
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ExportFileBuilder.java:538
+msgid "Rule Name"
+msgstr "規則名稱"
+
+#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleAlarm.java:239
+msgid "Root cause analysis script"
+msgstr "根本原因分析指令碼"
+
+#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleAlarm.java:256
+msgid "Alarm category script"
+msgstr "警報類別指令碼"
+
+#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleDowntimeControl.java:96
+msgid "Downtime tag"
+msgstr "停機標記"
+
+#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RulePersistentStorage.java:107
+msgid "Delete persistent storage entries"
+msgstr "刪除持續性儲存區項目"
+
+#: src/main/java/org/netxms/nxmc/modules/events/propertypages/RuleSourceObjects.java:177
+msgid "Exclusions:"
+msgstr "排除項目："
+
+#: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:192
+msgid "Errors"
+msgstr "錯誤"
+
+#: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:385
+msgid "Rule refers to source objects that do not exist"
+msgstr "規則參照到不存在的來源物件"
+
+#: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:387
+msgid "Rule refers to events that do not exist"
+msgstr "規則參照到不存在的事件"
+
+#: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:389
+msgid "Rule refers to actions that do not exist"
+msgstr "規則參照到不存在的動作"
+
+#: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:391
+msgid "Rule refers to alarm categories that do not exist"
+msgstr "規則參照到不存在的警報類別"
+
+#: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:393
+msgid "Filtering script cannot be compiled"
+msgstr "篩選指令碼無法編譯"
+
+#: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:395
+msgid "Action script cannot be compiled"
+msgstr "動作指令碼無法編譯"
+
+#: src/main/java/org/netxms/nxmc/modules/events/widgets/RuleEditor.java:879
+#, java-printf-format
+msgid "with categories selected by script \"%s\""
+msgstr "使用指令碼「%s」所選取的類別"
+
+#: src/main/java/org/netxms/nxmc/modules/filemanager/dialogs/FileFingerprintDialog.java:138
+msgid "File Fingerprint"
+msgstr "檔案指紋"
+
+#: src/main/java/org/netxms/nxmc/modules/filemanager/views/ServerFileManager.java:311
+#: src/main/java/org/netxms/nxmc/modules/snmp/views/MibFileManager.java:338
+msgid "Select Files"
+msgstr "選取檔案"
+
+#: src/main/java/org/netxms/nxmc/modules/imagelibrary/widgets/ImagePreview.java:86
+msgid "No image selected"
+msgstr "未選取影像"
+
+#: src/main/java/org/netxms/nxmc/modules/incidents/widgets/IncidentList.java:255
+msgid "&All incidents"
+msgstr "所有事故(&A)"
+
+#: src/main/java/org/netxms/nxmc/modules/incidents/widgets/IncidentList.java:265
+msgid "&Open incidents only"
+msgstr "僅開啟中的事故(&O)"
+
+#: src/main/java/org/netxms/nxmc/modules/incidents/widgets/IncidentList.java:275
+msgid "&Closed incidents only"
+msgstr "僅已關閉的事故(&C)"
+
+#: src/main/java/org/netxms/nxmc/modules/logviewer/dialogs/AuditLogRecordDetailsDialog.java:75
+msgid "Audit Log Record Details"
+msgstr "稽核記錄項目詳細資料"
+
+#: src/main/java/org/netxms/nxmc/modules/logviewer/dialogs/EventLogRecordDetailsDialog.java:62
+msgid "Event Log Record Details"
+msgstr "事件記錄項目詳細資料"
+
+#: src/main/java/org/netxms/nxmc/modules/logwatch/dialogs/SelectLogParserRuleDlg.java:137
+msgid "Match Expression"
+msgstr "比對運算式"
+
+#: src/main/java/org/netxms/nxmc/modules/logwatch/widgets/LogParserFileEditor.java:85
+msgid "File path"
+msgstr "檔案路徑"
+
+#: src/main/java/org/netxms/nxmc/modules/logwatch/widgets/LogParserMetricEditor.java:76
+msgid "Metric name"
+msgstr "量測項目名稱"
+
+#: src/main/java/org/netxms/nxmc/modules/logwatch/widgets/LogParserRuleEditor.java:411
+msgid "Reset repeat count"
+msgstr "重設重複計數"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/propertypages/LinkColor.java:174
+msgid "Include active &thresholds into calculation"
+msgstr "將作用中的臨界值納入計算(&T)"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/propertypages/LinkColor.java:183
+msgid "Include interface &utilization into calculation"
+msgstr "將介面使用率納入計算(&U)"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/propertypages/LinkGeneral.java:209
+msgid "Exclude from automatic updates"
+msgstr "排除於自動更新之外"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/propertypages/TextBoxGeneral.java:113
+msgid "Show border"
+msgstr "顯示邊框"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:115
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:200
+#, java-format
+msgid "Type: {0}"
+msgstr "類型：{0}"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:264
+msgid "Inbound"
+msgstr "輸入"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:265
+msgid "Outbound"
+msgstr "輸出"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:328
+msgid "VPN"
+msgstr "VPN"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:330
+msgid "Multiple links"
+msgstr "多重連線"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:332
+msgid "Agent tunnel"
+msgstr "代理程式通道"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:336
+msgid "SSH proxy"
+msgstr "SSH Proxy"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:340
+msgid "ICMP proxy"
+msgstr "ICMP Proxy"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:342
+msgid "Sensor proxy"
+msgstr "感測器 Proxy"
+
+#: src/main/java/org/netxms/nxmc/modules/networkmaps/widgets/helpers/LinkTooltip.java:346
+msgid "Wireless client"
+msgstr "無線用戶端"
+
+#: src/main/java/org/netxms/nxmc/modules/nxsl/views/ScriptExecutorView.java:789
+#, java-format
+msgid "Script on {0}"
+msgstr "{0} 上的指令碼"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/ObjectsPerspective.java:408
+msgid "Manage views"
+msgstr "管理檢視"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/ObjectsPerspective.java:867
+msgid " ▾  "
+msgstr ""
+
+#: src/main/java/org/netxms/nxmc/modules/objects/actions/EnableObjectPublicAccess.java:62
+msgid "Setting up public access"
+msgstr "正在設定公開存取"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/actions/EnableObjectPublicAccess.java:82
+#, java-printf-format
+msgid "Cannot setup public access for object \"%s\""
+msgstr "無法為物件「%s」設定公開存取"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateNodeDialog.java:333
+msgid "Disable usage of SSH for all polls"
+msgstr "所有輪詢皆停用 SSH"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateTrafficObserverDialog.java:127
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ObservationPointScope.java:117
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/TrafficObserverConnection.java:129
+msgid "Zone for host matching"
+msgstr "主機比對所用的區域"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateTrafficObserverDialog.java:177
+msgid "Please select traffic connector"
+msgstr "請選取流量連接器"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/CreateTrafficObserverDialog.java:183
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/TrafficObserverConnection.java:181
+msgid "Credentials must be a valid JSON object"
+msgstr "認證必須是有效的 JSON 物件"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/ObjectPublicAccessDialog.java:69
+msgid "Public Access Details"
+msgstr "公開存取詳細資料"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/ObjectPublicAccessDialog.java:88
+msgid "Access token"
+msgstr "存取權杖"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/PhysicalLinkEditDialog.java:117
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/PhysicalLinkEditDialog.java:198
+msgid "Interface or rack"
+msgstr "介面或機架"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/PhysicalLinkEditDialog.java:150
+#: src/main/java/org/netxms/nxmc/modules/objects/dialogs/PhysicalLinkEditDialog.java:231
+msgid "Patch panel"
+msgstr "跳線面板"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/Agent.java:211
+#: src/main/java/org/netxms/nxmc/modules/users/propertypages/Authentication.java:199
+msgid "Template ID"
+msgstr "範本 ID"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/DashboardElements.java:162
+msgid "&Scrollable content"
+msgstr "可捲動內容(&S)"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ICMP.java:137
+msgid "ICMP response statistic collection"
+msgstr "ICMP 回應統計收集"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ICMP.java:161
+msgid "Additional targets for ICMP response statistic collection"
+msgstr "ICMP 回應統計收集的額外目標"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/LocationControl.java:142
+msgid "&Generate event when location changes"
+msgstr "位置變更時產生事件(&G)"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/LocationControl.java:146
+msgid "Location control mode"
+msgstr "位置控制模式"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/LocationControl.java:148
+msgid "No control"
+msgstr "不控制"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/LocationControl.java:149
+msgid "Alert when within restricted area"
+msgstr "進入受限區域時發出警示"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/LocationControl.java:150
+msgid "Alert when outside allowed area"
+msgstr "超出允許區域時發出警示"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/MapAppearance.java:100
+msgid "Name on network maps (leave empty to use normal object name)"
+msgstr "網路地圖上的名稱（留空則使用一般物件名稱）"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/MapBackground.java:177
+msgid "Fit to scrren"
+msgstr "符合螢幕大小"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/MapBackground.java:264
+msgid "Image fit"
+msgstr "影像縮放方式"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/MapOptions.java:299
+msgid "Show link direction"
+msgstr "顯示連線方向"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/MapOptions.java:303
+msgid "Display traffic data"
+msgstr "顯示流量資料"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ObservationPointScope.java:118
+msgid "Inherit from observer"
+msgstr "繼承自觀察者"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/PhysicalContainerPlacement.java:137
+msgid "Rack or chassis"
+msgstr "機架或機箱"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/PhysicalContainerPlacement.java:233
+msgid "Chassis image"
+msgstr "機箱影像"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/PhysicalContainerPlacement.java:377
+msgid "Rack front image"
+msgstr "機架正面影像"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/PhysicalContainerPlacement.java:387
+msgid "Rack rear image"
+msgstr "機架背面影像"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/Polling.java:162
+msgid "Required poll count for status change"
+msgstr "狀態變更所需的輪詢次數"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/Polling.java:186
+msgid "Disable &NETCONF usage for all polls"
+msgstr "所有輪詢皆停用 NETCONF(&N)"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/RackPassiveElements.java:204
+msgid "&Delete..."
+msgstr "刪除(&D)..."
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ZoneAgentCredentials.java:143
+msgid "Shared secrets"
+msgstr "共用密鑰"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ZoneSNMPCredentials.java:157
+msgid "Community strings"
+msgstr "Community 字串"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/propertypages/ZoneSNMPCredentials.java:397
+msgid "USM credentials"
+msgstr "USM 認證"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/views/ObjectQueryResultView.java:83
+msgid "Object Query Results"
+msgstr "物件查詢結果"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/views/WirelessStations.java:76
+msgid "Wireless Stations"
+msgstr "無線工作站"
+
+#: src/main/java/org/netxms/nxmc/modules/objects/views/elements/InterfaceTrafficChart.java:328
+msgid "No data"
+msgstr "無資料"
+
+#: src/main/java/org/netxms/nxmc/modules/objecttools/dialogs/ObjectToolSelectionDialog.java:68
+msgid "Select Tool"
+msgstr "選取工具"
+
+#: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/Filter.java:236
+msgid "Workstation OS name should match the following template (comma separated regular expression list)"
+msgstr "工作站作業系統名稱必須符合下列樣板（以逗號分隔的正規表示式清單）"
+
+#: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/Filter.java:293
+msgid "The following custom attribute(s) should exist"
+msgstr "必須存在下列自訂屬性"
+
+#: src/main/java/org/netxms/nxmc/modules/objecttools/propertypages/General.java:400
+msgid "&Suppress notification of successful execution"
+msgstr "不通知執行成功的結果(&S)"
+
+#: src/main/java/org/netxms/nxmc/modules/reporting/propertypages/Notifications.java:82
+msgid "Send notification on job completion"
+msgstr "工作完成時傳送通知"
+
+#: src/main/java/org/netxms/nxmc/modules/reporting/propertypages/Notifications.java:156
+msgid "Attach rendered report to notification email as"
+msgstr "將產生的報表以下列格式附加至通知郵件"
+
+#: src/main/java/org/netxms/nxmc/modules/reporting/widgets/ReportExecutionForm.java:460
+msgid "This report does not have parameters"
+msgstr "此報表沒有參數"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/EditSSHCredentialsDialog.java:103
+msgid "SSH Key"
+msgstr "SSH 金鑰"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/MappingTableSelectionDialog.java:68
+msgid "Select Mapping Table"
+msgstr "選取對應表"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/ObjectToolSelectionDialog.java:66
+msgid "Select Object Tool"
+msgstr "選取物件工具"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/RepositorySelectionDialog.java:72
+msgid "Select Repository"
+msgstr "選取儲存庫"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/RepositorySelectionDialog.java:90
+msgid "Available repositories"
+msgstr "可用的儲存庫"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/ScheduledTaskEditDialog.java:78
+msgid "Edit Scheduled Task"
+msgstr "編輯排程工作"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/ScheduledTaskEditDialog.java:107
+msgid "Select execution object"
+msgstr "選取執行物件"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/VariableEditDialog.java:121
+msgid "&True"
+msgstr "是(&T)"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/dialogs/VariableEditDialog.java:125
+msgid "&False"
+msgstr "否(&F)"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ExportFileBuilder.java:1105
+msgid "NETCONF Query Definitions"
+msgstr "NETCONF 查詢定義"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/views/ImportConfiguration.java:144
+msgid "Replace &NETCONF query definitions"
+msgstr "取代 NETCONF 查詢定義(&N)"
+
+#: src/main/java/org/netxms/nxmc/modules/serverconfig/views/NetworkCredentialsEditor.java:167
+msgid "Select zone"
+msgstr "選取區域"
+
+#: src/main/java/org/netxms/nxmc/modules/snmp/views/MibFileManager.java:186
+msgid "Error Log"
+msgstr "錯誤記錄"
+
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:424
+msgid "Search mode"
+msgstr "搜尋模式"
+
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:429
+msgid "&Normal"
+msgstr "一般(&N)"
+
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:433
+msgid "&Pattern (* = any string, ? = any character)"
+msgstr "樣式比對(&P)（* = 任意字串，? = 任意字元）"
+
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:436
+msgid "&Regular expression"
+msgstr "正規表示式(&R)"
+
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:447
+msgid "Class filter"
+msgstr "類別篩選"
+
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:499
+msgid "Zone filter"
+msgstr "區域篩選"
+
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:545
+msgid "IP Range"
+msgstr "IP 範圍"
+
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:563
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:689
+msgid "&Search"
+msgstr "搜尋(&S)"
+
+#: src/main/java/org/netxms/nxmc/modules/tools/views/ObjectFinder.java:603
+msgid "Saved queries"
+msgstr "已儲存的查詢"
+
+#: src/main/java/org/netxms/nxmc/modules/traffic/views/ObservationPointView.java:190
+#, java-printf-format
+msgid "%.1f Gbps"
+msgstr "%.1f Gbps"
+
+#: src/main/java/org/netxms/nxmc/modules/traffic/views/ObservationPointView.java:192
+#, java-printf-format
+msgid "%.1f Mbps"
+msgstr "%.1f Mbps"
+
+#: src/main/java/org/netxms/nxmc/modules/traffic/views/ObservationPointView.java:194
+#, java-printf-format
+msgid "%.1f Kbps"
+msgstr "%.1f Kbps"
+
+#: src/main/java/org/netxms/nxmc/modules/traffic/views/ObservationPointView.java:195
+#, java-printf-format
+msgid "%.0f bps"
+msgstr "%.0f bps"
+
+#: src/main/java/org/netxms/nxmc/modules/users/propertypages/General.java:103
+msgid "Phone number"
+msgstr "電話號碼"
+
+#: src/main/java/org/netxms/nxmc/modules/users/propertypages/Members.java:90
+msgid ""
+"This built-in group contains all the users in the system and\n"
+"is populated automatically. You can’t add or remove users here."
+msgstr ""
+"此內建群組包含系統中所有使用者，並會自動維護。\n"
+"您無法在此新增或移除使用者。"
+
+#: src/main/java/org/netxms/nxmc/modules/users/propertypages/UIAccessRules.java:83
+msgid "&Add element..."
+msgstr "新增元素(&A)..."
+
+#: src/main/java/org/netxms/nxmc/modules/worldmap/dialogs/GeoAreaEditDialog.java:109
+msgid "Border points (one point per line)"
+msgstr "邊界點（每行一點）"
+
+#: src/main/java/org/netxms/nxmc/modules/worldmap/dialogs/GeoAreaSelectionDialog.java:77
+msgid "Select Geo Area"
+msgstr "選取地理區域"
+
+#: src/rwt/java/org/netxms/nxmc/Startup.java:284
+msgid "Invalid resource ID"
+msgstr "資源 ID 無效"
+
+#: src/rwt/java/org/netxms/nxmc/base/dialogs/ThemeEditDialog.java:88
+#: src/swt/java/org/netxms/nxmc/base/dialogs/ThemeEditDialog.java:94
+msgid "Edit Theme"
+msgstr "編輯佈景主題"
+
+#: src/rwt/java/org/netxms/nxmc/base/dialogs/ThemeEditDialog.java:113
+#: src/swt/java/org/netxms/nxmc/base/dialogs/ThemeEditDialog.java:120
+msgid "Theme elements"
+msgstr "佈景主題元素"
+
+#: src/rwt/java/org/netxms/nxmc/base/login/LoginDialog.java:157
+#: src/rwt/java/org/netxms/nxmc/base/login/LoginProgressDialog.java:124
+msgid "Copyright © 2013-2026 Raden Solutions"
+msgstr ""
+
+#: src/rwt/java/org/netxms/nxmc/base/preferencepages/ThemesPage.java:99
+#: src/swt/java/org/netxms/nxmc/base/preferencepages/ThemesPage.java:96
+msgid "Active theme"
+msgstr "使用中的佈景主題"
+
+#: src/rwt/java/org/netxms/nxmc/base/preferencepages/ThemesPage.java:179
+#: src/swt/java/org/netxms/nxmc/base/preferencepages/ThemesPage.java:176
+msgid "E&xport..."
+msgstr "匯出(&X)..."
+
+#: src/rwt/java/org/netxms/nxmc/base/widgets/WelcomePage.java:107
+#: src/swt/java/org/netxms/nxmc/base/widgets/WelcomePage.java:114
+msgid "Welcome to NetXMS "
+msgstr "歡迎使用 NetXMS "
+
+#: src/rwt/java/org/netxms/nxmc/modules/alarms/preferencepages/AlarmSounds.java:117
+#: src/swt/java/org/netxms/nxmc/modules/alarms/preferencepages/AlarmSounds.java:117
+msgid "Play sound on all alarms"
+msgstr "所有警報都播放音效"
+
+#: src/rwt/java/org/netxms/nxmc/modules/alarms/preferencepages/AlarmSounds.java:122
+#: src/swt/java/org/netxms/nxmc/modules/alarms/preferencepages/AlarmSounds.java:122
+msgid "Play sound as defined by active dashboard"
+msgstr "依作用中儀表板的定義播放音效"
+
+#: src/rwt/java/org/netxms/nxmc/modules/datacollection/propertypages/TemplateDataSources.java:89
+#: src/swt/java/org/netxms/nxmc/modules/datacollection/propertypages/TemplateDataSources.java:94
+msgid "Template Data Source"
+msgstr "範本資料來源"
+
+#: src/swt/java/org/netxms/nxmc/modules/dashboards/views/AbstractDashboardView.java:324
+msgid "Save dashboard as image"
+msgstr "將儀表板另存為影像"
+

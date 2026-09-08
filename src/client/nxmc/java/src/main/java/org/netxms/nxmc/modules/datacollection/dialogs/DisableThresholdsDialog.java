@@ -65,7 +65,7 @@ public class DisableThresholdsDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Disable DCI Threshold processing");
+      newShell.setText(i18n.tr("Disable DCI Threshold processing"));
    }
 
    /**

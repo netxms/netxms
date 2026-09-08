@@ -137,7 +137,7 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		tc.setWidth(300);
 		
       tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-      tc.setText("OID as text");
+      tc.setText(i18n.tr("OID as text"));
       tc.setWidth(300);
 
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);

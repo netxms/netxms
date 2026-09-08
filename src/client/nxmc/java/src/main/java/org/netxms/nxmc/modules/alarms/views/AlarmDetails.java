@@ -570,7 +570,7 @@ public class AlarmDetails extends AdHocObjectView
    						else
    						{
    						   Label label = new Label(dataArea, SWT.NONE);
-   						   label.setText("No DCI associated with this alarm");
+   						   label.setText(i18n.tr("No DCI associated with this alarm"));
                         dataSection.setExpanded(false);
    						   DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
    						   dd.fill = false;

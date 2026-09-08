@@ -91,7 +91,7 @@ public class SummaryTableGeneral extends PropertyPage
       if (table.isTableSoure())
       {
          dciName = new LabeledText(dialogArea, SWT.NONE);
-         dciName.setLabel("DCI name");
+         dciName.setLabel(i18n.tr("DCI name"));
          dciName.getTextControl().setTextLimit(255);
          dciName.setText(table.getTableDciName());
          dciName.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));

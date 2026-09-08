@@ -308,7 +308,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    private void uploadFile()
    {
       FileDialog fd = new FileDialog(getWindow().getShell(), SWT.OPEN | SWT.MULTI);
-      fd.setText("Select Files");
+      fd.setText(i18n.tr("Select Files"));
       if (fd.open() == null)
          return;
 

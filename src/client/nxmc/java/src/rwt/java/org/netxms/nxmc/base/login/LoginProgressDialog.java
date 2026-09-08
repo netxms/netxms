@@ -121,7 +121,7 @@ public class LoginProgressDialog extends Dialog implements IRunnableContext
       footer.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
       Label copyright = new Label(footer, SWT.LEFT);
-      copyright.setText("Copyright \u00a9 2013-2026 Raden Solutions");
+      copyright.setText(i18n.tr("Copyright \u00a9 2013-2026 Raden Solutions"));
       copyright.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, true, false));
 
       Label version = new Label(footer, SWT.RIGHT);

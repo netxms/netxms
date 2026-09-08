@@ -260,7 +260,7 @@ public class ObjectQueryEditDialog extends Dialog
       buttonAdd.setLayoutData(rd);
 
       buttonEdit = new Button(buttonsRight, SWT.PUSH);
-      buttonEdit.setText("&Edit...");
+      buttonEdit.setText(i18n.tr("&Edit..."));
       buttonEdit.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

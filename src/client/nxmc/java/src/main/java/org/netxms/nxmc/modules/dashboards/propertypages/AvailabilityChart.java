@@ -152,7 +152,7 @@ public class AvailabilityChart extends DashboardElementPropertyPage
       legendPosition.select(positionIndexFromValue(config.getLegendPosition()));
 
       daysSelector = new LabeledSpinner(dialogArea, SWT.NONE);
-      daysSelector.setLabel("Period length (days)");
+      daysSelector.setLabel(i18n.tr("Period length (days)"));
       daysSelector.setRange(1, 1000);
       daysSelector.setSelection(config.getNumberOfDays());
       daysSelector.setVisible(periodSelector.getSelectionIndex() == AvailabilityChartConfig.CUSTOM);

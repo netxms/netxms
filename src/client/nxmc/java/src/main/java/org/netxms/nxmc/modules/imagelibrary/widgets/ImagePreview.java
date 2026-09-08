@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.LibraryImage;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.imagelibrary.ImageProviderTools;
 import org.netxms.nxmc.tools.FontTools;
@@ -44,12 +45,15 @@ import org.netxms.ui.svg.SVGImage;
 import org.netxms.ui.svg.SVGParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Image preview widget for image library
  */
 public class ImagePreview extends Composite
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ImagePreview.class);
+
    private static final Logger logger = LoggerFactory.getLogger(ImagePreview.class);
 
    private static final String[] HEADER_FONTS = { "Verdana", "DejaVu Sans", "Liberation Sans", "Arial" };
@@ -79,7 +83,7 @@ public class ImagePreview extends Composite
 
       imageName = new Label(this, SWT.NONE);
       imageName.setBackground(getBackground());
-      imageName.setText("No image selected");
+      imageName.setText(i18n.tr("No image selected"));
       imageName.setFont(headerFont);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

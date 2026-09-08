@@ -40,6 +40,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.dialogs.ThemeEditDialog;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.DefaultDarkTheme;
 import org.netxms.nxmc.resources.DefaultLightTheme;
 import org.netxms.nxmc.resources.Theme;
@@ -48,12 +49,15 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Theme preferences
  */
 public class ThemesPage extends PropertyPage
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ThemesPage.class);
+
    private static final Logger logger = LoggerFactory.getLogger(ThemesPage.class);
 
    private Combo themeSelector;
@@ -92,7 +96,7 @@ public class ThemesPage extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 4;
-      themeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER, "Active theme", gd);
+      themeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER, i18n.tr("Active theme"), gd);
       updateThemeDropDown();
 
       String currentTheme = PreferenceStore.getInstance().getAsString("CurrentTheme");
@@ -114,7 +118,7 @@ public class ThemesPage extends PropertyPage
       });
 
       editButton = new Button(dialogArea, SWT.PUSH);
-      editButton.setText("&Edit...");
+      editButton.setText(i18n.tr("&Edit..."));
       gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -129,7 +133,7 @@ public class ThemesPage extends PropertyPage
       });
 
       removeButton = new Button(dialogArea, SWT.PUSH);
-      removeButton.setText("&Remove");
+      removeButton.setText(i18n.tr("&Remove"));
       gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -144,7 +148,7 @@ public class ThemesPage extends PropertyPage
       });
 
       importButton = new Button(dialogArea, SWT.PUSH);
-      importButton.setText("&Import...");
+      importButton.setText(i18n.tr("&Import..."));
       gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -158,7 +162,7 @@ public class ThemesPage extends PropertyPage
       });
 
       newButton = new Button(dialogArea, SWT.PUSH);
-      newButton.setText("&New...");
+      newButton.setText(i18n.tr("&New..."));
       gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
@@ -172,7 +176,7 @@ public class ThemesPage extends PropertyPage
       });
 
       exportButton = new Button(dialogArea, SWT.PUSH);
-      exportButton.setText("E&xport...");
+      exportButton.setText(i18n.tr("E&xport..."));
       gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;

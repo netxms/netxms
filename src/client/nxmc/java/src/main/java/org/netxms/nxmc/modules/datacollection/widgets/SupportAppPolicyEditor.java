@@ -58,6 +58,7 @@ import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.MenuItemDialog;
 import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.AppMenuItem;
@@ -70,12 +71,15 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Support application editor widget
  */
 public class SupportAppPolicyEditor extends AbstractPolicyEditor
 {
+   private final I18n i18n = LocalizationHelper.getI18n(SupportAppPolicyEditor.class);
+
    private static final Logger logger = LoggerFactory.getLogger(SupportAppPolicy.class);
    
    public static final int NAME = 0;
@@ -166,7 +170,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       createIconSelector(topArea);
       
       Group colorSelectors = new Group(topArea, SWT.NONE);
-      colorSelectors.setText("Color schema");
+      colorSelectors.setText(i18n.tr("Color schema"));
       layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       layout.numColumns = 3;
@@ -177,7 +181,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       GridData gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       customColorSchemaCheckbox = new Button(colorSelectors, SWT.CHECK);
-      customColorSchemaCheckbox.setText("Use custom color schema");
+      customColorSchemaCheckbox.setText(i18n.tr("Use custom color schema"));
       customColorSchemaCheckbox.setLayoutData(gd);
       customColorSchemaCheckbox.setSelection(policyData.menuBackgroundColor != null);
 
@@ -204,22 +208,22 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       messageArea.setLayout(layout);
 
       welcomeMessageText = new LabeledText(messageArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
-      welcomeMessageText.setLabel("Welcome message");
+      welcomeMessageText.setLabel(i18n.tr("Welcome message"));
       welcomeMessageText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
       tooltipMessageText = new LabeledText(messageArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
-      tooltipMessageText.setLabel("Tooltip message");
+      tooltipMessageText.setLabel(i18n.tr("Tooltip message"));
       tooltipMessageText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
       Group windowBehaviorGroup = new Group(topArea, SWT.NONE);
-      windowBehaviorGroup.setText("Window behavior");
+      windowBehaviorGroup.setText(i18n.tr("Window behavior"));
       windowBehaviorGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
       layout = new GridLayout();
       layout.numColumns = 2;
       windowBehaviorGroup.setLayout(layout);
 
       closeOnDeactivateCheckbox = new Button(windowBehaviorGroup, SWT.CHECK);
-      closeOnDeactivateCheckbox.setText("Close on &deactivate");
+      closeOnDeactivateCheckbox.setText(i18n.tr("Close on &deactivate"));
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       closeOnDeactivateCheckbox.setLayoutData(gd);
@@ -228,24 +232,24 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
             new GridData(SWT.FILL, SWT.BOTTOM, true, false));
       windowPositioning.add("Undefined");
       windowPositioning.add("Automatic");
-      windowPositioning.add("Top - Left");
-      windowPositioning.add("Top - Center");
-      windowPositioning.add("Top - Right");
-      windowPositioning.add("Middle - Left");
-      windowPositioning.add("Middle - Center");
-      windowPositioning.add("Middle - Right");
-      windowPositioning.add("Bottom - Left");
-      windowPositioning.add("Bottom - Center");
-      windowPositioning.add("Bottom - Right");
+      windowPositioning.add(i18n.tr("Top - Left"));
+      windowPositioning.add(i18n.tr("Top - Center"));
+      windowPositioning.add(i18n.tr("Top - Right"));
+      windowPositioning.add(i18n.tr("Middle - Left"));
+      windowPositioning.add(i18n.tr("Middle - Center"));
+      windowPositioning.add(i18n.tr("Middle - Right"));
+      windowPositioning.add(i18n.tr("Bottom - Left"));
+      windowPositioning.add(i18n.tr("Bottom - Center"));
+      windowPositioning.add(i18n.tr("Bottom - Right"));
       windowPositioning.select(0);
 
       notificationTimeout = new LabeledDurationInput(windowBehaviorGroup, SWT.NONE);
-      notificationTimeout.setLabel("Notification timeout");
+      notificationTimeout.setLabel(i18n.tr("Notification timeout"));
       notificationTimeout.setRange(0, 3600);
       notificationTimeout.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
       desktopWallpaperFile = new LabeledText(topArea, SWT.NONE);
-      desktopWallpaperFile.setLabel("Desktop wallpaper file name");
+      desktopWallpaperFile.setLabel(i18n.tr("Desktop wallpaper file name"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -356,7 +360,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    private void createIconSelector(Composite parent)
    {
       Group group = new Group(parent, SWT.NONE);
-      group.setText("Application Icon");
+      group.setText(i18n.tr("Application Icon"));
       GridData gd = new GridData(SWT.FILL, SWT.FILL, false, false);
       group.setLayoutData(gd);
       

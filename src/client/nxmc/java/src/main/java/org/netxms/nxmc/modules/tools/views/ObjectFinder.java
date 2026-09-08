@@ -411,7 +411,7 @@ public class ObjectFinder extends View
       fullTextSearchGroup.setLayout(layout);
 
       text = new LabeledText(fullTextSearchGroup, SWT.NONE);
-      text.setLabel("Search string");
+      text.setLabel(i18n.tr("Search string"));
       text.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
       TraverseListener traverseListener = new TraverseListener() {
          @Override
@@ -424,19 +424,19 @@ public class ObjectFinder extends View
       text.addTraverseListener(traverseListener);
 
       Group searchModeGroup = new Group(fullTextSearchGroup, SWT.NONE);
-      searchModeGroup.setText("Search mode");
+      searchModeGroup.setText(i18n.tr("Search mode"));
       layout = new GridLayout();
       searchModeGroup.setLayout(layout);
 
       radioPlainText = new Button(searchModeGroup, SWT.RADIO);
-      radioPlainText.setText("&Normal");
+      radioPlainText.setText(i18n.tr("&Normal"));
       radioPlainText.setSelection(true);
 
       radioPattern = new Button(searchModeGroup, SWT.RADIO);
-      radioPattern.setText("&Pattern (* = any string, ? = any character)");
+      radioPattern.setText(i18n.tr("&Pattern (* = any string, ? = any character)"));
 
       radioRegularExpression = new Button(searchModeGroup, SWT.RADIO);
-      radioRegularExpression.setText("&Regular expression");
+      radioRegularExpression.setText(i18n.tr("&Regular expression"));
 
       /*** Class filter ***/
       Composite classFilterGroup = new Composite(conditionGroup, SWT.NONE);
@@ -447,7 +447,7 @@ public class ObjectFinder extends View
       classFilterGroup.setLayout(layout);
 
       Label classFilterTitle = new Label(classFilterGroup, SWT.NONE);
-      classFilterTitle.setText("Class filter");
+      classFilterTitle.setText(i18n.tr("Class filter"));
 
       classList = CheckboxTableViewer.newCheckList(classFilterGroup, SWT.BORDER | SWT.CHECK);
       classList.setContentProvider(new ArrayContentProvider());
@@ -463,7 +463,7 @@ public class ObjectFinder extends View
       classListButtons.setLayout(rlayout);
 
       Button selectAll = new Button(classListButtons, SWT.PUSH);
-      selectAll.setText("Select &all");
+      selectAll.setText(i18n.tr("Select &all"));
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       selectAll.setLayoutData(rd);
@@ -476,7 +476,7 @@ public class ObjectFinder extends View
       });
 
       Button clearAll = new Button(classListButtons, SWT.PUSH);
-      clearAll.setText("&Clear all");
+      clearAll.setText(i18n.tr("&Clear all"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       clearAll.setLayoutData(rd);
@@ -499,7 +499,7 @@ public class ObjectFinder extends View
          zoneFilterGroup.setLayout(layout);
 
          Label zoneFilterTitle = new Label(zoneFilterGroup, SWT.NONE);
-         zoneFilterTitle.setText("Zone filter");
+         zoneFilterTitle.setText(i18n.tr("Zone filter"));
 
          zoneList = CheckboxTableViewer.newCheckList(zoneFilterGroup, SWT.BORDER | SWT.CHECK);
          zoneList.setContentProvider(new ArrayContentProvider());
@@ -517,7 +517,7 @@ public class ObjectFinder extends View
          zoneListButtons.setLayout(rlayout);
 
          selectAll = new Button(zoneListButtons, SWT.PUSH);
-         selectAll.setText("Select &all");
+         selectAll.setText(i18n.tr("Select &all"));
          rd = new RowData();
          rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
          selectAll.setLayoutData(rd);
@@ -530,7 +530,7 @@ public class ObjectFinder extends View
          });
 
          clearAll = new Button(zoneListButtons, SWT.PUSH);
-         clearAll.setText("&Clear all");
+         clearAll.setText(i18n.tr("&Clear all"));
          rd = new RowData();
          rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
          clearAll.setLayoutData(rd);
@@ -545,7 +545,7 @@ public class ObjectFinder extends View
 
       /*** IP filter ***/
       Group ipFilterGroup = new Group(conditionGroup, SWT.NONE);
-      ipFilterGroup.setText("IP Range");
+      ipFilterGroup.setText(i18n.tr("IP Range"));
       ipFilterGroup.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
       layout = new GridLayout();
       layout.numColumns = 3;
@@ -563,7 +563,7 @@ public class ObjectFinder extends View
 
       /*** Search button ***/
       Button searchButtonFilter = new Button(conditionGroup, SWT.PUSH);
-      searchButtonFilter.setText("&Search");
+      searchButtonFilter.setText(i18n.tr("&Search"));
       gd = new GridData(SWT.LEFT, SWT.BOTTOM, true, false);
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       searchButtonFilter.setLayoutData(gd);
@@ -603,7 +603,7 @@ public class ObjectFinder extends View
       labelQueryEditor.setLayoutData(gd);
 
       Label labelQueryList = new Label(queryArea, SWT.LEFT);
-      labelQueryList.setText("Saved queries");
+      labelQueryList.setText(i18n.tr("Saved queries"));
       labelQueryList.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
       queryEditor = new ScriptEditor(queryArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
@@ -689,7 +689,7 @@ public class ObjectFinder extends View
       queryHeader.setLayoutData(gd);
 
       searchButtonQuery = new Button(queryHeader, SWT.PUSH);
-      searchButtonQuery.setText("&Search");
+      searchButtonQuery.setText(i18n.tr("&Search"));
       gd = new GridData(SWT.LEFT, SWT.BOTTOM, false, false);
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       searchButtonQuery.setLayoutData(gd);

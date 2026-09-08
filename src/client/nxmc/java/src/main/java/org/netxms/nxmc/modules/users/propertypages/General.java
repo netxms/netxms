@@ -100,7 +100,7 @@ public class General extends PropertyPage
          textEmail = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Email", initialEmail, WidgetHelper.DEFAULT_LAYOUT_DATA);
 
          initialPhoneNumber = new String(((User)object).getPhoneNumber());
-         textPhoneNumber = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, "Phone number",
+         textPhoneNumber = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Phone number"),
                initialPhoneNumber, WidgetHelper.DEFAULT_LAYOUT_DATA);
 
       }

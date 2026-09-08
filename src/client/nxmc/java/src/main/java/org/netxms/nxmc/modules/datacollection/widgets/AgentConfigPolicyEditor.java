@@ -29,15 +29,19 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.AgentPolicy;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.widgets.AgentConfigEditor;
 import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Editor for agent configuration policy
  */
 public class AgentConfigPolicyEditor extends AbstractPolicyEditor
 {
+   private final I18n i18n = LocalizationHelper.getI18n(AgentConfigPolicyEditor.class);
+
    private AgentConfigEditor editor;
    private Button buttonExpandMacro;
    
@@ -64,7 +68,7 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
       mainArea.setLayout(layout);
       
       buttonExpandMacro = new Button(mainArea, SWT.CHECK);
-      buttonExpandMacro.setText("Expand macro");
+      buttonExpandMacro.setText(i18n.tr("Expand macro"));
       buttonExpandMacro.setLayoutData(new GridData());
       buttonExpandMacro.addSelectionListener(new SelectionListener() {
          

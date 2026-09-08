@@ -73,7 +73,7 @@ public class LogParserMetricEditor extends DashboardComposite
       setLayout(layout);
 
       labelMetricName = new LabeledText(this, SWT.NONE);
-      labelMetricName.setLabel("Metric name");
+      labelMetricName.setLabel(i18n.tr("Metric name"));
       labelMetricName.setBackground(getBackground());
       labelMetricName.setText(metric.getMetric());
       GridData gd = new GridData();

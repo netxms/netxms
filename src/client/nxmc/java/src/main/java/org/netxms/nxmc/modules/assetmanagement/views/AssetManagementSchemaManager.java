@@ -284,7 +284,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          protected void configureShell(Shell newShell)
          {
             super.configureShell(newShell);
-            newShell.setText("Asset Attribute Properties");
+            newShell.setText(i18n.tr("Asset Attribute Properties"));
          }
       };
       dlg.setBlockOnOpen(true);

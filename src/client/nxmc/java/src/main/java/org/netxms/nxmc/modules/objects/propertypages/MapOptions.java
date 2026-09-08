@@ -296,11 +296,11 @@ public class MapOptions extends ObjectPropertyPage
       linkDisplayGroup.setLayout(layout);
 
       checkShowLinkDirection = new Button(linkDisplayGroup, SWT.CHECK);
-      checkShowLinkDirection.setText("Show link direction");
+      checkShowLinkDirection.setText(i18n.tr("Show link direction"));
       checkShowLinkDirection.setSelection((map.getFlags() & NetworkMap.MF_SHOW_LINK_DIRECTION) != 0);
 
       checkShowTraffic = new Button(linkDisplayGroup, SWT.CHECK);
-      checkShowTraffic.setText("Display traffic data");
+      checkShowTraffic.setText(i18n.tr("Display traffic data"));
       checkShowTraffic.setSelection((map.getFlags() & NetworkMap.MF_SHOW_TRAFFIC) != 0);
 
       checkDontUpdateLinkText = new Button(linkDisplayGroup, SWT.CHECK);

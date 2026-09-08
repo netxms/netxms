@@ -44,16 +44,20 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.Theme;
 import org.netxms.nxmc.resources.ThemeElement;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Theme editing dialog
  */
 public class ThemeEditDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ThemeEditDialog.class);
+
    public static final int COLUMN_TAG = 0;
    public static final int COLUMN_FOREGROUND = 1;
    public static final int COLUMN_BACKGROUND = 2;
@@ -81,7 +85,7 @@ public class ThemeEditDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Edit Theme");
+      newShell.setText(i18n.tr("Edit Theme"));
       PreferenceStore settings = PreferenceStore.getInstance();
       newShell.setSize(settings.getAsInteger("ThemeEditDialog.cx", 670), settings.getAsInteger("ThemeEditDialog.cy", 600));
    }
@@ -106,7 +110,7 @@ public class ThemeEditDialog extends Dialog
       name.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Theme elements");
+      label.setText(i18n.tr("Theme elements"));
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.OUTER_SPACING - WidgetHelper.INNER_SPACING;
       label.setLayoutData(gd);

@@ -676,7 +676,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       searchBar.setLayoutData(fd);
 
       queryEditor = new LabeledText(searchBar, SWT.NONE);
-      queryEditor.setLabel("Search string");
+      queryEditor.setLabel(i18n.tr("Search string"));
       queryEditor.getTextControl().addKeyListener(new KeyListener() {
          @Override
          public void keyReleased(KeyEvent e)
@@ -703,7 +703,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
       previousButton = new Button(searchBar, SWT.PUSH);
       previousButton.setImage(SharedIcons.IMG_UP);
-      previousButton.setToolTipText("Find previous (Arrow Up)");
+      previousButton.setToolTipText(i18n.tr("Find previous (Arrow Up)"));
       previousButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -715,7 +715,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
       nextButton = new Button(searchBar, SWT.PUSH);
       nextButton.setImage(SharedIcons.IMG_DOWN);
-      nextButton.setToolTipText("Find next (Arrow Down)");
+      nextButton.setToolTipText(i18n.tr("Find next (Arrow Down)"));
       nextButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

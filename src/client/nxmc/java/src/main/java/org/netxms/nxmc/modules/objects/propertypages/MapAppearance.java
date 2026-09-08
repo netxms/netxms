@@ -97,7 +97,7 @@ public class MapAppearance extends ObjectPropertyPage
 
       // Name on maps
       nameOnMap = new LabeledText(dialogArea, SWT.NONE);
-      nameOnMap.setLabel("Name on network maps (leave empty to use normal object name)");
+      nameOnMap.setLabel(i18n.tr("Name on network maps (leave empty to use normal object name)"));
       nameOnMap.setText(object.getConfiguredNameOnMap());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -117,7 +117,7 @@ public class MapAppearance extends ObjectPropertyPage
       if (!(object instanceof NetworkMap))
       {
          drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
-         drillDownObject.setLabel("Drill-down object");
+         drillDownObject.setLabel(i18n.tr("Drill-down object"));
          drillDownObject.setObjectClass(AbstractObject.class);
          drillDownObject.setObjectId(object.getDrillDownObjectId());
          drillDownObject.setClassFilter(ObjectSelectionDialog.createDashboardAndNetworkMapSelectionFilter());

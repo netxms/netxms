@@ -91,7 +91,7 @@ public class ObjectAutoBind extends ObjectPropertyPage
 
       // Enable/disable check box
       checkboxEnableBind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableBind.setText("Automatically add objects selected by filter to this business service as check");
+      checkboxEnableBind.setText(i18n.tr("Automatically add objects selected by filter to this business service as check"));
       checkboxEnableBind.setSelection(businessService.isAutoBindEnabled());
       checkboxEnableBind.addSelectionListener(new SelectionListener() {
 			@Override
@@ -120,7 +120,7 @@ public class ObjectAutoBind extends ObjectPropertyPage
       });
       
       checkboxEnableUnbind = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableUnbind.setText("Automatically remove objects selected by filter from this business service");
+      checkboxEnableUnbind.setText(i18n.tr("Automatically remove objects selected by filter from this business service"));
       checkboxEnableUnbind.setSelection(businessService.isAutoUnbindEnabled());
       checkboxEnableUnbind.setEnabled(businessService.isAutoBindEnabled());
       

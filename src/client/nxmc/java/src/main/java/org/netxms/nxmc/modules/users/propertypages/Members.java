@@ -87,7 +87,7 @@ public class Members extends PropertyPage
          GridLayout layout = new GridLayout();
          dialogArea.setLayout(layout);
          Label label = new Label(dialogArea, SWT.CENTER | SWT.WRAP);
-         label.setText("This built-in group contains all the users in the system and\nis populated automatically. You can’t add or remove users here.");
+         label.setText(i18n.tr("This built-in group contains all the users in the system and\nis populated automatically. You can’t add or remove users here."));
          label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
          return dialogArea;
       }

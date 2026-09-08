@@ -236,7 +236,7 @@ public class RuleAlarm extends RuleBasePropertyPage
 		timeoutEvent.setLayoutData(gd);
 
       rcaScript = new ScriptSelector(alarmCreationGroup, SWT.NONE, false, true);
-      rcaScript.setLabel("Root cause analysis script");
+      rcaScript.setLabel(i18n.tr("Root cause analysis script"));
       rcaScript.setScriptName(rule.getRcaScriptName());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;

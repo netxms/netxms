@@ -41,14 +41,18 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.base.dialogs.KeyValuePairEditDialog;
 import org.netxms.nxmc.base.widgets.helpers.KeyValuePairLabelProvider;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.ElementLabelComparator;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Editor for generic set of key/value pairs
  */
 public class KeyValueSetEditor extends Composite
 {
+   private final I18n i18n = LocalizationHelper.getI18n(KeyValueSetEditor.class);
+
    private SortableTableViewer viewer;
    private Button buttonAdd;
    private Button buttonEdit;
@@ -118,7 +122,7 @@ public class KeyValueSetEditor extends Composite
       buttons.setLayoutData(gd);
 
       buttonAdd = new Button(buttons, SWT.PUSH);
-      buttonAdd.setText("&Add...");
+      buttonAdd.setText(i18n.tr("&Add..."));
       buttonAdd.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -131,7 +135,7 @@ public class KeyValueSetEditor extends Composite
       buttonAdd.setLayoutData(rd);
 
       buttonEdit = new Button(buttons, SWT.PUSH);
-      buttonEdit.setText("&Edit...");
+      buttonEdit.setText(i18n.tr("&Edit..."));
       buttonEdit.addSelectionListener(new SelectionAdapter() {
         @Override
         public void widgetSelected(SelectionEvent e)
@@ -145,7 +149,7 @@ public class KeyValueSetEditor extends Composite
       buttonEdit.setEnabled(false);
 
       buttonRemove = new Button(buttons, SWT.PUSH);
-      buttonRemove.setText("&Delete");
+      buttonRemove.setText(i18n.tr("&Delete"));
       buttonRemove.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

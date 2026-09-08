@@ -125,7 +125,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
       searchBar.setLayoutData(fd);
       
       queryEditor = new LabeledText(searchBar, SWT.NONE);
-      queryEditor.setLabel("Search string");
+      queryEditor.setLabel(i18n.tr("Search string"));
       queryEditor.getTextControl().addKeyListener(new KeyListener() {
          @Override
          public void keyReleased(KeyEvent e)
@@ -147,7 +147,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
       startButton = new Button(searchBar, SWT.PUSH);
       startButton.setImage(SharedIcons.IMG_EXECUTE);
       startButton.setText("Start");
-      startButton.setToolTipText("Start search");
+      startButton.setToolTipText(i18n.tr("Start search"));
       startButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
