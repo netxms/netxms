@@ -752,13 +752,13 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
          if (generateEvent && IsEventSource(owner->getObjectClass()))
          {
             static uint32_t eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-            static const wchar_t *originName[15] =
+            static const wchar_t *originName[16] =
             {
                L"Internal", L"NetXMS Agent", L"SNMP",
                L"Web Service", L"Push", L"WinPerf",
                L"iLO", L"Script", L"SSH", L"MQTT",
                L"Device Driver", L"Modbus", L"EtherNet/IP",
-               L"Cloud Connector", L"OTLP"
+               L"Cloud Connector", L"OTLP", L"Computed"
             };
             EventBuilder(eventCode[status], owner->getId())
                .dci(m_id)
