@@ -827,7 +827,9 @@ paths:
       summary: Query AI operator observations
       description: >-
         Retrieve observations recorded by AI operator instances, most recent
-        first. Requires the "view event log" system access right.
+        first. Requires the "view event log" system access right. Observations
+        related to objects the caller has no read access to are excluded;
+        server-level observations are always included.
       parameters:
         - name: instance
           in: query
@@ -840,7 +842,9 @@ paths:
           required: false
           schema:
             type: integer
-          description: Limit to observations related to the given object
+          description: >-
+            Limit to observations related to the given object (requires read
+            access to that object)
         - name: state
           in: query
           required: false
@@ -876,6 +880,8 @@ paths:
           description: Invalid query parameters
         '403':
           description: Insufficient access rights
+        '404':
+          description: Object given in "object" parameter not found
         '500':
           description: Database failure
       security:

@@ -22,6 +22,7 @@
 
 #include "webapi.h"
 #include <nxai.h>
+#include <map>
 
 #define DEBUG_TAG  L"webapi.ai"
 
@@ -394,6 +395,10 @@ static const char *ObservationStateName(int state)
  *   state    - limit to observations in given state (new, acknowledged, dismissed)
  *   since    - only observations recorded at or after given time (UNIX timestamp, ISO 8601, or relative like -1h)
  *   limit    - maximum number of records to return (default 100, most recent first)
+ *
+ * Observations related to objects the caller cannot read are excluded from the result;
+ * server-level observations (no related object) are visible to any caller with the
+ * event log access right.
  */
 int H_AiObservations(Context *context)
 {
@@ -430,8 +435,20 @@ int H_AiObservations(Context *context)
    }
 
    uint32_t instanceId = context->getQueryParameterAsUInt32("instance");
-   uint32_t objectId = context->getQueryParameterAsUInt32("object");
    uint32_t limit = context->getQueryParameterAsUInt32("limit", 100);
+
+   uint32_t objectId = context->getQueryParameterAsUInt32("object");
+   if (objectId != 0)
+   {
+      shared_ptr<NetObj> object = FindObjectById(objectId);
+      if (object == nullptr)
+      {
+         context->setErrorResponse("Object not found");
+         return 404;
+      }
+      if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+         return 403;
+   }
 
    StringBuffer query((g_dbSyntax == DB_SYNTAX_TSDB) ?
       L"SELECT id,date_part('epoch',observation_timestamp)::int,instance_id,severity,title,body,object_id,refs,state FROM ai_operator_observations WHERE 1=1" :
@@ -477,8 +494,23 @@ int H_AiObservations(Context *context)
 
    json_t *output = json_array();
    uint32_t count = 0;
+   uint32_t userId = context->getUserId();
+   std::map<uint32_t, bool> objectAccessCache;
    while (DBFetch(hResult) && ((limit == 0) || (count < limit)))
    {
+      uint32_t relatedObjectId = DBGetFieldUInt32(hResult, 6);
+      if (relatedObjectId != 0)
+      {
+         auto it = objectAccessCache.find(relatedObjectId);
+         if (it == objectAccessCache.end())
+         {
+            shared_ptr<NetObj> object = FindObjectById(relatedObjectId);
+            it = objectAccessCache.insert(std::make_pair(relatedObjectId, (object != nullptr) && object->checkAccessRights(userId, OBJECT_ACCESS_READ))).first;
+         }
+         if (!it->second)
+            continue;
+      }
+
       json_t *observation = json_object();
       json_object_set_new(observation, "id", json_integer(DBGetFieldInt64(hResult, 0)));
       json_object_set_new(observation, "timestamp", json_time_string(DBGetFieldInt64(hResult, 1)));
@@ -493,7 +525,7 @@ int H_AiObservations(Context *context)
       json_object_set_new(observation, "body", (body != nullptr) ? json_string(body) : json_null());
       MemFree(body);
 
-      json_object_set_new(observation, "objectId", json_integer(DBGetFieldUInt32(hResult, 6)));
+      json_object_set_new(observation, "objectId", json_integer(relatedObjectId));
 
       char *refs = DBGetFieldUTF8(hResult, 7, nullptr, 0);
       json_t *refsJson = ((refs != nullptr) && (*refs != 0)) ? json_loads(refs, 0, nullptr) : nullptr;
