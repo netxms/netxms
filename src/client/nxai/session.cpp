@@ -23,6 +23,7 @@
 
 #include "nxai.h"
 #include <fcntl.h>
+#include <nxstat.h>
 
 /**
  * Name of file with saved sessions
