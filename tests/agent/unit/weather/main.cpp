@@ -114,6 +114,41 @@ static const char *s_docMetNo =
    "  }"
    "}";
 
+/**
+ * Bright Sky /weather response: one observation record (past hour, station
+ * source) and one MOSMIX forecast record with null relative humidity, as the
+ * forecast source does not carry it.
+ */
+static const char *s_docBrightSky =
+   "{"
+   "  \"weather\": ["
+   "    {"
+   "      \"timestamp\": \"2020-01-01T00:00:00+00:00\","
+   "      \"source_id\": 6150,"
+   "      \"precipitation\": 0.3,"
+   "      \"temperature\": 19.0,"
+   "      \"wind_speed\": 24.1,"
+   "      \"cloud_cover\": 100,"
+   "      \"relative_humidity\": 71,"
+   "      \"solar\": 0.029"
+   "    },"
+   "    {"
+   "      \"timestamp\": \"2020-01-01T01:00:00+00:00\","
+   "      \"source_id\": 2382,"
+   "      \"precipitation\": 0.0,"
+   "      \"temperature\": 19.3,"
+   "      \"wind_speed\": 16.7,"
+   "      \"cloud_cover\": 76,"
+   "      \"relative_humidity\": null,"
+   "      \"solar\": 0.428"
+   "    }"
+   "  ],"
+   "  \"sources\": ["
+   "    { \"id\": 6150, \"observation_type\": \"current\", \"station_name\": \"BERLIN-TEMPELHOF\" },"
+   "    { \"id\": 2382, \"observation_type\": \"forecast\", \"station_name\": \"BERLIN-ALEX.\" }"
+   "  ]"
+   "}";
+
 #define FLOAT_EQ(a, b)  (fabs((a) - (b)) < 0.01)
 
 /**
@@ -170,6 +205,12 @@ static void TestIsoTimestamp()
    StartTest(_T("ISO 8601 timestamp parsing"));
    AssertEquals(static_cast<int64_t>(ParseIsoTimestamp("2020-01-01T00:00:00Z")), INT64_C(1577836800));
    AssertEquals(static_cast<int64_t>(ParseIsoTimestamp("2020-01-01T01:00:00Z")), INT64_C(1577840400));
+   AssertEquals(static_cast<int64_t>(ParseIsoTimestamp("2020-01-01T01:00:00+00:00")), INT64_C(1577840400));
+   AssertEquals(static_cast<int64_t>(ParseIsoTimestamp("2020-01-01T02:00:00+01:00")), INT64_C(1577840400));
+   AssertEquals(static_cast<int64_t>(ParseIsoTimestamp("2019-12-31T20:30:00-04:30")), INT64_C(1577840400));
+   AssertEquals(static_cast<int64_t>(ParseIsoTimestamp("2020-01-01T01:00:00")), INT64_C(0));
+   AssertEquals(static_cast<int64_t>(ParseIsoTimestamp("2020-01-01T01:00:00+01")), INT64_C(0));
+   AssertEquals(static_cast<int64_t>(ParseIsoTimestamp("2020-01-01T01:00:00Zx")), INT64_C(0));
    AssertEquals(static_cast<int64_t>(ParseIsoTimestamp("not a timestamp")), INT64_C(0));
    AssertEquals(static_cast<int64_t>(ParseIsoTimestamp(nullptr)), INT64_C(0));
    EndTest();
@@ -384,6 +425,88 @@ static void TestMetNoBadDocument()
 }
 
 /**
+ * Test Bright Sky request URL construction: coordinates at four decimals, a
+ * window from 00:00 UTC today spanning the configured horizon, fixed units.
+ */
+static void TestBrightSkyUrl()
+{
+   StartTest(_T("Bright Sky URL construction"));
+   BrightSkyProvider provider;
+   char url[1024];
+   provider.buildForecastUrl(50.1109, 8.6821, 3, url, sizeof(url));
+   static const char *prefix = "https://api.brightsky.dev/weather?lat=50.1109&lon=8.6821&date=";
+   AssertTrue(!strncmp(url, prefix, strlen(prefix)));
+
+   int y1, m1, d1, y2, m2, d2;
+   const char *date = strstr(url, "&date=");
+   AssertNotNull(date);
+   AssertTrue(sscanf(date, "&date=%4d-%2d-%2dT00:00:00Z&last_date=%4d-%2d-%2dT00:00:00Z&tz=Etc/UTC&units=dwd", &y1, &m1, &d1, &y2, &m2, &d2) == 6);
+
+   time_t now = time(nullptr);
+   time_t startOfDay = now - (now % 86400);
+   char expected[32];
+   snprintf(expected, sizeof(expected), "%04d-%02d-%02dT00:00:00Z", y1, m1, d1);
+   AssertTrue(ParseIsoTimestamp(expected) == startOfDay);
+   snprintf(expected, sizeof(expected), "%04d-%02d-%02dT00:00:00Z", y2, m2, d2);
+   AssertTrue(ParseIsoTimestamp(expected) == startOfDay + 3 * 86400);
+   EndTest();
+}
+
+/**
+ * Test Bright Sky response parsing and unit normalization.
+ */
+static void TestBrightSkyParsing()
+{
+   StartTest(_T("Bright Sky response parsing"));
+   BrightSkyProvider provider;
+   WeatherSnapshot *current = nullptr;
+   ForecastCurve *forecast = nullptr;
+   // The document is dated in the past, so the last record becomes the current snapshot.
+   AssertTrue(provider.parseForecastResponse(s_docBrightSky, strlen(s_docBrightSky), 2, &current, &forecast));
+   AssertNotNull(current);
+   AssertNotNull(forecast);
+   AssertTrue(forecast->points.size() == 2);
+
+   ForecastPoint *p0 = forecast->points.get(0);
+   AssertTrue(p0->targetTime == 1577836800);
+   AssertTrue(FLOAT_EQ(p0->temperature, 19.0));
+   AssertTrue(FLOAT_EQ(p0->cloudCover, 100.0));
+   AssertTrue(FLOAT_EQ(p0->relativeHumidity, 71.0));
+   AssertTrue(FLOAT_EQ(p0->windSpeed, 24.1));            // already km/h
+   AssertTrue(FLOAT_EQ(p0->precipitation, 0.3));
+   AssertTrue(FLOAT_EQ(p0->shortwaveRadiation, 29.0));   // 0.029 kWh/m2 over the hour -> 29 W/m2
+   AssertTrue(isnan(p0->directRadiation));               // DWD publishes global irradiance only
+
+   ForecastPoint *p1 = forecast->points.get(1);
+   AssertTrue(p1->targetTime == 1577840400);
+   AssertTrue(isnan(p1->relativeHumidity));              // null in document
+   AssertTrue(FLOAT_EQ(p1->shortwaveRadiation, 428.0));
+
+   AssertTrue(current->observationTime == 1577840400);
+   AssertTrue(FLOAT_EQ(current->temperature, 19.3));
+
+   MemFree(current);
+   delete forecast;
+   EndTest();
+}
+
+/**
+ * Test that a Bright Sky error document is rejected.
+ */
+static void TestBrightSkyErrorDocument()
+{
+   StartTest(_T("Bright Sky error document handling"));
+   BrightSkyProvider provider;
+   WeatherSnapshot *current = nullptr;
+   ForecastCurve *forecast = nullptr;
+   static const char *doc = "{ \"title\": \"404 Not Found\", \"description\": \"No sources match your criteria\" }";
+   AssertFalse(provider.parseForecastResponse(doc, strlen(doc), 2, &current, &forecast));
+   AssertNull(current);
+   AssertNull(forecast);
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -403,6 +526,9 @@ int main(int argc, char *argv[])
    TestErrorDocument();
    TestMetNoParsing();
    TestMetNoBadDocument();
+   TestBrightSkyUrl();
+   TestBrightSkyParsing();
+   TestBrightSkyErrorDocument();
 
    return 0;
 }

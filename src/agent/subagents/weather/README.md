@@ -14,20 +14,24 @@ Tracked by issues #3408 and #3570.
 |------|---------|-------|
 | `openmeteo` | [Open-Meteo](https://open-meteo.com) | Default. Solar irradiance and ensemble spread. Keyless tier is non-commercial only; set `ApiKey` for a commercial subscription. |
 | `metno` | [MET Norway Locationforecast 2.0](https://api.met.no/weatherapi/locationforecast/2.0/documentation) | Open data, no key. Authoritative for Nordic locations. **No solar radiation and no ensemble spread.** Requires an identifying `UserAgent`. |
+| `brightsky` | [Bright Sky](https://brightsky.dev) | Free JSON API over DWD open data (MOSMIX forecasts + station observations). **Germany only**, no key. Global irradiance, **no direct radiation and no ensemble spread.** Current conditions are real station observations. |
 
 The provider is selected **per location**, because their capabilities differ:
-locations feeding irradiance-driven decisions must use `openmeteo`, while
-Nordic locations that only need temperature/wind/cloud/humidity/precipitation can
-use `metno`.
+locations feeding irradiance-driven decisions must use `openmeteo` or (in
+Germany) `brightsky`, while Nordic locations that only need
+temperature/wind/cloud/humidity/precipitation can use `metno`.
 
 MET Norway data is licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/);
 attribution to the Norwegian Meteorological Institute is required when data
-derived from it is published.
+derived from it is published. DWD data served through Bright Sky is likewise
+[CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/) with attribution to
+Deutscher Wetterdienst; Bright Sky itself is a community-run public instance
+(self-hostable) rather than a DWD service.
 
 ## Prerequisites
 
-Outbound HTTPS. No API key is needed for the Open-Meteo free tier or for MET
-Norway; a commercial Open-Meteo subscription supplies a key.
+Outbound HTTPS. No API key is needed for the Open-Meteo free tier, MET Norway
+or Bright Sky; a commercial Open-Meteo subscription supplies a key.
 
 ## Configuration
 
@@ -48,6 +52,11 @@ EnsembleModel  = icon_seamless       ; ensemble model when EnableEnsemble = yes
 Latitude  = 59.9139
 Longitude = 10.7522
 Provider  = metno
+
+[Weather/Location/datacenter-fra]
+Latitude  = 50.1109
+Longitude = 8.6821
+Provider  = brightsky
 ```
 
 `Location` lines and `[Weather/Location/NAME]` blocks can be mixed; only the
@@ -73,7 +82,7 @@ Current conditions (scalars):
 |--------|------|-------------|
 | `Weather.Temperature(location)` | float | Air temperature at 2 m (°C) |
 | `Weather.CloudCover(location)` | float | Total cloud cover (%) |
-| `Weather.ShortwaveRadiation(location)` | float | Global horizontal irradiance (W/m²), Open-Meteo only |
+| `Weather.ShortwaveRadiation(location)` | float | Global horizontal irradiance (W/m²), Open-Meteo and Bright Sky |
 | `Weather.DirectRadiation(location)` | float | Direct radiation (W/m²), Open-Meteo only |
 | `Weather.WindSpeed(location)` | float | Wind speed at 10 m (km/h) |
 | `Weather.RelativeHumidity(location)` | float | Relative humidity at 2 m (%) |
@@ -102,9 +111,12 @@ feed.
 ## Units and horizon
 
 Values are normalized by the provider adapters: °C, km/h, W/m², %, mm (MET
-Norway reports wind in m/s and is converted). Times are UTC. The hourly curve
-spans `ForecastDays` days from the current hour; MET Norway returns hourly
-resolution for roughly the first two days and coarser steps beyond that.
+Norway reports wind in m/s and is converted; Bright Sky reports solar energy
+per hour in kWh/m² and is converted to mean irradiance). Times are UTC. The
+hourly curve spans `ForecastDays` days from the current hour; MET Norway
+returns hourly resolution for roughly the first two days and coarser steps
+beyond that. Bright Sky forecast records carry no relative humidity, so that
+column is present only for the observed (past) hours of a `brightsky` curve.
 
 ## Request caching
 
@@ -113,15 +125,25 @@ location and per request kind: a location whose response is still within its
 `Expires` window is not re-requested at all, and a refresh past that window is
 conditional (`If-Modified-Since`), so an unchanged forecast costs a 304 instead
 of a full body. This is mandated by MET Norway's terms of service and is good
-practice against Open-Meteo as well.
+practice against Open-Meteo as well. Bright Sky sends neither header, so every
+poll of a `brightsky` location is a full request; its request window is pinned
+to 00:00 UTC of the current day so the URL itself is stable within a day.
 
 ## Assumptions and limitations
 
 - **Deterministic forecast by default.** Forecast uncertainty is available only
   through the optional ensemble table; consumers doing stochastic optimization
   should enable it and use an Open-Meteo location.
-- **Grid-snapped coordinates.** Both providers resolve each request to their
-  nearest model grid cell, so nearby coordinates may return identical data.
+- **Grid-snapped coordinates.** Open-Meteo and MET Norway resolve each request
+  to their nearest model grid cell, so nearby coordinates may return identical
+  data. Bright Sky resolves to the nearest MOSMIX station and nearest observing
+  stations within 50 km, and returns an error for coordinates outside Germany.
   Coordinates are sent with four decimals, MET Norway's documented maximum.
-- **No observations.** Both APIs serve forecasts; the "current" snapshot is the
-  forecast value for the present hour, not a station measurement.
+- **Observations only from Bright Sky.** Open-Meteo and MET Norway serve
+  forecasts, so their "current" snapshot is the forecast value for the present
+  hour. Bright Sky fills past hours from DWD station measurements once DWD
+  has published them (the current hour is usually still the MOSMIX value until
+  its observation lands), so the snapshot is an observation for all but the
+  most recent hour. Forecast records carry no relative humidity, so
+  `Weather.RelativeHumidity` on a `brightsky` location errors whenever the
+  snapshot is still a forecast value.

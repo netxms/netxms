@@ -299,7 +299,7 @@ useragent	User support application (server side)
 userdb		User database (server side)
 
 watchdog	Server watchdog
-weather	Weather subagent (Open-Meteo, MET Norway)
+weather	Weather subagent (Open-Meteo, MET Norway, Bright Sky)
 webapi.objtools	WebAPI object tool execution and streaming
 webapi.tls	WebAPI TLS reverse proxy (reproxy)
 websvc		Web services

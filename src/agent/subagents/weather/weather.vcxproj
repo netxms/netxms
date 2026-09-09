@@ -374,6 +374,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="brightsky.cpp" />
     <ClCompile Include="httpclient.cpp" />
     <ClCompile Include="location.cpp" />
     <ClCompile Include="main.cpp" />

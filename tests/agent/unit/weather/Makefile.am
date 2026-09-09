@@ -12,7 +12,8 @@ bin_PROGRAMS = test-unit-weather
 test_unit_weather_SOURCES = main.cpp \
 	@top_srcdir@/src/agent/subagents/weather/util.cpp \
 	@top_srcdir@/src/agent/subagents/weather/openmeteo.cpp \
-	@top_srcdir@/src/agent/subagents/weather/metno.cpp
+	@top_srcdir@/src/agent/subagents/weather/metno.cpp \
+	@top_srcdir@/src/agent/subagents/weather/brightsky.cpp
 test_unit_weather_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/tests/include -I@top_srcdir@/build -I@top_srcdir@/src/agent/subagents/weather
 test_unit_weather_LDFLAGS = @EXEC_LDFLAGS@
 test_unit_weather_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
