@@ -6466,10 +6466,10 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
 
    // Each save request covers exactly one existing chain; a request without VID_CHAIN_ID is malformed
    // rather than a main chain save, so a stale client cannot overwrite the main chain by accident
-   EventProcessingPolicy *epp = GetEventProcessingPolicy();
    m_eppChainId = request.getFieldAsUInt32(VID_CHAIN_ID);
    m_eppBaseVersion = request.getFieldAsUInt32(VID_BASE_VERSION);
-   if (!request.isFieldExist(VID_CHAIN_ID) || !epp->chainExists(m_eppChainId))
+   uint32_t rcc = request.isFieldExist(VID_CHAIN_ID) ? GetEventProcessingPolicy()->checkChainEditAccess(m_eppChainId, m_userId) : RCC_INVALID_ARGUMENT;
+   if (rcc == RCC_INVALID_ARGUMENT)
    {
       debugPrintf(4, L"saveEventProcessingPolicy: chain ID %s", request.isFieldExist(VID_CHAIN_ID) ? L"refers to unknown chain" : L"missing");
       response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
@@ -6477,13 +6477,7 @@ void ClientSession::saveEventProcessingPolicy(const NXCPMessage& request)
       return;
    }
 
-   // Global EPP right grants edit on every chain; otherwise chain-level Edit is required
-   // (the main chain requires the global right)
-   bool allowed = (m_systemAccessRights & SYSTEM_ACCESS_EPP) != 0;
-   if (!allowed && (m_eppChainId != 0))
-      allowed = (epp->getEffectiveChainRights(m_eppChainId, m_userId) & EPP_CHAIN_ACCESS_EDIT) != 0;
-
-   if (allowed)
+   if (rcc == RCC_SUCCESS)
    {
       m_eppExpectedRuleCount = request.getFieldAsUInt32(VID_NUM_RULES);
       m_eppRuleList.clear();
@@ -6578,37 +6572,13 @@ void ClientSession::finishEPPSave(uint32_t requestId)
       }
    }
 
-   // Every chain call must target an existing chain (the target may have been deleted since the client loaded the rules)
-   for (int i = 0; (i < m_eppRuleList.size()) && (rcc == RCC_SUCCESS); i++)
+   // Every chain call must target an existing chain (the target may have been deleted since the client loaded the rules),
+   // and without the global EPP right a rule may only call chains the user can read
+   if (rcc == RCC_SUCCESS)
    {
-      const EPRule *rule = m_eppRuleList.get(i);
-      for (int j = 0; (j < rule->getChainCallCount()) && (rcc == RCC_SUCCESS); j++)
-      {
-         if (!epp->chainExists(rule->getChainCall(j)))
-         {
-            debugPrintf(4, L"finishEPPSave: rule %s calls unknown chain [%u]", rule->getGuid().toString().cstr(), rule->getChainCall(j));
-            rcc = RCC_INVALID_ARGUMENT;
-         }
-      }
-   }
-
-   // Without the global EPP right, a rule may only call chains the user can read
-   if ((rcc == RCC_SUCCESS) && !checkSystemAccessRights(SYSTEM_ACCESS_EPP))
-   {
-      for (int i = 0; (i < m_eppRuleList.size()) && (rcc == RCC_SUCCESS); i++)
-      {
-         const EPRule *rule = m_eppRuleList.get(i);
-         for (int j = 0; (j < rule->getChainCallCount()) && (rcc == RCC_SUCCESS); j++)
-         {
-            if (!(epp->getEffectiveChainRights(rule->getChainCall(j), m_userId) & EPP_CHAIN_ACCESS_READ))
-            {
-               debugPrintf(4, L"finishEPPSave: rule %s calls chain [%u] which user has no read access to",
-                  rule->getGuid().toString().cstr(), rule->getChainCall(j));
-               writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on adding event processing policy chain call"));
-               rcc = RCC_ACCESS_DENIED;
-            }
-         }
-      }
+      rcc = epp->checkChainCallAccess(m_eppRuleList, m_userId);
+      if (rcc == RCC_ACCESS_DENIED)
+         writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on adding event processing policy chain call");
    }
 
    ObjectArray<EPPConflict> conflicts(0, 16, Ownership::True);

@@ -71,10 +71,10 @@ std::string F_GetEventTemplate(json_t *arguments, uint32_t userId)
  */
 std::string F_GetEventProcessingPolicy(json_t *arguments, uint32_t userId)
 {
-   uint64_t systemAccess = GetEffectiveSystemRights(userId);
-   if ((systemAccess & SYSTEM_ACCESS_EPP) == 0)
+   // Users without the global EPP right see the chains granted by chain access lists
+   if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
       return std::string("User does not have rights to manage event processing policy");
-   return JsonToString(GetEventProcessingPolicy()->toJson());
+   return JsonToString(GetEventProcessingPolicy()->toJson(userId));
 }
 
 /**
@@ -799,7 +799,7 @@ static std::string EppReadModifyWrite(
    json_t *snapshot = nullptr;
    for (int attempt = 0; attempt < 2; attempt++)
    {
-      snapshot = GetEventProcessingPolicy()->toJson();
+      snapshot = GetEventProcessingPolicy()->toJson(userId);
       if (snapshot == nullptr)
          return std::string("Failed to read event processing policy");
 
@@ -828,8 +828,20 @@ static std::string EppReadModifyWrite(
          return parseError;
       }
 
+      // Global EPP right, or edit right on this chain and read right on every called chain
+      uint32_t saveRcc = GetEventProcessingPolicy()->checkChainEditAccess(chainId, userId);
+      if (saveRcc == RCC_SUCCESS)
+         saveRcc = GetEventProcessingPolicy()->checkChainCallAccess(*rules, userId);
+      if (saveRcc != RCC_SUCCESS)
+      {
+         delete rules;
+         json_decref(snapshot);
+         return (saveRcc == RCC_ACCESS_DENIED) ? std::string("User does not have rights to modify this event processing policy chain or to call one of the requested chains")
+                                                : std::string("One of the called chains does not exist");
+      }
+
       uint32_t newVersion = 0;
-      uint32_t saveRcc = EppSavePolicy(userId, chainId, *rules, version, &newVersion);
+      saveRcc = EppSavePolicy(userId, chainId, *rules, version, &newVersion);
       delete rules;
 
       if (saveRcc == RCC_SUCCESS)
@@ -1366,8 +1378,7 @@ static json_t *EppBuildDefaultRuleJson()
  */
 std::string F_CreateEppRule(json_t *arguments, uint32_t userId)
 {
-   uint64_t systemAccess = GetEffectiveSystemRights(userId);
-   if ((systemAccess & SYSTEM_ACCESS_EPP) == 0)
+   if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
       return std::string("User does not have rights to modify event processing policy");
 
    // Pre-validate by building the rule JSON eagerly against an empty policy.
@@ -1427,8 +1438,7 @@ std::string F_CreateEppRule(json_t *arguments, uint32_t userId)
  */
 std::string F_ModifyEppRule(json_t *arguments, uint32_t userId)
 {
-   uint64_t systemAccess = GetEffectiveSystemRights(userId);
-   if ((systemAccess & SYSTEM_ACCESS_EPP) == 0)
+   if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
       return std::string("User does not have rights to modify event processing policy");
 
    uuid ruleGuid;
@@ -1462,8 +1472,7 @@ std::string F_ModifyEppRule(json_t *arguments, uint32_t userId)
  */
 std::string F_DeleteEppRule(json_t *arguments, uint32_t userId)
 {
-   uint64_t systemAccess = GetEffectiveSystemRights(userId);
-   if ((systemAccess & SYSTEM_ACCESS_EPP) == 0)
+   if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
       return std::string("User does not have rights to modify event processing policy");
 
    uuid ruleGuid;
@@ -1534,8 +1543,7 @@ static std::string EppToggleRuleDisabled(json_t *arguments, uint32_t userId, boo
  */
 std::string F_EnableEppRule(json_t *arguments, uint32_t userId)
 {
-   uint64_t systemAccess = GetEffectiveSystemRights(userId);
-   if ((systemAccess & SYSTEM_ACCESS_EPP) == 0)
+   if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
       return std::string("User does not have rights to modify event processing policy");
    return EppToggleRuleDisabled(arguments, userId, false);
 }
@@ -1545,8 +1553,7 @@ std::string F_EnableEppRule(json_t *arguments, uint32_t userId)
  */
 std::string F_DisableEppRule(json_t *arguments, uint32_t userId)
 {
-   uint64_t systemAccess = GetEffectiveSystemRights(userId);
-   if ((systemAccess & SYSTEM_ACCESS_EPP) == 0)
+   if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
       return std::string("User does not have rights to modify event processing policy");
    return EppToggleRuleDisabled(arguments, userId, true);
 }
@@ -1556,8 +1563,7 @@ std::string F_DisableEppRule(json_t *arguments, uint32_t userId)
  */
 std::string F_MoveEppRule(json_t *arguments, uint32_t userId)
 {
-   uint64_t systemAccess = GetEffectiveSystemRights(userId);
-   if ((systemAccess & SYSTEM_ACCESS_EPP) == 0)
+   if (!GetEventProcessingPolicy()->hasAnyChainAccess(userId))
       return std::string("User does not have rights to modify event processing policy");
 
    uuid ruleGuid;

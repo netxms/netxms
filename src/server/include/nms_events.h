@@ -1063,6 +1063,8 @@ private:
    bool processRuleList(const SharedObjectArray<EPRule>& rules, Event *event, EventProcessingContext *context);
    void forEachRule(std::function<EnumerationCallbackResult (const shared_ptr<EPRule>& rule, const EventPolicyChain& chain)> callback) const;
    uint32_t countChainCallers(uint32_t chainId) const;
+   json_t *chainToJsonForUser(const EventPolicyChain& chain, bool includeRules, uint32_t userId, bool globalRights) const;
+   json_t *chainsToJson(bool includeRules, uint32_t userId) const;
    bool saveChainToDB(uint32_t chainId, const uuid& modifiedByGuid, const TCHAR *modifiedByName) const;
    bool enumerateChainCallers(uint32_t chainId, std::function<void (const EPRule& rule, uint32_t ownerId)> callback) const;
 
@@ -1078,7 +1080,10 @@ public:
    void sendChainRules(ClientSession *session, uint32_t requestId, uint32_t chainId) const;
    String getChainName(uint32_t chainId) const;
    bool chainExists(uint32_t chainId) const;
-   uint32_t getEffectiveChainRights(uint32_t chainId, uint32_t userId) const;
+   uint32_t getUserRightsOnChain(uint32_t chainId, uint32_t userId) const;
+   bool hasAnyChainAccess(uint32_t userId) const;
+   uint32_t checkChainEditAccess(uint32_t chainId, uint32_t userId) const;
+   uint32_t checkChainCallAccess(const SharedObjectArray<EPRule>& rules, uint32_t userId) const;
 
    // Optimistic concurrency support
    uint32_t saveWithMerge(uint32_t chainId, uint32_t baseVersion, const SharedObjectArray<EPRule>& clientRules,
@@ -1095,8 +1100,8 @@ public:
    uint32_t deleteChain(uint32_t chainId, StructArray<EPPChainVersion> *updatedChains);
    uint32_t fillChainCallers(NXCPMessage *msg, uint32_t chainId) const;
    json_t *getChainCallersAsJson(uint32_t chainId) const;
-   json_t *getChainsAsJson() const;
-   json_t *getChainAsJson(uint32_t chainId) const;
+   json_t *getChainsAsJson(uint32_t userId) const;
+   json_t *getChainAsJson(uint32_t chainId, uint32_t userId, uint32_t *rcc) const;
 
    json_t *exportRule(const uuid& guid) const;
    json_t *exportRuleOrdering() const;
@@ -1105,8 +1110,9 @@ public:
    uint32_t importChain(const uuid& guid, const wchar_t *name, const wchar_t *description, bool overwrite);
    bool importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
    json_t *getRuleDetails(const uuid& ruleId) const;
-   json_t *getRuleAsJson(const uuid& guid) const;
+   json_t *getRuleAsJson(const uuid& guid, uint32_t userId, uint32_t *rcc) const;
    json_t *toJson() const;
+   json_t *toJson(uint32_t userId) const;
 
    void validateConfig() const;
    bool isActionInUse(uint32_t actionId) const;

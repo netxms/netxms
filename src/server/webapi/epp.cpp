@@ -62,10 +62,11 @@ static bool ParseChainAccessList(json_t *array, StructArray<ACL_ELEMENT> *acl)
  */
 int H_EventProcessingPolicyChains(Context *context)
 {
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_EPP))
+   // A user without the global EPP right gets the chains granted by chain access lists
+   if (!GetEventProcessingPolicy()->hasAnyChainAccess(context->getUserId()))
       return 403;
 
-   json_t *output = GetEventProcessingPolicy()->getChainsAsJson();
+   json_t *output = GetEventProcessingPolicy()->getChainsAsJson(context->getUserId());
    context->setResponseData(output);
    json_decref(output);
    return 200;
@@ -109,7 +110,7 @@ int H_EventProcessingPolicyChainCreate(Context *context)
    }
 
    context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Event processing policy chain \"%s\" [%u] created", name.cstr(), chainId);
-   json_t *output = GetEventProcessingPolicy()->getChainAsJson(chainId);
+   json_t *output = GetEventProcessingPolicy()->getChainAsJson(chainId, context->getUserId(), &rcc);
    context->setResponseData(output);
    json_decref(output);
    return 201;
@@ -120,16 +121,14 @@ int H_EventProcessingPolicyChainCreate(Context *context)
  */
 int H_EventProcessingPolicyChain(Context *context)
 {
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_EPP))
-      return 403;
-
    uint32_t chainId;
    if (!ReadChainId(context, &chainId))
       return 400;
 
-   json_t *output = GetEventProcessingPolicy()->getChainAsJson(chainId);
+   uint32_t rcc;
+   json_t *output = GetEventProcessingPolicy()->getChainAsJson(chainId, context->getUserId(), &rcc);
    if (output == nullptr)
-      return 404;
+      return (rcc == RCC_ACCESS_DENIED) ? 403 : 404;
 
    context->setResponseData(output);
    json_decref(output);
@@ -157,7 +156,8 @@ int H_EventProcessingPolicyChainUpdate(Context *context)
    if (request == nullptr)
       return 400;
 
-   json_t *current = GetEventProcessingPolicy()->getChainAsJson(chainId);
+   uint32_t rcc;
+   json_t *current = GetEventProcessingPolicy()->getChainAsJson(chainId, context->getUserId(), &rcc);
    if (current == nullptr)
       return 404;
 
@@ -181,7 +181,7 @@ int H_EventProcessingPolicyChainUpdate(Context *context)
       return 400;
    }
 
-   uint32_t rcc = GetEventProcessingPolicy()->modifyChain(chainId, name, description, (aclJson != nullptr) ? &acl : nullptr);
+   rcc = GetEventProcessingPolicy()->modifyChain(chainId, name, description, (aclJson != nullptr) ? &acl : nullptr);
    if (rcc == RCC_INVALID_ARGUMENT)
       return 404;
    if (rcc != RCC_SUCCESS)
@@ -191,7 +191,7 @@ int H_EventProcessingPolicyChainUpdate(Context *context)
    }
 
    context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Event processing policy chain \"%s\" [%u] modified", name.cstr(), chainId);
-   json_t *output = GetEventProcessingPolicy()->getChainAsJson(chainId);
+   json_t *output = GetEventProcessingPolicy()->getChainAsJson(chainId, context->getUserId(), &rcc);
    if (output == nullptr)
       return 404;
    context->setResponseData(output);
@@ -249,9 +249,7 @@ int H_EventProcessingPolicyChainDelete(Context *context)
  */
 int H_EventProcessingPolicyChainRulesUpdate(Context *context)
 {
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_EPP))
-      return 403;
-
+   // Access is checked per chain: global EPP right, or edit right from the chain access list
    uint32_t chainId;
    if (!ReadChainId(context, &chainId))
       return 400;
@@ -281,6 +279,9 @@ int H_EventProcessingPolicyChainRulesUpdate(Context *context)
       case RCC_INVALID_ARGUMENT:
          context->setErrorResponse("Invalid event processing policy data");
          return 400;
+      case RCC_ACCESS_DENIED:
+         context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on event processing policy chain [%u] update", chainId);
+         return 403;
       default:
          context->setErrorResponse("Database failure");
          return 500;
@@ -313,9 +314,6 @@ int H_EventProcessingPolicyChainCallers(Context *context)
  */
 int H_EventProcessingPolicyRule(Context *context)
 {
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_EPP))
-      return 403;
-
    const wchar_t *guidText = context->getPlaceholderValue(L"rule-guid");
    if (guidText == nullptr)
       return 400;
@@ -327,9 +325,10 @@ int H_EventProcessingPolicyRule(Context *context)
       return 400;
    }
 
-   json_t *output = GetEventProcessingPolicy()->getRuleAsJson(guid);
+   uint32_t rcc;
+   json_t *output = GetEventProcessingPolicy()->getRuleAsJson(guid, context->getUserId(), &rcc);
    if (output == nullptr)
-      return 404;
+      return (rcc == RCC_ACCESS_DENIED) ? 403 : 404;
 
    context->setResponseData(output);
    json_decref(output);

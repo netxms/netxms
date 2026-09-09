@@ -10134,8 +10134,10 @@ paths:
       operationId: listEventProcessingPolicyChains
       summary: List event processing policy chains
       description: |
-        Retrieve the chain registry: every rule chain without its rules. Chain `0` is the main chain,
-        the entry point of event processing. Rules of a chain are retrieved with
+        Retrieve the chain registry: every rule chain readable by the user, without its rules. Users with
+        the global EPP right see every chain; others see the chains granting them read access through the
+        chain access list (the main chain is never among them). Chain `0` is the main chain, the entry point
+        of event processing. Rules of a chain are retrieved with
         `GET /v1/event-processing-policy/chains/{chain-id}`.
       responses:
         '200':
@@ -10149,7 +10151,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have EPP access right
+          description: User can read no chain - neither the global EPP right nor a read right on any chain
       security:
         - BearerAuth: []
       tags:
@@ -10182,7 +10184,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have EPP access right
+          description: User does not have the global EPP right (required to create chains)
         '500':
           description: Database failure
       security:
@@ -10213,7 +10215,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have EPP access right
+          description: User cannot read this chain - neither the global EPP right nor a read right from the chain access list
         '404':
           description: Chain not found
       security:
@@ -10249,7 +10251,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have EPP access right
+          description: User does not have the global EPP right (required to modify chains)
         '404':
           description: Chain not found
         '405':
@@ -10300,7 +10302,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have EPP access right
+          description: User does not have the global EPP right (required to delete chains)
         '404':
           description: Chain not found
         '405':
@@ -10351,7 +10353,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have EPP access right
+          description: User cannot edit this chain (global EPP right, or edit right from the chain access list, required; the main chain requires the global right), or a rule calls a chain the user cannot read
         '404':
           description: Chain not found
         '409':
@@ -10398,7 +10400,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have EPP access right
+          description: User does not have the global EPP right (required to list callers)
         '404':
           description: Chain not found
       security:
@@ -10430,7 +10432,7 @@ paths:
         '401':
           description: Unauthorized
         '403':
-          description: User does not have EPP access right
+          description: User cannot read the chain the rule belongs to
         '404':
           description: Rule not found
       security:
@@ -13671,9 +13673,12 @@ components:
           description: Chain version, incremented on every change of its rules. Send this value back when replacing the chain's rules to detect concurrent modifications.
         accessList:
           type: array
-          description: Chain-level access control list for users without the global EPP right (always empty for the main chain)
+          description: Chain-level access control list for users without the global EPP right (always empty for the main chain). Present only in responses to users with the global EPP right.
           items:
             $ref: '#/components/schemas/EventProcessingPolicyChainAccessElement'
+        effectiveRights:
+          type: integer
+          description: Rights of the requesting user on this chain as a bit mask (1 = read, 2 = edit). Users with the global EPP right have both on every chain.
         ruleCount:
           type: integer
           description: Number of rules in the chain

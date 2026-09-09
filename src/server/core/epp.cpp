@@ -3482,18 +3482,85 @@ bool EventProcessingPolicy::chainExists(uint32_t chainId) const
 }
 
 
+
 /**
- * Get user's rights on a chain from the chain's access control list (0 if the chain does not exist;
- * always 0 for the main chain, which is accessible only with the global EPP right).
- * Callers holding the global EPP right must not consult this - they have full access to every chain.
+ * Rights of given user on given chain, taking the global EPP right into account: a user with
+ * the global right has read and edit on every chain, others have what the chain ACL grants.
+ * The main chain has no ACL, so without the global right it is not accessible at all.
  */
-uint32_t EventProcessingPolicy::getEffectiveChainRights(uint32_t chainId, uint32_t userId) const
+uint32_t EventProcessingPolicy::getUserRightsOnChain(uint32_t chainId, uint32_t userId) const
 {
+   bool globalRights = (GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_EPP) != 0;
    readLock();
    EventPolicyChain *chain = m_chains.get(chainId);
-   uint32_t rights = (chain != nullptr) ? chain->getUserRights(userId) : 0;
+   uint32_t rights = 0;
+   if (chain != nullptr)
+      rights = globalRights ? (EPP_CHAIN_ACCESS_READ | EPP_CHAIN_ACCESS_EDIT) : (chain->isMain() ? 0 : chain->getUserRights(userId));
    unlock();
    return rights;
+}
+
+/**
+ * Check if user can read at least one chain
+ */
+bool EventProcessingPolicy::hasAnyChainAccess(uint32_t userId) const
+{
+   if (GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_EPP)
+      return true;
+   bool found = false;
+   readLock();
+   m_chains.forEach(
+      [userId, &found](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+      {
+         if ((chainId != 0) && (chain->getUserRights(userId) & EPP_CHAIN_ACCESS_READ))
+         {
+            found = true;
+            return _STOP;
+         }
+         return _CONTINUE;
+      });
+   unlock();
+   return found;
+}
+
+/**
+ * Check if user may save rules of given chain. Returns RCC_INVALID_ARGUMENT for unknown chain,
+ * RCC_ACCESS_DENIED without edit rights (the main chain requires the global EPP right).
+ */
+uint32_t EventProcessingPolicy::checkChainEditAccess(uint32_t chainId, uint32_t userId) const
+{
+   if (!chainExists(chainId))
+      return RCC_INVALID_ARGUMENT;
+   return (getUserRightsOnChain(chainId, userId) & EPP_CHAIN_ACCESS_EDIT) ? RCC_SUCCESS : RCC_ACCESS_DENIED;
+}
+
+/**
+ * Check chain calls of rules about to be saved: every call must target an existing chain
+ * (RCC_INVALID_ARGUMENT otherwise), and a user without the global EPP right may only call
+ * chains they can read (RCC_ACCESS_DENIED otherwise).
+ */
+uint32_t EventProcessingPolicy::checkChainCallAccess(const SharedObjectArray<EPRule>& rules, uint32_t userId) const
+{
+   bool globalRights = (GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_EPP) != 0;
+   for (int i = 0; i < rules.size(); i++)
+   {
+      const EPRule *rule = rules.get(i);
+      for (int j = 0; j < rule->getChainCallCount(); j++)
+      {
+         uint32_t targetId = rule->getChainCall(j);
+         if (!chainExists(targetId))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, L"Rule %s calls unknown chain [%u]", rule->getGuid().toString().cstr(), targetId);
+            return RCC_INVALID_ARGUMENT;
+         }
+         if (!globalRights && !(getUserRightsOnChain(targetId, userId) & EPP_CHAIN_ACCESS_READ))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, L"Rule %s calls chain [%u] which user [%u] cannot read", rule->getGuid().toString().cstr(), targetId, userId);
+            return RCC_ACCESS_DENIED;
+         }
+      }
+   }
+   return RCC_SUCCESS;
 }
 
 
@@ -4020,13 +4087,33 @@ json_t *EventProcessingPolicy::getRuleDetails(const uuid& ruleId) const
  * Get single rule serialized to JSON (canonical form, as produced by EPRule::toJson()).
  * Returns nullptr if rule with given GUID does not exist.
  */
-json_t *EventProcessingPolicy::getRuleAsJson(const uuid& guid) const
+/**
+ * Rule JSON for given user. Returns nullptr and sets *rcc to RCC_INVALID_ARGUMENT for unknown rule
+ * or RCC_ACCESS_DENIED when the user cannot read the chain the rule belongs to.
+ */
+json_t *EventProcessingPolicy::getRuleAsJson(const uuid& guid, uint32_t userId, uint32_t *rcc) const
 {
+   bool globalRights = (GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_EPP) != 0;
    json_t *result = nullptr;
    readLock();
    shared_ptr<EPRule> rule = findRuleByGuid(guid);
-   if (rule != nullptr)
-      result = rule->toJson();
+   if (rule == nullptr)
+   {
+      *rcc = RCC_INVALID_ARGUMENT;
+   }
+   else
+   {
+      EventPolicyChain *chain = m_chains.get(rule->getChainId());
+      if (globalRights || ((chain != nullptr) && !chain->isMain() && (chain->getUserRights(userId) & EPP_CHAIN_ACCESS_READ)))
+      {
+         result = rule->toJson();
+         *rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         *rcc = RCC_ACCESS_DENIED;
+      }
+   }
    unlock();
    return result;
 }
@@ -4304,37 +4391,86 @@ json_t *EventProcessingPolicy::toJson() const
    return root;
 }
 
+/**
+ * Policy with rules as seen by given user: only chains the user can read
+ */
+json_t *EventProcessingPolicy::toJson(uint32_t userId) const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "chains", chainsToJson(true, userId));
+   return root;
+}
+
 
 /**
  * Get chain registry as JSON array (all chains without rules, the main chain first)
  */
-json_t *EventProcessingPolicy::getChainsAsJson() const
+/**
+ * Chain JSON as seen by given user: the user's effective rights are added, and the access
+ * list is included only for users with the global EPP right
+ */
+json_t *EventProcessingPolicy::chainToJsonForUser(const EventPolicyChain& chain, bool includeRules, uint32_t userId, bool globalRights) const
 {
+   json_t *json = chain.toJson(includeRules, countChainCallers(chain.getId()));
+   json_object_set_new(json, "effectiveRights", json_integer(globalRights ? (EPP_CHAIN_ACCESS_READ | EPP_CHAIN_ACCESS_EDIT) : chain.getUserRights(userId)));
+   if (!globalRights)
+      json_object_del(json, "accessList");
+   return json;
+}
+
+/**
+ * Chain registry (without rules) filtered to chains readable by given user
+ */
+json_t *EventProcessingPolicy::getChainsAsJson(uint32_t userId) const
+{
+   return chainsToJson(false, userId);
+}
+
+/**
+ * Chains readable by given user; main chain first. With includeRules each chain carries its rules.
+ */
+json_t *EventProcessingPolicy::chainsToJson(bool includeRules, uint32_t userId) const
+{
+   bool globalRights = (GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_EPP) != 0;
    json_t *chains = json_array();
    readLock();
    EventPolicyChain *mainChain = m_chains.get(0);
-   if (mainChain != nullptr)
-      json_array_append_new(chains, mainChain->toJson(false, countChainCallers(0)));
+   if ((mainChain != nullptr) && globalRights)
+      json_array_append_new(chains, chainToJsonForUser(*mainChain, includeRules, userId, globalRights));
    m_chains.forEach(
-      [this, chains](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+      [this, chains, includeRules, userId, globalRights](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
       {
-         if (chainId != 0)
-            json_array_append_new(chains, chain->toJson(false, countChainCallers(chainId)));
+         if ((chainId != 0) && (globalRights || (chain->getUserRights(userId) & EPP_CHAIN_ACCESS_READ)))
+            json_array_append_new(chains, chainToJsonForUser(*chain, includeRules, userId, globalRights));
          return _CONTINUE;
       });
    unlock();
    return chains;
 }
 
-
 /**
- * Get chain with its rules as JSON (nullptr if no such chain)
+ * Chain with rules as seen by given user. Returns nullptr and sets *rcc to RCC_INVALID_ARGUMENT
+ * for unknown chain or RCC_ACCESS_DENIED when the user cannot read it.
  */
-json_t *EventProcessingPolicy::getChainAsJson(uint32_t chainId) const
+json_t *EventProcessingPolicy::getChainAsJson(uint32_t chainId, uint32_t userId, uint32_t *rcc) const
 {
+   bool globalRights = (GetEffectiveSystemRights(userId) & SYSTEM_ACCESS_EPP) != 0;
+   json_t *json = nullptr;
    readLock();
    EventPolicyChain *chain = m_chains.get(chainId);
-   json_t *json = (chain != nullptr) ? chain->toJson(true, countChainCallers(chainId)) : nullptr;
+   if (chain == nullptr)
+   {
+      *rcc = RCC_INVALID_ARGUMENT;
+   }
+   else if (globalRights || ((chainId != 0) && (chain->getUserRights(userId) & EPP_CHAIN_ACCESS_READ)))
+   {
+      json = chainToJsonForUser(*chain, true, userId, globalRights);
+      *rcc = RCC_SUCCESS;
+   }
+   else
+   {
+      *rcc = RCC_ACCESS_DENIED;
+   }
    unlock();
    return json;
 }
@@ -4445,12 +4581,19 @@ uint32_t UpdateEventProcessingPolicyFromJson(json_t *request, uint32_t chainId, 
       rules.add(make_shared<EPRule>(ruleJson, &importContext));
    }
 
+   EventProcessingPolicy *epp = GetEventProcessingPolicy();
+   uint32_t rcc = epp->checkChainEditAccess(chainId, userId);
+   if (rcc == RCC_SUCCESS)
+      rcc = epp->checkChainCallAccess(rules, userId);
+   if (rcc != RCC_SUCCESS)
+      return rcc;
+
    uuid userGuid = GetUserGuidById(userId);
    wchar_t userName[MAX_USER_NAME];
    ResolveUserId(userId, userName, true);
 
    uint32_t newVersion = 0;
-   uint32_t rcc = GetEventProcessingPolicy()->replaceAllRules(chainId, rules, checkVersion, expectedVersion, userGuid, userName, &newVersion);
+   rcc = epp->replaceAllRules(chainId, rules, checkVersion, expectedVersion, userGuid, userName, &newVersion);
    if (rcc == RCC_SUCCESS)
    {
       *response = json_object();
