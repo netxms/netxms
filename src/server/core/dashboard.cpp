@@ -332,7 +332,7 @@ String DashboardBase::getElementScript(int index) const
 {
    StringBuffer script;
    lockProperties();
-   if (m_elements.size() > index)
+   if ((index >= 0) && (index < m_elements.size()))
    {
       DashboardElement *e = m_elements.get(index);
       if (IsScriptedElementType(e->m_type) && json_is_object(e->m_data))
@@ -360,7 +360,7 @@ bool DashboardBase::isElementContextObject(int index, uint32_t contextObject) co
 {
    bool isContextObject = false;
    lockProperties();
-   if (m_elements.size() > index)
+   if ((index >= 0) && (index < m_elements.size()))
    {
       DashboardElement *e = m_elements.get(index);
       if (IsScriptedElementType(e->m_type) && json_is_object(e->m_data))
