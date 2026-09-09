@@ -101,6 +101,7 @@ public class SnmpAgentEditDialog extends Dialog
       name = new LabeledText(dialogArea, SWT.NONE);
       name.setLabel(i18n.tr("Name"));
       name.setText(configuration.getName());
+      name.setTextLimit(63);
       GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
       gd.widthHint = 400;
       name.setLayoutData(gd);

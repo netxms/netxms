@@ -16001,6 +16001,10 @@ components:
           type: integer
         snmpContext:
           type: string
+        snmpAgentName:
+          type: string
+          maxLength: 63
+          description: Name of additional SNMP agent on the node to collect from; empty to use the node's primary SNMP agent. When set, the agent's configuration takes precedence over snmpPort, snmpVersion, and snmpContext.
         snmpRawValueType:
           type: string
           enum: [none, int32, uint32, int64, uint64, double, ipAddr, macAddr, ip6Addr]

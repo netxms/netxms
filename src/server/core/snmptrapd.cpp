@@ -509,7 +509,8 @@ TrapCredentialCheckResult ValidateTrapCredentials(SNMP_PDU *pdu, SNMP_SecurityCo
  * Validate SNMP trap credentials against additional SNMP agents configured on the node.
  * Only applicable to v1/v2c traps - SNMPv3 decryption and validation is bound to the node's
  * primary (or trap-specific) security context. Returns true if community string of any
- * additional agent matches the trap PDU.
+ * additional agent matches the trap PDU. Agents with empty community string are skipped,
+ * so a blank community on an additional agent does not disable validation for the node.
  */
 bool ValidateTrapCredentialsForAdditionalAgents(SNMP_PDU *pdu, const shared_ptr<Node>& node)
 {
@@ -521,7 +522,7 @@ bool ValidateTrapCredentialsForAdditionalAgents(SNMP_PDU *pdu, const shared_ptr<
    for(int i = 0; i < contexts->size(); i++)
    {
       SNMP_SecurityContext *context = contexts->get(i);
-      if (context->getSecurityModel() == SNMP_SECURITY_MODEL_USM)
+      if ((context->getSecurityModel() == SNMP_SECURITY_MODEL_USM) || (context->getCommunity()[0] == 0))
          continue;
       if (ValidateTrapCredentials(pdu, context) == TrapCredentialCheckResult::OK)
       {

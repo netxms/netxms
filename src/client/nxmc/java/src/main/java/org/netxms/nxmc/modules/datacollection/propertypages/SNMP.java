@@ -129,6 +129,7 @@ public class SNMP extends AbstractDCIPropertyPage
       }
 
       snmpAgentName = WidgetHelper.createLabeledCombo(pageArea, SWT.DROP_DOWN, i18n.tr("Additional SNMP agent (empty to use node's primary SNMP agent)"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      snmpAgentName.setTextLimit(63);
       AbstractObject owner = Registry.getSession().findObjectById(dco.getNodeId());
       if (owner instanceof AbstractNode)
       {

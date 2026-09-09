@@ -10948,14 +10948,16 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
       for(int i = 0; i < count; i++, fieldId += 10)
       {
          auto agent = new AdditionalSnmpAgent(msg, fieldId);
-         if (agent->getName()[0] == 0)
+         if ((agent->getName()[0] == 0) || (agent->getPort() == 0) || (agent->getSnmpVersion() == SNMP_VERSION_DEFAULT) ||
+             (agent->getIpAddress().isValid() && !agent->getIpAddress().isValidUnicast()))
          {
             delete agent;
             return RCC_INVALID_ARGUMENT;
          }
+         // Names must be unique case-insensitively: primary key on node_snmp_agents is case-insensitive on some databases
          for(int j = 0; j < agents.size(); j++)
          {
-            if (!wcscmp(agents.get(j)->getName(), agent->getName()))
+            if (!wcsicmp(agents.get(j)->getName(), agent->getName()))
             {
                delete agent;
                return RCC_INVALID_ARGUMENT;
@@ -11487,9 +11489,10 @@ uint32_t Node::modifyJsonSnmpConfig(json_t *snmp)
          AdditionalSnmpAgent *agent = AdditionalSnmpAgent::createFromJson(element, &rcc);
          if (agent == nullptr)
             return rcc;
+         // Names must be unique case-insensitively: primary key on node_snmp_agents is case-insensitive on some databases
          for(int j = 0; j < newAgents.size(); j++)
          {
-            if (!wcscmp(newAgents.get(j)->getName(), agent->getName()))
+            if (!wcsicmp(newAgents.get(j)->getName(), agent->getName()))
             {
                delete agent;
                return RCC_INVALID_ARGUMENT;

@@ -223,15 +223,18 @@ public class SNMPAgents extends ObjectPropertyPage
       if (selection.size() != 1)
          return;
 
-      SnmpAgentConfiguration configuration = (SnmpAgentConfiguration)selection.getFirstElement();
+      // Edit a copy so that cancelling after a rejected name does not leave partially edited data in the list
+      SnmpAgentConfiguration original = (SnmpAgentConfiguration)selection.getFirstElement();
+      SnmpAgentConfiguration configuration = new SnmpAgentConfiguration(original);
       SnmpAgentEditDialog dlg = new SnmpAgentEditDialog(getShell(), configuration, false);
       while(dlg.open() == Window.OK)
       {
-         if (findAgentByName(configuration.getName(), configuration) != null)
+         if (findAgentByName(configuration.getName(), original) != null)
          {
             MessageDialog.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Agent with name \"{0}\" already exists", configuration.getName()));
             continue;
          }
+         agents.set(agents.indexOf(original), configuration);
          viewer.refresh();
          break;
       }
