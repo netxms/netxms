@@ -455,12 +455,14 @@ public class EventProcessingPolicyEditor extends ConfigurationView
     */
    private void setAllRulesCollapsed(boolean collapsed)
    {
+      dataArea.setRedraw(false);
       for(RuleEditor editor : ruleEditors)
       {
          if (!editor.isDisposed())
             editor.setCollapsed(collapsed, false);
       }
       updateEditorAreaLayout();
+      dataArea.setRedraw(true);
    }
 
    /**

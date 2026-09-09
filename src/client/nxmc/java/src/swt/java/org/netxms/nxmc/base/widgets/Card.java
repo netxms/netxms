@@ -30,7 +30,6 @@ import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -55,7 +54,6 @@ public abstract class Card extends DashboardComposite
 
 	private String text;
 	private Control clientArea;
-	private Font titleFont;
    private Color titleBackground = null;
 	private Color titleColor;
 	private Point headerSize;
@@ -73,8 +71,7 @@ public abstract class Card extends DashboardComposite
 
       titleColor = ThemeEngine.getForegroundColor("Card.Title");
 
-      titleFont = FontTools.createTitleFont();
-		setFont(titleFont);
+      setFont(FontTools.getTitleFont());
 
 		headerSize = WidgetHelper.getTextExtent(this, text);
       headerSize.y += HEADER_MARGIN_HEIGHT * 2 + getBorderWidth();
@@ -115,15 +112,12 @@ public abstract class Card extends DashboardComposite
          }
       });
 
-      addDisposeListener((e) -> {
-         removePaintListener(paintListener);
-         titleFont.dispose();
-      });
+      addDisposeListener((e) -> removePaintListener(paintListener));
 	}
 
 	/**
 	 * Create client area control and do necessary configuration
-	 * 
+	 *
 	 * @return
 	 */
 	private Control createClientAreaInternal()
@@ -161,7 +155,7 @@ public abstract class Card extends DashboardComposite
 
    /**
     * Paint header and footer
-    * 
+    *
     * @param gc graphics context
     */
 	private void doPaint(GC gc)
@@ -188,7 +182,7 @@ public abstract class Card extends DashboardComposite
 
 	/**
     * Create client area for card.
-    * 
+    *
     * @param parent parent composite
     * @return client area control
     */
@@ -229,7 +223,7 @@ public abstract class Card extends DashboardComposite
 
 	/**
     * Set title background color
-    * 
+    *
     * @param backgroundColor new title background color
     */
 	protected void setTitleBackground(Color backgroundColor)
@@ -249,7 +243,7 @@ public abstract class Card extends DashboardComposite
 
 	/**
     * Set title text color
-    * 
+    *
     * @param titleColor the titleColor to set
     */
 	protected void setTitleColor(Color titleColor)
@@ -259,7 +253,7 @@ public abstract class Card extends DashboardComposite
 
 	/**
 	 * Add button
-	 * 
+	 *
 	 * @param button
 	 */
 	public void addButton(final DashboardElementButton button)
@@ -293,7 +287,8 @@ public abstract class Card extends DashboardComposite
 
 		button.setControl(l);
 		buttons.add(button);
-		layoutButtons();
+		if (getSize().x > 0)   // Otherwise buttons are placed by the resize listener once the card gets its size
+			layoutButtons();
 	}
 
    /**

@@ -184,46 +184,6 @@ public class RuleEditor extends Composite
 
       createPopupMenu(new Control[] { leftPanel, ruleNumberLabel, header, headerLabel });
 
-      condition = new Card(mainArea, i18n.tr("Filter")) {
-         @Override
-         protected Control createClientArea(Composite parent)
-         {
-            setTitleBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Condition"));
-            setTitleColor(ThemeEngine.getForegroundColor("RuleEditor.Title"));
-            return createConditionControl(parent, RuleEditor.this.rule);
-         }
-      };
-      configureLayout(condition);
-      final Action editRuleCondition = new Action() {
-         @Override
-         public void run()
-         {
-            editRule("org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0");
-         }
-      };
-      condition.addButton(new DashboardElementButton(i18n.tr("Edit condition"), SharedIcons.IMG_EDIT, editRuleCondition));
-      condition.setDoubleClickAction(editRuleCondition);
-
-      action = new Card(mainArea, i18n.tr("Action")) {
-         @Override
-         protected Control createClientArea(Composite parent)
-         {
-            setTitleBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Action"));
-            setTitleColor(ThemeEngine.getForegroundColor("RuleEditor.Title"));
-            return createActionControl(parent, RuleEditor.this.rule);
-         }
-      };
-      configureLayout(action);
-      final Action editRuleAction = new Action() {
-         @Override
-         public void run()
-         {
-            editRule("org.netxms.ui.eclipse.epp.propertypages.RuleAction#1");
-         }
-      };
-      action.addButton(new DashboardElementButton(i18n.tr("Edit actions"), SharedIcons.IMG_EDIT, editRuleAction));
-      action.setDoubleClickAction(editRuleAction);
-
       dragEnable();
       dropEnable();
    }
@@ -272,6 +232,52 @@ public class RuleEditor extends Composite
       gd.grabExcessHorizontalSpace = true;
       gd.exclude = collapsed;
       mainArea.setLayoutData(gd);
+   }
+
+   /**
+    * Create main area content (condition and action cards). Deferred until the rule is first expanded.
+    */
+   private void createMainAreaContent()
+   {
+      condition = new Card(mainArea, i18n.tr("Filter")) {
+         @Override
+         protected Control createClientArea(Composite parent)
+         {
+            setTitleBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Condition"));
+            setTitleColor(ThemeEngine.getForegroundColor("RuleEditor.Title"));
+            return createConditionControl(parent, RuleEditor.this.rule);
+         }
+      };
+      configureLayout(condition);
+      final Action editRuleCondition = new Action() {
+         @Override
+         public void run()
+         {
+            editRule("org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0");
+         }
+      };
+      condition.addButton(new DashboardElementButton(i18n.tr("Edit condition"), SharedIcons.IMG_EDIT, editRuleCondition));
+      condition.setDoubleClickAction(editRuleCondition);
+
+      action = new Card(mainArea, i18n.tr("Action")) {
+         @Override
+         protected Control createClientArea(Composite parent)
+         {
+            setTitleBackground(ThemeEngine.getBackgroundColor("RuleEditor.Border.Action"));
+            setTitleColor(ThemeEngine.getForegroundColor("RuleEditor.Title"));
+            return createActionControl(parent, RuleEditor.this.rule);
+         }
+      };
+      configureLayout(action);
+      final Action editRuleAction = new Action() {
+         @Override
+         public void run()
+         {
+            editRule("org.netxms.ui.eclipse.epp.propertypages.RuleAction#1");
+         }
+      };
+      action.addButton(new DashboardElementButton(i18n.tr("Edit actions"), SharedIcons.IMG_EDIT, editRuleAction));
+      action.setDoubleClickAction(editRuleAction);
    }
 
    /**
@@ -1087,6 +1093,8 @@ public class RuleEditor extends Composite
    public void setCollapsed(boolean collapsed, boolean doLayout)
    {
       this.collapsed = collapsed;
+      if (!collapsed && (condition == null))
+         createMainAreaContent();
       expandButton.setImage(collapsed ? SharedIcons.IMG_EXPAND : SharedIcons.IMG_COLLAPSE);
       expandButton.setToolTipText(collapsed ? i18n.tr("Expand rule") : i18n.tr("Collapse rule"));
       mainArea.setVisible(!collapsed);
@@ -1145,8 +1153,11 @@ public class RuleEditor extends Composite
 
          updateBackground();
 
-         condition.replaceClientArea();
-         action.replaceClientArea();
+         if (condition != null)
+         {
+            condition.replaceClientArea();
+            action.replaceClientArea();
+         }
          editor.updateEditorAreaLayout();
          editor.setModified(true);
       }
@@ -1292,6 +1303,8 @@ public class RuleEditor extends Composite
     */
    public void updateExplanation()
    {
+      if (condition == null)
+         createMainAreaContent();
       if (explanation == null)
       {
          explanation = new Card(mainArea, i18n.tr("Explanation")) {

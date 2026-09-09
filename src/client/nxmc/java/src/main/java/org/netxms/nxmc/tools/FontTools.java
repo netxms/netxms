@@ -39,11 +39,11 @@ public class FontTools
 
    private static Logger logger = LoggerFactory.getLogger(FontTools.class);
    private static Set<String> availableFonts = null;
-   private static Map<String, Font> fontCache = new HashMap<String, Font>();  
+   private static Map<String, Font> fontCache = new HashMap<String, Font>();
 
    /**
     * Find first available font from given list
-    * 
+    *
     * @param names list of font names
     * @return select font name or null if none can be found
     */
@@ -85,7 +85,7 @@ public class FontTools
       String name = findFirstAvailableFont(names);
       if (name == null)
          return null;
-      
+
       String key = name + "/A=" + heightAdjustment + "/" + style;
       Font f = fontCache.get(key);
       if (f != null)
@@ -97,9 +97,9 @@ public class FontTools
    }
 
    /**
-    * Get array of font objects with first available font name from given list with increasing height. 
+    * Get array of font objects with first available font name from given list with increasing height.
     * Fonts will be created as needed and cached within font tools class.
-    * 
+    *
     * @param names possible font names
     * @param baseHeight base font height
     * @param style font style
@@ -111,7 +111,7 @@ public class FontTools
       String name = findFirstAvailableFont(names);
       if (name == null)
          return null;
-   
+
       Font[] fonts = new Font[count];
       for(int i = 0; i < count; i++)
       {
@@ -160,7 +160,7 @@ public class FontTools
 
    /**
     * Create first available font from given list with same height as default system font
-    * 
+    *
     * @param names possible font names
     * @param style font style
     * @return font object
@@ -171,8 +171,18 @@ public class FontTools
    }
 
    /**
+    * Get shared standard title font (cached, must not be disposed by caller)
+    *
+    * @return title font
+    */
+   public static Font getTitleFont()
+   {
+      return getFont(TITLE_FONTS, 2, SWT.BOLD);
+   }
+
+   /**
     * Create standard title font
-    * 
+    *
     * @return title font
     */
    public static Font createTitleFont()
