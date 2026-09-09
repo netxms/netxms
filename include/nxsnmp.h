@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -955,28 +955,23 @@ public:
    void setContextEngine(const SNMP_Engine &engine) { m_contextEngine = engine; }
    const SNMP_Engine& getContextEngine() const { return m_contextEngine; }
 
-   size_t getSignatureSize() const;
-};
-
-/**
- * Get signature size for selected authentication method
- */
-inline size_t SNMP_SecurityContext::getSignatureSize() const
-{
-   switch(m_authMethod)
+   size_t getSignatureSize() const
    {
-      case SNMP_AUTH_SHA224:
-         return 16;
-      case SNMP_AUTH_SHA256:
-         return 24;
-      case SNMP_AUTH_SHA384:
-         return 32;
-      case SNMP_AUTH_SHA512:
-         return 48;
-      default:
-         return 12;
+      switch(m_authMethod)
+      {
+         case SNMP_AUTH_SHA224:
+            return 16;
+         case SNMP_AUTH_SHA256:
+            return 24;
+         case SNMP_AUTH_SHA384:
+            return 32;
+         case SNMP_AUTH_SHA512:
+            return 48;
+         default:
+            return 12;
+      }
    }
-}
+};
 
 /**
  * Buffer for PDU encoding

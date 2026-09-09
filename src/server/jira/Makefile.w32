@@ -9,6 +9,6 @@
 
 MODULE = jira
 SOURCES = $(wildcard *.cpp)
-MOD_LIBS = -lnxjansson $(CURL_LIBS)
+MOD_LIBS = -lnxjansson $(CURL_LIBS) $(MICROHTTPD_LIBS)
 
 include $(TOPDIR)/src/server/module-common.mk

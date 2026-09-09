@@ -2523,10 +2523,8 @@ public:
    virtual int getObjectClass() const override { return OBJECT_INTERFACE; }
    virtual InetAddress getPrimaryIpAddress() const override
    {
-      lockProperties();
-      auto a = m_ipAddressList.getFirstUnicastAddress();
-      unlockProperties();
-      return a;
+      LockGuard lockGuard(m_mutexProperties);
+      return m_ipAddressList.getFirstUnicastAddress();
    }
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -2552,13 +2550,39 @@ public:
 
    InetAddressList getIpAddressList() const { return GetAttributeWithLock(m_ipAddressList, m_mutexProperties); }
    InetAddress getFirstIpAddress() const;
-   InetAddress getFirstUnicastAddress() const;
-   InetAddress getFirstUnicastAddressV4() const;
-   bool hasIpAddress(const InetAddress& addr) const;
+   InetAddress getFirstUnicastAddress() const
+   {
+      LockGuard lockGuard(m_mutexProperties);
+      return m_ipAddressList.getFirstUnicastAddress();
+   }
+
+   InetAddress getFirstUnicastAddressV4() const
+   {
+      LockGuard lockGuard(m_mutexProperties);
+      return m_ipAddressList.getFirstUnicastAddressV4();
+   }
+
+   bool hasIpAddress(const InetAddress& addr) const
+   {
+      LockGuard lockGuard(m_mutexProperties);
+      return m_ipAddressList.hasAddress(addr);
+   }
+
    bool hasAddressInSubnet(const InetAddress& subnet) const;
    bool hasAddressInSameSubnet(const InetAddress& addr) const;
-   InetAddress findSameSubnetAddress(const InetAddress& addr) const;
-   String getIpAddressListAsString() const;
+
+   InetAddress findSameSubnetAddress(const InetAddress& addr) const
+   {
+      LockGuard lockGuard(m_mutexProperties);
+      return m_ipAddressList.findSameSubnetAddress(addr);
+   }
+
+   String getIpAddressListAsString() const
+   {
+      LockGuard lockGuard(m_mutexProperties);
+      return m_ipAddressList.toString();
+   }
+
    uint32_t getIfIndex() const { return m_index; }
    uint32_t getIfType() const { return m_type; }
    uint32_t getMTU() const { return m_mtu; }
@@ -2627,51 +2651,53 @@ public:
       setModified(MODIFY_INTERFACE_PROPERTIES);
    }
    void setPhysicalLocation(const InterfacePhysicalLocation& location);
+
    void setPhysicalPortFlag(bool isPhysical)
    {
-      lockProperties();
+      LockGuard lockGuard(m_mutexProperties);
       if (isPhysical)
          m_flags |= IF_PHYSICAL_PORT;
       else
          m_flags &= ~IF_PHYSICAL_PORT;
       setModified(MODIFY_COMMON_PROPERTIES);
-      unlockProperties();
    }
+
    void setManualCreationFlag(bool isManual)
    {
-      lockProperties();
+      LockGuard lockGuard(m_mutexProperties);
       if (isManual)
          m_flags |= IF_CREATED_MANUALLY;
       else
          m_flags &= ~IF_CREATED_MANUALLY;
       setModified(MODIFY_COMMON_PROPERTIES);
-      unlockProperties();
    }
+
    void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
    void setPeer(AccessPoint *ap, LinkLayerProtocol protocol);
    void clearPeer();
    bool clearExpiredPeerData(uint32_t maxAgeSeconds);
+
    void setDescription(const TCHAR *description)
    {
-      lockProperties();
+      LockGuard lockGuard(m_mutexProperties);
       m_description = description;
       setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
    }
+
    void setIfName(const TCHAR *ifName)
    {
-      lockProperties();
+      LockGuard lockGuard(m_mutexProperties);
       m_ifName = ifName;
       setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
    }
+
    void setIfAlias(const TCHAR *ifAlias)
    {
-      lockProperties();
+      LockGuard lockGuard(m_mutexProperties);
       m_ifAlias = ifAlias;
       setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
    }
+
    void setExcludeFromTopology(bool excluded);
    void setIncludeInIcmpPoll(bool included);
    void setNetMask(const InetAddress& addr);
@@ -2697,12 +2723,11 @@ public:
    }
    void setIfTableSuffix(int len, const uint32_t *suffix)
    {
-      lockProperties();
+      LockGuard lockGuard(m_mutexProperties);
       MemFree(m_ifTableSuffix);
       m_ifTableSuffixLen = len;
       m_ifTableSuffix = (len > 0) ? MemCopyArray(suffix, len) : nullptr;
       setModified(MODIFY_INTERFACE_PROPERTIES);
-      unlockProperties();
    }
    void setParentInterface(uint32_t parentInterfaceId)
    {
@@ -2730,46 +2755,6 @@ public:
 
    void statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, uint32_t nodeIcmpProxy, bool agentReachable);
 };
-
-inline InetAddress Interface::getFirstUnicastAddress() const
-{
-   lockProperties();
-   InetAddress result = m_ipAddressList.getFirstUnicastAddress();
-   unlockProperties();
-   return result;
-}
-
-inline InetAddress Interface::getFirstUnicastAddressV4() const
-{
-   lockProperties();
-   InetAddress result = m_ipAddressList.getFirstUnicastAddressV4();
-   unlockProperties();
-   return result;
-}
-
-inline bool Interface::hasIpAddress(const InetAddress& addr) const
-{
-   lockProperties();
-   bool result = m_ipAddressList.hasAddress(addr);
-   unlockProperties();
-   return result;
-}
-
-inline InetAddress Interface::findSameSubnetAddress(const InetAddress& addr) const
-{
-   lockProperties();
-   InetAddress result = m_ipAddressList.findSameSubnetAddress(addr);
-   unlockProperties();
-   return result;
-}
-
-inline String Interface::getIpAddressListAsString() const
-{
-   lockProperties();
-   String result = m_ipAddressList.toString();
-   unlockProperties();
-   return result;
-}
 
 /**
  * Network service class
@@ -2831,7 +2816,7 @@ private:
    typedef NetObj super;
 
 protected:
-   UINT32 m_dwPeerGateway;        // Object ID of peer gateway
+   uint32_t m_dwPeerGateway;        // Object ID of peer gateway
    ObjectArray<InetAddress> *m_localNetworks;
    ObjectArray<InetAddress> *m_remoteNetworks;
 
@@ -2855,7 +2840,7 @@ public:
 
    bool isLocalAddr(const InetAddress& addr) const;
    bool isRemoteAddr(const InetAddress& addr) const;
-   UINT32 getPeerGatewayId() const { return m_dwPeerGateway; }
+   uint32_t getPeerGatewayId() const { return m_dwPeerGateway; }
    InetAddress getPeerGatewayAddr() const;
 };
 
@@ -3272,10 +3257,9 @@ public:
    void attachToDomain(uint32_t domainId, uint32_t controllerId);
    void setIpAddress(const InetAddress& addr)
    {
-      lockProperties();
+      LockGuard lockGuard(m_mutexProperties);
       m_ipAddress = addr;
       setModified(MODIFY_AP_PROPERTIES);
-      unlockProperties();
    }
    void updateRadioInterfaces(const StructArray<RadioInterfaceInfo>& ri);
    void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
@@ -3587,10 +3571,8 @@ public:
    SharedString getConnectorName() const { return GetAttributeWithLock(m_connectorName, m_mutexProperties); }
    json_t *getCredentials() const
    {
-      lockProperties();
-      json_t *credentials = (m_parsedCredentials != nullptr) ? json_deep_copy(m_parsedCredentials) : nullptr;
-      unlockProperties();
-      return credentials;
+      LockGuard lockGuard(m_mutexProperties);
+      return (m_parsedCredentials != nullptr) ? json_deep_copy(m_parsedCredentials) : nullptr;
    }
    int16_t getRemovalPolicy() const { return m_removalPolicy; }
    uint32_t getGracePeriod() const { return m_gracePeriod; }
@@ -3737,10 +3719,8 @@ public:
    SharedString getConnectorName() const { return GetAttributeWithLock(m_connectorName, m_mutexProperties); }
    json_t *getCredentials() const
    {
-      lockProperties();
-      json_t *credentials = (m_parsedCredentials != nullptr) ? json_deep_copy(m_parsedCredentials) : nullptr;
-      unlockProperties();
-      return credentials;
+      LockGuard lockGuard(m_mutexProperties);
+      return (m_parsedCredentials != nullptr) ? json_deep_copy(m_parsedCredentials) : nullptr;
    }
    uint32_t getLinkedNodeId() const { return m_linkedNodeId; }
    int16_t getRemovalPolicy() const { return m_removalPolicy; }
@@ -4567,7 +4547,7 @@ public:
    shared_ptr<Cluster> getCluster() const;
    shared_ptr<WirelessDomain> getWirelessDomain() const;
 
-   InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
+   InetAddress getIpAddress() const { return GetAttributeWithLock(m_ipAddress, m_mutexProperties); }
    MacAddress getPrimaryMacAddress() const
    {
       shared_ptr<Interface> iface = findInterfaceByIP(getPrimaryIpAddress());
@@ -4689,7 +4669,11 @@ public:
    uint32_t getPhysicalContainerId() const { return m_physicalContainer; }
    int16_t getRackHeight() const { return m_rackHeight; }
    int16_t getRackPosition() const { return m_rackPosition; }
-   bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConnection != nullptr); unlockProperties(); return result; }
+   bool hasFileUpdateConnection() const
+   {
+      LockGuard lockGuard(m_mutexProperties);
+      return m_fileUpdateConnection != nullptr;
+   }
    uint32_t getIcmpProxy() const { return m_icmpProxy; }
    SharedString getSshLogin() const { return GetAttributeWithLock(m_sshLogin, m_mutexProperties); }
    SharedString getSshPassword() const { return GetAttributeWithLock(m_sshPassword, m_mutexProperties); }
@@ -5047,7 +5031,7 @@ public:
    virtual bool showThresholdSummary() const override;
    virtual bool isMaintenanceApplicable() const override { return true; }
 
-   InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
+   InetAddress getIpAddress() const { return GetAttributeWithLock(m_ipAddress, m_mutexProperties); }
    bool isSyntheticMask() const { return (m_flags & SF_SYNTETIC_MASK) > 0; }
    bool isManuallyCreated() const { return (m_flags & SF_MANUALLY_CREATED) > 0; }
    bool isPointToPoint() const;
