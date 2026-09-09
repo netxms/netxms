@@ -189,6 +189,61 @@ public class RuleEditor extends Composite
             new Control[] { leftPanel, ruleNumberLabel, header, headerLabel, errorMarker } :
             new Control[] { leftPanel, ruleNumberLabel, header, headerLabel });
 
+      dragEnable();
+      dropEnable();
+   }
+
+   /**
+    * Enables drag functionality of the rule
+    */
+   private void dragEnable()
+   {
+      // enable each label to be a drag target
+      DragSource source = new DragSource(headerLabel, DND.DROP_MOVE);
+      source.setTransfer(new Transfer[] { LocalSelectionTransfer.getTransfer() });
+      // add a drop listener
+      source.addDragListener(new RuleDragSourceListener(this));
+   }
+
+   /**
+    * Enables drop functionality of the rule
+    */
+   private void dropEnable()
+   {
+      // enable each label to be a drop target
+      DropTarget target = new DropTarget(this, DND.DROP_MOVE);
+      target.setTransfer(new Transfer[] { LocalSelectionTransfer.getTransfer() });
+      // add a drop listener
+      target.addDropListener(new RuleDropTargetListener());
+   }
+
+   /**
+    * Create main area which contains condition and action elements
+    */
+   private void createMainArea()
+   {
+      mainArea = new Composite(this, SWT.NONE);
+      mainArea.setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
+
+      GridLayout layout = new GridLayout();
+      layout.numColumns = verticalLayout ? 1 : 2;
+      layout.marginHeight = 4;
+      layout.marginWidth = 4;
+      layout.makeColumnsEqualWidth = true;
+      mainArea.setLayout(layout);
+
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.exclude = collapsed;
+      mainArea.setLayoutData(gd);
+   }
+
+   /**
+    * Create main area content (error, condition, and action cards). Deferred until the rule is first expanded.
+    */
+   private void createMainAreaContent()
+   {
       if (rule.hasErrors())
       {
          Card errors = new Card(mainArea, i18n.tr("Errors")) {
@@ -247,55 +302,6 @@ public class RuleEditor extends Composite
       };
       action.addButton(new DashboardElementButton(i18n.tr("Edit actions"), SharedIcons.IMG_EDIT, editRuleAction));
       action.setDoubleClickAction(editRuleAction);
-
-      dragEnable();
-      dropEnable();
-   }
-
-   /**
-    * Enables drag functionality of the rule
-    */
-   private void dragEnable()
-   {
-      // enable each label to be a drag target
-      DragSource source = new DragSource(headerLabel, DND.DROP_MOVE);
-      source.setTransfer(new Transfer[] { LocalSelectionTransfer.getTransfer() });
-      // add a drop listener
-      source.addDragListener(new RuleDragSourceListener(this));
-   }
-
-   /**
-    * Enables drop functionality of the rule
-    */
-   private void dropEnable()
-   {
-      // enable each label to be a drop target
-      DropTarget target = new DropTarget(this, DND.DROP_MOVE);
-      target.setTransfer(new Transfer[] { LocalSelectionTransfer.getTransfer() });
-      // add a drop listener
-      target.addDropListener(new RuleDropTargetListener());
-   }
-
-   /**
-    * Create main area which contains condition and action elements
-    */
-   private void createMainArea()
-   {
-      mainArea = new Composite(this, SWT.NONE);
-      mainArea.setBackground(ThemeEngine.getBackgroundColor("Dashboard"));
-
-      GridLayout layout = new GridLayout();
-      layout.numColumns = verticalLayout ? 1 : 2;
-      layout.marginHeight = 4;
-      layout.marginWidth = 4;
-      layout.makeColumnsEqualWidth = true;
-      mainArea.setLayout(layout);
-
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.exclude = collapsed;
-      mainArea.setLayoutData(gd);
    }
 
    /**
@@ -1194,6 +1200,8 @@ public class RuleEditor extends Composite
    public void setCollapsed(boolean collapsed, boolean doLayout)
    {
       this.collapsed = collapsed;
+      if (!collapsed && (condition == null))
+         createMainAreaContent();
       expandButton.setImage(collapsed ? SharedIcons.IMG_EXPAND : SharedIcons.IMG_COLLAPSE);
       expandButton.setToolTipText(collapsed ? i18n.tr("Expand rule") : i18n.tr("Collapse rule"));
       mainArea.setVisible(!collapsed);
@@ -1253,8 +1261,11 @@ public class RuleEditor extends Composite
 
          updateBackground();
 
-         condition.replaceClientArea();
-         action.replaceClientArea();
+         if (condition != null)
+         {
+            condition.replaceClientArea();
+            action.replaceClientArea();
+         }
          editor.updateEditorAreaLayout();
          editor.setModified(true);
       }
@@ -1388,6 +1399,8 @@ public class RuleEditor extends Composite
     */
    public void updateExplanation()
    {
+      if (condition == null)
+         createMainAreaContent();
       if (explanation == null)
       {
          explanation = new Card(mainArea, i18n.tr("Explanation")) {

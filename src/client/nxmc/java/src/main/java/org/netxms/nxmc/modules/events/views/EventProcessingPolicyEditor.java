@@ -305,7 +305,6 @@ public class EventProcessingPolicyEditor extends ConfigurationView
          for(EventProcessingPolicyRule rule : chain.getRules())
             rule.setRuleNumber(number++);
          rebuildFilteredEditors();
-         dataArea.layout(true, true);   // Freshly created editors need a full layout pass
          updateLayout();
       }
 
@@ -918,10 +917,12 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       ChainTab tab = activeTab();
       if (tab == null)
          return;
+      tab.dataArea.setRedraw(false);
       for(RuleEditor e : tab.ruleEditors)
          if (!e.isDisposed())
             e.setCollapsed(collapsed, false);
       tab.updateLayout();
+      tab.dataArea.setRedraw(true);
    }
 
    /**
