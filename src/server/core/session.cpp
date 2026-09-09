@@ -5843,7 +5843,7 @@ void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
       if (object != nullptr)
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
-                  (delegateObject != nullptr && object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ) &&
+                  (delegateObject != nullptr && delegateObject->isDelegate() && object->checkAccessRights(m_userId, OBJECT_ACCESS_DELEGATED_READ) &&
                   delegateObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ) &&
                   delegateObject->getAsDelegate()->containsDci(request.getFieldAsUInt32(incomingIndex + 1))))
          {
@@ -12677,7 +12677,7 @@ void ClientSession::executeDashboardScript(const NXCPMessage& request)
 
    shared_ptr<NetObj> contextObject = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    shared_ptr<NetObj> dashboard = FindObjectById(request.getFieldAsUInt32(VID_DASHBOARD_ID), { OBJECT_DASHBOARD, OBJECT_DASHBOARDTEMPLATE });
-   int elementIndex = request.getFieldAsUInt32(VID_ELEMENT_INDEX);
+   int elementIndex = request.getFieldAsInt32(VID_ELEMENT_INDEX);
    if (dashboard != nullptr && contextObject != nullptr)
    {
       if ((contextObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ) ||
