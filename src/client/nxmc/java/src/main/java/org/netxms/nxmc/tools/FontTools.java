@@ -63,10 +63,7 @@ public class FontTools
       for(String name : names)
       {
          if (availableFonts.contains(name.trim().toUpperCase()))
-         {
-            logger.debug("Selected font " + name);
             return name;
-         }
       }
       return null;
    }
