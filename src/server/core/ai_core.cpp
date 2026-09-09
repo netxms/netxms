@@ -1452,7 +1452,7 @@ void Chat::initializeFunctions()
       "get-session-info",
       "Get information about the current session type. Returns whether this is an interactive session (user chat) or background session (autonomous task). "
       "Use this to determine the appropriate approval workflow: interactive sessions should use ask-user-confirmation, "
-      "background sessions should use create-approval-request.",
+      "background sessions should use create-approval-request. The ask-user-* functions are not available in background sessions.",
       std::vector<AssistantFunctionParameter>{},
       [this] (json_t *arguments, uint32_t userId) -> std::string
       {
@@ -1464,95 +1464,101 @@ void Chat::initializeFunctions()
       true
    ));
 
-   m_functions.emplace("ask-user-confirmation", make_shared<AssistantFunction>(
-      "ask-user-confirmation",
-      "Ask user a yes/no confirmation question. Blocks until user responds or timeout (5 minutes). Use for approval workflows or binary decisions.",
-      std::vector<AssistantFunctionParameter>{
-         {"intent", "Explanation of why this action is needed and what it accomplishes. Do not put actual command or action here, use 'action' parameter for that."},
-         {"action", "Optional: The specific action to be approved (command, script code, configuration change, etc.). Do not add any additional text, just the action itself."},
-         {"confirmation_type", "Type of confirmation: 'approve_reject', 'yes_no', or 'confirm_cancel'. Defaults to 'approve_reject'"}
-      },
-      [this] (json_t *arguments, uint32_t userId) -> std::string
-      {
-         const char *text = json_object_get_string_utf8(arguments, "intent", "");
-         if (*text == 0)
-            return R"({"error": "Intent is required"})";
-
-         const char *context = json_object_get_string_utf8(arguments, "action", "");
-         const char *typeStr = json_object_get_string_utf8(arguments, "confirmation_type", "approve_reject");
-
-         ConfirmationType type = ConfirmationType::APPROVE_REJECT;
-         if (!stricmp(typeStr, "yes_no"))
-            type = ConfirmationType::YES_NO;
-         else if (!stricmp(typeStr, "confirm_cancel"))
-            type = ConfirmationType::CONFIRM_CANCEL;
-
-         bool result = this->askConfirmation(text, context, type);
-         return result ? R"({"approved": true})" : R"({"approved": false})";
-      },
-      true
-   ));
-
-   m_functions.emplace("ask-user-choice", make_shared<AssistantFunction>(
-      "ask-user-choice",
-      "Ask user to choose from multiple options. Blocks until user responds or timeout (5 minutes). Use when user needs to select from a list of choices.",
-      std::vector<AssistantFunctionParameter>{
-         {"question", "The question to display to the user"},
-         {"context", "Optional additional context for the question"},
-         {"options", "Array of option strings for the user to choose from", "array", "string"}
-      },
-      [this] (json_t *arguments, uint32_t userId) -> std::string
-      {
-         const char *text = json_object_get_string_utf8(arguments, "question", "");
-         if (*text == 0)
-            return R"({"error": "Question is required"})";
-
-         json_t *optionsArray = json_object_get(arguments, "options");
-         if (!json_is_array(optionsArray) || json_array_size(optionsArray) == 0)
-            return R"({"error": "Options array is required and must not be empty"})";
-
-         StringList options;
-         size_t i;
-         json_t *value;
-         json_array_foreach(optionsArray, i, value)
+   // User questions can only be delivered in interactive chats (console or chat bot session);
+   // background, task, and delegation chats get no such functions so the model receives
+   // an explicit error instead of blocking until the question times out
+   if (m_isInteractive)
+   {
+      m_functions.emplace("ask-user-confirmation", make_shared<AssistantFunction>(
+         "ask-user-confirmation",
+         "Ask user a yes/no confirmation question. Blocks until user responds or timeout (5 minutes). Use for approval workflows or binary decisions.",
+         std::vector<AssistantFunctionParameter>{
+            {"intent", "Explanation of why this action is needed and what it accomplishes. Do not put actual command or action here, use 'action' parameter for that."},
+            {"action", "Optional: The specific action to be approved (command, script code, configuration change, etc.). Do not add any additional text, just the action itself."},
+            {"confirmation_type", "Type of confirmation: 'approve_reject', 'yes_no', or 'confirm_cancel'. Defaults to 'approve_reject'"}
+         },
+         [this] (json_t *arguments, uint32_t userId) -> std::string
          {
-            if (json_is_string(value))
+            const char *text = json_object_get_string_utf8(arguments, "intent", "");
+            if (*text == 0)
+               return R"({"error": "Intent is required"})";
+
+            const char *context = json_object_get_string_utf8(arguments, "action", "");
+            const char *typeStr = json_object_get_string_utf8(arguments, "confirmation_type", "approve_reject");
+
+            ConfirmationType type = ConfirmationType::APPROVE_REJECT;
+            if (!stricmp(typeStr, "yes_no"))
+               type = ConfirmationType::YES_NO;
+            else if (!stricmp(typeStr, "confirm_cancel"))
+               type = ConfirmationType::CONFIRM_CANCEL;
+
+            bool result = this->askConfirmation(text, context, type);
+            return result ? R"({"approved": true})" : R"({"approved": false})";
+         },
+         true
+      ));
+
+      m_functions.emplace("ask-user-choice", make_shared<AssistantFunction>(
+         "ask-user-choice",
+         "Ask user to choose from multiple options. Blocks until user responds or timeout (5 minutes). Use when user needs to select from a list of choices.",
+         std::vector<AssistantFunctionParameter>{
+            {"question", "The question to display to the user"},
+            {"context", "Optional additional context for the question"},
+            {"options", "Array of option strings for the user to choose from", "array", "string"}
+         },
+         [this] (json_t *arguments, uint32_t userId) -> std::string
+         {
+            const char *text = json_object_get_string_utf8(arguments, "question", "");
+            if (*text == 0)
+               return R"({"error": "Question is required"})";
+
+            json_t *optionsArray = json_object_get(arguments, "options");
+            if (!json_is_array(optionsArray) || json_array_size(optionsArray) == 0)
+               return R"({"error": "Options array is required and must not be empty"})";
+
+            StringList options;
+            size_t i;
+            json_t *value;
+            json_array_foreach(optionsArray, i, value)
             {
-#ifdef UNICODE
-               WCHAR *woption = WideStringFromUTF8String(json_string_value(value));
-               options.add(woption);
-               MemFree(woption);
-#else
-               options.add(json_string_value(value));
-#endif
+               if (json_is_string(value))
+               {
+   #ifdef UNICODE
+                  WCHAR *woption = WideStringFromUTF8String(json_string_value(value));
+                  options.add(woption);
+                  MemFree(woption);
+   #else
+                  options.add(json_string_value(value));
+   #endif
+               }
             }
-         }
 
-         if (options.isEmpty())
-            return R"({"error": "Options array must contain at least one string"})";
+            if (options.isEmpty())
+               return R"({"error": "Options array must contain at least one string"})";
 
-         const char *context = json_object_get_string_utf8(arguments, "context", "");
-         int result = this->askMultipleChoice(text, context, options);
-         if (result >= 0 && result < options.size())
-         {
-            // Include both 1-based index and selected text for clarity
-            const wchar_t *selectedText = options.get(result);
-            json_t *response = json_object();
-            json_object_set_new(response, "selected", json_integer(result + 1));
-            json_object_set_new(response, "selectedOption", json_string_w(selectedText));
-            return JsonToString(response);
-         }
-         else
-         {
-            json_t *response = json_object();
-            json_object_set_new(response, "selected", json_integer(-1));
-            json_object_set_new(response, "selectedOption", json_null());
-            json_object_set_new(response, "error", json_string("No selection made or timeout"));
-            return JsonToString(response);
-         }
-      },
-      true
-   ));
+            const char *context = json_object_get_string_utf8(arguments, "context", "");
+            int result = this->askMultipleChoice(text, context, options);
+            if (result >= 0 && result < options.size())
+            {
+               // Include both 1-based index and selected text for clarity
+               const wchar_t *selectedText = options.get(result);
+               json_t *response = json_object();
+               json_object_set_new(response, "selected", json_integer(result + 1));
+               json_object_set_new(response, "selectedOption", json_string_w(selectedText));
+               return JsonToString(response);
+            }
+            else
+            {
+               json_t *response = json_object();
+               json_object_set_new(response, "selected", json_integer(-1));
+               json_object_set_new(response, "selectedOption", json_null());
+               json_object_set_new(response, "error", json_string("No selection made or timeout"));
+               return JsonToString(response);
+            }
+         },
+         true
+      ));
+   }
 
    m_functionDeclarations = RebuildFunctionDeclarations(m_functions);
 }
@@ -2055,6 +2061,12 @@ static void SendQuestionToUser(uint32_t userId, uint32_t chatId, const PendingQu
  */
 bool Chat::askConfirmation(const char *text, const char *context, ConfirmationType type, uint32_t timeout)
 {
+   if (!m_isInteractive)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: confirmation question rejected in non-interactive chat: %hs"), m_id, text);
+      return false;
+   }
+
    m_questionMutex.lock();
 
    // Only one question at a time per chat
@@ -2110,6 +2122,12 @@ bool Chat::askConfirmation(const char *text, const char *context, ConfirmationTy
  */
 int Chat::askMultipleChoice(const char *text, const char *context, const StringList &options, uint32_t timeout)
 {
+   if (!m_isInteractive)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: multiple choice question rejected in non-interactive chat: %hs"), m_id, text);
+      return -1;
+   }
+
    m_questionMutex.lock();
 
    // Only one question at a time per chat

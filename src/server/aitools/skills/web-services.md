@@ -43,7 +43,7 @@ Calling `query-web-service` first refreshes the cached document, so the usual or
 ## Setting up a new web service metric
 
 1. Call `list-web-services` to check whether a suitable definition already exists.
-2. If not, create one with `create-web-service`. Ask the user for the URL and authentication details.
+2. If not, create one with `create-web-service`. The URL and authentication details must come from the user; if they were not provided, ask for them (or, when running as a delegated task, report them as missing instead of inventing values).
 3. Call `query-web-service` for the object that will collect the data, and read the returned document to understand its structure.
 4. Propose one or more extraction paths and verify each with `test-web-service-path`. Never propose a path without verifying it - a path that looks correct against the document may still fail, for example because of the array indexing rules of the parser.
 5. Use the `dciMetricName` returned by a successful path test as the `metric` argument of `create-metric` in the data-collection skill, with `origin` set to `webService`.
