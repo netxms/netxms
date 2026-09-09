@@ -218,6 +218,20 @@ public:
 };
 
 /**
+ * Bright Sky adapter (brightsky.cpp): free JSON API over DWD open data (MOSMIX
+ * forecasts plus station observations), Germany only, no key. Provides global
+ * irradiance but no direct radiation and no ensemble spread.
+ */
+class BrightSkyProvider : public WeatherProvider
+{
+public:
+   virtual const char *getName() const override { return "brightsky"; }
+
+   virtual void buildForecastUrl(double latitude, double longitude, int forecastDays, char *url, size_t size) const override;
+   virtual bool parseForecastResponse(const char *data, size_t len, int forecastDays, WeatherSnapshot **current, ForecastCurve **forecast) const override;
+};
+
+/**
  * A configured or lazily-resolved location with cached state.
  */
 class WeatherLocation
@@ -269,7 +283,8 @@ void FormatLocationKey(const char *providerName, double latitude, double longitu
 bool ParseLatLon(const TCHAR *str, double *latitude, double *longitude);
 
 /**
- * Parse an ISO 8601 UTC timestamp ("2026-08-20T12:00:00Z") into time_t (util.cpp).
+ * Parse an ISO 8601 timestamp with a "Z" or "+HH:MM"/"-HH:MM" zone designator
+ * ("2026-08-20T12:00:00Z", "2026-08-20T12:00:00+00:00") into UTC time_t (util.cpp).
  * Returns 0 if the string does not have that shape.
  */
 time_t ParseIsoTimestamp(const char *str);

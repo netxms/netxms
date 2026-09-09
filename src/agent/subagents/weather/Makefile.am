@@ -1,7 +1,7 @@
 SUBAGENT = weather
 
 pkglib_LTLIBRARIES = weather.la
-weather_la_SOURCES = main.cpp util.cpp httpclient.cpp openmeteo.cpp metno.cpp location.cpp
+weather_la_SOURCES = main.cpp util.cpp httpclient.cpp openmeteo.cpp metno.cpp brightsky.cpp location.cpp
 weather_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 weather_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 weather_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la

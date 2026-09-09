@@ -191,7 +191,7 @@ static void LoadLocationsFromList(Config *config)
 /**
  * Load explicit [Weather/Location/NAME] blocks. Unlike the Location directive
  * these can select a provider per location, which matters because provider
- * capabilities differ (only Open-Meteo reports solar irradiance).
+ * capabilities differ (MET Norway reports no solar irradiance at all).
  */
 static void LoadLocationsFromBlocks(Config *config)
 {
@@ -424,6 +424,7 @@ static bool SubagentInit(Config *config)
 
    s_providers.add(new OpenMeteoProvider(apiKey, ensembleModel));
    s_providers.add(new MetNoProvider());
+   s_providers.add(new BrightSkyProvider());
 
    const TCHAR *defaultProviderName = config->getValue(_T("/Weather/Provider"), _T("openmeteo"));
    s_defaultProvider = FindProvider(defaultProviderName);

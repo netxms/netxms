@@ -4,7 +4,7 @@
 #
 
 SUBAGENT = weather
-SOURCES = main.cpp util.cpp httpclient.cpp openmeteo.cpp metno.cpp location.cpp
+SOURCES = main.cpp util.cpp httpclient.cpp openmeteo.cpp metno.cpp brightsky.cpp location.cpp
 SA_LIBS = -lnxjansson $(CURL_LIBS) $(SSL_LIBS)
 
 include $(TOPDIR)/src/agent/subagents/subagent-common.mk

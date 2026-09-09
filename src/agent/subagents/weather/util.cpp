@@ -69,17 +69,35 @@ bool ParseLatLon(const TCHAR *str, double *latitude, double *longitude)
 }
 
 /**
- * Parse an ISO 8601 UTC timestamp ("2026-08-20T12:00:00Z"). Only the exact shape
- * used by MET Norway is accepted; anything else yields 0.
+ * Parse an ISO 8601 timestamp with a zone designator: "Z" (MET Norway) or a
+ * numeric "+HH:MM"/"-HH:MM" offset (Bright Sky). Anything else yields 0.
  */
 time_t ParseIsoTimestamp(const char *str)
 {
    if (str == nullptr)
       return 0;
 
-   int year, month, day, hour, minute, second;
-   if (sscanf(str, "%4d-%2d-%2dT%2d:%2d:%2dZ", &year, &month, &day, &hour, &minute, &second) != 6)
+   int year, month, day, hour, minute, second, consumed;
+   if (sscanf(str, "%4d-%2d-%2dT%2d:%2d:%2d%n", &year, &month, &day, &hour, &minute, &second, &consumed) != 6)
       return 0;
+
+   const char *zone = str + consumed;
+   int offset = 0;   // seconds east of UTC
+   if (!strcmp(zone, "Z"))
+   {
+      offset = 0;
+   }
+   else if ((*zone == '+') || (*zone == '-'))
+   {
+      int offsetHours, offsetMinutes;
+      if ((sscanf(zone + 1, "%2d:%2d%n", &offsetHours, &offsetMinutes, &consumed) != 2) || (zone[1 + consumed] != 0))
+         return 0;
+      offset = (offsetHours * 3600 + offsetMinutes * 60) * ((*zone == '-') ? -1 : 1);
+   }
+   else
+   {
+      return 0;
+   }
 
    struct tm t;
    memset(&t, 0, sizeof(struct tm));
@@ -90,5 +108,5 @@ time_t ParseIsoTimestamp(const char *str)
    t.tm_min = minute;
    t.tm_sec = second;
    t.tm_isdst = 0;
-   return timegm(&t);
+   return timegm(&t) - offset;
 }
