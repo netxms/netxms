@@ -1292,6 +1292,10 @@ static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, json_t *snaps
       json_t *v;
       json_array_foreach(src, i, v)
       {
+         char fieldPath[64];
+         snprintf(fieldPath, sizeof(fieldPath), "chain_calls[%zu]", i);
+
+         // Only a chain name or a numeric ID is accepted; an empty reference would resolve to the main chain
          char idText[16];
          const char *ref;
          if (json_is_integer(v))
@@ -1299,15 +1303,20 @@ static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, json_t *snaps
             snprintf(idText, sizeof(idText), "%d", static_cast<int>(json_integer_value(v)));
             ref = idText;
          }
+         else if (json_is_string(v) && (json_string_value(v)[0] != 0))
+         {
+            ref = json_string_value(v);
+         }
          else
          {
-            ref = json_is_string(v) ? json_string_value(v) : "";
+            *error = EppFilterError("expected chain name or ID", fieldPath, nullptr);
+            json_decref(dest);
+            json_decref(src);
+            return false;
          }
          json_t *chain = EppFindChainJson(snapshot, ref);
          if (chain == nullptr)
          {
-            char fieldPath[64];
-            snprintf(fieldPath, sizeof(fieldPath), "chain_calls[%zu]", i);
             *error = EppFilterError("chain not found", fieldPath, ref);
             json_decref(dest);
             json_decref(src);
