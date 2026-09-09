@@ -660,6 +660,63 @@ static int32_t GetFieldLength(DBDRV_RESULT hResult, int row, int column)
 }
 
 /**
+ * Fetch column value from current row of prepared statement result into caller's buffer.
+ * UTF-8 values are fetched directly into caller's buffer (connector truncates the value
+ * to buffer size and reports full length). Wide character values go through intermediate
+ * UTF-8 buffer sized by actual field length, which is placed on heap for large fields.
+ * Returns false if column could not be fetched.
+ */
+static bool FetchPreparedStatementColumn(MYSQL_STMT *statement, int column, unsigned long fieldLength, void *buffer, int bufferSize, bool utf8)
+{
+   if (bufferSize <= 0)
+      return false;
+
+   MYSQL_BIND b;
+   unsigned long l = 0;
+   my_bool isNull;
+
+   memset(&b, 0, sizeof(MYSQL_BIND));
+   b.buffer_type = MYSQL_TYPE_STRING;
+   b.length = &l;
+   b.is_null = &isNull;
+
+   Buffer<char, 4096> utf8Buffer;
+   if (utf8)
+   {
+      b.buffer = buffer;
+      b.buffer_length = bufferSize - 1;
+   }
+   else
+   {
+      utf8Buffer.reserve(fieldLength + 1);
+      b.buffer = utf8Buffer.buffer();
+      b.buffer_length = fieldLength + 1;
+   }
+
+   if (mysql_stmt_fetch_column(statement, &b, column, 0) != 0)
+      return false;
+
+   if (isNull)
+   {
+      if (utf8)
+         *static_cast<char*>(buffer) = 0;
+      else
+         *static_cast<WCHAR*>(buffer) = 0;
+   }
+   else if (utf8)
+   {
+      static_cast<char*>(buffer)[std::min(l, static_cast<unsigned long>(bufferSize - 1))] = 0;
+   }
+   else
+   {
+      utf8Buffer[static_cast<size_t>(std::min(l, fieldLength))] = 0;
+      utf8_to_wchar(utf8Buffer.buffer(), -1, static_cast<WCHAR*>(buffer), bufferSize);
+      static_cast<WCHAR*>(buffer)[bufferSize - 1] = 0;
+   }
+   return true;
+}
+
+/**
  * Get field value from result - UNICODE and UTF8 implementation
  */
 static void *GetFieldInternal(MARIADB_RESULT *result, int iRow, int iColumn, void *buffer, int bufferSize, bool utf8)
@@ -680,43 +737,9 @@ static void *GetFieldInternal(MARIADB_RESULT *result, int iRow, int iColumn, voi
 			result->currentRow = iRow;
 		}
 
-		MYSQL_BIND b;
-		unsigned long l = 0;
-		my_bool isNull;
-
-		memset(&b, 0, sizeof(MYSQL_BIND));
-		b.buffer = MemAllocLocal(result->lengthFields[iColumn] + 1);
-		b.buffer_length = result->lengthFields[iColumn] + 1;
-		b.buffer_type = MYSQL_TYPE_STRING;
-		b.length = &l;
-		b.is_null = &isNull;
-      int rc = mysql_stmt_fetch_column(result->statement, &b, iColumn, 0);
-      if (rc == 0)
-		{
-         if (!isNull)
-         {
-			   ((char *)b.buffer)[l] = 0;
-            if (utf8)
-            {
-			      strlcpy((char *)buffer, (char *)b.buffer, bufferSize);
-            }
-            else
-            {
-			      utf8_to_wchar((char *)b.buffer, -1, (WCHAR *)buffer, bufferSize);
-   			   ((WCHAR *)buffer)[bufferSize - 1] = 0;
-            }
-         }
-         else
-         {
-            if (utf8)
-               *((char *)buffer) = 0;
-            else
-               *((WCHAR *)buffer) = 0;
-         }
-			value = buffer;
-		}
+      if (FetchPreparedStatementColumn(result->statement, iColumn, result->lengthFields[iColumn], buffer, bufferSize, utf8))
+         value = buffer;
       result->connection->mutexQueryLock.unlock();
-		MemFreeLocal(b.buffer);
 	}
 	else
 	{
@@ -1040,42 +1063,8 @@ static void *GetFieldUnbufferedInternal(MARIADB_UNBUFFERED_RESULT *result, int c
    void *value = nullptr;
    if (result->isPreparedStatement)
    {
-      MYSQL_BIND b;
-      unsigned long l = 0;
-      my_bool isNull;
-
-      memset(&b, 0, sizeof(MYSQL_BIND));
-      b.buffer = MemAllocLocal(result->lengthFields[column] + 1);
-      b.buffer_length = result->lengthFields[column] + 1;
-      b.buffer_type = MYSQL_TYPE_STRING;
-      b.length = &l;
-      b.is_null = &isNull;
-      int rc = mysql_stmt_fetch_column(result->statement, &b, column, 0);
-      if (rc == 0)
-      {
-         if (!isNull)
-         {
-            ((char *)b.buffer)[l] = 0;
-            if (utf8)
-            {
-               strlcpy((char *)buffer, (char *)b.buffer, bufferSize);
-            }
-            else
-            {
-               utf8_to_wchar((char *)b.buffer, -1, (WCHAR *)buffer, bufferSize);
-               ((WCHAR *)buffer)[bufferSize - 1] = 0;
-            }
-         }
-         else
-         {
-            if (utf8)
-               *((char *)buffer) = 0;
-            else
-               *((WCHAR *)buffer) = 0;
-         }
+      if (FetchPreparedStatementColumn(result->statement, column, result->lengthFields[column], buffer, bufferSize, utf8))
          value = buffer;
-      }
-      MemFreeLocal(b.buffer);
    }
    else
    {
