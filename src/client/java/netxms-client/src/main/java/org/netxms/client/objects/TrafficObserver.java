@@ -50,7 +50,7 @@ public class TrafficObserver extends DataCollectionTarget implements PollingTarg
    public static final long CAP_HOST_SET_AUTHORITATIVE = 0x00000080L;
 
    private String connectorName;
-   private boolean hasCredentials;
+   private String credentials;
    private int zoneUIN;
    private long linkedNodeId;
    private int removalPolicy;
@@ -75,7 +75,7 @@ public class TrafficObserver extends DataCollectionTarget implements PollingTarg
    {
       super(msg, session);
       connectorName = msg.getFieldAsString(NXCPCodes.VID_CONNECTOR_NAME);
-      hasCredentials = msg.getFieldAsBoolean(NXCPCodes.VID_CLOUD_CREDENTIALS);
+      credentials = msg.getFieldAsString(NXCPCodes.VID_CLOUD_CREDENTIALS);
       zoneUIN = msg.getFieldAsInt32(NXCPCodes.VID_ZONE_UIN);
       linkedNodeId = msg.getFieldAsInt64(NXCPCodes.VID_LINKED_NODE_ID);
       removalPolicy = msg.getFieldAsInt16(NXCPCodes.VID_REMOVAL_POLICY);
@@ -140,11 +140,22 @@ public class TrafficObserver extends DataCollectionTarget implements PollingTarg
    }
 
    /**
+    * Get connector credentials as sent by the server: a JSON object with password-typed
+    * fields (as declared by the connector) removed. Secrets never leave the server.
+    *
+    * @return sanitized credentials JSON or null if credentials are not set
+    */
+   public String getCredentials()
+   {
+      return ((credentials != null) && !credentials.isEmpty()) ? credentials : null;
+   }
+
+   /**
     * @return true if connector credentials are set
     */
    public boolean hasCredentials()
    {
-      return hasCredentials;
+      return (credentials != null) && !credentials.isEmpty();
    }
 
    /**

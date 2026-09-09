@@ -43,7 +43,22 @@ enable the node "Traffic" tab, per-node host DCIs, and host alias sync.
 ## 3. Creating a traffic observer
 
 Create the *Traffic Observer* object (Infrastructure Services), select the
-connector (`NTOPNG`), and provide credentials as a JSON document:
+connector (`NTOPNG`), and fill in the connection form. The form is built
+from the credential fields the connector declares; for ntopng these are:
+
+| Field | JSON key | Default | Meaning |
+|-------|----------|---------|---------|
+| URL | `url` | — | Base URL of the ntopng instance (required) |
+| API token | `token` | — | API token, sent as `Authorization: Token` (required) |
+| Request timeout | `timeout` | 30 | HTTP request timeout, seconds |
+| Verify TLS certificate | `verifyTls` | true | Verify TLS certificate |
+| Cache TTL | `cacheTtl` | 30 | Connector-side cache TTL, seconds (active host lists, host details, interface counters) |
+| Host list page size | `pageSize` | 1000 | Page size for active host list retrieval |
+| Maximum active hosts | `maxHosts` | 100000 | Upper bound on active hosts retrieved per observation point |
+
+The values are stored as a JSON document under the listed keys; the REST API
+accepts and returns the same document (`credentials` property of the object),
+for example:
 
 ```json
 {
@@ -55,21 +70,13 @@ connector (`NTOPNG`), and provide credentials as a JSON document:
 }
 ```
 
-| Field | Default | Meaning |
-|-------|---------|---------|
-| `url` | — | Base URL of the ntopng instance (required) |
-| `token` | — | API token, sent as `Authorization: Token` (required) |
-| `timeout` | 30 | HTTP request timeout, seconds |
-| `verifyTls` | true | Verify TLS certificate |
-| `cacheTtl` | 30 | Connector-side cache TTL, seconds (active host lists, host details, interface counters) |
-| `pageSize` | 1000 | Page size for active host list retrieval |
-| `maxHosts` | 100000 | Upper bound on active hosts retrieved per observation point |
+Password-typed fields (the API token) never leave the server: the object
+editor and the REST API return the credentials with those keys removed, and
+leaving the token empty when saving the *Communication* property page keeps
+the stored value. `GET /v1/traffic-connectors` lists the connectors with
+their field descriptors.
 
-Credentials are write-only from the client: the object editor shows only
-whether credentials are set, and an empty credentials field on the
-*Connection* property page keeps the current value.
-
-Other settings on the *Connection* property page:
+Other settings on the *Communication* property page:
 
 - **Zone** — zone used for host matching (`-1` = match in all zones).
 - **Node representing the analyzer itself** — optional link to the node

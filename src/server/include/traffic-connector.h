@@ -36,6 +36,33 @@ enum class TrafficConnectorStatus
 };
 
 /**
+ * Credential field types (mirrored in Java client as TrafficCredentialField.Type)
+ */
+enum class TrafficCredentialFieldType
+{
+   STRING = 0,
+   PASSWORD = 1,
+   INTEGER = 2,
+   BOOLEAN = 3
+};
+
+/**
+ * Credential field descriptor. Connector declares the keys it reads from the
+ * credentials JSON so clients can render a form instead of a raw JSON editor.
+ * PASSWORD fields are stripped before credentials are sent to clients and are
+ * preserved on modification when the incoming JSON omits them or leaves them empty.
+ */
+struct TrafficCredentialField
+{
+   const char *name;             // key in credentials JSON
+   const wchar_t *displayName;
+   const wchar_t *description;   // may be nullptr
+   TrafficCredentialFieldType type;
+   bool required;
+   const wchar_t *defaultValue;  // textual default, nullptr = none
+};
+
+/**
  * Metric level for metric catalog queries
  */
 enum class TrafficMetricLevel
@@ -207,6 +234,10 @@ struct TrafficConnectorInterface
    // further surfaces (host pools, local networks) are added to the interface when a
    // connector that can actually serve them lands - no dead entry points.
    TrafficConnectorStatus (*SyncHostAliases)(const StringMap& aliases, json_t *credentials);   // hostKey -> name
+
+   // Credential form description (may be nullptr / 0 = connector takes free-form JSON)
+   const TrafficCredentialField *credentialFields;
+   size_t credentialFieldCount;
 };
 
 /**
@@ -218,6 +249,11 @@ TrafficConnectorInterface NXCORE_EXPORTABLE *FindTrafficConnector(const wchar_t 
  * Get names of available traffic connectors
  */
 StringList NXCORE_EXPORTABLE GetTrafficConnectorNames();
+
+/**
+ * Get available traffic connectors with their credential field descriptors as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetTrafficConnectorsAsJson();
 
 /**
  * Get error message for given status

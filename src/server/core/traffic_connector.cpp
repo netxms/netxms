@@ -63,6 +63,59 @@ StringList NXCORE_EXPORTABLE GetTrafficConnectorNames()
 }
 
 /**
+ * Symbolic name for credential field type (external API surface)
+ */
+static const char *CredentialFieldTypeName(TrafficCredentialFieldType type)
+{
+   switch(type)
+   {
+      case TrafficCredentialFieldType::PASSWORD:
+         return "password";
+      case TrafficCredentialFieldType::INTEGER:
+         return "integer";
+      case TrafficCredentialFieldType::BOOLEAN:
+         return "boolean";
+      default:
+         return "string";
+   }
+}
+
+/**
+ * Get available traffic connectors with their credential field descriptors as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetTrafficConnectorsAsJson()
+{
+   json_t *connectors = json_array();
+   StringList names = GetTrafficConnectorNames();
+   for(int i = 0; i < names.size(); i++)
+   {
+      TrafficConnectorInterface *connector = s_connectors.get(names.get(i));
+      if (connector == nullptr)
+         continue;
+
+      json_t *fields = json_array();
+      for(size_t j = 0; j < connector->credentialFieldCount; j++)
+      {
+         const TrafficCredentialField& field = connector->credentialFields[j];
+         json_t *f = json_object();
+         json_object_set_new(f, "name", json_string(field.name));
+         json_object_set_new(f, "displayName", json_string_w(field.displayName));
+         json_object_set_new(f, "description", (field.description != nullptr) ? json_string_w(field.description) : json_null());
+         json_object_set_new(f, "type", json_string(CredentialFieldTypeName(field.type)));
+         json_object_set_new(f, "required", json_boolean(field.required));
+         json_object_set_new(f, "defaultValue", (field.defaultValue != nullptr) ? json_string_w(field.defaultValue) : json_null());
+         json_array_append_new(fields, f);
+      }
+
+      json_t *c = json_object();
+      json_object_set_new(c, "name", json_string_w(names.get(i)));
+      json_object_set_new(c, "credentialFields", fields);
+      json_array_append_new(connectors, c);
+   }
+   return connectors;
+}
+
+/**
  * Initialize traffic connectors from loaded modules
  */
 void InitializeTrafficConnectors()

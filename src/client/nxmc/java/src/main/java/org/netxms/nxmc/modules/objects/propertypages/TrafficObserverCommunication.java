@@ -20,12 +20,18 @@ package org.netxms.nxmc.modules.objects.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TrafficConnector;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.TrafficObserver;
@@ -33,26 +39,26 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
-import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.modules.objects.widgets.ZoneSelector;
-import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.modules.traffic.widgets.TrafficCredentialsEditor;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 
 /**
- * "Connection" property page for traffic observer objects
+ * "Communication" property page for traffic observer objects: connector credentials, host
+ * matching zone, analyzer node link, and observation point removal policy. Takes the
+ * "communication" page slot so the web service proxy sub-page attaches to it.
  */
-public class TrafficObserverConnection extends ObjectPropertyPage
+public class TrafficObserverCommunication extends ObjectPropertyPage
 {
-   private I18n i18n = LocalizationHelper.getI18n(TrafficObserverConnection.class);
+   private I18n i18n = LocalizationHelper.getI18n(TrafficObserverCommunication.class);
 
    private TrafficObserver observer;
-   private LabeledText connectorName;
-   private LabeledText credentials;
+   private LabeledCombo connectorName;
+   private TrafficCredentialsEditor credentials;
+   private List<TrafficConnector> connectors = new ArrayList<TrafficConnector>();
    private ZoneSelector zoneSelector;
    private ObjectSelector linkedNode;
    private LabeledCombo removalPolicy;
@@ -63,9 +69,9 @@ public class TrafficObserverConnection extends ObjectPropertyPage
     *
     * @param object object to edit
     */
-   public TrafficObserverConnection(AbstractObject object)
+   public TrafficObserverCommunication(AbstractObject object)
    {
-      super(LocalizationHelper.getI18n(TrafficObserverConnection.class).tr("Connection"), object);
+      super(LocalizationHelper.getI18n(TrafficObserverCommunication.class).tr("Communication"), object);
    }
 
    /**
@@ -74,7 +80,7 @@ public class TrafficObserverConnection extends ObjectPropertyPage
    @Override
    public String getId()
    {
-      return "trafficObserverConnection";
+      return "communication";
    }
 
    /**
@@ -110,18 +116,19 @@ public class TrafficObserverConnection extends ObjectPropertyPage
       layout.marginHeight = 0;
       dialogArea.setLayout(layout);
 
-      connectorName = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.READ_ONLY);
+      connectorName = new LabeledCombo(dialogArea, SWT.NONE);
       connectorName.setLabel(i18n.tr("Connector"));
-      connectorName.setText(observer.getConnectorName());
       connectorName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      connectorName.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            onConnectorSelected();
+         }
+      });
 
-      credentials = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-      credentials.setLabel(observer.hasCredentials()
-            ? i18n.tr("Credentials (JSON; leave empty to keep current)")
-            : i18n.tr("Credentials (JSON)"));
-      GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-      gd.heightHint = 120;
-      credentials.setLayoutData(gd);
+      credentials = new TrafficCredentialsEditor(dialogArea, SWT.NONE);
+      credentials.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       if (Registry.getSession().isZoningEnabled())
       {
@@ -153,7 +160,52 @@ public class TrafficObserverConnection extends ObjectPropertyPage
       gracePeriod.setSelection(observer.getGracePeriod());
       gracePeriod.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Reading traffic connector information"), null, messageArea) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final List<TrafficConnector> list = session.getTrafficConnectors();
+            list.sort(Comparator.comparing(TrafficConnector::getName));
+            runInUIThread(() -> {
+               if (connectorName.isDisposed())
+                  return;
+               connectors = list;
+               for(TrafficConnector c : connectors)
+                  connectorName.add(c.getName());
+               int index = connectorName.indexOf(observer.getConnectorName());
+               if (index == -1)
+               {
+                  // Connector of this observer is not loaded on the server - keep its name selectable
+                  connectorName.add(observer.getConnectorName());
+                  index = connectors.size();
+               }
+               connectorName.select(index);
+               onConnectorSelected();
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot read traffic connector information");
+         }
+      }.start();
+
       return dialogArea;
+   }
+
+   /**
+    * Rebuild credential form for currently selected connector. Stored credentials only apply
+    * to the observer's current connector; switching to another one starts from an empty form.
+    */
+   private void onConnectorSelected()
+   {
+      int index = connectorName.getSelectionIndex();
+      TrafficConnector connector = ((index >= 0) && (index < connectors.size())) ? connectors.get(index) : null;
+      boolean sameConnector = connectorName.getText().equals(observer.getConnectorName());
+      credentials.setConnector(connector, sameConnector ? observer.getCredentials() : null);
+      WidgetHelper.adjustWindowSize(this);
    }
 
    /**
@@ -164,25 +216,11 @@ public class TrafficObserverConnection extends ObjectPropertyPage
    {
       final NXCObjectModificationData md = new NXCObjectModificationData(observer.getObjectId());
 
-      String credentialsText = credentials.getText().trim();
-      if (!credentialsText.isEmpty())
-      {
-         boolean valid;
-         try
-         {
-            valid = JsonParser.parseString(credentialsText).isJsonObject();
-         }
-         catch(JsonSyntaxException e)
-         {
-            valid = false;
-         }
-         if (!valid)
-         {
-            MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Credentials must be a valid JSON object"));
-            return false;
-         }
-         md.setCredentials(credentialsText);
-      }
+      if (!credentials.validate())
+         return false;
+      if (!connectorName.getText().equals(observer.getConnectorName()))
+         md.setConnectorName(connectorName.getText());
+      md.setCredentials(credentials.getCredentials());
 
       if ((zoneSelector != null) && (zoneSelector.getZoneUIN() != observer.getZoneId()))
          md.setZoneUIN(zoneSelector.getZoneUIN());
@@ -195,7 +233,7 @@ public class TrafficObserverConnection extends ObjectPropertyPage
          setValid(false);
 
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Updating traffic observer connection settings"), null, messageArea) {
+      new Job(i18n.tr("Updating traffic observer communication settings"), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -205,14 +243,14 @@ public class TrafficObserverConnection extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot update traffic observer connection settings");
+            return i18n.tr("Cannot update traffic observer communication settings");
          }
 
          @Override
          protected void jobFinalize()
          {
             if (isApply)
-               runInUIThread(() -> TrafficObserverConnection.this.setValid(true));
+               runInUIThread(() -> TrafficObserverCommunication.this.setValid(true));
          }
       }.start();
       return true;

@@ -157,6 +157,82 @@ void TrafficObserver::parseCredentials()
 }
 
 /**
+ * Replace credentials (takes ownership of the given string). PASSWORD fields declared by
+ * the connector that are absent or empty in the new document are carried over from the
+ * current credentials, so clients never have to send secrets back. Properties lock must
+ * be held by the caller.
+ */
+void TrafficObserver::setCredentials(char *credentials)
+{
+   json_t *parsed = nullptr;
+   if (credentials != nullptr)
+   {
+      json_error_t error;
+      parsed = json_loads(credentials, 0, &error);
+      if (parsed == nullptr)
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_TRAFFIC_POLL, L"TrafficObserver(%s [%u]): failed to parse credentials JSON on line %d: %hs", m_name, m_id, error.line, error.text);
+   }
+
+   TrafficConnectorInterface *connector = FindTrafficConnector(m_connectorName);
+   if (json_is_object(parsed) && json_is_object(m_parsedCredentials) && (connector != nullptr))
+   {
+      bool merged = false;
+      for(size_t i = 0; i < connector->credentialFieldCount; i++)
+      {
+         const TrafficCredentialField& field = connector->credentialFields[i];
+         if (field.type != TrafficCredentialFieldType::PASSWORD)
+            continue;
+         json_t *value = json_object_get(parsed, field.name);
+         if ((value != nullptr) && !(json_is_string(value) && (json_string_value(value)[0] == 0)))
+            continue;   // new secret supplied
+         json_t *current = json_object_get(m_parsedCredentials, field.name);
+         if (current != nullptr)
+         {
+            json_object_set(parsed, field.name, current);
+            merged = true;
+         }
+      }
+      if (merged)
+      {
+         char *text = json_dumps(parsed, JSON_COMPACT);
+         MemFree(credentials);
+         credentials = MemCopyStringA(text);
+         free(text);
+      }
+   }
+
+   MemFree(m_credentials);
+   m_credentials = credentials;
+   json_decref(m_parsedCredentials);
+   m_parsedCredentials = parsed;
+}
+
+/**
+ * Build copy of credentials suitable for sending to clients: PASSWORD fields declared by
+ * the connector are removed. Returns nullptr when no credentials are set, and an empty
+ * object when the connector is not loaded (nothing can be classified, so nothing is
+ * exposed). Properties lock must be held by the caller.
+ */
+json_t *TrafficObserver::sanitizedCredentials() const
+{
+   if (m_parsedCredentials == nullptr)
+      return nullptr;
+
+   TrafficConnectorInterface *connector = FindTrafficConnector(m_connectorName);
+   if ((connector == nullptr) || !json_is_object(m_parsedCredentials))
+      return json_object();
+
+   json_t *copy = json_deep_copy(m_parsedCredentials);
+   for(size_t i = 0; i < connector->credentialFieldCount; i++)
+   {
+      const TrafficCredentialField& field = connector->credentialFields[i];
+      if (field.type == TrafficCredentialFieldType::PASSWORD)
+         json_object_del(copy, field.name);
+   }
+   return copy;
+}
+
+/**
  * TrafficObserver destructor
  */
 TrafficObserver::~TrafficObserver()
@@ -287,6 +363,8 @@ json_t *TrafficObserver::toJson(bool includeSensitiveData)
 
    lockProperties();
    json_object_set_new(root, "connectorName", json_string_t(m_connectorName));
+   json_t *credentials = sanitizedCredentials();
+   json_object_set_new(root, "credentials", (credentials != nullptr) ? credentials : json_null());
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "linkedNodeId", json_integer(m_linkedNodeId));
    json_object_set_new(root, "removalPolicy", json_integer(m_removalPolicy));
@@ -316,7 +394,18 @@ void TrafficObserver::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageLocked(msg, userId);
    msg->setField(VID_CONNECTOR_NAME, m_connectorName);
-   msg->setField(VID_CLOUD_CREDENTIALS, m_credentials != nullptr);
+   json_t *credentials = sanitizedCredentials();
+   if (credentials != nullptr)
+   {
+      char *text = json_dumps(credentials, JSON_COMPACT);
+      msg->setFieldFromUtf8String(VID_CLOUD_CREDENTIALS, text);
+      free(text);
+      json_decref(credentials);
+   }
+   else
+   {
+      msg->setFieldFromUtf8String(VID_CLOUD_CREDENTIALS, "");
+   }
    msg->setField(VID_ZONE_UIN, m_zoneUIN);
    msg->setField(VID_LINKED_NODE_ID, m_linkedNodeId);
    msg->setField(VID_REMOVAL_POLICY, m_removalPolicy);
@@ -340,11 +429,7 @@ uint32_t TrafficObserver::modifyFromMessageInternal(const NXCPMessage& msg, Clie
    if (msg.isFieldExist(VID_CONNECTOR_NAME))
       m_connectorName = msg.getFieldAsSharedString(VID_CONNECTOR_NAME);
    if (msg.isFieldExist(VID_CLOUD_CREDENTIALS))
-   {
-      MemFree(m_credentials);
-      m_credentials = msg.getFieldAsUtf8String(VID_CLOUD_CREDENTIALS);
-      parseCredentials();
-   }
+      setCredentials(msg.getFieldAsUtf8String(VID_CLOUD_CREDENTIALS));
    if (msg.isFieldExist(VID_ZONE_UIN))
       m_zoneUIN = msg.getFieldAsInt32(VID_ZONE_UIN);
    if (msg.isFieldExist(VID_LINKED_NODE_ID))
@@ -408,9 +493,10 @@ uint32_t TrafficObserver::modifyFromJSONInternal(json_t *json, GenericClientSess
    value = json_object_get(json, "credentials");
    if (value != nullptr)
    {
-      if (!JsonValueToAttribute(value, &m_credentials))
+      char *credentials = nullptr;
+      if (!JsonValueToAttribute(value, &credentials))
          return RCC_INVALID_ARGUMENT;
-      parseCredentials();
+      setCredentials(credentials);
    }
 
    value = json_object_get(json, "zoneUIN");

@@ -554,7 +554,7 @@ public class NXCPCodes
    public static final int CMD_RESET_AI_OPERATOR = 0x0219;
    public static final int CMD_SET_AI_OBSERVATION_STATE = 0x021A;
    public static final int CMD_RESTORE_DEVICE_CONFIG = 0x021B;
-   public static final int CMD_GET_TRAFFIC_CONNECTOR_NAMES = 0x021C;
+   public static final int CMD_GET_TRAFFIC_CONNECTORS = 0x021C;
    public static final int CMD_GET_TRAFFIC_METRIC_DEFS = 0x021D;
    public static final int CMD_QUERY_TRAFFIC_DATA = 0x021E;
    public static final int CMD_NETCONF_EXECUTE = 0x021F;

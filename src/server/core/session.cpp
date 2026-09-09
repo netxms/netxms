@@ -2255,8 +2255,8 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_CLOUD_CONNECTOR_NAMES:
          getCloudConnectorNames(*request);
          break;
-      case CMD_GET_TRAFFIC_CONNECTOR_NAMES:
-         getTrafficConnectorNames(*request);
+      case CMD_GET_TRAFFIC_CONNECTORS:
+         getTrafficConnectors(*request);
          break;
       case CMD_GET_TRAFFIC_METRIC_DEFS:
          getTrafficMetricDefinitions(*request);
@@ -21936,15 +21936,38 @@ void ClientSession::getCloudConnectorNames(const NXCPMessage& request)
 }
 
 /**
- * Get names of available traffic connectors
+ * Get available traffic connectors with their credential field descriptors
  *
  * Called by:
- * CMD_GET_TRAFFIC_CONNECTOR_NAMES
+ * CMD_GET_TRAFFIC_CONNECTORS
  */
-void ClientSession::getTrafficConnectorNames(const NXCPMessage& request)
+void ClientSession::getTrafficConnectors(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   GetTrafficConnectorNames().fillMessage(&response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+
+   // Each connector occupies a block of 0x1000 field IDs: name, field count, then
+   // one sub-block of 0x10 IDs per credential field starting at offset 0x10
+   StringList names = GetTrafficConnectorNames();
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < names.size(); i++, fieldId += 0x1000)
+   {
+      TrafficConnectorInterface *connector = FindTrafficConnector(names.get(i));
+      response.setField(fieldId, names.get(i));
+      size_t count = (connector != nullptr) ? connector->credentialFieldCount : 0;
+      response.setField(fieldId + 1, static_cast<uint32_t>(count));
+      uint32_t id = fieldId + 0x10;
+      for(size_t j = 0; j < count; j++, id += 0x10)
+      {
+         const TrafficCredentialField& field = connector->credentialFields[j];
+         response.setFieldFromUtf8String(id, field.name);
+         response.setField(id + 1, field.displayName);
+         response.setField(id + 2, CHECK_NULL_EX(field.description));
+         response.setField(id + 3, static_cast<int16_t>(field.type));
+         response.setField(id + 4, field.required);
+         response.setField(id + 5, CHECK_NULL_EX(field.defaultValue));
+      }
+   }
+   response.setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(names.size()));
    response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }

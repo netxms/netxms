@@ -17851,18 +17851,24 @@ public class NXCSession
    }
 
    /**
-    * Get names of registered traffic connectors.
+    * Get registered traffic connectors with their credential field descriptors.
     *
-    * @return list of traffic connector names
+    * @return list of traffic connectors
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<String> getTrafficConnectorNames() throws IOException, NXCException
+   public List<TrafficConnector> getTrafficConnectors() throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TRAFFIC_CONNECTOR_NAMES);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_TRAFFIC_CONNECTORS);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getStringListFromFields(NXCPCodes.VID_ELEMENT_LIST_BASE, NXCPCodes.VID_NUM_ELEMENTS);
+
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<TrafficConnector> list = new ArrayList<TrafficConnector>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 0x1000)
+         list.add(new TrafficConnector(response, fieldId));
+      return list;
    }
 
    /**

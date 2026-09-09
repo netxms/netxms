@@ -49,6 +49,20 @@ static void NtopngShutdown()
 }
 
 /**
+ * Credential fields read from the observer's credentials JSON
+ */
+static const TrafficCredentialField s_credentialFields[] =
+{
+   { "url", L"URL", L"Base URL of the ntopng instance (for example https://ntopng.example.com:3000)", TrafficCredentialFieldType::STRING, true, nullptr },
+   { "token", L"API token", L"ntopng REST API token (admin token required for host alias synchronization)", TrafficCredentialFieldType::PASSWORD, true, nullptr },
+   { "timeout", L"Request timeout (seconds)", nullptr, TrafficCredentialFieldType::INTEGER, false, L"30" },
+   { "verifyTls", L"Verify TLS certificate", nullptr, TrafficCredentialFieldType::BOOLEAN, false, L"true" },
+   { "cacheTtl", L"Cache TTL (seconds)", L"Connector-side cache lifetime for active host lists, host details, and interface counters", TrafficCredentialFieldType::INTEGER, false, L"30" },
+   { "pageSize", L"Host list page size", nullptr, TrafficCredentialFieldType::INTEGER, false, L"1000" },
+   { "maxHosts", L"Maximum active hosts per observation point", nullptr, TrafficCredentialFieldType::INTEGER, false, L"100000" }
+};
+
+/**
  * Traffic connector interface
  */
 static TrafficConnectorInterface s_ntopngConnector =
@@ -64,7 +78,9 @@ static TrafficConnectorInterface s_ntopngConnector =
    NtopngGetHostMetric,
    NtopngGetHostTable,
    NtopngGetMetricDefinitions,
-   NtopngSyncHostAliases
+   NtopngSyncHostAliases,
+   s_credentialFields,
+   sizeof(s_credentialFields) / sizeof(s_credentialFields[0])
 };
 
 /**

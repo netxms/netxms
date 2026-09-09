@@ -75,6 +75,8 @@ tags:
     description: Asset management schema (asset attribute definitions)
   - name: Cloud Connectors
     description: Cloud connector information
+  - name: Traffic Observers
+    description: Traffic connector information
   - name: Logs
     description: Server-side log discovery and querying
 paths:
@@ -2512,6 +2514,50 @@ paths:
         - BearerAuth: []
       tags:
         - Cloud Connectors
+  /v1/traffic-connectors:
+    get:
+      operationId: listTrafficConnectors
+      summary: List traffic connectors
+      description: Retrieve all available traffic connectors with the credential fields they expect. Traffic connectors are provided by server modules and referenced by name when configuring traffic observer objects; the credential fields describe the keys of the observer's credentials JSON document.
+      responses:
+        '200':
+          description: Traffic connectors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    credentialFields:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: Key in credentials JSON
+                          displayName:
+                            type: string
+                          description:
+                            type: string
+                            nullable: true
+                          type:
+                            type: string
+                            enum: [string, password, integer, boolean]
+                          required:
+                            type: boolean
+                          defaultValue:
+                            type: string
+                            nullable: true
+        '401':
+          description: Unauthorized
+      security:
+        - BearerAuth: []
+      tags:
+        - Traffic Observers
   /v1/connection-history:
     get:
       operationId: getConnectionHistory

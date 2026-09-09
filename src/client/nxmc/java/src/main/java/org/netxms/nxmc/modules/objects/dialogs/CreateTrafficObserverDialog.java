@@ -18,29 +18,32 @@
  */
 package org.netxms.nxmc.modules.objects.dialogs;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TrafficConnector;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ZoneSelector;
+import org.netxms.nxmc.modules.traffic.widgets.TrafficCredentialsEditor;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.ObjectNameValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 
 /**
  * Traffic observer object creation dialog
@@ -52,8 +55,9 @@ public class CreateTrafficObserverDialog extends Dialog
    private LabeledText nameField;
    private LabeledText aliasField;
    private LabeledCombo connectorNameField;
-   private LabeledText credentialsField;
+   private TrafficCredentialsEditor credentialsEditor;
    private ZoneSelector zoneSelector;
+   private List<TrafficConnector> connectors = new ArrayList<TrafficConnector>();
 
    private String name;
    private String alias;
@@ -113,12 +117,16 @@ public class CreateTrafficObserverDialog extends Dialog
       connectorNameField = new LabeledCombo(dialogArea, SWT.NONE);
       connectorNameField.setLabel(i18n.tr("Connector"));
       connectorNameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      connectorNameField.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            onConnectorSelected();
+         }
+      });
 
-      credentialsField = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI);
-      credentialsField.setLabel(i18n.tr("Credentials (JSON)"));
-      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-      gd.heightHint = 160;
-      credentialsField.setLayoutData(gd);
+      credentialsEditor = new TrafficCredentialsEditor(dialogArea, SWT.NONE);
+      credentialsEditor.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       final NXCSession session = Registry.getSession();
       if (session.isZoningEnabled())
@@ -134,14 +142,16 @@ public class CreateTrafficObserverDialog extends Dialog
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<String> connectors = session.getTrafficConnectorNames();
-            Collections.sort(connectors);
+            final List<TrafficConnector> list = session.getTrafficConnectors();
+            list.sort(Comparator.comparing(TrafficConnector::getName));
             runInUIThread(() -> {
                if (connectorNameField.isDisposed())
                   return;
-               for(String c : connectors)
-                  connectorNameField.add(c);
+               connectors = list;
+               for(TrafficConnector c : connectors)
+                  connectorNameField.add(c.getName());
                connectorNameField.select(0);
+               onConnectorSelected();
             });
          }
 
@@ -153,6 +163,16 @@ public class CreateTrafficObserverDialog extends Dialog
       }.start();
 
       return dialogArea;
+   }
+
+   /**
+    * Rebuild credential form for currently selected connector
+    */
+   private void onConnectorSelected()
+   {
+      int index = connectorNameField.getSelectionIndex();
+      credentialsEditor.setConnector(((index >= 0) && (index < connectors.size())) ? connectors.get(index) : null, null);
+      WidgetHelper.adjustWindowSize(this);
    }
 
    /**
@@ -170,7 +190,6 @@ public class CreateTrafficObserverDialog extends Dialog
       name = nameField.getText().trim();
       alias = aliasField.getText().trim();
       connectorName = connectorNameField.getText().trim();
-      credentials = credentialsField.getText().trim();
 
       if (connectorName.isEmpty())
       {
@@ -178,34 +197,17 @@ public class CreateTrafficObserverDialog extends Dialog
          return;
       }
 
-      if (!credentials.isEmpty() && !isJsonObject(credentials))
+      if (!credentialsEditor.validate())
       {
-         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Credentials must be a valid JSON object"));
+         WidgetHelper.adjustWindowSize(this);
          return;
       }
+      credentials = credentialsEditor.getCredentials();
 
       if (zoneSelector != null)
          zoneUIN = zoneSelector.getZoneUIN();
 
       super.okPressed();
-   }
-
-   /**
-    * Check that given text is a JSON object
-    *
-    * @param text text to check
-    * @return true if text parses as JSON object
-    */
-   private static boolean isJsonObject(String text)
-   {
-      try
-      {
-         return JsonParser.parseString(text).isJsonObject();
-      }
-      catch(JsonSyntaxException e)
-      {
-         return false;
-      }
    }
 
    /**

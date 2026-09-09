@@ -1022,7 +1022,7 @@ private:
    void getInterfaceTrafficDcis(const NXCPMessage& request);
    void autoConnectNetworkMapNodes(const NXCPMessage& request);
    void getCloudConnectorNames(const NXCPMessage& request);
-   void getTrafficConnectorNames(const NXCPMessage& request);
+   void getTrafficConnectors(const NXCPMessage& request);
    void getTrafficMetricDefinitions(const NXCPMessage& request);
    void queryTrafficData(const NXCPMessage& request);
    void getConnectionHistory(const NXCPMessage& request);

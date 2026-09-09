@@ -85,7 +85,7 @@ import org.netxms.nxmc.modules.objects.propertypages.SSH;
 import org.netxms.nxmc.modules.objects.propertypages.SensorProperties;
 import org.netxms.nxmc.modules.objects.propertypages.StatusCalculation;
 import org.netxms.nxmc.modules.objects.propertypages.Syslog;
-import org.netxms.nxmc.modules.objects.propertypages.TrafficObserverConnection;
+import org.netxms.nxmc.modules.objects.propertypages.TrafficObserverCommunication;
 import org.netxms.nxmc.modules.objects.propertypages.TrafficObserverSync;
 import org.netxms.nxmc.modules.objects.propertypages.TrustedObjects;
 import org.netxms.nxmc.modules.objects.propertypages.VNC;
@@ -157,7 +157,7 @@ public class ObjectPropertiesManager
       pageClasses.add(ResponsibleUsers.class);
       pageClasses.add(SensorProperties.class);
       pageClasses.add(ObservationPointScope.class);
-      pageClasses.add(TrafficObserverConnection.class);
+      pageClasses.add(TrafficObserverCommunication.class);
       pageClasses.add(TrafficObserverSync.class);
       pageClasses.add(SNMP.class);
       pageClasses.add(SNMPAgents.class);

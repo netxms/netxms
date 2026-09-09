@@ -3699,6 +3699,8 @@ protected:
    uint32_t m_aliasSyncErrors;
 
    void parseCredentials();
+   void setCredentials(char *credentials);
+   json_t *sanitizedCredentials() const;
    void updateBackendInfo(const TrafficBackendInfo& info);
    void updateConnectionState(int16_t newState, const wchar_t *details);
    bool isHostAliasSyncEnabled(uint32_t *interval) const;

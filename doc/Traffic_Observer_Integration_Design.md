@@ -291,6 +291,13 @@ struct TrafficConnectorInterface
    // v1 - further surfaces (host pools, local networks) are added to the interface when
    // a connector that can actually serve them lands; no dead entry points.
    TrafficConnectorStatus (*SyncHostAliases)(const StringMap& aliases, json_t *credentials);   // hostKey -> name
+
+   // Credential form description: keys the connector reads from the credentials JSON
+   // (name, display name, description, type string/password/integer/boolean, required,
+   // textual default). Clients render a form from it; PASSWORD fields are stripped from
+   // credentials sent to clients and preserved on modification when left empty.
+   const TrafficCredentialField *credentialFields;
+   size_t credentialFieldCount;
 };
 ```
 
@@ -666,9 +673,11 @@ considered but is reserved for out-of-tree plugins; core views register directly
 
 ### 8.3 Property pages
 
-- `TrafficObserverConnection` — connector (read-only after creation), endpoint URL,
-  token, TLS verification, timeouts (fields map into the credentials blob; editor shows
-  token write-only, standard sensitive-field handling)
+- `TrafficObserverCommunication` — connector (dropdown; changing it resets the credential form), credential form
+  rendered from the connector's field descriptors (`TrafficCredentialsEditor`, shared
+  with the creation dialog; fields map into the credentials blob, password fields are
+  write-only), host matching zone, analyzer node link, removal policy. Takes the
+  `communication` page id so the web service proxy sub-page attaches to it.
 - `TrafficObserverSync` — sync surface enablement, scope selection, host pool mapping,
   schedule
 - `ObservationPointScope` — in-scope flag (also exposed as a checkbox/action in the
@@ -872,8 +881,8 @@ Carried over from the draft where still relevant, with mitigations now concrete:
    view (live stat header + active hosts / L7 / top talkers), node "Traffic" tab
    (observation point records + per-host stats / L7 / peers). Live tables share
    `TrafficQueryTable` (a `BaseTableValueViewer` over `queryTable`/
-   `getActiveTrafficHosts`). `TrafficObserverConnection` property page added
-   (credentials, node link, removal policy/grace period). The connector caches
+   `getActiveTrafficHosts`). `TrafficObserverCommunication` property page added
+   (credential form from connector descriptors, node link, removal policy/grace period). The connector caches
    `interface/data.lua` per TTL, so a view's multi-metric stat header costs one backend
    call per refresh. Host matching now pushes node object updates when a node's
    observation set changes, keeping tab visibility current. Deferred to later phases:

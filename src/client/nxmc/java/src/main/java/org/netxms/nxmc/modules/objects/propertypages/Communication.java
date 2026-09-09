@@ -36,6 +36,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.TrafficObserver;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -95,7 +96,7 @@ public class Communication extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof DataCollectionTarget) && !(object instanceof Cluster);
+      return (object instanceof DataCollectionTarget) && !(object instanceof Cluster) && !(object instanceof TrafficObserver);
    }
 
    /**

@@ -103,6 +103,7 @@ int H_AssetAttributeUpdate(Context *context);
 int H_AssetAttributeDelete(Context *context);
 int H_BusinessServiceAvailability(Context *context);
 int H_CloudConnectors(Context *context);
+int H_TrafficConnectors(Context *context);
 int H_GetConnectionHistory(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
 int H_DataCollectionHistory(Context *context);
@@ -489,6 +490,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/cloud-connectors")
       .GET(H_CloudConnectors)
+      .build();
+   RouteBuilder("v1/traffic-connectors")
+      .GET(H_TrafficConnectors)
       .build();
    RouteBuilder("v1/event-processing-policy/chains")
       .GET(H_EventProcessingPolicyChains)

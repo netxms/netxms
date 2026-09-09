@@ -32,7 +32,6 @@ import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.ObjectStatusChartConfig;
 import org.netxms.nxmc.modules.dashboards.widgets.TitleConfigurator;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
-import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
