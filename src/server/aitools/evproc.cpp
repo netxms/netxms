@@ -1307,12 +1307,13 @@ static bool EppApplyAiPatchToRule(json_t *rule, json_t *arguments, json_t *snaps
          char fieldPath[64];
          snprintf(fieldPath, sizeof(fieldPath), "chain_calls[%zu]", i);
 
-         // Only a chain name or a numeric ID is accepted; an empty reference would resolve to the main chain
+         // Only a chain name or a numeric ID within the chain ID range is accepted; an empty reference or a
+         // value truncated to 32 bits would resolve to the main chain
          char idText[16];
          const char *ref;
-         if (json_is_integer(v))
+         if (json_is_integer(v) && (json_integer_value(v) >= 0) && (json_integer_value(v) <= 0xFFFFFFFFLL))
          {
-            snprintf(idText, sizeof(idText), "%d", static_cast<int>(json_integer_value(v)));
+            snprintf(idText, sizeof(idText), "%u", static_cast<uint32_t>(json_integer_value(v)));
             ref = idText;
          }
          else if (json_is_string(v) && (json_string_value(v)[0] != 0))
