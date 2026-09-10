@@ -37,6 +37,95 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *compiler, const char *sourceCode)
    m_compiler = compiler;
    m_commentLevel = 0;
    m_stringSize = 0;
+   m_lastToken = 0;
+   m_lastColonIsLabel = false;
+   NXSL_BracketContext *root = m_brackets.addPlaceholder();
+   root->openingToken = 0;
+   root->pendingTernary = 0;
+}
+
+/**
+ * Check if opening brace at current position starts a block (as opposed to
+ * hash map initializer). Decision is based on previously returned token: brace
+ * opens a block only where the grammar cannot expect an operand.
+ */
+bool NXSL_Lexer::isBlockBraceExpected() const
+{
+   switch(m_lastToken)
+   {
+      case 0:     // start of script
+      case ';':
+      case '{':
+      case '}':
+      case ')':   // if/while/for/foreach/switch/function header, select options
+      case T_ELSE:
+      case T_DO:
+      case T_TRY:
+      case T_CATCH:
+      case T_IDENTIFIER:   // select statement without options
+         return true;
+      case ':':   // case/when/default label, unless ternary or hash map value
+         return m_lastColonIsLabel;
+      default:
+         return false;
+   }
+}
+
+/**
+ * Post-process token returned by scanner: track bracket nesting and rewrite
+ * hash map initializer brace into T_LBRACE_MAP. Returns token to be passed to parser.
+ */
+int NXSL_Lexer::processToken(int token)
+{
+   NXSL_BracketContext *context = m_brackets.get(m_brackets.size() - 1);
+   switch(token)
+   {
+      case '{':
+         if (m_lastToken == '%')   // deprecated %{ } form, parsed as separate '%' and '{' tokens
+         {
+            context = m_brackets.addPlaceholder();
+            context->openingToken = T_LBRACE_MAP;
+         }
+         else
+         {
+            if (!isBlockBraceExpected())
+               token = T_LBRACE_MAP;
+            context = m_brackets.addPlaceholder();
+            context->openingToken = token;
+         }
+         context->pendingTernary = 0;
+         break;
+      case '(':
+      case '[':
+         context = m_brackets.addPlaceholder();
+         context->openingToken = token;
+         context->pendingTernary = 0;
+         break;
+      case ')':
+      case ']':
+      case '}':
+         if (m_brackets.size() > 1)
+            m_brackets.remove(m_brackets.size() - 1);
+         break;
+      case '?':
+         context->pendingTernary++;
+         break;
+      case ':':
+         if (context->pendingTernary > 0)
+         {
+            context->pendingTernary--;
+            m_lastColonIsLabel = false;
+         }
+         else
+         {
+            m_lastColonIsLabel = (context->openingToken == '{') || (context->openingToken == 0);
+         }
+         break;
+      default:
+         break;
+   }
+   m_lastToken = token;
+   return token;
 }
 
 /**

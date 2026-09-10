@@ -37,6 +37,9 @@ escape		\\[bnrt0\"\\]
 #define YY_EXTRA_TYPE	NXSL_Lexer*
 #define YY_INPUT(buf, result, maxSize) { result = yyextra->lexerInput(buf, maxSize); }
 
+// Generated scanner is wrapped by yylex() defined below, which post-processes tokens
+#define YY_DECL int NXSL_ScanToken(YYSTYPE *yylval_param, yyscan_t yyscanner)
+
 #define YY_NO_UNPUT
 
 #include "libnxsl.h"
@@ -431,4 +434,12 @@ static inline uint32_t StringToUInt32(const char *s)
 static void LexerError(const char *message, yyscan_t scanner)
 {
    yyget_extra(scanner)->error(message);
+}
+
+/**
+ * Lexer entry point for parser
+ */
+int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner)
+{
+   return yyget_extra(yyscanner)->processToken(NXSL_ScanToken(yylval_param, yyscanner));
 }

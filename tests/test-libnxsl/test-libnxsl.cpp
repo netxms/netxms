@@ -9,6 +9,7 @@ static TCHAR *s_testScriptDirectory = nullptr;
 static const char *s_prog1 = "a = 1;\nb = 2;\nreturn a + b;";
 static const char *s_prog2 = "a = 1;\nb = {;\nreturn a + b;";
 static const char *s_prog3 = "a = substr('abc', 1, 1);";
+static const char *s_prog4 = "a = %{ \"k\": 1 };\nb = %{};\nreturn a[\"k\"] + b.size;";
 
 /**
  * Test NXSL compiler
@@ -39,6 +40,16 @@ static void TestCompiler()
    AssertFalse(compileDiag.warnings.isEmpty());
    AssertEquals(compileDiag.warnings.get(0)->lineNumber, 1);
    AssertTrue(!_tcscmp(compileDiag.warnings.get(0)->message, _T("Function \"substr\" is deprecated")));
+   delete p;
+   compileDiag.reset();
+
+   p = NXSLCompile(s_prog4, &compileTimeEnvironment, &compileDiag);
+   AssertNotNull(p);
+   AssertEquals(compileDiag.errorLineNumber, -1);
+   AssertEquals(compileDiag.warnings.size(), 2);
+   AssertEquals(compileDiag.warnings.get(0)->lineNumber, 1);
+   AssertTrue(!_tcscmp(compileDiag.warnings.get(0)->message, _T("Hash map initialization with \"%{}\" is deprecated, use \"{}\" instead")));
+   AssertEquals(compileDiag.warnings.get(1)->lineNumber, 2);
    delete p;
    compileDiag.reset();
 

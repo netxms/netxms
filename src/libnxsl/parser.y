@@ -84,6 +84,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_WHEN
 %token T_WHILE
 %token T_WITH
+%token T_LBRACE_MAP "{"
 
 %token <valIdentifier> T_COMPOUND_IDENTIFIER
 %token <valIdentifier> T_IDENTIFIER
@@ -431,11 +432,11 @@ MetadataValue:
 ;
 
 WithCalculationBlock:
-	'{' StatementList '}'
+	T_LBRACE_MAP StatementList '}'
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_RET_NULL);
 }
-|	'{' Expression '}'
+|	T_LBRACE_MAP Expression '}'
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_RETURN);
 }
@@ -917,13 +918,24 @@ ArrayElement:
 ;
 
 HashMapInitializer:
-	'%' '{'
+	T_LBRACE_MAP
 {
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_HASHMAP);
+}
+	HashMapElements '}'
+|	T_LBRACE_MAP '}'
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_HASHMAP);
+}
+|	'%' '{'
+{
+	compiler->warning(_T("Hash map initialization with \"%%{}\" is deprecated, use \"{}\" instead"));
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_HASHMAP);
 }
 	HashMapElements '}'
 |	'%' '{' '}'
 {
+	compiler->warning(_T("Hash map initialization with \"%%{}\" is deprecated, use \"{}\" instead"));
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_NEW_HASHMAP);
 }
 ;

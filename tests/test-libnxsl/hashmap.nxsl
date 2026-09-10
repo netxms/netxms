@@ -23,4 +23,77 @@ assert(!m2.contains("beta"));
 assert(m2.remove("beta") == null);
 assert(m1.contains("beta"));
 
+// Initializer without % prefix
+m3 = { "alpha":1, "beta":2 };
+assert(m3.size == 2);
+assert(m3["alpha"] == 1);
+assert(m3["beta"] == 2);
+
+empty = {};
+assert(empty.size == 0);
+assert(typeof(empty) == "hashmap");
+
+// Nested initializers
+nested = { "a": { "b": { "c": 42 } }, "list": [ { "id": 1 }, { "id": 2 } ] };
+assert(nested["a"]["b"]["c"] == 42);
+assert(nested["list"].size == 2);
+assert(nested["list"][1]["id"] == 2);
+
+// Initializer as function argument and return value
+function makeMap(v)
+{
+   return { "value": v, "double": v * 2 };
+}
+assert(makeMap(21)["double"] == 42);
+assert(typeof({ "x": 1 }) == "hashmap");
+
+// Initializer in ternary operator (both branches and after ':')
+t = (m3.size > 1) ? { "branch": "yes" } : { "branch": "no" };
+assert(t["branch"] == "yes");
+t = (m3.size > 100) ? 1 : { "branch": "no" };
+assert(t["branch"] == "no");
+t = { "k": (m3.size > 1) ? { "inner": 1 } : { "inner": 2 } };
+assert(t["k"]["inner"] == 1);
+
+// Braces after labels and loop headers must still open blocks
+sum = 0;
+switch(m3.size)
+{
+   case 2:
+   {
+      m4 = { "found": true };
+      sum++;
+   }
+   default:
+   {
+      sum += 10;
+   }
+}
+assert(sum == 11);
+assert(m4["found"]);
+
+for(k : m3.keys)
+{
+   sum += m3[k];
+}
+assert(sum == 14);
+
+for(i = 0; i < 2; i++)
+{
+   sum += { "one": 1, "two": 2 }["two"];
+}
+assert(sum == 18);
+
+// Ternary inside format string must not affect brace classification after it
+s = f"{ (sum > 0) ? 'positive' : 'negative' }";
+assert(s == "positive");
+m5 = { "after": "fstring" };
+assert(m5["after"] == "fstring");
+
+// Compound assignments and const/global declarations
+global gm = { "g": 1 };
+assert(gm["g"] == 1);
+sum += { "n": 5 }["n"];
+assert(sum == 23);
+
 return 0;

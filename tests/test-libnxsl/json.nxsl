@@ -7,7 +7,7 @@ json.data.reference = "reference string";
 json.data.value = 0.712;
 json.set("rcpt", "mail@domain.com");
 json.series = [1, 2, 3, 10, 20];
-json.map = %{ "name":"test map", "value":200 };
+json.map = { "name":"test map", "value":200 };
 
 r = json.data;
 r.extraBytes = "some extra bytes";
@@ -122,7 +122,7 @@ for(s : json.series.values)
 }
 assert(("" .. json.series.values[json.series.values.size - 1]) like "JsonArray@*");
 
-json = new JsonObject(%{ "name":"test", "value":100, "data":%{ "id":1, "version":"10X" }});
+json = new JsonObject({ "name":"test", "value":100, "data":{ "id":1, "version":"10X" }});
 assert(json != null);
 assert(json.name == "test");
 assert(json.value == 100);

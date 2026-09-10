@@ -90,19 +90,19 @@ static void TestStringResult()
 static void TestHashResult()
 {
    StartTest(_T("Hash result"));
-   AICheckResult result = Evaluate("return %{ \"title\": \"CPU high\", \"severity\": \"major\", \"details\": \"95% for 10 minutes\" };");
+   AICheckResult result = Evaluate("return { \"title\": \"CPU high\", \"severity\": \"major\", \"details\": \"95% for 10 minutes\" };");
    AssertTrue(result.verdict == AICheckVerdict::FIRED);
    AssertEquals(result.title.c_str(), "CPU high");
    AssertEquals(result.severity, SEVERITY_MAJOR);
    AssertEquals(result.details.c_str(), "95% for 10 minutes");
 
    // Numeric severity
-   result = Evaluate("return %{ \"title\": \"x\", \"severity\": 4 };");
+   result = Evaluate("return { \"title\": \"x\", \"severity\": 4 };");
    AssertTrue(result.verdict == AICheckVerdict::FIRED);
    AssertEquals(result.severity, SEVERITY_CRITICAL);
 
    // Severity names are case-insensitive
-   result = Evaluate("return %{ \"title\": \"x\", \"severity\": \"Minor\" };");
+   result = Evaluate("return { \"title\": \"x\", \"severity\": \"Minor\" };");
    AssertTrue(result.verdict == AICheckVerdict::FIRED);
    AssertEquals(result.severity, SEVERITY_MINOR);
    EndTest();
@@ -114,13 +114,13 @@ static void TestHashResult()
 static void TestHashResultDefaults()
 {
    StartTest(_T("Hash result defaults"));
-   AICheckResult result = Evaluate("return %{ \"details\": \"something\" };");
+   AICheckResult result = Evaluate("return { \"details\": \"something\" };");
    AssertTrue(result.verdict == AICheckVerdict::FIRED);
    AssertEquals(result.title.c_str(), "test-check");
    AssertEquals(result.severity, SEVERITY_WARNING);
    AssertEquals(result.details.c_str(), "something");
 
-   result = Evaluate("return %{ \"title\": \"\" };");
+   result = Evaluate("return { \"title\": \"\" };");
    AssertTrue(result.verdict == AICheckVerdict::FIRED);
    AssertEquals(result.title.c_str(), "test-check");
    EndTest();
@@ -132,11 +132,11 @@ static void TestHashResultDefaults()
 static void TestHashInvalidSeverity()
 {
    StartTest(_T("Hash result with invalid severity"));
-   AICheckResult result = Evaluate("return %{ \"title\": \"x\", \"severity\": \"urgent\" };");
+   AICheckResult result = Evaluate("return { \"title\": \"x\", \"severity\": \"urgent\" };");
    AssertTrue(result.verdict == AICheckVerdict::FAILED);
    AssertFalse(result.error.empty());
 
-   result = Evaluate("return %{ \"title\": \"x\", \"severity\": 7 };");
+   result = Evaluate("return { \"title\": \"x\", \"severity\": 7 };");
    AssertTrue(result.verdict == AICheckVerdict::FAILED);
    EndTest();
 }

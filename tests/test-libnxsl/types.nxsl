@@ -7,7 +7,7 @@ s = "string";
 n = null;
 o = new DateTime();
 a = %(1, 2, 3);
-m = %{ "one":1, "two":2 };
+m = { "one":1, "two":2 };
 
 assert(typeof(i32) == "int32");
 assert(typeof(i64) == "int64");

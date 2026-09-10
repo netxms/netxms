@@ -331,11 +331,21 @@ public:
 };
 
 /**
+ * Bracket nesting context tracked by lexer (needed to distinguish block-opening
+ * brace from hash map initializer brace)
+ */
+struct NXSL_BracketContext
+{
+   int openingToken;    // '(', '[', '{', T_LBRACE_MAP, or 0 for top level
+   int pendingTernary;  // number of '?' not yet matched by ':' at this level
+};
+
+/**
  * Modified lexer class
  */
 class NXSL_Lexer
 {
-	friend int yylex(YYSTYPE *, yyscan_t);
+	friend int NXSL_ScanToken(YYSTYPE *, yyscan_t);
 
 protected:
    size_t m_sourceSize;
@@ -350,6 +360,12 @@ protected:
    char m_string[MAX_STRING_SIZE];
    ByteStream m_text;
 
+   int m_lastToken;
+   bool m_lastColonIsLabel;
+   StructArray<NXSL_BracketContext> m_brackets;
+
+   bool isBlockBraceExpected() const;
+
 public:
 	NXSL_Lexer(NXSL_Compiler *compiler, const char *sourceCode);
 	~NXSL_Lexer()
@@ -358,6 +374,7 @@ public:
 	}
 
 	size_t lexerInput(char *buffer, size_t maxSize);
+	int processToken(int token);
 
 	void setConverterMode(bool mode) { m_converterMode = mode; }
 	bool isConverterMode() const { return m_converterMode; }
