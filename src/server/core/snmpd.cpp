@@ -423,7 +423,7 @@ void StartSNMPAgent()
       return;
    }
 
-   ConfigReadStrA(_T("SNMP.Agent.Community"), s_community, sizeof(s_community), "public");
+   ConfigReadStrA(_T("SNMP.Agent.CommunityString"), s_community, sizeof(s_community), "public");
 
    // Setup MIB tree
    s_mib.add(new SingleValueMIBSubTree(SNMP_ObjectId::parse(_T(".1.3.6.1.2.1.1.1")),
@@ -464,7 +464,7 @@ void StopSNMPAgent()
  */
 void OnSNMPAgentConfigurationChange(const wchar_t *name, const wchar_t *value)
 {
-   if (!wcscmp(name, L"SNMP.Agent.Community"))
+   if (!wcscmp(name, L"SNMP.Agent.CommunityString"))
    {
       memset(s_community, 0, sizeof(s_community));
       wchar_to_utf8(value, -1, s_community, sizeof(s_community) - 1);
