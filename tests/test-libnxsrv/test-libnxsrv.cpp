@@ -1667,14 +1667,14 @@ static void TestDailyActivityForecaster()
    double daysLeft = static_cast<double>(crossing - now) / 86400.0;
    AssertTrue((daysLeft > 4.0) && (daysLeft < 5.0));
    AssertTrue(flat.predictThresholdCrossing(100.0, now, noHolidays) < flat.predictThresholdCrossing(600.0, now, noHolidays));
-   AssertEquals(flat.predictThresholdCrossing(0.0, now, noHolidays), now);      // already crossed
+   AssertEquals(static_cast<int64_t>(flat.predictThresholdCrossing(0.0, now, noHolidays)), static_cast<int64_t>(now));      // already crossed
    EndTest();
 
    StartTest(_T("DailyActivityForecaster: forecast horizon"));
    // At 100/day from 06:00 the walk can accumulate at most 8975 within the 90-day horizon
    AssertTrue(flat.predictThresholdCrossing(100.0 * 88, now, noHolidays) != 0);
-   AssertEquals(flat.predictThresholdCrossing(100.0 * 90, now, noHolidays), static_cast<time_t>(0));
-   AssertEquals(flat.predictThresholdCrossing(100.0 * 200, now, noHolidays), static_cast<time_t>(0));
+   AssertEquals(static_cast<int64_t>(flat.predictThresholdCrossing(100.0 * 90, now, noHolidays)), static_cast<int64_t>(0));
+   AssertEquals(static_cast<int64_t>(flat.predictThresholdCrossing(100.0 * 200, now, noHolidays)), static_cast<int64_t>(0));
    EndTest();
 
    StartTest(_T("DailyActivityForecaster: negative samples ignored"));
@@ -1781,7 +1781,7 @@ static void TestDailyActivityForecaster()
    shortHorizon.learn(series, now);
    AssertEquals(shortHorizon.getConfig().horizonDays, 10);   // configuration survives learn()
    AssertTrue(shortHorizon.predictThresholdCrossing(450.0, now, noHolidays) != 0);
-   AssertEquals(shortHorizon.predictThresholdCrossing(100.0 * 15, now, noHolidays), static_cast<time_t>(0));
+   AssertEquals(static_cast<int64_t>(shortHorizon.predictThresholdCrossing(100.0 * 15, now, noHolidays)), static_cast<int64_t>(0));
    EndTest();
 
    StartTest(_T("DailyActivityForecaster: cold start"));
@@ -1789,7 +1789,7 @@ static void TestDailyActivityForecaster()
    BuildActivitySeries(&series, 3, ActivityFlatHundred);
    cold.learn(series, now);
    AssertFalse(cold.isValid());
-   AssertEquals(cold.predictThresholdCrossing(450.0, now, noHolidays), static_cast<time_t>(0));
+   AssertEquals(static_cast<int64_t>(cold.predictThresholdCrossing(450.0, now, noHolidays)), static_cast<int64_t>(0));
    DailyActivityForecaster shallow;
    BuildActivitySeries(&series, 10, ActivitySundayDip);
    shallow.learn(series, now);
@@ -1798,7 +1798,7 @@ static void TestDailyActivityForecaster()
    AssertTrue(shallow.predictThresholdCrossing(450.0, now, noHolidays) != 0);
    DailyActivityForecaster empty;
    AssertFalse(empty.isValid());
-   AssertEquals(empty.predictThresholdCrossing(100.0, now, noHolidays), static_cast<time_t>(0));
+   AssertEquals(static_cast<int64_t>(empty.predictThresholdCrossing(100.0, now, noHolidays)), static_cast<int64_t>(0));
    EndTest();
 }
 
