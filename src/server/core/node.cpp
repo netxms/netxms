@@ -719,7 +719,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
    }
    loadDCIListForCleanup(hdb);
 
-   updatePhysicalContainerBinding(m_physicalContainer);
+   updatePhysicalContainerBinding();
 
    if (bResult)
    {
@@ -10431,7 +10431,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
    if (msg.isFieldExist(VID_PHYSICAL_CONTAINER_ID))
    {
       m_physicalContainer = msg.getFieldAsUInt32(VID_PHYSICAL_CONTAINER_ID);
-      ThreadPoolExecute(g_mainThreadPool, this, &Node::updatePhysicalContainerBinding, m_physicalContainer);
+      ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Node::updatePhysicalContainerBinding);
    }
    if (msg.isFieldExist(VID_RACK_IMAGE_FRONT))
       m_rackImageFront = msg.getFieldAsGUID(VID_RACK_IMAGE_FRONT);
@@ -11418,7 +11418,10 @@ void Node::onObjectDelete(const NetObj& object)
    if (objectId == m_physicalContainer)
    {
       m_physicalContainer = 0;
-      updatePhysicalContainerBinding(0);
+      // Queued rather than run here: the task takes the parent list lock and the container's child
+      // list lock, which must not be acquired under the property lock (see modifyFromJSONInternal),
+      // and it must not overlap a rebind already queued for this node.
+      ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Node::updatePhysicalContainerBinding);
       setModified(MODIFY_NODE_PROPERTIES);
       nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 3, _T("Node::onObjectDelete(%s [%u]): physical container %s [%u] deleted"), m_name, m_id, object.getName(), objectId);
    }
@@ -14927,10 +14930,17 @@ void Node::onDataCollectionChange()
 }
 
 /**
- * Update physical container (rack or chassis) binding
+ * Update physical container (rack or chassis) binding. Reconciles the parent list against the
+ * current value of m_physicalContainer, not a value captured when the task was queued, so that
+ * queued tasks all converge on the latest committed container regardless of the order they run in.
+ * Runtime callers queue this task with PHYSICAL_BINDING_TASK_KEY so that no two runs overlap.
  */
-void Node::updatePhysicalContainerBinding(uint32_t containerId)
+void Node::updatePhysicalContainerBinding()
 {
+   lockProperties();
+   uint32_t containerId = m_physicalContainer;
+   unlockProperties();
+
    bool containerFound = false;
    SharedObjectArray<NetObj> deleteList;
 

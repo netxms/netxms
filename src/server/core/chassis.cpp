@@ -62,20 +62,25 @@ bool Chassis::showThresholdSummary() const
 }
 
 /**
- * Update rack binding
+ * Update rack binding. Reconciles the parent list against the current value of m_rackId. Runtime
+ * callers queue this task with PHYSICAL_BINDING_TASK_KEY so that no two runs overlap.
  */
 void Chassis::updateRackBinding()
 {
+   lockProperties();
+   uint32_t rackId = m_rackId;
+   unlockProperties();
+
    bool rackFound = false;
    SharedObjectArray<NetObj> deleteList;
 
-   writeLockParentList();
+   readLockParentList();
    for(int i = 0; i < getParentList().size(); i++)
    {
       NetObj *object = getParentList().get(i);
       if (object->getObjectClass() != OBJECT_RACK)
          continue;
-      if (object->getId() == m_rackId)
+      if (object->getId() == rackId)
       {
          rackFound = true;
          continue;
@@ -91,9 +96,9 @@ void Chassis::updateRackBinding()
       unlinkObjects(rack, this);
    }
 
-   if (!rackFound && (m_rackId != 0))
+   if (!rackFound && (rackId != 0))
    {
-      shared_ptr<Rack> rack = static_pointer_cast<Rack>(FindObjectById(m_rackId, OBJECT_RACK));
+      shared_ptr<Rack> rack = static_pointer_cast<Rack>(FindObjectById(rackId, OBJECT_RACK));
       if (rack != nullptr)
       {
          nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("Chassis::updateRackBinding(%s [%u]): add rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
@@ -101,16 +106,22 @@ void Chassis::updateRackBinding()
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("Chassis::updateRackBinding(%s [%u]): rack object [%d] not found"), m_name, m_id, m_rackId);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("Chassis::updateRackBinding(%s [%u]): rack object [%d] not found"), m_name, m_id, rackId);
       }
    }
 }
 
 /**
- * Update controller binding
+ * Update controller binding. Reconciles the parent list against the current controller ID and
+ * bind flag. Runtime callers queue this task with PHYSICAL_BINDING_TASK_KEY so that no two runs overlap.
  */
 void Chassis::updateControllerBinding()
 {
+   lockProperties();
+   uint32_t controllerId = m_controllerId;
+   bool bindUnderController = (m_flags & CHF_BIND_UNDER_CONTROLLER) != 0;
+   unlockProperties();
+
    bool controllerFound = false;
 
    IntegerArray<uint32_t> unbindList;
@@ -120,7 +131,7 @@ void Chassis::updateControllerBinding()
       NetObj *object = getParentList().get(i);
       if (object->getObjectClass() != OBJECT_NODE)
          continue;
-      if ((m_flags & CHF_BIND_UNDER_CONTROLLER) && (object->getId() == m_controllerId))
+      if (bindUnderController && (object->getId() == controllerId))
       {
          controllerFound = true;
       }
@@ -131,16 +142,16 @@ void Chassis::updateControllerBinding()
    }
    unlockParentList();
 
-   if ((m_flags & CHF_BIND_UNDER_CONTROLLER) && !controllerFound)
+   if (bindUnderController && !controllerFound)
    {
-      shared_ptr<NetObj> controller = FindObjectById(m_controllerId, OBJECT_NODE);
+      shared_ptr<NetObj> controller = FindObjectById(controllerId, OBJECT_NODE);
       if (controller != nullptr)
       {
          linkObjects(controller, self());
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 4, _T("Chassis::updateControllerBinding(%s [%u]): controller node with ID %u not found"), m_name, m_id, m_controllerId);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 4, _T("Chassis::updateControllerBinding(%s [%u]): controller node with ID %u not found"), m_name, m_id, controllerId);
       }
    }
 
@@ -179,7 +190,7 @@ uint32_t Chassis::modifyFromMessageInternal(const NXCPMessage& msg, ClientSessio
    if (msg.isFieldExist(VID_PHYSICAL_CONTAINER_ID))
    {
       m_rackId = msg.getFieldAsUInt32(VID_PHYSICAL_CONTAINER_ID);
-      ThreadPoolExecute(g_mainThreadPool, this, &Chassis::updateRackBinding);
+      ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Chassis::updateRackBinding);
    }
    if (msg.isFieldExist(VID_RACK_IMAGE_FRONT))
       m_rackImageFront = msg.getFieldAsGUID(VID_RACK_IMAGE_FRONT);
@@ -204,7 +215,7 @@ void Chassis::updateFlags(uint32_t flags, uint32_t mask)
 
    if (mask & CHF_BIND_UNDER_CONTROLLER)
    {
-      ThreadPoolExecute(g_mainThreadPool, this, &Chassis::updateControllerBinding);
+      ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Chassis::updateControllerBinding);
    }
 }
 
@@ -414,7 +425,7 @@ void Chassis::setBindUnderController(bool doBind)
       m_flags &= ~CHF_BIND_UNDER_CONTROLLER;
    setModified(MODIFY_COMMON_PROPERTIES, false);
    unlockProperties();
-   updateControllerBinding();
+   ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Chassis::updateControllerBinding);
 }
 
 /**
