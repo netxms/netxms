@@ -482,7 +482,7 @@ paths:
                   "urls": [],
                   "responsibleUsers": [],
                   "objectClassName": "Network"
-              }
+                }
         '401':
           description: Access denied 
           content:
@@ -874,7 +874,7 @@ paths:
                           "text": "comment text"
                       }
                   ]
-              }
+                }
         '401':
           description: Access denied 
           content:
