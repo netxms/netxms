@@ -220,21 +220,29 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       chatContent.append("  }");
       chatContent.append("  window.javaCallback(questionId, positive, selectedOption);");
       chatContent.append("}");
-      chatContent.append("function startQuestionTimer(questionId, seconds) {");
-      chatContent.append("  if (questionTimers[questionId]) return;");  // Prevent duplicate timers
+      // Countdown is derived from an absolute deadline (milliseconds since epoch) so that throttled timers
+      // or page reloads do not drift it; expiry itself is enforced on the Java side, here it only disables the card
+      chatContent.append("function startQuestionTimer(questionId, deadline) {");
+      chatContent.append("  if (questionTimers[questionId] || answeredQuestions[questionId]) return;");  // Prevent duplicate timers
       chatContent.append("  var timerEl = document.getElementById('timer_' + questionId);");
       chatContent.append("  if (!timerEl) return;");
-      chatContent.append("  var remaining = seconds;");
       chatContent.append("  function updateTimer() {");
+      chatContent.append("    var remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));");
       chatContent.append("    var mins = Math.floor(remaining / 60);");
       chatContent.append("    var secs = remaining % 60;");
       chatContent.append("    timerEl.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;");
       chatContent.append("    if (remaining <= 0) {");
       chatContent.append("      clearInterval(questionTimers[questionId]);");
       chatContent.append("      delete questionTimers[questionId];");
-      chatContent.append("      answerQuestion(questionId, false, -1);");
+      chatContent.append("      answeredQuestions[questionId] = true;");
+      chatContent.append("      var card = document.getElementById('question_' + questionId);");
+      chatContent.append("      if (card) {");
+      chatContent.append("        card.classList.add('question-answered');");
+      chatContent.append("        card.querySelectorAll('button').forEach(function(btn) { btn.disabled = true; });");
+      chatContent.append("        var timer = card.querySelector('.question-timer');");
+      chatContent.append("        if (timer) { timer.textContent = 'Expired'; }");
+      chatContent.append("      }");
       chatContent.append("    }");
-      chatContent.append("    remaining--;");
       chatContent.append("  }");
       chatContent.append("  updateTimer();");
       chatContent.append("  questionTimers[questionId] = setInterval(updateTimer, 1000);");
@@ -585,7 +593,18 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       // Track message for export
       messages.add(new ChatMessage(isUser, message));
 
-      String escapedMessage = prepareMessageText(message);
+      insertMessageHtml(prepareMessageText(message), isUser, messageId);
+   }
+
+   /**
+    * Insert message bubble into the chat content
+    *
+    * @param escapedMessage message text already prepared for HTML display
+    * @param isUser true if this is a user message, false for assistant
+    * @param messageId unique identifier for the message (null for user messages)
+    */
+   private void insertMessageHtml(String escapedMessage, boolean isUser, String messageId)
+   {
       String messageClass = isUser ? "user-message" : "assistant-message";
       String bubbleClass = isUser ? "user-bubble" : "assistant-bubble";
       String sender = isUser ? i18n.tr("User") : i18n.tr("AI Assistant");
@@ -646,8 +665,13 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
             // Replace the old content
             chatContent.replace(contentStart, contentEnd, escapedMessage);
             updateBrowserContent();
+            return;
          }
       }
+
+      // Target message is gone (thinking placeholder removed by a question card and not restored),
+      // append as new assistant message so the text is not lost; export list is already updated above
+      insertMessageHtml(escapedMessage, false, messageId);
    }
 
    /**
@@ -813,14 +837,41 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
           .append(":").append(String.format("%02d", question.getTimeoutSeconds() % 60)).append("</span></div>");
       html.append("</div>");
 
-      // Add inline script to start timer when page loads
-      html.append("<script>startQuestionTimer(").append(question.getId()).append(", ")
-          .append(question.getTimeoutSeconds()).append(");</script>");
+      // Add inline script to start timer when page loads. The deadline is fixed here, so re-rendering
+      // the chat content later restarts the countdown from the same point in time.
+      final long questionId = question.getId();
+      final long timeoutMs = question.getTimeoutSeconds() * 1000L;
+      final long deadline = System.currentTimeMillis() + timeoutMs;
+      html.append("<script>startQuestionTimer(").append(questionId).append(", ").append(deadline).append(");</script>");
 
       // Insert before closing </div></body></html>
       int insertPos = chatContent.lastIndexOf("</div></body></html>");
       chatContent.insert(insertPos, html.toString());
 
+      updateBrowserContent();
+
+      getDisplay().timerExec((int)timeoutMs, () -> expireQuestion(questionId));
+   }
+
+   /**
+    * Handle question expiration. Server side drops answers received after the timeout, so the
+    * question is closed locally without sending a response.
+    *
+    * @param questionId ID of expired question
+    */
+   private void expireQuestion(long questionId)
+   {
+      if (isDisposed() || (pendingQuestion == null) || (pendingQuestion.getId() != questionId))
+         return;
+
+      pendingQuestion = null;
+      markQuestionAnswered(questionId, "Expired");
+
+      // Add "Thinking..." message back while waiting for model's final response
+      if (currentMessageId != null)
+      {
+         currentMessageId = addThinkingMessage();
+      }
       updateBrowserContent();
    }
 
@@ -843,7 +894,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       pendingQuestion = null;
 
       // Mark question as answered in the HTML content
-      markQuestionAnswered(questionId);
+      markQuestionAnswered(questionId, "Answered");
 
       // Add "Thinking..." message back while waiting for model's final response
       if (currentMessageId != null)
@@ -869,11 +920,12 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    }
 
    /**
-    * Mark a question as answered in the HTML content
+    * Mark a question as closed in the HTML content
     *
-    * @param questionId the question ID to mark as answered
+    * @param questionId the question ID to mark as closed
+    * @param label text replacing the countdown ("Answered", "Expired")
     */
-   private void markQuestionAnswered(long questionId)
+   private void markQuestionAnswered(long questionId, String label)
    {
       String currentContent = chatContent.toString();
 
@@ -897,7 +949,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
          chatContent.replace(classPos, classPos + oldClass.length(), newClass);
       }
 
-      // Update timer text to "Answered"
+      // Replace countdown with given label
       currentContent = chatContent.toString();
       String timerSearch = "id='timer_" + questionId + "'>";
       int timerStart = currentContent.indexOf(timerSearch);
@@ -912,7 +964,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
             int timerDivEnd = currentContent.indexOf("</div>", timerStart);
             if (timerDivStart != -1 && timerDivEnd != -1)
             {
-               chatContent.replace(timerDivStart, timerDivEnd + 6, "<div class='question-timer'>Answered</div>");
+               chatContent.replace(timerDivStart, timerDivEnd + 6, "<div class='question-timer'>" + label + "</div>");
             }
          }
       }

@@ -373,6 +373,7 @@ public class NXCSession
    private int connectTimeout = 10000; // Default is 10 seconds
    private int commandTimeout = 30000; // Default is 30 seconds
    private int serverCommandOutputTimeout = 60000;
+   private static final int AI_CHAT_RESPONSE_TIMEOUT = 900000; // 15 minutes: LLM processing plus up to 5 minutes while a question to the user is pending
 
    // Notification listeners and queue
    private LinkedBlockingQueue<SessionNotification> notificationQueue = new LinkedBlockingQueue<SessionNotification>(8192);
@@ -16628,7 +16629,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_MESSAGE, message);
       msg.setField(NXCPCodes.VID_AI_QUESTION_CONTEXT, context);
       sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId(), commandTimeout * 10);   // LLM response can take significant amount of time
+      NXCPMessage response = waitForRCC(msg.getMessageId(), AI_CHAT_RESPONSE_TIMEOUT);
       return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
    }
 
