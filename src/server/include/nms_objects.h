@@ -84,6 +84,15 @@ DB_RESULT NXCORE_EXPORTABLE ExecuteSelectOnObject(DB_HANDLE hdb, uint32_t object
 #define INVALID_INDEX         0xFFFFFFFF
 
 /**
+ * Serialization key for thread pool tasks that rebind a node or chassis to its physical container
+ * or a chassis to its controller. Every such task snapshots the parent list, releases the lock,
+ * and then unlinks and links; two of them overlapping on the same object can double-link it or
+ * leave it under a container the object no longer names. One key for all of them also keeps a
+ * controller rebind and a placement rebind from racing to close a cycle between a node and a chassis.
+ */
+#define PHYSICAL_BINDING_TASK_KEY   _T("PhysicalBindingUpdate")
+
+/**
  * Last events
  */
 #define MAX_LAST_EVENTS       8
@@ -4540,7 +4549,7 @@ protected:
    bool deleteDuplicateInterfaces(uint32_t requestId);
    void executeInterfaceUpdateHook(Interface *iface);
    void updateInterfacesFromEntityMib(const Component *component);
-   void updatePhysicalContainerBinding(uint32_t containerId);
+   void updatePhysicalContainerBinding();
    DuplicateCheckResult checkForDuplicates(shared_ptr<Node> *duplicate, TCHAR *reason, size_t size);
    bool isDuplicateOf(Node *node, TCHAR *reason, size_t size);
    void reconcileWithDuplicateNode(Node *node);
