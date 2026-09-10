@@ -6,7 +6,7 @@
 # exports the shared toolchain/flag variables). Each driver produces a <name>.ndd
 # module loaded at runtime by the server. The full MSVC driver set is built.
 #
-DRIVERS = at avaya bdcom bulat cambium cisco dell-pwc dlink edgecore eltex etherwan extreme fortinet hirschmann hpe huawei ignitenet juniper lenovo mds mikrotik moxa net-snmp netonix origo ping3 planet qtech rittal saf siemens symbol-ws tb tplink ubnt westerstrand zyxel
+DRIVERS = at avaya bdcom bulat cambium cisco dell dlink edgecore eltex etherwan extreme fortinet hirschmann hpe huawei ignitenet juniper lenovo mds mikrotik moxa net-snmp netonix origo ping3 planet qtech rittal saf siemens symbol-ws tb tplink ubnt westerstrand zyxel
 
 .PHONY: all clean install $(DRIVERS)
 

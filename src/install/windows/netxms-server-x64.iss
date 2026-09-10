@@ -162,7 +162,7 @@ Source: "..\..\..\out\x64\Release\bin\bdcom.ndd"; DestDir: "{app}\lib\ndd"; Flag
 Source: "..\..\..\out\x64\Release\bin\bulat.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\cambium.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\cisco.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\out\x64\Release\bin\dell-pwc.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\dell.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\dlink.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\edgecore.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\eltex.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
@@ -338,6 +338,7 @@ Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\sql"""; WorkingDir: "
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\airespace.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\avaya-ers.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\baystack.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden
+Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\dell-pwc.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\cat2900xl.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\catalyst.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\cisco.dll"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden

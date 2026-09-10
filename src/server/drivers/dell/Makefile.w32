@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - dell network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = dell
+SOURCES = dell.cpp ftos.cpp os10.cpp powerconnect.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk

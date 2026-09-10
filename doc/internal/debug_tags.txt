@@ -162,6 +162,8 @@ ndd.cisco	Cisco network device driver
 ndd.cisco.c9800	Cisco-C9800 network device driver
 ndd.cisco.sb	Cisco-SB network device driver
 ndd.cisco.wlc	Cisco-WLC network device driver
+ndd.dell.ftos	Dell Networking OS9 (Force10 / FTOS) network device driver
+ndd.dell.os10	Dell EMC Networking OS10 network device driver
 ndd.etherwan	EtherWAN network device driver
 ndd.h3c		H3C network device driver
 ndd.hpe.aoscx	HPE Aruba CX (AOS-CX) network device driver
