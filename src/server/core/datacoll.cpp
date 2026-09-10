@@ -765,6 +765,31 @@ bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **sour
 #define DEBUG_TAG_DC_V5MIGRATE  L"dc.v5migrate"
 
 /**
+ * V5 data migration state. Written by the migration manager and the server console, polled by
+ * migration workers; a stale read only delays a pause or a status line by one poll interval, so
+ * plain variables are sufficient.
+ */
+static bool s_v5MigrationActive = false;
+static bool s_v5MigrationPaused = false;
+static int s_v5MigrationPendingObjects = 0;
+
+/**
+ * Block while V5 data migration is paused by operator. Returns immediately if not paused,
+ * on shutdown, or once migration is resumed.
+ */
+static void WaitIfV5DataMigrationPaused()
+{
+   if (!s_v5MigrationPaused)
+      return;
+
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, L"V5 data migration worker paused by operator");
+   while(s_v5MigrationPaused && !SleepAndCheckForShutdown(1))
+      ;
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, L"V5 data migration worker resumed (%s)",
+      IsShutdownInProgress() ? L"shutdown" : L"operator command");
+}
+
+/**
  * Throttle V5 data migration if needed. Returns false if shutdown time has arrived and migration process should be aborted.
  */
 static void ThrottleV5DataMigration()
@@ -881,6 +906,7 @@ static bool MigrateV5DataTable(DataCollectionTarget *target, DB_HANDLE hdb, bool
       }
 
       ThrottleV5DataMigration();
+      WaitIfV5DataMigrationPaused();
 
       lastItem = boundaryItem;
    }
@@ -897,9 +923,11 @@ static void MigrateV5Data(DataCollectionTarget *target)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   if (target->hasV5IdataTable())
+   WaitIfV5DataMigrationPaused();
+   if (!IsShutdownInProgress() && target->hasV5IdataTable())
       MigrateV5DataTable(target, hdb, false);
 
+   WaitIfV5DataMigrationPaused();
    if (!IsShutdownInProgress() && target->hasV5TdataTable())
       MigrateV5DataTable(target, hdb, true);
 
@@ -921,6 +949,7 @@ static THREAD s_v5DataMigrationThread = INVALID_THREAD_HANDLE;
 static void V5DataMigrationManager()
 {
    nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, L"V5 data migration manager started");
+   s_v5MigrationActive = true;
 
    auto filter =
       [] (NetObj *object) -> bool
@@ -938,6 +967,10 @@ static void V5DataMigrationManager()
 
    while(!SleepAndCheckForShutdown(5))
    {
+      WaitIfV5DataMigrationPaused();
+      if (IsShutdownInProgress())
+         break;
+
       SharedObjectArray<NetObj> objects(1024, 1024);
       g_idxAccessPointById.getObjects(&objects, filter);
       g_idxChassisById.getObjects(&objects, filter);
@@ -956,6 +989,7 @@ static void V5DataMigrationManager()
       g_idxTrafficObserverById.getObjects(&objects, filter);
       g_idxObservationPointById.getObjects(&objects, filter);
 
+      s_v5MigrationPendingObjects = objects.size();
       if (objects.isEmpty())
       {
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"All v5 data migration completed");
@@ -981,6 +1015,7 @@ static void V5DataMigrationManager()
    }
 
    ThreadPoolDestroy(migrationPool);
+   s_v5MigrationActive = false;
    nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, _T("V5 data migration manager stopped"));
 }
 
@@ -1048,4 +1083,46 @@ void StartV5DataMigration()
 void StopV5DataMigration()
 {
    ThreadJoin(s_v5DataMigrationThread);
+}
+
+/**
+ * Pause background v5 data migration. Workers stop at the next chunk boundary.
+ */
+void PauseV5DataMigration()
+{
+   s_v5MigrationPaused = true;
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"V5 data migration paused by operator");
+}
+
+/**
+ * Resume background v5 data migration paused by operator
+ */
+void ResumeV5DataMigration()
+{
+   s_v5MigrationPaused = false;
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"V5 data migration resumed by operator");
+}
+
+/**
+ * Check if background v5 data migration is paused by operator
+ */
+bool IsV5DataMigrationPaused()
+{
+   return s_v5MigrationPaused;
+}
+
+/**
+ * Check if background v5 data migration manager is running
+ */
+bool IsV5DataMigrationActive()
+{
+   return s_v5MigrationActive;
+}
+
+/**
+ * Get number of objects with v5 data tables found by last migration sweep
+ */
+int GetV5DataMigrationPendingObjects()
+{
+   return s_v5MigrationPendingObjects;
 }
