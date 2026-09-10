@@ -383,6 +383,13 @@ public abstract class AbstractDashboardView extends ObjectView
          scroller.setExpandVertical(true);
          WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
          scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+         scroller.addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent e)
+            {
+               updateScroller();
+            }
+         });
          viewArea.layout(true, true);
       }
 
@@ -390,12 +397,6 @@ public abstract class AbstractDashboardView extends ObjectView
       if (dashboard.isScrollable() || narrowScreenMode)
       {
          scroller.setContent(dbc);
-         scroller.addControlListener(new ControlAdapter() {
-            public void controlResized(ControlEvent e)
-            {
-               updateScroller();
-            }
-         });
          updateScroller();
       }
       else
@@ -410,6 +411,9 @@ public abstract class AbstractDashboardView extends ObjectView
     */
    private void updateScroller()
    {
+      if ((dbc == null) || dbc.isDisposed())
+         return;
+
       dbc.layout(true, true);
       Rectangle r = scroller.getClientArea();
       Point s = dbc.computeSize(r.width, SWT.DEFAULT);
