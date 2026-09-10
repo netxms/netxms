@@ -938,6 +938,8 @@ static bool H_UpgradeFromV15()
       _T("   3) alarmId - Alarm ID\r\n")
       _T("   4) userId - User ID who unlinked")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE acl SET access_rights=access_rights+33554432 WHERE user_id=1073741825")));
+
    CHK_EXEC(SetMinorSchemaVersion(16));
    return true;
 }
