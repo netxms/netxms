@@ -40,7 +40,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{45C17A03-3478-4BA4-90B2-F74FE13BFB83}</ProjectGuid>
-    <RootNamespace>dellpwc</RootNamespace>
+    <RootNamespace>dlink</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>

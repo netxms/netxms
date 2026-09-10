@@ -40,7 +40,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4CD8D04D-375D-40B5-AB1C-C8AC8A38FB45}</ProjectGuid>
-    <RootNamespace>dellpwc</RootNamespace>
+    <RootNamespace>dell</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -365,12 +365,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="dell-pwc.cpp" />
+    <ClCompile Include="dell.cpp" />
+    <ClCompile Include="ftos.cpp" />
+    <ClCompile Include="os10.cpp" />
+    <ClCompile Include="powerconnect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\nddrv.h" />
     <ClInclude Include="..\..\include\nxsrvapi.h" />
-    <ClInclude Include="dell-pwc.h" />
+    <ClInclude Include="dell.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\libnetxms\libnetxms.vcxproj">

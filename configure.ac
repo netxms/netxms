@@ -4879,7 +4879,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/bulat/Makefile
 	src/server/drivers/cambium/Makefile
 	src/server/drivers/cisco/Makefile
-	src/server/drivers/dell-pwc/Makefile
+	src/server/drivers/dell/Makefile
 	src/server/drivers/dlink/Makefile
 	src/server/drivers/edgecore/Makefile
 	src/server/drivers/eltex/Makefile

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Dell PowerConnect switches
-** Copyright (C) 2003-2024 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,11 +17,10 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: dell-pwc.cpp
+** File: powerconnect.cpp
 **/
 
-#include "dell-pwc.h"
-#include <netxms-version.h>
+#include "dell.h"
 
 /**
  * Get driver name
@@ -166,20 +165,12 @@ bool PowerConnectDriver::getRunningConfig(DeviceBackupContext *ctx, ByteStream *
 }
 
 /**
- * Driver entry point
+ * Get startup configuration via interactive SSH
  */
-DECLARE_NDD_ENTRY_POINT(PowerConnectDriver);
-
-/**
- * DLL entry point
- */
-#ifdef _WIN32
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+bool PowerConnectDriver::getStartupConfig(DeviceBackupContext *ctx, ByteStream *output)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
-		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+      return false;
+   return ssh->executeCommand("show startup-config", output);
 }
-
-#endif

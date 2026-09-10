@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-DRIVERS = at avaya bdcom bulat cambium cisco dell-pwc dlink edgecore eltex \
+DRIVERS = at avaya bdcom bulat cambium cisco dell dlink edgecore eltex \
 	etherwan extreme fortinet hirschmann hpe huawei ignitenet juniper \
 	lenovo mds mikrotik moxa net-snmp netonix origo ping3 planet qtech \
 	rittal saf siemens symbol-ws tb tplink ubnt westerstrand zyxel
@@ -16,7 +16,7 @@ DRIVERS = at avaya bdcom bulat cambium cisco dell-pwc dlink edgecore eltex \
 SUBDIRS = $(DRIVERS)
 
 pkglib_LTLIBRARIES = at.la avaya.la bdcom.la bulat.la cambium.la cisco.la \
-	dell-pwc.la dlink.la edgecore.la eltex.la etherwan.la extreme.la \
+	dell.la dlink.la edgecore.la eltex.la etherwan.la extreme.la \
 	fortinet.la hirschmann.la hpe.la huawei.la ignitenet.la juniper.la \
 	lenovo.la mds.la mikrotik.la moxa.la net-snmp.la netonix.la origo.la \
 	ping3.la planet.la qtech.la rittal.la saf.la siemens.la symbol-ws.la \
@@ -64,10 +64,10 @@ cisco_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
-dell_pwc_la_SOURCES = dell-pwc/dell-pwc.cpp
-dell_pwc_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
-dell_pwc_la_LDFLAGS = -module -avoid-version
-dell_pwc_la_LIBADD = ../../libnetxms/libnetxms.la \
+dell_la_SOURCES = dell/dell.cpp dell/ftos.cpp dell/os10.cpp dell/powerconnect.cpp
+dell_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+dell_la_LDFLAGS = -module -avoid-version
+dell_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 

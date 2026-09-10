@@ -141,7 +141,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mssql", "src\agent\subagent
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxapush", "src\agent\tools\nxapush\nxapush.vcxproj", "{68B9F17F-A292-4DAB-8EA9-B87473BB0436}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dell-pwc", "src\server\drivers\dell-pwc\dell-pwc.vcxproj", "{4CD8D04D-375D-40B5-AB1C-C8AC8A38FB45}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dell", "src\server\drivers\dell\dell.vcxproj", "{4CD8D04D-375D-40B5-AB1C-C8AC8A38FB45}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dbquery", "src\agent\subagents\dbquery\dbquery.vcxproj", "{784D1668-124C-46D9-B985-51276FFA282A}"
 EndProject

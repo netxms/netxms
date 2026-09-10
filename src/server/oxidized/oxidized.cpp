@@ -104,6 +104,8 @@ static void InitializeDriverModelMap()
    // Extreme
    s_driverModelMap.set(L"EXTREME", L"xos");
    // Dell
+   s_driverModelMap.set(L"DELL-FTOS", L"ftos");
+   s_driverModelMap.set(L"DELL-OS10", L"os10");
    s_driverModelMap.set(L"DELL-PWC", L"powerconnect");
    // Ubiquiti
    s_driverModelMap.set(L"UBNT-AIRMAX", L"airos");

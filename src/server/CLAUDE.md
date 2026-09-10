@@ -112,6 +112,7 @@ All drivers are in `drivers/<vendor>/`:
 | Juniper | `juniper/` | JunOS devices |
 | Huawei | `huawei/` | VRP switches/routers |
 | HPE | `hpe/` | ProCurve, Aruba |
+| Dell | `dell/` | PowerConnect, Networking OS9 (FTOS), OS10 |
 | MikroTik | `mikrotik/` | RouterOS |
 | Extreme | `extreme/` | EXOS switches |
 | Fortinet | `fortinet/` | FortiGate firewalls |
@@ -200,6 +201,9 @@ void MyVendorDriver::getSSHDriverHints(SSHDriverHints *hints) const
 | HPE Aruba CX (AOS-CX) | `ArubaCXDriver` | IOS-like, no enable (role-based), `no page` |
 | HPE Comware (H3C/HH3C) | `ComwareDeviceDriver` | `<host>`/`[host]`, no enable, `screen-length disable`, exit is `quit` |
 | Aruba ArubaOS (controllers) | `ArubaSwitchDriver` | `(host) #`, `enable`, `no paging` |
+| Dell PowerConnect | `PowerConnectDriver` | `host#`, no enable, no pagination command |
+| Dell Networking OS9 (FTOS) | `DellFTOSDriver` | IOS-like, `enable`, `terminal length 0` |
+| Dell EMC Networking OS10 | `DellOS10Driver` | IOS-like, no enable (role-based), `terminal length 0`, `show running-configuration` |
 
 ### Device Detection Priority
 
