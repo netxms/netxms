@@ -2156,6 +2156,36 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsoleWrite(console, _T("ERROR: Invalid TUNNEL subcommand\n\n"));
       }
    }
+   else if (IsCommand(_T("V5MIGRATE"), szBuffer, 3))
+   {
+      ExtractWord(pArg, szBuffer);
+      if (!IsV5DataMigrationActive())
+      {
+         ConsoleWrite(console, _T("V5 data migration is not active\n"));
+      }
+      else if (IsCommand(_T("STATUS"), szBuffer, 1))
+      {
+         ThreadPoolInfo tpi;
+         bool hasPool = ThreadPoolGetInfo(L"V5MIGRATE", &tpi);
+         ConsolePrintf(console, _T("State ............: %s\n"), IsV5DataMigrationPaused() ? _T("paused") : _T("running"));
+         ConsolePrintf(console, _T("Pending objects ..: %d\n"), GetV5DataMigrationPendingObjects());
+         ConsolePrintf(console, _T("Active workers ...: %d\n"), hasPool ? tpi.activeRequests : 0);
+      }
+      else if (IsCommand(_T("PAUSE"), szBuffer, 1))
+      {
+         PauseV5DataMigration();
+         ConsoleWrite(console, _T("V5 data migration paused; running workers will stop at the next chunk boundary\n"));
+      }
+      else if (IsCommand(_T("RESUME"), szBuffer, 1))
+      {
+         ResumeV5DataMigration();
+         ConsoleWrite(console, _T("V5 data migration resumed\n"));
+      }
+      else
+      {
+         ConsoleWrite(console, _T("Invalid subcommand\n"));
+      }
+   }
    else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
    {
       ConsoleWrite(console,
@@ -2229,6 +2259,9 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   trace <node1> <node2>             - Show network path trace between two nodes\n")
             _T("   tunnel bind <tunnel> <node>       - Bind agent tunnel to node\n")
             _T("   tunnel unbind <node>              - Unbind agent tunnel from node\n")
+            _T("   v5migrate pause                   - Pause background migration of V5 collected data\n")
+            _T("   v5migrate resume                  - Resume paused migration of V5 collected data\n")
+            _T("   v5migrate status                  - Show state of background migration of V5 collected data\n")
             _T("\nAlmost all commands can be abbreviated to 2 or 3 characters\n")
 #if HAVE_LIBEDIT
             _T("\nYou can use the following shortcuts to execute command from history:\n")

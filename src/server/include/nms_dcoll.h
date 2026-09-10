@@ -1208,6 +1208,11 @@ void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *script);
  */
 void StartV5DataMigration();
 void StopV5DataMigration();
+void PauseV5DataMigration();
+void ResumeV5DataMigration();
+bool IsV5DataMigrationPaused();
+bool IsV5DataMigrationActive();
+int GetV5DataMigrationPendingObjects();
 
 /**
  * DCI data aggregation
