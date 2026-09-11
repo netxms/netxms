@@ -50,6 +50,7 @@ class ImportContext;
 struct ResourceDescriptor;
 struct ObservationPointDescriptor;
 struct TrafficBackendInfo;
+struct TrafficConnectorInterface;
 
 /**
  * Global variables used by inline methods
@@ -3737,8 +3738,8 @@ protected:
    uint32_t m_aliasSyncErrors;
 
    void parseCredentials();
-   void setCredentials(char *credentials);
-   json_t *sanitizedCredentials() const;
+   void setCredentials(char *credentials, TrafficConnectorInterface *connector);
+   json_t *sanitizedCredentials(TrafficConnectorInterface *connector) const;
    void updateBackendInfo(const TrafficBackendInfo& info);
    void updateConnectionState(int16_t newState, const wchar_t *details);
    bool isHostAliasSyncEnabled(uint32_t *interval) const;

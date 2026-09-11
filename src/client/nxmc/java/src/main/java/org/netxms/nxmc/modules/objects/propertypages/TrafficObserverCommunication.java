@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -58,6 +59,8 @@ public class TrafficObserverCommunication extends ObjectPropertyPage
    private TrafficObserver observer;
    private LabeledCombo connectorName;
    private TrafficCredentialsEditor credentials;
+   private Label connectorWarning;
+   private boolean credentialsEditable = true;   // false while the selected connector is the observer's own and its module is not loaded on the server
    private List<TrafficConnector> connectors = new ArrayList<TrafficConnector>();
    private ZoneSelector zoneSelector;
    private ObjectSelector linkedNode;
@@ -130,6 +133,16 @@ public class TrafficObserverCommunication extends ObjectPropertyPage
       credentials = new TrafficCredentialsEditor(dialogArea, SWT.NONE);
       credentials.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
+      if (!observer.isConnectorLoaded())
+      {
+         credentialsEditable = false;
+         credentials.setVisible(false);
+         ((GridData)credentials.getLayoutData()).exclude = true;
+         connectorWarning = new Label(dialogArea, SWT.WRAP);
+         connectorWarning.setText(i18n.tr("Warning: connector module \"{0}\" is not loaded on the server; connector configuration cannot be viewed or changed until the module is loaded.", observer.getConnectorName()));
+         connectorWarning.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      }
+
       if (Registry.getSession().isZoningEnabled())
       {
          zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, true);
@@ -198,6 +211,8 @@ public class TrafficObserverCommunication extends ObjectPropertyPage
    /**
     * Rebuild credential form for currently selected connector. Stored credentials only apply
     * to the observer's current connector; switching to another one starts from an empty form.
+    * While the observer's connector module is not loaded on the server, its configuration
+    * cannot be shown or changed, so a warning is displayed instead of the form.
     */
    private void onConnectorSelected()
    {
@@ -205,6 +220,15 @@ public class TrafficObserverCommunication extends ObjectPropertyPage
       TrafficConnector connector = ((index >= 0) && (index < connectors.size())) ? connectors.get(index) : null;
       boolean sameConnector = connectorName.getText().equals(observer.getConnectorName());
       credentials.setConnector(connector, sameConnector ? observer.getCredentials() : null);
+      credentialsEditable = !sameConnector || observer.isConnectorLoaded();
+      if (connectorWarning != null)
+      {
+         connectorWarning.setVisible(!credentialsEditable);
+         ((GridData)connectorWarning.getLayoutData()).exclude = credentialsEditable;
+         credentials.setVisible(credentialsEditable);
+         ((GridData)credentials.getLayoutData()).exclude = !credentialsEditable;
+         credentials.getParent().layout(true, true);
+      }
       WidgetHelper.adjustWindowSize(this);
    }
 
@@ -216,11 +240,12 @@ public class TrafficObserverCommunication extends ObjectPropertyPage
    {
       final NXCObjectModificationData md = new NXCObjectModificationData(observer.getObjectId());
 
-      if (!credentials.validate())
+      if (credentialsEditable && !credentials.validate())
          return false;
       if (!connectorName.getText().equals(observer.getConnectorName()))
          md.setConnectorName(connectorName.getText());
-      md.setCredentials(credentials.getCredentials());
+      if (credentialsEditable)
+         md.setCredentials(credentials.getCredentials());
 
       if ((zoneSelector != null) && (zoneSelector.getZoneUIN() != observer.getZoneId()))
          md.setZoneUIN(zoneSelector.getZoneUIN());

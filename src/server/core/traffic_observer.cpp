@@ -159,10 +159,11 @@ void TrafficObserver::parseCredentials()
 /**
  * Replace credentials (takes ownership of the given string). PASSWORD fields declared by
  * the connector that are absent or empty in the new document are carried over from the
- * current credentials, so clients never have to send secrets back. Properties lock must
- * be held by the caller.
+ * current credentials, so clients never have to send secrets back. Caller must ensure
+ * that the connector is loaded (see modifyFromMessageInternal / modifyFromJSONInternal).
+ * Properties lock must be held by the caller.
  */
-void TrafficObserver::setCredentials(char *credentials)
+void TrafficObserver::setCredentials(char *credentials, TrafficConnectorInterface *connector)
 {
    json_t *parsed = nullptr;
    if (credentials != nullptr)
@@ -173,8 +174,7 @@ void TrafficObserver::setCredentials(char *credentials)
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_TRAFFIC_POLL, L"TrafficObserver(%s [%u]): failed to parse credentials JSON on line %d: %hs", m_name, m_id, error.line, error.text);
    }
 
-   TrafficConnectorInterface *connector = FindTrafficConnector(m_connectorName);
-   if (json_is_object(parsed) && json_is_object(m_parsedCredentials) && (connector != nullptr))
+   if (json_is_object(parsed) && json_is_object(m_parsedCredentials))
    {
       bool merged = false;
       for(size_t i = 0; i < connector->credentialFieldCount; i++)
@@ -209,17 +209,16 @@ void TrafficObserver::setCredentials(char *credentials)
 
 /**
  * Build copy of credentials suitable for sending to clients: PASSWORD fields declared by
- * the connector are removed. Returns nullptr when no credentials are set, and an empty
- * object when the connector is not loaded (nothing can be classified, so nothing is
- * exposed). Properties lock must be held by the caller.
+ * the connector are removed. Returns nullptr when no credentials are set or when the
+ * connector is not loaded (nothing can be classified, so nothing is exposed; clients are
+ * told via the "connector loaded" indicator). Properties lock must be held by the caller.
  */
-json_t *TrafficObserver::sanitizedCredentials() const
+json_t *TrafficObserver::sanitizedCredentials(TrafficConnectorInterface *connector) const
 {
-   if (m_parsedCredentials == nullptr)
+   if ((m_parsedCredentials == nullptr) || (connector == nullptr))
       return nullptr;
 
-   TrafficConnectorInterface *connector = FindTrafficConnector(m_connectorName);
-   if ((connector == nullptr) || !json_is_object(m_parsedCredentials))
+   if (!json_is_object(m_parsedCredentials))
       return json_object();
 
    json_t *copy = json_deep_copy(m_parsedCredentials);
@@ -362,8 +361,10 @@ json_t *TrafficObserver::toJson(bool includeSensitiveData)
    json_t *root = super::toJson(includeSensitiveData);
 
    lockProperties();
+   TrafficConnectorInterface *connector = FindTrafficConnector(m_connectorName);
    json_object_set_new(root, "connectorName", json_string_t(m_connectorName));
-   json_t *credentials = sanitizedCredentials();
+   json_object_set_new(root, "connectorLoaded", json_boolean(connector != nullptr));
+   json_t *credentials = sanitizedCredentials(connector);
    json_object_set_new(root, "credentials", (credentials != nullptr) ? credentials : json_null());
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "linkedNodeId", json_integer(m_linkedNodeId));
@@ -393,8 +394,10 @@ json_t *TrafficObserver::toJson(bool includeSensitiveData)
 void TrafficObserver::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageLocked(msg, userId);
+   TrafficConnectorInterface *connector = FindTrafficConnector(m_connectorName);
    msg->setField(VID_CONNECTOR_NAME, m_connectorName);
-   json_t *credentials = sanitizedCredentials();
+   msg->setField(VID_CONNECTOR_LOADED, connector != nullptr);
+   json_t *credentials = sanitizedCredentials(connector);
    if (credentials != nullptr)
    {
       char *text = json_dumps(credentials, JSON_COMPACT);
@@ -422,14 +425,22 @@ void TrafficObserver::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
- * Modify object from NXCP message
+ * Modify object from NXCP message. Credentials are ignored when the (possibly updated)
+ * connector is not loaded: without the connector's field list clients cannot render or
+ * round-trip the document, so accepting it would overwrite stored secrets.
  */
 uint32_t TrafficObserver::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_CONNECTOR_NAME))
       m_connectorName = msg.getFieldAsSharedString(VID_CONNECTOR_NAME);
    if (msg.isFieldExist(VID_CLOUD_CREDENTIALS))
-      setCredentials(msg.getFieldAsUtf8String(VID_CLOUD_CREDENTIALS));
+   {
+      TrafficConnectorInterface *connector = FindTrafficConnector(m_connectorName);
+      if (connector != nullptr)
+         setCredentials(msg.getFieldAsUtf8String(VID_CLOUD_CREDENTIALS), connector);
+      else
+         nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 4, L"TrafficObserver(%s [%u]): credentials update ignored because connector \"%s\" is not loaded", m_name, m_id, m_connectorName.cstr());
+   }
    if (msg.isFieldExist(VID_ZONE_UIN))
       m_zoneUIN = msg.getFieldAsInt32(VID_ZONE_UIN);
    if (msg.isFieldExist(VID_LINKED_NODE_ID))
@@ -478,7 +489,8 @@ static bool JsonValueToAttribute(json_t *value, char **attribute)
 }
 
 /**
- * Modify object from JSON document (same keys as the JSON creation constructor)
+ * Modify object from JSON document (same keys as the JSON creation constructor). Credentials
+ * are ignored when the (possibly updated) connector is not loaded, same as for NXCP.
  */
 uint32_t TrafficObserver::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
 {
@@ -496,7 +508,16 @@ uint32_t TrafficObserver::modifyFromJSONInternal(json_t *json, GenericClientSess
       char *credentials = nullptr;
       if (!JsonValueToAttribute(value, &credentials))
          return RCC_INVALID_ARGUMENT;
-      setCredentials(credentials);
+      TrafficConnectorInterface *connector = FindTrafficConnector(m_connectorName);
+      if (connector != nullptr)
+      {
+         setCredentials(credentials, connector);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 4, L"TrafficObserver(%s [%u]): credentials update ignored because connector \"%s\" is not loaded", m_name, m_id, m_connectorName.cstr());
+         MemFree(credentials);
+      }
    }
 
    value = json_object_get(json, "zoneUIN");

@@ -295,7 +295,9 @@ struct TrafficConnectorInterface
    // Credential form description: keys the connector reads from the credentials JSON
    // (name, display name, description, type string/password/integer/boolean, required,
    // textual default). Clients render a form from it; PASSWORD fields are stripped from
-   // credentials sent to clients and preserved on modification when left empty.
+   // credentials sent to clients and preserved on modification when left empty. When the
+   // connector is not loaded, the observer reports connectorLoaded=false, sends no
+   // credentials at all, and ignores credentials in modification requests.
    const TrafficCredentialField *credentialFields;
    size_t credentialFieldCount;
 };

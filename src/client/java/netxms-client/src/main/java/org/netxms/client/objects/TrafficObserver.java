@@ -50,6 +50,7 @@ public class TrafficObserver extends DataCollectionTarget implements PollingTarg
    public static final long CAP_HOST_SET_AUTHORITATIVE = 0x00000080L;
 
    private String connectorName;
+   private boolean connectorLoaded;
    private String credentials;
    private int zoneUIN;
    private long linkedNodeId;
@@ -75,6 +76,7 @@ public class TrafficObserver extends DataCollectionTarget implements PollingTarg
    {
       super(msg, session);
       connectorName = msg.getFieldAsString(NXCPCodes.VID_CONNECTOR_NAME);
+      connectorLoaded = msg.getFieldAsBoolean(NXCPCodes.VID_CONNECTOR_LOADED);
       credentials = msg.getFieldAsString(NXCPCodes.VID_CLOUD_CREDENTIALS);
       zoneUIN = msg.getFieldAsInt32(NXCPCodes.VID_ZONE_UIN);
       linkedNodeId = msg.getFieldAsInt64(NXCPCodes.VID_LINKED_NODE_ID);
@@ -140,10 +142,23 @@ public class TrafficObserver extends DataCollectionTarget implements PollingTarg
    }
 
    /**
-    * Get connector credentials as sent by the server: a JSON object with password-typed
-    * fields (as declared by the connector) removed. Secrets never leave the server.
+    * Check if connector module referenced by this observer is loaded on the server. When it
+    * is not, credentials are not sent to clients and the server ignores credentials in
+    * object modification requests.
     *
-    * @return sanitized credentials JSON or null if credentials are not set
+    * @return true if connector module is loaded on the server
+    */
+   public boolean isConnectorLoaded()
+   {
+      return connectorLoaded;
+   }
+
+   /**
+    * Get connector credentials as sent by the server: a JSON object with password-typed
+    * fields (as declared by the connector) removed. Secrets never leave the server. Not
+    * available (null) when the connector module is not loaded on the server.
+    *
+    * @return sanitized credentials JSON or null if credentials are not set or not available
     */
    public String getCredentials()
    {

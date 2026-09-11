@@ -76,6 +76,14 @@ leaving the token empty when saving the *Communication* property page keeps
 the stored value. `GET /v1/traffic-connectors` lists the connectors with
 their field descriptors.
 
+When the connector module referenced by an observer is not loaded on the
+server (object property `connectorLoaded` is `false`), the server cannot
+tell which keys are secrets, so the credentials are not returned at all
+(`credentials` is `null`) and any `credentials` value in a modification
+request is ignored — the stored document is kept unchanged. The
+*Communication* property page shows a warning instead of the form in this
+case; other settings on the page can still be changed.
+
 Other settings on the *Communication* property page:
 
 - **Zone** — zone used for host matching (`-1` = match in all zones).

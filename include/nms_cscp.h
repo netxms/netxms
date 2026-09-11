@@ -1830,6 +1830,7 @@ __PACK_END__
 #define VID_NUM_CHAINS              ((uint32_t)1047)
 #define VID_CHAIN_GUID              ((uint32_t)1048)
 #define VID_CHAIN_ACL_COUNT         ((uint32_t)1049)
+#define VID_CONNECTOR_LOADED        ((uint32_t)1050)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)
