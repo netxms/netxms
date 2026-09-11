@@ -90,6 +90,9 @@ struct DiscoveredAddress
    bool ignoreFilter;
    DiscoveryFilterData *data;
    SNMP_Transport *snmpTransport;
+   SNMP_SecurityContext *snmpSecurity;   // Copy of credentials found by SNMP probe (transport may be handed over to filter script)
+   SNMP_Version snmpVersion;
+   uint16_t snmpPort;
    shared_ptr<AgentConnectionEx> agentConnection;
    uint16_t agentPort;
    TCHAR agentSecret[MAX_SECRET_LENGTH];
@@ -104,6 +107,9 @@ struct DiscoveredAddress
       ignoreFilter = false;
       data = nullptr;
       snmpTransport = nullptr;
+      snmpSecurity = nullptr;
+      snmpVersion = SNMP_VERSION_DEFAULT;
+      snmpPort = SNMP_DEFAULT_PORT;
       agentPort = AGENT_LISTEN_PORT;
       agentSecret[0] = 0;
       memset(&sshCredentials, 0, sizeof(SSHCredentials));
@@ -114,6 +120,7 @@ struct DiscoveredAddress
    {
       delete data;
       delete snmpTransport;
+      delete snmpSecurity;
    }
 };
 
