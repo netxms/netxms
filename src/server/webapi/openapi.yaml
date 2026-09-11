@@ -4079,8 +4079,9 @@ paths:
         A node may be placed in a rack or in a chassis; a chassis may only be placed in a
         rack. When the container is a rack, `position` and `height` must leave the object
         entirely within the rack's unit range. That range is checked only when the document
-        supplies `containerId`, `position` or `height`, so an object already stored at an
-        out-of-range position stays patchable in other respects. Placing an object into a
+        supplies `containerId`, `position` or `height`, so an object whose stored `position`
+        or `height` a rack would reject stays patchable, and can always be removed from its
+        container. Placing an object into a
         rack therefore requires a valid `position`, either sent in the same document or
         already stored: an object that has never been placed has `position` 0 and must be
         given one, otherwise the request is rejected with `400`. Overlapping placements are

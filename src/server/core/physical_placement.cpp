@@ -91,6 +91,11 @@ uint32_t ModifyPhysicalPlacementFromJson(json_t *group, const NetObj *object, co
    if (!json_object_update_integer(group, "height", &height))
       return RCC_INVALID_ARGUMENT;
 
+   // A height supplied by the document must be usable (this is also what rejects null, read
+   // as 0 above). A stored height is checked below instead, and only for a rack.
+   if ((json_object_get(group, "height") != nullptr) && (height < 1))
+      return RCC_INVALID_ARGUMENT;
+
    json_t *value = json_object_get(group, "orientation");
    if (value != nullptr)
    {
@@ -128,18 +133,14 @@ uint32_t ModifyPhysicalPlacementFromJson(json_t *group, const NetObj *object, co
       }
    }
 
-   // Geometry is validated only when the document actually touches it. An object can hold a
-   // position that this check would reject - the NXCP path validates nothing and the console
-   // spinner offers a fixed 1..50 range regardless of rack height - and such an object must
-   // still be patchable, e.g. to set an image alone. The flip side is that placing an object
-   // into a rack requires a position that fits, either sent in the same document or already
-   // stored; a never placed object has position 0 and must supply one.
+   // Geometry is validated only when the document touches it, and only against a rack. Stored
+   // values can be unusable - the NXCP path validates nothing, and the console stores height 0
+   // for anything it places into a chassis - and such an object must stay patchable and
+   // removable. Placing into a rack therefore needs an extent that fits, sent in the document
+   // or already stored; a never placed object has position 0 and must supply one.
    if ((json_object_get(group, "containerId") != nullptr) || (json_object_get(group, "position") != nullptr) ||
        (json_object_get(group, "height") != nullptr))
    {
-      if (height < 1)
-         return RCC_INVALID_ARGUMENT;
-
       if (containerId != 0)
       {
          shared_ptr<NetObj> container = FindObjectById(containerId);
@@ -147,6 +148,8 @@ uint32_t ModifyPhysicalPlacementFromJson(json_t *group, const NetObj *object, co
             return RCC_INVALID_OBJECT_ID;
          if (container->getObjectClass() == OBJECT_RACK)
          {
+            if (height < 1)
+               return RCC_INVALID_ARGUMENT;
             const Rack *rack = static_cast<const Rack*>(container.get());
             if (!IsValidRackExtent(position, height, rack->getHeight(), rack->isTopBottomNumbering()))
                return RCC_INVALID_ARGUMENT;

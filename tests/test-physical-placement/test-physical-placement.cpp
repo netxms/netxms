@@ -246,9 +246,35 @@ static void TestModifyGeometryScope()
 
    AssertEquals(ApplyPatch(&p, "{}"), static_cast<uint32_t>(RCC_SUCCESS));
 
-   // As soon as the document touches geometry the stored height is validated again
-   AssertEquals(ApplyPatch(&p, "{\"position\":4}"), static_cast<uint32_t>(RCC_INVALID_ARGUMENT));
+   // Touching geometry resolves the container again, and 326 does not exist here; the stored
+   // geometry itself is only judged against a rack
+   AssertEquals(ApplyPatch(&p, "{\"position\":4}"), static_cast<uint32_t>(RCC_INVALID_OBJECT_ID));
    AssertEquals(static_cast<int32_t>(p.position), 0);
+
+   EndTest();
+}
+
+/**
+ * A stored height of 0 - what the console writes for anything placed in a chassis - must not
+ * block unplacing, even though an unplace document carries containerId and so brings the
+ * geometry checks into scope
+ */
+static void TestModifyStoredZeroHeight()
+{
+   StartTest(_T("Physical placement with stored zero height"));
+
+   TestPlacement p;
+   p.containerId = 500;
+   p.height = 0;
+
+   AssertEquals(ApplyPatch(&p, "{\"containerId\":null}"), static_cast<uint32_t>(RCC_SUCCESS));
+   AssertEquals(p.containerId, static_cast<uint32_t>(0));
+   AssertEquals(static_cast<int32_t>(p.height), 0);
+
+   // A height sent in the document is still validated, whatever the container is
+   AssertEquals(ApplyPatch(&p, "{\"containerId\":null,\"height\":0}"), static_cast<uint32_t>(RCC_INVALID_ARGUMENT));
+   AssertEquals(ApplyPatch(&p, "{\"height\":1}"), static_cast<uint32_t>(RCC_SUCCESS));
+   AssertEquals(static_cast<int32_t>(p.height), 1);
 
    EndTest();
 }
@@ -435,6 +461,7 @@ int main(int argc, char *argv[])
    TestModifyMergeSemantics();
    TestModifyValidation();
    TestModifyGeometryScope();
+   TestModifyStoredZeroHeight();
    TestModifyUnknownContainer();
    TestModifyImages();
    TestChassisPlacementToXml();
