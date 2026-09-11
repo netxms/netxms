@@ -26,6 +26,7 @@
 #include <nms_common.h>
 #include <nms_threads.h>
 #include <initializer_list>
+#include <string>
 
 #ifdef LIBNXSNMP_EXPORTS
 #define LIBNXSNMP_EXPORTABLE __EXPORT
@@ -877,77 +878,62 @@ class LIBNXSNMP_EXPORTABLE SNMP_SecurityContext
 {
 private:
    SNMP_SecurityModel m_securityModel;
-   char *m_community;
-	char *m_userName;
-	char *m_authPassword;
-	char *m_privPassword;
-	char *m_contextName;
-	BYTE m_authKey[64];
-	BYTE m_privKey[64];
-	bool m_validKeys;
-	SNMP_Engine m_authoritativeEngine;
+   std::string m_community;
+   std::string m_userName;
+   std::string m_authPassword;
+   std::string m_privPassword;
+   std::string m_contextName;
+   BYTE m_authKey[64];
+   BYTE m_privKey[64];
+   bool m_validKeys;
+   SNMP_Engine m_authoritativeEngine;
    SNMP_Engine m_contextEngine;
-	SNMP_AuthMethod m_authMethod;
-	SNMP_EncryptionMethod m_privMethod;
+   SNMP_AuthMethod m_authMethod;
+   SNMP_EncryptionMethod m_privMethod;
 
 public:
-	SNMP_SecurityContext();
-	SNMP_SecurityContext(const SNMP_SecurityContext *src);
-	SNMP_SecurityContext(const char *community);
-	SNMP_SecurityContext(const char *user, const char *authPassword, SNMP_AuthMethod authMethod);
-	SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,
-	         SNMP_AuthMethod authMethod, SNMP_EncryptionMethod encryptionMethod);
-	~SNMP_SecurityContext();
+   SNMP_SecurityContext();
+   SNMP_SecurityContext(const char *community);
+   SNMP_SecurityContext(const char *user, const char *authPassword, SNMP_AuthMethod authMethod);
+   SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,
+            SNMP_AuthMethod authMethod, SNMP_EncryptionMethod encryptionMethod);
 
-	SNMP_SecurityModel getSecurityModel() const { return m_securityModel; }
-	const char *getCommunity() const { return CHECK_NULL_EX_A(m_community); }
-	const char *getUserName() const { return CHECK_NULL_EX_A(m_userName); }
-	const char *getAuthName() const { return (m_securityModel == SNMP_SECURITY_MODEL_USM) ? getUserName() : getCommunity(); }
-	const char *getAuthPassword() const { return CHECK_NULL_EX_A(m_authPassword); }
-	const char *getPrivPassword() const { return CHECK_NULL_EX_A(m_privPassword); }
-	const char *getContextName() const { return m_contextName; }
+   SNMP_SecurityModel getSecurityModel() const { return m_securityModel; }
+   const char *getCommunity() const { return m_community.c_str(); }
+   const char *getUserName() const { return m_userName.c_str(); }
+   const char *getAuthName() const { return (m_securityModel == SNMP_SECURITY_MODEL_USM) ? getUserName() : getCommunity(); }
+   const char *getAuthPassword() const { return m_authPassword.c_str(); }
+   const char *getPrivPassword() const { return m_privPassword.c_str(); }
+   const char *getContextName() const { return m_contextName.c_str(); }
 
-	bool needAuthentication() const { return (m_authMethod != SNMP_AUTH_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
-	bool needEncryption() const { return (m_privMethod != SNMP_ENCRYPT_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
-	SNMP_AuthMethod getAuthMethod() const { return m_authMethod; }
-	SNMP_EncryptionMethod getPrivMethod() const { return m_privMethod; }
-	const BYTE *getAuthKey()
-	{
-	   if (!m_validKeys)
-	      recalculateKeys();
-	   return m_authKey;
-	}
-	const BYTE *getPrivKey()
-	{
-	   if (!m_validKeys)
-	      recalculateKeys();
-	   return m_privKey;
-	}
+   bool needAuthentication() const { return (m_authMethod != SNMP_AUTH_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
+   bool needEncryption() const { return (m_privMethod != SNMP_ENCRYPT_NONE) && (m_authoritativeEngine.getIdLen() != 0); }
+   SNMP_AuthMethod getAuthMethod() const { return m_authMethod; }
+   SNMP_EncryptionMethod getPrivMethod() const { return m_privMethod; }
+   const BYTE *getAuthKey()
+   {
+      if (!m_validKeys)
+         recalculateKeys();
+      return m_authKey;
+   }
+   const BYTE *getPrivKey()
+   {
+      if (!m_validKeys)
+         recalculateKeys();
+      return m_privKey;
+   }
    void recalculateKeys();
 
-	json_t *toJson(bool includeSensitiveData = false) const;
+   json_t *toJson(bool includeSensitiveData = false) const;
 
-   void setCommunity(const char *community)
-   {
-      MemFree(m_community);
-      m_community = MemCopyStringA(CHECK_NULL_EX_A(community));
-   }
-   void setUserName(const char *userName)
-   {
-      MemFree(m_userName);
-      m_userName = MemCopyStringA(CHECK_NULL_EX_A(userName));
-   }
+   void setCommunity(const char *community) { m_community = CHECK_NULL_EX_A(community); }
+   void setUserName(const char *userName) { m_userName = CHECK_NULL_EX_A(userName); }
    void setAuthPassword(const char *password);
    void setPrivPassword(const char *password);
    void setAuthMethod(SNMP_AuthMethod method);
    void setPrivMethod(SNMP_EncryptionMethod method);
    void setSecurityModel(SNMP_SecurityModel model);
-
-   void setContextName(const char *name)
-   {
-      MemFree(m_contextName);
-      m_contextName = MemCopyStringA(name);
-   }
+   void setContextName(const char *name) { m_contextName = CHECK_NULL_EX_A(name); }
 
    void setAuthoritativeEngine(const SNMP_Engine &engine);
    const SNMP_Engine& getAuthoritativeEngine() const { return m_authoritativeEngine; }
@@ -1089,7 +1075,7 @@ public:
 class LIBNXSNMP_EXPORTABLE SNMP_Transport
 {
 protected:
-	SNMP_SecurityContext *m_securityContext;
+	SNMP_SecurityContext m_securityContext;
 	SNMP_Engine *m_authoritativeEngine;
 	SNMP_Engine *m_contextEngine;
 	bool m_enableEngineIdAutoupdate;
@@ -1105,7 +1091,6 @@ public:
 	{
 	   m_authoritativeEngine = nullptr;
 	   m_contextEngine = nullptr;
-	   m_securityContext = nullptr;
 	   m_enableEngineIdAutoupdate = false;
 	   m_updatePeerOnRecv = false;
 	   m_reliable = false;
@@ -1114,7 +1099,7 @@ public:
    virtual ~SNMP_Transport();
 
    virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout = INFINITE, struct sockaddr *sender = nullptr,
-            socklen_t *addrSize = nullptr, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) = 0;
+            socklen_t *addrSize = nullptr, SNMP_SecurityContext (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) = 0;
    virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) = 0;
    virtual InetAddress getPeerIpAddress() = 0;
    virtual uint16_t getPort() = 0;
@@ -1124,9 +1109,10 @@ public:
    uint32_t doRequest(SNMP_PDU *request, SNMP_PDU **response);
    uint32_t sendTrap(SNMP_PDU *trap, uint32_t timeout = INFINITE, int numRetries = 1);
 
-	void setSecurityContext(SNMP_SecurityContext *ctx);
-	SNMP_SecurityContext *getSecurityContext() { return m_securityContext; }
-	const char *getCommunityString() const { return (m_securityContext != nullptr) ? m_securityContext->getCommunity() : ""; }
+	void setSecurityContext(SNMP_SecurityContext ctx);
+	SNMP_SecurityContext& getSecurityContext() { return m_securityContext; }
+	const SNMP_SecurityContext& getSecurityContext() const { return m_securityContext; }
+	const char *getCommunityString() const { return m_securityContext.getCommunity(); }
    const SNMP_Engine *getAuthoritativeEngine() const { return m_authoritativeEngine; }
    const SNMP_Engine *getContextEngine() const { return m_contextEngine; }
 
@@ -1183,7 +1169,7 @@ public:
    virtual ~SNMP_UDPTransport();
 
    virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout = INFINITE, struct sockaddr *sender = nullptr,
-            socklen_t *addrSize = nullptr, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) override;
+            socklen_t *addrSize = nullptr, SNMP_SecurityContext (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) override;
    virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override;
    virtual InetAddress getPeerIpAddress() override;
    virtual uint16_t getPort() override;

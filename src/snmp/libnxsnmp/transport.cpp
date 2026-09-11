@@ -73,22 +73,20 @@ SNMP_Transport::~SNMP_Transport()
 {
 	delete m_authoritativeEngine;
 	delete m_contextEngine;
-	delete m_securityContext;
 }
 
 /**
- * Set security context. Previous security context will be destroyed.
+ * Set security context. Cached engine data is reset from the new context.
  *
  * @param ctx new security context
  */
-void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
+void SNMP_Transport::setSecurityContext(SNMP_SecurityContext ctx)
 {
-	delete m_securityContext;
-	m_securityContext = ctx;
+   m_securityContext = std::move(ctx);
    delete m_authoritativeEngine;
-   m_authoritativeEngine = ((ctx != nullptr) && (ctx->getAuthoritativeEngine().getIdLen() > 0)) ? new SNMP_Engine(ctx->getAuthoritativeEngine()) : nullptr;
+   m_authoritativeEngine = (m_securityContext.getAuthoritativeEngine().getIdLen() > 0) ? new SNMP_Engine(m_securityContext.getAuthoritativeEngine()) : nullptr;
    delete m_contextEngine;
-   m_contextEngine = ((ctx != nullptr) && (ctx->getContextEngine().getIdLen() > 0)) ? new SNMP_Engine(ctx->getContextEngine()) : nullptr;
+   m_contextEngine = (m_securityContext.getContextEngine().getIdLen() > 0) ? new SNMP_Engine(m_securityContext.getContextEngine()) : nullptr;
 }
 
 /**
@@ -131,10 +129,6 @@ uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, uint3
       return SNMP_ERR_PARAM;
 
    *response = nullptr;
-
-	// Create dummy context
-	if (m_securityContext == nullptr)
-		m_securityContext = new SNMP_SecurityContext();
 
 	// Update SNMP V3 request with cached context engine id
 	if (request->getVersion() == SNMP_VERSION_3)
@@ -187,7 +181,7 @@ retry_wait:
                   if ((m_authoritativeEngine == nullptr) && ((*response)->getAuthoritativeEngine().getIdLen() != 0))
                   {
                      m_authoritativeEngine = new SNMP_Engine((*response)->getAuthoritativeEngine());
-                     m_securityContext->setAuthoritativeEngine(*m_authoritativeEngine);
+                     m_securityContext.setAuthoritativeEngine(*m_authoritativeEngine);
                   }
 
                   // Cache context engine ID
@@ -195,7 +189,7 @@ retry_wait:
                   {
                      delete m_contextEngine;
                      m_contextEngine = new SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
-                     m_securityContext->setContextEngine(*m_contextEngine);
+                     m_securityContext.setContextEngine(*m_contextEngine);
                   }
 
                   if ((*response)->getCommand() == SNMP_REPORT)
@@ -228,9 +222,9 @@ retry_wait:
                            if ((*response)->getContextEngineIdLength() > 0)
                            {
                               request->setContextEngineId((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
-                              if (m_securityContext->getContextEngine().getIdLen() == 0)
+                              if (m_securityContext.getContextEngine().getIdLen() == 0)
                               {
-                                 m_securityContext->setContextEngine(SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength()));
+                                 m_securityContext.setContextEngine(SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength()));
                               }
                            }
                            else if ((*response)->getAuthoritativeEngine().getIdLen() != 0)
@@ -239,9 +233,9 @@ retry_wait:
                            }
                            canRetry = true;
                         }
-                        if (m_securityContext->getAuthoritativeEngine().getIdLen() == 0)
+                        if (m_securityContext.getAuthoritativeEngine().getIdLen() == 0)
                         {
-                           m_securityContext->setAuthoritativeEngine((*response)->getAuthoritativeEngine());
+                           m_securityContext.setAuthoritativeEngine((*response)->getAuthoritativeEngine());
                            canRetry = true;
                         }
 
@@ -265,7 +259,7 @@ retry_wait:
                         {
                            m_authoritativeEngine->setBoots((*response)->getAuthoritativeEngine().getBoots());
                            m_authoritativeEngine->setTime((*response)->getAuthoritativeEngine().getTime());
-                           m_securityContext->setAuthoritativeEngine(*m_authoritativeEngine);
+                           m_securityContext.setAuthoritativeEngine(*m_authoritativeEngine);
                            timeSyncRetries--;
                            goto retry;
                         }
@@ -337,10 +331,6 @@ uint32_t SNMP_Transport::sendTrap(SNMP_PDU *trap, uint32_t timeout, int numRetri
 
    if (trap->getCommand() != SNMP_TRAP)
       return SNMP_ERR_PARAM;
-
-   // Create dummy context
-   if (m_securityContext == nullptr)
-      m_securityContext = new SNMP_SecurityContext();
 
    // Do engine ID discovery if needed
    // Update SNMP V3 request with cached context engine id
@@ -512,7 +502,7 @@ size_t SNMP_UDPTransport::preParsePDU()
  * Read PDU from socket
  */
 int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender,
-         socklen_t *addrSize, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
+         socklen_t *addrSize, SNMP_SecurityContext (*contextFinder)(struct sockaddr *, socklen_t))
 {
    int rc = recvData(timeout, sender, addrSize);
    if (rc <= 0)
@@ -538,13 +528,11 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sock
 
 	// Change security context if needed
 	if (contextFinder != nullptr)
-	{
 		setSecurityContext(contextFinder(sender, *addrSize));
-	}
 
    // Create new PDU object and remove parsed data from buffer
    *pdu = new SNMP_PDU;
-   if (!(*pdu)->parse(m_buffer, pduLength, m_securityContext, m_enableEngineIdAutoupdate))
+   if (!(*pdu)->parse(m_buffer, pduLength, &m_securityContext, m_enableEngineIdAutoupdate))
    {
       delete *pdu;
       *pdu = nullptr;
@@ -560,7 +548,7 @@ int SNMP_UDPTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
 {
    int bytes = 0;
    Buffer<BYTE, 4096> buffer;
-   size_t size = pdu->encode(&buffer, m_securityContext);
+   size_t size = pdu->encode(&buffer, &m_securityContext);
    if (size != 0)
    {
       bytes = sendto(m_hSocket, (char*)buffer.buffer(), (int)size, 0, &m_peerAddr.sa, SA_LEN(&m_peerAddr.sa));

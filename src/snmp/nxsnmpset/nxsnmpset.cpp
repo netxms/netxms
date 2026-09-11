@@ -59,9 +59,9 @@ static int SetVariables(int argc, TCHAR *argv[])
    {
       transport->setSnmpVersion(s_snmpVersion);
 		if (s_snmpVersion == SNMP_VERSION_3)
-			transport->setSecurityContext(new SNMP_SecurityContext(s_user, s_authPassword, s_encryptionPassword, s_authMethod, s_encryptionMethod));
+			transport->setSecurityContext(SNMP_SecurityContext(s_user, s_authPassword, s_encryptionPassword, s_authMethod, s_encryptionMethod));
 		else
-			transport->setSecurityContext(new SNMP_SecurityContext(s_community));
+			transport->setSecurityContext(SNMP_SecurityContext(s_community));
 
 		// Create request
       auto request = new SNMP_PDU(SNMP_SET_REQUEST, GetCurrentProcessId(), s_snmpVersion);

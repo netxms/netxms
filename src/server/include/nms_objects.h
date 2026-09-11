@@ -4224,7 +4224,7 @@ private:
    InetAddress m_ipAddress;   // Invalid address = use node's primary IP address
    uint16_t m_port;
    SNMP_Version m_version;
-   SNMP_SecurityContext *m_securityContext;
+   SNMP_SecurityContext m_securityContext;
 
    void createSecurityContext(const char *authName, const char *authPassword, const char *privPassword, int usmMethods, const char *contextName);
 
@@ -4233,23 +4233,18 @@ private:
       m_name[0] = 0;
       m_port = SNMP_DEFAULT_PORT;
       m_version = SNMP_VERSION_2C;
-      m_securityContext = nullptr;
    }
 
 public:
    AdditionalSnmpAgent(DB_RESULT hResult, int row);
    AdditionalSnmpAgent(const NXCPMessage& msg, uint32_t baseId);
    AdditionalSnmpAgent(const AdditionalSnmpAgent& src);
-   ~AdditionalSnmpAgent()
-   {
-      delete m_securityContext;
-   }
 
    const wchar_t *getName() const { return m_name; }
    const InetAddress& getIpAddress() const { return m_ipAddress; }
    uint16_t getPort() const { return m_port; }
    SNMP_Version getSnmpVersion() const { return m_version; }
-   const SNMP_SecurityContext *getSecurityContext() const { return m_securityContext; }
+   const SNMP_SecurityContext& getSecurityContext() const { return m_securityContext; }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    bool saveToDatabase(DB_STATEMENT hStmt) const;
@@ -4315,7 +4310,7 @@ protected:
    SNMP_Version m_snmpVersion;
    uint16_t m_snmpPort;
    uint16_t m_nUseIfXTable;
-   SNMP_SecurityContext *m_snmpSecurity;
+   SNMP_SecurityContext m_snmpSecurity;
    SNMP_SecurityContext *m_snmpTrapSecurity;  // Separate credentials for trap reception (null = use m_snmpSecurity)
    SNMP_Version m_snmpTrapVersion;            // Only used when m_snmpTrapSecurity != nullptr
    ObjectArray<AdditionalSnmpAgent> m_additionalSnmpAgents;
@@ -4928,8 +4923,8 @@ public:
    SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr, bool pollerMessageOnFailure = false, uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr);
    SNMP_Transport *createSnmpTransportForPoller(uint32_t *proxyNodeId = nullptr, bool *proxyConnectionFailed = nullptr) { return createSnmpTransport(0, SNMP_VERSION_DEFAULT, nullptr, nullptr, true, proxyNodeId, proxyConnectionFailed); }
    SNMP_Transport *createSnmpTransportForAgent(const wchar_t *agentName, bool *agentNotFound = nullptr);
-   SNMP_SecurityContext *getSnmpSecurityContext() const;
-   SNMP_SecurityContext *getSnmpTrapSecurityContext() const;
+   SNMP_SecurityContext getSnmpSecurityContext() const;
+   SNMP_SecurityContext getSnmpTrapSecurityContext() const;
    AdditionalSnmpAgent *getAdditionalSnmpAgent(const wchar_t *name) const;
    void getAdditionalSnmpAgentNames(StringList *names) const;
    ObjectArray<SNMP_SecurityContext> *getAdditionalSnmpSecurityContexts() const;

@@ -334,21 +334,21 @@ static uint32_t FDBHandler(SNMP_Variable *var, SNMP_Transport *snmp, uint16_t vl
 /**
  * Set per-VLAN SNMP security context (community@vlan for SNMP v1/v2c, context name "vlan-N" for SNMP v3)
  */
-static void SetVlanSecurityContext(SNMP_Transport *snmp, const SNMP_SecurityContext *baseSecurityContext, uint16_t vlanId)
+static void SetVlanSecurityContext(SNMP_Transport *snmp, const SNMP_SecurityContext& baseSecurityContext, uint16_t vlanId)
 {
    if (snmp->getSnmpVersion() < SNMP_VERSION_3)
    {
       char community[256];
-      snprintf(community, sizeof(community), "%s@%u", baseSecurityContext->getCommunity(), vlanId);
-      snmp->setSecurityContext(new SNMP_SecurityContext(community));
+      snprintf(community, sizeof(community), "%s@%u", baseSecurityContext.getCommunity(), vlanId);
+      snmp->setSecurityContext(SNMP_SecurityContext(community));
    }
    else
    {
       char contextName[32];
       snprintf(contextName, sizeof(contextName), "vlan-%u", vlanId);
-      SNMP_SecurityContext *securityContext = new SNMP_SecurityContext(baseSecurityContext);
-      securityContext->setContextName(contextName);
-      snmp->setSecurityContext(securityContext);
+      SNMP_SecurityContext securityContext(baseSecurityContext);
+      securityContext.setContextName(contextName);
+      snmp->setSecurityContext(std::move(securityContext));
    }
 }
 
@@ -371,7 +371,7 @@ StructArray<ForwardingDatabaseEntry> *CiscoDeviceDriver::getForwardingDatabase(D
    VlanList *vlans = getVlans(context, node, driverData);
    if (vlans != nullptr)
    {
-      SNMP_SecurityContext *savedSecurityContext = new SNMP_SecurityContext(snmp->getSecurityContext());
+      SNMP_SecurityContext savedSecurityContext(snmp->getSecurityContext());
       for(int i = 0; i < vlans->size(); i++)
       {
          uint16_t vlanId = vlans->get(i)->getVlanId();
@@ -478,7 +478,7 @@ StructArray<BridgePort> *CiscoDeviceDriver::getBridgePorts(DeviceContext *contex
    if (vlans != nullptr)
    {
       int size = bridgePorts->size();
-      SNMP_SecurityContext *savedSecurityContext = new SNMP_SecurityContext(snmp->getSecurityContext());
+      SNMP_SecurityContext savedSecurityContext(snmp->getSecurityContext());
       for(int i = 0; i < vlans->size(); i++)
       {
          uint16_t vlanId = vlans->get(i)->getVlanId();

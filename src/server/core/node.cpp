@@ -116,21 +116,21 @@ void AdditionalSnmpAgent::createSecurityContext(const char *authName, const char
 {
    if (m_version == SNMP_VERSION_3)
    {
-      m_securityContext = new SNMP_SecurityContext(authName, authPassword, privPassword,
+      m_securityContext = SNMP_SecurityContext(authName, authPassword, privPassword,
          static_cast<SNMP_AuthMethod>(usmMethods & 0xFF), static_cast<SNMP_EncryptionMethod>(usmMethods >> 8));
-      m_securityContext->recalculateKeys();
+      m_securityContext.recalculateKeys();
    }
    else
    {
       // Create security context with V2C security model; USM fields are preserved but keys are not calculated
-      m_securityContext = new SNMP_SecurityContext(authName);
-      m_securityContext->setAuthMethod(static_cast<SNMP_AuthMethod>(usmMethods & 0xFF));
-      m_securityContext->setAuthPassword(authPassword);
-      m_securityContext->setPrivMethod(static_cast<SNMP_EncryptionMethod>(usmMethods >> 8));
-      m_securityContext->setPrivPassword(privPassword);
+      m_securityContext = SNMP_SecurityContext(authName);
+      m_securityContext.setAuthMethod(static_cast<SNMP_AuthMethod>(usmMethods & 0xFF));
+      m_securityContext.setAuthPassword(authPassword);
+      m_securityContext.setPrivMethod(static_cast<SNMP_EncryptionMethod>(usmMethods >> 8));
+      m_securityContext.setPrivPassword(privPassword);
    }
    if ((contextName != nullptr) && (contextName[0] != 0))
-      m_securityContext->setContextName(contextName);
+      m_securityContext.setContextName(contextName);
 }
 
 /**
@@ -173,12 +173,11 @@ AdditionalSnmpAgent::AdditionalSnmpAgent(const NXCPMessage& msg, uint32_t baseId
 /**
  * Copy constructor for additional SNMP agent configuration
  */
-AdditionalSnmpAgent::AdditionalSnmpAgent(const AdditionalSnmpAgent& src) : m_ipAddress(src.m_ipAddress)
+AdditionalSnmpAgent::AdditionalSnmpAgent(const AdditionalSnmpAgent& src) : m_ipAddress(src.m_ipAddress), m_securityContext(src.m_securityContext)
 {
    wcscpy(m_name, src.m_name);
    m_port = src.m_port;
    m_version = src.m_version;
-   m_securityContext = new SNMP_SecurityContext(src.m_securityContext);
 }
 
 /**
@@ -255,10 +254,9 @@ AdditionalSnmpAgent *AdditionalSnmpAgent::createFromJson(json_t *json, uint32_t 
       return nullptr;
    }
 
-   agent->m_securityContext = new SNMP_SecurityContext();
-   agent->m_securityContext->setSecurityModel((agent->m_version == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+   agent->m_securityContext.setSecurityModel((agent->m_version == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
    bool changed = false;
-   uint32_t fieldStatus = ApplySnmpCredentialFields(json, agent->m_securityContext, &changed);
+   uint32_t fieldStatus = ApplySnmpCredentialFields(json, &agent->m_securityContext, &changed);
    if (fieldStatus != RCC_SUCCESS)
    {
       *rcc = fieldStatus;
@@ -269,7 +267,7 @@ AdditionalSnmpAgent *AdditionalSnmpAgent::createFromJson(json_t *json, uint32_t 
    value = json_object_get(json, "contextName");
    if (json_is_string(value))
    {
-      agent->m_securityContext->setContextName(json_string_value(value));
+      agent->m_securityContext.setContextName(json_string_value(value));
    }
    else if ((value != nullptr) && !json_is_null(value))
    {
@@ -279,7 +277,7 @@ AdditionalSnmpAgent *AdditionalSnmpAgent::createFromJson(json_t *json, uint32_t 
    }
 
    if (agent->m_version == SNMP_VERSION_3)
-      agent->m_securityContext->recalculateKeys();
+      agent->m_securityContext.recalculateKeys();
 
    return agent;
 }
@@ -294,11 +292,11 @@ void AdditionalSnmpAgent::fillMessage(NXCPMessage *msg, uint32_t baseId) const
       msg->setField(baseId + 1, m_ipAddress);
    msg->setField(baseId + 2, m_port);
    msg->setField(baseId + 3, static_cast<int16_t>(m_version));
-   msg->setFieldFromMBString(baseId + 4, m_securityContext->getAuthName());
-   msg->setFieldFromMBString(baseId + 5, m_securityContext->getAuthPassword());
-   msg->setFieldFromMBString(baseId + 6, m_securityContext->getPrivPassword());
-   msg->setField(baseId + 7, static_cast<uint16_t>(m_securityContext->getAuthMethod() | (m_securityContext->getPrivMethod() << 8)));
-   msg->setFieldFromMBString(baseId + 8, CHECK_NULL_EX_A(m_securityContext->getContextName()));
+   msg->setFieldFromMBString(baseId + 4, m_securityContext.getAuthName());
+   msg->setFieldFromMBString(baseId + 5, m_securityContext.getAuthPassword());
+   msg->setFieldFromMBString(baseId + 6, m_securityContext.getPrivPassword());
+   msg->setField(baseId + 7, static_cast<uint16_t>(m_securityContext.getAuthMethod() | (m_securityContext.getPrivMethod() << 8)));
+   msg->setFieldFromMBString(baseId + 8, m_securityContext.getContextName());
 }
 
 /**
@@ -312,11 +310,11 @@ bool AdditionalSnmpAgent::saveToDatabase(DB_STATEMENT hStmt) const
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress.isValidUnicast() ? m_ipAddress.toString(ipAddr) : nullptr, DB_BIND_STATIC);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_port);
    DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_version));
-   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext->getAuthName()), DB_BIND_DYNAMIC);
-   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext->getAuthPassword()), DB_BIND_DYNAMIC);
-   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext->getPrivPassword()), DB_BIND_DYNAMIC);
-   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_securityContext->getAuthMethod() | (m_securityContext->getPrivMethod() << 8));
-   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, WideStringFromMBString(CHECK_NULL_EX_A(m_securityContext->getContextName())), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext.getAuthName()), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext.getAuthPassword()), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext.getPrivPassword()), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_securityContext.getAuthMethod() | (m_securityContext.getPrivMethod() << 8));
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_securityContext.getContextName()), DB_BIND_DYNAMIC);
    return DBExecute(hStmt);
 }
 
@@ -338,14 +336,14 @@ json_t *AdditionalSnmpAgent::toJson(bool includeSensitiveData) const
    }
    json_object_set_new(json, "port", json_integer(m_port));
    json_object_set_new(json, "version", json_string(SnmpVersionToName(m_version)));
-   json_object_set_new(json, "authName", json_string_a(m_securityContext->getAuthName()));
-   json_object_set_new(json, "authMethod", json_string(SnmpAuthMethodToName(m_securityContext->getAuthMethod())));
-   json_object_set_new(json, "privMethod", json_string(SnmpPrivMethodToName(m_securityContext->getPrivMethod())));
-   json_object_set_new(json, "contextName", json_string_a(CHECK_NULL_EX_A(m_securityContext->getContextName())));
+   json_object_set_new(json, "authName", json_string_a(m_securityContext.getAuthName()));
+   json_object_set_new(json, "authMethod", json_string(SnmpAuthMethodToName(m_securityContext.getAuthMethod())));
+   json_object_set_new(json, "privMethod", json_string(SnmpPrivMethodToName(m_securityContext.getPrivMethod())));
+   json_object_set_new(json, "contextName", json_string(m_securityContext.getContextName()));
    if (includeSensitiveData)
    {
-      json_object_set_new(json, "authPassword", json_string_a(m_securityContext->getAuthPassword()));
-      json_object_set_new(json, "privPassword", json_string_a(m_securityContext->getPrivPassword()));
+      json_object_set_new(json, "authPassword", json_string_a(m_securityContext.getAuthPassword()));
+      json_object_set_new(json, "privPassword", json_string_a(m_securityContext.getPrivPassword()));
    }
    return json;
 }
@@ -368,7 +366,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_agentSecret[0] = 0;
    m_snmpVersion = SNMP_VERSION_2C;
    m_snmpPort = SNMP_DEFAULT_PORT;
-   m_snmpSecurity = new SNMP_SecurityContext("public");
+   m_snmpSecurity = SNMP_SecurityContext("public");
    m_snmpTrapSecurity = nullptr;
    m_snmpTrapVersion = SNMP_VERSION_2C;
    m_snmpCodepage[0] = 0;
@@ -511,9 +509,9 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_snmpVersion = newNodeData->snmpVersion;
    m_snmpPort = newNodeData->snmpPort;
    if (newNodeData->snmpSecurity != nullptr)
-      m_snmpSecurity = new SNMP_SecurityContext(newNodeData->snmpSecurity);
+      m_snmpSecurity = *newNodeData->snmpSecurity;
    else
-      m_snmpSecurity = new SNMP_SecurityContext("public");
+      m_snmpSecurity = SNMP_SecurityContext("public");
    m_snmpTrapSecurity = nullptr;
    m_snmpTrapVersion = SNMP_VERSION_2C;
    if (newNodeData->name[0] != 0)
@@ -658,7 +656,6 @@ Node::~Node()
    delete m_driverParameters;
    delete m_smclpMetrics;
    MemFree(m_sysDescription);
-   delete m_snmpSecurity;
    delete m_snmpTrapSecurity;
    delete m_radioInterfaces;
    delete m_wirelessStations;
@@ -754,19 +751,18 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
    DBGetFieldA(hResult, 0, 18, snmpPrivPassword, 256);
    int snmpMethods = DBGetFieldLong(hResult, 0, 19);
    DBGetFieldA(hResult, 0, 72, snmpEngineId, 256);
-   delete m_snmpSecurity;
    if (m_snmpVersion == SNMP_VERSION_3)
    {
-      m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword,
+      m_snmpSecurity = SNMP_SecurityContext(snmpAuthObject, snmpAuthPassword, snmpPrivPassword,
                static_cast<SNMP_AuthMethod>(snmpMethods & 0xFF), static_cast<SNMP_EncryptionMethod>(snmpMethods >> 8));
       if (snmpEngineId[0] != 0)
       {
          BYTE engineId[128];
          size_t engineIdLen = StrToBinA(snmpEngineId, engineId, 128);
          if (engineIdLen > 0)
-            m_snmpSecurity->setAuthoritativeEngine(SNMP_Engine(engineId, engineIdLen, 0, 0));
+            m_snmpSecurity.setAuthoritativeEngine(SNMP_Engine(engineId, engineIdLen, 0, 0));
       }
-      m_snmpSecurity->recalculateKeys();
+      m_snmpSecurity.recalculateKeys();
 
       DBGetFieldA(hResult, 0, 82, snmpEngineId, 256);
       if (snmpEngineId[0] != 0)
@@ -774,18 +770,18 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
          BYTE engineId[128];
          size_t engineIdLen = StrToBinA(snmpEngineId, engineId, 128);
          if (engineIdLen > 0)
-            m_snmpSecurity->setContextEngine(SNMP_Engine(engineId, engineIdLen));
+            m_snmpSecurity.setContextEngine(SNMP_Engine(engineId, engineIdLen));
       }
    }
    else
    {
       // This will create security context with V2C security model
       // USM fields will be loaded but keys will not be calculated
-      m_snmpSecurity = new SNMP_SecurityContext(snmpAuthObject);
-      m_snmpSecurity->setAuthMethod(static_cast<SNMP_AuthMethod>(snmpMethods & 0xFF));
-      m_snmpSecurity->setAuthPassword(snmpAuthPassword);
-      m_snmpSecurity->setPrivMethod(static_cast<SNMP_EncryptionMethod>(snmpMethods >> 8));
-      m_snmpSecurity->setPrivPassword(snmpPrivPassword);
+      m_snmpSecurity = SNMP_SecurityContext(snmpAuthObject);
+      m_snmpSecurity.setAuthMethod(static_cast<SNMP_AuthMethod>(snmpMethods & 0xFF));
+      m_snmpSecurity.setAuthPassword(snmpAuthPassword);
+      m_snmpSecurity.setPrivMethod(static_cast<SNMP_EncryptionMethod>(snmpMethods >> 8));
+      m_snmpSecurity.setPrivPassword(snmpPrivPassword);
    }
 
    m_sysName = DBGetField(hResult, 0, 20, nullptr, 0);
@@ -1430,7 +1426,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       {
          lockProperties();
 
-         int32_t snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
+         int32_t snmpMethods = m_snmpSecurity.getAuthMethod() | (m_snmpSecurity.getPrivMethod() << 8);
          TCHAR ipAddr[64], cacheMode[16], compressionMode[16], hardwareId[HARDWARE_ID_LENGTH * 2 + 1], routerId[16];
 
          const TCHAR *icmpPollMode;
@@ -1468,7 +1464,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_snmpPort);
          DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, m_capabilities);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_snmpVersion));
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthName()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity.getAuthName()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_agentPort);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_agentSecret, DB_BIND_STATIC);
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_snmpObjectId.toString(oidText, 256), DB_BIND_STATIC);
@@ -1482,8 +1478,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_icmpProxy);
          DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_requiredPollCount);
          DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_nUseIfXTable);
-         DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
-         DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity.getAuthPassword()), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity.getPrivPassword()), DB_BIND_DYNAMIC);
          DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, snmpMethods);
          DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC, 127);
          DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_baseBridgeAddress);
@@ -1537,16 +1533,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 72, DB_SQLTYPE_INTEGER, m_cipVendorCode);
          DBBind(hStmt, 73, DB_SQLTYPE_VARCHAR, agentCertMappingMethod, DB_BIND_STATIC);
          DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, m_agentCertMappingData, DB_BIND_STATIC);
-         if (m_snmpSecurity != nullptr)
-         {
-            DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
-            DBBind(hStmt, 76, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getContextEngine().toString(), DB_BIND_TRANSIENT);
-         }
-         else
-         {
-            DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-            DBBind(hStmt, 76, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-         }
+         DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, m_snmpSecurity.getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
+         DBBind(hStmt, 76, DB_SQLTYPE_VARCHAR, m_snmpSecurity.getContextEngine().toString(), DB_BIND_TRANSIENT);
          DBBind(hStmt, 77, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_syslogCodepage, DB_BIND_STATIC);
          DBBind(hStmt, 78, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_snmpCodepage, DB_BIND_STATIC);
          if (m_ospfRouterId != 0)
@@ -1874,12 +1862,6 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
       }
    }
 
-   if ((m_lastAgentCommTime == TIMESTAMP_NEVER) && (m_syslogMessageCount == 0) && (m_snmpTrapCount == 0) && (m_snmpSecurity == nullptr) && (m_downSince == m_savedDownSince))
-   {
-      unlockProperties();
-      return true;
-   }
-
    unlockProperties();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=?,snmp_engine_id=?,snmp_context_engine_id=?,down_since=? WHERE id=?"));
@@ -1890,16 +1872,8 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastAgentCommTime));
    DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
    DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
-   if (m_snmpSecurity != nullptr)
-   {
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getContextEngine().toString(), DB_BIND_TRANSIENT);
-   }
-   else
-   {
-      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-   }
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_snmpSecurity.getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_snmpSecurity.getContextEngine().toString(), DB_BIND_TRANSIENT);
    DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_downSince));
    DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
    m_savedDownSince = m_downSince;
@@ -3153,11 +3127,11 @@ restart_status_poll:
             if ((pTransport->getSnmpVersion() == SNMP_VERSION_3) && (pTransport->getAuthoritativeEngine() != nullptr))
             {
                lockProperties();
-               m_snmpSecurity->setAuthoritativeEngine(*pTransport->getAuthoritativeEngine());
-               m_snmpSecurity->recalculateKeys();
+               m_snmpSecurity.setAuthoritativeEngine(*pTransport->getAuthoritativeEngine());
+               m_snmpSecurity.recalculateKeys();
                if (pTransport->getContextEngine() != nullptr)
                {
-                  m_snmpSecurity->setContextEngine(*pTransport->getContextEngine());
+                  m_snmpSecurity.setContextEngine(*pTransport->getContextEngine());
                }
                unlockProperties();
             }
@@ -3166,8 +3140,8 @@ restart_status_poll:
          {
             // Reset authoritative engine data
             lockProperties();
-            m_snmpSecurity->setAuthoritativeEngine(SNMP_Engine());
-            m_snmpSecurity->setContextEngine(SNMP_Engine());
+            m_snmpSecurity.setAuthoritativeEngine(SNMP_Engine());
+            m_snmpSecurity.setContextEngine(SNMP_Engine());
             unlockProperties();
             delete pTransport;
             retryCount--;
@@ -7131,7 +7105,7 @@ bool Node::confPollSnmp()
       SNMP_Version minVersion = SNMP_VersionFromInt(
          getCustomAttributeAsUInt32(L"SysConfig:SNMP.MinVersion", static_cast<uint32_t>(g_snmpMinVersion)));
       pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress,
-               &m_snmpVersion, m_snmpPort, m_snmpSecurity, oids, m_zoneUIN, false, minVersion);
+               &m_snmpVersion, m_snmpPort, &m_snmpSecurity, oids, m_zoneUIN, false, minVersion);
    }
    if (pTransport == nullptr)
    {
@@ -7142,12 +7116,11 @@ bool Node::confPollSnmp()
 
    lockProperties();
    m_snmpPort = pTransport->getPort();
-   delete m_snmpSecurity;
-   m_snmpSecurity = new SNMP_SecurityContext(pTransport->getSecurityContext());
+   m_snmpSecurity = pTransport->getSecurityContext();
    if (m_snmpVersion == SNMP_VERSION_3)
    {
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMPv3 authoritative engine ID: %s"), m_name, m_snmpSecurity->getAuthoritativeEngine().toString().cstr());
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMPv3 context engine ID: %s"), m_name, m_snmpSecurity->getContextEngine().toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMPv3 authoritative engine ID: %s"), m_name, m_snmpSecurity.getAuthoritativeEngine().toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMPv3 context engine ID: %s"), m_name, m_snmpSecurity.getContextEngine().toString().cstr());
    }
    m_capabilities |= NC_IS_SNMP;
    if (m_state & NSF_SNMP_UNREACHABLE)
@@ -10494,10 +10467,10 @@ void Node::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_AGENT_PORT, m_agentPort);
    msg->setField(VID_AGENT_CACHE_MODE, m_agentCacheMode);
    msg->setField(VID_SHARED_SECRET, m_agentSecret);
-   msg->setFieldFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getAuthName());
-   msg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
-   msg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
-   msg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
+   msg->setFieldFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity.getAuthName());
+   msg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity.getAuthPassword());
+   msg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity.getPrivPassword());
+   msg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity.getAuthMethod() | ((WORD)m_snmpSecurity.getPrivMethod() << 8)));
    msg->setField(VID_SNMP_OID, m_snmpObjectId.toString());  // String form is fine - client stores and displays it as string, and VID_SNMP_OID is also used as string in SNMP walk commands
    msg->setField(VID_SNMP_PORT, m_snmpPort);
    msg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
@@ -10872,7 +10845,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
       if (requestedVersion < minVersion)
          requestedVersion = minVersion;
       m_snmpVersion = requestedVersion;
-      m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+      m_snmpSecurity.setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
    }
 
    // Change SNMP port
@@ -10885,23 +10858,23 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
       char mbBuffer[256];
 
       msg.getFieldAsMBString(VID_SNMP_AUTH_OBJECT, mbBuffer, 256);
-      if (m_snmpSecurity->getSecurityModel() == SNMP_SECURITY_MODEL_USM)
-         m_snmpSecurity->setUserName(mbBuffer);
+      if (m_snmpSecurity.getSecurityModel() == SNMP_SECURITY_MODEL_USM)
+         m_snmpSecurity.setUserName(mbBuffer);
       else
-         m_snmpSecurity->setCommunity(mbBuffer);
+         m_snmpSecurity.setCommunity(mbBuffer);
 
       msg.getFieldAsMBString(VID_SNMP_AUTH_PASSWORD, mbBuffer, 256);
-      m_snmpSecurity->setAuthPassword(mbBuffer);
+      m_snmpSecurity.setAuthPassword(mbBuffer);
 
       msg.getFieldAsMBString(VID_SNMP_PRIV_PASSWORD, mbBuffer, 256);
-      m_snmpSecurity->setPrivPassword(mbBuffer);
+      m_snmpSecurity.setPrivPassword(mbBuffer);
 
       uint16_t methods = msg.getFieldAsUInt16(VID_SNMP_USM_METHODS);
-      m_snmpSecurity->setAuthMethod(static_cast<SNMP_AuthMethod>(methods & 0xFF));
-      m_snmpSecurity->setPrivMethod(static_cast<SNMP_EncryptionMethod>(methods >> 8));
+      m_snmpSecurity.setAuthMethod(static_cast<SNMP_AuthMethod>(methods & 0xFF));
+      m_snmpSecurity.setPrivMethod(static_cast<SNMP_EncryptionMethod>(methods >> 8));
 
       if (m_snmpVersion == SNMP_VERSION_3)
-         m_snmpSecurity->recalculateKeys();
+         m_snmpSecurity.recalculateKeys();
    }
 
    // Change SNMP trap credentials
@@ -11385,14 +11358,14 @@ uint32_t Node::modifyJsonSnmpConfig(json_t *snmp)
       if (version < minVersion)
          version = minVersion;
       m_snmpVersion = version;
-      m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+      m_snmpSecurity.setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
       credentialsChanged = true;
    }
 
    if (!json_object_update_integer(snmp, "port", &m_snmpPort))
       return RCC_INVALID_ARGUMENT;
 
-   uint32_t rcc = ApplySnmpCredentialFields(snmp, m_snmpSecurity, &credentialsChanged);
+   uint32_t rcc = ApplySnmpCredentialFields(snmp, &m_snmpSecurity, &credentialsChanged);
    if (rcc != RCC_SUCCESS)
       return rcc;
 
@@ -11401,11 +11374,11 @@ uint32_t Node::modifyJsonSnmpConfig(json_t *snmp)
    {
       if (!json_is_string(value) && !json_is_null(value))
          return RCC_INVALID_ARGUMENT;
-      m_snmpSecurity->setContextName(json_is_string(value) ? json_string_value(value) : "");
+      m_snmpSecurity.setContextName(json_is_string(value) ? json_string_value(value) : "");
    }
 
    if (credentialsChanged && (m_snmpVersion == SNMP_VERSION_3))
-      m_snmpSecurity->recalculateKeys();
+      m_snmpSecurity.recalculateKeys();
 
    if (!json_object_update_string_utf8(snmp, "codepage", m_snmpCodepage, sizeof(m_snmpCodepage)))
       return RCC_INVALID_ARGUMENT;
@@ -13439,9 +13412,9 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
       if (context == nullptr)
       {
          if (community == nullptr)
-            transport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
+            transport->setSecurityContext(m_snmpSecurity);
          else
-            transport->setSecurityContext(new SNMP_SecurityContext(community));
+            transport->setSecurityContext(SNMP_SecurityContext(community));
       }
       else
       {
@@ -13449,16 +13422,16 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
          {
             char fullCommunity[128];
             if (community == nullptr)
-               snprintf(fullCommunity, 128, "%s@%s", m_snmpSecurity->getCommunity(), context);
+               snprintf(fullCommunity, 128, "%s@%s", m_snmpSecurity.getCommunity(), context);
             else
                snprintf(fullCommunity, 128, "%s@%s", community, context);
-            transport->setSecurityContext(new SNMP_SecurityContext(fullCommunity));
+            transport->setSecurityContext(SNMP_SecurityContext(fullCommunity));
          }
          else
          {
-            SNMP_SecurityContext *securityContext = new SNMP_SecurityContext(m_snmpSecurity);
-            securityContext->setContextName(context);
-            transport->setSecurityContext(securityContext);
+            SNMP_SecurityContext securityContext(m_snmpSecurity);
+            securityContext.setContextName(context);
+            transport->setSecurityContext(std::move(securityContext));
          }
       }
       unlockProperties();
@@ -13555,7 +13528,7 @@ SNMP_Transport *Node::createSnmpTransportForAgent(const wchar_t *agentName, bool
    InetAddress targetAddr = agent->getIpAddress().isValidUnicast() ? agent->getIpAddress() : m_ipAddress;
    uint16_t port = agent->getPort();
    SNMP_Version version = agent->getSnmpVersion();
-   SNMP_SecurityContext *securityContext = new SNMP_SecurityContext(agent->getSecurityContext());
+   SNMP_SecurityContext securityContext(agent->getSecurityContext());
    char codepage[16];
    memcpy(codepage, m_snmpCodepage, sizeof(codepage));
    unlockProperties();
@@ -13564,23 +13537,18 @@ SNMP_Transport *Node::createSnmpTransportForAgent(const wchar_t *agentName, bool
    if (version < minVersion)
    {
       nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransportForAgent(%s [%u]): SNMP version %d of agent \"%s\" is below minimum %d", m_name, m_id, version, agentName, minVersion);
-      delete securityContext;
       return nullptr;
    }
 
    if (isPortBlocked(port, false))
    {
       nxlog_debug_tag(L"snmp", 5, L"Node::createSnmpTransportForAgent(%s [%u]): port %u blocked by port stop list", m_name, m_id, port);
-      delete securityContext;
       return nullptr;
    }
 
    SNMP_Transport *transport = createSnmpTransportInternal(targetAddr, port, false, nullptr, nullptr);
    if (transport == nullptr)
-   {
-      delete securityContext;
       return nullptr;
-   }
 
    transport->setSnmpVersion(version);
    if (codepage[0] != 0)
@@ -13589,16 +13557,14 @@ SNMP_Transport *Node::createSnmpTransportForAgent(const wchar_t *agentName, bool
       transport->setCodepage(g_snmpCodepage);
 
    // For SNMP versions 1 and 2c context name is passed as community@context
-   const char *context = securityContext->getContextName();
-   if ((version < SNMP_VERSION_3) && (context != nullptr) && (context[0] != 0))
+   const char *context = securityContext.getContextName();
+   if ((version < SNMP_VERSION_3) && (context[0] != 0))
    {
       char fullCommunity[128];
-      snprintf(fullCommunity, 128, "%s@%s", securityContext->getCommunity(), context);
-      SNMP_SecurityContext *fullContext = new SNMP_SecurityContext(fullCommunity);
-      delete securityContext;
-      securityContext = fullContext;
+      snprintf(fullCommunity, 128, "%s@%s", securityContext.getCommunity(), context);
+      securityContext = SNMP_SecurityContext(fullCommunity);
    }
-   transport->setSecurityContext(securityContext);
+   transport->setSecurityContext(std::move(securityContext));
    return transport;
 }
 
@@ -13607,10 +13573,10 @@ SNMP_Transport *Node::createSnmpTransportForAgent(const wchar_t *agentName, bool
  * ATTENTION: This method returns new copy of security context
  * which must be destroyed by the caller
  */
-SNMP_SecurityContext *Node::getSnmpSecurityContext() const
+SNMP_SecurityContext Node::getSnmpSecurityContext() const
 {
    lockProperties();
-   SNMP_SecurityContext *ctx = new SNMP_SecurityContext(m_snmpSecurity);
+   SNMP_SecurityContext ctx(m_snmpSecurity);
    unlockProperties();
    return ctx;
 }
@@ -13621,10 +13587,10 @@ SNMP_SecurityContext *Node::getSnmpSecurityContext() const
  * ATTENTION: This method returns new copy of security context
  * which must be destroyed by the caller
  */
-SNMP_SecurityContext *Node::getSnmpTrapSecurityContext() const
+SNMP_SecurityContext Node::getSnmpTrapSecurityContext() const
 {
    lockProperties();
-   SNMP_SecurityContext *ctx = (m_snmpTrapSecurity != nullptr) ? new SNMP_SecurityContext(m_snmpTrapSecurity) : new SNMP_SecurityContext(m_snmpSecurity);
+   SNMP_SecurityContext ctx((m_snmpTrapSecurity != nullptr) ? *m_snmpTrapSecurity : m_snmpSecurity);
    unlockProperties();
    return ctx;
 }
@@ -16297,7 +16263,7 @@ void Node::setSnmpVersion(SNMP_Version version)
    if (version < minVersion)
       version = minVersion;
    m_snmpVersion = version;
-   m_snmpSecurity->setSecurityModel((version == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
+   m_snmpSecurity.setSecurityModel((version == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
    m_lastSnmpTrapAuthFailureEventTime = 0;
    setModified(MODIFY_NODE_PROPERTIES);
    unlockProperties();
@@ -16314,9 +16280,9 @@ void Node::setSnmpCommunity(const char *community)
    if (m_snmpVersion == SNMP_VERSION_3)
    {
       m_snmpVersion = SNMP_VERSION_2C;
-      m_snmpSecurity->setSecurityModel(SNMP_SECURITY_MODEL_V2C);
+      m_snmpSecurity.setSecurityModel(SNMP_SECURITY_MODEL_V2C);
    }
-   m_snmpSecurity->setCommunity(CHECK_NULL_EX_A(community));
+   m_snmpSecurity.setCommunity(CHECK_NULL_EX_A(community));
    m_lastSnmpTrapAuthFailureEventTime = 0;
    setModified(MODIFY_NODE_PROPERTIES);
    unlockProperties();
@@ -16331,13 +16297,13 @@ void Node::setSnmpUSMCredentials(const char *userName, const char *authPassword,
 {
    lockProperties();
    m_snmpVersion = SNMP_VERSION_3;
-   m_snmpSecurity->setSecurityModel(SNMP_SECURITY_MODEL_USM);
-   m_snmpSecurity->setUserName(CHECK_NULL_EX_A(userName));
-   m_snmpSecurity->setAuthPassword(CHECK_NULL_EX_A(authPassword));
-   m_snmpSecurity->setPrivPassword(CHECK_NULL_EX_A(privPassword));
-   m_snmpSecurity->setAuthMethod(authMethod);
-   m_snmpSecurity->setPrivMethod(privMethod);
-   m_snmpSecurity->recalculateKeys();
+   m_snmpSecurity.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+   m_snmpSecurity.setUserName(CHECK_NULL_EX_A(userName));
+   m_snmpSecurity.setAuthPassword(CHECK_NULL_EX_A(authPassword));
+   m_snmpSecurity.setPrivPassword(CHECK_NULL_EX_A(privPassword));
+   m_snmpSecurity.setAuthMethod(authMethod);
+   m_snmpSecurity.setPrivMethod(privMethod);
+   m_snmpSecurity.recalculateKeys();
    m_lastSnmpTrapAuthFailureEventTime = 0;
    setModified(MODIFY_NODE_PROPERTIES);
    unlockProperties();
@@ -16658,17 +16624,14 @@ json_t *Node::snmpConfigToJson(bool includeSensitiveData)
    json_object_set_new(snmp, "proxy", json_integer(m_snmpProxy));
    json_object_set_new(snmp, "codepage", json_string_a(m_snmpCodepage));
    json_object_set_new(snmp, "settingsLocked", json_boolean((m_flags & NF_SNMP_SETTINGS_LOCKED) != 0));
-   if (m_snmpSecurity != nullptr)
+   json_object_set_new(snmp, "authName", json_string(m_snmpSecurity.getAuthName()));
+   json_object_set_new(snmp, "authMethod", json_string(SnmpAuthMethodToName(m_snmpSecurity.getAuthMethod())));
+   json_object_set_new(snmp, "privMethod", json_string(SnmpPrivMethodToName(m_snmpSecurity.getPrivMethod())));
+   json_object_set_new(snmp, "contextName", json_string(m_snmpSecurity.getContextName()));
+   if (includeSensitiveData)
    {
-      json_object_set_new(snmp, "authName", json_string_a(m_snmpSecurity->getAuthName()));
-      json_object_set_new(snmp, "authMethod", json_string(SnmpAuthMethodToName(m_snmpSecurity->getAuthMethod())));
-      json_object_set_new(snmp, "privMethod", json_string(SnmpPrivMethodToName(m_snmpSecurity->getPrivMethod())));
-      json_object_set_new(snmp, "contextName", json_string_a(CHECK_NULL_EX_A(m_snmpSecurity->getContextName())));
-      if (includeSensitiveData)
-      {
-         json_object_set_new(snmp, "authPassword", json_string_a(m_snmpSecurity->getAuthPassword()));
-         json_object_set_new(snmp, "privPassword", json_string_a(m_snmpSecurity->getPrivPassword()));
-      }
+      json_object_set_new(snmp, "authPassword", json_string(m_snmpSecurity.getAuthPassword()));
+      json_object_set_new(snmp, "privPassword", json_string(m_snmpSecurity.getPrivPassword()));
    }
    if (m_snmpTrapSecurity != nullptr)
    {

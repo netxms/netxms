@@ -453,6 +453,228 @@ static void TestPDUPrivacy(SNMP_EncryptionMethod method, const TCHAR *name)
 }
 
 /**
+ * Test SNMP_SecurityContext class
+ */
+static void TestSecurityContext()
+{
+   // Key localization test vectors from RFC 3414 appendix A.3
+   static const BYTE engineId[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02 };
+   static const BYTE md5Key[] = { 0x52, 0x6f, 0x5e, 0xed, 0x9f, 0xcc, 0xe2, 0x6f, 0x89, 0x64, 0xc2, 0x93, 0x07, 0x87, 0xd8, 0x2b };
+   static const BYTE sha1Key[] = { 0x66, 0x95, 0xfe, 0xbc, 0x92, 0x88, 0xe3, 0x62, 0x82, 0x23, 0x5f, 0xc7, 0x15, 0x1f, 0x12, 0x84, 0x97, 0xb3, 0x8f, 0x3f };
+   SNMP_Engine engine(engineId, sizeof(engineId), 3, 100);
+
+   StartTest(_T("SNMP_SecurityContext default constructor"));
+   SNMP_SecurityContext defaultContext;
+   AssertTrue(defaultContext.getSecurityModel() == SNMP_SECURITY_MODEL_V2C);
+   AssertTrue(defaultContext.getAuthMethod() == SNMP_AUTH_NONE);
+   AssertTrue(defaultContext.getPrivMethod() == SNMP_ENCRYPT_NONE);
+   AssertTrue(!strcmp(defaultContext.getCommunity(), ""));
+   AssertTrue(!strcmp(defaultContext.getUserName(), ""));
+   AssertTrue(!strcmp(defaultContext.getAuthPassword(), ""));
+   AssertTrue(!strcmp(defaultContext.getPrivPassword(), ""));
+   AssertTrue(!strcmp(defaultContext.getContextName(), ""));
+   AssertEquals(defaultContext.getAuthoritativeEngine().getIdLen(), 0);
+   AssertFalse(defaultContext.needAuthentication());
+   AssertFalse(defaultContext.needEncryption());
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext community constructor"));
+   SNMP_SecurityContext communityContext("public");
+   AssertTrue(communityContext.getSecurityModel() == SNMP_SECURITY_MODEL_V2C);
+   AssertTrue(!strcmp(communityContext.getCommunity(), "public"));
+   AssertTrue(!strcmp(communityContext.getAuthName(), "public"));
+   AssertTrue(!strcmp(communityContext.getUserName(), ""));
+   SNMP_SecurityContext nullCommunityContext(nullptr);
+   AssertTrue(!strcmp(nullCommunityContext.getCommunity(), ""));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext authNoPriv constructor"));
+   SNMP_SecurityContext authNoPrivContext("user1", "authpass", SNMP_AUTH_SHA1);
+   AssertTrue(authNoPrivContext.getSecurityModel() == SNMP_SECURITY_MODEL_USM);
+   AssertTrue(authNoPrivContext.getAuthMethod() == SNMP_AUTH_SHA1);
+   AssertTrue(authNoPrivContext.getPrivMethod() == SNMP_ENCRYPT_NONE);
+   AssertTrue(!strcmp(authNoPrivContext.getUserName(), "user1"));
+   AssertTrue(!strcmp(authNoPrivContext.getAuthName(), "user1"));
+   AssertTrue(!strcmp(authNoPrivContext.getAuthPassword(), "authpass"));
+   AssertTrue(!strcmp(authNoPrivContext.getPrivPassword(), ""));
+   AssertTrue(!strcmp(authNoPrivContext.getCommunity(), ""));
+   AssertFalse(authNoPrivContext.needAuthentication());   // engine ID not set yet
+   authNoPrivContext.setAuthoritativeEngine(engine);
+   AssertTrue(authNoPrivContext.needAuthentication());
+   AssertFalse(authNoPrivContext.needEncryption());
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext authPriv constructor"));
+   SNMP_SecurityContext authPrivContext("user2", "authpass", "privpass", SNMP_AUTH_MD5, SNMP_ENCRYPT_AES_128);
+   AssertTrue(authPrivContext.getSecurityModel() == SNMP_SECURITY_MODEL_USM);
+   AssertTrue(authPrivContext.getAuthMethod() == SNMP_AUTH_MD5);
+   AssertTrue(authPrivContext.getPrivMethod() == SNMP_ENCRYPT_AES_128);
+   AssertTrue(!strcmp(authPrivContext.getUserName(), "user2"));
+   AssertTrue(!strcmp(authPrivContext.getAuthPassword(), "authpass"));
+   AssertTrue(!strcmp(authPrivContext.getPrivPassword(), "privpass"));
+   authPrivContext.setAuthoritativeEngine(engine);
+   AssertTrue(authPrivContext.needAuthentication());
+   AssertTrue(authPrivContext.needEncryption());
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext key localization (MD5)"));
+   SNMP_SecurityContext md5Context("user", "maplesyrup", "maplesyrup", SNMP_AUTH_MD5, SNMP_ENCRYPT_DES);
+   md5Context.setAuthoritativeEngine(engine);
+   AssertTrue(!memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)));
+   AssertTrue(!memcmp(md5Context.getPrivKey(), md5Key, sizeof(md5Key)));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext key localization (SHA1)"));
+   SNMP_SecurityContext sha1Context("user", "maplesyrup", SNMP_AUTH_SHA1);
+   sha1Context.setAuthoritativeEngine(engine);
+   AssertTrue(!memcmp(sha1Context.getAuthKey(), sha1Key, sizeof(sha1Key)));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext key invalidation on auth method change"));
+   md5Context.setAuthMethod(SNMP_AUTH_SHA1);
+   AssertTrue(!memcmp(md5Context.getAuthKey(), sha1Key, sizeof(sha1Key)));
+   md5Context.setAuthMethod(SNMP_AUTH_MD5);
+   AssertTrue(!memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext key invalidation on password change"));
+   md5Context.setAuthPassword("maplesyrup");   // same password - key must stay the same
+   AssertTrue(!memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)));
+   md5Context.setAuthPassword("maplesirup");
+   AssertTrue(memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)) != 0);
+   md5Context.setAuthPassword("maplesyrup");
+   AssertTrue(!memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)));
+   md5Context.setPrivPassword("maplesirup");
+   AssertTrue(memcmp(md5Context.getPrivKey(), md5Key, sizeof(md5Key)) != 0);
+   AssertTrue(!memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)));
+   md5Context.setPrivPassword("maplesyrup");
+   AssertTrue(!memcmp(md5Context.getPrivKey(), md5Key, sizeof(md5Key)));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext::setAuthoritativeEngine"));
+   SNMP_Engine sameEngine(engineId, sizeof(engineId), 7, 500);
+   md5Context.setAuthoritativeEngine(sameEngine);
+   AssertTrue(md5Context.getAuthoritativeEngine().getBoots() == 7);
+   AssertTrue(md5Context.getAuthoritativeEngine().getTime() == 500);
+   AssertTrue(!memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)));
+   static const BYTE otherEngineId[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03 };
+   md5Context.setAuthoritativeEngine(SNMP_Engine(otherEngineId, sizeof(otherEngineId)));
+   AssertTrue(md5Context.getAuthoritativeEngine().equals(SNMP_Engine(otherEngineId, sizeof(otherEngineId))));
+   AssertTrue(memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)) != 0);
+   md5Context.setAuthoritativeEngine(engine);
+   AssertTrue(!memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext::setSecurityModel"));
+   SNMP_SecurityContext modelContext("private");
+   modelContext.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+   AssertTrue(modelContext.getSecurityModel() == SNMP_SECURITY_MODEL_USM);
+   AssertTrue(!strcmp(modelContext.getUserName(), "private"));
+   AssertTrue(!strcmp(modelContext.getCommunity(), ""));
+   AssertTrue(!strcmp(modelContext.getAuthName(), "private"));
+   modelContext.setSecurityModel(SNMP_SECURITY_MODEL_V2C);
+   AssertTrue(modelContext.getSecurityModel() == SNMP_SECURITY_MODEL_V2C);
+   AssertTrue(!strcmp(modelContext.getCommunity(), "private"));
+   AssertTrue(!strcmp(modelContext.getUserName(), ""));
+   AssertTrue(!strcmp(modelContext.getAuthName(), "private"));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext setters"));
+   modelContext.setCommunity("public");
+   AssertTrue(!strcmp(modelContext.getCommunity(), "public"));
+   modelContext.setCommunity(nullptr);
+   AssertTrue(!strcmp(modelContext.getCommunity(), ""));
+   modelContext.setUserName("user3");
+   AssertTrue(!strcmp(modelContext.getUserName(), "user3"));
+   modelContext.setUserName(nullptr);
+   AssertTrue(!strcmp(modelContext.getUserName(), ""));
+   modelContext.setContextName("vlan-1");
+   AssertTrue(!strcmp(modelContext.getContextName(), "vlan-1"));
+   modelContext.setContextName(nullptr);
+   AssertTrue(!strcmp(modelContext.getContextName(), ""));
+   modelContext.setPrivMethod(SNMP_ENCRYPT_AES_256);
+   AssertTrue(modelContext.getPrivMethod() == SNMP_ENCRYPT_AES_256);
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext copy constructor"));
+   md5Context.setContextName("ctx");
+   md5Context.setContextEngine(SNMP_Engine(otherEngineId, sizeof(otherEngineId)));
+   SNMP_SecurityContext copy(md5Context);
+   AssertTrue(copy.getSecurityModel() == SNMP_SECURITY_MODEL_USM);
+   AssertTrue(copy.getAuthMethod() == SNMP_AUTH_MD5);
+   AssertTrue(copy.getPrivMethod() == SNMP_ENCRYPT_DES);
+   AssertTrue(!strcmp(copy.getUserName(), "user"));
+   AssertTrue(!strcmp(copy.getAuthPassword(), "maplesyrup"));
+   AssertTrue(!strcmp(copy.getPrivPassword(), "maplesyrup"));
+   AssertTrue(!strcmp(copy.getContextName(), "ctx"));
+   AssertTrue(copy.getAuthoritativeEngine().equals(engine));
+   AssertTrue(copy.getContextEngine().equals(SNMP_Engine(otherEngineId, sizeof(otherEngineId))));
+   AssertTrue(!memcmp(copy.getAuthKey(), md5Key, sizeof(md5Key)));
+   // Copies must be independent
+   copy.setUserName("other");
+   copy.setAuthPassword("otherpass");
+   AssertTrue(!strcmp(md5Context.getUserName(), "user"));
+   AssertTrue(!strcmp(md5Context.getAuthPassword(), "maplesyrup"));
+   AssertTrue(!memcmp(md5Context.getAuthKey(), md5Key, sizeof(md5Key)));
+   AssertTrue(memcmp(copy.getAuthKey(), md5Key, sizeof(md5Key)) != 0);
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext move constructor"));
+   SNMP_SecurityContext temp(md5Context);
+   SNMP_SecurityContext moved(std::move(temp));
+   AssertTrue(moved.getSecurityModel() == SNMP_SECURITY_MODEL_USM);
+   AssertTrue(!strcmp(moved.getUserName(), "user"));
+   AssertTrue(!strcmp(moved.getAuthPassword(), "maplesyrup"));
+   AssertTrue(!strcmp(moved.getPrivPassword(), "maplesyrup"));
+   AssertTrue(!strcmp(moved.getContextName(), "ctx"));
+   AssertTrue(moved.getAuthoritativeEngine().equals(engine));
+   AssertTrue(!memcmp(moved.getAuthKey(), md5Key, sizeof(md5Key)));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext::operator ="));
+   copy = communityContext;
+   AssertTrue(copy.getSecurityModel() == SNMP_SECURITY_MODEL_V2C);
+   AssertTrue(!strcmp(copy.getCommunity(), "public"));
+   AssertTrue(!strcmp(copy.getUserName(), ""));
+   AssertTrue(!strcmp(copy.getContextName(), ""));
+   AssertEquals(copy.getAuthoritativeEngine().getIdLen(), 0);
+   copy.setCommunity("changed");
+   AssertTrue(!strcmp(communityContext.getCommunity(), "public"));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext::operator = (move semantics)"));
+   copy = std::move(moved);
+   AssertTrue(copy.getSecurityModel() == SNMP_SECURITY_MODEL_USM);
+   AssertTrue(!strcmp(copy.getUserName(), "user"));
+   AssertTrue(!strcmp(copy.getAuthPassword(), "maplesyrup"));
+   AssertTrue(!strcmp(copy.getContextName(), "ctx"));
+   AssertTrue(!strcmp(copy.getCommunity(), ""));
+   AssertTrue(copy.getAuthoritativeEngine().equals(engine));
+   AssertTrue(!memcmp(copy.getAuthKey(), md5Key, sizeof(md5Key)));
+   EndTest();
+
+   StartTest(_T("SNMP_SecurityContext::toJson"));
+   json_t *json = md5Context.toJson(false);
+   AssertNotNull(json);
+   AssertTrue(!strcmp(json_string_value(json_object_get(json, "userName")), "user"));
+   AssertTrue(!strcmp(json_string_value(json_object_get(json, "contextName")), "ctx"));
+   AssertEquals(static_cast<int>(json_integer_value(json_object_get(json, "securityModel"))), static_cast<int>(SNMP_SECURITY_MODEL_USM));
+   AssertEquals(static_cast<int>(json_integer_value(json_object_get(json, "authMethod"))), static_cast<int>(SNMP_AUTH_MD5));
+   AssertEquals(static_cast<int>(json_integer_value(json_object_get(json, "privMethod"))), static_cast<int>(SNMP_ENCRYPT_DES));
+   AssertNull(json_object_get(json, "authPassword"));
+   AssertNull(json_object_get(json, "privPassword"));
+   AssertNull(json_object_get(json, "community"));
+   json_decref(json);
+   json = md5Context.toJson(true);
+   AssertNotNull(json);
+   AssertTrue(!strcmp(json_string_value(json_object_get(json, "authPassword")), "maplesyrup"));
+   AssertTrue(!strcmp(json_string_value(json_object_get(json, "privPassword")), "maplesyrup"));
+   AssertTrue(!strcmp(json_string_value(json_object_get(json, "community")), ""));
+   json_decref(json);
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -462,6 +684,7 @@ int main(int argc, char *argv[])
    TestOidConversion();
    TestOidClass();
    TestVariableClass();
+   TestSecurityContext();
    TestPDUEncoding();
    TestV1TrapEncoding();
    TestPDUPrivacy(SNMP_ENCRYPT_DES, _T("SNMPv3 privacy (DES)"));

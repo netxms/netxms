@@ -899,7 +899,7 @@ size_t SNMP_PDU::encode(SNMP_PDUBuffer *outBuffer, SNMP_SecurityContext *securit
    size_t bytes, varBindsSize, pduSize, packetSize;
 
 	// Replace context name if defined in security context
-	if (securityContext->getContextName() != nullptr)
+	if (securityContext->getContextName()[0] != 0)
 		strlcpy(m_contextName, securityContext->getContextName(), SNMP_MAX_CONTEXT_NAME);
 
    // Estimate required buffer size and allocate it

@@ -28,50 +28,22 @@
  */
 SNMP_SecurityContext::SNMP_SecurityContext()
 {
-	m_securityModel = SNMP_SECURITY_MODEL_V2C;
-	m_community = nullptr;
-	m_userName = nullptr;
-	m_authPassword = nullptr;
-	m_privPassword = nullptr;
-	m_contextName = nullptr;
-	m_authMethod = SNMP_AUTH_NONE;
-	m_privMethod = SNMP_ENCRYPT_NONE;
-	memset(m_authKey, 0, sizeof(m_authKey));
-	memset(m_privKey, 0, sizeof(m_privKey));
-	m_validKeys = false;
-}
-
-/**
- * Create copy of given security context
- */
-SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src) : m_authoritativeEngine(src->m_authoritativeEngine), m_contextEngine(src->m_contextEngine)
-{
-	m_securityModel = src->m_securityModel;
-	m_community = MemCopyStringA(src->m_community);
-	m_userName = MemCopyStringA(src->m_userName);
-	m_authPassword = MemCopyStringA(src->m_authPassword);
-	m_privPassword = MemCopyStringA(src->m_privPassword);
-	m_contextName = MemCopyStringA(src->m_contextName);
-	m_authMethod = src->m_authMethod;
-	m_privMethod = src->m_privMethod;
-	memcpy(m_authKey, src->m_authKey, sizeof(m_authKey));
-	memcpy(m_privKey, src->m_privKey, sizeof(m_privKey));
-	m_validKeys = src->m_validKeys;
+   m_securityModel = SNMP_SECURITY_MODEL_V2C;
+   m_authMethod = SNMP_AUTH_NONE;
+   m_privMethod = SNMP_ENCRYPT_NONE;
+   memset(m_authKey, 0, sizeof(m_authKey));
+   memset(m_privKey, 0, sizeof(m_privKey));
+   m_validKeys = false;
 }
 
 /**
  * Create V2C security context
  */
-SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
+SNMP_SecurityContext::SNMP_SecurityContext(const char *community) : m_community(CHECK_NULL_EX_A(community))
 {
-	m_securityModel = SNMP_SECURITY_MODEL_V2C;
-	m_community = MemCopyStringA(CHECK_NULL_EX_A(community));
-	m_userName = nullptr;
-	m_authPassword = nullptr;
-	m_privPassword = nullptr;
-	m_contextName = nullptr;
-	m_authMethod = SNMP_AUTH_NONE;
-	m_privMethod = SNMP_ENCRYPT_NONE;
+   m_securityModel = SNMP_SECURITY_MODEL_V2C;
+   m_authMethod = SNMP_AUTH_NONE;
+   m_privMethod = SNMP_ENCRYPT_NONE;
    memset(m_authKey, 0, sizeof(m_authKey));
    memset(m_privKey, 0, sizeof(m_privKey));
    m_validKeys = false;
@@ -80,16 +52,12 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *community)
 /**
  * Create authNoPriv V3 security context
  */
-SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, SNMP_AuthMethod authMethod)
+SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, SNMP_AuthMethod authMethod) :
+         m_userName(CHECK_NULL_EX_A(user)), m_authPassword(CHECK_NULL_EX_A(authPassword))
 {
-	m_securityModel = SNMP_SECURITY_MODEL_USM;
-	m_community = nullptr;
-	m_userName = MemCopyStringA(CHECK_NULL_EX_A(user));
-	m_authPassword = MemCopyStringA(CHECK_NULL_EX_A(authPassword));
-	m_privPassword = nullptr;
-	m_contextName = nullptr;
-	m_authMethod = authMethod;
-	m_privMethod = SNMP_ENCRYPT_NONE;
+   m_securityModel = SNMP_SECURITY_MODEL_USM;
+   m_authMethod = authMethod;
+   m_privMethod = SNMP_ENCRYPT_NONE;
    memset(m_authKey, 0, sizeof(m_authKey));
    memset(m_privKey, 0, sizeof(m_privKey));
    m_validKeys = false;
@@ -98,31 +66,15 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPas
 /**
  * Create authPriv V3 security context
  */
-SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword, SNMP_AuthMethod authMethod, SNMP_EncryptionMethod encryptionMethod)
+SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword, SNMP_AuthMethod authMethod, SNMP_EncryptionMethod encryptionMethod) :
+         m_userName(CHECK_NULL_EX_A(user)), m_authPassword(CHECK_NULL_EX_A(authPassword)), m_privPassword(CHECK_NULL_EX_A(encryptionPassword))
 {
-	m_securityModel = SNMP_SECURITY_MODEL_USM;
-   m_community = nullptr;
-	m_userName = MemCopyStringA(CHECK_NULL_EX_A(user));
-	m_authPassword = MemCopyStringA(CHECK_NULL_EX_A(authPassword));
-	m_privPassword = MemCopyStringA(CHECK_NULL_EX_A(encryptionPassword));
-	m_contextName = nullptr;
-	m_authMethod = authMethod;
-	m_privMethod = encryptionMethod;
+   m_securityModel = SNMP_SECURITY_MODEL_USM;
+   m_authMethod = authMethod;
+   m_privMethod = encryptionMethod;
    memset(m_authKey, 0, sizeof(m_authKey));
    memset(m_privKey, 0, sizeof(m_privKey));
    m_validKeys = false;
-}
-
-/**
- * Destructor for security context
- */
-SNMP_SecurityContext::~SNMP_SecurityContext()
-{
-   MemFree(m_community);
-	MemFree(m_userName);
-	MemFree(m_authPassword);
-	MemFree(m_privPassword);
-	MemFree(m_contextName);
 }
 
 /**
@@ -136,16 +88,14 @@ void SNMP_SecurityContext::setSecurityModel(SNMP_SecurityModel model)
    if (model == SNMP_SECURITY_MODEL_USM)
    {
       // switch to USM, use community as user name
-      MemFree(m_userName);
-      m_userName = MemCopyStringA(m_community);
-      MemFreeAndNull(m_community);
+      m_userName = std::move(m_community);
+      m_community.clear();
    }
    else if (m_securityModel == SNMP_SECURITY_MODEL_USM)
    {
       // switch to community, use user name as community
-      MemFree(m_community);
-      m_community = MemCopyStringA(m_userName);
-      MemFreeAndNull(m_userName);
+      m_community = std::move(m_userName);
+      m_userName.clear();
    }
    m_securityModel = model;
    m_validKeys = false;
@@ -156,10 +106,9 @@ void SNMP_SecurityContext::setSecurityModel(SNMP_SecurityModel model)
  */
 void SNMP_SecurityContext::setAuthPassword(const char *password)
 {
-   if ((m_authPassword != nullptr) && !strcmp(CHECK_NULL_EX_A(password), m_authPassword))
+   if (m_authPassword == CHECK_NULL_EX_A(password))
       return;
-	MemFree(m_authPassword);
-	m_authPassword = MemCopyStringA(CHECK_NULL_EX_A(password));
+   m_authPassword = CHECK_NULL_EX_A(password);
    m_validKeys = false;
 }
 
@@ -168,10 +117,9 @@ void SNMP_SecurityContext::setAuthPassword(const char *password)
  */
 void SNMP_SecurityContext::setPrivPassword(const char *password)
 {
-   if ((m_privPassword != nullptr) && !strcmp(CHECK_NULL_EX_A(password), m_privPassword))
+   if (m_privPassword == CHECK_NULL_EX_A(password))
       return;
-	MemFree(m_privPassword);
-	m_privPassword = MemCopyStringA(CHECK_NULL_EX_A(password));
+   m_privPassword = CHECK_NULL_EX_A(password);
    m_validKeys = false;
 }
 
@@ -235,8 +183,8 @@ void SNMP_SecurityContext::recalculateKeys()
    if ((m_securityModel != SNMP_SECURITY_MODEL_USM) || m_validKeys)
       return;  // no need to recalculate keys
 
-	const char *authPassword = (m_authPassword != nullptr) ? m_authPassword : "";
-	const char *privPassword = (m_privPassword != nullptr) ? m_privPassword : "";
+	const char *authPassword = m_authPassword.c_str();
+	const char *privPassword = m_privPassword.c_str();
 
 	switch(m_authMethod)
 	{
@@ -296,12 +244,12 @@ json_t *SNMP_SecurityContext::toJson(bool includeSensitiveData) const
    json_object_set_new(root, "securityModel", json_integer(m_securityModel));
    if (includeSensitiveData)
    {
-      json_object_set_new(root, "community", json_string_a(m_community));
-      json_object_set_new(root, "authPassword", json_string_a(m_authPassword));
-      json_object_set_new(root, "privPassword", json_string_a(m_privPassword));
+      json_object_set_new(root, "community", json_string(m_community.c_str()));
+      json_object_set_new(root, "authPassword", json_string(m_authPassword.c_str()));
+      json_object_set_new(root, "privPassword", json_string(m_privPassword.c_str()));
    }
-   json_object_set_new(root, "userName", json_string_a(m_userName));
-   json_object_set_new(root, "contextName", json_string_a(m_contextName));
+   json_object_set_new(root, "userName", json_string(m_userName.c_str()));
+   json_object_set_new(root, "contextName", json_string(m_contextName.c_str()));
    json_object_set_new(root, "authMethod", json_integer(m_authMethod));
    json_object_set_new(root, "privMethod", json_integer(m_privMethod));
    return root;

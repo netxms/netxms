@@ -14,3 +14,8 @@ test_libnxsnmp_CPPFLAGS = -I@top_srcdir@/include -I../include -I@top_srcdir@/bui
 test_libnxsnmp_LDFLAGS = @EXEC_LDFLAGS@
 test_libnxsnmp_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @EXEC_LIBS@
 
+if USE_INTERNAL_JANSSON
+test_libnxsnmp_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+test_libnxsnmp_LDADD += -ljansson
+endif

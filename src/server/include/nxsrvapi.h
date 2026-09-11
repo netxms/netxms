@@ -1376,7 +1376,7 @@ public:
 	virtual ~SNMP_ProxyTransport();
 
    virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout = INFINITE, struct sockaddr *sender = nullptr,
-            socklen_t *addrSize = nullptr, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) override;
+            socklen_t *addrSize = nullptr, SNMP_SecurityContext (*contextFinder)(struct sockaddr *, socklen_t) = nullptr) override;
    virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override;
    virtual InetAddress getPeerIpAddress() override;
    virtual uint16_t getPort() override;

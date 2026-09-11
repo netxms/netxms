@@ -206,14 +206,14 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
    transport.setSnmpVersion(m_snmpVersion);
    if (m_snmpVersion == SNMP_VERSION_3)
    {
-      SNMP_SecurityContext *context = new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod);
+      SNMP_SecurityContext context(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod);
       if (m_contextName[0] != 0)
-         context->setContextName(m_contextName);
-      transport.setSecurityContext(context);
+         context.setContextName(m_contextName);
+      transport.setSecurityContext(std::move(context));
    }
    else
    {
-      transport.setSecurityContext(new SNMP_SecurityContext(m_community));
+      transport.setSecurityContext(SNMP_SecurityContext(m_community));
    }
 
    result = SnmpWalk(&transport, pszRootOid, WalkCallback, nullptr);

@@ -568,7 +568,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          // Do not check for node existence here - it will be checked by ProcessTrap
 
          SNMP_PDU *pdu = new SNMP_PDU;
-         SNMP_SecurityContext *sctx = (originNode != nullptr) ? originNode->getSnmpTrapSecurityContext() : nullptr;
+         SNMP_SecurityContext *sctx = (originNode != nullptr) ? new SNMP_SecurityContext(originNode->getSnmpTrapSecurityContext()) : nullptr;
          if (pdu->parse(pduBytes, pduLenght, sctx, true))
          {
             debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): received PDU of type %d"), pdu->getCommand());
@@ -598,8 +598,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                SNMP_ProxyTransport *snmpTransport = isInformRequest ? CreateSNMPProxyTransport(self(), originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT)) : nullptr;
                if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
                {
-                  SNMP_SecurityContext *context = snmpTransport->getSecurityContext();
-                  context->setAuthoritativeEngine(localEngine);
+                  snmpTransport->getSecurityContext().setAuthoritativeEngine(localEngine);
                }
                if (snmpTransport != nullptr)
                   snmpTransport->setWaitForResponse(false);
@@ -623,13 +622,13 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                var->setValueFromString(ASN_INTEGER, L"2");
                response.bindVariable(var);
 
-               SNMP_SecurityContext *context = new SNMP_SecurityContext();
+               SNMP_SecurityContext context;
                localEngine.setTime((int)time(nullptr));
-               context->setAuthoritativeEngine(localEngine);
-               context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
-               context->setAuthMethod(SNMP_AUTH_NONE);
-               context->setPrivMethod(SNMP_ENCRYPT_NONE);
-               snmpTransport->setSecurityContext(context);
+               context.setAuthoritativeEngine(localEngine);
+               context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+               context.setAuthMethod(SNMP_AUTH_NONE);
+               context.setPrivMethod(SNMP_ENCRYPT_NONE);
+               snmpTransport->setSecurityContext(std::move(context));
 
                snmpTransport->setWaitForResponse(false);
                snmpTransport->sendMessage(&response, 0);

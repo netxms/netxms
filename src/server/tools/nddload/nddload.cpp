@@ -415,7 +415,7 @@ static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVe
       transport = new SNMP_ProxyTransport(agentConnection, InetAddress::resolveHostName(host), snmpPort);
    }
    transport->setSnmpVersion(snmpVersion);
-   transport->setSecurityContext(new SNMP_SecurityContext(community));
+   transport->setSecurityContext(SNMP_SecurityContext(community));
 
    int *apiVersion = static_cast<int*>(DLGetSymbolAddr(hModule, "nddAPIVersion", errorText));
    ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = DLGetFunctionAddr<ObjectArray<NetworkDeviceDriver> *(*)()>(hModule, "nddCreateInstances", errorText);

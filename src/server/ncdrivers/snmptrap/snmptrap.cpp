@@ -187,11 +187,11 @@ int SNMPTrapDriver::send(const NotificationContext& context)
 
    if (m_version == SNMP_VERSION_3)
    {
-      transport.setSecurityContext(new SNMP_SecurityContext(m_authName, m_authPassword, m_privPassword, m_authMethod, m_privMethod));
+      transport.setSecurityContext(SNMP_SecurityContext(m_authName, m_authPassword, m_privPassword, m_authMethod, m_privMethod));
    }
    else
    {
-      transport.setSecurityContext(new SNMP_SecurityContext(m_authName));
+      transport.setSecurityContext(SNMP_SecurityContext(m_authName));
    }
 
    rc = transport.sendTrap(&pdu, 2000);

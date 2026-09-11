@@ -52,7 +52,7 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
 {
    int nRet = -1;
    SNMP_PDUBuffer encodedPDU;
-   size_t size = pdu->encode(&encodedPDU, m_securityContext);
+   size_t size = pdu->encode(&encodedPDU, &m_securityContext);
    if (size != 0)
    {
       NXCPMessage msg(CMD_SNMP_REQUEST, 0, m_agentConnection->getProtocolVersion());
@@ -87,7 +87,7 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu, uint32_t timeout)
  * Receive PDU
  */
 int SNMP_ProxyTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender,
-         socklen_t *addrSize, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
+         socklen_t *addrSize, SNMP_SecurityContext (*contextFinder)(struct sockaddr *, socklen_t))
 {
 	if (m_response == nullptr)
 		return -1;
@@ -105,7 +105,7 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct so
             setSecurityContext(contextFinder(sender, *addrSize));
 
          *pdu = new SNMP_PDU;
-         if ((*pdu)->parse(encodedPDU, size, m_securityContext, m_enableEngineIdAutoupdate))
+         if ((*pdu)->parse(encodedPDU, size, &m_securityContext, m_enableEngineIdAutoupdate))
          {
             rc = static_cast<int>(size);
          }

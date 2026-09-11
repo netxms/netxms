@@ -429,9 +429,11 @@ void EnqueueSNMPTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN,
    if (isInformRq)
    {
       SNMP_PDU response(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
-      if (snmpTransport->getSecurityContext() == nullptr)
+      // Transport without credentials for this sender (default context) - respond with community from request
+      const SNMP_SecurityContext& securityContext = snmpTransport->getSecurityContext();
+      if ((securityContext.getSecurityModel() != SNMP_SECURITY_MODEL_USM) && (securityContext.getCommunity()[0] == 0))
       {
-         snmpTransport->setSecurityContext(new SNMP_SecurityContext(pdu->getCommunity()));
+         snmpTransport->setSecurityContext(SNMP_SecurityContext(pdu->getCommunity()));
       }
       response.setMessageId(pdu->getMessageId());
       response.setContextEngineId(localEngine->getId(), localEngine->getIdLen());
@@ -444,14 +446,14 @@ void EnqueueSNMPTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN,
 /**
  * Context finder - tries to find SNMPv3 security context by IP address
  */
-static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addrLen)
+static SNMP_SecurityContext ContextFinder(struct sockaddr *addr, socklen_t addrLen)
 {
    InetAddress ipAddr = InetAddress::createFromSockaddr(addr);
    shared_ptr<Node> node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
    TCHAR buffer[64];
    nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
       ipAddr.toString(buffer), (node != nullptr) ? node->getName() : _T("<unknown>"));
-   return (node != nullptr) ? node->getSnmpTrapSecurityContext() : nullptr;
+   return (node != nullptr) ? node->getSnmpTrapSecurityContext() : SNMP_SecurityContext();
 }
 
 /**
@@ -742,7 +744,7 @@ static void ReceiverThread()
          {
             InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
-            TrapCredentialCheckResult credCheck = ValidateTrapCredentials(pdu, transport->getSecurityContext());
+            TrapCredentialCheckResult credCheck = ValidateTrapCredentials(pdu, &transport->getSecurityContext());
             shared_ptr<Node> sourceNode;
             if (credCheck != TrapCredentialCheckResult::OK)
             {
@@ -768,8 +770,7 @@ static void ReceiverThread()
             {
                if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
                {
-                  SNMP_SecurityContext *context = transport->getSecurityContext();
-                  context->setAuthoritativeEngine(localEngine);
+                  transport->getSecurityContext().setAuthoritativeEngine(localEngine);
                }
                EnqueueSNMPTrap(pdu, sourceAddr, 0, ntohs(SA_PORT(&addr)), transport, &localEngine);
                pdu = nullptr; // prevent delete (PDU will be deleted by trap processor)
@@ -788,13 +789,13 @@ static void ReceiverThread()
                var->setValueFromUInt32(ASN_INTEGER, 2);
                response->bindVariable(var);
 
-               SNMP_SecurityContext *context = new SNMP_SecurityContext();
+               SNMP_SecurityContext context;
                localEngine.setTime(static_cast<uint32_t>(time(nullptr)));
-               context->setAuthoritativeEngine(localEngine);
-               context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
-               context->setAuthMethod(SNMP_AUTH_NONE);
-               context->setPrivMethod(SNMP_ENCRYPT_NONE);
-               transport->setSecurityContext(context);
+               context.setAuthoritativeEngine(localEngine);
+               context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+               context.setAuthMethod(SNMP_AUTH_NONE);
+               context.setPrivMethod(SNMP_ENCRYPT_NONE);
+               transport->setSecurityContext(std::move(context));
 
                transport->sendMessage(response, 0);
                delete response;

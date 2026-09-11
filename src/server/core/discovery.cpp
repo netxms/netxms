@@ -837,7 +837,7 @@ static void ProcessDiscoveredAddressStage2(DiscoveredAddress *address)
       newNodeData->doConfPoll = true;
       if (address->snmpSecurity != nullptr)
       {
-         newNodeData->snmpSecurity = new SNMP_SecurityContext(address->snmpSecurity);
+         newNodeData->snmpSecurity = new SNMP_SecurityContext(*address->snmpSecurity);
          newNodeData->snmpPort = address->snmpPort;
          newNodeData->snmpVersion = address->snmpVersion;
       }

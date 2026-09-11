@@ -350,7 +350,7 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
 	{
 		nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckV3CommSettings(%s): trying %hs/%d:%d"), id, originalContext->getUserName(),
 		          originalContext->getAuthMethod(), originalContext->getPrivMethod());
-		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
+		pTransport->setSecurityContext(*originalContext);
 		if (SnmpTestRequest(pTransport, testOids, separateRequests))
 		{
          nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckV3CommSettings(%s): success"), id);
@@ -368,7 +368,7 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
-         ObjectArray<SNMP_SecurityContext> contexts(count);
+         ObjectArray<SNMP_SecurityContext> contexts(count, 16, Ownership::True);
          for(int i = 0; i < count; i++)
          {
             char name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
@@ -388,17 +388,12 @@ static bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityCon
          for(int i = 0; (i < contexts.size()) && !found && !IsShutdownInProgress(); i++)
          {
             SNMP_SecurityContext *ctx = contexts.get(i);
-            pTransport->setSecurityContext(ctx);
+            pTransport->setSecurityContext(*ctx);
             nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckV3CommSettings(%s): trying %hs/%d:%d"), id, ctx->getUserName(), ctx->getAuthMethod(), ctx->getPrivMethod());
             if (SnmpTestRequest(pTransport, testOids, separateRequests))
             {
                nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckV3CommSettings(%s): success"), id);
                found = true;
-
-               // Delete unused contexts
-               for(int j = i + 1; j < contexts.size(); j++)
-                  delete contexts.get(j);
-
                break;
             }
          }
@@ -509,7 +504,7 @@ restart_check:
       {
          nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): trying version %d community '%hs'"),
                   ipAddrText, pTransport->getSnmpVersion(), originalContext->getCommunity());
-         pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
+         pTransport->setSecurityContext(*originalContext);
          if (SnmpTestRequest(pTransport, testOids, separateRequests))
          {
             *version = pTransport->getSnmpVersion();
@@ -530,7 +525,7 @@ restart_check:
          {
             nxlog_debug_tag(DEBUG_TAG_SNMP_DISCOVERY, 5, _T("SnmpCheckCommSettings(%s): trying version %d community '%hs'"),
                      ipAddrText, pTransport->getSnmpVersion(), community);
-            pTransport->setSecurityContext(new SNMP_SecurityContext(community));
+            pTransport->setSecurityContext(SNMP_SecurityContext(community));
             MemFree(community);
             if (SnmpTestRequest(pTransport, testOids, separateRequests))
             {

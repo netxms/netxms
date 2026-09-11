@@ -153,11 +153,11 @@ static int GetData(int argc, TCHAR *argv[], int interval)
    transport.setSnmpVersion(m_snmpVersion);
    if (m_snmpVersion == SNMP_VERSION_3)
    {
-      transport.setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
+      transport.setSecurityContext(SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
    }
    else
    {
-      transport.setSecurityContext(new SNMP_SecurityContext(m_community));
+      transport.setSecurityContext(SNMP_SecurityContext(m_community));
    }
 
    // Create request

@@ -96,7 +96,7 @@ static SNMP_Transport *CreateTransport(SOCKET hSocket)
    SNMP_Transport *t = new SNMP_UDPTransport(hSocket);
    t->enableEngineIdAutoupdate(true);
    t->setPeerUpdatedOnRecv(true);
-   t->setSecurityContext(new SNMP_SecurityContext(s_community));
+   t->setSecurityContext(SNMP_SecurityContext(s_community));
    return t;
 }
 
@@ -364,13 +364,13 @@ static void SNMPAgentReceiver()
                   var->setValueFromUInt32(ASN_INTEGER, 2);
                   response->bindVariable(var);
 
-                  SNMP_SecurityContext *context = new SNMP_SecurityContext();
+                  SNMP_SecurityContext context;
                   localEngine.setTime((int)time(nullptr));
-                  context->setAuthoritativeEngine(localEngine);
-                  context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
-                  context->setAuthMethod(SNMP_AUTH_NONE);
-                  context->setPrivMethod(SNMP_ENCRYPT_NONE);
-                  transport->setSecurityContext(context);
+                  context.setAuthoritativeEngine(localEngine);
+                  context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+                  context.setAuthMethod(SNMP_AUTH_NONE);
+                  context.setPrivMethod(SNMP_ENCRYPT_NONE);
+                  transport->setSecurityContext(std::move(context));
 
                   transport->sendMessage(response, 0);
                   delete response;
