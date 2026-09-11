@@ -2079,6 +2079,113 @@ void DumpObjects(ServerConsole *console, const TCHAR *filter)
 }
 
 /**
+ * Node of parent tree built by DumpObjectParentTree
+ */
+struct ParentTreeNode
+{
+   shared_ptr<NetObj> object;
+   ObjectArray<ParentTreeNode> children;
+
+   ParentTreeNode(const shared_ptr<NetObj>& o) : object(o), children(0, 8, Ownership::True) { }
+
+   ParentTreeNode *findOrAddChild(const shared_ptr<NetObj>& o)
+   {
+      for(int i = 0; i < children.size(); i++)
+         if (children.get(i)->object->getId() == o->getId())
+            return children.get(i);
+      auto child = new ParentTreeNode(o);
+      children.add(child);
+      return child;
+   }
+};
+
+/**
+ * Walk from given object up to top level objects and merge each discovered path (top level object first) into tree
+ */
+static void CollectParentPaths(const shared_ptr<NetObj>& object, SharedObjectArray<NetObj>& path, ParentTreeNode *root)
+{
+   // Protection against cyclic references
+   for(int i = 0; i < path.size(); i++)
+      if (path.get(i)->getId() == object->getId())
+         return;
+
+   path.add(object);
+   unique_ptr<SharedObjectArray<NetObj>> parents = object->getParents();
+   if (parents->isEmpty())
+   {
+      ParentTreeNode *node = root;
+      for(int i = path.size() - 1; i >= 0; i--)
+         node = node->findOrAddChild(path.getShared(i));
+   }
+   else
+   {
+      for(int i = 0; i < parents->size(); i++)
+         CollectParentPaths(parents->getShared(i), path, root);
+   }
+   path.remove(path.size() - 1);
+}
+
+/**
+ * Print parent tree to debug console. Top level objects (children of virtual root node)
+ * are printed without tree markers; nested levels use same layout as configuration dump.
+ */
+static void PrintParentTree(ServerConsole *console, const ParentTreeNode *node, const String& prefix)
+{
+   for(int i = 0; i < node->children.size(); i++)
+   {
+      const ParentTreeNode *child = node->children.get(i);
+      if (node->object == nullptr)
+      {
+         console->printf(_T("%s [%u]\n"), child->object->getName(), child->object->getId());
+         PrintParentTree(console, child, prefix);
+      }
+      else
+      {
+         console->printf(_T("%s +- %s [%u]\n"), prefix.cstr(), child->object->getName(), child->object->getId());
+         StringBuffer childPrefix(prefix);
+         childPrefix.append((i == node->children.size() - 1) ? _T("    ") : _T(" |  "));
+         PrintParentTree(console, child, childPrefix);
+      }
+   }
+}
+
+/**
+ * Dump parent tree of given object (identified by ID or name) to debug console.
+ * Tree is drawn from top level objects down to given object, so object appears
+ * once for each path leading to it.
+ */
+void DumpObjectParentTree(ServerConsole *console, const TCHAR *objectSpec)
+{
+   shared_ptr<NetObj> object;
+   TCHAR *eptr;
+   uint32_t id = _tcstoul(objectSpec, &eptr, 0);
+   if ((id != 0) && (*eptr == 0))
+   {
+      object = FindObjectById(id);
+      if (object == nullptr)
+      {
+         console->printf(_T("Object with ID %u not found\n"), id);
+         return;
+      }
+   }
+   else
+   {
+      object = FindObjectByName(objectSpec);
+      if (object == nullptr)
+      {
+         console->printf(_T("Object with name \"%s\" not found\n"), objectSpec);
+         return;
+      }
+   }
+
+   ParentTreeNode root{shared_ptr<NetObj>()};
+   SharedObjectArray<NetObj> path(16, 16);
+   CollectParentPaths(object, path, &root);
+   PrintParentTree(console, &root, String());
+   console->print(_T("\n"));
+}
+
+/**
  * Check is given object class is a valid parent class for other object
  * This function is used to check manually created bindings, so it won't
  * return TRUE for node -- subnet for example
