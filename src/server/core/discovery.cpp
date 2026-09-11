@@ -291,6 +291,9 @@ static bool HostIsReachable(DiscoveredAddress *address, bool fullCheck)
          {
             snmpTransport->setSnmpVersion(version);
             address->snmpTransport = snmpTransport;
+            address->snmpSecurity = new SNMP_SecurityContext(snmpTransport->getSecurityContext());
+            address->snmpVersion = version;
+            address->snmpPort = snmpTransport->getPort();
          }
          else
          {
@@ -831,11 +834,11 @@ static void ProcessDiscoveredAddressStage2(DiscoveredAddress *address)
       newNodeData->zoneUIN = address->zoneUIN;
       newNodeData->origin = NODE_ORIGIN_NETWORK_DISCOVERY;
       newNodeData->doConfPoll = true;
-      if (address->snmpTransport != nullptr)
+      if (address->snmpSecurity != nullptr)
       {
-         newNodeData->snmpSecurity = new SNMP_SecurityContext(address->snmpTransport->getSecurityContext());
-         newNodeData->snmpPort = address->snmpTransport->getPort();
-         newNodeData->snmpVersion = address->snmpTransport->getSnmpVersion();
+         newNodeData->snmpSecurity = new SNMP_SecurityContext(address->snmpSecurity);
+         newNodeData->snmpPort = address->snmpPort;
+         newNodeData->snmpVersion = address->snmpVersion;
       }
       newNodeData->agentPort = address->agentPort;
       _tcslcpy(newNodeData->agentSecret, address->agentSecret, MAX_SECRET_LENGTH);
