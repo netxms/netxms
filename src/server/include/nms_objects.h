@@ -6228,6 +6228,7 @@ json_t NXCORE_EXPORTABLE *GetObjectQueriesList();
 
 bool LoadObjects();
 void DumpObjects(ServerConsole *console, const TCHAR *filter);
+void DumpObjectParentTree(ServerConsole *console, const TCHAR *objectSpec);
 
 bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass);
 

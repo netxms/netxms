@@ -1571,6 +1571,20 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             ConsoleWrite(console, _T("ERROR: Invalid or missing node ID\n\n"));
          }
       }
+      else if (IsCommand(_T("PARENTS"), szBuffer, 2))
+      {
+         // Object name may contain spaces, so use rest of the line as object specification
+         _tcslcpy(szBuffer, pArg, 256);
+         Trim(szBuffer);
+         if (szBuffer[0] != 0)
+         {
+            DumpObjectParentTree(console, szBuffer);
+         }
+         else
+         {
+            ConsoleWrite(console, _T("ERROR: Missing object ID or name\n\n"));
+         }
+      }
       else if (IsCommand(_T("POLLERS"), szBuffer, 2))
       {
          ExtractWord(pArg, szBuffer);
@@ -2132,6 +2146,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   show modules                      - Show loaded server modules\n")
             _T("   show ndd                          - Show loaded network device drivers\n")
             _T("   show objects [<filter>]           - Dump network objects to screen\n")
+            _T("   show parents <object>             - Show parent tree for object (by ID or name)\n")
             _T("   show pollers [summary]            - Show pollers state information\n")
             _T("   show queues                       - Show internal queues statistics\n")
             _T("   show routing-table <node>         - Show cached routing table for node\n")
