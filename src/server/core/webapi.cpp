@@ -545,11 +545,14 @@ void StartWebAPIListener()
       flags |= MHD_USE_IPv6;
 #endif
 
+   unsigned int threadPoolSize = g_serverConfig.getValueAsUInt(_T("/WEBAPI/ThreadPoolSize"), 16);
+
    SockAddrBuffer sa;
    s_listenerAddr.fillSockAddr(&sa, s_listenerPort);
    s_daemon = MHD_start_daemon(
          flags, s_listenerPort, nullptr, nullptr,
          ConnectionHandler, nullptr,
+         MHD_OPTION_THREAD_POOL_SIZE, threadPoolSize,
          MHD_OPTION_EXTERNAL_LOGGER, Logger, nullptr,
          MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, nullptr,
 #if MHD_VERSION >= 0x00097706
