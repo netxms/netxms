@@ -134,7 +134,7 @@ StringList NXCORE_EXPORTABLE SplitCommandLine(const wchar_t *command)
 {
    StringList elements;
    StringBuffer tmp;
-   int state = 0;
+   int state = 3;  // start in "skip spaces" state so leading spaces do not produce empty first element
    int size = (int)_tcslen(command);
    for(int i = 0; i < size; i++)
    {
@@ -201,7 +201,8 @@ StringList NXCORE_EXPORTABLE SplitCommandLine(const wchar_t *command)
             break;
       }
    }
-   if (state != 3)
+   // Always return at least one element (callers use first element as command name)
+   if ((state != 3) || elements.isEmpty())
       elements.add(tmp);
 
    return elements;
