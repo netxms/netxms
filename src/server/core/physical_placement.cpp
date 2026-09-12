@@ -64,6 +64,11 @@ bool IsValidRackExtent(int position, int height, int rackHeight, bool topBottomN
  * NetObj::modifyFromJSONInternal, placement fields are only meaningful together.
  * The object being placed is needed to reject a container that is one of its own
  * descendants; it is only dereferenced once a container id actually resolves.
+ *
+ * Must be called with the caller's property lock released: the descendant check takes the
+ * child list lock of the object and of every descendant, and the configuration poll acquires
+ * child list before properties, so holding properties across this call can deadlock the two.
+ * Callers stage their fields into locals, drop the lock, and commit after success.
  */
 uint32_t ModifyPhysicalPlacementFromJson(json_t *group, const NetObj *object, const PhysicalPlacementRef& placement, bool allowChassisContainer)
 {

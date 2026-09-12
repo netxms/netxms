@@ -3394,7 +3394,8 @@ json_t NXCORE_EXPORTABLE *PhysicalPlacementToJson(const PhysicalPlacementRef& pl
  * are applied, omitted keys are left untouched, and null clears. Nothing is written to the
  * target unless every field validates. Set allowChassisContainer for objects that can be
  * placed inside a chassis as well as a rack. The object being placed is used to reject a
- * container that is one of its own descendants with RCC_OBJECT_LOOP.
+ * container that is one of its own descendants with RCC_OBJECT_LOOP. Must be called with the
+ * caller's property lock released (takes child list locks).
  */
 uint32_t NXCORE_EXPORTABLE ModifyPhysicalPlacementFromJson(json_t *group, const NetObj *object, const PhysicalPlacementRef& placement, bool allowChassisContainer);
 

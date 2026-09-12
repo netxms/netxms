@@ -11727,13 +11727,7 @@ uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *sessio
          }
       }
 
-      // ModifyPhysicalPlacementFromJson calls NetObj::isChild, which read locks the child list of
-      // this object and of every descendant. Holding the property lock across that call would
-      // establish properties -> child list, the reverse of the order the configuration poll uses
-      // when it scans interface addresses for EtherNet/IP, and a thread waiting for the child list
-      // write lock would deadlock the two. Stage every field into a local and drop the property
-      // lock for the duration of the call, the same way the primary host name check above does;
-      // the group still commits all or nothing because nothing is written until it succeeds.
+      // Stage into locals and drop property lock for the call (see ModifyPhysicalPlacementFromJson)
       uint32_t containerId = m_physicalContainer;
       int16_t position = m_rackPosition;
       int16_t height = m_rackHeight;
@@ -11741,7 +11735,7 @@ uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *sessio
       uuid imageFront = m_rackImageFront;
       uuid imageRear = m_rackImageRear;
       PhysicalPlacementRef placementRef = { &containerId, &position, &height, &orientation, &imageFront, &imageRear };
-      unlockProperties(); // removing possible deadlock
+      unlockProperties();
       uint32_t rcc = ModifyPhysicalPlacementFromJson(physicalPlacement, this, placementRef, true);
       lockProperties();
       if (rcc != RCC_SUCCESS)
