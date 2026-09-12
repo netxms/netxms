@@ -411,6 +411,10 @@ static bool H_UpgradeFromV24()
    {
       CHK_EXEC(SQLQueryFormatted(L"UPDATE acl SET access_rights=access_rights+2147483648 WHERE (BITAND(access_rights, 2147483648)=0) AND (BITAND(access_rights, %u)<>0)", baseRights));
    }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQueryFormatted(L"UPDATE acl SET access_rights=access_rights+2147483648 WHERE ((access_rights & CAST(2147483648 AS bigint))=0) AND ((access_rights & %u)<>0)", baseRights));
+   }
    else
    {
       CHK_EXEC(SQLQueryFormatted(L"UPDATE acl SET access_rights=access_rights+2147483648 WHERE ((access_rights & 2147483648)=0) AND ((access_rights & %u)<>0)", baseRights));
