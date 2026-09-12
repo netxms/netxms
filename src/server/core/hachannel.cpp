@@ -583,7 +583,11 @@ ConnectionProcessingResult HAChannelListener::processConnection(SOCKET s, const 
 {
    nxlog_debug_tag(DEBUG_TAG, 4, L"Inbound peer channel connection from %s", peer.toString().cstr());
 
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
    SSL_CTX *context = SSL_CTX_new(TLS_method());
+#else
+   SSL_CTX *context = SSL_CTX_new(SSLv23_method());
+#endif
    if (context == nullptr)
       return CPR_COMPLETED;
    if (!SetupServerTlsContext(context))
@@ -664,7 +668,11 @@ static void DialerThread()
             SOCKET s = ConnectToHost(addr, s_peerPort, 5000);
             if (s != INVALID_SOCKET)
             {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
                SSL_CTX *context = SSL_CTX_new(TLS_method());
+#else
+               SSL_CTX *context = SSL_CTX_new(SSLv23_method());
+#endif
                SSL *ssl = (context != nullptr) ? SSL_new(context) : nullptr;
                if (ssl != nullptr)
                {
