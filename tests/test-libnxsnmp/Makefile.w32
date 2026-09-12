@@ -6,6 +6,6 @@
 TOOL = test-libnxsnmp
 SOURCES = test-libnxsnmp.cpp
 TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
-TOOL_LIBS = -lnxsnmp -lnetxms
+TOOL_LIBS = -lnxsnmp -lnetxms -lnxjansson
 
 include $(TOPDIR)/build/tool-common.mk
