@@ -33,6 +33,7 @@
 
 void TestAICheckLogic();
 void TestPhysicalPlacement();
+void TestSplitCommandLine();
 
 /**
  * main()
@@ -48,6 +49,7 @@ int main(int argc, char *argv[])
 
    TestAICheckLogic();
    TestPhysicalPlacement();
+   TestSplitCommandLine();
 
    return 0;
 }

@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_PROGRAMS = test-libnxcore
-test_libnxcore_SOURCES = ai_checks.cpp placement.cpp test-libnxcore.cpp
+test_libnxcore_SOURCES = ai_checks.cpp cmdline.cpp placement.cpp test-libnxcore.cpp
 test_libnxcore_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I../include -I@top_srcdir@/build @MICROHTTPD_CPPFLAGS@
 test_libnxcore_LDFLAGS = @EXEC_LDFLAGS@
 test_libnxcore_LDADD = \

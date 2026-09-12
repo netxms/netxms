@@ -4,7 +4,7 @@
 #
 
 TOOL = test-libnxcore
-SOURCES = ai_checks.cpp placement.cpp test-libnxcore.cpp
+SOURCES = ai_checks.cpp cmdline.cpp placement.cpp test-libnxcore.cpp
 # nms_core.h pulls in netxms-webapi.h, which includes <microhttpd.h>
 TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/tests/include -I$(MICROHTTPD_ROOT)/include
 TOOL_LIBS = -lnxcore -lnxsrv -lnxsnmp -lnxsl -lnxdb -lnxagent -lnetxms -lnxjansson
