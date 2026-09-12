@@ -28,7 +28,7 @@ column below.
 | `test-libnxsl/` | NXSL interpreter tests | via `@TEST_MODULES@` |
 | `test-libnxsrv/` | Server library tests (NObject hierarchy, drivers, mock SNMP transport, …) | via `@TEST_MODULES@` |
 | `test-libnxcore/` | Server core library tests — links `libnxcore`; only utility / supplemental functions and classes that do not need an initialized server (AI check decision logic, physical placement property group) | via `@TEST_MODULES@` |
-| `test-server/` | Test launcher that takes the place of `netxmsd`: prepares a SQLite database in a scratch directory, runs the regular `Initialize()`, executes server-dependent tests (authentication tokens) inside the running server, then `Shutdown()` | via `@TEST_MODULES@` |
+| `test-server/` | Test launcher that takes the place of `netxmsd`: prepares a SQLite database in a scratch directory, runs the regular `Initialize()`, executes server-dependent tests (authentication tokens, NXSL HTTP classes) inside the running server, then `Shutdown()` | via `@TEST_MODULES@` |
 | `test-ncd-webhook/` | Webhook notification-channel driver tests | via `@TEST_MODULES@` |
 | `agent/unit/*` | Per-subagent unit tests: `entsoe`, `extcheck`, `weather`, `linux-cpu-usage-collector` | via `@AGENT_UNIT_TESTS@` |
 | `ha/` | `ha-node-sim` + Python `harness.py` — adversarial HA lease-manager harness (issue #3364). Compiles the real `src/server/core/halease.cpp` against a shared DB. | via `@TEST_MODULES@` |

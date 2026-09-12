@@ -41,6 +41,7 @@
 #endif
 
 void TestAuthenticationTokens();
+void TestNXSLHttp();
 
 /**
  * Scratch work directory holding the configuration file, database, data directory and log
@@ -252,6 +253,7 @@ int main(int argc, char *argv[])
    SetTestFailureHook(TestFailureHandler);
 
    TestAuthenticationTokens();
+   TestNXSLHttp();
 
    SetTestFailureHook(nullptr);
 

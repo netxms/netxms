@@ -9,9 +9,9 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_PROGRAMS = test-server
-test_server_SOURCES = authtokens.cpp test-server.cpp
+test_server_SOURCES = authtokens.cpp nxsl_http.cpp test-server.cpp
 test_server_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I../include -I@top_srcdir@/build @MICROHTTPD_CPPFLAGS@
-test_server_LDFLAGS = @EXEC_LDFLAGS@
+test_server_LDFLAGS = @EXEC_LDFLAGS@ @MICROHTTPD_LDFLAGS@
 test_server_LDADD = \
 	@top_srcdir@/src/server/core/libnxcore.la \
 	@top_srcdir@/src/server/libnxsrv/libnxsrv.la \
@@ -22,7 +22,7 @@ test_server_LDADD = \
 	@top_srcdir@/src/db/libnxdb/libnxdb.la \
 	@top_srcdir@/src/agent/libnxagent/libnxagent.la \
 	@top_srcdir@/src/libnetxms/libnetxms.la \
-	@SERVER_LIBS@ @EXEC_LIBS@
+	@MICROHTTPD_LIBS@ @SERVER_LIBS@ @EXEC_LIBS@
 
 if USE_INTERNAL_JANSSON
 test_server_LDADD += @top_srcdir@/src/jansson/libnxjansson.la

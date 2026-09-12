@@ -37,6 +37,7 @@
 #include <nxstat.h>
 #include <netxms-editline.h>
 #include <nms_incident.h>
+#include <nxlibcurl.h>
 
 #ifdef _WIN32
 #include <errno.h>
@@ -1225,6 +1226,10 @@ bool NXCORE_EXPORTABLE Initialize()
 #endif
 
 	InitLocalNetInfo();
+
+	// Initialize libcurl once before any thread can create curl handles
+	if (!InitializeLibCURL())
+	   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("libcurl initialization failed, HTTP client functionality will be unavailable"));
 
 	// Initialize database driver and connect to database
 	if (!DBInit())

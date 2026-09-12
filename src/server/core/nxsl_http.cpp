@@ -558,18 +558,6 @@ static bool IsValidHeader(const wchar_t *name, const wchar_t *value)
 }
 
 /**
- * Check if header with given name (case-insensitive) is present in header map
- */
-static bool HasHeader(const StringMap& headers, const wchar_t *name)
-{
-   return headers.forEach(
-      [name] (const wchar_t *key, const void *value) -> EnumerationCallbackResult
-      {
-         return wcsicmp(key, name) ? _CONTINUE : _STOP;
-      }) == _STOP;
-}
-
-/**
  * Set request body from NXSL value. Strings are sent as is; JSON objects, arrays, and hash maps
  * are serialized to JSON (with Content-Type set to application/json unless already set); null clears body.
  */
@@ -586,7 +574,7 @@ static void SetRequestBody(HttpRequestData *request, NXSL_Value *value)
       json_decref(json);
       request->setBody(text);
       MemFree(text);
-      if (!HasHeader(request->settings.headers, L"Content-Type"))
+      if (!request->settings.headers.contains(L"Content-Type"))   // header names are matched case-insensitively
          request->settings.headers.set(L"Content-Type", L"application/json");
    }
    else

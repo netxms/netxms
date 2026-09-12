@@ -4,9 +4,9 @@
 #
 
 TOOL = test-server
-SOURCES = authtokens.cpp test-server.cpp
+SOURCES = authtokens.cpp nxsl_http.cpp test-server.cpp
 # nms_core.h pulls in netxms-webapi.h, which includes <microhttpd.h>
 TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/tests/include -I$(MICROHTTPD_ROOT)/include
-TOOL_LIBS = -lnxcore -lnxsrv -lnxsnmp -lnxsl -lnxdb -lnxagent -lnetxms -lnxjansson
+TOOL_LIBS = -lnxcore -lnxsrv -lnxsnmp -lnxsl -lnxdb -lnxagent -lnetxms -lnxjansson -lmicrohttpd
 
 include $(TOPDIR)/build/tool-common.mk
