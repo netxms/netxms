@@ -398,7 +398,7 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
  * Deliberately not marked as NXCORE_EXPORTABLE: the only caller lives in the same shared library, and
  * leaving the decoration off keeps the spend primitive out of reach of server modules.
  */
-bool ConsumeAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, AuthenticationTokenType *tokenType)
+bool NXCORE_EXPORTABLE ConsumeAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId, AuthenticationTokenType *tokenType)
 {
    return ProcessAuthenticationToken(token, true, userId, tokenType, 0, nullptr, nullptr);
 }

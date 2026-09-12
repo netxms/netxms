@@ -1,0 +1,12 @@
+#
+# Makefile.w32 - test-libnxcore (server core library unit tests) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = test-libnxcore
+SOURCES = ai_checks.cpp placement.cpp test-libnxcore.cpp
+# nms_core.h pulls in netxms-webapi.h, which includes <microhttpd.h>
+TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/tests/include -I$(MICROHTTPD_ROOT)/include
+TOOL_LIBS = -lnxcore -lnxsrv -lnxsnmp -lnxsl -lnxdb -lnxagent -lnetxms -lnxjansson
+
+include $(TOPDIR)/build/tool-common.mk

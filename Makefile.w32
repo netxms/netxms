@@ -173,7 +173,7 @@ TESTS_DIRS = \
     tests/agent/unit/extcheck \
     tests/agent/unit/weather
 ifeq ($(BUILD_SERVER),1)
-TESTS_DIRS += tests/test-libnxsrv tests/test-ai-checks tests/test-authtokens tests/test-physical-placement
+TESTS_DIRS += tests/test-libnxsrv tests/test-libnxcore tests/test-server
 endif
 endif
 
@@ -276,9 +276,9 @@ $(TESTS_DIRS): $(LIBS)
 # test-libnxsrv links libnxsrv, which belongs to the server tier
 tests/test-libnxsrv: src/server/libnxsrv
 
-# test-authtokens and test-ai-checks compile server core sources and link libnxsrv
-tests/test-authtokens: src/server/libnxsrv
-tests/test-ai-checks: src/server/libnxsrv
+# test-libnxcore and the test-server launcher link the server core library
+tests/test-libnxcore: src/server/core
+tests/test-server: src/server/core
 
 # ATM subsystem links the agent, server and core import libraries, so it is
 # built after every in-tree tier it depends on.

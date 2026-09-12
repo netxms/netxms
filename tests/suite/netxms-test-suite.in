@@ -20,24 +20,6 @@ echo ""
 echo "********** test-libnetxms **********"
 $BINDIR/test-libnetxms || exit 1
 
-if [ -x $BINDIR/test-ai-checks ]; then
-	echo ""
-	echo "********** test-ai-checks **********"
-	$BINDIR/test-ai-checks || exit 1
-fi
-
-if [ -x $BINDIR/test-authtokens ]; then
-	echo ""
-	echo "********** test-authtokens **********"
-	$BINDIR/test-authtokens || exit 1
-fi
-
-if [ -x $BINDIR/test-physical-placement ]; then
-	echo ""
-	echo "********** test-physical-placement **********"
-	$BINDIR/test-physical-placement || exit 1
-fi
-
 if [ -x $BINDIR/test-libethernetip ]; then
 	echo ""
 	echo "********** test-libethernetip **********"
@@ -68,6 +50,12 @@ if [ -x $BINDIR/test-libnxsrv ]; then
 	$BINDIR/test-libnxsrv || exit 1
 fi
 
+if [ -x $BINDIR/test-libnxcore ]; then
+	echo ""
+	echo "********** test-libnxcore **********"
+	$BINDIR/test-libnxcore || exit 1
+fi
+
 if [ -x $BINDIR/test-ncd-webhook ]; then
 	echo ""
 	echo "********** test-ncd-webhook **********"
@@ -96,6 +84,12 @@ if [ -x $BINDIR/test-unit-linux-cpu-usage-collector ]; then
 	echo ""
 	echo "********** test-unit-linux-cpu-usage-collector **********"
 	$BINDIR/test-unit-linux-cpu-usage-collector || exit 1
+fi
+
+if [ -x $BINDIR/test-server ]; then
+	echo ""
+	echo "********** test-server **********"
+	$BINDIR/test-server || exit 1
 fi
 
 exit 0

@@ -16,11 +16,14 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: test-physical-placement.cpp
+** File: placement.cpp
 **
 ** Unit tests for the "physicalPlacement" property group: serialization, merge-patch
 ** parsing with strict type validation, rack extent geometry, and chassis placement XML
-** serialization. Compiles the real src/server/core/physical_placement.cpp.
+** serialization. The server object index is empty in the test process, so container
+** lookup always misses: the tests cover every path except the three that need a live
+** container object (rack extent, chassis class acceptance and the descendant loop
+** check), and IsValidRackExtent is tested directly instead.
 **
 **/
 
@@ -29,17 +32,6 @@
 #include <nxcpapi.h>
 #include <nms_core.h>
 #include <testtools.h>
-
-/**
- * Stub for the server object index. Constructing a real Rack or Chassis would pull in the
- * whole server, so container lookup always misses here: the tests cover every path except
- * the three that need a live container object (rack extent, chassis class acceptance and
- * the descendant loop check), and IsValidRackExtent is tested directly instead.
- */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClassHint)
-{
-   return shared_ptr<NetObj>();
-}
 
 /**
  * Placement state under test, together with the reference structure addressing it
@@ -142,7 +134,7 @@ static uint32_t ApplyPatch(TestPlacement *p, const char *text, bool allowChassis
 {
    json_t *group = ParseJson(text);
    // The placed object is only dereferenced after a container id resolves, which never happens
-   // with the FindObjectById stub above, so nullptr is safe here
+   // with an empty object index, so nullptr is safe here
    uint32_t rcc = ModifyPhysicalPlacementFromJson(group, nullptr, p->ref, allowChassisContainer);
    json_decref(group);
    return rcc;
@@ -450,12 +442,10 @@ static void TestValidateChassisPlacement()
 }
 
 /**
- * Entry point
+ * Physical placement tests
  */
-int main(int argc, char *argv[])
+void TestPhysicalPlacement()
 {
-   InitNetXMSProcess(true);
-
    TestPlacementToJson();
    TestRackExtent();
    TestModifyMergeSemantics();
@@ -466,6 +456,4 @@ int main(int argc, char *argv[])
    TestModifyImages();
    TestChassisPlacementToXml();
    TestValidateChassisPlacement();
-
-   return 0;
 }

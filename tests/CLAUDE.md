@@ -27,8 +27,8 @@ column below.
 | `test-libnxsnmp/` | SNMP library tests | via `@TEST_MODULES@` |
 | `test-libnxsl/` | NXSL interpreter tests | via `@TEST_MODULES@` |
 | `test-libnxsrv/` | Server library tests (NObject hierarchy, drivers, mock SNMP transport, …) | via `@TEST_MODULES@` |
-| `test-ai-checks/` | AI operator standing check logic tests — compiles the real `src/server/core/ai_check_logic.cpp`; covers script result evaluation and quiet/fired/error transitions with cooldown and renotify | via `@TEST_MODULES@` |
-| `test-authtokens/` | Authentication token tests — compiles the real `src/server/core/authtokens.cpp` and stubs four core symbols; covers the validate/consume split and the single-use claim race | via `@TEST_MODULES@` |
+| `test-libnxcore/` | Server core library tests — links `libnxcore`; only utility / supplemental functions and classes that do not need an initialized server (AI check decision logic, physical placement property group) | via `@TEST_MODULES@` |
+| `test-server/` | Test launcher that takes the place of `netxmsd`: prepares a SQLite database in a scratch directory, runs the regular `Initialize()`, executes server-dependent tests (authentication tokens) inside the running server, then `Shutdown()` | via `@TEST_MODULES@` |
 | `test-ncd-webhook/` | Webhook notification-channel driver tests | via `@TEST_MODULES@` |
 | `agent/unit/*` | Per-subagent unit tests: `entsoe`, `extcheck`, `weather`, `linux-cpu-usage-collector` | via `@AGENT_UNIT_TESTS@` |
 | `ha/` | `ha-node-sim` + Python `harness.py` — adversarial HA lease-manager harness (issue #3364). Compiles the real `src/server/core/halease.cpp` against a shared DB. | via `@TEST_MODULES@` |
@@ -79,6 +79,9 @@ There is **no external framework** (no GoogleTest/Catch). Tests are hand-rolled:
     process non-zero** (via `ptrace(PT_TRACE_ME)` so a debugger can catch it,
     unless ASan is active). There is no "continue after failure" — first
     failure aborts that binary, and the suite runner stops.
+- `SetTestFailureHook(fn)` registers a function that `ExitTestProcess()` calls
+  before exiting on a failed assert; `test-server` uses it to `FastShutdown()`
+  the live server so the database is unlocked and the log flushed.
 - Use `_T()` for literals and `TCHAR` throughout, same as production code.
 
 ## Building and running
@@ -121,14 +124,32 @@ Makefile alone is not enough:
    directory to `TESTS_DIRS` in the top-level `Makefile.w32`.
 5. Add a `call :RunTest <binary>` line to `suite/netxms-test-suite.cmd`.
 
-A test that compiles a **server core** source directly instead of linking a
-library needs two extra flags in both Makefiles, and missing either one breaks
-only the Windows build: `-DNXCORE_EXPORTS`, without which `NXCORE_EXPORTABLE`
-expands to `__declspec(dllimport)` (`src/server/include/nms_core.h`) and
-defining those symbols is a hard error on MinGW; and `@MICROHTTPD_CPPFLAGS@` /
-`-I$(MICROHTTPD_ROOT)/include` if the source reaches `netxms-webapi.h`, which
-includes `<microhttpd.h>`. Link `libnxsrv` for `ServerConsole` and stub only the
-few remaining core symbols. `test-authtokens/` is the reference example.
+## Server core tests
+
+Do not create a new standalone binary for server core code. There are two homes:
+
+- **`test-libnxcore/`** links the real `libnxcore` (plus the same library set as
+  `netxmsd`) and is for functions and classes that work without an initialized
+  server. The test is in the wrong place if it needs the DB connection pool, the
+  configuration cache, the user database, or loaded objects — such code hangs
+  (`DBConnectionPoolAcquireConnection()` retries forever) or fails instead of
+  being unit-testable, and stubbing core symbols is not an option because the
+  library is linked, not compiled in. Add a `TestXxx()` entry function in a new
+  `.cpp`, list it in both Makefiles, and call it from `test-libnxcore.cpp`.
+- **`test-server/`** is a launcher that replaces `netxmsd`: it writes a
+  `netxmsd.conf` into a scratch directory under `$TMPDIR`, creates a SQLite
+  database with `nxdbmgr init` (found via `GetNetXMSDirectory(nxDirBin)`, so
+  the tree must be installed), moves the client, tunnel and mobile listeners to
+  ports 147xx and disables the SNMP trap receiver, local admin interface and
+  web API, then calls `LoadConfig()` / `Initialize()`, runs the test functions
+  inside the live server, and calls `Shutdown()`. Tests create the objects they
+  need through the normal object API after initialization rather than through
+  SQL. `-D <level>` sets the server debug level (log goes to the work
+  directory), `-k` keeps the work directory after a successful run; it is always
+  kept after a failure.
+
+Both binaries need `@MICROHTTPD_CPPFLAGS@` / `-I$(MICROHTTPD_ROOT)/include`
+because `nms_core.h` reaches `netxms-webapi.h`, which includes `<microhttpd.h>`.
 
 For a **new test case in an existing binary**: add the `Test*()` function (new
 `.cpp` if substantial, listed in that dir's `_SOURCES`), declare it in the

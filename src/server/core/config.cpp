@@ -160,6 +160,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { L"InternalCACertificatePassword", CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_internalCACertificatePassword, nullptr },
    { L"LibraryDirectory", CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, nullptr },
    { L"ListenAddress", CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, nullptr },
+   { L"LocalAdminInterface", CT_BOOLEAN_FLAG_64, 0, 0, AF_ENABLE_LOCAL_ADMIN_INTERFACE, 0, (void*)&g_flags, nullptr },
    { L"LogFile", CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, nullptr },
    { L"LogHistorySize", CT_LONG, 0, 0, 0, 0, &g_logHistorySize, nullptr },
    { L"LogRotationMode", CT_LONG, 0, 0, 0, 0, &g_logRotationMode, nullptr },

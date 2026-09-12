@@ -35,18 +35,17 @@ if not exist "%BinDir%" (
 echo *** Running NetXMS test suite from %BinDir% ***
 
 call :RunTest test-libnetxms || goto failure
-call :RunTest test-ai-checks || goto failure
-call :RunTest test-authtokens || goto failure
-call :RunTest test-physical-placement || goto failure
 call :RunTest test-libethernetip || goto failure
 call :RunTest test-libnxnetconf || goto failure
 call :RunTest test-libnxsnmp || goto failure
 call :RunTest test-libnxsl .\tests\test-libnxsl || goto failure
 call :RunTest test-libnxsrv || goto failure
+call :RunTest test-libnxcore || goto failure
 call :RunTest test-ncd-webhook || goto failure
 call :RunTest test-unit-entsoe || goto failure
 call :RunTest test-unit-extcheck || goto failure
 call :RunTest test-unit-weather || goto failure
+call :RunTest test-server || goto failure
 
 echo *** SUCCESS ***
 exit /b 0

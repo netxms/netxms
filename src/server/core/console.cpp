@@ -1536,6 +1536,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DEVICE_BACKUP_API_ENABLED));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DC_SCHEDULER_REQUIRES_CONNECTIVITY));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_RESTRICT_SCRIPT_WRITES));
+         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_LOCAL_ADMIN_INTERFACE));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(console, _T("\n"));

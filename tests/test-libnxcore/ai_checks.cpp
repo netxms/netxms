@@ -16,11 +16,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: test-ai-checks.cpp
+** File: ai_checks.cpp
 **
 ** Unit tests for AI operator standing check decision logic: evaluation of script
 ** return values and the quiet/fired/error state transitions with cooldown and
-** renotify handling. Compiles the real src/server/core/ai_check_logic.cpp.
+** renotify handling.
 **
 **/
 
@@ -238,12 +238,10 @@ static void TestFailures()
 }
 
 /**
- * main()
+ * AI operator standing check logic tests
  */
-int main(int argc, char *argv[])
+void TestAICheckLogic()
 {
-   InitNetXMSProcess(true);
-
    TestQuietResults();
    TestStringResult();
    TestHashResult();
@@ -254,6 +252,4 @@ int main(int argc, char *argv[])
    TestRenotify();
    TestCooldown();
    TestFailures();
-
-   return 0;
 }

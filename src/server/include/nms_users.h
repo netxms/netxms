@@ -634,12 +634,10 @@ bool NXCORE_EXPORTABLE ValidateAuthenticationToken(const UserAuthenticationToken
 
 /**
  * Validate authentication token and consume it if it is single-use. This is the single designated spend
- * point for single-use tokens and must be called from client session login only.
- *
- * Deliberately not marked as NXCORE_EXPORTABLE: the only caller lives in the same shared library, and
- * leaving the decoration off keeps the spend primitive out of reach of server modules.
+ * point for single-use tokens and must be called from client session login only. It is exported for the
+ * test-server launcher, which exercises the spend semantics directly; server modules must not call it.
  */
-bool ConsumeAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId,
+bool NXCORE_EXPORTABLE ConsumeAuthenticationToken(const UserAuthenticationToken& token, uint32_t *userId,
    AuthenticationTokenType *tokenType = nullptr);
 void AuthenticationTokensToMessage(uint32_t userId, NXCPMessage *msg);
 json_t NXCORE_EXPORTABLE *AuthenticationTokensToJson(uint32_t userId);

@@ -2,6 +2,31 @@
 #define _testtools_h_
 
 /**
+ * Test failure hook - called before the test process exits on a failed assertion, so that a test
+ * binary hosting a live server can shut it down. Storage is a function-local static inside a
+ * non-static inline function, so every translation unit of the test binary shares one instance.
+ */
+typedef void (*TestFailureHook)();
+
+inline TestFailureHook *GetTestFailureHookStorage()
+{
+   static TestFailureHook hook = nullptr;
+   return &hook;
+}
+
+static inline void SetTestFailureHook(TestFailureHook hook)
+{
+   *GetTestFailureHookStorage() = hook;
+}
+
+static inline void CallTestFailureHook()
+{
+   TestFailureHook hook = *GetTestFailureHookStorage();
+   if (hook != nullptr)
+      hook();
+}
+
+/**
  * Exit test process
  */
 #if HAVE_SYS_PTRACE_H && !defined(WITH_ADDRESS_SANITIZER)
@@ -10,6 +35,7 @@
 
 static inline void ExitTestProcess()
 {
+   CallTestFailureHook();
 #ifdef _AIX
 #ifdef __64BIT__
    int rc = ptrace64(PT_TRACE_ME, 0, 0, 0, nullptr);
@@ -29,6 +55,7 @@ static inline void ExitTestProcess()
 
 static inline void ExitTestProcess()
 {
+   CallTestFailureHook();
    exit(1);
 }
 

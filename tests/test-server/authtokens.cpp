@@ -16,11 +16,12 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: test-authtokens.cpp
+** File: authtokens.cpp
 **
-** Unit tests for authentication token validation and consumption. Only ephemeral,
-** service and single-use tokens are issued so that the persistent token code paths,
-** which require a database connection, are never entered.
+** Tests for authentication token validation and consumption, executed inside the
+** test server launcher against the initialized server. Tokens are issued for the
+** built-in "admin" user; only ephemeral, service and single-use tokens are issued,
+** so no token is persisted to the database.
 **
 **/
 
@@ -32,34 +33,6 @@
 #include <testtools.h>
 
 #define TEST_USER_ID    1
-
-/**
- * Stubs for server core symbols referenced by authtokens.cpp. The token code
- * under test never reaches the database, so the query stub only has to exist.
- */
-uint32_t NXCORE_EXPORTABLE ConfigReadULong(const wchar_t *variable, uint32_t defaultValue)
-{
-   return defaultValue;
-}
-
-uint32_t NXCORE_EXPORTABLE CreateUniqueId(int group)
-{
-   static VolatileCounter id = 0;
-   return static_cast<uint32_t>(InterlockedIncrement(&id));
-}
-
-bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const wchar_t *query)
-{
-   return true;
-}
-
-wchar_t NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, wchar_t *buffer, bool noFail)
-{
-   if (id & GROUP_FLAG)
-      return noFail ? wcscpy(buffer, L"[unknown]") : nullptr;
-   nx_swprintf(buffer, MAX_USER_NAME, L"user-%u", id);
-   return buffer;
-}
 
 /**
  * Issue token and check that it was created
@@ -292,7 +265,7 @@ static void TestSingleUseIsMemoryOnly()
  */
 static void TestIssueFailures()
 {
-   StartTest(_T("Token issuing failures (invalid user, already expired persistent token)"));
+   StartTest(_T("Token issuing failures"));
 
    AssertNull(IssueAuthenticationToken(GROUP_FLAG | TEST_USER_ID, 600).get());
    AssertNull(IssueAuthenticationToken(TEST_USER_ID, 0, AuthenticationTokenType::PERSISTENT).get());
@@ -535,12 +508,10 @@ static void TestMaskedValueForRestoredToken()
 }
 
 /**
- * main()
+ * Authentication token tests
  */
-int main(int argc, char *argv[])
+void TestAuthenticationTokens()
 {
-   InitNetXMSProcess(true);
-
    TestValidateRejectsSingleUse();
    TestConsumeSingleUseOnce();
    TestConsumeNonSingleUse();
@@ -559,6 +530,4 @@ int main(int argc, char *argv[])
    TestSerializedTokenType();
    TestClearTextValueExposure();
    TestMaskedValueForRestoredToken();
-
-   return 0;
 }

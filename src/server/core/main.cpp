@@ -1234,7 +1234,10 @@ bool NXCORE_EXPORTABLE Initialize()
 		return false;
 
    // Start local administrative interface listener
-   ThreadCreate(LocalAdminListenerThread);
+   if (g_flags & AF_ENABLE_LOCAL_ADMIN_INTERFACE)
+      ThreadCreate(LocalAdminListenerThread);
+   else
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Local administration interface is disabled by configuration"));
 
 	// Wait for database password if needed
 	GetDatabasePassword();

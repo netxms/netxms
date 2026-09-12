@@ -1,0 +1,12 @@
+#
+# Makefile.w32 - test-server (test launcher running tests inside initialized server) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = test-server
+SOURCES = authtokens.cpp test-server.cpp
+# nms_core.h pulls in netxms-webapi.h, which includes <microhttpd.h>
+TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/tests/include -I$(MICROHTTPD_ROOT)/include
+TOOL_LIBS = -lnxcore -lnxsrv -lnxsnmp -lnxsl -lnxdb -lnxagent -lnetxms -lnxjansson
+
+include $(TOPDIR)/build/tool-common.mk
