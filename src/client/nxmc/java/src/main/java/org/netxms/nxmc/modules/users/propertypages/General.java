@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.users.AbstractUserObject;
@@ -35,6 +36,8 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -80,7 +83,31 @@ public class General extends PropertyPage
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       dialogArea.setLayout(layout);
-      
+
+      if ((object.getFlags() & AbstractUserObject.LDAP_USER) != 0)
+      {
+         Composite warningArea = new Composite(dialogArea, SWT.BORDER);
+         warningArea.setBackground(ThemeEngine.getBackgroundColor("MessageBar"));
+         warningArea.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+         warningArea.setLayout(new GridLayout(2, false));
+
+         Label warningImage = new Label(warningArea, SWT.NONE);
+         warningImage.setBackground(warningArea.getBackground());
+         warningImage.setImage(ResourceManager.getImage("icons/warning.png"));
+         warningImage.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, false));
+         warningImage.addDisposeListener((e) -> warningImage.getImage().dispose());
+
+         Label warningText = new Label(warningArea, SWT.WRAP);
+         warningText.setBackground(warningArea.getBackground());
+         warningText.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
+         warningText.setText((object instanceof User) ?
+               i18n.tr("This user is synchronized from LDAP. Changes to login name, full name, email, phone number, and description will be overwritten on next synchronization.") :
+               i18n.tr("This group is synchronized from LDAP. Changes to name and description will be overwritten on next synchronization."));
+         GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+         gd.widthHint = 400;
+         warningText.setLayoutData(gd);
+      }
+
       // Object ID
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Object ID"),
                                      Long.toString(object.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
