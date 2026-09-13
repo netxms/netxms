@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2024 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

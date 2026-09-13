@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2022 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -90,31 +90,31 @@ LONG H_FileSystemInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
       case DISK_USED_PERC:
          if (totalBlocks > 0)
          {
-            ret_double(value, (usedBlocks * 100.0) / totalBlocks);
+            ret_double(value, (usedBlocks * 100.0) / totalBlocks, 2);
          }
          else
          {
-            ret_double(value, 0.0);
+            ret_double(value, 0.0, 2);
          }
          break;
       case DISK_AVAIL_PERC:
          if (totalBlocks > 0)
          {
-            ret_double(value, (availableBlocks * 100.0) / totalBlocks);
+            ret_double(value, (availableBlocks * 100.0) / totalBlocks, 2);
          }
          else
          {
-            ret_double(value, 0.0);
+            ret_double(value, 0.0, 2);
          }
          break;
       case DISK_FREE_PERC:
          if (totalBlocks > 0)
          {
-            ret_double(value, (freeBlocks * 100.0) / totalBlocks);
+            ret_double(value, (freeBlocks * 100.0) / totalBlocks, 2);
          }
          else
          {
-            ret_double(value, 0.0);
+            ret_double(value, 0.0, 2);
          }
          break;
       case DISK_TOTAL_INODES:
@@ -126,13 +126,13 @@ LONG H_FileSystemInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
          break;
       case DISK_FREE_INODES_PERC:
       case DISK_AVAIL_INODES_PERC:
-         ret_double(value, (s.f_files > 0) ? s.f_ffree * 100.0 / s.f_files : 0);
+         ret_double(value, (s.f_files > 0) ? s.f_ffree * 100.0 / s.f_files : 0, 2);
          break;
       case DISK_USED_INODES:
          ret_uint64(value, s.f_files - s.f_ffree);
          break;
       case DISK_USED_INODES_PERC:
-         ret_double(value, (s.f_files > 0) ? (s.f_files - s.f_ffree) * 100.0 / s.f_files : 0);
+         ret_double(value, (s.f_files > 0) ? (s.f_files - s.f_ffree) * 100.0 / s.f_files : 0, 2);
          break;
       default:
          return SYSINFO_RC_UNSUPPORTED;

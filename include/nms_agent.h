@@ -1198,20 +1198,33 @@ static inline void ret_uint(TCHAR *rbuf, uint32_t value)
    IntegerToString(value, rbuf);
 }
 
-static inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
+/**
+ * Set double value as metric result. Value is formatted with given number of fraction digits.
+ * If fraction digits < 0 value is formatted to 6 fraction digits and
+ * then trailing zeroes are removed, keeping at least two fraction digits (3.715000 -> 3.715, 2.400000 -> 2.40).
+ */
+static inline void ret_double(TCHAR *rbuf, double value, int digits = -1)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300) && !defined(__clang__)
-   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%1.*f"), digits, value);
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%1.*f"), (digits < 0) ? 6 : digits, value);
 #else
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%1.*f"), digits, value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%1.*f"), (digits < 0) ? 6 : digits, value);
 #endif
+   if (digits < 0)
+      RemoveTrailingZeroes(rbuf, 2);
 }
 
+/**
+ * Set int64 value as metric result
+ */
 static inline void ret_int64(TCHAR *rbuf, int64_t value)
 {
    IntegerToString(value, rbuf);
 }
 
+/**
+ * Set unsigned int64 value as metric result
+ */
 static inline void ret_uint64(TCHAR *rbuf, uint64_t value)
 {
    IntegerToString(value, rbuf);

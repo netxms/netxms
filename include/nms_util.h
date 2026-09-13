@@ -5544,6 +5544,14 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str);
 #define RemoveTrailingCRLF RemoveTrailingCRLFA
 #endif
 
+char LIBNETXMS_EXPORTABLE *RemoveTrailingZeroesA(char *str, int minFractionDigits);
+WCHAR LIBNETXMS_EXPORTABLE *RemoveTrailingZeroesW(WCHAR *str, int minFractionDigits);
+#ifdef UNICODE
+#define RemoveTrailingZeroes RemoveTrailingZeroesW
+#else
+#define RemoveTrailingZeroes RemoveTrailingZeroesA
+#endif
+
 bool LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool matchCase);
 bool LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool matchCase);
 #ifdef UNICODE
