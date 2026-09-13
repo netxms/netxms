@@ -121,7 +121,10 @@ void ItemValue::set(double value, const TCHAR *stringValue)
    if (stringValue != nullptr)
       _tcslcpy(m_string, stringValue, MAX_DB_STRING);
    else
+   {
       _sntprintf(m_string, MAX_DB_STRING, _T("%f"), m_double);
+      RemoveTrailingZeroes(m_string, 2);
+   }
    m_int64 = static_cast<int64_t>(m_double);
    m_uint64 = static_cast<uint64_t>(m_double);
 }

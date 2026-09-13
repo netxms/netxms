@@ -435,6 +435,9 @@ public class DataFormatter
                NumberFormat nf = NumberFormat.getNumberInstance();
                // Two decimal places is enough for values above 1, but smaller ones should keep two significant digits to not be rounded to zero
                nf.setMaximumFractionDigits((precision > 0) ? Math.min(precision + 1, 8) : 2);
+               // Floating point values always show at least two decimal places (2.4 is displayed as 2.40), integers converted by multipliers are not padded
+               if (dataType == DataType.FLOAT)
+                  nf.setMinimumFractionDigits(2);
                v.value = nf.format(d);
             }
             break;

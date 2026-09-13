@@ -696,6 +696,31 @@ static void TestStringFunctionsA()
    AssertTrue(&s[4] == stristr(s, "two"));
    AssertNull(stristr(s, "TwoThree"));
    EndTest();
+
+   StartTest(_T("RemoveTrailingZeroesA"));
+   strcpy(buffer, "3.715000");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 2), "3.715");
+   strcpy(buffer, "2.400000");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 2), "2.40");
+   strcpy(buffer, "1.000000");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 2), "1.00");
+   strcpy(buffer, "-1.000000");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 2), "-1.00");
+   strcpy(buffer, "0.000000");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 0), "0");
+   strcpy(buffer, "1.500000");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 0), "1.5");
+   strcpy(buffer, "1.0");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 2), "1.0");
+   strcpy(buffer, "1.0");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 1), "1.0");
+   strcpy(buffer, "100");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 2), "100");
+   strcpy(buffer, "inf");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 2), "inf");
+   strcpy(buffer, "");
+   AssertEquals(RemoveTrailingZeroesA(buffer, 2), "");
+   EndTest();
 }
 
 /**
@@ -753,6 +778,23 @@ static void TestStringFunctionsW()
    AssertTrue(s == wcsistr(s, L""));
    AssertTrue(&s[4] == wcsistr(s, L"two"));
    AssertNull(wcsistr(s, L"TwoThree"));
+   EndTest();
+
+   StartTest(_T("RemoveTrailingZeroesW"));
+   wcscpy(buffer, L"3.715000");
+   AssertEquals(RemoveTrailingZeroesW(buffer, 2), L"3.715");
+   wcscpy(buffer, L"2.400000");
+   AssertEquals(RemoveTrailingZeroesW(buffer, 2), L"2.40");
+   wcscpy(buffer, L"1.000000");
+   AssertEquals(RemoveTrailingZeroesW(buffer, 2), L"1.00");
+   wcscpy(buffer, L"0.000000");
+   AssertEquals(RemoveTrailingZeroesW(buffer, 0), L"0");
+   wcscpy(buffer, L"1.500000");
+   AssertEquals(RemoveTrailingZeroesW(buffer, 1), L"1.5");
+   wcscpy(buffer, L"1.0");
+   AssertEquals(RemoveTrailingZeroesW(buffer, 2), L"1.0");
+   wcscpy(buffer, L"100");
+   AssertEquals(RemoveTrailingZeroesW(buffer, 2), L"100");
    EndTest();
 }
 

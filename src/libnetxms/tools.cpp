@@ -708,6 +708,48 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str)
 }
 
 /**
+ * Remove trailing zeroes from fractional part of a number string, keeping at least given number of fraction digits.
+ * If minFractionDigits is 0 and all fraction digits are removed, decimal point is removed as well.
+ * String without decimal point is left unchanged.
+ */
+template<typename T> static inline T *RemoveTrailingZeroesInternal(T *str, int minFractionDigits)
+{
+   T *d = str;
+   while((*d != 0) && (*d != '.'))
+      d++;
+   if (*d == 0)
+      return str;
+
+   T *p = d;
+   while(*p != 0)
+      p++;
+   p--;   // last character
+
+   T *keep = d + 1 + minFractionDigits;   // first character that can be removed
+   while((p >= keep) && (*p == '0'))
+      *p-- = 0;
+   if (p == d)
+      *p = 0;   // no fraction digits left, remove decimal point
+   return str;
+}
+
+/**
+ * Remove trailing zeroes from fractional part of a number string, keeping at least given number of fraction digits
+ */
+char LIBNETXMS_EXPORTABLE *RemoveTrailingZeroesA(char *str, int minFractionDigits)
+{
+   return RemoveTrailingZeroesInternal(str, minFractionDigits);
+}
+
+/**
+ * Remove trailing zeroes from fractional part of a number string, keeping at least given number of fraction digits
+ */
+WCHAR LIBNETXMS_EXPORTABLE *RemoveTrailingZeroesW(WCHAR *str, int minFractionDigits)
+{
+   return RemoveTrailingZeroesInternal(str, minFractionDigits);
+}
+
+/**
  * Swap bytes in INT16 array or UCS-2 string
  * Length -1 causes stop at first 0 value
  */

@@ -184,13 +184,13 @@ public class DataFormatterTest
       assertEquals("0.68" + THIN_SPACE + "A", format("0.680000", DataType.FLOAT, "A", DciValue.MULTIPLIERS_DEFAULT));
       assertEquals("-0.68" + THIN_SPACE + "A", format("-0.680000", DataType.FLOAT, "A", DciValue.MULTIPLIERS_DEFAULT));
       assertEquals("0.68", format("0.680000", DataType.FLOAT, null, DciValue.MULTIPLIERS_DEFAULT));
-      assertEquals("0" + THIN_SPACE + "A", format("0.000000", DataType.FLOAT, "A", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("0.00" + THIN_SPACE + "A", format("0.000000", DataType.FLOAT, "A", DciValue.MULTIPLIERS_DEFAULT));
 
       // Values above 1 are not affected
       assertEquals("3.03" + THIN_SPACE + "A", format("3.030000", DataType.FLOAT, "A", DciValue.MULTIPLIERS_DEFAULT));
 
       // Small values still use small multipliers if unit is set
-      assertEquals("5" + THIN_SPACE + "mA", format("0.005000", DataType.FLOAT, "A", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("5.00" + THIN_SPACE + "mA", format("0.005000", DataType.FLOAT, "A", DciValue.MULTIPLIERS_DEFAULT));
 
       // Without unit small multipliers are not applicable, so significant digits should be preserved
       assertEquals("0.005", format("0.005000", DataType.FLOAT, null, DciValue.MULTIPLIERS_DEFAULT));
@@ -210,6 +210,22 @@ public class DataFormatterTest
 
       // Integer values are displayed as is
       assertEquals("1234567" + THIN_SPACE + "A", format("1234567", DataType.INT32, "A", DciValue.MULTIPLIERS_NO));
+   }
+
+   @Test
+   public void testFormatFloatValuesKeepTwoDecimalPlaces()
+   {
+      // Trailing zeroes are removed but at least two decimal places are always shown for floating point values
+      assertEquals("1.00", format("1.000000", DataType.FLOAT, null, DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("2.40", format("2.400000", DataType.FLOAT, null, DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("2.40", format("2.40", DataType.FLOAT, null, DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("12.50" + THIN_SPACE + "%", format("12.500000", DataType.FLOAT, "%", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("1.50" + THIN_SPACE + "kA", format("1500", DataType.FLOAT, "A", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("1,500.00" + THIN_SPACE + "A", format("1500", DataType.FLOAT, "A", DciValue.MULTIPLIERS_NO));
+
+      // Integer values converted by multipliers are not padded
+      assertEquals("1" + THIN_SPACE + "kA", format("1000", DataType.INT32, "A", DciValue.MULTIPLIERS_DEFAULT));
+      assertEquals("1.5" + THIN_SPACE + "kA", format("1500", DataType.INT32, "A", DciValue.MULTIPLIERS_DEFAULT));
    }
 
    @Test
