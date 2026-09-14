@@ -4757,6 +4757,7 @@ AC_CONFIG_FILES([
 	src/server/aitools/skills/Makefile
 	src/server/core/Makefile
 	src/server/drivers/Makefile
+	src/server/drivers/arista/Makefile
 	src/server/drivers/at/Makefile
 	src/server/drivers/avaya/Makefile
 	src/server/drivers/bdcom/Makefile
@@ -4777,6 +4778,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/juniper/Makefile
 	src/server/drivers/lenovo/Makefile
 	src/server/drivers/mds/Makefile
+	src/server/drivers/mellanox/Makefile
 	src/server/drivers/mikrotik/Makefile
 	src/server/drivers/moxa/Makefile
 	src/server/drivers/net-snmp/Makefile

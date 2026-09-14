@@ -154,6 +154,7 @@ ncd.webhook	Generic webhook notification channel driver
 ncd.xmpp	XMPP notification channel and chat bot driver
 
 ndd.*           Network device drivers
+ndd.arista	Arista EOS network device driver
 ndd.bdcom	BDCOM network device driver
 ndd.cambium	Cambium network device driver
 ndd.common	Network device drivers common
@@ -170,6 +171,7 @@ ndd.hpe.aoscx	HPE Aruba CX (AOS-CX) network device driver
 ndd.hpe.hpsw	HPE switch network device driver
 ndd.huawei.optix	Huawei OptiX network device driver
 ndd.lenovo.flex	Lenovo Flex System Fabric network device driver
+ndd.mellanox	Mellanox Onyx network device driver
 ndd.mikrotik    Mikrotik network device driver
 ndd.moxa.edr    MOXA-EDR network device driver
 ndd.net-snmp	net-snmp network device driver

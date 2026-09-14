@@ -156,6 +156,7 @@ Source: "..\..\agent\subagents\opcua\target\opcua.jar"; DestDir: "{app}\lib\java
 Source: "..\..\agent\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\tools\scripts\nxagentd-generate-tunnel-config.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 ; Network device drivers
+Source: "..\..\..\out\x64\Release\bin\arista.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\at.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\avaya.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\bdcom.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
@@ -176,6 +177,7 @@ Source: "..\..\..\out\x64\Release\bin\ignitenet.ndd"; DestDir: "{app}\lib\ndd"; 
 Source: "..\..\..\out\x64\Release\bin\juniper.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\lenovo.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\mds.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\mellanox.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\mikrotik.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\moxa.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\net-snmp.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server

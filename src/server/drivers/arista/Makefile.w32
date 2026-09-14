@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - arista network device driver for Windows/MinGW
+# Part of NetXMS project
+#
+
+DRIVER = arista
+SOURCES = arista.cpp eos.cpp
+
+include $(TOPDIR)/src/server/drivers/ndd-common.mk
