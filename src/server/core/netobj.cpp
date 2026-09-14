@@ -196,17 +196,31 @@ int NetObj::getObjectClassByNameA(const char *name)
 }
 
 /**
- * Link two objects
+ * Link two objects. Returns false and leaves no link behind if deletion of either object has started.
  */
-void NetObj::linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child)
+bool NetObj::linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child)
 {
    child->addParentReference(parent);
    parent->addChildReference(child);
+
+   // Checked after both references are added: deleteObject() sets the flag before its unlink loop takes the same
+   // relation list locks, so either the flag is visible here or the loop runs later and removes the references
+   if (child->isDeleteInitiated() || parent->isDeleteInitiated())
+   {
+      parent->deleteChildReference(child->m_id);
+      child->deleteParentReference(parent->m_id);
+      parent->markAsModified(MODIFY_RELATIONS);   // in case syncer saved the transient link
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::linkObjects: link refused, object is being deleted (parent=%s [%u]; child=%s [%u])"),
+            parent->m_name, parent->m_id, child->m_name, child->m_id);
+      return false;
+   }
+
    child->markAsModified(MODIFY_RELATIONS);
    parent->markAsModified(MODIFY_RELATIONS);
    child->clearInheritedAccessCache();
    child->notifyClientsOnAccessChange();
    nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::linkObjects: parent=%s [%u]; child=%s [%u]"), parent->m_name, parent->m_id, child->m_name, child->m_id);
+   return true;
 }
 
 /**
@@ -940,7 +954,8 @@ void NetObj::deleteObject(NetObj *initiator, SharedObjectArray<NetObj> *accumula
    nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Deleting object %d [%s]"), m_id, m_name);
 
 	// Prevent object change propagation until it's marked as deleted
-	// (to prevent the object's incorrect appearance in GUI)
+	// (to prevent the object's incorrect appearance in GUI). linkObjects() relies on the flag
+	// being set before the relation lists are cleared below.
 	lockProperties();
 	if (m_isDeleteInitiated)
 	{

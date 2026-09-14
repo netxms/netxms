@@ -1102,6 +1102,8 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
    for (int i = 0; i < objects->size(); i++)
    {
       shared_ptr<NetObj> object = objects->getShared(i);
+      if (object->isDeleteInitiated())
+         continue;
 
       AutoBindDecision decision = isApplicable(&cachedFilterVM, object, this);
       if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
@@ -1134,6 +1136,8 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
             sendPollerMsg(_T("   Applying to \"%s\"\r\n"), object->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): binding object \"%s\" [%u] to template \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
             applyToTarget(static_pointer_cast<DataCollectionTarget>(object));
+            if (!isDirectChild(object->getId()))
+               continue;   // do not send event if auto bind failed, applyToTarget() also returns false on DCI apply failures
             EventBuilder(EVENT_TEMPLATE_AUTOAPPLY, GetServerEventSourceId())
                .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
                .param(_T("nodeName"), object->getName())

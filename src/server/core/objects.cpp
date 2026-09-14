@@ -3410,7 +3410,11 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
    if ((parent != nullptr) &&             // parent can be nullptr for nodes
        (objectClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
    {
-      NetObj::linkObjects(parent, object);
+      if (!NetObj::linkObjects(parent, object))
+      {
+         object->deleteObject();
+         return RCC_INVALID_OBJECT_ID;
+      }
       parent->calculateCompoundStatus();
       if (parent->getObjectClass() == OBJECT_CLUSTER)
       {
