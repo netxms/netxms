@@ -8,19 +8,26 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-DRIVERS = at avaya bdcom bulat cambium cisco dell dlink edgecore eltex \
+DRIVERS = arista at avaya bdcom bulat cambium cisco dell dlink edgecore eltex \
 	etherwan extreme fortinet hirschmann hpe huawei ignitenet juniper \
-	lenovo mds mikrotik moxa net-snmp netonix origo ping3 planet qtech \
+	lenovo mds mellanox mikrotik moxa net-snmp netonix origo ping3 planet qtech \
 	rittal saf siemens symbol-ws tb tplink ubnt westerstrand zyxel
 
 SUBDIRS = $(DRIVERS)
 
-pkglib_LTLIBRARIES = at.la avaya.la bdcom.la bulat.la cambium.la cisco.la \
+pkglib_LTLIBRARIES = arista.la at.la avaya.la bdcom.la bulat.la cambium.la cisco.la \
 	dell.la dlink.la edgecore.la eltex.la etherwan.la extreme.la \
 	fortinet.la hirschmann.la hpe.la huawei.la ignitenet.la juniper.la \
-	lenovo.la mds.la mikrotik.la moxa.la net-snmp.la netonix.la origo.la \
+	lenovo.la mds.la mellanox.la mikrotik.la moxa.la net-snmp.la netonix.la origo.la \
 	ping3.la planet.la qtech.la rittal.la saf.la siemens.la symbol-ws.la \
 	tb.la tplink.la ubnt.la westerstrand.la zyxel.la
+
+arista_la_SOURCES = arista/arista.cpp arista/eos.cpp
+arista_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+arista_la_LDFLAGS = -module -avoid-version
+arista_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
 
 at_la_SOURCES = at/at.cpp
 at_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
@@ -159,6 +166,13 @@ mds_la_SOURCES = mds/mds.cpp mds/orbit.cpp
 mds_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 mds_la_LDFLAGS = -module -avoid-version
 mds_la_LIBADD = ../../libnetxms/libnetxms.la \
+	../../snmp/libnxsnmp/libnxsnmp.la \
+	../libnxsrv/libnxsrv.la
+
+mellanox_la_SOURCES = mellanox/mellanox.cpp mellanox/onyx.cpp
+mellanox_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
+mellanox_la_LDFLAGS = -module -avoid-version
+mellanox_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 

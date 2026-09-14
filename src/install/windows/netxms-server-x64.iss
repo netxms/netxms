@@ -245,6 +245,8 @@ Source: "..\..\agent\subagents\opcua\target\opcua.jar"; DestDir: "{app}\lib\java
 Source: "..\..\agent\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: server
 Source: "..\..\agent\tools\scripts\nxagentd-generate-tunnel-config.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 ; Network device drivers
+Source: "..\..\..\x64\Release\arista.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\arista.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\at.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\at.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\avaya.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
@@ -285,6 +287,8 @@ Source: "..\..\..\x64\Release\lenovo.ndd"; DestDir: "{app}\lib\ndd"; Flags: igno
 Source: "..\..\..\x64\Release\lenovo.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\mds.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\mds.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\x64\Release\mellanox.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\mellanox.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\mikrotik.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\mikrotik.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\x64\Release\moxa.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion signonce; Components: server
