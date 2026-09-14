@@ -11,7 +11,7 @@
 vpath %.cpp $(TOPDIR)/src/agent/subagents/weather
 
 TOOL = test-unit-weather
-SOURCES = main.cpp util.cpp openmeteo.cpp metno.cpp
+SOURCES = brightsky.cpp main.cpp metno.cpp openmeteo.cpp util.cpp
 TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include -I$(TOPDIR)/src/agent/subagents/weather
 TOOL_LIBS = -lnetxms -lnxjansson $(CURL_LIBS)
 
