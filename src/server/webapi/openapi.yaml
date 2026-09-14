@@ -5692,7 +5692,7 @@ paths:
         '404':
           description: Parent or child object with given ID does not exist
         '409':
-          description: Binding would create a loop, violates object hierarchy rules (for example a rack with a second cooling zone parent, or a power domain reachable from two facilities), or conflicts with a template from the same exclusion group
+          description: Binding would create a loop, violates object hierarchy rules (for example a rack with a second cooling zone parent, or a power domain with a facility parent and a power domain parent from a different facility), or conflicts with a template from the same exclusion group
         '500':
           description: Errors occurred while copying data collection configuration from template
       security:

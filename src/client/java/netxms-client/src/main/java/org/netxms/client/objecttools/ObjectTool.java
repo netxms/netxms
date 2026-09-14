@@ -29,8 +29,8 @@ import org.netxms.client.InputField;
 import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Collector;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -537,6 +537,6 @@ public class ObjectTool implements ObjectAction
     */
    public static boolean isContainerObject(AbstractObject object)
    {
-      return ((object instanceof Collector) || (object instanceof Container) || (object instanceof Rack) || (object instanceof ServiceRoot) || (object instanceof Subnet) || (object instanceof Cluster) || (object instanceof Zone));
+      return ((object instanceof DataCollectionContainer) || (object instanceof Container) || (object instanceof Rack) || (object instanceof ServiceRoot) || (object instanceof Subnet) || (object instanceof Cluster) || (object instanceof Zone));
    }
 }

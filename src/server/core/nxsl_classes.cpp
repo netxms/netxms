@@ -943,7 +943,9 @@ NXSL_METHOD_DEFINITION(NetObj, unbind)
       *result = vm->createValue(false);
       return 0;
    }
-   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
+       (thisObject->getObjectClass() != OBJECT_FACILITY) && (thisObject->getObjectClass() != OBJECT_POWERDOMAIN) &&
+       (thisObject->getObjectClass() != OBJECT_COOLINGZONE) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    if (!argv[0]->isObject())
@@ -980,7 +982,9 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
       return NXSL_ERR_BAD_CLASS;
 
    NetObj *parent = static_cast<shared_ptr<NetObj>*>(nxslParent->getData())->get();
-   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+   if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
+       (parent->getObjectClass() != OBJECT_FACILITY) && (parent->getObjectClass() != OBJECT_POWERDOMAIN) &&
+       (parent->getObjectClass() != OBJECT_COOLINGZONE) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    NetObj::unlinkObjects(parent, thisObject);

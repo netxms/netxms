@@ -260,44 +260,116 @@ uint32_t PowerDomain::modifyFromJSONInternal(json_t *json, GenericClientSession 
 }
 
 /**
- * Collect facilities reachable from given object through facility and power domain parents.
- * Facility objects are added to the set directly; power domain parents are followed recursively.
- * Object lists are locked internally, so this must not be called with parent list locked.
+ * Context of a pending binding: the edge child -> parent is treated as existing
+ * while the hierarchy rule is evaluated, before the objects are actually linked.
  */
-static void CollectReachableFacilities(const NetObj& object, HashSet<uint32_t> *facilities, HashSet<uint32_t> *visited)
+struct PendingBinding
 {
-   if (visited->contains(object.getId()))
-      return;
-   visited->put(object.getId());
+   const NetObj *child;
+   const NetObj *parent;
+};
 
-   unique_ptr<SharedObjectArray<NetObj>> parents = object.getParents();
+/**
+ * Check if given object has facility with given ID among its direct parents,
+ * taking pending binding into account.
+ */
+static bool HasDirectFacilityParent(const NetObj& object, uint32_t facilityId, const PendingBinding& binding)
+{
+   if ((binding.child->getId() == object.getId()) && (binding.parent->getObjectClass() == OBJECT_FACILITY) && (binding.parent->getId() == facilityId))
+      return true;
+
+   unique_ptr<SharedObjectArray<NetObj>> parents = object.getParents(OBJECT_FACILITY);
    for(int i = 0; i < parents->size(); i++)
-   {
-      NetObj *parent = parents->get(i);
-      if (parent->getObjectClass() == OBJECT_FACILITY)
-         facilities->put(parent->getId());
-      else if (parent->getObjectClass() == OBJECT_POWERDOMAIN)
-         CollectReachableFacilities(*parent, facilities, visited);
-   }
+      if (parents->get(i)->getId() == facilityId)
+         return true;
+   return false;
 }
 
 /**
- * Validate binding to given parent. Power domain may not belong to two different facilities,
- * neither directly nor through a chain of parent power domains.
+ * Walk power domain ancestors of given object (through power domain parent edges only,
+ * pending binding included) and check whether any of them is a direct member of a facility
+ * that the domain being checked is not itself a direct member of. Returns true if such
+ * facility is found. Visited set is used to guard against loops.
+ */
+static bool HasConflictingFacilityViaPowerDomains(const NetObj& domain, const NetObj& object, const PendingBinding& binding, HashSet<uint32_t> *visited)
+{
+   if (visited->contains(object.getId()))
+      return false;
+   visited->put(object.getId());
+
+   // Facilities of this ancestor (object != domain) must all be facilities of the domain itself
+   if (object.getId() != domain.getId())
+   {
+      if ((binding.child->getId() == object.getId()) && (binding.parent->getObjectClass() == OBJECT_FACILITY) &&
+          !HasDirectFacilityParent(domain, binding.parent->getId(), binding))
+         return true;
+
+      unique_ptr<SharedObjectArray<NetObj>> facilities = object.getParents(OBJECT_FACILITY);
+      for(int i = 0; i < facilities->size(); i++)
+         if (!HasDirectFacilityParent(domain, facilities->get(i)->getId(), binding))
+            return true;
+   }
+
+   if ((binding.child->getId() == object.getId()) && (binding.parent->getObjectClass() == OBJECT_POWERDOMAIN) &&
+       HasConflictingFacilityViaPowerDomains(domain, *binding.parent, binding, visited))
+      return true;
+
+   unique_ptr<SharedObjectArray<NetObj>> parents = object.getParents(OBJECT_POWERDOMAIN);
+   for(int i = 0; i < parents->size(); i++)
+      if (HasConflictingFacilityViaPowerDomains(domain, *parents->get(i), binding, visited))
+         return true;
+   return false;
+}
+
+/**
+ * Check hierarchy rule for single power domain: a power domain may not have a facility
+ * parent and a power domain parent (direct or through a chain of power domains) from a
+ * different facility. Membership in two facilities directly is not an error here.
+ */
+static bool IsPowerDomainHierarchyValid(const NetObj& domain, const PendingBinding& binding)
+{
+   bool hasFacilityParent = ((binding.child->getId() == domain.getId()) && (binding.parent->getObjectClass() == OBJECT_FACILITY)) ||
+         (domain.getParents(OBJECT_FACILITY)->size() > 0);
+   if (!hasFacilityParent)
+      return true;   // Facility membership is inherited through power domain parents only, no conflict possible
+
+   HashSet<uint32_t> visited;
+   return !HasConflictingFacilityViaPowerDomains(domain, domain, binding, &visited);
+}
+
+/**
+ * Validate binding to given parent. New facility or power domain parent changes facility
+ * lineage of this domain and of every power domain below it, so the rule is checked for
+ * this object and all its power domain descendants.
  */
 uint32_t PowerDomain::validateParent(const NetObj& parent) const
 {
    if ((parent.getObjectClass() != OBJECT_FACILITY) && (parent.getObjectClass() != OBJECT_POWERDOMAIN))
       return RCC_SUCCESS;
 
-   HashSet<uint32_t> facilities, visited;
-   CollectReachableFacilities(*this, &facilities, &visited);
-   if (parent.getObjectClass() == OBJECT_FACILITY)
-      facilities.put(parent.getId());
-   else
-      CollectReachableFacilities(parent, &facilities, &visited);
+   PendingBinding binding = { this, &parent };
+   if (!IsPowerDomainHierarchyValid(*this, binding))
+      return RCC_OBJECT_HIERARCHY_VIOLATION;
 
-   return (facilities.size() > 1) ? RCC_OBJECT_HIERARCHY_VIOLATION : RCC_SUCCESS;
+   HashSet<uint32_t> visited;
+   visited.put(m_id);
+   unique_ptr<SharedObjectArray<NetObj>> queue = getChildren(OBJECT_POWERDOMAIN);
+   while(queue->size() > 0)
+   {
+      shared_ptr<NetObj> domain = queue->getShared(queue->size() - 1);
+      queue->remove(queue->size() - 1);
+      if (visited.contains(domain->getId()))
+         continue;
+      visited.put(domain->getId());
+
+      if (!IsPowerDomainHierarchyValid(*domain, binding))
+         return RCC_OBJECT_HIERARCHY_VIOLATION;
+
+      unique_ptr<SharedObjectArray<NetObj>> children = domain->getChildren(OBJECT_POWERDOMAIN);
+      for(int i = 0; i < children->size(); i++)
+         queue->add(children->getShared(i));
+   }
+   return RCC_SUCCESS;
 }
 
 /**
