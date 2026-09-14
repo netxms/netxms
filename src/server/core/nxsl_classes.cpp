@@ -5531,7 +5531,12 @@ static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
    shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString());
    NetObjInsert(container, true, false);
-   NetObj::linkObjects(thisObject, container);
+   if (!NetObj::linkObjects(thisObject, container))
+   {
+      container->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    container->publish();
 
    *result = container->createNXSLObject(vm);
@@ -5549,7 +5554,12 @@ static int CreateCollectorImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
    shared_ptr<Collector> collector = make_shared<Collector>(argv[0]->getValueAsCString());
    NetObjInsert(collector, true, false);
-   NetObj::linkObjects(thisObject, collector);
+   if (!NetObj::linkObjects(thisObject, collector))
+   {
+      collector->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    collector->publish();
 
    *result = collector->createNXSLObject(vm);
@@ -5569,7 +5579,12 @@ static int CreateFacilityImpl(NXSL_Object *object, int argc, NXSL_Value **argv, 
    shared_ptr<Facility> facility = make_shared<Facility>();
    facility->setName(argv[0]->getValueAsCString());
    NetObjInsert(facility, true, false);
-   NetObj::linkObjects(thisObject, facility);
+   if (!NetObj::linkObjects(thisObject, facility))
+   {
+      facility->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    facility->publish();
 
    *result = facility->createNXSLObject(vm);
@@ -5603,7 +5618,12 @@ static int CreatePowerDomainImpl(NXSL_Object *object, int argc, NXSL_Value **arg
    shared_ptr<PowerDomain> domain = make_shared<PowerDomain>(argv[0]->getValueAsCString(), json);
    json_decref(json);
    NetObjInsert(domain, true, false);
-   NetObj::linkObjects(thisObject, domain);
+   if (!NetObj::linkObjects(thisObject, domain))
+   {
+      domain->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    domain->publish();
 
    *result = domain->createNXSLObject(vm);
@@ -5635,7 +5655,12 @@ static int CreateCoolingZoneImpl(NXSL_Object *object, int argc, NXSL_Value **arg
    shared_ptr<CoolingZone> zone = make_shared<CoolingZone>(argv[0]->getValueAsCString(), json);
    json_decref(json);
    NetObjInsert(zone, true, false);
-   NetObj::linkObjects(thisObject, zone);
+   if (!NetObj::linkObjects(thisObject, zone))
+   {
+      zone->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    zone->publish();
 
    *result = zone->createNXSLObject(vm);
@@ -5660,7 +5685,12 @@ static int CreateRackImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
    shared_ptr<Rack> rack = make_shared<Rack>(argv[0]->getValueAsCString(), (argc > 1) ? argv[1]->getValueAsInt32() : 0);
    NetObjInsert(rack, true, false);
-   NetObj::linkObjects(thisObject, rack);
+   if (!NetObj::linkObjects(thisObject, rack))
+   {
+      rack->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    rack->publish();
 
    *result = rack->createNXSLObject(vm);
@@ -5703,9 +5733,16 @@ static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
    if (node != nullptr)
    {
       node->setPrimaryHostName(pname);
-      NetObj::linkObjects(thisObject, node);
-      node->publish();
-      *result = node->createNXSLObject(vm);
+      if (NetObj::linkObjects(thisObject, node))
+      {
+         node->publish();
+         *result = node->createNXSLObject(vm);
+      }
+      else
+      {
+         node->deleteObject();
+         *result = vm->createValue();
+      }
    }
    else
    {
@@ -5742,7 +5779,12 @@ static int CreateSensorImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NX
 
    shared_ptr<Sensor> sensor = make_shared<Sensor>(argv[0]->getValueAsCString(), deviceClass, gatewayId, static_cast<uint16_t>((argc > 3) ? argv[3]->getValueAsUInt32() : 255));
    NetObjInsert(sensor, true, false);
-   NetObj::linkObjects(thisObject, sensor);
+   if (!NetObj::linkObjects(thisObject, sensor))
+   {
+      sensor->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    sensor->publish();
    *result = sensor->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;

@@ -519,7 +519,7 @@ void AutoBindTarget::runContainerAutoBindPoll()
    for (int i = 0; i < objects->size(); i++)
    {
       shared_ptr<NetObj> object = objects->getShared(i);
-      if (object->getId() == m_this->getId())
+      if ((object->getId() == m_this->getId()) || object->isDeleteInitiated())
          continue;
 
       AutoBindDecision decision = isApplicable(&cachedFilterVM, object, m_this);
@@ -541,7 +541,8 @@ void AutoBindTarget::runContainerAutoBindPoll()
          m_this->sendPollerMsg(_T("   Binding object %s\r\n"), object->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("AutoBindTarget::runContainerAutoBindPoll(): binding object \"%s\" [%u] to %s \"%s\" [%u]"),
                object->getName(), object->getId(), className, m_this->getName(), m_this->getId());
-         NetObj::linkObjects(m_this->self(), object);
+         if (!NetObj::linkObjects(m_this->self(), object))
+            continue;
          EventBuilder(EVENT_CONTAINER_AUTOBIND, GetServerEventSourceId())
             .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("nodeName"), object->getName())
