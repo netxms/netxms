@@ -2807,7 +2807,7 @@ uint32_t NXCORE_EXPORTABLE ChangeObjectBinding(const shared_ptr<NetObj>& parent,
          }
          else
          {
-            rcc = RCC_DCI_COPY_ERRORS;
+            rcc = RCC_INVALID_OBJECT_ID;
          }
       }
       else
@@ -3198,7 +3198,11 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
    if ((parent != nullptr) &&             // parent can be nullptr for nodes
        (objectClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
    {
-      NetObj::linkObjects(parent, object);
+      if (!NetObj::linkObjects(parent, object))
+      {
+         object->deleteObject();
+         return RCC_INVALID_OBJECT_ID;
+      }
       parent->calculateCompoundStatus();
       if (parent->getObjectClass() == OBJECT_CLUSTER)
       {

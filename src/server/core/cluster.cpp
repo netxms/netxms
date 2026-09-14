@@ -1078,7 +1078,8 @@ bool Cluster::addNode(const shared_ptr<Node>& node)
    if (m_zoneUIN != node->getZoneUIN())
       return false;
 
-   applyToTarget(node);
+   if (!applyToTarget(node))
+      return false;
    node->setRecheckCapsFlag();
    node->forceConfigurationPoll();
    return true;
@@ -1126,6 +1127,8 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
    for (int i = 0; i < nodes->size(); i++)
    {
       shared_ptr<NetObj> node = nodes->getShared(i);
+      if (node->isDeleteInitiated())
+         continue;
 
       AutoBindDecision decision = isApplicable(&cachedFilterVM, node, this);
       if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
@@ -1148,8 +1151,8 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          }
          else
          {
-            sendPollerMsg(_T("   Node not added - node and cluster are in different zones\r\n"), node->getName());
-            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): node \"%s\" [%u] not added to cluster \"%s\" [%u] due to zone mismatch"), node->getName(), node->getId(), m_name, m_id);
+            sendPollerMsg(_T("   Node %s not added - zone mismatch or node is being deleted\r\n"), node->getName());
+            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): node \"%s\" [%u] not added to cluster \"%s\" [%u] (zone mismatch or node is being deleted)"), node->getName(), node->getId(), m_name, m_id);
          }
       }
       else if ((decision == AutoBindDecision_Unbind) && isDirectChild(node->getId()))

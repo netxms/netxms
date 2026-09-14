@@ -1780,7 +1780,7 @@ public:
    virtual int getRackPlacement(json_t *element) const { return 0; }
    virtual json_t *getChassisPlacement() const { return nullptr; }
 
-   static void linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child);
+   static bool linkObjects(const shared_ptr<NetObj>& parent, const shared_ptr<NetObj>& child);
    static void unlinkObjects(NetObj *parent, NetObj *child);
 
    static const wchar_t *getObjectClassNameW(int objectClass);

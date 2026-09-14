@@ -1114,9 +1114,16 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
 	if (node != nullptr)
 	{
 		node->setPrimaryHostName(pname);
-		NetObj::linkObjects(parent, node);
-		node->publish();
-		*result = node->createNXSLObject(vm);
+		if (NetObj::linkObjects(parent, node))
+		{
+			node->publish();
+			*result = node->createNXSLObject(vm);
+		}
+		else
+		{
+			node->deleteObject();
+			*result = vm->createValue();
+		}
 	}
 	else
 	{
@@ -1162,7 +1169,12 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **result, N
 
 	shared_ptr<Container> container = make_shared<Container>(name);
 	NetObjInsert(container, true, false);
-	NetObj::linkObjects(parent, container);
+	if (!NetObj::linkObjects(parent, container))
+	{
+		container->deleteObject();
+		*result = vm->createValue();
+		return NXSL_ERR_SUCCESS;
+	}
 	container->publish();
 
 	*result = container->createNXSLObject(vm);
@@ -1231,9 +1243,10 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 
    if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, parent.get()) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, child.get()))
    {
-      NetObj::linkObjects(parent, child);
-      parent->calculateCompoundStatus();
-      *ppResult = vm->createValue(true);
+      bool success = NetObj::linkObjects(parent, child);
+      if (success)
+         parent->calculateCompoundStatus();
+      *ppResult = vm->createValue(success);
    }
    else
    {

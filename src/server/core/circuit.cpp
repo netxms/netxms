@@ -166,6 +166,8 @@ void Circuit::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
    for (int i = 0; i < objects->size(); i++)
    {
       shared_ptr<NetObj> iface = objects->getShared(i);
+      if (iface->isDeleteInitiated())
+         continue;
 
       AutoBindDecision decision = isApplicable(&cachedFilterVM, iface, this);
       if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
@@ -175,7 +177,8 @@ void Circuit::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
       {
          sendPollerMsg(_T("   Binding interface %s\r\n"), iface->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Circuit::autobindPoll(): binding interface \"%s\" [%u] to circuit \"%s\" [%u]"), iface->getName(), iface->getId(), m_name, m_id);
-         linkObjects(self(), iface);
+         if (!linkObjects(self(), iface))
+            continue;
          EventBuilder(EVENT_CIRCUIT_AUTOBIND, g_dwMgmtNode)
             .param(_T("interfaceId"), iface->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("interfaceName"), iface->getName())

@@ -2131,7 +2131,8 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
                   TCHAR containerName[MAX_OBJECT_NAME];
                   ConfigReadStr(_T("AgentTunnels.NewNodesContainer"), containerName, MAX_OBJECT_NAME, _T("New Tunnel Nodes"));
                   shared_ptr<NetObj> container = FindObjectByName(containerName, OBJECT_CONTAINER);
-                  NetObj::linkObjects((container != nullptr) ? container : g_infrastructureServiceRoot, node);
+                  if ((container == nullptr) || !NetObj::linkObjects(container, node))
+                     NetObj::linkObjects(g_infrastructureServiceRoot, node);
 
                   uint32_t rcc = BindAgentTunnel(t->getId(), node->getId(), 0);
                   nxlog_debug_tag(DEBUG_TAG, 4, _T("Bind tunnel %u to new node %s [%d]: RCC = %u"),

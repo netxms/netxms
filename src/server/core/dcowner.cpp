@@ -887,12 +887,11 @@ void DataCollectionOwner::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
  */
 bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& target)
 {
-   bool success = true;
-
    // Link node to template
    if (!isDirectChild(target->getId()))
    {
-      linkObjects(self(), target);
+      if (!linkObjects(self(), target))
+         return false;
    }
 
    // Copy items
@@ -906,10 +905,7 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
    {
 		DCObject *object = m_dcObjects.get(i);
 		dciList.add(object->getId());
-      if (!target->applyTemplateItem(m_id, object))
-      {
-         success = false;
-      }
+      target->applyTemplateItem(m_id, object);
    }
    unlockDciAccess();
 
@@ -924,7 +920,7 @@ bool DataCollectionOwner::applyToTarget(const shared_ptr<DataCollectionTarget>& 
       target->queueUpdate();
    }
 
-   return success;
+   return true;
 }
 
 /**

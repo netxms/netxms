@@ -2417,7 +2417,11 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
       return iface;
 
    NetObjInsert(iface, true, false);
-   linkObjects(self(), iface);
+   if (!linkObjects(self(), iface))
+   {
+      iface->deleteObject();
+      return shared_ptr<Interface>();
+   }
    if (!m_isUnpublished)
       iface->publish();
 

@@ -5343,7 +5343,12 @@ static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
    shared_ptr<Container> container = make_shared<Container>(argv[0]->getValueAsCString());
    NetObjInsert(container, true, false);
-   NetObj::linkObjects(thisObject, container);
+   if (!NetObj::linkObjects(thisObject, container))
+   {
+      container->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    container->publish();
 
    *result = container->createNXSLObject(vm);
@@ -5361,7 +5366,12 @@ static int CreateCollectorImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
    shared_ptr<Collector> collector = make_shared<Collector>(argv[0]->getValueAsCString());
    NetObjInsert(collector, true, false);
-   NetObj::linkObjects(thisObject, collector);
+   if (!NetObj::linkObjects(thisObject, collector))
+   {
+      collector->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    collector->publish();
 
    *result = collector->createNXSLObject(vm);
@@ -5404,9 +5414,16 @@ static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
    if (node != nullptr)
    {
       node->setPrimaryHostName(pname);
-      NetObj::linkObjects(thisObject, node);
-      node->publish();
-      *result = node->createNXSLObject(vm);
+      if (NetObj::linkObjects(thisObject, node))
+      {
+         node->publish();
+         *result = node->createNXSLObject(vm);
+      }
+      else
+      {
+         node->deleteObject();
+         *result = vm->createValue();
+      }
    }
    else
    {
@@ -5443,7 +5460,12 @@ static int CreateSensorImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NX
 
    shared_ptr<Sensor> sensor = make_shared<Sensor>(argv[0]->getValueAsCString(), deviceClass, gatewayId, static_cast<uint16_t>((argc > 3) ? argv[3]->getValueAsUInt32() : 255));
    NetObjInsert(sensor, true, false);
-   NetObj::linkObjects(thisObject, sensor);
+   if (!NetObj::linkObjects(thisObject, sensor))
+   {
+      sensor->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    sensor->publish();
    *result = sensor->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;

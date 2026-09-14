@@ -374,6 +374,8 @@ void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
    for (int i = 0; i < objects->size(); i++)
    {
       shared_ptr<NetObj> object = objects->getShared(i);
+      if (object->isDeleteInitiated())
+         continue;
 
       AutoBindDecision decision = isApplicable(&cachedFilterVM, object, this);
       if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
@@ -383,7 +385,8 @@ void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
       {
          sendPollerMsg(_T("   Binding object %s\r\n"), object->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Container::autobindPoll(): binding object \"%s\" [%u] to container \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
-         linkObjects(self(), object);
+         if (!linkObjects(self(), object))
+            continue;
          EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
             .param(_T("nodeId"), object->getId(), EventBuilder::OBJECT_ID_FORMAT)
             .param(_T("nodeName"), object->getName())
