@@ -590,6 +590,12 @@ ConnectionProcessingResult HAChannelListener::processConnection(SOCKET s, const 
 #endif
    if (context == nullptr)
       return CPR_COMPLETED;
+
+#ifdef SSL_OP_NO_COMPRESSION
+   SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
+#else
+   SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+#endif
    if (!SetupServerTlsContext(context))
    {
       SSL_CTX_free(context);
@@ -673,30 +679,41 @@ static void DialerThread()
 #else
                SSL_CTX *context = SSL_CTX_new(SSLv23_method());
 #endif
-               SSL *ssl = (context != nullptr) ? SSL_new(context) : nullptr;
-               if (ssl != nullptr)
+               if (context != nullptr)
                {
-                  SSL_set_connect_state(ssl);
-                  SSL_set_fd(ssl, static_cast<int>(s));
-                  if (DoTlsHandshake(ssl, s))
+#ifdef SSL_OP_NO_COMPRESSION
+                  SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
+#else
+                  SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+#endif
+                  SSL *ssl = SSL_new(context);
+                  if (ssl != nullptr)
                   {
-                     LockGuard lockGuard(s_sessionLock);
-                     delete s_outboundSession;
-                     s_outboundSession = new HAChannelSession(s, context, ssl, true);
-                     s_outboundSession->start();
-                     nxlog_debug_tag(DEBUG_TAG, 3, L"Outbound peer channel connection to %s:%u established", s_peerAddress, s_peerPort);
+                     SSL_set_connect_state(ssl);
+                     SSL_set_fd(ssl, static_cast<int>(s));
+                     if (DoTlsHandshake(ssl, s))
+                     {
+                        LockGuard lockGuard(s_sessionLock);
+                        delete s_outboundSession;
+                        s_outboundSession = new HAChannelSession(s, context, ssl, true);
+                        s_outboundSession->start();
+                        nxlog_debug_tag(DEBUG_TAG, 3, L"Outbound peer channel connection to %s:%u established", s_peerAddress, s_peerPort);
+                     }
+                     else
+                     {
+                        SSL_free(ssl);
+                        SSL_CTX_free(context);
+                        closesocket(s);
+                     }
                   }
                   else
                   {
-                     SSL_free(ssl);
                      SSL_CTX_free(context);
                      closesocket(s);
                   }
                }
                else
                {
-                  if (context != nullptr)
-                     SSL_CTX_free(context);
                   closesocket(s);
                }
             }
