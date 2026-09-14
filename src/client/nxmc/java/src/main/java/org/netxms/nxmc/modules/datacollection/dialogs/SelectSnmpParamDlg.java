@@ -29,14 +29,17 @@ import org.netxms.nxmc.modules.snmp.dialogs.MibSelectionDialog;
  */
 public class SelectSnmpParamDlg extends MibSelectionDialog implements IParameterSelectionDialog
 {
-	/**
-	 * @param parentShell
-	 * @param currentOid
-	 * @param nodeId
-	 */
-	public SelectSnmpParamDlg(Shell parentShell, SnmpObjectId currentOid, long nodeId)
+   /**
+    * Create dialog.
+    *
+    * @param parentShell parent shell
+    * @param currentOid current OID (can be null)
+    * @param nodeId node object ID for walk
+    * @param snmpAgentName name of additional SNMP agent to be used for walk (null or empty for node's primary SNMP agent)
+    */
+   public SelectSnmpParamDlg(Shell parentShell, SnmpObjectId currentOid, long nodeId, String snmpAgentName)
 	{
-		super(parentShell, currentOid, nodeId);
+      super(parentShell, currentOid, nodeId, snmpAgentName);
 	}
 
 	/* (non-Javadoc)

@@ -58,6 +58,7 @@ public class MibSelectionDialog extends Dialog
    private I18n i18n = LocalizationHelper.getI18n(MibSelectionDialog.class);
 
 	private long nodeId = 0;
+   private String snmpAgentName = null;
 	private MibBrowser mibTree;
 	private Text oid;
 	private MibObjectDetails details;
@@ -72,11 +73,25 @@ public class MibSelectionDialog extends Dialog
 	 */
 	public MibSelectionDialog(Shell parentShell, SnmpObjectId initialSelection, long nodeId)
 	{
-		super(parentShell);
-		setShellStyle(getShellStyle() | SWT.RESIZE);
-		this.initialSelection = initialSelection;
-		this.nodeId = nodeId;
+      this(parentShell, initialSelection, nodeId, null);
 	}
+
+   /**
+    * Create MIB selection dialog with walk option using given SNMP agent.
+    *
+    * @param parentShell parent shell
+    * @param initialSelection initial selection for MIB tree or null
+    * @param nodeId node object ID for walk (0 to disable walk)
+    * @param snmpAgentName name of additional SNMP agent to be used for walk (null or empty for node's primary SNMP agent)
+    */
+   public MibSelectionDialog(Shell parentShell, SnmpObjectId initialSelection, long nodeId, String snmpAgentName)
+   {
+      super(parentShell);
+      setShellStyle(getShellStyle() | SWT.RESIZE);
+      this.initialSelection = initialSelection;
+      this.nodeId = nodeId;
+      this.snmpAgentName = snmpAgentName;
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
@@ -289,7 +304,7 @@ public class MibSelectionDialog extends Dialog
 		try
 		{
 			final SnmpObjectId root = SnmpObjectId.parseSnmpObjectId(oid.getText());
-			MibWalkDialog dlg = new MibWalkDialog(getShell(), nodeId, root);
+			MibWalkDialog dlg = new MibWalkDialog(getShell(), nodeId, snmpAgentName, root);
 			if (dlg.open() == Window.OK)
 			{
 				SnmpValue v = dlg.getValue();

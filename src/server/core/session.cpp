@@ -10733,6 +10733,7 @@ struct SNMP_WalkerThreadArgs
    uint32_t requestId;
    shared_ptr<Node> node;
    TCHAR *baseOID;
+   SharedString snmpAgentName;
 
    SNMP_WalkerThreadArgs(ClientSession *_session, uint32_t _requestId, const shared_ptr<Node>& _node) : node(_node)
    {
@@ -10797,7 +10798,10 @@ static void SNMP_WalkerThread(SNMP_WalkerThreadArgs *args)
    context.fieldId = VID_SNMP_WALKER_DATA_BASE;
    context.varbindCount = 0;
    context.session = args->session;
-   args->node->callSnmpEnumerate(args->baseOID, WalkerCallback, &context);
+   if (args->snmpAgentName.isEmpty())
+      args->node->callSnmpEnumerate(args->baseOID, WalkerCallback, &context);
+   else
+      args->node->callSnmpEnumerate(args->snmpAgentName, args->baseOID, WalkerCallback, &context);
    msg.setField(VID_NUM_VARIABLES, context.varbindCount);
    msg.setEndOfSequence();
    args->session->sendMessage(msg);
@@ -10818,13 +10822,24 @@ void ClientSession::startSnmpWalk(const NXCPMessage& request)
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ_SNMP))
          {
-            response.setField(VID_RCC, RCC_SUCCESS);
+            SharedString snmpAgentName = request.getFieldAsSharedString(VID_SNMP_AGENT_NAME);
+            AdditionalSnmpAgent *agent = !snmpAgentName.isEmpty() ? static_cast<Node&>(*object).getAdditionalSnmpAgent(snmpAgentName) : nullptr;
+            if (snmpAgentName.isEmpty() || (agent != nullptr))
+            {
+               delete agent;
+               response.setField(VID_RCC, RCC_SUCCESS);
 
-            incRefCount();
+               incRefCount();
 
-            SNMP_WalkerThreadArgs *args = new SNMP_WalkerThreadArgs(this, request.getId(), static_pointer_cast<Node>(object));
-            args->baseOID = request.getFieldAsString(VID_SNMP_OID);
-            ThreadPoolExecute(g_clientThreadPool, SNMP_WalkerThread, args);
+               SNMP_WalkerThreadArgs *args = new SNMP_WalkerThreadArgs(this, request.getId(), static_pointer_cast<Node>(object));
+               args->baseOID = request.getFieldAsString(VID_SNMP_OID);
+               args->snmpAgentName = snmpAgentName;
+               ThreadPoolExecute(g_clientThreadPool, SNMP_WalkerThread, args);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+            }
          }
          else
          {

@@ -693,7 +693,7 @@ public class TableColumns extends AbstractDCIPropertyPage
                final Map<Long, SnmpValue> oidMap = new HashMap<>();
                final int columnIdOffset = baseOID.getLength();
                logger.debug("Running SNMP WALK on {}", baseOID);
-               session.snmpWalk(nodeId, baseOID, (nid, data) -> {
+               session.snmpWalk(nodeId, dci.getSnmpAgentName(), baseOID, (nid, data) -> {
                   for(SnmpValue v : data)
                      oidMap.put(v.getObjectId().getIdFromPos(columnIdOffset), v);
                });

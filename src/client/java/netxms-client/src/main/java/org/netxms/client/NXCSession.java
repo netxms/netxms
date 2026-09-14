@@ -13635,9 +13635,43 @@ public class NXCSession
     */
    public void snmpWalk(long nodeId, String rootOid, SnmpWalkListener listener) throws IOException, NXCException
    {
+      snmpWalk(nodeId, null, rootOid, listener);
+   }
+
+   /**
+    * Do SNMP walk using given additional SNMP agent configured on node. Operation will start at given root object, and callback
+    * will be called one or more times as data will come from server. This method will exit only when walk operation is complete.
+    *
+    * @param nodeId node object ID
+    * @param snmpAgentName name of additional SNMP agent (null or empty string to use node's primary SNMP agent)
+    * @param rootOid root SNMP object ID
+    * @param listener listener
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void snmpWalk(long nodeId, String snmpAgentName, SnmpObjectId rootOid, SnmpWalkListener listener) throws IOException, NXCException
+   {
+      snmpWalk(nodeId, snmpAgentName, rootOid.toString(), listener);
+   }
+
+   /**
+    * Do SNMP walk using given additional SNMP agent configured on node. Operation will start at given root object, and callback
+    * will be called one or more times as data will come from server. This method will exit only when walk operation is complete.
+    *
+    * @param nodeId node object ID
+    * @param snmpAgentName name of additional SNMP agent (null or empty string to use node's primary SNMP agent)
+    * @param rootOid root SNMP object ID (as text)
+    * @param listener listener
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void snmpWalk(long nodeId, String snmpAgentName, String rootOid, SnmpWalkListener listener) throws IOException, NXCException
+   {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_START_SNMP_WALK);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_SNMP_OID, rootOid);
+      if ((snmpAgentName != null) && !snmpAgentName.isEmpty())
+         msg.setField(NXCPCodes.VID_SNMP_AGENT_NAME, snmpAgentName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       while(true)
@@ -13652,7 +13686,7 @@ public class NXCSession
             final int type = response.getFieldAsInt32(fieldId++);
             final String value = response.getFieldAsString(fieldId++);
             final byte[] rawValue = response.getFieldAsBinary(fieldId++);
-            data.add(new SnmpValue(name, type, value, rawValue, nodeId));
+            data.add(new SnmpValue(name, type, value, rawValue, nodeId, snmpAgentName));
          }
          listener.onSnmpWalkData(nodeId, data);
          if (response.isEndOfSequence())

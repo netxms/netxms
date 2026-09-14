@@ -60,20 +60,26 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 	public static final int COLUMN_VALUE = 2;
 	
 	private long nodeId;
+   private String snmpAgentName;
 	private SnmpObjectId rootObject;
    private SortableTableViewer viewer;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
 	private SnmpValue value;
 	
-	/**
-	 * @param parentShell
-	 * @param rootObject root object to start walk from
-	 */
-	public MibWalkDialog(Shell parentShell, long nodeId, SnmpObjectId rootObject)
+   /**
+    * Create dialog.
+    *
+    * @param parentShell parent shell
+    * @param nodeId node object ID
+    * @param snmpAgentName name of additional SNMP agent to use (null for node's primary SNMP agent)
+    * @param rootObject root object to start walk from
+    */
+   public MibWalkDialog(Shell parentShell, long nodeId, String snmpAgentName, SnmpObjectId rootObject)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 		this.nodeId = nodeId;
+      this.snmpAgentName = snmpAgentName;
 		this.rootObject = rootObject;
 	}
 	
@@ -205,7 +211,7 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-				session.snmpWalk(nodeId, rootObject.toString(), MibWalkDialog.this);
+				session.snmpWalk(nodeId, snmpAgentName, rootObject.toString(), MibWalkDialog.this);
 			}
 
 			@Override

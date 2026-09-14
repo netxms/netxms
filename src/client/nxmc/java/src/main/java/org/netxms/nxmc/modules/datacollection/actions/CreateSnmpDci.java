@@ -152,6 +152,8 @@ public class CreateSnmpDci extends Action
 		dci.setDescription(description);
 		dci.setDeltaCalculation(deltaCalculation);
 		dci.setName(value.getName());
+      if (value.getSnmpAgentName() != null)
+         dci.setSnmpAgentName(value.getSnmpAgentName());
 
 		dcc.modifyObject(dci);
 		dcc.close();

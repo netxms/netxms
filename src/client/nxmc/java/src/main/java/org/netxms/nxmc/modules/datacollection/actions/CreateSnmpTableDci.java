@@ -53,6 +53,7 @@ public class CreateSnmpTableDci extends Action
 
    private ObjectView view;
    private MibObject mibObject;
+   private String snmpAgentName;
 
    /**
     * Create action.
@@ -86,10 +87,12 @@ public class CreateSnmpTableDci extends Action
     * Set MIB object for tree-based creation.
     *
     * @param object selected MIB object
+    * @param snmpAgentName name of additional SNMP agent to be used by new DCI (null for node's primary SNMP agent)
     */
-   public void setMibObject(MibObject object)
+   public void setMibObject(MibObject object, String snmpAgentName)
    {
       this.mibObject = object;
+      this.snmpAgentName = snmpAgentName;
       setEnabled(true);
    }
 
@@ -122,6 +125,7 @@ public class CreateSnmpTableDci extends Action
       final int retentionTime = dlg.getRetentionTime();
       final List<ColumnDefinition> finalColumns = dlg.getSelectedColumns();
       final long nodeId = view.getObjectId();
+      final String agentName = snmpAgentName;
 
       new Job(i18n.tr("Creating SNMP table DCI..."), view) {
          @Override
@@ -148,6 +152,8 @@ public class CreateSnmpTableDci extends Action
             table.setDescription(finalDescription);
             table.setName(dciName);
             table.setColumns(finalColumns);
+            if (agentName != null)
+               table.setSnmpAgentName(agentName);
             dcc.modifyObject(table);
             dcc.close();
          }

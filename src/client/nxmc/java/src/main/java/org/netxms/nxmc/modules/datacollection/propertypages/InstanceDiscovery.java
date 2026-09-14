@@ -374,7 +374,7 @@ public class InstanceDiscovery extends AbstractDCIPropertyPage
             {
                oid = null;
             }
-            SelectSnmpParamDlg snmpDlg = new SelectSnmpParamDlg(getShell(), oid, nodeId);
+            SelectSnmpParamDlg snmpDlg = new SelectSnmpParamDlg(getShell(), oid, nodeId, dco.getSnmpAgentName());
             if (snmpDlg.open() == Window.OK)
                discoveryData.setText(snmpDlg.getParameterName());
             break;

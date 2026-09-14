@@ -771,9 +771,9 @@ public class General extends AbstractDCIPropertyPage
                   oid = null;
                }
                if (sourceNode.getObjectId() != 0)
-                  dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
+                  dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId(), dco.getSnmpAgentName());
                else
-                  dlg = new SelectSnmpParamDlg(getShell(), oid, dco.getNodeId());
+                  dlg = new SelectSnmpParamDlg(getShell(), oid, dco.getNodeId(), dco.getSnmpAgentName());
                break;
             case WINPERF:
                if (!isTable)

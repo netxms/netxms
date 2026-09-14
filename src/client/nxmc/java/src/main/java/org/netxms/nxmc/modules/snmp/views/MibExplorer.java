@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.snmp.views;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -41,13 +42,18 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
+import org.netxms.client.snmp.SnmpAgentConfiguration;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.nxmc.Memento;
@@ -97,6 +103,10 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
    private SnmpValueLabelProvider valuesLabelProvider;
 	private boolean walkActive = false;
    private long walkObjectId = 0;
+   private String walkAgentName = null;
+   private Composite agentSelectorArea;
+   private Combo agentSelector;
+   private String selectedAgentName = null;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
    private String restoredSelection;
 	private Action actionWalk;
@@ -171,6 +181,8 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       super.postClone(origin);
 
       MibExplorer view = (MibExplorer)origin;
+      selectedAgentName = view.selectedAgentName;
+      updateAgentSelector();
       if (!view.walkActive)
       {
          walkData.addAll(view.walkData);
@@ -217,10 +229,18 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       gd.verticalIndent = toolView ? 3 : 0;
       splitter.setLayoutData(gd);
 
-		SashForm mibViewSplitter = new SashForm(splitter, SWT.HORIZONTAL);
-		mibViewSplitter.setLayout(new FillLayout());
+      SashForm mibViewSplitter = new SashForm(splitter, SWT.HORIZONTAL);
 
-		mibBrowser = new MibBrowser(mibViewSplitter, SWT.BORDER);
+      Composite mibBrowserArea = new Composite(mibViewSplitter, SWT.NONE);
+      GridLayout mibBrowserAreaLayout = new GridLayout();
+      mibBrowserAreaLayout.marginHeight = 0;
+      mibBrowserAreaLayout.marginWidth = 0;
+      mibBrowserAreaLayout.verticalSpacing = 0;
+      mibBrowserArea.setLayout(mibBrowserAreaLayout);
+      createAgentSelector(mibBrowserArea);
+
+      mibBrowser = new MibBrowser(mibBrowserArea, SWT.BORDER);
+      mibBrowser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       mibBrowser.setMessageHandler((message) -> addMessage(MessageArea.INFORMATION, message));
 		mibBrowser.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -310,6 +330,8 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       fd.bottom = new FormAttachment(100, 0);
       viewer.getControl().setLayoutData(fd);
 
+      updateAgentSelector();
+
       if ((restoredSelection != null) && !restoredSelection.isBlank())
       {
          details.setOid(restoredSelection);
@@ -324,6 +346,89 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
          }
       }
 	}
+
+   /**
+    * Create selector for SNMP agent to be used for walk.
+    *
+    * @param parent parent composite
+    */
+   private void createAgentSelector(Composite parent)
+   {
+      agentSelectorArea = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.marginHeight = WidgetHelper.OUTER_SPACING;
+      layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      agentSelectorArea.setLayout(layout);
+      GridData gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+      gd.exclude = true;
+      agentSelectorArea.setLayoutData(gd);
+      agentSelectorArea.setVisible(false);
+
+      Label label = new Label(agentSelectorArea, SWT.NONE);
+      label.setText(i18n.tr("SNMP agent:"));
+
+      agentSelector = new Combo(agentSelectorArea, SWT.DROP_DOWN | SWT.READ_ONLY);
+      agentSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      agentSelector.addModifyListener((e) -> {
+         int index = agentSelector.getSelectionIndex();
+         selectedAgentName = (index > 0) ? agentSelector.getItem(index) : null;
+      });
+   }
+
+   /**
+    * Update SNMP agent selector from current node configuration. Selector is only shown if node has additional SNMP agents.
+    */
+   private void updateAgentSelector()
+   {
+      if ((agentSelector == null) || agentSelector.isDisposed())
+         return;
+
+      AbstractObject object = getObject();
+      List<SnmpAgentConfiguration> agents = (object instanceof AbstractNode) ? ((AbstractNode)object).getSnmpAgents() : null;
+      boolean hasAgents = (agents != null) && !agents.isEmpty();
+
+      String selection = selectedAgentName;
+      agentSelector.removeAll();
+      agentSelector.add(i18n.tr("Primary"));
+      int selectionIndex = 0;
+      if (hasAgents)
+      {
+         for(SnmpAgentConfiguration a : agents)
+         {
+            agentSelector.add(a.getName());
+            if (a.getName().equals(selection))
+               selectionIndex = agentSelector.getItemCount() - 1;
+         }
+      }
+      agentSelector.select(selectionIndex);
+      selectedAgentName = (selectionIndex > 0) ? selection : null;
+
+      if (agentSelectorArea.getVisible() != hasAgents)
+      {
+         agentSelectorArea.setVisible(hasAgents);
+         ((GridData)agentSelectorArea.getLayoutData()).exclude = !hasAgents;
+         getClientArea().layout(true, true);
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void onObjectChange(AbstractObject object)
+   {
+      updateAgentSelector();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectUpdate(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void onObjectUpdate(AbstractObject object)
+   {
+      updateAgentSelector();
+   }
 
    /**
     * Show or hide results filter.
@@ -589,7 +694,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 		MibObject selectedObject = mibBrowser.getSelection();
 		if (CreateSnmpTableDci.isTableColumn(selectedObject))
 		{
-		   actionCreateSnmpTableDci.setMibObject(selectedObject);
+		   actionCreateSnmpTableDci.setMibObject(selectedObject, selectedAgentName);
 		   manager.add(actionCreateSnmpTableDci);
 		   manager.add(new Separator());
 		}
@@ -661,14 +766,16 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
       viewer.refresh();
 
       final long nodeId = getObjectId();
+      final String agentName = selectedAgentName;
       final String queryOid = oid;
       walkObjectId = nodeId;
+      walkAgentName = agentName;
 
       Job job = new Job(i18n.tr("Walking MIB tree"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-            session.snmpWalk(nodeId, queryOid, MibExplorer.this);
+            session.snmpWalk(nodeId, agentName, queryOid, MibExplorer.this);
 			}
 
 			@Override
@@ -700,8 +807,8 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 			@Override
 			public void run()
 			{
-            if (nodeId != walkObjectId)
-               return; // Ignore data from incorrect node
+            if ((nodeId != walkObjectId) || (!data.isEmpty() && !Objects.equals(data.get(0).getSnmpAgentName(), walkAgentName)))
+               return; // Ignore data from incorrect node or SNMP agent
 
 				walkData.addAll(data);
             viewer.refresh();
@@ -735,6 +842,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
    {
       super.saveState(memento);
       memento.set("selection", mibBrowser.getSelection().getObjectId().toString());
+      memento.set("snmpAgent", (selectedAgentName != null) ? selectedAgentName : "");
    }
 
    /**
@@ -746,5 +854,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
    {
       super.restoreState(memento);
       restoredSelection = memento.getAsString("selection", null);
+      String agentName = memento.getAsString("snmpAgent", "");
+      selectedAgentName = agentName.isEmpty() ? null : agentName;
    }
 }

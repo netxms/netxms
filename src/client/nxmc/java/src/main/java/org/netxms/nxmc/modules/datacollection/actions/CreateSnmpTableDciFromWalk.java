@@ -136,6 +136,7 @@ public class CreateSnmpTableDciFromWalk extends Action
       final int retentionTime = dlg.getRetentionTime();
       final List<ColumnDefinition> finalColumns = dlg.getSelectedColumns();
       final long nodeId = objects.get(0).getNodeId();
+      final String snmpAgentName = objects.get(0).getSnmpAgentName();
 
       new Job(i18n.tr("Creating SNMP table DCI..."), view) {
          @Override
@@ -162,6 +163,8 @@ public class CreateSnmpTableDciFromWalk extends Action
             table.setDescription(finalDescription);
             table.setName(dciName);
             table.setColumns(finalColumns);
+            if (snmpAgentName != null)
+               table.setSnmpAgentName(snmpAgentName);
             dcc.modifyObject(table);
             dcc.close();
          }

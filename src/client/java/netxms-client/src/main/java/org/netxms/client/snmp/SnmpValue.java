@@ -29,6 +29,7 @@ public class SnmpValue
 	private String value;
    private byte[] rawValue;
 	private long nodeId;
+   private String snmpAgentName;
 
 	/**
     * Create new SNMP value (varbind) object.
@@ -41,13 +42,29 @@ public class SnmpValue
     */
 	public SnmpValue(String name, int type, String value, byte[] rawValue, long nodeId)
 	{
-		this.name = name;
-		this.objectId = null;
-		this.type = type;
-		this.value = value;
-      this.rawValue = rawValue;
-		this.nodeId = nodeId;
+      this(name, type, value, rawValue, nodeId, null);
 	}
+
+   /**
+    * Create new SNMP value (varbind) object.
+    *
+    * @param name value name (OID in text form)
+    * @param type data type
+    * @param value value as string
+    * @param rawValue raw value
+    * @param nodeId source node ID
+    * @param snmpAgentName name of additional SNMP agent this value was read from (null or empty for node's primary SNMP agent)
+    */
+   public SnmpValue(String name, int type, String value, byte[] rawValue, long nodeId, String snmpAgentName)
+   {
+      this.name = name;
+      this.objectId = null;
+      this.type = type;
+      this.value = value;
+      this.rawValue = rawValue;
+      this.nodeId = nodeId;
+      this.snmpAgentName = snmpAgentName;
+   }
 
 	/**
     * Create new SNMP value (varbind) object.
@@ -128,4 +145,14 @@ public class SnmpValue
 	{
 		return nodeId;
 	}
+
+   /**
+    * Get name of additional SNMP agent this value was read from.
+    *
+    * @return name of additional SNMP agent or null (or empty string) if value was read from node's primary SNMP agent
+    */
+   public String getSnmpAgentName()
+   {
+      return snmpAgentName;
+   }
 }

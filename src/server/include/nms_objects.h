@@ -4975,6 +4975,13 @@ public:
    {
       return callSnmpEnumerate(rootOid, reinterpret_cast<uint32_t (*)(SNMP_Variable*, SNMP_Transport*, void*)>(handler), callerData, context, failOnShutdown);
    }
+   uint32_t callSnmpEnumerate(const wchar_t *agentName, const TCHAR *rootOid, uint32_t (*handler)(SNMP_Variable*, SNMP_Transport*, void*),
+         void *callerData, const char *context = nullptr, bool failOnShutdown = false);
+   template<typename T> uint32_t callSnmpEnumerate(const wchar_t *agentName, const TCHAR *rootOid,
+         uint32_t (*handler)(SNMP_Variable*, SNMP_Transport*, T*), T *callerData, const char *context = nullptr, bool failOnShutdown = false)
+   {
+      return callSnmpEnumerate(agentName, rootOid, reinterpret_cast<uint32_t (*)(SNMP_Variable*, SNMP_Transport*, void*)>(handler), callerData, context, failOnShutdown);
+   }
 
    shared_ptr<NetworkMapObjectList> getAndUpdateL2Topology(uint32_t *status, int radius, bool useL1Topology);
    shared_ptr<NetworkMapObjectList> buildL2Topology(int radius, bool includeEndNodes, bool useL1Topology, bool includeWiFiClients, NetworkMap *filterProvider);

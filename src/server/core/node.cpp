@@ -13055,11 +13055,36 @@ uint32_t Node::callSnmpEnumerate(const TCHAR *rootOid, uint32_t (*handler)(SNMP_
       return SNMP_ERR_COMM;
 
    uint32_t rc;
-   SNMP_Transport *pTransport = createSnmpTransport(0, SNMP_VERSION_DEFAULT, context);
-   if (pTransport != nullptr)
+   SNMP_Transport *transport = createSnmpTransport(0, SNMP_VERSION_DEFAULT, context);
+   if (transport != nullptr)
    {
-      rc = SnmpWalk(pTransport, rootOid, handler, callerData, false, failOnShutdown);
-      delete pTransport;
+      rc = SnmpWalk(transport, rootOid, handler, callerData, false, failOnShutdown);
+      delete transport;
+   }
+   else
+   {
+      rc = SNMP_ERR_COMM;
+   }
+   return rc;
+}
+
+/**
+ * Call SNMP Enumerate with parameters of given additional SNMP agent
+ */
+uint32_t Node::callSnmpEnumerate(const wchar_t *agentName, const TCHAR *rootOid, uint32_t (*handler)(SNMP_Variable *, SNMP_Transport *, void *), void *callerData, const char *context, bool failOnShutdown)
+{
+   if (agentName == nullptr)
+      return callSnmpEnumerate(rootOid, handler, callerData, context, failOnShutdown);
+
+   if (m_state & DCSF_UNREACHABLE)
+      return SNMP_ERR_COMM;
+
+   uint32_t rc;
+   SNMP_Transport *transport = createSnmpTransportForAgent(agentName);
+   if (transport != nullptr)
+   {
+      rc = SnmpWalk(transport, rootOid, handler, callerData, false, failOnShutdown);
+      delete transport;
    }
    else
    {
