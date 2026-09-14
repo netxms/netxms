@@ -1070,6 +1070,11 @@ BOOL Initialize()
       }
    }
 
+   // Report configuration warnings collected while log was not yet open
+   const StringList& configWarnings = g_config->getWarnings();
+   for(int i = 0; i < configWarnings.size(); i++)
+      nxlog_write_tag(NXLOG_WARNING, _T("config"), _T("%s"), configWarnings.get(i));
+
    // Applied here rather than before Initialize() so that environment file
    // problems are reported into the already opened log
    UpdateEnvironment();
@@ -2038,7 +2043,8 @@ static void UpdateEnvironment()
 
    if (fileEntry != nullptr)
    {
-      for(int i = 0; i < fileEntry->getValueCount(); i++)
+      // Iterate in load order so that later files override variables set by earlier ones
+      for(int i = fileEntry->getValueCount() - 1; i >= 0; i--)
       {
          StringMap env;
          if (LoadEnvironmentFile(fileEntry->getValue(i), &env))
@@ -2063,7 +2069,7 @@ static int QueryConfig(const Config& config, const TCHAR *path)
    if ((e == nullptr) || (e->getValueCount() == 0))
       return 2;
 
-   for(int i = 0; i < e->getValueCount(); i++)
+   for(int i = e->getValueCount() - 1; i >= 0; i--)  // in load order
       ConsolePrintf(_T("%s\n"), e->getValue(i));
    return 0;
 }
@@ -2654,6 +2660,8 @@ int main(int argc, char *argv[])
                config = g_config;
                config->print(stdout);
                validConfig = config->parseTemplate(configSection, m_cfgTemplate);
+               for(int i = 0; i < config->getWarnings().size(); i++)
+                  ConsolePrintf(_T("WARNING: %s\n"), config->getWarnings().get(i));
             }
 
             if (!validConfig)

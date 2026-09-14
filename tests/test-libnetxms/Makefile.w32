@@ -6,6 +6,7 @@
 TOOL = test-libnetxms
 SOURCES = \
 	cc.cpp \
+	config.cpp \
 	crypto.cpp \
 	gauge64.cpp \
 	geolocation.cpp \

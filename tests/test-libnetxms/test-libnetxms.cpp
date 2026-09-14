@@ -11,6 +11,7 @@
 
 NETXMS_EXECUTABLE_HEADER(test-libnetxms)
 
+void TestConfig();
 void TestGauge64();
 void TestMemoryPool();
 void TestObjectMemoryPool();
@@ -3827,6 +3828,7 @@ int main(int argc, char *argv[])
    TestCondition();
    TestRWLock();
    TestGauge64();
+   TestConfig();
    TestMemoryPool();
    TestObjectMemoryPool();
    TestString();

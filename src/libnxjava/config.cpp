@@ -514,7 +514,7 @@ JNIEXPORT jint JNICALL Java_org_netxms_agent_ConfigEntry_getLine(JNIEnv *jenv, j
    {
       return 0;
    }
-   return (jint) configEntry->getLine();
+   return (jint) configEntry->getValueLine();
 }
 
 /*
@@ -570,7 +570,7 @@ JNIEXPORT jstring JNICALL Java_org_netxms_agent_ConfigEntry_getFile(JNIEnv *jenv
    {
       return jresult;
    }
-   const TCHAR *result = configEntry->getFile();
+   const TCHAR *result = configEntry->getValueFile();
    if (result != NULL)
    {
       jresult = JavaStringFromCString(jenv, result);

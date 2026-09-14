@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -41,19 +41,19 @@ private:
 	ConfigEntry *m_first;
    ConfigEntry *m_last;
 	StringList m_values;
+   StringList m_valueFiles;         // Source file of each value (parallel to m_values)
+   IntegerArray<int> m_valueLines;  // Source line of each value (parallel to m_values)
    StringMap m_attributes;
-   TCHAR *m_file;
-	int m_line;
-	int m_id;
+   int m_id;
    const Config *m_owner;
 
-	void addEntry(ConfigEntry *entry);
-	void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
+   void addEntry(ConfigEntry *entry);
+   void linkEntry(ConfigEntry *entry) { entry->m_next = m_next; m_next = entry; }
 
    ConfigEntry(const ConfigEntry *src, const Config *owner);
 
 public:
-	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, const TCHAR *file, int line, int id);
+	ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, int id);
 	ConfigEntry(const ConfigEntry& src) = delete;
 	~ConfigEntry();
 
@@ -65,35 +65,41 @@ public:
 	int getValueCount() const { return m_values.size(); }
 
    String getConcatenatedValues(const TCHAR *separator = nullptr) const;
-	int getConcatenatedValuesLength() const;
+   int getConcatenatedValuesLength() const;
 
-   const TCHAR *getValue(int index = 0) const { return m_values.get(index); }
+   // Values are kept in load order but indexed newest first: index 0 is the most recently
+   // added value (the effective one when a key is set in several configuration sources),
+   // index getValueCount() - 1 is the first one loaded.
+   const TCHAR *getValue(int index = 0) const { return m_values.get(m_values.size() - 1 - index); }
 	int32_t getValueAsInt(int index = 0, int32_t defaultValue = 0) const;
 	uint32_t getValueAsUInt(int index = 0, uint32_t defaultValue = 0) const;
 	int64_t getValueAsInt64(int index = 0, int64_t defaultValue = 0) const;
 	uint64_t getValueAsUInt64(int index = 0, uint64_t defaultValue = 0) const;
 	bool getValueAsBoolean(int index = 0, bool defaultValue = false) const;
-	uuid getValueAsUUID(int index) const;
+   uuid getValueAsUUID(int index) const;
+   const TCHAR *getValueFile(int index = 0) const { return m_valueFiles.get(m_values.size() - 1 - index); }
+   int getValueLine(int index = 0) const { return m_valueLines.get(m_values.size() - 1 - index); }
 
-   void addValue(const TCHAR *value) { m_values.add(value); }
-   void addValuePreallocated(TCHAR *value) { m_values.addPreallocated(value); }
-	void setValue(const TCHAR*value);
+   // Source file can be nullptr for values not read from a file
+   void addValue(const TCHAR *value, const TCHAR *file = nullptr, int line = 0);
+   void addValuePreallocated(TCHAR *value, const TCHAR *file = nullptr, int line = 0);
+   void setValue(const TCHAR*value);
 
-	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = nullptr) const;
-	int32_t getSubEntryValueAsInt(const TCHAR *name, int index = 0, int32_t defaultValue = 0) const;
-	uint32_t getSubEntryValueAsUInt(const TCHAR *name, int index = 0, uint32_t defaultValue = 0) const;
-	int64_t getSubEntryValueAsInt64(const TCHAR *name, int index = 0, int64_t defaultValue = 0) const;
-	uint64_t getSubEntryValueAsUInt64(const TCHAR *name, int index = 0, uint64_t defaultValue = 0) const;
-	double getSubEntryValueAsDouble(const TCHAR *name, int index = 0, double defaultValue = 0) const;
-	bool getSubEntryValueAsBoolean(const TCHAR *name, int index = 0, bool defaultValue = false) const;
-	uuid getSubEntryValueAsUUID(const TCHAR *name, int index = 0) const;
+   const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = nullptr) const;
+   int32_t getSubEntryValueAsInt(const TCHAR *name, int index = 0, int32_t defaultValue = 0) const;
+   uint32_t getSubEntryValueAsUInt(const TCHAR *name, int index = 0, uint32_t defaultValue = 0) const;
+   int64_t getSubEntryValueAsInt64(const TCHAR *name, int index = 0, int64_t defaultValue = 0) const;
+   uint64_t getSubEntryValueAsUInt64(const TCHAR *name, int index = 0, uint64_t defaultValue = 0) const;
+   double getSubEntryValueAsDouble(const TCHAR *name, int index = 0, double defaultValue = 0) const;
+   bool getSubEntryValueAsBoolean(const TCHAR *name, int index = 0, bool defaultValue = false) const;
+   uuid getSubEntryValueAsUUID(const TCHAR *name, int index = 0) const;
 
    const TCHAR *getAttribute(const TCHAR *name)  const { return m_attributes.get(name); }
-	int32_t getAttributeAsInt(const TCHAR *name, int32_t defaultValue = 0) const;
-	uint32_t getAttributeAsUInt(const TCHAR *name, uint32_t defaultValue = 0) const;
-	int64_t getAttributeAsInt64(const TCHAR *name, int64_t defaultValue = 0) const;
-	uint64_t getAttributeAsUInt64(const TCHAR *name, uint64_t defaultValue = 0) const;
-	bool getAttributeAsBoolean(const TCHAR *name, bool defaultValue = false) const;
+   int32_t getAttributeAsInt(const TCHAR *name, int32_t defaultValue = 0) const;
+   uint32_t getAttributeAsUInt(const TCHAR *name, uint32_t defaultValue = 0) const;
+   int64_t getAttributeAsInt64(const TCHAR *name, int64_t defaultValue = 0) const;
+   uint64_t getAttributeAsUInt64(const TCHAR *name, uint64_t defaultValue = 0) const;
+   bool getAttributeAsBoolean(const TCHAR *name, bool defaultValue = false) const;
 
    void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); }
    void setAttributePreallocated(TCHAR *name, TCHAR *value) { m_attributes.setPreallocated(name, value); }
@@ -103,13 +109,10 @@ public:
    void setAttribute(const TCHAR *name, uint64_t value);
    void setAttribute(const TCHAR *name, bool value);
 
-	const TCHAR *getFile() const { return m_file; }
-	int getLine() const { return m_line; }
+   void setName(const TCHAR *name);
 
-	void setName(const TCHAR *name);
-
-	ConfigEntry *findOrCreateEntry(const TCHAR *name);
-	ConfigEntry *findEntry(const TCHAR *name) const;
+   ConfigEntry *findOrCreateEntry(const TCHAR *name);
+   ConfigEntry *findEntry(const TCHAR *name) const;
    unique_ptr<ObjectArray<ConfigEntry>> getSubEntries(const TCHAR *mask = nullptr) const;
    unique_ptr<ObjectArray<ConfigEntry>> getOrderedSubEntries(const TCHAR *mask = nullptr) const;
    void unlinkEntry(ConfigEntry *entry);
@@ -132,18 +135,20 @@ typedef ConfigEntry *(*ConfigMergeStrategy)(ConfigEntry *parent, const TCHAR *na
 class LIBNETXMS_EXPORTABLE Config
 {
 private:
-	ConfigEntry *m_root;
-	int m_errorCount;
-	Mutex m_mutex;
+   ConfigEntry *m_root;
+   int m_errorCount;
+   Mutex m_mutex;
    StringMap m_aliases;
    bool m_allowMacroExpansion;
    ConfigMergeStrategy m_mergeStrategy;
    bool m_logErrors;
+   StringList m_warnings;
 
 protected:
 	virtual void onError(const TCHAR *errorMessage);
 
 	void error(const TCHAR *format, ...);
+	void warning(const TCHAR *format, ...);
 
 public:
 	Config(bool allowMacroExpansion = true);
@@ -197,6 +202,7 @@ public:
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 
 	int getErrorCount() const { return m_errorCount; }
+	const StringList& getWarnings() const { return m_warnings; }
 
    void print() const;
 	void print(FILE *file) const;

@@ -206,7 +206,8 @@ bool AddExtensionFromConfig(const ConfigEntry *config)
       const ConfigEntry *envEntry = config->findEntry(_T("Environment"));
       if (envEntry != nullptr)
       {
-         for (int i = 0; i < envEntry->getValueCount(); i++)
+         // Iterate in load order so that later definitions override earlier ones
+         for (int i = envEntry->getValueCount() - 1; i >= 0; i--)
          {
             const TCHAR *kv = envEntry->getValue(i);
             const TCHAR *eq = (kv != nullptr) ? _tcschr(kv, _T('=')) : nullptr;

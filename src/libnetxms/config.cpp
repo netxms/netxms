@@ -118,7 +118,7 @@ static StringBuffer ExpandValue(const TCHAR *src, bool xmlFormat, bool expandEnv
 /**
  * Constructor for config entry
  */
-ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, const TCHAR *file, int line, int id)
+ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *owner, int id)
 {
    m_name = MemCopyString(CHECK_NULL(name));
    m_first = nullptr;
@@ -127,8 +127,6 @@ ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const Config *o
    m_parent = nullptr;
    if (parent != nullptr)
       parent->addEntry(this);
-   m_file = MemCopyString(CHECK_NULL(file));
-   m_line = line;
    m_id = id;
    m_owner = owner;
 }
@@ -144,9 +142,9 @@ ConfigEntry::ConfigEntry(const ConfigEntry *src, const Config *owner)
    m_next = nullptr;
    m_parent = nullptr;
    m_values.addAll(&src->m_values);
+   m_valueFiles.addAll(&src->m_valueFiles);
+   m_valueLines.addAll(&src->m_valueLines);
    m_attributes.addAll(&src->m_attributes);
-   m_file = MemCopyString(src->m_file);
-   m_line = src->m_line;
    m_id = src->m_id;
    m_owner = owner;
 }
@@ -163,7 +161,6 @@ ConfigEntry::~ConfigEntry()
       delete entry;
    }
    MemFree(m_name);
-   MemFree(m_file);
 }
 
 /**
@@ -218,7 +215,7 @@ ConfigEntry* ConfigEntry::findOrCreateEntry(const TCHAR *name)
       if (!_tcsicmp(e->getName(), realName))
          return e;
 
-   return new ConfigEntry(realName, this, m_owner, _T("<memory>"), 0, 0);
+   return new ConfigEntry(realName, this, m_owner, 0);
 }
 
 /**
@@ -360,7 +357,29 @@ uuid ConfigEntry::getValueAsUUID(int index) const
 void ConfigEntry::setValue(const TCHAR *value)
 {
    m_values.clear();
+   m_valueFiles.clear();
+   m_valueLines.clear();
+   addValue(value);
+}
+
+/**
+ * Add value with its source location
+ */
+void ConfigEntry::addValue(const TCHAR *value, const TCHAR *file, int line)
+{
    m_values.add(value);
+   m_valueFiles.add((file != nullptr) ? file : _T("<memory>"));
+   m_valueLines.add(line);
+}
+
+/**
+ * Add preallocated value with its source location
+ */
+void ConfigEntry::addValuePreallocated(TCHAR *value, const TCHAR *file, int line)
+{
+   m_values.addPreallocated(value);
+   m_valueFiles.add((file != nullptr) ? file : _T("<memory>"));
+   m_valueLines.add(line);
 }
 
 /**
@@ -602,6 +621,8 @@ void ConfigEntry::addSubTree(const ConfigEntry *root, bool merge)
          if (dst != nullptr)
          {
             dst->m_values.addAll(&src->m_values);
+            dst->m_valueFiles.addAll(&src->m_valueFiles);
+            dst->m_valueLines.addAll(&src->m_valueLines);
          }
          else
          {
@@ -805,7 +826,7 @@ void ConfigEntry::createJson(json_t *parent, bool toCamelCase) const
    }
    else if (!m_values.isEmpty())
    {
-      json_object_set_new(parent, utf8Name.c_str(), json_string_t(m_values.get(0)));
+      json_object_set_new(parent, utf8Name.c_str(), json_string_t(m_values.get(m_values.size() - 1)));
    }
 }
 
@@ -814,7 +835,7 @@ void ConfigEntry::createJson(json_t *parent, bool toCamelCase) const
  */
 Config::Config(bool allowMacroExpansion)
 {
-   m_root = new ConfigEntry(_T("config"), nullptr, this, nullptr, 0, 0);
+   m_root = new ConfigEntry(_T("config"), nullptr, this, 0);
    m_errorCount = 0;
    m_allowMacroExpansion = allowMacroExpansion;
    m_mergeStrategy = nullptr;
@@ -856,6 +877,22 @@ void Config::error(const TCHAR *format, ...)
 }
 
 /**
+ * Report warning (does not affect error count or parse result)
+ */
+void Config::warning(const TCHAR *format, ...)
+{
+   va_list args;
+   TCHAR buffer[4096];
+
+   va_start(args, format);
+   _vsntprintf(buffer, 4096, format, args);
+   va_end(args);
+   m_warnings.add(buffer);
+   if (m_logErrors)
+      nxlog_write_tag(NXLOG_WARNING, _T("config"), _T("%s"), buffer);
+}
+
+/**
  * Parse size specification (with K, M, G, or T suffixes)
  */
 static uint64_t ParseSize(const TCHAR *s, uint64_t multiplier)
@@ -873,6 +910,14 @@ static uint64_t ParseSize(const TCHAR *s, uint64_t multiplier)
    if ((*eptr == 'T') || (*eptr == 't'))
       return value * multiplier * multiplier * multiplier * multiplier;
    return value;
+}
+
+/**
+ * Check if configuration template entry type accepts multiple values
+ */
+static inline bool IsMultiValueType(BYTE type)
+{
+   return (type == CT_STRING_CONCAT) || (type == CT_STRING_SET) || (type == CT_STRING_LIST);
 }
 
 /**
@@ -896,7 +941,15 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
       entry = getEntry(name);
       if (entry != nullptr)
       {
-         const TCHAR *value = CHECK_NULL(entry->getValue(entry->getValueCount() - 1));
+         if ((entry->getValueCount() > 1) && !IsMultiValueType(cfgTemplate[i].type) && (cfgTemplate[i].type != CT_IGNORE))
+         {
+            for(int j = 1; j < entry->getValueCount(); j++)
+            {
+               warning(_T("Configuration parameter %s set in file %s at line %d overrides value set in file %s at line %d"),
+                     cfgTemplate[i].token, entry->getValueFile(), entry->getValueLine(), entry->getValueFile(j), entry->getValueLine(j));
+            }
+         }
+         const TCHAR *value = CHECK_NULL(entry->getValue());
          switch(cfgTemplate[i].type)
          {
             case CT_LONG:
@@ -908,7 +961,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                *((int32_t *)cfgTemplate[i].buffer) = _tcstol(value, &eptr, 0);
                if (*eptr != 0)
                {
-                  error(_T("Invalid number '%s' in configuration file %s at line %d\n"), value, entry->getFile(), entry->getLine());
+                  error(_T("Invalid number '%s' in configuration file %s at line %d\n"), value, entry->getValueFile(), entry->getValueLine());
                }
                break;
             case CT_WORD:
@@ -920,7 +973,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                *((UINT16 *)cfgTemplate[i].buffer) = (UINT16)_tcstoul(value, &eptr, 0);
                if (*eptr != 0)
                {
-                  error(_T("Invalid number '%s' in configuration file %s at line %d\n"), value, entry->getFile(), entry->getLine());
+                  error(_T("Invalid number '%s' in configuration file %s at line %d\n"), value, entry->getValueFile(), entry->getValueLine());
                }
                break;
             case CT_BOOLEAN_FLAG_32:
@@ -997,7 +1050,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                   *static_cast<TCHAR**>(cfgTemplate[i].buffer) = MemAllocString(entry->getConcatenatedValuesLength() + 1);
                   curr = *static_cast<TCHAR**>(cfgTemplate[i].buffer);
                }
-               for(int j = 0; j < entry->getValueCount(); j++)
+               for(int j = entry->getValueCount() - 1; j >= 0; j--)  // in load order
                {
                   _tcscpy(curr, entry->getValue(j));
                   curr += _tcslen(curr);
@@ -1007,11 +1060,11 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                *curr = 0;
                break;
             case CT_STRING_SET:
-               for (int j = 0; j < entry->getValueCount(); j++)
+               for (int j = entry->getValueCount() - 1; j >= 0; j--)  // in load order
                   static_cast<StringSet*>(cfgTemplate[i].buffer)->add(entry->getValue(j));
                break;
             case CT_STRING_LIST:
-               for (int j = 0; j < entry->getValueCount(); j++)
+               for (int j = entry->getValueCount() - 1; j >= 0; j--)  // in load order
                   static_cast<StringList*>(cfgTemplate[i].buffer)->add(entry->getValue(j));
                break;
             case CT_SIZE_BYTES:
@@ -1039,7 +1092,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                *((double*)cfgTemplate[i].buffer) = _tcstod(value, &eptr);
                if (*eptr != 0)
                {
-                  error(_T("Invalid floating point number '%s' in configuration file %s at line %d\n"), value, entry->getFile(), entry->getLine());
+                  error(_T("Invalid floating point number '%s' in configuration file %s at line %d\n"), value, entry->getValueFile(), entry->getValueLine());
                }
                break;
             case CT_IGNORE:
@@ -1074,7 +1127,7 @@ const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue, int 
 }
 
 /**
- * Get first non-empty value
+ * Get first non-empty value (values are checked newest first, so this is the effective non-empty value)
  */
 const TCHAR *Config::getFirstNonEmptyValue(const TCHAR *path) const
 {
@@ -1246,14 +1299,14 @@ ConfigEntry *Config::getOrCreateEntry(const TCHAR *path)
          entry = parent->findEntry(name);
          curr = end + 1;
          if (entry == nullptr)
-            entry = new ConfigEntry(name, parent, this, _T("<memory>"), 0, 0);
+            entry = new ConfigEntry(name, parent, this, 0);
          parent = entry;
       }
       else
       {
          entry = parent->findEntry(curr);
          if (entry == nullptr)
-            entry = new ConfigEntry(curr, parent, this, _T("<memory>"), 0, 0);
+            entry = new ConfigEntry(curr, parent, this, 0);
       }
    }
    while(end != nullptr);
@@ -1427,7 +1480,7 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
    currentSection = m_root->findEntry(defaultIniSection);
    if (currentSection == nullptr)
    {
-      currentSection = new ConfigEntry(defaultIniSection, m_root, this, fileName, 0, 0);
+      currentSection = new ConfigEntry(defaultIniSection, m_root, this, 0);
    }
 
    const char *curr = content;
@@ -1479,14 +1532,14 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
             if (*curr == _T('@'))
             {
                // @name indicates no merge entry
-               currentSection = new ConfigEntry(curr + 1, parent, this, fileName, sourceLine, 0);
+               currentSection = new ConfigEntry(curr + 1, parent, this, 0);
             }
             else
             {
                currentSection = parent->findEntry(curr);
                if (currentSection == nullptr)
                {
-                  currentSection = new ConfigEntry(curr, parent, this, fileName, sourceLine, 0);
+                  currentSection = new ConfigEntry(curr, parent, this, 0);
                }
             }
             curr = s + 1;
@@ -1511,9 +1564,9 @@ bool Config::loadIniConfigFromMemory(const char *content, size_t length, const T
          ConfigEntry *entry = currentSection->findEntry(buffer);
          if (entry == nullptr)
          {
-            entry = new ConfigEntry(buffer, currentSection, this, fileName, sourceLine, 0);
+            entry = new ConfigEntry(buffer, currentSection, this, 0);
          }
-         entry->addValue(ExpandValue(ptr, false, m_allowMacroExpansion));
+         entry->addValue(ExpandValue(ptr, false, m_allowMacroExpansion), fileName, sourceLine);
       }
    }
    return ignoreErrors || validConfig;
@@ -1555,9 +1608,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          WCHAR wname[MAX_PATH];
          utf8_to_wchar(name, -1, wname, MAX_PATH);
          wname[MAX_PATH - 1] = 0;
-         ConfigEntry *e = new ConfigEntry(wname, ps->config->getEntry(_T("/")), ps->config, ps->file, XML_GetCurrentLineNumber(ps->parser), 0);
+         ConfigEntry *e = new ConfigEntry(wname, ps->config->getEntry(_T("/")), ps->config, 0);
 #else
-         ConfigEntry *e = new ConfigEntry(name, ps->config->getEntry(_T("/")), ps->config, ps->file, XML_GetCurrentLineNumber(ps->parser), 0);
+         ConfigEntry *e = new ConfigEntry(name, ps->config->getEntry(_T("/")), ps->config, 0);
 #endif
          ps->stack[ps->level] = e;
          ps->charData[ps->level] = _T("");
@@ -1624,7 +1677,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          }
          if (ps->stack[ps->level] == nullptr)
          {
-            ConfigEntry *e = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->config, ps->file, XML_GetCurrentLineNumber(ps->parser), (int)id);
+            ConfigEntry *e = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->config, (int)id);
             ps->stack[ps->level] = e;
             // add all attributes to the entry
             for(int i = 0; attrs[i] != nullptr; i += 2)
@@ -1662,7 +1715,8 @@ static void EndElement(void *userData, const char *name)
       ps->level--;
       if (ps->trimValue[ps->level])
          ps->charData[ps->level].trim();
-      ps->stack[ps->level]->addValue(ExpandValue(ps->charData[ps->level], true, ps->config->isExpansionAllowed()));
+      ps->stack[ps->level]->addValue(ExpandValue(ps->charData[ps->level], true, ps->config->isExpansionAllowed()),
+            ps->file, static_cast<int>(XML_GetCurrentLineNumber(ps->parser)));
    }
 }
 
@@ -1689,7 +1743,7 @@ static void LoadJsonObject(ConfigEntry *parent, json_t *obj, const Config *owner
 
       ConfigEntry *entry = merge ? parent->findEntry(tkey) : nullptr;
       if (entry == nullptr)
-         entry = new ConfigEntry(tkey, parent, owner, _T("<memory>"), 0, 0);
+         entry = new ConfigEntry(tkey, parent, owner, 0);
 
       if (json_is_object(value))
       {
@@ -1748,7 +1802,7 @@ bool Config::loadJsonConfigFromMemory(const char *json, size_t jsonSize, const T
       section = m_root->findEntry(defaultSectionName);
       if ((section == nullptr) || !merge)
       {
-         section = new ConfigEntry(defaultSectionName, m_root, this, _T("<memory>"), 0, 0);
+         section = new ConfigEntry(defaultSectionName, m_root, this, 0);
       }
    }
    else
@@ -1883,48 +1937,48 @@ bool Config::loadConfig(const TCHAR *file, const TCHAR *defaultIniSection, const
 }
 
 /**
- * Load all files in given directory
+ * Load all files in given directory. Files are loaded in sorted name order, so when the same
+ * key is set in several files the result does not depend on directory enumeration order.
  */
 bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSection, const char *topLevelTag, bool ignoreErrors, bool merge)
 {
-   TCHAR fileName[MAX_PATH];
-   bool success;
-
    DIRHANDLE *dir = OpenDir(path);
-   if (dir != nullptr)
+   if (dir == nullptr)
+      return false;
+
+   StringList files;
+   while(true)
    {
-      success = true;
-      bool trailingSeparator = (path[_tcslen(path) - 1] == FS_PATH_SEPARATOR_CHAR);
-      while(true)
+      DIRENTRY *file = ReadDir(dir);
+      if (file == nullptr)
+         break;
+
+      if (!_tcscmp(file->d_name, _T(".")) || !_tcscmp(file->d_name, _T("..")))
+         continue;
+
+      if (_tcslen(path) + _tcslen(file->d_name) + 2 > MAX_PATH)
+         continue;	// Full file name is too long
+
+      files.add(file->d_name);
+   }
+   CloseDir(dir);
+   files.sort(true, true);
+
+   bool trailingSeparator = (path[_tcslen(path) - 1] == FS_PATH_SEPARATOR_CHAR);
+   bool success = true;
+   for(int i = 0; i < files.size(); i++)
+   {
+      TCHAR fileName[MAX_PATH];
+      _tcscpy(fileName, path);
+      if (!trailingSeparator)
+         _tcscat(fileName, FS_PATH_SEPARATOR);
+      _tcscat(fileName, files.get(i));
+
+      if (!loadConfig(fileName, defaultIniSection, topLevelTag, ignoreErrors, merge))
       {
-         DIRENTRY *file = ReadDir(dir);
-         if (file == nullptr)
-            break;
-
-         if (!_tcscmp(file->d_name, _T(".")) || !_tcscmp(file->d_name, _T("..")))
-            continue;
-
-         size_t len = _tcslen(path) + _tcslen(file->d_name) + 2;
-         if (len > MAX_PATH)
-            continue;	// Full file name is too long
-
-         _tcscpy(fileName, path);
-         if (!trailingSeparator)
-            _tcscat(fileName, FS_PATH_SEPARATOR);
-         _tcscat(fileName, file->d_name);
-
-         if (!loadConfig(fileName, defaultIniSection, topLevelTag, ignoreErrors, merge))
-         {
-            success = false;
-         }
+         success = false;
       }
-      CloseDir(dir);
    }
-   else
-   {
-      success = false;
-   }
-
    return success;
 }
 
