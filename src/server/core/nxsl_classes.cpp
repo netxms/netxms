@@ -684,6 +684,30 @@ NXSL_METHOD_DEFINITION(NetObj, setComments)
 }
 
 /**
+ * Set custom attribute from NXSL value. Strings, numbers, and booleans are stored as text; hash maps, arrays,
+ * JsonObject and JsonArray instances are stored as structured (JSON) values. Returns NXSL error code.
+ */
+int SetCustomAttributeFromNXSL(NObject *object, const wchar_t *name, NXSL_Value *value, StateChange inheritable)
+{
+   if (value->isHashMap() || value->isArray() || value->isObject(_T("JsonObject")) || value->isObject(_T("JsonArray")))
+   {
+      json_t *json = value->toJson();
+      object->setCustomAttribute(name, json, inheritable);
+      json_decref(json);
+      return NXSL_ERR_SUCCESS;
+   }
+
+   if (value->isObject())
+      return NXSL_ERR_NOT_CONTAINER;
+
+   if (!value->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   object->setCustomAttribute(name, value->getValueAsCString(), inheritable);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * NetObj::setCustomAttribute(name, value, ...)
  */
 NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
@@ -697,16 +721,21 @@ NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
    if (argc > 3 || argc < 2)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if (!argv[0]->isString() || !argv[1]->isString())
+   if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
    NetObj *netxmsObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    const TCHAR *name = argv[0]->getValueAsCString();
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, name);
-   *result = (value != nullptr) ? value : vm->createValue(); // Return nullptr if attribute not found
    StateChange inherit = (argc == 3) ? (argv[2]->getValueAsBoolean() ? StateChange::SET : StateChange::CLEAR) : StateChange::IGNORE;
-   netxmsObject->setCustomAttribute(name, argv[1]->getValueAsCString(), inherit);
-   return 0;
+   int rc = SetCustomAttributeFromNXSL(netxmsObject, name, argv[1], inherit);
+   if (rc != NXSL_ERR_SUCCESS)
+   {
+      vm->destroyValue(value);
+      return rc;
+   }
+   *result = (value != nullptr) ? value : vm->createValue(); // Return nullptr if attribute not found
+   return NXSL_ERR_SUCCESS;
 }
 
 /**

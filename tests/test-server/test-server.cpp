@@ -41,6 +41,7 @@
 #endif
 
 void TestAuthenticationTokens();
+void TestCustomAttributes();
 void TestNXSLHttp();
 void TestObjectHierarchy();
 
@@ -254,6 +255,7 @@ int main(int argc, char *argv[])
    SetTestFailureHook(TestFailureHandler);
 
    TestAuthenticationTokens();
+   TestCustomAttributes();
    TestNXSLHttp();
    TestObjectHierarchy();
 

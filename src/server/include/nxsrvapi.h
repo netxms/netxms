@@ -541,6 +541,7 @@ public:
 #define CAF_INHERITABLE 0x01
 #define CAF_REDEFINED   0x02
 #define CAF_CONFLICT    0x04
+#define CAF_JSON        0x08  /* value is a JSON object or array serialized to text */
 
 /**
  * Custom attribute
@@ -551,11 +552,24 @@ struct LIBNXSRV_EXPORTABLE CustomAttribute
    uint32_t sourceObject; // source object ID for inherited attribute
    uint32_t flags;
 
+   CustomAttribute() : sourceObject(0), flags(0)
+   {
+   }
+
    CustomAttribute(SharedString value, uint32_t flags, uint32_t sourceObject = 0)
    {
       this->value = value;
       this->flags = flags;
       this->sourceObject = sourceObject;
+   }
+
+   /**
+    * Copy value and value type flag (CAF_JSON) from another attribute, keeping all other flags
+    */
+   void copyValue(const CustomAttribute& src)
+   {
+      value = src.value;
+      flags = (flags & ~CAF_JSON) | (src.flags & CAF_JSON);
    }
 
    bool isInheritable() const
@@ -579,6 +593,12 @@ struct LIBNXSRV_EXPORTABLE CustomAttribute
       return sourceObject != 0;
    }
 
+   bool isJson() const
+   {
+      return (flags & CAF_JSON) > 0;
+   }
+
+   json_t *valueToJson() const;
    json_t *toJson(const TCHAR *name) const;
 };
 
@@ -594,12 +614,12 @@ private:
    StringObjectMap<CustomAttribute> m_customAttributes;
    Mutex m_customAttributeLock;
 
-   SharedString getCustomAttributeFromParent(const TCHAR *name, uint32_t id);
-   std::pair<uint32_t, SharedString> getCustomAttributeFromParent(const TCHAR *name);
-   bool setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t base);
-   void setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent, bool conflict);
+   CustomAttribute getCustomAttributeFromParent(const TCHAR *name, uint32_t id);
+   CustomAttribute getCustomAttributeFromParent(const TCHAR *name);
+   void setCustomAttribute(const wchar_t *name, const SharedString& value, uint32_t valueFlags, StateChange inheritable);
+   void setInheritedCustomAttribute(const wchar_t *name, const SharedString& value, uint32_t valueFlags, uint32_t parent, bool conflict);
    void deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentId);
-   void propagateCustomAttributeChange(const TCHAR *name, const SharedString& value, uint32_t parentId);
+   void propagateCustomAttributeChange(const TCHAR *name, const SharedString& value, uint32_t valueFlags, uint32_t parentId);
    void propagateCustomAttributeRemove(const TCHAR *name, uint32_t parentId);
    bool checkCustomAttributeInConflict(const TCHAR *name, uint32_t newParent);
 
@@ -673,7 +693,7 @@ public:
    int getParentCount() const { return m_parentList.size(); }
 
    TCHAR *getCustomAttribute(const TCHAR *name, TCHAR *buffer, size_t size) const;
-   SharedString getInheritableCustomAttribute(const TCHAR *name) const;
+   CustomAttribute getInheritableCustomAttribute(const TCHAR *name) const;
    uint32_t getInheritableCustomAttributeParent(const TCHAR *name) const;
    SharedString getCustomAttribute(const TCHAR *name) const;
    TCHAR *getCustomAttributeCopy(const TCHAR *name) const;
@@ -689,7 +709,11 @@ public:
 
    json_t *getCustomAttributesAsJson(bool (*filter)(const wchar_t *, const CustomAttribute *, void *) = nullptr, void *context = nullptr) const;
 
-   void setCustomAttribute(const wchar_t *name, SharedString value, StateChange inheritable);
+   void setCustomAttribute(const wchar_t *name, const SharedString& value, StateChange inheritable)
+   {
+      setCustomAttribute(name, value, 0, inheritable);
+   }
+   void setCustomAttribute(const wchar_t *name, const json_t *value, StateChange inheritable);
    void setCustomAttribute(const wchar_t *key, const wchar_t *value)
    {
       setCustomAttribute(key, SharedString(value), StateChange::IGNORE);
@@ -715,7 +739,7 @@ public:
       setCustomAttribute(key, IntegerToString(value, buffer), StateChange::IGNORE);
    }
 
-   void setCustomAttributesFromMessage(const NXCPMessage& msg);
+   uint32_t setCustomAttributesFromMessage(const NXCPMessage& msg);
    void setCustomAttributesFromDatabase(DB_RESULT hResult);
    void deleteCustomAttribute(const TCHAR *name);
    void updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uint32_t parentId);

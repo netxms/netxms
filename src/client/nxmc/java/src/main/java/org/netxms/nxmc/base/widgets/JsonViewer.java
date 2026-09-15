@@ -31,6 +31,7 @@ import org.netxms.nxmc.resources.ThemeEngine;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * JSON viewer
@@ -51,7 +52,8 @@ public class JsonViewer extends Composite
    {
       super(parent, style);
       setLayout(new FillLayout());
-      textControl = new StyledText(this, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY);
+      textControl = new StyledText(this, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      textControl.setEditable(false);
       textControl.setFont(JFaceResources.getTextFont());
       textControl.setLineStyler(new LineStyler() {
          @Override
@@ -148,19 +150,46 @@ public class JsonViewer extends Composite
     * Set content for this viewer
     * 
     * @param jsonText JSON document as text
-    * @param prettify if true, do reparsing and formatting on JSON document before display
+    * @param prettify if true, do reparsing and formatting on JSON document before display (text is shown as is if it cannot be parsed)
     */
    public void setContent(String jsonText, boolean prettify)
    {
       if (prettify)
       {
-         jsonText = jsonText.trim();
-         if (!jsonText.startsWith("{") && !jsonText.startsWith("["))
-            jsonText = "{" + jsonText + "}";
-         Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
-         JsonElement json = gson.fromJson(jsonText, JsonElement.class);
-         jsonText = gson.toJson(json);
+         String text = jsonText.trim();
+         if (!text.startsWith("{") && !text.startsWith("["))
+            text = "{" + text + "}";
+         try
+         {
+            Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+            JsonElement json = gson.fromJson(text, JsonElement.class);
+            jsonText = gson.toJson(json);
+         }
+         catch(JsonSyntaxException e)
+         {
+            // Show original text
+         }
       }
       textControl.setText(jsonText);
+   }
+
+   /**
+    * Get current content of this viewer as text.
+    *
+    * @return JSON document as text
+    */
+   public String getContent()
+   {
+      return textControl.getText();
+   }
+
+   /**
+    * Set editable state of this viewer. Viewer is read-only by default.
+    *
+    * @param editable true to allow editing
+    */
+   public void setEditable(boolean editable)
+   {
+      textControl.setEditable(editable);
    }
 }

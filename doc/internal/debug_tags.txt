@@ -212,6 +212,7 @@ otlp.metrics	OTLP metric export (DCI values exported as OTLP metrics)
 oxidized	Oxidized integration module
 
 obj.*		Object related
+obj.attr	Object custom attributes
 obj.condition   Condition objects
 obj.dc.*	Data collection related
 obj.lifecycle	Object lifecycle related

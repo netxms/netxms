@@ -5061,6 +5061,11 @@ paths:
         Upsert a single custom attribute identified by name. The name is taken from the
         URL path (URL-encoded). It must be 1-127 characters, must not contain a slash or
         any control character; spaces, dots, dashes, colons and unicode are allowed.
+
+        A string value is stored as plain text. A JSON object or array value is stored as
+        a structured value: it is serialized in canonical form (compact, sorted keys) and the
+        attribute is marked with the `json` flag, so scripts receive it as a hash map or array
+        and JSON representations return it as an object or array rather than as text.
       parameters:
         - name: object-id
           in: path
@@ -5081,9 +5086,14 @@ paths:
               type: object
               properties:
                 value:
-                  type: string
+                  oneOf:
+                    - type: string
+                    - type: object
+                    - type: array
                   nullable: true
-                  description: Attribute value. Null or absent is treated as an empty string.
+                  description: |
+                    Attribute value. A string is stored as plain text; an object or array is stored
+                    as a structured value. Null or absent is treated as an empty string.
                 inheritable:
                   type: boolean
                   description: Whether the attribute is inherited by child objects. Defaults to false.
@@ -5098,7 +5108,11 @@ paths:
                   name:
                     type: string
                   value:
-                    type: string
+                    oneOf:
+                      - type: string
+                      - type: object
+                      - type: array
+                    description: Stored value; object or array for structured values.
                   inheritable:
                     type: boolean
         '400':
@@ -15533,8 +15547,11 @@ components:
           type: string
           description: Attribute name.
         value:
-          type: string
-          description: Attribute value.
+          oneOf:
+            - type: string
+            - type: object
+            - type: array
+          description: Attribute value. Plain text for regular attributes; a JSON object or array for structured attributes (`flags.json` is true).
         flags:
           type: object
           description: Attribute flags as named booleans.
@@ -15548,6 +15565,9 @@ components:
             conflict:
               type: boolean
               description: Attribute is inherited from multiple parents with differing values.
+            json:
+              type: boolean
+              description: Attribute holds a structured value (JSON object or array).
         sourceObject:
           type: integer
           description: ID of the object an inherited attribute originates from; 0 if defined directly on this object.

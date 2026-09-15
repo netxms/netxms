@@ -870,6 +870,8 @@ public:
          m_values.destroy(v);
    }
 
+   NXSL_Value *createValueFromJson(json_t *json, int depth = 16);
+
    NXSL_Identifier *createIdentifier() { return new(m_identifiers.allocate()) NXSL_Identifier(); }
    NXSL_Identifier *createIdentifier(const char *s) { return new(m_identifiers.allocate()) NXSL_Identifier(s); }
 #ifdef UNICODE

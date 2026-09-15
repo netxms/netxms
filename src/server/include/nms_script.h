@@ -1044,4 +1044,6 @@ extern NXSL_WirelessDomainClass g_nxslWirelessDomainClass;
 extern NXSL_WirelessStationClass g_nxslWirelessStationClass;
 extern NXSL_ZoneClass g_nxslZoneClass;
 
+int SetCustomAttributeFromNXSL(NObject *object, const wchar_t *name, NXSL_Value *value, StateChange inheritable);
+
 #endif

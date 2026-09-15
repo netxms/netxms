@@ -133,7 +133,7 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->isString() || !argv[2]->isString())
+	if (!argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
@@ -147,9 +147,14 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
       return NXSL_ERR_SUCCESS;
    }
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
+   int rc = SetCustomAttributeFromNXSL(netxmsObject, argv[1]->getValueAsCString(), argv[2], StateChange::IGNORE);
+   if (rc != NXSL_ERR_SUCCESS)
+   {
+      vm->destroyValue(value);
+      return rc;
+   }
    *ppResult = (value != nullptr) ? value : vm->createValue(); // Return nullptr if attribute not found
-	netxmsObject->setCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString(), StateChange::IGNORE);
-	return 0;
+	return NXSL_ERR_SUCCESS;
 }
 
 /**

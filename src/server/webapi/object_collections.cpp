@@ -114,9 +114,10 @@ int H_ObjectCustomAttributeUpdate(Context *context)
    }
 
    json_t *jsonValue = json_object_get(request, "value");
-   if ((jsonValue != nullptr) && !json_is_string(jsonValue) && !json_is_null(jsonValue))
+   bool structured = (jsonValue != nullptr) && (json_is_object(jsonValue) || json_is_array(jsonValue));
+   if ((jsonValue != nullptr) && !structured && !json_is_string(jsonValue) && !json_is_null(jsonValue))
    {
-      context->setErrorResponse("Custom attribute value must be a string");
+      context->setErrorResponse("Custom attribute value must be a string, object, or array");
       return 400;
    }
    json_t *jsonInheritable = json_object_get(request, "inheritable");
@@ -126,18 +127,21 @@ int H_ObjectCustomAttributeUpdate(Context *context)
       return 400;
    }
 
-   String value = json_object_get_string(request, "value", L"");
    bool inheritable = json_object_get_boolean(request, "inheritable", false);
 
    SharedString oldValue = object->getCustomAttribute(name);
-   object->setCustomAttribute(name, value, inheritable ? StateChange::SET : StateChange::CLEAR);
+   if (structured)
+      object->setCustomAttribute(name, jsonValue, inheritable ? StateChange::SET : StateChange::CLEAR);
+   else
+      object->setCustomAttribute(name, json_object_get_string(request, "value", L""), inheritable ? StateChange::SET : StateChange::CLEAR);
+   SharedString newValue = object->getCustomAttribute(name);
 
-   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue.cstr(), value.cstr(), 'T',
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue.cstr(), newValue.cstr(), 'T',
       L"Custom attribute \"%s\" of object %s [%u] changed", name, object->getName(), object->getId());
 
    json_t *output = json_object();
    json_object_set_new(output, "name", json_string_w(name));
-   json_object_set_new(output, "value", json_string_t(value));
+   json_object_set_new(output, "value", structured ? json_incref(jsonValue) : json_string_t(newValue));
    json_object_set_new(output, "inheritable", json_boolean(inheritable));
    context->setResponseData(output);
    json_decref(output);

@@ -20,6 +20,8 @@ package org.netxms.nxmc.modules.objects.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -29,26 +31,37 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.widgets.JsonViewer;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 /**
- * Object's custom attribute edit dialog
+ * Object's custom attribute edit dialog. Value can be edited either as plain text or as JSON document;
+ * both tabs show the current value, and the tab selected when dialog is closed with OK determines
+ * attribute type (plain text or structured).
  */
 public class AttributeEditDialog extends Dialog
 {
    private I18n i18n = LocalizationHelper.getI18n(AttributeEditDialog.class);
-	private LabeledText textName;
-	private LabeledText textValue;
-	private Button checkInherite;
-	private String name;
-	private String value;
-	private long flags;
+   private LabeledText textName;
+   private CTabFolder tabFolder;
+   private CTabItem textTab;
+   private CTabItem jsonTab;
+   private LabeledText textValue;
+   private JsonViewer jsonValue;
+   private Button checkInherite;
+   private String name;
+   private String value;
+   private long flags;
    private boolean inherited;
    private long source;
-   
+
    /**
     * @param parentShell
     * @param source
@@ -66,46 +79,70 @@ public class AttributeEditDialog extends Dialog
    /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected Control createDialogArea(Composite parent)
-	{
-		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
-		GridLayout layout = new GridLayout();
+   @Override
+   protected Control createDialogArea(Composite parent)
+   {
+      Composite dialogArea = (Composite)super.createDialogArea(parent);
+
+      GridLayout layout = new GridLayout();
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
-		
+
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel(i18n.tr("Name"));
       textName.getTextControl().setTextLimit(127);
       if (name != null)
       {
-      	textName.setText(name);
+         textName.setText(name);
       }
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       textName.setLayoutData(gd);
-      
-      textValue = new LabeledText(dialogArea, SWT.NONE);
-      textValue.setLabel(i18n.tr("Value"));
-      if (value != null)
-      	textValue.setText(value);
+
+      boolean isJson = (flags & CustomAttribute.JSON) != 0;
+
+      tabFolder = new CTabFolder(dialogArea, SWT.BORDER);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.widthHint = 300;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.widthHint = 400;
+      gd.heightHint = 250;
+      tabFolder.setLayoutData(gd);
+
+      textTab = new CTabItem(tabFolder, SWT.NONE);
+      textTab.setText(i18n.tr("Text"));
+      Composite textArea = new Composite(tabFolder, SWT.NONE);
+      textArea.setLayout(new GridLayout());
+      textValue = new LabeledText(textArea, SWT.NONE);
+      textValue.setLabel(i18n.tr("Value"));
+      if (value != null)
+         textValue.setText(value);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
       textValue.setLayoutData(gd);
-      
+      textTab.setControl(textArea);
+
+      jsonTab = new CTabItem(tabFolder, SWT.NONE);
+      jsonTab.setText(i18n.tr("JSON"));
+      jsonValue = new JsonViewer(tabFolder, SWT.NONE);
+      jsonValue.setEditable(true);
+      if (value != null)
+         jsonValue.setContent(value, isJson);
+      jsonTab.setControl(jsonValue);
+
+      tabFolder.setSelection(isJson ? jsonTab : textTab);
       if (name != null)
-      	textValue.setFocus();
-      
+         (isJson ? jsonValue : textValue).setFocus();
+
       checkInherite = new Button(dialogArea, SWT.CHECK);
       if (inherited)
       {
          NXCSession session = Registry.getSession();
-         checkInherite.setText(String.format(i18n.tr("Inheritable (enforced by %s [%d])"), 
-               session.getObjectName(source), source));  
+         checkInherite.setText(String.format(i18n.tr("Inheritable (enforced by %s [%d])"), session.getObjectName(source), source));
       }
       else
       {
@@ -115,46 +152,46 @@ public class AttributeEditDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       checkInherite.setLayoutData(gd);
-      
+
       checkInherite.setSelection(inherited || (flags & CustomAttribute.INHERITABLE) > 0);
       checkInherite.setEnabled(!inherited);
-      
-		return dialogArea;
-	}
+
+      return dialogArea;
+   }
 
    /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
-		newShell.setText((name == null) ? i18n.tr("Add Attribute") : i18n.tr("Modify Attribute"));
-	}
-	
-	/**
-	 * Get variable name
-	 */
-	public String getName()
-	{
-		return name;
-	}
-	
-	/**
-	 * Get variable value
-	 */
-	public String getValue()
-	{
-		return value;
-	}
-	
-	/**
-	 * Get variable flags
-	 */
-	public long getFlags()
-	{
-	   return flags;
-	}
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText((name == null) ? i18n.tr("Add Attribute") : i18n.tr("Modify Attribute"));
+   }
+
+   /**
+    * Get variable name
+    */
+   public String getName()
+   {
+      return name;
+   }
+
+   /**
+    * Get variable value
+    */
+   public String getValue()
+   {
+      return value;
+   }
+
+   /**
+    * Get variable flags
+    */
+   public long getFlags()
+   {
+      return flags;
+   }
 
    /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
@@ -162,13 +199,39 @@ public class AttributeEditDialog extends Dialog
    @Override
    protected void okPressed()
    {
+      boolean isJson = (tabFolder.getSelection() == jsonTab);
+      if (isJson)
+      {
+         String text = jsonValue.getContent().trim();
+         try
+         {
+            JsonElement json = JsonParser.parseString(text);
+            if (!json.isJsonObject() && !json.isJsonArray())
+            {
+               MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Structured value must be a JSON object or array"));
+               return;
+            }
+         }
+         catch(JsonSyntaxException e)
+         {
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Value is not a valid JSON document (%s)"), e.getLocalizedMessage()));
+            return;
+         }
+         value = text;
+      }
+      else
+      {
+         value = textValue.getText();
+      }
+
       name = textName.getText().trim();
-      value = textValue.getText();
       flags = 0;
       if (checkInherite.getSelection())
          flags |= CustomAttribute.INHERITABLE;
       if (inherited)
          flags |= CustomAttribute.REDEFINED | CustomAttribute.INHERITABLE;
+      if (isJson)
+         flags |= CustomAttribute.JSON;
       super.okPressed();
    }
 }

@@ -79,6 +79,64 @@ static NXSL_Value *ValueFromJson(NXSL_VM *vm, json_t *json)
 }
 
 /**
+ * Create NXSL value from json_t using native NXSL types: JSON objects become hash maps,
+ * JSON arrays become arrays, leaves become string, integer, real, boolean, or null values.
+ * Nesting deeper than given depth is returned as empty containers.
+ */
+NXSL_Value *NXSL_ValueManager::createValueFromJson(json_t *json, int depth)
+{
+   if (json == nullptr)
+      return createValue();
+
+   switch(json_typeof(json))
+   {
+      case JSON_OBJECT:
+      {
+         NXSL_HashMap *map = new NXSL_HashMap(this);
+         if (depth > 0)
+         {
+            const char *key;
+            json_t *element;
+            json_object_foreach(json, key, element)
+            {
+               WCHAR wkey[1024];
+               utf8_to_wchar(key, -1, wkey, 1024);
+               wkey[1023] = 0;
+               map->set(wkey, createValueFromJson(element, depth - 1));
+            }
+         }
+         return createValue(map);
+      }
+      case JSON_ARRAY:
+      {
+         NXSL_Array *array = new NXSL_Array(this);
+         if (depth > 0)
+         {
+            size_t index;
+            json_t *element;
+            json_array_foreach(json, index, element)
+            {
+               array->append(createValueFromJson(element, depth - 1));
+            }
+         }
+         return createValue(array);
+      }
+      case JSON_STRING:
+         return createValue(json_string_value(json));
+      case JSON_INTEGER:
+         return createValue(static_cast<int64_t>(json_integer_value(json)));
+      case JSON_REAL:
+         return createValue(json_real_value(json));
+      case JSON_TRUE:
+         return createValue(true);
+      case JSON_FALSE:
+         return createValue(false);
+      default:
+         return createValue();
+   }
+}
+
+/**
  * Create json_t from NXSL value
  */
 json_t *NXSL_Value::toJson(int depth)

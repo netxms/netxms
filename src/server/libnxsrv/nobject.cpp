@@ -32,8 +32,57 @@ static FlagNameMapping s_customAttrFlagMapping[] =
    { CAF_INHERITABLE, "inheritable" },
    { CAF_REDEFINED, "redefined" },
    { CAF_CONFLICT, "conflict" },
+   { CAF_JSON, "json" },
    { 0, nullptr }
 };
+
+/**
+ * Parse text of structured custom attribute value. Returns JSON object or array,
+ * or nullptr if text is not a valid JSON object or array.
+ */
+static json_t *ParseStructuredValue(const wchar_t *text)
+{
+   if (text == nullptr)
+      return nullptr;
+
+   char *utf8 = UTF8StringFromWideString(text);
+   json_error_t error;
+   json_t *json = json_loads(utf8, 0, &error);
+   MemFree(utf8);
+
+   if ((json != nullptr) && !json_is_object(json) && !json_is_array(json))
+   {
+      json_decref(json);
+      json = nullptr;
+   }
+   return json;
+}
+
+/**
+ * Serialize JSON object or array into canonical text form (compact, sorted keys)
+ * used for storing structured custom attribute values.
+ */
+static SharedString SerializeStructuredValue(const json_t *json)
+{
+   char *text = json_dumps(json, JSON_COMPACT | JSON_SORT_KEYS);
+   SharedString value(WideStringFromUTF8String(text), Ownership::True);
+   MemFree(text);
+   return value;
+}
+
+/**
+ * Get custom attribute value as JSON: parsed object or array for structured values, string otherwise
+ */
+json_t *CustomAttribute::valueToJson() const
+{
+   if (isJson())
+   {
+      json_t *json = ParseStructuredValue(value);
+      if (json != nullptr)
+         return json;
+   }
+   return json_string_t(value);
+}
 
 /**
  * Create JSON representation of custom attribute
@@ -42,7 +91,7 @@ json_t *CustomAttribute::toJson(const TCHAR *name) const
 {
    json_t *root = json_object();
    json_object_set_new(root, "name", json_string_t(name));
-   json_object_set_new(root, "value", json_string_t(value));
+   json_object_set_new(root, "value", valueToJson());
    json_object_set_new(root, "flags", json_boolean_object(flags, s_customAttrFlagMapping));
    json_object_set_new(root, "sourceObject", json_integer(sourceObject));
    return root;
@@ -99,19 +148,23 @@ void NObject::addChildReference(const shared_ptr<NObject>& object)
    unlockChildList();
 
    // Update custom attribute inheritance
-   ObjectArray<std::pair<String, uint32_t>> updateList(0, 16, Ownership::True);
+   StringObjectMap<CustomAttribute> inheritedAttributes(Ownership::True);
    lockCustomAttributes();
    auto it = m_customAttributes.begin();
    while(it.hasNext())
    {
       KeyValuePair<CustomAttribute> *pair = it.next();
       if (pair->value->isInheritable())
-         updateList.add(new std::pair<String, UINT32>(pair->key, pair->value->isRedefined() || pair->value->sourceObject == 0 ? m_id : pair->value->sourceObject));
+         inheritedAttributes.set(pair->key, new CustomAttribute(pair->value->value, pair->value->flags & CAF_JSON, pair->value->isRedefined() || pair->value->sourceObject == 0 ? m_id : pair->value->sourceObject));
    }
    unlockCustomAttributes();
 
-   for(int i = 0; i < updateList.size(); i++)
-      object->setCustomAttribute(updateList.get(i)->first, getCustomAttribute(updateList.get(i)->first), updateList.get(i)->second, false);
+   inheritedAttributes.forEach(
+      [&object] (const TCHAR *name, const CustomAttribute *attr) -> EnumerationCallbackResult
+      {
+         object->setInheritedCustomAttribute(name, attr->value, attr->flags, attr->sourceObject, false);
+         return _CONTINUE;
+      });
 }
 
 /**
@@ -261,41 +314,41 @@ bool NObject::isDirectParent(uint32_t id) const
 /**
  * Get inheritable custom attribute value from parent by name
  */
-SharedString NObject::getCustomAttributeFromParent(const TCHAR *name, uint32_t id)
+CustomAttribute NObject::getCustomAttributeFromParent(const TCHAR *name, uint32_t id)
 {
-   SharedString value;
+   CustomAttribute attr;
    readLockParentList();
    for(int i = 0; i < m_parentList.size(); i++)
    {
       if (m_parentList.get(i)->getId() == id)
       {
-         value = m_parentList.get(i)->getInheritableCustomAttribute(name);
+         attr = m_parentList.get(i)->getInheritableCustomAttribute(name);
          break;
       }
    }
    unlockParentList();
-   return value;
+   return attr;
 }
 
 /**
- * Get inheritable custom attribute value from parent by name
+ * Get inheritable custom attribute value from any parent by name. Returned attribute has null value if not found;
+ * sourceObject is set to ID of the object where attribute is defined.
  */
-std::pair<uint32_t, SharedString> NObject::getCustomAttributeFromParent(const TCHAR *name)
+CustomAttribute NObject::getCustomAttributeFromParent(const TCHAR *name)
 {
-   SharedString value;
-   uint32_t sourceId = 0;
+   CustomAttribute attr;
    readLockParentList();
    for(int i = 0; i < m_parentList.size(); i++)
    {
-      value = m_parentList.get(i)->getInheritableCustomAttribute(name);
-      if (!value.isNull())
+      attr = m_parentList.get(i)->getInheritableCustomAttribute(name);
+      if (!attr.value.isNull())
       {
-         sourceId = m_parentList.get(i)->getInheritableCustomAttributeParent(name);
+         attr.sourceObject = m_parentList.get(i)->getInheritableCustomAttributeParent(name);
          break;
       }
    }
    unlockParentList();
-   return std::pair<uint32_t, SharedString>(sourceId, value);
+   return attr;
 }
 
 /**
@@ -373,9 +426,17 @@ static inline uint32_t CalculateFlagChange(uint32_t flags, StateChange change, u
 }
 
 /**
- * Set custom attribute
+ * Set custom attribute from JSON object or array
  */
-void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateChange inheritable)
+void NObject::setCustomAttribute(const wchar_t *name, const json_t *value, StateChange inheritable)
+{
+   setCustomAttribute(name, SerializeStructuredValue(value), CAF_JSON, inheritable);
+}
+
+/**
+ * Set custom attribute. Value flags can contain CAF_JSON to mark structured value.
+ */
+void NObject::setCustomAttribute(const wchar_t *name, const SharedString& value, uint32_t valueFlags, StateChange inheritable)
 {
    lockCustomAttributes();
    CustomAttribute *curr = m_customAttributes.get(name);
@@ -383,18 +444,19 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
 
    if (curr == nullptr)
    {
-      curr = new CustomAttribute(value, CalculateFlagChange(0, inheritable, CAF_INHERITABLE));
+      curr = new CustomAttribute(value, CalculateFlagChange(0, inheritable, CAF_INHERITABLE) | valueFlags);
       m_customAttributes.set(name, curr);
       onCustomAttributeChange(name, value);
    }
-   else if (_tcscmp(curr->value, value) || (curr->flags != CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE)) || (curr->isInherited() && !curr->isRedefined()))
+   else if (_tcscmp(curr->value, value) || ((curr->flags & CAF_JSON) != valueFlags) ||
+            (curr->flags != CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE)) || (curr->isInherited() && !curr->isRedefined()))
    {
       propagateRemove = (curr->flags != CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE));
       curr->value = value;
       if (curr->isInherited())
-         curr->flags = CAF_INHERITABLE | CAF_REDEFINED;
+         curr->flags = CAF_INHERITABLE | CAF_REDEFINED | valueFlags;
       else
-         curr->flags = CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE);
+         curr->flags = (CalculateFlagChange(curr->flags, inheritable, CAF_INHERITABLE) & ~CAF_JSON) | valueFlags;
       onCustomAttributeChange(name, value);
    }
 
@@ -403,15 +465,15 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
    unlockCustomAttributes();
 
    if (inherit)
-      propagateCustomAttributeChange(name, value, source);
+      propagateCustomAttributeChange(name, value, valueFlags, source);
    else if (propagateRemove)
       propagateCustomAttributeRemove(name, source);
 }
 
 /**
- * Set custom attribute
+ * Set custom attribute inherited from parent object
  */
-void NObject::setCustomAttribute(const wchar_t *name, SharedString value, uint32_t parent, bool conflict)
+void NObject::setInheritedCustomAttribute(const wchar_t *name, const SharedString& value, uint32_t valueFlags, uint32_t parent, bool conflict)
 {
    lockCustomAttributes();
 
@@ -432,14 +494,14 @@ void NObject::setCustomAttribute(const wchar_t *name, SharedString value, uint32
 
    if (curr == nullptr)
    {
-      curr = new CustomAttribute(value, CAF_INHERITABLE, parent);
+      curr = new CustomAttribute(value, CAF_INHERITABLE | valueFlags, parent);
       m_customAttributes.set(name, curr);
       onCustomAttributeChange(name, value);
 
       if (conflict) //Will be set when redefined flag removed and conflict persists
          curr->flags |= CAF_CONFLICT;
    }
-   else if (_tcscmp(curr->value, value) || (curr->sourceObject == 0) || (curr->isConflict() && curr->sourceObject != parent))
+   else if (_tcscmp(curr->value, value) || ((curr->flags & CAF_JSON) != valueFlags) || (curr->sourceObject == 0) || (curr->isConflict() && curr->sourceObject != parent))
    {
       propagateChanges = (curr->isInheritable() && !curr->isRedefined()) || !curr->isInherited();
       curr->flags |= CAF_INHERITABLE;
@@ -447,34 +509,40 @@ void NObject::setCustomAttribute(const wchar_t *name, SharedString value, uint32
          curr->flags |= CAF_REDEFINED;
 
       if (!curr->isRedefined())
+      {
          curr->value = value;
+         curr->flags = (curr->flags & ~CAF_JSON) | valueFlags;
+      }
 
       curr->sourceObject = parent;
       onCustomAttributeChange(name, value);
    }
 
    uint32_t source = parent;
+   SharedString effectiveValue = value;
+   uint32_t effectiveValueFlags = valueFlags;
    if (curr->isRedefined())
    {
       source = m_id;
-      value = curr->value;
+      effectiveValue = curr->value;
+      effectiveValueFlags = curr->flags & CAF_JSON;
    }
 
    unlockCustomAttributes();
 
    if (propagateChanges)
-      propagateCustomAttributeChange(name, value, source);
+      propagateCustomAttributeChange(name, effectiveValue, effectiveValueFlags, source);
 }
 
 /**
  * Update inherited custom attribute for child node
  */
-void NObject::propagateCustomAttributeChange(const TCHAR *name, const SharedString& value, uint32_t source)
+void NObject::propagateCustomAttributeChange(const TCHAR *name, const SharedString& value, uint32_t valueFlags, uint32_t source)
 {
    writeLockChildList();
    for(int i = 0; i < m_childList.size(); i++)
    {
-      m_childList.get(i)->setCustomAttribute(name, value, source, false);
+      m_childList.get(i)->setInheritedCustomAttribute(name, value, valueFlags, source, false);
    }
    unlockChildList();
 }
@@ -519,43 +587,55 @@ void NObject::setCustomAttributesFromDatabase(DB_RESULT hResult)
 }
 
 /**
- * Set custom attribute from message
+ * Set custom attributes from NXCP message. Attributes marked as structured (CAF_JSON) are validated
+ * and re-serialized in canonical form; returns RCC_INVALID_ARGUMENT if any of them is not a JSON object or array.
  */
-bool NObject::setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t base)
+uint32_t NObject::setCustomAttributesFromMessage(const NXCPMessage& msg)
 {
-   TCHAR name[128];
-   msg.getFieldAsString(base++, name, 128);
-   if (name[0] == '$')
-      return false;
-
-   bool success = false;
-   TCHAR *value = msg.getFieldAsString(base++);
-   uint32_t flags = msg.getFieldAsUInt32(base++);
-   if (value != nullptr)
+   int count = msg.getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
+   StringObjectMap<CustomAttribute> newAttributes(Ownership::True);
+   uint32_t fieldId = VID_CUSTOM_ATTRIBUTES_BASE;
+   for(int i = 0; i < count; i++, fieldId += 3)
    {
-      setCustomAttribute(name, value, (flags & CAF_INHERITABLE) > 0 ? StateChange::SET : StateChange::CLEAR);
-      success = true;
-   }
-   MemFree(value);
-   return success;
-}
+      TCHAR name[128];
+      msg.getFieldAsString(fieldId, name, 128);
+      if (name[0] == '$')
+         continue;
 
-/**
- * Set custom attributes from NXCP message
- */
-void NObject::setCustomAttributesFromMessage(const NXCPMessage& msg)
-{
+      TCHAR *value = msg.getFieldAsString(fieldId + 1);
+      if (value == nullptr)
+         continue;
+
+      uint32_t flags = msg.getFieldAsUInt32(fieldId + 2) & (CAF_INHERITABLE | CAF_JSON);
+      if (flags & CAF_JSON)
+      {
+         json_t *json = ParseStructuredValue(value);
+         MemFree(value);
+         if (json == nullptr)
+         {
+            nxlog_debug_tag(L"obj.attr", 4, L"NObject::setCustomAttributesFromMessage(%s [%u]): value of custom attribute \"%s\" marked as structured is not a valid JSON object or array", m_name, m_id, name);
+            return RCC_INVALID_ARGUMENT;
+         }
+         newAttributes.set(name, new CustomAttribute(SerializeStructuredValue(json), flags));
+         json_decref(json);
+      }
+      else
+      {
+         newAttributes.set(name, new CustomAttribute(SharedString(value, Ownership::True), flags));
+      }
+   }
+
    StringList existingAttibutes;
    StringList deletionList;
    ObjectArray<std::pair<String, uint32_t>> updateList(0, 16, Ownership::True);
 
-   int count = msg.getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
-   uint32_t fieldId = VID_CUSTOM_ATTRIBUTES_BASE;
-   for(int i = 0; i < count; i++, fieldId += 3)
-   {
-      if (setCustomAttributeFromMessage(msg, fieldId))
-         existingAttibutes.addPreallocated(msg.getFieldAsString(fieldId));
-   }
+   newAttributes.forEach(
+      [this, &existingAttibutes] (const TCHAR *name, const CustomAttribute *attr) -> EnumerationCallbackResult
+      {
+         setCustomAttribute(name, attr->value, attr->flags & CAF_JSON, attr->isInheritable() ? StateChange::SET : StateChange::CLEAR);
+         existingAttibutes.add(name);
+         return _CONTINUE;
+      });
 
    lockCustomAttributes();
    auto it = m_customAttributes.begin();
@@ -591,20 +671,23 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage& msg)
 
    for(int i = 0; i < updateList.size(); i++)
    {
-      SharedString value = getCustomAttributeFromParent(updateList.get(i)->first, updateList.get(i)->second);
-      if (!value.isNull())
+      const TCHAR *name = updateList.get(i)->first;
+      uint32_t parentId = updateList.get(i)->second;
+      CustomAttribute parentAttr = getCustomAttributeFromParent(name, parentId);
+      if (!parentAttr.value.isNull())
       {
-         setCustomAttribute(updateList.get(i)->first, value, updateList.get(i)->second, checkCustomAttributeInConflict(updateList.get(i)->first, updateList.get(i)->second));
+         setInheritedCustomAttribute(name, parentAttr.value, parentAttr.flags & CAF_JSON, parentId, checkCustomAttributeInConflict(name, parentId));
       }
       else
       {
-         std::pair<uint32_t, SharedString> value = getCustomAttributeFromParent(updateList.get(i)->first);
-         if (!value.second.isNull())
-            setCustomAttribute(updateList.get(i)->first, value.second, value.first, checkCustomAttributeInConflict(updateList.get(i)->first, updateList.get(i)->second));
+         parentAttr = getCustomAttributeFromParent(name);
+         if (!parentAttr.value.isNull())
+            setInheritedCustomAttribute(name, parentAttr.value, parentAttr.flags & CAF_JSON, parentAttr.sourceObject, checkCustomAttributeInConflict(name, parentId));
          else
-            propagateCustomAttributeRemove(updateList.get(i)->first, 0); // Attribute no longer exist at parent, delete it from this object
+            propagateCustomAttributeRemove(name, 0); // Attribute no longer exist at parent, delete it from this object
       }
    }
+   return RCC_SUCCESS;
 }
 
 /**
@@ -626,7 +709,7 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
       if (ca->isRedefined())
       {
          ca->flags &= ~CAF_REDEFINED;
-         ca->value = getCustomAttributeFromParent(name, ca->sourceObject);
+         ca->copyValue(getCustomAttributeFromParent(name, ca->sourceObject));
       }
       else
       {
@@ -643,16 +726,16 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
    }
    else if (redefined)
    {
-      SharedString value = getCustomAttributeFromParent(name, parent);
-      if (!value.isNull())
+      CustomAttribute parentAttr = getCustomAttributeFromParent(name, parent);
+      if (!parentAttr.value.isNull())
       {
-         setCustomAttribute(name, value, parent, checkCustomAttributeInConflict(name, parent));
+         setInheritedCustomAttribute(name, parentAttr.value, parentAttr.flags & CAF_JSON, parent, checkCustomAttributeInConflict(name, parent));
       }
       else
       {
-         std::pair<uint32_t, SharedString> value = getCustomAttributeFromParent(name);
-         if (!value.second.isNull())
-            setCustomAttribute(name, value.second, value.first, checkCustomAttributeInConflict(name, parent));
+         parentAttr = getCustomAttributeFromParent(name);
+         if (!parentAttr.value.isNull())
+            setInheritedCustomAttribute(name, parentAttr.value, parentAttr.flags & CAF_JSON, parentAttr.sourceObject, checkCustomAttributeInConflict(name, parent));
          else
             propagateCustomAttributeRemove(name, m_id); // Attribute no longer exist at parent, delete it from this object
       }
@@ -664,7 +747,7 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
  */
 void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uint32_t parentId)
 {
-   std::pair<uint32_t, SharedString> pair = NObject::getCustomAttributeFromParent(name);
+   CustomAttribute parentAttr = NObject::getCustomAttributeFromParent(name);
 
    lockCustomAttributes();
    CustomAttribute *ca = m_customAttributes.get(name);
@@ -674,9 +757,9 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uin
    {
       if (ca->isRedefined())
       {
-         if (pair.first != 0)
+         if (parentAttr.sourceObject != 0)
          {
-            ca->sourceObject = pair.first;
+            ca->sourceObject = parentAttr.sourceObject;
          }
          else
          {
@@ -695,17 +778,17 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uin
       {
          if (parentId == ca->sourceObject)
          {
-            ca->sourceObject = pair.first;
-            ca->value = pair.second;
+            ca->sourceObject = parentAttr.sourceObject;
+            ca->copyValue(parentAttr);
             propagateChange = true;
          }
          if (!checkCustomAttributeInConflict(name, 0))
          {
             ca->flags &= ~CAF_CONFLICT;
-            if (!propagateChange && pair.first != 0)
+            if (!propagateChange && parentAttr.sourceObject != 0)
             {
-               ca->sourceObject = pair.first;
-               ca->value = pair.second;
+               ca->sourceObject = parentAttr.sourceObject;
+               ca->copyValue(parentAttr);
                propagateChange = true;
             }
          }
@@ -717,7 +800,7 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uin
    if (propagateDelete)
       propagateCustomAttributeRemove(name, parentId);
    if (propagateChange)
-      propagateCustomAttributeChange(name, pair.second, pair.first);
+      propagateCustomAttributeChange(name, parentAttr.value, parentAttr.flags & CAF_JSON, parentAttr.sourceObject);
 }
 
 /**
@@ -725,12 +808,12 @@ void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uin
  */
 void NObject::deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentId)
 {
-   std::pair<uint32_t, SharedString> value = getCustomAttributeFromParent(name);
+   CustomAttribute parentAttr = getCustomAttributeFromParent(name);
    lockCustomAttributes();
    CustomAttribute *ca = m_customAttributes.get(name);
    bool propagateChange = false;
    bool propagateDelete = false;
-   if (ca != nullptr && (ca->sourceObject == parentId || (value.first != parentId || parentId == 0)))
+   if (ca != nullptr && (ca->sourceObject == parentId || (parentAttr.sourceObject != parentId || parentId == 0)))
    {
       if (!ca->isRedefined() && ca->sourceObject != 0) //source check required if node is multiple times under parent container
       {
@@ -738,8 +821,8 @@ void NObject::deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentI
          {
             if (parentId == ca->sourceObject)
             {
-               ca->sourceObject = value.first;
-               ca->value = value.second;
+               ca->sourceObject = parentAttr.sourceObject;
+               ca->copyValue(parentAttr);
                propagateChange = true;
             }
 
@@ -756,9 +839,9 @@ void NObject::deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentI
       }
       else if (ca->isRedefined())
       {
-         if (!value.second.isNull()) //Redefine may come from different node
+         if (!parentAttr.value.isNull()) //Redefine may come from different node
          {
-            ca->sourceObject = value.first;
+            ca->sourceObject = parentAttr.sourceObject;
          }
          else
          {
@@ -773,7 +856,7 @@ void NObject::deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentI
    if (propagateDelete)
       propagateCustomAttributeRemove(name, parentId);
    if (propagateChange)
-      propagateCustomAttributeChange(name, value.second, value.first);
+      propagateCustomAttributeChange(name, parentAttr.value, parentAttr.flags & CAF_JSON, parentAttr.sourceObject);
 }
 
 /**
@@ -867,17 +950,15 @@ uint32_t NObject::getInheritableCustomAttributeParent(const TCHAR *name) const
 /**
  * Get custom attribute into buffer
  */
-SharedString NObject::getInheritableCustomAttribute(const TCHAR *name) const
+CustomAttribute NObject::getInheritableCustomAttribute(const TCHAR *name) const
 {
+   CustomAttribute result;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes.get(name);
    if (attr != nullptr && attr->isInheritable())
-   {
-      unlockCustomAttributes();
-      return SharedString(attr->value);
-   }
+      result = *attr;
    unlockCustomAttributes();
-   return SharedString();
+   return result;
 }
 
 /**
@@ -1060,11 +1141,29 @@ json_t *NObject::getCustomAttributesAsJson(bool (*filter)(const TCHAR *, const C
    {
       char keyBuffer[256];
       wchar_to_utf8(filtered->get(i)->key, -1, keyBuffer, 256);
-      json_object_set_new(attributes, keyBuffer, json_string_w(filtered->get(i)->value->value));
+      json_object_set_new(attributes, keyBuffer, filtered->get(i)->value->valueToJson());
    }
    delete filtered;
    unlockCustomAttributes();
    return attributes;
+}
+
+/**
+ * Create NXSL value from structured custom attribute. Returns nullptr if attribute is not structured
+ * or its text cannot be parsed as JSON object or array.
+ */
+static NXSL_Value *StructuredValueToNXSL(NXSL_VM *vm, const CustomAttribute *attr)
+{
+   if (!attr->isJson())
+      return nullptr;
+
+   json_t *json = ParseStructuredValue(attr->value);
+   if (json == nullptr)
+      return nullptr;
+
+   NXSL_Value *value = vm->createValueFromJson(json);
+   json_decref(json);
+   return value;
 }
 
 /**
@@ -1077,13 +1176,17 @@ NXSL_Value *NObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) c
    const CustomAttribute *attr = m_customAttributes.get(name);
    if (attr != nullptr)
    {
-      // Handle "true" and "false" strings as boolean value
-      if (!_tcscmp(attr->value.cstr(), _T("true")))
-         value = vm->createValue(true);
-      else if (!_tcscmp(attr->value.cstr(), _T("false")))
-         value = vm->createValue(false);
-      else
-         value = vm->createValue(attr->value);
+      value = StructuredValueToNXSL(vm, attr);
+      if (value == nullptr)
+      {
+         // Handle "true" and "false" strings as boolean value
+         if (!_tcscmp(attr->value.cstr(), _T("true")))
+            value = vm->createValue(true);
+         else if (!_tcscmp(attr->value.cstr(), _T("false")))
+            value = vm->createValue(false);
+         else
+            value = vm->createValue(attr->value);
+      }
    }
    else
    {
@@ -1111,7 +1214,8 @@ NXSL_Value *NObject::getCustomAttributesForNXSL(NXSL_VM *vm) const
    for(int i = 0; i < attributes->size(); i++)
    {
       KeyValuePair<CustomAttribute> *p = attributes->get(i);
-      map->set(p->key, vm->createValue(p->value->value));
+      NXSL_Value *value = StructuredValueToNXSL(vm, p->value);
+      map->set(p->key, (value != nullptr) ? value : vm->createValue(p->value->value));
    }
    unlockCustomAttributes();
    delete attributes;
@@ -1138,14 +1242,14 @@ void NObject::pruneCustomAttributes()
       KeyValuePair<CustomAttribute> *p = attributes->get(i);
       if (p->value->isRedefined())
       {
-         SharedString parentValue = getCustomAttributeFromParent(p->key, p->value->sourceObject);
-         if (parentValue.isNull())
+         CustomAttribute parentAttr = getCustomAttributeFromParent(p->key, p->value->sourceObject);
+         if (parentAttr.value.isNull())
          {
             CustomAttribute *ca = m_customAttributes.get(p->key);
             ca->flags &= ~CAF_REDEFINED;
             onCustomAttributeChange(p->key, ca->value);
          }
-         else if (!_tcscmp(p->value->value, parentValue))
+         else if (!_tcscmp(p->value->value, parentAttr.value) && (p->value->isJson() == parentAttr.isJson()))
          {
             deletionList.add(p->key);
          }

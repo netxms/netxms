@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_PROGRAMS = test-server
-test_server_SOURCES = authtokens.cpp nxsl_http.cpp object_hierarchy.cpp test-server.cpp
+test_server_SOURCES = authtokens.cpp custom_attributes.cpp nxsl_http.cpp object_hierarchy.cpp test-server.cpp
 test_server_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I../include -I@top_srcdir@/build @MICROHTTPD_CPPFLAGS@
 test_server_LDFLAGS = @EXEC_LDFLAGS@ @MICROHTTPD_LDFLAGS@
 test_server_LDADD = \

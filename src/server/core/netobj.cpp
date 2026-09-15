@@ -2226,7 +2226,11 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession
 uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
-      setCustomAttributesFromMessage(msg);
+   {
+      uint32_t rcc = setCustomAttributesFromMessage(msg);
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+   }
 
    if (msg.isFieldExist(VID_RESPONSIBLE_USERS_COUNT))
       setResponsibleUsersFromMessage(msg, session);

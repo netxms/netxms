@@ -28,6 +28,7 @@ public class CustomAttribute
    public static final long INHERITABLE = 1;
    public static final long REDEFINED = 2;
    public static final long CONFLICT = 4;
+   public static final long JSON = 8;
    
    protected String value;
    protected long flags;
@@ -130,5 +131,15 @@ public class CustomAttribute
    public boolean isConflict()
    {
       return (flags & CONFLICT) > 0;
-   } 
+   }
+
+   /**
+    * Check if attribute holds structured value (JSON object or array)
+    *
+    * @return true if attribute value is JSON object or array
+    */
+   public boolean isJson()
+   {
+      return (flags & JSON) > 0;
+   }
 }
