@@ -262,6 +262,11 @@ int H_WebServiceDefinitionDelete(Context *context);
 int H_GrafanaObjectQueryList(Context *context);
 int H_QueryAdHocSummaryTable(Context *context);
 int H_QuerySummaryTable(Context *context);
+int H_ServerConfigVariables(Context *context);
+int H_ServerConfigVariableDetails(Context *context);
+int H_ServerConfigVariableUpdate(Context *context);
+int H_ServerConfigVariableDelete(Context *context);
+int H_ServerConfigVariableReset(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
 int H_GetMibNode(Context *context);
@@ -963,6 +968,17 @@ static bool InitModule(Config *config)
       .GET(H_ServerActionDetails)
       .PUT(H_ServerActionUpdate)
       .DELETE(H_ServerActionDelete)
+      .build();
+   RouteBuilder("v1/server-config")
+      .GET(H_ServerConfigVariables)
+      .build();
+   RouteBuilder("v1/server-config/:name")
+      .GET(H_ServerConfigVariableDetails)
+      .PUT(H_ServerConfigVariableUpdate)
+      .DELETE(H_ServerConfigVariableDelete)
+      .build();
+   RouteBuilder("v1/server-config/:name/reset")
+      .POST(H_ServerConfigVariableReset)
       .build();
    RouteBuilder("v1/server-info")
       .GET(H_ServerInfo)

@@ -348,14 +348,39 @@ void UserDatabaseObject::modifyFromJson(const json_t *json)
    json_t *attributes = json_object_get(const_cast<json_t*>(json), "attributes");
    if ((attributes != nullptr) && json_is_object(attributes))
    {
+      // Attributes with names starting with dot are owned by the client application (UI state,
+      // user preferences). Preserve them across the replace, otherwise any user update that does
+      // not echo them back wipes that user's stored preferences. Request can still remove any
+      // attribute explicitly by passing null as its value.
+      StringMap preserved;
+      for(KeyValuePair<const wchar_t> *a : m_attributes)
+      {
+         if (a->key[0] == L'.')
+            preserved.set(a->key, a->value);
+      }
+
       m_attributes.clear();
       const char *key;
       json_t *val;
       json_object_foreach(attributes, key, val)
       {
          wchar_t *wkey = WideStringFromUTF8String(key);
+         if (json_is_null(val))
+         {
+            // Explicit null removes attribute instead of setting it, including preserved client-owned one
+            preserved.remove(wkey);
+            MemFree(wkey);
+            continue;
+         }
          wchar_t *wval = json_is_string(val) ? WideStringFromUTF8String(json_string_value(val)) : MemCopyString(L"");
          m_attributes.setPreallocated(wkey, wval);
+      }
+
+      // Explicit client-owned attribute in the request wins over the preserved one
+      for(KeyValuePair<const wchar_t> *a : preserved)
+      {
+         if (m_attributes.get(a->key) == nullptr)
+            m_attributes.set(a->key, a->value);
       }
    }
 
