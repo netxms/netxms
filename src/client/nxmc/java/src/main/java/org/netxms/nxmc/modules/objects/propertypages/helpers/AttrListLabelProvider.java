@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.objects.propertypages.CustomAttributes;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
@@ -71,6 +72,11 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
+      if (columnIndex == 0)
+      {
+         return ((CustomAttribute)((Entry)element).getValue()).isJson() ? SharedIcons.IMG_JSON : SharedIcons.IMG_TEXT;
+      }
+
 	   if (columnIndex == CustomAttributes.COLUMN_INHERETED_FROM)
 	   {
          CustomAttribute attr = (CustomAttribute)((Entry)element).getValue();
@@ -79,7 +85,8 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
          AbstractObject object = session.findObjectById(attr.getSourceObject());
 	      return (object != null) ? wbLabelProvider.getImage(object) : null;
 	   }
-		return null;
+
+      return null;
 	}
 
    /**

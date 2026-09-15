@@ -86,6 +86,7 @@ public class SharedIcons
    public static ImageDescriptor SHOW;
    public static ImageDescriptor SOUND;
 	public static ImageDescriptor TERMINATE;
+   public static ImageDescriptor TEXT;
 	public static ImageDescriptor UNKNOWN_OBJECT;
 	public static ImageDescriptor UP;
    public static ImageDescriptor UPDATE;
@@ -158,6 +159,7 @@ public class SharedIcons
    public static Image IMG_SHOW;
    public static Image IMG_SOUND;
 	public static Image IMG_TERMINATE;
+   public static Image IMG_TEXT;
 	public static Image IMG_UNKNOWN_OBJECT;
 	public static Image IMG_UP;
    public static Image IMG_UPDATE;
@@ -235,6 +237,7 @@ public class SharedIcons
       SHOW = ResourceManager.getImageDescriptor("icons/show.png");
       SOUND = ResourceManager.getImageDescriptor("icons/sound.png");
       TERMINATE = ResourceManager.getImageDescriptor("icons/terminate.png");
+      TEXT = ResourceManager.getImageDescriptor("icons/text.png");
       UNKNOWN_OBJECT = ResourceManager.getImageDescriptor("icons/unknown_obj.gif");
       UP = ResourceManager.getImageDescriptor("icons/up.png");
       UPDATE = ResourceManager.getImageDescriptor("icons/update.png");
@@ -307,6 +310,7 @@ public class SharedIcons
       IMG_SHOW = SHOW.createImage();
       IMG_SOUND = SOUND.createImage();
 		IMG_TERMINATE = TERMINATE.createImage();
+      IMG_TEXT = TEXT.createImage();
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
 		IMG_UP = UP.createImage();
       IMG_UPDATE = UPDATE.createImage();
