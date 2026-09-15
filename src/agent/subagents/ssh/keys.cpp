@@ -29,24 +29,32 @@ static Mutex s_mutex;
  */
 KeyPair::KeyPair(char *privateKey, char *publicKey)
 {
-   pubKeySource = publicKey;
-   nxlog_debug_tag(DEBUG_TAG, 9, _T("GetSshKey: public key %hs"), pubKeySource);
-   char *tmp = strchr(pubKeySource, ' ');
-   if (tmp != nullptr)
-   {
-      *tmp = 0;
-      type = ssh_key_type_from_name(pubKeySource);
-      this->publicKey = tmp + 1;
-   }
-
-   tmp = strchr(publicKey, ' ');
-   if (tmp != nullptr)
-   {
-      *tmp = 0;
-   }
-
    this->privateKey = privateKey;
-   nxlog_debug_tag(DEBUG_TAG, 9, _T("GetSshKey: private key %hs"), privateKey);
+   this->publicKey = nullptr;
+   pubKeySource = publicKey;
+   type = SSH_KEYTYPE_UNKNOWN;
+
+   nxlog_debug_tag(DEBUG_TAG, 9, _T("GetSshKey: public key %hs"), CHECK_NULL_A(pubKeySource));
+   nxlog_debug_tag(DEBUG_TAG, 9, _T("GetSshKey: private key %s"), (privateKey != nullptr) ? _T("present") : _T("missing"));
+
+   // Public key is expected in OpenSSH one-line format: "<type> <base64 body> [comment]".
+   // Type and body are addressed in place within pubKeySource; comment is cut off.
+   if (pubKeySource == nullptr)
+      return;
+
+   char *keyBody = strchr(pubKeySource, ' ');
+   if (keyBody == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("GetSshKey: public key has no type prefix, key authentication will not be attempted"));
+      return;
+   }
+   *keyBody++ = 0;
+   type = ssh_key_type_from_name(pubKeySource);
+
+   char *comment = strchr(keyBody, ' ');
+   if (comment != nullptr)
+      *comment = 0;
+   this->publicKey = keyBody;
 }
 
 /**
