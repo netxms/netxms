@@ -7507,6 +7507,11 @@ bool Node::checkSshConnection()
  */
 bool Node::checkNetconfConnection()
 {
+   if (isPortBlocked(m_netconfPort, true))
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Node::checkNetconfConnection(%s [%u]): NETCONF port %u blocked by port stop list"), m_name, m_id, m_netconfPort);
+      return false;
+   }
    SharedString sshLogin = getSshLogin(); // Use getter instead of direct access because we need proper lock
    if (sshLogin.isNull() || sshLogin.isEmpty())
       return false;
@@ -7520,6 +7525,13 @@ bool Node::confPollNetconf()
 {
    if ((m_flags & (NF_DISABLE_SSH | NF_DISABLE_NETCONF)) || !m_ipAddress.isValidUnicast())
       return false;
+
+   if (isPortBlocked(m_netconfPort, true))
+   {
+      sendPollerMsg(_T("   NETCONF check skipped (port blocked by port stop list)\r\n"));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 7, _T("ConfPoll(%s): NETCONF check skipped (port %u blocked by port stop list)"), m_name, m_netconfPort);
+      return false;
+   }
 
    sendPollerMsg(_T("   Checking NETCONF connectivity...\r\n"));
 

@@ -623,7 +623,6 @@ bool JuniperDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, 
       return false;
    }
 
-   static const char *unlockRequest = "<unlock><target><candidate/></target></unlock>";
    static const wchar_t *stepNames[] = { L"lock candidate datastore", L"load configuration", L"commit configuration", L"confirm commit", L"unlock candidate datastore" };
 
    const char *requests[5];
@@ -631,7 +630,7 @@ bool JuniperDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, 
    requests[1] = reinterpret_cast<const char*>(loadRequest.buffer());
    requests[2] = "<commit><confirmed/><confirm-timeout>300</confirm-timeout></commit>";
    requests[3] = "<commit/>";
-   requests[4] = unlockRequest;
+   requests[4] = "<unlock><target><candidate/></target></unlock>";
 
    char *replies[5];
    int received = ctx->executeNETCONFRequests(5, requests, replies, 120000);
@@ -679,18 +678,15 @@ bool JuniperDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, 
 
    if ((failedStep >= 1) && (failedStep <= 3))
    {
-      // Candidate datastore may contain partially loaded or already committed configuration -
-      // discard changes and release the lock. Lock cannot be left to session termination because
-      // proxy agent keeps NETCONF sessions pooled after request completion. Discarding changes
-      // does not cancel pending confirmed commit, so automatic rollback is not affected.
-      const char *cleanupRequests[2] = { "<discard-changes/>", unlockRequest };
-      char *cleanupReplies[2];
-      ctx->executeNETCONFRequests(2, cleanupRequests, cleanupReplies, 60000);
-      MemFree(cleanupReplies[0]);
-      MemFree(cleanupReplies[1]);
+      // Proxy agent closes the device session after a failed RPC, which releases the candidate
+      // lock and (RFC 6241 section 8.4) immediately rolls back an unconfirmed commit. Junos keeps
+      // uncommitted changes in the shared candidate datastore even after the session that made
+      // them terminates, so discard them explicitly on a new session.
+      char *cleanupReply = ctx->executeNETCONFRequest("<discard-changes/>", 60000);
+      MemFree(cleanupReply);
 
       if (failedStep == 3)
-         errorLog->append(L"; device will roll back to previous configuration automatically (confirmed commit timeout 300 seconds)");
+         errorLog->append(L"; device rolls back to previous configuration automatically (confirmed commit session closed)");
    }
    return false;
 }

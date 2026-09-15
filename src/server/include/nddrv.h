@@ -543,7 +543,9 @@ public:
     * Execute sequence of NETCONF RPCs on a single device session, so datastore locks
     * span the sequence. Each request is the RPC content (operation element) without
     * the rpc envelope, in UTF-8. Execution stops at the first RPC that fails on
-    * transport level or returns rpc-error. Returns number of replies received (the
+    * transport level or returns rpc-error, and the device session is closed after such
+    * failure, so any lock taken earlier in the sequence is released and an unconfirmed
+    * commit is rolled back by the device. Returns number of replies received (the
     * last one may contain rpc-error), or -1 if no RPC could be delivered to the
     * device; on return each element of replies is either a UTF-8 rpc-reply document
     * to be released with MemFree() or nullptr. Timeout is per RPC in milliseconds

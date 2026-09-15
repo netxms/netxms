@@ -498,6 +498,12 @@ DataCollectionError Node::getMetricFromNetconf(const TCHAR *metric, TCHAR *buffe
       return DCE_NOT_SUPPORTED;
    }
 
+   if (isPortBlocked(m_netconfPort, true))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_NETCONF, 5, L"Node::getMetricFromNetconf(%s [%u]): NETCONF port %u blocked by port stop list", m_name, m_id, m_netconfPort);
+      return DCE_COMM_ERROR;
+   }
+
    shared_ptr<NetObj> proxyNode = FindObjectById(getEffectiveNetconfProxy(), OBJECT_NODE);
    if (proxyNode == nullptr)
    {

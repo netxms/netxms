@@ -65,6 +65,7 @@ private:
    uint32_t m_messageId;
    time_t m_lastAccess;
    bool m_busy;
+   bool m_requestSent;
 
    bool authenticate(const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys);
    bool sendMessage(const pugi::xml_document& document);
@@ -83,6 +84,12 @@ public:
    const TCHAR *getName() const { return m_name.cstr(); }
    time_t getLastAccessTime() const { return m_lastAccess; }
    bool isBusy() const { return m_busy; }
+
+   /**
+    * Returns true if the most recent RPC was delivered to the device (even if no reply
+    * arrived). Used to decide whether a failed request may be safely retried.
+    */
+   bool isLastRequestSent() const { return m_requestSent; }
 
    bool match(const InetAddress& addr, uint16_t port, const TCHAR *login) const;
 

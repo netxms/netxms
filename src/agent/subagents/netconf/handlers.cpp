@@ -128,6 +128,10 @@ LONG H_NETCONFCapabilities(const TCHAR *param, const TCHAR *arg, StringList *val
  * received so far are returned in any case. Session is closed after rpc-error, because
  * datastore locks are bound to the session and the caller cannot tell whether a lock
  * taken earlier in the sequence is still held - closing the session releases it.
+ * A stale pooled session is retried once, but only if the first RPC could not be sent
+ * at all: once a request has been delivered, the device may have executed it even
+ * though no reply arrived, and replaying a non-idempotent RPC (edit-config, commit)
+ * is not safe.
  */
 void ExecuteNETCONFRequest(const NXCPMessage& request, NXCPMessage *response, AbstractCommSession *session)
 {
@@ -206,10 +210,10 @@ void ExecuteNETCONFRequest(const NXCPMessage& request, NXCPMessage *response, Ab
          }
       }
 
-      if (transportFailure && (executed == 0) && (attempt == 0))
+      if (transportFailure && (executed == 0) && (attempt == 0) && !netconfSession->isLastRequestSent())
       {
-         // First RPC failed without any reply - pooled session may be stale, retry with new session
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteNETCONFRequest: RPC execution on %s:%u failed, retrying with new session"), addr.toString(ipAddrText), port);
+         // First RPC could not be sent - pooled session is stale, retry with new session
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteNETCONFRequest: cannot send RPC on pooled session %s, retrying with new session"), netconfSession->getName());
          ReleaseSession(netconfSession, true);
          continue;
       }

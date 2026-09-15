@@ -35,6 +35,7 @@ NETCONFSession::NETCONFSession(const InetAddress& addr, uint16_t port, int32_t i
    m_messageId = 0;
    m_lastAccess = 0;
    m_busy = false;
+   m_requestSent = false;
    m_name.append(_T("nobody@"));
    m_name.append(m_addr.toString());
    m_name.append(_T(':'));
@@ -372,8 +373,10 @@ void NETCONFSession::disconnect()
  */
 char *NETCONFSession::transact(const pugi::xml_document& rpc, uint32_t messageId, uint32_t timeout, size_t *replySize)
 {
+   m_requestSent = false;
    if (!sendMessage(rpc))
       return nullptr;
+   m_requestSent = true;
 
    int64_t deadline = GetCurrentTimeMs() + timeout;
    while(true)
@@ -427,6 +430,7 @@ char *NETCONFSession::transact(const pugi::xml_document& rpc, uint32_t messageId
  */
 char *NETCONFSession::executeRpc(const char *content, uint32_t timeout, size_t *replySize)
 {
+   m_requestSent = false;
    if (!isConnected())
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::executeRpc: session %s is not connected"), m_name.cstr());
@@ -449,6 +453,7 @@ char *NETCONFSession::executeRpc(const char *content, uint32_t timeout, size_t *
  */
 char *NETCONFSession::executeGetRequest(int datastore, NetconfFilterType filterType, const char *filter, uint32_t timeout, size_t *replySize)
 {
+   m_requestSent = false;
    if (!isConnected())
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("NETCONFSession::executeGetRequest: session %s is not connected"), m_name.cstr());

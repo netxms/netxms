@@ -28,13 +28,15 @@ class CachedDocument
 {
 private:
    Mutex m_mutex;
-   time_t m_timestamp;
+   time_t m_timestamp;     // time of last successful update from device
+   time_t m_lastAccess;    // time of last query against this document
    pugi::xml_document m_document;
 
 public:
    CachedDocument() : m_mutex(MutexType::NORMAL)
    {
       m_timestamp = 0;
+      m_lastAccess = time(nullptr);
    }
 
    void lock() { m_mutex.lock(); }
@@ -42,6 +44,9 @@ public:
 
    bool isExpired(uint32_t retentionTime) const { return (time(nullptr) - m_timestamp) >= retentionTime; }
    time_t getTimestamp() const { return m_timestamp; }
+
+   void touch() { m_lastAccess = time(nullptr); }
+   bool isIdle(uint32_t timeout) const { return (time(nullptr) - m_lastAccess) >= timeout; }
 
    /**
     * Update document from raw rpc-reply. Content of data element is re-rooted so XPath
@@ -83,7 +88,10 @@ static SharedStringObjectMap<CachedDocument> s_documentCache;
 static Mutex s_documentCacheLock(MutexType::FAST);
 
 /**
- * Remove stale entries from document cache (called from housekeeping thread)
+ * Remove entries not queried for CacheExpirationTime from document cache (called from
+ * housekeeping thread). Eviction is based on last access, not on last update, so that
+ * query definitions with retention time longer than CacheExpirationTime keep their
+ * documents between polls.
  */
 void CleanDocumentCache()
 {
@@ -92,7 +100,7 @@ void CleanDocumentCache()
       [] (const TCHAR *key, const void *value, void *context) -> bool
       {
          const shared_ptr<CachedDocument>& document = *static_cast<const shared_ptr<CachedDocument>*>(value);
-         if (!document->isExpired(g_netconfCacheExpirationTime))
+         if (!document->isIdle(g_netconfCacheExpirationTime))
             return true;
          nxlog_debug_tag(DEBUG_TAG, 7, _T("CleanDocumentCache: cache entry \"%s\" removed"), key);
          return false;
@@ -179,6 +187,7 @@ void QueryNetconfDocument(const NXCPMessage& request, NXCPMessage *response, Abs
       document = make_shared<CachedDocument>();
       s_documentCache.set(key, document);
    }
+   document->touch();   // under cache lock, so housekeeper sees consistent access time
    s_documentCacheLock.unlock();
 
    document->lock();

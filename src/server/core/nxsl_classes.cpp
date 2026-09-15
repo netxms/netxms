@@ -65,8 +65,10 @@ struct SSHSessionData
 
 /**
  * NETCONF session handle for NXSL. Server side is stateless - each operation is executed
- * as separate request via node's effective NETCONF proxy, and proxy agent's session pool
- * keeps the underlying NETCONF session alive between calls.
+ * as separate request via node's effective NETCONF proxy, and consecutive calls may be
+ * served by different pooled NETCONF sessions on the proxy agent. Operations whose effect
+ * is bound to a NETCONF session (lock/unlock, kill-session, non-persistent confirmed
+ * commit) are therefore not supported through this class.
  */
 struct NetconfSessionData
 {
@@ -11237,9 +11239,26 @@ NXSL_METHOD_DEFINITION(NETCONFSession, discardChanges)
 }
 
 /**
+ * Check if RPC operation element is bound to NETCONF session state. Each NXSL call may be
+ * executed on a different pooled session, so such operations cannot work reliably (a lock
+ * taken on one session cannot be released from another, and an unconfirmed commit is
+ * rolled back when its session is reused or closed).
+ */
+static bool IsSessionScopedOperation(const pugi::xml_node& op)
+{
+   const char *name = NETCONF_LocalName(op);
+   if (!strcmp(name, "lock") || !strcmp(name, "unlock") || !strcmp(name, "kill-session") || !strcmp(name, "close-session"))
+      return true;
+   if (!strcmp(name, "commit") && NETCONF_FindChildByLocalName(op, "confirmed") && !NETCONF_FindChildByLocalName(op, "persist"))
+      return true;
+   return false;
+}
+
+/**
  * NETCONFSession::rpc(content) method. Content is the RPC operation element without
  * rpc envelope. Returns full rpc-reply document (even if it contains rpc-error) or
- * null on communication failure.
+ * null on communication failure or if operation is bound to session state (lock, unlock,
+ * kill-session, close-session, confirmed commit without persist).
  */
 NXSL_METHOD_DEFINITION(NETCONFSession, rpc)
 {
@@ -11256,6 +11275,17 @@ NXSL_METHOD_DEFINITION(NETCONFSession, rpc)
       session->lastError = L"Invalid RPC content";
       *result = vm->createValue();
       return 0;
+   }
+
+   for(pugi::xml_node op = validator.first_child(); op; op = op.next_sibling())
+   {
+      if ((op.type() == pugi::node_element) && IsSessionScopedOperation(op))
+      {
+         MemFree(content);
+         session->lastError = L"Session-scoped operations (lock, unlock, kill-session, close-session, non-persistent confirmed commit) are not supported";
+         *result = vm->createValue();
+         return 0;
+      }
    }
 
    uint32_t agentRcc;
