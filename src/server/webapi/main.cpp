@@ -101,11 +101,15 @@ int H_AssetAttributeDetails(Context *context);
 int H_AssetAttributeCreate(Context *context);
 int H_AssetAttributeUpdate(Context *context);
 int H_AssetAttributeDelete(Context *context);
+int H_BackgroundTaskDetails(Context *context);
 int H_BusinessServiceAvailability(Context *context);
 int H_CloudConnectors(Context *context);
 int H_TrafficConnectors(Context *context);
 int H_GetConnectionHistory(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
+int H_DeviceConfigBackups(Context *context);
+int H_DeviceConfigBackupDetails(Context *context);
+int H_DeviceConfigRestore(Context *context);
 int H_DataCollectionHistory(Context *context);
 int H_DataCollectionTableValue(Context *context);
 int H_PerformanceViewDCIs(Context *context);
@@ -418,6 +422,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/ai/skills-and-functions")
       .GET(H_AiSkillsAndFunctions)
+      .build();
+   RouteBuilder("v1/background-tasks/:task-id")
+      .GET(H_BackgroundTaskDetails)
       .build();
    RouteBuilder("v1/alarm-categories")
       .GET(H_AlarmCategories)
@@ -834,6 +841,12 @@ static bool InitModule(Config *config)
       .PATCH(H_DataCollectionConfigUpdate)
       .DELETE(H_DataCollectionConfigDelete)
       .build();
+   RouteBuilder("v1/objects/:object-id/device-config-backups")
+      .GET(H_DeviceConfigBackups)
+      .build();
+   RouteBuilder("v1/objects/:object-id/device-config-backups/:backup-id")
+      .GET(H_DeviceConfigBackupDetails)
+      .build();
    RouteBuilder("v1/objects/:object-id/execute-agent-command")
       .POST(H_ObjectExecuteAgentCommand)
       .build();
@@ -848,6 +861,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/remote-control")
       .POST(H_ObjectRemoteControl)
+      .build();
+   RouteBuilder("v1/objects/:object-id/restore-device-config")
+      .POST(H_DeviceConfigRestore)
       .build();
    RouteBuilder("v1/objects/:object-id/set-maintenance")
       .POST(H_ObjectSetMaintenance)

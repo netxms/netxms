@@ -244,3 +244,117 @@ bool RestoreDeviceConfig(const shared_ptr<Node>& node, const BYTE *config, size_
    nxlog_debug_tag(DEBUG_TAG, 4, L"RestoreDeviceConfig(%s [%u]): device configuration restore completed", node->getName(), node->getId());
    return true;
 }
+
+/**
+ * Check that target node accepts restore requests: caller has upload right, driver implements restore hook,
+ * and at least one transport used by restore hooks (interactive SSH or NETCONF) is available.
+ */
+static DeviceConfigRestoreStatus CheckRestoreTarget(const GenericClientSession& session, const Node& node)
+{
+   if (!node.checkAccessRights(session.getUserId(), OBJECT_ACCESS_UPLOAD_DEVICE_CONFIG))
+   {
+      session.writeAuditLog(AUDIT_OBJECTS, false, node.getId(), L"Access denied on device configuration restore");
+      return DeviceConfigRestoreStatus::ACCESS_DENIED;
+   }
+
+   if (!node.getDriver()->isConfigRestoreSupported())
+      return DeviceConfigRestoreStatus::NOT_SUPPORTED;
+
+   uint64_t capabilities = node.getCapabilities();
+   bool sshAvailable = (capabilities & NC_SSH_INTERACTIVE_CHANNEL) && !(node.getFlags() & NF_DISABLE_SSH);
+   bool netconfAvailable = (capabilities & NC_IS_NETCONF) && !(node.getFlags() & (NF_DISABLE_SSH | NF_DISABLE_NETCONF));
+   if (!sshAvailable && !netconfAvailable)
+      return DeviceConfigRestoreStatus::NO_TRANSPORT;
+
+   return DeviceConfigRestoreStatus::SUCCESS;
+}
+
+/**
+ * Start restore of already validated configuration as serialized background task (one restore at a time per node).
+ * Takes ownership of configuration buffer.
+ */
+static shared_ptr<BackgroundTask> StartRestoreTask(const GenericClientSession& session, const shared_ptr<Node>& node,
+      BYTE *config, size_t size, uint32_t sourceNodeId, const wchar_t *sourceNodeName, int64_t backupId)
+{
+   wchar_t key[64];
+   nx_swprintf(key, 64, L"restore-config-%u", node->getId());
+   wchar_t description[256];
+   nx_swprintf(description, 256, L"Restore device configuration on %s", node->getName());
+   String userName(session.getLoginName());
+   String sourceName(sourceNodeName);
+   return CreateSerializedBackgroundTask(g_mainThreadPool, key,
+      [node, config, size, sourceNodeId, sourceName, backupId, userName] (BackgroundTask *task) -> bool
+      {
+         bool success = RestoreDeviceConfig(node, config, size, sourceNodeId, sourceName.cstr(), backupId, userName.cstr(), task);
+         MemFree(config);
+         return success;
+      }, description);
+}
+
+/**
+ * Validate restore request for configuration taken from stored backup of source node (possibly a different
+ * node than the target), write audit record, and start restore as background task on success.
+ */
+DeviceConfigRestoreStatus NXCORE_EXPORTABLE StartDeviceConfigRestoreFromBackup(const GenericClientSession& session,
+      const shared_ptr<Node>& node, const shared_ptr<Node>& sourceNode, int64_t backupId, bool useStartupConfig,
+      bool forceApply, shared_ptr<BackgroundTask> *task)
+{
+   DeviceConfigRestoreStatus status = CheckRestoreTarget(session, *node);
+   if (status != DeviceConfigRestoreStatus::SUCCESS)
+      return status;
+
+   if (!sourceNode->checkAccessRights(session.getUserId(), OBJECT_ACCESS_READ_DEVICE_CONFIG))
+   {
+      session.writeAuditLog(AUDIT_OBJECTS, false, sourceNode->getId(), L"Access denied on reading device configuration backup for restore");
+      return DeviceConfigRestoreStatus::ACCESS_DENIED;
+   }
+
+   if (wcscmp(sourceNode->getDriverName(), node->getDriverName()) && !forceApply)
+      return DeviceConfigRestoreStatus::DRIVER_MISMATCH;
+
+   auto result = DevBackupGetBackupById(*sourceNode, backupId);
+   if (result.first != DeviceBackupApiStatus::SUCCESS)
+      return (result.first == DeviceBackupApiStatus::NOT_IMPLEMENTED) ? DeviceConfigRestoreStatus::BACKUP_NOT_SUPPORTED : DeviceConfigRestoreStatus::BACKUP_UNAVAILABLE;
+
+   if (result.second.isBinary)
+      return DeviceConfigRestoreStatus::BINARY_BACKUP;
+
+   const BYTE *config = useStartupConfig ? result.second.startupConfig : result.second.runningConfig;
+   size_t size = useStartupConfig ? result.second.startupConfigSize : result.second.runningConfigSize;
+   if ((config == nullptr) || (size == 0))
+      return DeviceConfigRestoreStatus::EMPTY_CONFIG;
+
+   BYTE hash[SHA256_DIGEST_SIZE];
+   CalculateSHA256Hash(config, size, hash);
+   wchar_t hashText[SHA256_DIGEST_SIZE * 2 + 1];
+   BinToStrW(hash, SHA256_DIGEST_SIZE, hashText);
+   session.writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"Device configuration restore initiated (source node \"%s\" [%u], backup ID " INT64_FMT L", config SHA-256 %s%s)",
+         sourceNode->getName(), sourceNode->getId(), backupId, hashText, forceApply ? L", driver mismatch override" : L"");
+
+   *task = StartRestoreTask(session, node, MemCopyBlock(config, size), size, sourceNode->getId(), sourceNode->getName(), backupId);
+   return DeviceConfigRestoreStatus::SUCCESS;
+}
+
+/**
+ * Validate restore request for client-supplied configuration text, write audit record, and start restore
+ * as background task on success.
+ */
+DeviceConfigRestoreStatus NXCORE_EXPORTABLE StartDeviceConfigRestoreFromText(const GenericClientSession& session,
+      const shared_ptr<Node>& node, const BYTE *config, size_t size, shared_ptr<BackgroundTask> *task)
+{
+   DeviceConfigRestoreStatus status = CheckRestoreTarget(session, *node);
+   if (status != DeviceConfigRestoreStatus::SUCCESS)
+      return status;
+
+   if ((config == nullptr) || (size == 0))
+      return DeviceConfigRestoreStatus::EMPTY_CONFIG;
+
+   BYTE hash[SHA256_DIGEST_SIZE];
+   CalculateSHA256Hash(config, size, hash);
+   wchar_t hashText[SHA256_DIGEST_SIZE * 2 + 1];
+   BinToStrW(hash, SHA256_DIGEST_SIZE, hashText);
+   session.writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"Device configuration restore initiated (client-supplied configuration, config SHA-256 %s)", hashText);
+
+   *task = StartRestoreTask(session, node, MemCopyBlock(config, size), size, 0, L"", 0);
+   return DeviceConfigRestoreStatus::SUCCESS;
+}

@@ -617,11 +617,21 @@ public class DeviceConfigBackupView extends ObjectView
          return;
 
       final AbstractNode targetNode = (AbstractNode)selectedObjects.get(0);
-      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Restore Device Configuration"),
-            i18n.tr("The {0} configuration from backup of node \"{1}\" taken {2} will be merged line by line into the configuration of device \"{3}\" and saved to its startup configuration. " +
-                  "This will modify the device configuration and may disrupt network connectivity. This operation cannot be undone. Are you sure?",
-                  useStartupConfig ? i18n.tr("startup") : i18n.tr("running"), sourceNodeName,
-                  DateFormatFactory.getDateTimeFormat().format(backup.getTimestamp()), targetNode.getObjectName())))
+      StringBuilder message = new StringBuilder();
+      message.append(i18n.tr("The {0} configuration from the backup of node \"{1}\" taken {2} will be applied to device \"{3}\" and saved as its startup configuration.",
+            useStartupConfig ? i18n.tr("startup") : i18n.tr("running"), sourceNodeName,
+            DateFormatFactory.getDateTimeFormat().format(backup.getTimestamp()), targetNode.getObjectName()));
+      if (targetNode.getObjectId() != sourceNodeId)
+      {
+         message.append("\n\n");
+         message.append(i18n.tr("The backup was taken from a different device. Make sure \"{0}\" is the intended replacement for \"{1}\".", targetNode.getObjectName(), sourceNodeName));
+      }
+      message.append("\n\n");
+      message.append(i18n.tr("Depending on the device driver, the configuration is either merged into the current device configuration or replaces it completely. " +
+            "Existing settings on the target device may be changed or lost, and the device may become unreachable if the applied configuration changes its management access."));
+      message.append("\n\n");
+      message.append(i18n.tr("This operation cannot be undone. Continue?"));
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Restore Device Configuration"), message.toString()))
          return;
 
       new Job(i18n.tr("Restoring device configuration"), this) {

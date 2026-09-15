@@ -237,6 +237,7 @@ std::pair<DeviceBackupApiStatus, std::vector<BackupData>> NXCORE_EXPORTABLE DevB
 std::pair<DeviceBackupApiStatus, BackupData> NXCORE_EXPORTABLE DevBackupGetBackupById(const Node& node, int64_t id);
 
 class BackgroundTask;
+class GenericClientSession;
 
 /**
  * Restore device configuration by feeding it to device via driver's restore hook.
@@ -244,5 +245,36 @@ class BackgroundTask;
  */
 bool NXCORE_EXPORTABLE RestoreDeviceConfig(const shared_ptr<Node>& node, const BYTE *config, size_t size,
       uint32_t sourceNodeId, const wchar_t *sourceNodeName, int64_t backupId, const wchar_t *userName, BackgroundTask *task);
+
+/**
+ * Result of device configuration restore request validation
+ */
+enum class DeviceConfigRestoreStatus
+{
+   SUCCESS = 0,
+   ACCESS_DENIED = 1,         // Caller lacks upload right on target node or read-config right on source node
+   NOT_SUPPORTED = 2,         // Target node's device driver does not support configuration restore
+   NO_TRANSPORT = 3,          // Target node has neither interactive SSH nor NETCONF available
+   DRIVER_MISMATCH = 4,       // Source and target nodes use different device drivers and override was not requested
+   BACKUP_NOT_SUPPORTED = 5,  // Backup provider does not implement backup retrieval
+   BACKUP_UNAVAILABLE = 6,    // Backup provider failed to return requested backup
+   BINARY_BACKUP = 7,         // Requested backup holds binary configuration that cannot be replayed
+   EMPTY_CONFIG = 8           // Requested configuration is empty
+};
+
+/**
+ * Validate restore request for configuration taken from stored backup of source node (possibly a different
+ * node than the target), write audit record, and start restore as background task on success.
+ */
+DeviceConfigRestoreStatus NXCORE_EXPORTABLE StartDeviceConfigRestoreFromBackup(const GenericClientSession& session,
+      const shared_ptr<Node>& node, const shared_ptr<Node>& sourceNode, int64_t backupId, bool useStartupConfig,
+      bool forceApply, shared_ptr<BackgroundTask> *task);
+
+/**
+ * Validate restore request for client-supplied configuration text, write audit record, and start restore
+ * as background task on success.
+ */
+DeviceConfigRestoreStatus NXCORE_EXPORTABLE StartDeviceConfigRestoreFromText(const GenericClientSession& session,
+      const shared_ptr<Node>& node, const BYTE *config, size_t size, shared_ptr<BackgroundTask> *task);
 
 #endif   /* _device_backup_h_ */

@@ -79,6 +79,8 @@ tags:
     description: Traffic connector information
   - name: Logs
     description: Server-side log discovery and querying
+  - name: Background Tasks
+    description: Status of long-running server-side tasks started by other endpoints
 paths:
   /:
     get:
@@ -1447,6 +1449,36 @@ paths:
         - BearerAuth: []
       tags:
         - AI Saved Prompts
+  /v1/background-tasks/{task-id}:
+    get:
+      operationId: getBackgroundTask
+      summary: Get background task state
+      description: >-
+        Retrieve the state and progress of a server-side background task started by another endpoint (for example,
+        device configuration restore). Finished tasks remain available for a limited time after completion.
+      parameters:
+        - name: task-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Task ID returned by the endpoint that started the task
+      responses:
+        '200':
+          description: Task state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackgroundTask'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Task with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Background Tasks
   /v1/alarm-categories:
     get:
       operationId: listAlarmCategories
@@ -5737,6 +5769,91 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/device-config-backups:
+    get:
+      operationId: listDeviceConfigBackups
+      summary: List device configuration backups
+      description: >-
+        Retrieve metadata of all stored configuration backups of the given node (timestamps, sizes and SHA-256 hashes,
+        without configuration content). Requires a device backup provider module to be loaded on the server.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      responses:
+        '200':
+          description: List of backups, newest first as returned by backup provider
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceConfigBackupSummary'
+        '400':
+          description: Invalid object ID or object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+        '500':
+          description: Backup provider is unavailable or failed to return backup list
+        '501':
+          description: Backup provider does not implement backup listing
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/device-config-backups/{backup-id}:
+    get:
+      operationId: getDeviceConfigBackup
+      summary: Get device configuration backup
+      description: >-
+        Retrieve a single stored configuration backup of the given node including running and startup configuration
+        content. Text configurations are returned as UTF-8 strings; binary configurations are base64-encoded.
+        Requires the dedicated read-device-configuration access right on the node; denied requests are recorded in
+        the audit log.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+        - name: backup-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Backup ID as returned by the backup list
+      responses:
+        '200':
+          description: Backup with configuration content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceConfigBackup'
+        '400':
+          description: Invalid object ID, invalid backup ID, or object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read-device-configuration access to given object
+        '404':
+          description: Object with given ID does not exist
+        '500':
+          description: Backup provider is unavailable or failed to return the backup
+        '501':
+          description: Backup provider does not implement backup retrieval
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/execute-agent-command:
     post:
       operationId: executeAgentCommand
@@ -6744,6 +6861,96 @@ paths:
       security:
         - BearerAuth: []
 
+  /v1/objects/{object-id}/restore-device-config:
+    post:
+      operationId: restoreDeviceConfig
+      summary: Restore device configuration
+      description: >-
+        Push a configuration to the device represented by the given node using the device driver's restore hook
+        (merge semantics over interactive SSH for CLI-driven devices, full override over NETCONF where supported).
+        The configuration comes either from a stored backup, which may belong to a different node (replacement-device
+        scenario), or from the request body. The restore runs as a background task; poll its state with
+        GET /v1/background-tasks/{task-id}. Requires the upload-device-configuration access right on the target node
+        and, when restoring from a backup, the read-device-configuration right on the source node. Every request is
+        recorded in the audit log together with the SHA-256 hash of the configuration; events
+        SYS_DEVICE_CONFIG_RESTORE_STARTED / COMPLETED / FAILED are generated on the target node.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Target node object ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  title: Restore from stored backup
+                  required:
+                    - sourceObjectId
+                    - backupId
+                  properties:
+                    sourceObjectId:
+                      type: integer
+                      description: ID of the node the backup belongs to (may differ from the target node)
+                    backupId:
+                      type: integer
+                      format: int64
+                      description: Backup ID as returned by GET /v1/objects/{object-id}/device-config-backups
+                    useStartupConfig:
+                      type: boolean
+                      default: false
+                      description: Restore the startup configuration from the backup instead of the running configuration
+                    force:
+                      type: boolean
+                      default: false
+                      description: Apply even if the device drivers of source and target nodes differ
+                - type: object
+                  title: Restore client-supplied configuration
+                  required:
+                    - config
+                  properties:
+                    config:
+                      type: string
+                      description: Configuration text to apply
+      responses:
+        '202':
+          description: Restore started; the task ID can be used to poll for completion
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskId:
+                    type: integer
+                    format: int64
+                    description: Background task ID
+        '400':
+          description: |
+            Invalid request. Possible reasons:
+            - Invalid object ID, object is not a node, or invalid source object ID
+            - Request body is missing or specifies neither sourceObjectId nor config
+            - Device driver of the target node does not support configuration restore
+            - Neither interactive SSH nor NETCONF is available on the target node
+            - Requested backup holds a binary configuration
+            - Configuration is empty
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have upload-device-configuration access to the target node or read-device-configuration access to the source node
+        '404':
+          description: Object with given ID does not exist, or the requested backup cannot be retrieved
+        '409':
+          description: Device driver of the target node differs from the device driver of the source node; repeat with force set to true to apply anyway
+        '501':
+          description: Backup provider does not implement backup retrieval
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/set-maintenance:
     post:
       operationId: setObjectMaintenance
@@ -14590,6 +14797,82 @@ components:
         wsUrl:
           type: string
           description: WebSocket URL path to connect for streaming output
+    BackgroundTask:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Task ID
+        description:
+          type: string
+          description: Human-readable task description
+        state:
+          type: string
+          enum:
+            - pending
+            - running
+            - completed
+            - failed
+          description: Current task state
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Completion percentage reported by the task
+        completionTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Time the task finished (null while pending or running)
+        failureReason:
+          type: string
+          nullable: true
+          description: Failure details (null unless state is failed)
+    DeviceConfigBackupSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Backup ID
+        timestamp:
+          type: string
+          format: date-time
+          description: Time the backup was taken
+        lastCheckTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last time the backup provider verified the device configuration against this backup
+        isBinary:
+          type: boolean
+          description: True if configuration content is binary rather than text
+        runningConfigSize:
+          type: integer
+          description: Size of running configuration in bytes
+        runningConfigHash:
+          type: string
+          description: SHA-256 hash of running configuration as hexadecimal string
+        startupConfigSize:
+          type: integer
+          description: Size of startup configuration in bytes (0 if not stored)
+        startupConfigHash:
+          type: string
+          description: SHA-256 hash of startup configuration as hexadecimal string
+    DeviceConfigBackup:
+      allOf:
+        - $ref: '#/components/schemas/DeviceConfigBackupSummary'
+        - type: object
+          properties:
+            runningConfig:
+              type: string
+              nullable: true
+              description: Running configuration content (UTF-8 text, or base64 when isBinary is true)
+            startupConfig:
+              type: string
+              nullable: true
+              description: Startup configuration content (UTF-8 text, or base64 when isBinary is true); null if not stored
     ObjectClass:
       type: string
       enum:
