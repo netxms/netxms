@@ -131,6 +131,9 @@ void DellOS10Driver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->testCommand = "show version";
    hints->testCommandPattern = "OS10";
 
+   // Error response detection (used by configuration restore)
+   hints->errorPattern = "^%\\s*Error";
+
    // Timeouts
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
@@ -164,4 +167,30 @@ bool DellOS10Driver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
    if (ssh == nullptr)
       return false;
    return ssh->executeCommand("show startup-configuration", output);
+}
+
+/**
+ * Check if config restore is supported
+ */
+bool DellOS10Driver::isConfigRestoreSupported()
+{
+   return true;
+}
+
+/**
+ * Restore configuration via interactive SSH (merge semantics)
+ */
+bool DellOS10Driver::restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+      const std::function<void (int, int)>& progressCallback)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+   {
+      errorLog->append(L"Cannot open interactive SSH channel");
+      return false;
+   }
+
+   StringList commands;
+   PrepareConfigCommands(config, '!', &commands);
+   return ssh->applyConfiguration(commands, "configure terminal", "end", "write memory", errorLog, progressCallback);
 }

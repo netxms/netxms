@@ -371,6 +371,9 @@ void CiscoNexusDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->testCommand = "show version | include Cisco";
    hints->testCommandPattern = "Cisco";
 
+   // Error response detection (used by configuration restore)
+   hints->errorPattern = "^%\\s*(Invalid|Incomplete|Ambiguous|Permission denied|Error)|^ERROR:";
+
    // Timeouts
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
@@ -410,4 +413,41 @@ bool CiscoNexusDriver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
       return false;
    StripCiscoConfigPreamble(output);
    return true;
+}
+
+/**
+ * Check if config restore is supported
+ */
+bool CiscoNexusDriver::isConfigRestoreSupported()
+{
+   return true;
+}
+
+/**
+ * Restore configuration via interactive SSH (merge semantics)
+ */
+bool CiscoNexusDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+      const std::function<void (int, int)>& progressCallback)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+   {
+      errorLog->append(L"Cannot open interactive SSH channel");
+      return false;
+   }
+
+   StringList commands;
+   PrepareConfigCommands(config, '!', &commands);
+
+   // NX-OS shows software version as "version X.Y(Z) Bios:version ..." in running configuration; it is not a configuration command
+   for(int i = 0; i < commands.size(); i++)
+   {
+      if (!wcsncmp(commands.get(i), L"version ", 8))
+      {
+         commands.remove(i);
+         break;
+      }
+   }
+
+   return ssh->applyConfiguration(commands, "configure terminal", "end", "copy running-config startup-config", errorLog, progressCallback);
 }

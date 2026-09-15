@@ -910,6 +910,130 @@ bool SSHInteractiveChannel::feedConfigurationLines(const StringList& commands, S
 }
 
 /**
+ * Apply configuration to device (enter configuration mode, feed command units, leave configuration mode, save)
+ */
+bool SSHInteractiveChannel::applyConfiguration(const StringList& commands, const char *enterConfigModeCommand,
+      const char *exitConfigModeCommand, const char *saveCommand, StringBuffer *errorLog,
+      const std::function<void (int, int)>& progressCallback)
+{
+   if (!m_privileged)
+   {
+      errorLog->append(L"Privileged mode is required for configuration restore");
+      return false;
+   }
+
+   if (commands.isEmpty())
+   {
+      errorLog->append(L"Configuration is empty");
+      return false;
+   }
+
+   MutableString errorText;
+   if (!execute(enterConfigModeCommand, 0))
+   {
+      errorLog->appendFormattedString(L"Cannot enter configuration mode: %s", m_lastErrorMessage.cstr());
+      return false;
+   }
+   if (scanForDeviceError(enterConfigModeCommand, &errorText))
+   {
+      errorLog->appendFormattedString(L"Cannot enter configuration mode: %s", errorText.cstr());
+      return false;
+   }
+
+   bool success = feedConfigurationLines(commands, errorLog, progressCallback);
+
+   // Always leave configuration mode, even after failure
+   execute(exitConfigModeCommand, 0);
+
+   if (!success)
+      return false;   // never save partially applied configuration
+
+   if (!execute(saveCommand, 120000))
+   {
+      errorLog->appendFormattedString(L"Failed to save configuration: %s", m_lastErrorMessage.cstr());
+      return false;
+   }
+   if (scanForDeviceError(saveCommand, &errorText))
+   {
+      errorLog->appendFormattedString(L"Failed to save configuration: %s", errorText.cstr());
+      return false;
+   }
+   return true;
+}
+
+/**
+ * Check if given configuration line opens a multi-line banner block. On match extracts banner
+ * delimiter (single character, or two-character "^X" representation of a control character)
+ * into provided buffer (at least 3 characters long).
+ */
+static bool IsBannerBlockStart(const wchar_t *line, wchar_t *delimiter)
+{
+   if (wcsncmp(line, L"banner ", 7) != 0)
+      return false;
+
+   // Skip banner type (motd, login, exec, etc.) and following spaces
+   const wchar_t *p = line + 7;
+   while(*p == L' ')
+      p++;
+   while((*p != 0) && (*p != L' '))
+      p++;
+   while(*p == L' ')
+      p++;
+   if (*p == 0)
+      return false;
+
+   size_t delimLen = ((*p == L'^') && (*(p + 1) != 0) && (*(p + 1) != L' ')) ? 2 : 1;
+   memcpy(delimiter, p, delimLen * sizeof(wchar_t));
+   delimiter[delimLen] = 0;
+
+   // If the delimiter occurs again on the same line, the banner is single-line
+   return wcsstr(p + delimLen, delimiter) == nullptr;
+}
+
+/**
+ * Convert IOS-style configuration text into list of command units for line-by-line replay. Drops
+ * empty lines, comment lines, and "show running-config" preamble remnants. Multi-line banner
+ * definitions are grouped into single units (device does not print prompts for banner content).
+ */
+void LIBNXSRV_EXPORTABLE PrepareConfigCommands(const ByteStream& config, char commentChar, StringList *commands)
+{
+   StringBuffer text(reinterpret_cast<const char*>(config.buffer()), static_cast<ssize_t>(config.size()), "UTF-8");
+   text.replace(L"\r", L"");
+   StringList lines = text.split(L"\n", false);
+   for(int i = 0; i < lines.size(); i++)
+   {
+      StringBuffer line(lines.get(i));
+      line.trim();
+
+      if (line.isEmpty() || (line.charAt(0) == static_cast<wchar_t>(commentChar)))
+         continue;
+
+      if (!wcsncmp(line.cstr(), L"Building configuration", 22) || !wcsncmp(line.cstr(), L"Current configuration", 21) ||
+          !wcsncmp(line.cstr(), L"Running configuration", 21) || !wcsncmp(line.cstr(), L"Startup configuration", 21))
+         continue;
+
+      wchar_t delimiter[3];
+      if (IsBannerBlockStart(line.cstr(), delimiter))
+      {
+         // Accumulate banner content verbatim until closing delimiter
+         StringBuffer unit(line);
+         while(++i < lines.size())
+         {
+            const wchar_t *contentLine = lines.get(i);
+            unit.append(L'\n');
+            unit.append(contentLine);
+            if (wcsstr(contentLine, delimiter) != nullptr)
+               break;
+         }
+         commands->add(unit.cstr());
+         continue;
+      }
+
+      commands->add(line.cstr());
+   }
+}
+
+/**
  * Close channel
  */
 void SSHInteractiveChannel::close()

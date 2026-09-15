@@ -1626,6 +1626,16 @@ public:
          uint32_t perLineTimeout = 0);
 
    /**
+    * Apply configuration to device: enter configuration mode, feed command units one by one
+    * (see feedConfigurationLines), leave configuration mode, and save running configuration.
+    * Requires privileged mode. Configuration mode is always left, even after failure, but
+    * configuration is never saved when any command was rejected. On failure appends details
+    * to error log.
+    */
+   bool applyConfiguration(const StringList& commands, const char *enterConfigModeCommand, const char *exitConfigModeCommand,
+         const char *saveCommand, StringBuffer *errorLog, const std::function<void (int, int)>& progressCallback);
+
+   /**
     * Escalate to privileged mode
     */
    bool escalatePrivilege(const TCHAR *enablePassword);
@@ -1656,6 +1666,14 @@ public:
    uint32_t getLastError() const { return m_lastError; }
    const wchar_t *getLastErrorMessage() const { return m_lastErrorMessage.cstr(); }
 };
+
+/**
+ * Convert IOS-style configuration text into list of command units suitable for
+ * SSHInteractiveChannel::feedConfigurationLines. Drops empty lines, comment lines (starting
+ * with given comment character), and "show running-config" preamble lines. Multi-line banner
+ * definitions are grouped into single units.
+ */
+void LIBNXSRV_EXPORTABLE PrepareConfigCommands(const ByteStream& config, char commentChar, StringList *commands);
 
 /**
  * ISC flags

@@ -125,6 +125,9 @@ void ArubaCXDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->testCommand = "show version";
    hints->testCommandPattern = "ArubaOS-CX";
 
+   // Error response detection (used by configuration restore)
+   hints->errorPattern = "^(Invalid input|Incomplete input|Ambiguous input|Unknown command|Command failed|Error)";
+
    // Timeouts
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
@@ -158,4 +161,30 @@ bool ArubaCXDriver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
    if (ssh == nullptr)
       return false;
    return ssh->executeCommand("show startup-config", output);
+}
+
+/**
+ * Check if config restore is supported
+ */
+bool ArubaCXDriver::isConfigRestoreSupported()
+{
+   return true;
+}
+
+/**
+ * Restore configuration via interactive SSH (merge semantics)
+ */
+bool ArubaCXDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+      const std::function<void (int, int)>& progressCallback)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+   {
+      errorLog->append(L"Cannot open interactive SSH channel");
+      return false;
+   }
+
+   StringList commands;
+   PrepareConfigCommands(config, '!', &commands);
+   return ssh->applyConfiguration(commands, "configure terminal", "end", "write memory", errorLog, progressCallback);
 }

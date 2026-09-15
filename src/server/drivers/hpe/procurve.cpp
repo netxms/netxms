@@ -157,6 +157,9 @@ void ProCurveDriver::getSSHDriverHints(SSHDriverHints *hints) const
    hints->testCommand = "show system";
    hints->testCommandPattern = "System";
 
+   // Error response detection (used by configuration restore)
+   hints->errorPattern = "^(Invalid input|Incomplete input|Ambiguous input|Unable to|Error)";
+
    // Timeouts
    hints->commandTimeout = 30000;
    hints->connectTimeout = 15000;
@@ -223,4 +226,30 @@ bool ProCurveDriver::getStartupConfig(DeviceContext *ctx, ByteStream *output)
       return false;
    StripProCurveConfigPreamble(output);
    return true;
+}
+
+/**
+ * Check if config restore is supported
+ */
+bool ProCurveDriver::isConfigRestoreSupported()
+{
+   return true;
+}
+
+/**
+ * Restore configuration via interactive SSH (merge semantics)
+ */
+bool ProCurveDriver::restoreConfig(DeviceContext *ctx, const ByteStream& config, StringBuffer *errorLog,
+      const std::function<void (int, int)>& progressCallback)
+{
+   SSHInteractiveChannel *ssh = ctx->getInteractiveSSH();
+   if (ssh == nullptr)
+   {
+      errorLog->append(L"Cannot open interactive SSH channel");
+      return false;
+   }
+
+   StringList commands;
+   PrepareConfigCommands(config, ';', &commands);
+   return ssh->applyConfiguration(commands, "configure", "end", "write memory", errorLog, progressCallback);
 }
