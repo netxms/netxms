@@ -1575,3 +1575,34 @@ void GetClientConfigurationHints(NXCPMessage *msg, uint32_t userId)
 
    msg->setField(VID_CONFIG_HINT_COUNT, data.count);
 }
+
+/**
+ * Enumeration callback for GetClientConfigurationHintsAsJson
+ */
+static EnumerationCallbackResult GetClientConfigurationHintsAsJson_Callback(const wchar_t *key, const wchar_t *value, json_t *hints)
+{
+   if (wcsncmp(key, L"Client.", 7))
+      return _CONTINUE;
+
+   char *name = UTF8StringFromWideString(&key[7]);
+   json_object_set_new(hints, name, json_string_w(CHECK_NULL_EX(value)));
+   MemFree(name);
+   return _CONTINUE;
+}
+
+/**
+ * Get client configuration hints as JSON object. User attributes are processed after global
+ * configuration variables, so a per-user attribute overrides the global value of same hint.
+ */
+json_t NXCORE_EXPORTABLE *GetClientConfigurationHintsAsJson(uint32_t userId)
+{
+   json_t *hints = json_object();
+
+   s_configCacheLock.readLock();
+   s_configCache.forEach(GetClientConfigurationHintsAsJson_Callback, hints);
+   s_configCacheLock.unlock();
+
+   EnumerateUserDbObjectAttributes(userId, GetClientConfigurationHintsAsJson_Callback, hints);
+
+   return hints;
+}

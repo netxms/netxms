@@ -84,6 +84,10 @@ int H_ServerInfo(Context *context)
    json_object_set_new(response, "dateTimeFormat", dateTimeFormat);
    json_object_set_new(response, "components", ComponentsToJson());
 
+   // Hints are per-user: global "Client.*" configuration variables overlaid with the calling
+   // user's own "Client.*" attributes. Response must not be shared between users.
+   json_object_set_new(response, "clientConfigurationHints", GetClientConfigurationHintsAsJson(context->getUserId()));
+
    context->setResponseData(response);
    json_decref(response);
    return 200;

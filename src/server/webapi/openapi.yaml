@@ -177,8 +177,165 @@ paths:
                     items:
                       type: object
                     description: Registered server components
+                  clientConfigurationHints:
+                    type: object
+                    additionalProperties:
+                      type: string
+                    description: >-
+                      Client configuration hints - server configuration variables with names
+                      starting with "Client." (prefix stripped), overlaid with attributes of
+                      the calling user that have the same prefix. This makes the response
+                      user-specific, so it must not be cached and shared between users.
         '401':
           description: Unauthorized
+      security:
+        - BearerAuth: []
+      tags:
+        - Server
+  /v1/server-config:
+    get:
+      operationId: listServerConfigVariables
+      summary: List server configuration variables
+      description: >-
+        Retrieve all visible server configuration variables. Requires SERVER_CONFIG access
+        right. Hidden variables (is_visible = 0) are never returned.
+      responses:
+        '200':
+          description: Configuration variables retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServerConfigVariable'
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SERVER_CONFIG access right
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Server
+  /v1/server-config/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        description: Configuration variable name
+        schema:
+          type: string
+    get:
+      operationId: getServerConfigVariable
+      summary: Get server configuration variable
+      description: Retrieve single visible server configuration variable. Requires SERVER_CONFIG access right.
+      responses:
+        '200':
+          description: Configuration variable retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerConfigVariable'
+        '400':
+          description: Invalid variable name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SERVER_CONFIG access right
+        '404':
+          description: Configuration variable does not exist or is not visible
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Server
+    put:
+      operationId: updateServerConfigVariable
+      summary: Set server configuration variable
+      description: >-
+        Set value of server configuration variable, creating it if it does not exist. Requires
+        SERVER_CONFIG access right. New variables are created as visible string variables
+        without description, units, or default value. Change takes effect immediately unless
+        the variable is marked as requiring server restart.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerConfigVariableUpdate'
+      responses:
+        '200':
+          description: Configuration variable updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerConfigVariable'
+        '400':
+          description: Invalid variable name, missing or invalid value, or value too long
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SERVER_CONFIG access right
+        '404':
+          description: Variable was written but is not visible, so it cannot be returned
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Server
+    delete:
+      operationId: deleteServerConfigVariable
+      summary: Delete server configuration variable
+      description: Delete server configuration variable. Requires SERVER_CONFIG access right.
+      responses:
+        '204':
+          description: Configuration variable deleted successfully
+        '400':
+          description: Invalid variable name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SERVER_CONFIG access right
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Server
+  /v1/server-config/{name}/reset:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        description: Configuration variable name
+        schema:
+          type: string
+    post:
+      operationId: resetServerConfigVariable
+      summary: Reset server configuration variable to default value
+      description: >-
+        Set server configuration variable to its default value. Requires SERVER_CONFIG access
+        right.
+      responses:
+        '200':
+          description: Configuration variable reset successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerConfigVariable'
+        '400':
+          description: Invalid variable name
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SERVER_CONFIG access right
+        '404':
+          description: Configuration variable does not exist
+        '500':
+          description: Database failure
       security:
         - BearerAuth: []
       tags:
@@ -13637,7 +13794,11 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: Custom attributes (replaces all existing attributes)
+            nullable: true
+          description: >-
+            Custom attributes. Replaces all existing attributes, except those whose name starts with
+            a dot - those are owned by client applications (UI state, user preferences) and are kept
+            unless the request lists them explicitly. Null as a value removes the attribute.
         groupMembership:
           type: array
           items:
@@ -13665,7 +13826,11 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: Custom attributes (replaces all existing attributes)
+            nullable: true
+          description: >-
+            Custom attributes. Replaces all existing attributes, except those whose name starts with
+            a dot - those are owned by client applications (UI state, user preferences) and are kept
+            unless the request lists them explicitly. Null as a value removes the attribute.
         members:
           type: array
           items:
@@ -16819,6 +16984,58 @@ components:
         notificationChannelName:
           type: string
           description: Notification channel name
+    ServerConfigVariable:
+      type: object
+      description: Server configuration variable
+      properties:
+        name:
+          type: string
+          description: Variable name (up to 63 characters)
+        value:
+          type: string
+          description: Current value
+        defaultValue:
+          type: string
+          description: Default value, empty if not defined
+        dataType:
+          type: string
+          enum: [STRING, BOOLEAN, INTEGER, CHOICE, COLOR, PASSWORD]
+          description: >-
+            Type of the value. BOOLEAN values are stored as "0" and "1", COLOR values as CSS
+            color strings, and CHOICE values must be one of possibleValues.
+        description:
+          type: string
+          description: Human readable description, empty if not defined
+        units:
+          type: string
+          description: Units of the value (for INTEGER variables), empty if not defined
+        needServerRestart:
+          type: boolean
+          description: True if server restart is required for a change to take effect
+        possibleValues:
+          type: array
+          description: Allowed values, populated for CHOICE variables only
+          items:
+            $ref: '#/components/schemas/ServerConfigPossibleValue'
+    ServerConfigPossibleValue:
+      type: object
+      description: Allowed value of a CHOICE configuration variable
+      properties:
+        value:
+          type: string
+          description: Value as stored in the variable
+        description:
+          type: string
+          description: Human readable description of the value
+    ServerConfigVariableUpdate:
+      type: object
+      description: Server configuration variable update request
+      required:
+        - value
+      properties:
+        value:
+          type: string
+          description: New value, up to 1999 characters
     SshKey:
       type: object
       properties:

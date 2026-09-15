@@ -1424,6 +1424,7 @@ TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *varariable, const TCHAR *de
 char NXCORE_EXPORTABLE *ConfigReadCLOBUTF8(const TCHAR *variable, const char *defaultValue);
 bool NXCORE_EXPORTABLE ConfigWriteCLOB(const wchar_t *variable, const wchar_t *value, bool create);
 bool NXCORE_EXPORTABLE ConfigDelete(const wchar_t *variable);
+json_t NXCORE_EXPORTABLE *GetClientConfigurationHintsAsJson(uint32_t userId);
 
 void MetaDataPreLoad();
 bool NXCORE_EXPORTABLE MetaDataReadStr(const wchar_t *variable, wchar_t *buffer, int size, const wchar_t *defaultValue);
