@@ -5088,9 +5088,10 @@ paths:
                 value:
                   oneOf:
                     - type: string
+                      nullable: true
                     - type: object
                     - type: array
-                  nullable: true
+                      items: {}
                   description: |
                     Attribute value. A string is stored as plain text; an object or array is stored
                     as a structured value. Null or absent is treated as an empty string.
