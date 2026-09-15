@@ -205,7 +205,8 @@ EventLogReader::EventLogReader(const TCHAR *name, Config *config, bool processOf
    ConfigEntry *filters = config->getEntry(path);
    if (filters != nullptr)
    {
-      for (int i = 0; i < filters->getValueCount(); i++)
+      // Iterate in load order: filters are evaluated first-match-wins, so file order is significant
+      for (int i = filters->getValueCount() - 1; i >= 0; i--)
       {
          Filter filter;
          memset(&filter, 0, sizeof(Filter));
