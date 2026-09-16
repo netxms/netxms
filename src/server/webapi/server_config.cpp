@@ -196,6 +196,43 @@ static int SendServerConfigVariable(Context *context, const wchar_t *name)
 }
 
 /**
+ * State of configuration variable in the database
+ */
+enum class ConfigVariableState
+{
+   MISSING,
+   HIDDEN,
+   VISIBLE,
+   DB_FAILURE
+};
+
+/**
+ * Get state of configuration variable
+ */
+static ConfigVariableState GetConfigVariableState(const wchar_t *name)
+{
+   ConfigVariableState state = ConfigVariableState::DB_FAILURE;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT is_visible FROM config WHERE var_name=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) == 0)
+            state = ConfigVariableState::MISSING;
+         else
+            state = (DBGetFieldLong(hResult, 0, 0) != 0) ? ConfigVariableState::VISIBLE : ConfigVariableState::HIDDEN;
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return state;
+}
+
+/**
  * Validate name of configuration variable taken from URL
  */
 static bool ValidateConfigVariableName(const wchar_t *name, Context *context)
@@ -301,7 +338,7 @@ int H_ServerConfigVariableDetails(Context *context)
 /**
  * Handler for PUT /v1/server-config/:name
  * Body: { "value": "..." }. Creates the variable if it does not exist, same as "create new
- * variable" action in desktop console.
+ * variable" action in desktop console. Hidden variables are not accessible.
  */
 int H_ServerConfigVariableUpdate(Context *context)
 {
@@ -336,6 +373,15 @@ int H_ServerConfigVariableUpdate(Context *context)
       context->setErrorResponse("Configuration variable value is too long");
       return 400;
    }
+
+   ConfigVariableState state = GetConfigVariableState(name);
+   if (state == ConfigVariableState::DB_FAILURE)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+   if (state == ConfigVariableState::HIDDEN)
+      return 404;
 
    wchar_t newValue[MAX_CONFIG_VALUE_LENGTH];
    utf8_to_wchar(json_string_value(jsonValue), -1, newValue, MAX_CONFIG_VALUE_LENGTH);
@@ -377,7 +423,7 @@ int H_ServerConfigVariableReset(Context *context)
    wchar_t defaultValue[MAX_CONFIG_VALUE_LENGTH];
    bool found = false;
    bool dbFailure = false;
-   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT default_value FROM config WHERE var_name=?");
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT default_value FROM config WHERE var_name=? AND is_visible=1");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
@@ -442,6 +488,15 @@ int H_ServerConfigVariableDelete(Context *context)
 
    if (!ValidateConfigVariableName(name, context))
       return 400;
+
+   ConfigVariableState state = GetConfigVariableState(name);
+   if (state == ConfigVariableState::DB_FAILURE)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+   if (state != ConfigVariableState::VISIBLE)
+      return 404;
 
    if (!ConfigDelete(name))
    {

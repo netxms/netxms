@@ -257,8 +257,8 @@ paths:
       description: >-
         Set value of server configuration variable, creating it if it does not exist. Requires
         SERVER_CONFIG access right. New variables are created as visible string variables
-        without description, units, or default value. Change takes effect immediately unless
-        the variable is marked as requiring server restart.
+        without description, units, or default value. Hidden variables cannot be set. Change
+        takes effect immediately unless the variable is marked as requiring server restart.
       requestBody:
         required: true
         content:
@@ -279,7 +279,7 @@ paths:
         '403':
           description: User does not have SERVER_CONFIG access right
         '404':
-          description: Variable was written but is not visible, so it cannot be returned
+          description: Configuration variable exists but is not visible
         '500':
           description: Database failure
       security:
@@ -299,6 +299,8 @@ paths:
           description: Unauthorized
         '403':
           description: User does not have SERVER_CONFIG access right
+        '404':
+          description: Configuration variable does not exist or is not visible
         '500':
           description: Database failure
       security:
@@ -333,7 +335,7 @@ paths:
         '403':
           description: User does not have SERVER_CONFIG access right
         '404':
-          description: Configuration variable does not exist
+          description: Configuration variable does not exist or is not visible
         '500':
           description: Database failure
       security:
@@ -17035,12 +17037,15 @@ components:
           description: True if server restart is required for a change to take effect
         possibleValues:
           type: array
-          description: Allowed values, populated for CHOICE variables only
+          description: >-
+            Value constraints. For CHOICE variables, the list of allowed values. For INTEGER
+            variables, either empty (no limit) or a single entry holding the maximum allowed
+            value. Empty for other types.
           items:
             $ref: '#/components/schemas/ServerConfigPossibleValue'
     ServerConfigPossibleValue:
       type: object
-      description: Allowed value of a CHOICE configuration variable
+      description: Allowed value of a CHOICE variable, or maximum value of an INTEGER variable
       properties:
         value:
           type: string
