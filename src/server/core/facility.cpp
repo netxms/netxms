@@ -46,6 +46,8 @@ Facility::Facility(const TCHAR *name) : super(name)
 Facility::Facility(const TCHAR *name, const NXCPMessage& request) : super(name)
 {
    m_settlementLag = request.isFieldExist(VID_SETTLEMENT_LAG) ? request.getFieldAsInt32(VID_SETTLEMENT_LAG) : DEFAULT_SETTLEMENT_LAG;
+   if (m_settlementLag < 0)
+      m_settlementLag = DEFAULT_SETTLEMENT_LAG;
    m_providerId = request.getFieldAsSharedString(VID_PROVIDER_ID, 63);
 }
 
@@ -55,6 +57,8 @@ Facility::Facility(const TCHAR *name, const NXCPMessage& request) : super(name)
 Facility::Facility(const TCHAR *name, json_t *json) : super(name)
 {
    m_settlementLag = json_object_get_int32(json, "settlementLag", DEFAULT_SETTLEMENT_LAG);
+   if (m_settlementLag < 0)
+      m_settlementLag = DEFAULT_SETTLEMENT_LAG;
    json_t *value = json_object_get(json, "providerId");
    if (json_is_string(value))
       m_providerId = String(json_string_value(value), "utf8");
@@ -144,7 +148,12 @@ void Facility::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 uint32_t Facility::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_SETTLEMENT_LAG))
-      m_settlementLag = msg.getFieldAsInt32(VID_SETTLEMENT_LAG);
+   {
+      int32_t settlementLag = msg.getFieldAsInt32(VID_SETTLEMENT_LAG);
+      if (settlementLag < 0)
+         return RCC_INVALID_ARGUMENT;
+      m_settlementLag = settlementLag;
+   }
    if (msg.isFieldExist(VID_PROVIDER_ID))
       m_providerId = msg.getFieldAsSharedString(VID_PROVIDER_ID, 63);
    return super::modifyFromMessageInternal(msg, session);
