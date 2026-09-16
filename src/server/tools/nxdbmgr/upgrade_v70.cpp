@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.38 to 70.39
+ */
+static bool H_UpgradeFromV38()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 42)
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE config SET description='Polling interval (in seconds) for DCIs with collection schedule set to server default.' WHERE var_name='DataCollection.DefaultDCIPollingInterval'"));
+      CHK_EXEC(SQLQuery(L"UPDATE config SET description='Retention time (in days) for DCIs with history retention set to server default.' WHERE var_name='DataCollection.DefaultDCIRetentionTime'"));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 42));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(39));
+   return true;
+}
+
+/**
  * Upgrade from 70.37 to 70.38
  */
 static bool H_UpgradeFromV37()
@@ -1253,6 +1268,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 38, 70, 39, H_UpgradeFromV38 },
    { 37, 70, 38, H_UpgradeFromV37 },
    { 36, 70, 37, H_UpgradeFromV36 },
    { 35, 70, 36, H_UpgradeFromV35 },
