@@ -58,6 +58,16 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
 	@Override
 	protected abstract void paintFigure(Graphics gc);
 
+   /**
+    * Get map element represented by this figure.
+    *
+    * @return map element
+    */
+   public NetworkMapElement getMapElement()
+   {
+      return decoration;
+   }
+
 	/**
 	 * Stop dragging
 	 */
