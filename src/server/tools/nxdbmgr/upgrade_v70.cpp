@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.39 to 70.40
+ */
+static bool H_UpgradeFromV39()
+{
+   CHK_EXEC(CreateConfigParam(L"Objects.Facilities.ContainerAutoBind", L"0", L"Enable/disable container auto binding for facilities.", nullptr, 'B', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Objects.Facilities.TemplateAutoApply", L"0", L"Enable/disable template auto apply for facilities.", nullptr, 'B', true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(40));
+   return true;
+}
+
+/**
  * Upgrade from 70.38 to 70.39
  */
 static bool H_UpgradeFromV38()
@@ -1268,6 +1279,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 39, 70, 40, H_UpgradeFromV39 },
    { 38, 70, 39, H_UpgradeFromV38 },
    { 37, 70, 38, H_UpgradeFromV37 },
    { 36, 70, 37, H_UpgradeFromV36 },

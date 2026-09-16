@@ -460,6 +460,7 @@ struct AutoBindClassFilterData
    bool processClusters;
    bool processCollectors;
    bool processCoolingZones;
+   bool processFacilities;
    bool processMobileDevices;
    bool processPowerDomains;
    bool processRacks;
@@ -476,6 +477,7 @@ static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filter
          (filterData->processClusters && (object->getObjectClass() == OBJECT_CLUSTER)) ||
          (filterData->processCollectors && (object->getObjectClass() == OBJECT_COLLECTOR)) ||
          (filterData->processCoolingZones && (object->getObjectClass() == OBJECT_COOLINGZONE)) ||
+         (filterData->processFacilities && (object->getObjectClass() == OBJECT_FACILITY)) ||
          (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
          (filterData->processPowerDomains && (object->getObjectClass() == OBJECT_POWERDOMAIN)) ||
          (filterData->processRacks && (object->getObjectClass() == OBJECT_RACK)) ||
@@ -492,6 +494,7 @@ unique_ptr<SharedObjectArray<NetObj>> AutoBindTarget::getObjectsForAutoBind(cons
    filterData.processClusters = ConfigReadBoolean(StringBuffer(_T("Objects.Clusters.")).append(configurationSuffix), false);
    filterData.processCollectors = ConfigReadBoolean(StringBuffer(_T("Objects.Collectors.")).append(configurationSuffix), false);
    filterData.processCoolingZones = ConfigReadBoolean(StringBuffer(_T("Objects.CoolingZones.")).append(configurationSuffix), false);
+   filterData.processFacilities = ConfigReadBoolean(StringBuffer(_T("Objects.Facilities.")).append(configurationSuffix), false);
    filterData.processMobileDevices = ConfigReadBoolean(StringBuffer(_T("Objects.MobileDevices.")).append(configurationSuffix), false);
    filterData.processPowerDomains = ConfigReadBoolean(StringBuffer(_T("Objects.PowerDomains.")).append(configurationSuffix), false);
    filterData.processRacks = ConfigReadBoolean(StringBuffer(_T("Objects.Racks.")).append(configurationSuffix), false);

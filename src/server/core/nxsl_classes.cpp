@@ -5576,8 +5576,7 @@ static int CreateFacilityImpl(NXSL_Object *object, int argc, NXSL_Value **argv, 
       return NXSL_ERR_NOT_STRING;
 
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
-   shared_ptr<Facility> facility = make_shared<Facility>();
-   facility->setName(argv[0]->getValueAsCString());
+   shared_ptr<Facility> facility = make_shared<Facility>(argv[0]->getValueAsCString());
    NetObjInsert(facility, true, false);
    if (!NetObj::linkObjects(thisObject, facility))
    {

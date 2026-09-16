@@ -33,6 +33,14 @@ Facility::Facility() : super()
 }
 
 /**
+ * Constructor for new object with given name and default settings
+ */
+Facility::Facility(const TCHAR *name) : super(name)
+{
+   m_settlementLag = DEFAULT_SETTLEMENT_LAG;
+}
+
+/**
  * Constructor from NXCP message (object creation request)
  */
 Facility::Facility(const TCHAR *name, const NXCPMessage& request) : super(name)
@@ -47,7 +55,9 @@ Facility::Facility(const TCHAR *name, const NXCPMessage& request) : super(name)
 Facility::Facility(const TCHAR *name, json_t *json) : super(name)
 {
    m_settlementLag = json_object_get_int32(json, "settlementLag", DEFAULT_SETTLEMENT_LAG);
-   m_providerId = json_object_get_string_t(json, "providerId", _T(""));
+   json_t *value = json_object_get(json, "providerId");
+   if (json_is_string(value))
+      m_providerId = String(json_string_value(value), "utf8");
 }
 
 /**
@@ -188,7 +198,7 @@ uint32_t Facility::modifyFromJSONInternal(json_t *json, GenericClientSession *se
       if (value != nullptr)
       {
          if (json_is_string(value))
-            m_providerId = json_object_get_string_t(group, "providerId", _T(""));
+            m_providerId = String(json_string_value(value), "utf8");
          else if (json_is_null(value))
             m_providerId = nullptr;
          else

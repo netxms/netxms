@@ -1162,8 +1162,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **result, N
 
 	shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(obj->getData());
 	if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
-	         (parent->getObjectClass() != OBJECT_FACILITY) && (parent->getObjectClass() != OBJECT_POWERDOMAIN) &&
-	         (parent->getObjectClass() != OBJECT_COOLINGZONE) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+	         (parent->getObjectClass() != OBJECT_FACILITY) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
 		return NXSL_ERR_BAD_CLASS;
 
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, parent.get()))

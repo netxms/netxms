@@ -98,7 +98,11 @@ PowerDomain::PowerDomain(const TCHAR *name, json_t *json) : super(name)
    json_t *value = json_object_get(json, "domainType");
    if (value != nullptr)
       PowerDomainTypeFromJson(value, &m_domainType);
-   _tcslcpy(m_feedTag, json_object_get_string_t(json, "feedTag", _T("")), 16);
+   value = json_object_get(json, "feedTag");
+   if (json_is_string(value))
+      utf8_to_tchar(json_string_value(value), -1, m_feedTag, 16);
+   else
+      m_feedTag[0] = 0;
    m_ratedPower = json_object_get_int32(json, "ratedPower");
 }
 
@@ -241,7 +245,7 @@ uint32_t PowerDomain::modifyFromJSONInternal(json_t *json, GenericClientSession 
       if (value != nullptr)
       {
          if (json_is_string(value))
-            _tcslcpy(m_feedTag, json_object_get_string_t(group, "feedTag", _T("")), 16);
+            utf8_to_tchar(json_string_value(value), -1, m_feedTag, 16);
          else if (json_is_null(value))
             m_feedTag[0] = 0;
          else

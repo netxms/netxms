@@ -5918,6 +5918,7 @@ protected:
 
 public:
    Facility();
+   Facility(const TCHAR *name);
    Facility(const TCHAR *name, const NXCPMessage& request);
    Facility(const TCHAR *name, json_t *json);
 
