@@ -298,7 +298,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="true" autoUnbind="false">attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic&quot;);&#x0A;return attr != null and attr.toUpperCase() in [&quot;TRUE&quot;, &quot;YES&quot;, &quot;1&quot;] and classof($object) == &quot;Node&quot; and $node.isSNMP;</filter>
+			<filter autoBind="true" autoUnbind="false">attr = $object.getCustomAttribute(&quot;Template.InterfaceTraffic&quot;);&#x0A;return attr != null and attr.toUpperCase() in [&quot;TRUE&quot;, &quot;YES&quot;, &quot;1&quot;] and classof($object) == &quot;Node&quot; and $node.isSNMP and not $node.isAgent;</filter>
 			<filter2 autoBind="false" autoUnbind="false"></filter2>
 		</template>
 	</templates>
