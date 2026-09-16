@@ -106,6 +106,7 @@ import org.netxms.nxmc.modules.networkmaps.widgets.helpers.LinkDciValueProvider;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.MapContentProvider;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.MapLabelProvider;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ObjectFigure;
+import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ParallelLinkGroup;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -168,6 +169,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected boolean objectMoveLocked = true; //default false for adhock maps and true for predefined
 	protected boolean readOnly = true;
 	protected boolean saveSchedulted = false;
+   private int parallelLinkMergeThreshold = ParallelLinkGroup.DEFAULT_MERGE_THRESHOLD;
 
 	protected Action actionShowStatusIcon;
 	protected Action actionShowStatusBackground;
@@ -197,6 +199,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
    protected Action actionSaveImage;
    protected Action actionHideLinkLabels;
    protected Action actionHideLinks;
+   protected Action actionMergeParallelLinks;
    protected Action actionSelectAllObjects;
    protected Action actionLock;
    protected Action actionToggleCanvasType;
@@ -649,6 +652,53 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
          geoViewer.setLinksVisible(!actionHideLinks.isChecked());
       if (actionHideLinkLabels != null)
          geoViewer.setLinkLabelsVisible(!actionHideLinkLabels.isChecked());
+      if (actionMergeParallelLinks != null)
+         geoViewer.setParallelLinkMergeThreshold(activeParallelLinkMergeThreshold());
+   }
+
+   /**
+    * Set number of parallel links between the same pair of elements above which they are drawn as a single link (0 to
+    * never merge). The "Merge parallel links" toggle follows the configured value; the canvases are rebuilt if the
+    * threshold in effect changes.
+    *
+    * @param threshold threshold configured on the map
+    */
+   protected void setParallelLinkMergeThreshold(int threshold)
+   {
+      int previous = activeParallelLinkMergeThreshold();
+      parallelLinkMergeThreshold = threshold;
+      actionMergeParallelLinks.setChecked(threshold > 0);
+      if (activeParallelLinkMergeThreshold() != previous)
+         applyParallelLinkMergeThreshold();
+   }
+
+   /**
+    * Threshold currently in effect: 0 when merging is switched off in this view, otherwise the configured one, or the
+    * default when the map is configured not to merge and the user switched merging on.
+    *
+    * @return threshold in effect
+    */
+   private int activeParallelLinkMergeThreshold()
+   {
+      if (!actionMergeParallelLinks.isChecked())
+         return 0;
+      return (parallelLinkMergeThreshold > 0) ? parallelLinkMergeThreshold : ParallelLinkGroup.DEFAULT_MERGE_THRESHOLD;
+   }
+
+   /**
+    * Push the threshold in effect to both canvases and rebuild them once the map page exists.
+    */
+   private void applyParallelLinkMergeThreshold()
+   {
+      int threshold = activeParallelLinkMergeThreshold();
+      ((MapContentProvider)viewer.getContentProvider()).setParallelLinkMergeThreshold(threshold);
+      if (geoViewer != null)
+         geoViewer.setParallelLinkMergeThreshold(threshold);
+      if (mapPage == null)
+         return;
+      if (geoViewer != null)
+         geoViewer.setContent(mapPage);
+      viewer.setInput(mapPage);
    }
 
    /**
@@ -952,7 +1002,13 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		viewer.setInput(mapPage);
 		for (Object s : selection)
 		{
-		   if (s instanceof NetworkMapLink)
+		   if (s instanceof ParallelLinkGroup)
+         {
+            NetworkMapLink member = mapPage.findLink(((ParallelLinkGroup)s).getLinks().get(0));
+            if (member != null)
+               newSelection.add(((MapContentProvider)viewer.getContentProvider()).displayedLink(member));
+         }
+		   else if (s instanceof NetworkMapLink)
          {
 		      newSelection.add(mapPage.findLink((NetworkMapLink)s));
          }
@@ -1424,6 +1480,15 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       };
       actionHideLinks.setImageDescriptor(ResourceManager.getImageDescriptor("icons/netmap/hide_links.png"));
 
+      actionMergeParallelLinks = new Action(i18n.tr("&Merge parallel links"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            applyParallelLinkMergeThreshold();
+         }
+      };
+      actionMergeParallelLinks.setChecked(parallelLinkMergeThreshold > 0);
+
       actionSelectAllObjects = new Action(i18n.tr("Select &all objects")) {
          @Override
          public void run()
@@ -1659,6 +1724,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(new Separator());
       manager.add(actionHideLinkLabels);
       manager.add(actionHideLinks);
+      manager.add(actionMergeParallelLinks);
       manager.add(new Separator());
       manager.add(actionCopyImage);
       manager.add(actionSaveImage);
@@ -1691,6 +1757,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       manager.add(new Separator());
       manager.add(actionHideLinkLabels);
       manager.add(actionHideLinks);
+      manager.add(actionMergeParallelLinks);
       manager.add(new Separator());
       if (!readOnly)
          manager.add(actionLock);
@@ -1971,8 +2038,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		List<NetworkMapLink> links = mapPage.findLinksWithStatusObject(object.getObjectId());
 		if (links != null)
 		{
-			for(NetworkMapLink l : links)
+         MapContentProvider contentProvider = (MapContentProvider)viewer.getContentProvider();
+			for(NetworkMapLink link : links)
 			{
+            NetworkMapLink l = contentProvider.displayedLink(link);
 				GraphItem item = viewer.findGraphItem(l);
 				if (item instanceof GraphConnection)
 					labelProvider.refreshConnectionColor(l, (GraphConnection)item);

@@ -1634,6 +1634,7 @@ public class NXCPCodes
    public static final long VID_CHAIN_GUID = 1048;
    public static final long VID_CHAIN_ACL_COUNT = 1049;
    public static final long VID_CONNECTOR_LOADED = 1050;
+   public static final long VID_LINK_MERGE_THRESHOLD = 1051;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

@@ -59,15 +59,19 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	private Thread syncThread = null;
 	private volatile boolean syncRunning = true;
 	private MapLabelProvider labelProvider;
+   private int parallelLinkMergeThreshold;
+   private List<NetworkMapLink> displayLinks = new ArrayList<NetworkMapLink>();
+   private Map<Long, ParallelLinkGroup> groupByMemberId = new HashMap<Long, ParallelLinkGroup>();
 
 	/**
 	 * Constructor
-	 * @param labelProvider 
+	 * @param labelProvider
 	 */
 	public MapContentProvider(ExtendedGraphViewer viewer, MapLabelProvider labelProvider)
 	{
 	   this.labelProvider = labelProvider;
 		this.viewer = viewer;
+      parallelLinkMergeThreshold = ParallelLinkGroup.DEFAULT_MERGE_THRESHOLD;
 		final Display display = viewer.getControl().getDisplay();
       syncThread = new Thread(() -> syncData(display), "MapContentProvider");
 		syncThread.setDaemon(true);
@@ -125,12 +129,14 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
                         }
                         if (page != null && page.getLinks() != null)
                         {
+                           Set<NetworkMapLink> linksToRefresh = new HashSet<NetworkMapLink>();
                            for(NetworkMapLink e : page.getLinks())
                            {
-                              if (!e.hasDciData())
-                                 continue;
-                              viewer.refresh(e);
+                              if (e.hasDciData())
+                                 linksToRefresh.add(displayedLink(e));
                            }
+                           for(NetworkMapLink e : linksToRefresh)
+                              viewer.refresh(e);
                         }
                         if (page != null && page.getElements() != null)
                         {
@@ -152,7 +158,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
          }
 			try
 			{
-				Thread.sleep(30000); 
+				Thread.sleep(30000);
 			}
          catch(InterruptedException e)
 			{
@@ -163,7 +169,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 
 	/**
 	 * Get last DCI values for given node
-	 * 
+	 *
 	 * @param nodeId
 	 * @return
 	 */
@@ -197,8 +203,38 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	@Override
 	public Object[] getRelationships(Object source, Object dest)
 	{
-	   return page.findLinks((NetworkMapElement)source, (NetworkMapElement)dest).toArray();
+      long sourceId = ((NetworkMapElement)source).getId();
+      long destId = ((NetworkMapElement)dest).getId();
+      List<NetworkMapLink> result = new ArrayList<NetworkMapLink>();
+      for(NetworkMapLink l : displayLinks)
+      {
+         if ((l.getElement1() == sourceId) && (l.getElement2() == destId))
+            result.add(l);
+      }
+      return result.toArray();
 	}
+
+   /**
+    * Set number of parallel links above which they are displayed as a single link. Takes effect on next input change.
+    *
+    * @param threshold threshold (0 to disable merging)
+    */
+   public void setParallelLinkMergeThreshold(int threshold)
+   {
+      parallelLinkMergeThreshold = threshold;
+   }
+
+   /**
+    * Get link as displayed in the viewer: the parallel link group containing given link, or the link itself.
+    *
+    * @param link map link
+    * @return displayed link
+    */
+   public NetworkMapLink displayedLink(NetworkMapLink link)
+   {
+      ParallelLinkGroup group = groupByMemberId.get(link.getId());
+      return (group != null) ? group : link;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.IContentProvider#dispose()
@@ -227,7 +263,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
                if (e instanceof NetworkMapObject)
                {
                   boolean found = false;
-                  long id = ((NetworkMapObject)e).getObjectId();                  
+                  long id = ((NetworkMapObject)e).getObjectId();
                   for(NetworkMapElement e2 : page.getElements())
                   {
                      if (e2 instanceof NetworkMapObject)
@@ -243,16 +279,26 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
                   {
                      cachedDciValues.remove(id);
                   }
-                  
+
                }
             }
          }
-         
+
       }
-	   
+
 		if (newInput instanceof NetworkMapPage)
 		{
 			page = (NetworkMapPage)newInput;
+         displayLinks = ParallelLinkGroup.merge(page.getLinks(), parallelLinkMergeThreshold);
+         groupByMemberId.clear();
+         for(NetworkMapLink l : displayLinks)
+         {
+            if (l instanceof ParallelLinkGroup)
+            {
+               for(NetworkMapLink member : ((ParallelLinkGroup)l).getLinks())
+                  groupByMemberId.put(member.getId(), (ParallelLinkGroup)l);
+            }
+         }
 			synchronized(cachedDciValues)
 			{
 				for(NetworkMapElement e : page.getElements())
@@ -272,12 +318,14 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 		else
 		{
 			page = null;
+         displayLinks.clear();
+         groupByMemberId.clear();
 		}
 	}
 
 	/**
 	 * Get map decorations
-	 * 
+	 *
 	 * @param inputElement
 	 * @return
 	 */

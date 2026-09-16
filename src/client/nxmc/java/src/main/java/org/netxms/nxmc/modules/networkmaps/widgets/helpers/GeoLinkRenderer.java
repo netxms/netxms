@@ -76,6 +76,9 @@ public final class GeoLinkRenderer
     *   OBJECT2 DCI : (7 + 3*p)/11
     */
    private static final int CONNECTOR_OFFSET_PX = 50;
+   private static final int LABEL_GAP = 4;
+   private static final int PILL_PAD_X = 4;
+   private static final int PILL_PAD_Y = 2;
 
    private GeoLinkRenderer()
    {
@@ -256,46 +259,50 @@ public final class GeoLinkRenderer
       double connectorOffset = Math.min(CONNECTOR_OFFSET_PX, totalLength / 3.0);
       double connectorFracSrc = (totalLength > 0) ? (connectorOffset / totalLength) : 0;
       double connectorFracDst = (totalLength > 0) ? (1.0 - connectorOffset / totalLength) : 1.0;
-      String srcLabel = connectorName(link, false, session);
+      String srcLabel = LinkLabelText.connectorName(link, false, session);
+      Point srcLabelSize = null;
       if (srcLabel != null)
+      {
          drawPillAt(gc, pointAtFraction(polyline, cumDist, connectorFracSrc), srcLabel, null, colors);
-      String dstLabel = connectorName(link, true, session);
+         srcLabelSize = pillSize(gc, srcLabel);
+      }
+      String dstLabel = LinkLabelText.connectorName(link, true, session);
+      Point dstLabelSize = null;
       if (dstLabel != null)
+      {
          drawPillAt(gc, pointAtFraction(polyline, cumDist, connectorFracDst), dstLabel, null, colors);
+         dstLabelSize = pillSize(gc, dstLabel);
+      }
 
       // Center label: link name + CENTER DCI values.
       // For proxy / tunnel link types the graph canvas paints the CENTER label
       // with the link's line color as background (text auto-contrasted) — match it here.
-      boolean hasName = link.hasName();
-      boolean hasDci = link.hasDciData();
-      Color centerBg = isProxyOrTunnel(link.getType()) ? lineColor : null;
-      if (hasName || hasDci)
+      String centerText = LinkLabelText.centerLabel(link, session, dciValueProvider);
+      if (!centerText.isEmpty())
       {
-         StringBuilder centerText = new StringBuilder();
-         if (hasName)
-            centerText.append(link.getName());
-         if (hasDci)
-         {
-            String dci = dciValueProvider.getDciDataAsString(link, LinkDataLocation.CENTER);
-            if ((dci != null) && !dci.isEmpty())
-            {
-               if (centerText.length() > 0)
-                  centerText.append('\n');
-               centerText.append(dci);
-            }
-         }
-         if (centerText.length() > 0)
-            drawPillAt(gc, pointAtFraction(polyline, cumDist, fracCenter), centerText.toString(), centerBg, colors);
+         Color centerBg = isProxyOrTunnel(link.getType()) ? lineColor : null;
+         drawPillAt(gc, pointAtFraction(polyline, cumDist, fracCenter), centerText, centerBg, colors);
+      }
 
-         if (hasDci)
-         {
-            String obj1 = dciValueProvider.getDciDataAsString(link, LinkDataLocation.OBJECT1);
-            if ((obj1 != null) && !obj1.isEmpty())
-               drawPillAt(gc, pointAtFraction(polyline, cumDist, fracObj1), obj1, null, colors);
-            String obj2 = dciValueProvider.getDciDataAsString(link, LinkDataLocation.OBJECT2);
-            if ((obj2 != null) && !obj2.isEmpty())
-               drawPillAt(gc, pointAtFraction(polyline, cumDist, fracObj2), obj2, null, colors);
-         }
+      // OBJECT1 / OBJECT2 pills keep their proportional position but are
+      // pushed along the link when they would overlap the connector pill.
+      String obj1 = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT1, session, dciValueProvider);
+      if (!obj1.isEmpty())
+      {
+         double frac = fracObj1;
+         if ((srcLabelSize != null) && (totalLength > 0))
+            frac = Math.max(frac, minimumLabelDistance(gc, srcLabelSize, connectorOffset, obj1, polyline[0], polyline[1]) / totalLength);
+         frac = Math.min(frac, 4.0 / 11.0);
+         drawPillAt(gc, pointAtFraction(polyline, cumDist, frac), obj1, null, colors);
+      }
+      String obj2 = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT2, session, dciValueProvider);
+      if (!obj2.isEmpty())
+      {
+         double frac = fracObj2;
+         if ((dstLabelSize != null) && (totalLength > 0))
+            frac = Math.min(frac, 1.0 - minimumLabelDistance(gc, dstLabelSize, connectorOffset, obj2, polyline[polyline.length - 1], polyline[polyline.length - 2]) / totalLength);
+         frac = Math.max(frac, 7.0 / 11.0);
+         drawPillAt(gc, pointAtFraction(polyline, cumDist, frac), obj2, null, colors);
       }
 
       gc.setLineStyle(oldStyle);
@@ -320,16 +327,31 @@ public final class GeoLinkRenderer
    }
 
    /**
-    * Resolve the connector name for one end of a link: prefer explicit
-    * {@code connectorName1/2}, fall back to the interface object's name.
+    * Distance along the link from the endpoint at which the center of a pill with given text clears the connector pill
+    * centered at {@code connectorOffset}. The link direction is taken from the segment adjacent to that endpoint.
     */
-   private static String connectorName(NetworkMapLink link, boolean second, NXCSession session)
+   private static double minimumLabelDistance(GC gc, Point connectorPillSize, double connectorOffset, String text, Point segmentStart, Point segmentEnd)
    {
-      String name = second ? link.getConnectorName2() : link.getConnectorName1();
-      if ((name != null) && !name.isBlank())
-         return name;
-      long ifaceId = second ? link.getInterfaceId2() : link.getInterfaceId1();
-      return (ifaceId > 0) ? session.getObjectName(ifaceId) : null;
+      double dx = segmentEnd.x - segmentStart.x;
+      double dy = segmentEnd.y - segmentStart.y;
+      double len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 1e-9)
+         return 0;
+      double cos = Math.abs(dx / len);
+      double sin = Math.abs(dy / len);
+      Point size = pillSize(gc, text);
+      double connectorExtent = connectorPillSize.x * cos + connectorPillSize.y * sin;
+      double labelExtent = size.x * cos + size.y * sin;
+      return connectorOffset + connectorExtent / 2 + LABEL_GAP + labelExtent / 2;
+   }
+
+   /**
+    * Size of the pill drawn by {@link #drawPillLabel} for given text.
+    */
+   private static Point pillSize(GC gc, String text)
+   {
+      Point textSize = gc.textExtent(text, SWT.DRAW_DELIMITER);
+      return new Point(textSize.x + PILL_PAD_X * 2, textSize.y + PILL_PAD_Y * 2);
    }
 
    /**
@@ -412,11 +434,9 @@ public final class GeoLinkRenderer
     */
    private static void drawPillLabel(GC gc, int cx, int cy, String text, Color background, ColorCache colors)
    {
-      Point textSize = gc.textExtent(text);
-      int padX = 4;
-      int padY = 2;
-      int w = textSize.x + padX * 2;
-      int h = textSize.y + padY * 2;
+      Point size = pillSize(gc, text);
+      int w = size.x;
+      int h = size.y;
       int x = cx - w / 2;
       int y = cy - h / 2;
 
@@ -434,7 +454,7 @@ public final class GeoLinkRenderer
       gc.drawRoundRectangle(x, y, w, h, 8, 8);
       Color textColor = (background != null) ? ColorConverter.selectTextColorByBackgroundColor(background, colors) : LABEL_FG;
       gc.setForeground(textColor);
-      gc.drawText(text, x + padX, y + padY, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+      gc.drawText(text, x + PILL_PAD_X, y + PILL_PAD_Y, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 
       gc.setBackground(oldBg);
       gc.setForeground(oldFg);

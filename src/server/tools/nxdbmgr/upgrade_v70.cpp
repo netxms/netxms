@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.37 to 70.38
+ */
+static bool H_UpgradeFromV37()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE network_maps ADD link_merge_threshold integer\n"
+      L"UPDATE network_maps SET link_merge_threshold=2\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"network_maps", L"link_merge_threshold"));
+   CHK_EXEC(SetMinorSchemaVersion(38));
+   return true;
+}
+
+/**
  * Upgrade from 70.36 to 70.37
  */
 static bool H_UpgradeFromV36()
@@ -1238,6 +1253,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 37, 70, 38, H_UpgradeFromV37 },
    { 36, 70, 37, H_UpgradeFromV36 },
    { 35, 70, 36, H_UpgradeFromV35 },
    { 34, 70, 35, H_UpgradeFromV34 },

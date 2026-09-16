@@ -78,6 +78,9 @@ public final class LinkStylingHelper
          LinkDciValueProvider dciValueProvider, ColorCache colors,
          Color defaultLinkColor, int defaultLinkColorSource)
    {
+      if (link instanceof ParallelLinkGroup)
+         return resolveLinkColor(mostCriticalMember((ParallelLinkGroup)link, session), session, dciValueProvider, colors, defaultLinkColor, defaultLinkColorSource);
+
       int source = link.getColorSource();
 
       if (source == NetworkMapLink.COLOR_SOURCE_OBJECT_STATUS)
@@ -128,6 +131,26 @@ public final class LinkStylingHelper
    {
       int s = link.getConfig().getStyle();
       return (s == 0 || s > 5) ? defaultLinkStyle : s;
+   }
+
+   /**
+    * Select member of parallel link group with the most critical calculated status (first member when no member has a
+    * known status); the group takes its color from that member.
+    */
+   private static NetworkMapLink mostCriticalMember(ParallelLinkGroup group, NXCSession session)
+   {
+      NetworkMapLink result = group.getLinks().get(0);
+      ObjectStatus resultStatus = ObjectStatus.UNKNOWN;
+      for(NetworkMapLink member : group.getLinks())
+      {
+         ObjectStatus status = LinkTooltip.calculateLinkStatus(session, member);
+         if ((status != ObjectStatus.UNKNOWN) && ((resultStatus == ObjectStatus.UNKNOWN) || (status.compareTo(resultStatus) > 0)))
+         {
+            result = member;
+            resultStatus = status;
+         }
+      }
+      return result;
    }
 
    private static Color resolveObjectStatusColor(NetworkMapLink link, NXCSession session, LinkDciValueProvider dciValueProvider)

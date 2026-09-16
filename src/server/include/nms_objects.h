@@ -5706,6 +5706,7 @@ protected:
    int m_displayPriority;
    MapCanvasType m_canvasType;
    MapInitialViewMode m_initialViewMode;
+   int32_t m_linkMergeThreshold;  // 0 = do not merge, N = merge when more than N parallel links
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
@@ -5765,6 +5766,7 @@ public:
    uint16_t getObjectDisplayMode() const { return m_objectDisplayMode; }
    MapCanvasType getCanvasType() const { return m_canvasType; }
    MapInitialViewMode getInitialViewMode() const { return m_initialViewMode; }
+   int32_t getLinkMergeThreshold() const { return m_linkMergeThreshold; }
    void setCanvasType(MapCanvasType canvasType) { m_canvasType = canvasType; }
    void setInitialViewMode(MapInitialViewMode mode) { m_initialViewMode = mode; }
    int32_t getWidth() const { return m_width; }

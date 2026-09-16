@@ -8505,6 +8505,11 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_MAP_INITIAL_VIEW_MODE, data.getMapInitialViewMode().getValue());
       }
 
+      if (data.getMapLinkMergeThreshold() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_LINK_MERGE_THRESHOLD, data.getMapLinkMergeThreshold());
+      }
+
       if (data.getExpectedCapabilities() != null)
       {
          msg.setFieldInt64(NXCPCodes.VID_EXPECTED_CAPABILITIES, data.getExpectedCapabilities());

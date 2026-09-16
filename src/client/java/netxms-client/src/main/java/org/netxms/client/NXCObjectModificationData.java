@@ -221,6 +221,7 @@ public class NXCObjectModificationData
    private Integer displayPriority;
    private MapCanvasType mapCanvasType;
    private MapInitialViewMode mapInitialViewMode;
+   private Integer mapLinkMergeThreshold;
    private Integer mapWidth;
    private Integer mapHeight;
    private Long expectedCapabilities;
@@ -2804,6 +2805,22 @@ public class NXCObjectModificationData
    public void setMapInitialViewMode(MapInitialViewMode mapInitialViewMode)
    {
       this.mapInitialViewMode = mapInitialViewMode;
+   }
+
+   /**
+    * @return the map link merge threshold
+    */
+   public Integer getMapLinkMergeThreshold()
+   {
+      return mapLinkMergeThreshold;
+   }
+
+   /**
+    * @param mapLinkMergeThreshold number of parallel links above which they are displayed as a single link (0 to never merge)
+    */
+   public void setMapLinkMergeThreshold(Integer mapLinkMergeThreshold)
+   {
+      this.mapLinkMergeThreshold = mapLinkMergeThreshold;
    }
 
    /**

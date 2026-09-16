@@ -682,6 +682,16 @@ public class NetworkMapLink
    }
 
    /**
+    * Set link position among links connecting the same pair of elements
+    *
+    * @param position new position
+    */
+   public void setPosition(int position)
+   {
+      this.position = position;
+   }
+
+   /**
     * @return link config
     */
    public LinkConfig getConfig()

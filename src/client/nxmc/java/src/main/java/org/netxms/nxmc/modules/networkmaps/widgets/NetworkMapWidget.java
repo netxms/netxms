@@ -105,7 +105,7 @@ public class NetworkMapWidget extends Composite
 
 		setLayout(new FillLayout());
 
-      viewer = new ExtendedGraphViewer(this, SWT.NONE, view, null); 
+      viewer = new ExtendedGraphViewer(this, SWT.NONE, view, null);
       labelProvider = new MapLabelProvider(viewer);
 		viewer.setContentProvider(new MapContentProvider(viewer, labelProvider));
 		viewer.setLabelProvider(labelProvider);
@@ -137,7 +137,7 @@ public class NetworkMapWidget extends Composite
 	}
 
 	/**
-	 * Enable double click on objects 
+	 * Enable double click on objects
 	 */
 	public void enableObjectDoubleClick()
 	{
@@ -195,7 +195,7 @@ public class NetworkMapWidget extends Composite
 
    /**
     * Called by session listener when NetXMS object was changed.
-    * 
+    *
     * @param object changed NetXMS object
     */
    private void onObjectChange(final AbstractObject object)
@@ -215,7 +215,7 @@ public class NetworkMapWidget extends Composite
 
 	/**
     * Set content from map page
-    * 
+    *
     * @param page map page
     */
 	public void setContent(NetworkMapPage page)
@@ -227,7 +227,7 @@ public class NetworkMapWidget extends Composite
 
 	/**
 	 * Set content from preconfigured map object
-	 * 
+	 *
 	 * @param mapObject
 	 */
 	public void setContent(NetworkMap mapObject)
@@ -237,14 +237,14 @@ public class NetworkMapWidget extends Composite
 
    /**
     * Set content from preconfigured map object
-    * 
+    *
     * @param mapObject
     * @param resetHistory true to reset drill-down history
     */
    private void setContent(NetworkMap mapObject, boolean resetHistory)
    {
       syncObjects(mapObject);
-      
+
       if(!mapObject.isFitToScreen())
       {
          int width = mapObject.getWidth() == 0 ? session.getNetworkMapDefaultWidth() : mapObject.getWidth();
@@ -253,9 +253,9 @@ public class NetworkMapWidget extends Composite
       }
       else
       {
-         viewer.setMapSize(-1, -1);         
+         viewer.setMapSize(-1, -1);
       }
-      
+
       currentMapId = mapObject.getObjectId();
 		setMapLayout(mapObject.getLayout());
 
@@ -290,9 +290,10 @@ public class NetworkMapWidget extends Composite
       labelProvider.setTranslucentLabelBackground(mapObject.isTranslucentLabelBackground());
       labelProvider.setDefaultLinkStyle(mapObject.getDefaultLinkStyle());
       labelProvider.setDefaultLinkWidth(mapObject.getDefaultLinkWidth());
+      ((MapContentProvider)viewer.getContentProvider()).setParallelLinkMergeThreshold(mapObject.getLinkMergeThreshold());
 
 		mapPage = mapObject.createMapPage();
-      addDciToRequestList();	
+      addDciToRequestList();
 		viewer.setInput(mapPage);
 
 		if (resetHistory)
@@ -349,7 +350,7 @@ public class NetworkMapWidget extends Composite
 			setLayoutAlgorithm(layout);
 		}
 	}
-	
+
 	/**
 	 * Set layout algorithm for map
 	 * @param alg
@@ -357,7 +358,7 @@ public class NetworkMapWidget extends Composite
 	public void setLayoutAlgorithm(MapLayoutAlgorithm alg)
 	{
 		LayoutAlgorithm algorithm;
-		
+
 		switch(alg)
 		{
 			case SPRING:
@@ -381,7 +382,7 @@ public class NetworkMapWidget extends Composite
 						return e1.toString().compareToIgnoreCase(e2.toString());
 					}
 				});
-				algorithm = new CompositeLayoutAlgorithm( 
+				algorithm = new CompositeLayoutAlgorithm(
 						new LayoutAlgorithm[] { mainLayoutAlgorithm,
 						                        new SparseTree() });
 				break;
@@ -394,7 +395,7 @@ public class NetworkMapWidget extends Composite
 
 	/**
 	 * Set map default connection routing algorithm
-	 * 
+	 *
 	 * @param routingAlgorithm
 	 */
 	public void setConnectionRouter(int routingAlgorithm)
@@ -410,7 +411,7 @@ public class NetworkMapWidget extends Composite
 		}
 		viewer.refresh();
 	}
-	
+
 	/**
 	 * @param zoomLevel
 	 */
@@ -418,7 +419,7 @@ public class NetworkMapWidget extends Composite
 	{
 		viewer.zoomTo(zoomLevel);
 	}
-	
+
 	/**
 	 * Refresh control
 	 */
@@ -471,7 +472,7 @@ public class NetworkMapWidget extends Composite
                }
             }
          }
-         
+
          if(element instanceof NetworkMapDCIImage)
          {
             NetworkMapDCIImage item = (NetworkMapDCIImage)element;
@@ -488,16 +489,16 @@ public class NetworkMapWidget extends Composite
          }
       }
    }
-   
+
    /**
     * Get map label provider
     * @return label provider
-    */ 
+    */
    public MapLabelProvider getLabelProvider()
    {
       return labelProvider;
    }
-   
+
    /**
     * Get control
     * @return control
@@ -508,8 +509,8 @@ public class NetworkMapWidget extends Composite
    }
 
    /**
-    * Hide link labels 
-    * 
+    * Hide link labels
+    *
     * @param hide true if labels should not be displayed
     */
    public void hideLinkLabels(boolean hide)

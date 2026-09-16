@@ -103,23 +103,28 @@ public class LinkTooltip extends Figure
       Label title = new Label(getLinkTitle(i18n, link));
       title.setFont(JFaceResources.getBannerFont());
       add(title);
-
-      ObjectStatus status = calculateLinkStatus(session, link);
-      Label statusLabel = new Label(StatusDisplayInfo.getStatusText(status));
-      statusLabel.setIcon(StatusDisplayInfo.getStatusImage(status));
-      add(statusLabel);
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.RIGHT;
-      setConstraint(statusLabel, gd);
-
-      Label type = new Label(i18n.tr("Type: {0}", getLinkTypeName(i18n, link)));
-      add(type);
-      gd = new GridData();
-      gd.horizontalSpan = 2;
-      setConstraint(type, gd);
+      addStatusLabel(calculateLinkStatus(session, link));
 
       Object input = labelProvider.getViewer().getInput();
       NetworkMapPage page = (input instanceof NetworkMapPage) ? (NetworkMapPage)input : null;
+
+      if (link instanceof ParallelLinkGroup)
+      {
+         ParallelLinkGroup group = (ParallelLinkGroup)link;
+         addSeparator();
+         for(NetworkMapLink member : group.getLinks())
+         {
+            add(new Label(LinkLabelText.memberIdentity(group, member, session)));
+            addStatusLabel(calculateLinkStatus(session, member));
+         }
+         return;
+      }
+
+      Label type = new Label(i18n.tr("Type: {0}", getLinkTypeName(i18n, link)));
+      add(type);
+      GridData gd = new GridData();
+      gd.horizontalSpan = 2;
+      setConstraint(type, gd);
       for(Endpoint endpoint : collectEndpoints(i18n, session, link, page))
       {
          addSeparator();
@@ -130,39 +135,56 @@ public class LinkTooltip extends Figure
          add(objectLabel);
 
          if (endpoint.object != null)
-         {
-            Label objectStatus = new Label(StatusDisplayInfo.getStatusText(endpoint.object.getStatus()));
-            objectStatus.setIcon(StatusDisplayInfo.getStatusImage(endpoint.object.getStatus()));
-            add(objectStatus);
-            gd = new GridData();
-            gd.horizontalAlignment = SWT.RIGHT;
-            setConstraint(objectStatus, gd);
-         }
+            addStatusLabel(endpoint.object.getStatus());
          else
-         {
             add(new Label());
-         }
 
-         if (endpoint.details.isEmpty())
-            continue;
-
-         Figure details = new Figure();
-         GridLayout detailsLayout = new GridLayout(2, false);
-         detailsLayout.horizontalSpacing = 10;
-         detailsLayout.marginWidth = 0;
-         detailsLayout.marginHeight = 0;
-         details.setLayoutManager(detailsLayout);
-         for(String[] detail : endpoint.details)
-         {
-            details.add(new Label(detail[0] + ":"));
-            details.add(new Label(detail[1]));
-         }
-
-         gd = new GridData();
-         gd.horizontalSpan = 2;
-         gd.horizontalIndent = 16;
-         add(details, gd);
+         addEndpointDetails(endpoint);
       }
+   }
+
+   /**
+    * Add right-aligned status label with icon to the current row.
+    *
+    * @param status status to show
+    */
+   private void addStatusLabel(ObjectStatus status)
+   {
+      Label statusLabel = new Label(StatusDisplayInfo.getStatusText(status));
+      statusLabel.setIcon(StatusDisplayInfo.getStatusImage(status));
+      add(statusLabel);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      setConstraint(statusLabel, gd);
+   }
+
+   /**
+    * Add indented name/value details of an endpoint spanning both tooltip columns. Nothing is added for an endpoint without
+    * details.
+    *
+    * @param endpoint endpoint
+    */
+   private void addEndpointDetails(Endpoint endpoint)
+   {
+      if (endpoint.details.isEmpty())
+         return;
+
+      Figure details = new Figure();
+      GridLayout detailsLayout = new GridLayout(2, false);
+      detailsLayout.horizontalSpacing = 10;
+      detailsLayout.marginWidth = 0;
+      detailsLayout.marginHeight = 0;
+      details.setLayoutManager(detailsLayout);
+      for(String[] detail : endpoint.details)
+      {
+         details.add(new Label(detail[0] + ":"));
+         details.add(new Label(detail[1]));
+      }
+
+      GridData gd = new GridData();
+      gd.horizontalSpan = 2;
+      gd.horizontalIndent = 16;
+      add(details, gd);
    }
 
    /**
@@ -197,8 +219,19 @@ public class LinkTooltip extends Figure
 
       StringBuilder sb = new StringBuilder(getLinkTitle(i18n, link));
       sb.append('\n').append(StatusDisplayInfo.getStatusText(calculateLinkStatus(session, link)));
-      sb.append('\n').append(i18n.tr("Type: {0}", getLinkTypeName(i18n, link)));
 
+      if (link instanceof ParallelLinkGroup)
+      {
+         ParallelLinkGroup group = (ParallelLinkGroup)link;
+         for(NetworkMapLink member : group.getLinks())
+         {
+            sb.append('\n').append(LinkLabelText.memberIdentity(group, member, session));
+            sb.append(" (").append(StatusDisplayInfo.getStatusText(calculateLinkStatus(session, member))).append(')');
+         }
+         return sb.toString();
+      }
+
+      sb.append('\n').append(i18n.tr("Type: {0}", getLinkTypeName(i18n, link)));
       for(Endpoint endpoint : collectEndpoints(i18n, session, link, page))
       {
          sb.append('\n').append(endpoint.name);
@@ -307,6 +340,8 @@ public class LinkTooltip extends Figure
     */
    private static String getLinkTitle(I18n i18n, NetworkMapLink link)
    {
+      if (link instanceof ParallelLinkGroup)
+         return i18n.tr("Multiple links");
       String name = link.getName();
       return ((name != null) && !name.isBlank()) ? name : i18n.tr("Link");
    }
@@ -357,9 +392,16 @@ public class LinkTooltip extends Figure
     * @param link map link
     * @return calculated link status
     */
-   private static ObjectStatus calculateLinkStatus(NXCSession session, NetworkMapLink link)
+   static ObjectStatus calculateLinkStatus(NXCSession session, NetworkMapLink link)
    {
       ObjectStatus status = ObjectStatus.UNKNOWN;
+      if (link instanceof ParallelLinkGroup)
+      {
+         for(NetworkMapLink member : ((ParallelLinkGroup)link).getLinks())
+            status = mostCritical(status, calculateLinkStatus(session, member));
+         return status;
+      }
+
       for(Long id : link.getStatusObjects())
       {
          AbstractObject object = session.findObjectById(id, true);

@@ -517,54 +517,57 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
       connection.setLineStyle(LinkStylingHelper.resolveLinkStyle(link, defaultLinkStyle));
 
+      Label sourceConnectorLabel = null;
+      Label targetConnectorLabel = null;
       if (connectionLabelsVisible)
-		{
-         String name = getConnectorName(link, false);
+      {
+         String name = LinkLabelText.connectorName(link, false, session);
          if (name != null)
          {
             ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
             sourceEndpointLocator.setVDistance(0);
-            final Label label = new ConnectorLabel(name, this);
-            label.setFont(getLabelFont());
-            connection.getConnectionFigure().add(label, sourceEndpointLocator);
+            sourceConnectorLabel = new ConnectorLabel(name, this);
+            sourceConnectorLabel.setFont(getLabelFont());
+            connection.getConnectionFigure().add(sourceConnectorLabel, sourceEndpointLocator);
          }
 
-         name = getConnectorName(link, true);
+         name = LinkLabelText.connectorName(link, true, session);
          if (name != null)
          {
             ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
             targetEndpointLocator.setVDistance(0);
-            final Label label = new ConnectorLabel(name, this);
-            label.setFont(getLabelFont());
-            connection.getConnectionFigure().add(label, targetEndpointLocator);
+            targetConnectorLabel = new ConnectorLabel(name, this);
+            targetConnectorLabel.setFont(getLabelFont());
+            connection.getConnectionFigure().add(targetConnectorLabel, targetEndpointLocator);
          }
-		}
+      }
 
       connection.setLineWidth(LinkStylingHelper.resolveLinkWidth(link, defaultLinkWidth));
 
-		if (showLinkDirection)
-		{
-		   PolygonDecoration decoration = new PolygonDecoration();
-		   double scale = connection.getLineWidth() * 0.9 + 2;
-		   decoration.setScale(scale * 2.3, scale);
+      if (showLinkDirection)
+      {
+         PolygonDecoration decoration = new PolygonDecoration();
+         double scale = connection.getLineWidth() * 0.9 + 2;
+         decoration.setScale(scale * 2.3, scale);
          ((PolylineConnection)connection.getConnectionFigure()).setTargetDecoration(decoration);
-		}
+      }
 
-		IFigure owner = ((PolylineConnection)connection.getConnectionFigure()).getTargetAnchor().getOwner();
+      IFigure owner = ((PolylineConnection)connection.getConnectionFigure()).getTargetAnchor().getOwner();
       ((PolylineConnection)connection.getConnectionFigure()).setTargetAnchor(new MultiConnectionAnchor(owner, link));
       owner = ((PolylineConnection)connection.getConnectionFigure()).getSourceAnchor().getOwner();
       ((PolylineConnection)connection.getConnectionFigure()).setSourceAnchor(new MultiConnectionAnchor(owner, link));
-
-		boolean hasDciData = link.hasDciData();
-      boolean hasName = link.hasName();
 
       Color resolvedColor = LinkStylingHelper.resolveLinkColor(link, session, dciValueProvider, colors,
             defaultLinkColor, defaultLinkColorSource);
       if (resolvedColor != null)
          connection.setLineColor(resolvedColor);
 
-      if ((hasName || hasDciData) && connectionLabelsVisible)
+      if (connectionLabelsVisible)
       {
+         String labelString = LinkLabelText.centerLabel(link, session, dciValueProvider);
+         String labelObj1String = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT1, session, dciValueProvider);
+         String labelObj2String = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT2, session, dciValueProvider);
+
          ConnectionLocator nameLocatorCenter;
          ConnectionLocator nameLocatorObject1;
          ConnectionLocator nameLocatorObject2;
@@ -578,65 +581,31 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          }
          else
          {
-            nameLocatorCenter = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.CENTER);
-            nameLocatorObject1 = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.OBJECT1);
-            nameLocatorObject2 = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.OBJECT2);
+            nameLocatorCenter = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.CENTER, null);
+            nameLocatorObject1 = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.OBJECT1, sourceConnectorLabel);
+            nameLocatorObject2 = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.OBJECT2, targetConnectorLabel);
          }
-
-
-         String labelString = "";
-         String labelObj1String = "";
-         String labelObj2String = "";
-         if (hasName)
-            labelString += link.getName();
-
-         if (hasDciData)
-         {
-            String label = dciValueProvider.getDciDataAsString(link, LinkDataLocation.CENTER);
-            if (hasName && !label.isEmpty())
-               labelString += "\n";
-            labelString += label;
-
-            labelObj1String = dciValueProvider.getDciDataAsString(link, LinkDataLocation.OBJECT1);
-            labelObj2String = dciValueProvider.getDciDataAsString(link, LinkDataLocation.OBJECT2);
-         }
-
-         final Label label;
-         if (link.getType() == NetworkMapLink.AGENT_TUNEL ||
-             link.getType() == NetworkMapLink.AGENT_PROXY ||
-             link.getType() == NetworkMapLink.ICMP_PROXY ||
-             link.getType() == NetworkMapLink.SNMP_PROXY ||
-             link.getType() == NetworkMapLink.SSH_PROXY ||
-             link.getType() == NetworkMapLink.ZONE_PROXY)
-            label = new ConnectorLabel(labelString, this, connection.getLineColor());
-         else
-            label = new ConnectorLabel(labelString, this);
 
          if (!labelString.isEmpty())
+         {
+            final Label label;
+            if (link.getType() == NetworkMapLink.AGENT_TUNEL ||
+                link.getType() == NetworkMapLink.AGENT_PROXY ||
+                link.getType() == NetworkMapLink.ICMP_PROXY ||
+                link.getType() == NetworkMapLink.SNMP_PROXY ||
+                link.getType() == NetworkMapLink.SSH_PROXY ||
+                link.getType() == NetworkMapLink.ZONE_PROXY)
+               label = new ConnectorLabel(labelString, this, connection.getLineColor());
+            else
+               label = new ConnectorLabel(labelString, this);
             connection.getConnectionFigure().add(label, nameLocatorCenter);
+         }
          if (!labelObj1String.isEmpty())
-            connection.getConnectionFigure().add( new ConnectorLabel(labelObj1String, this), nameLocatorObject1);
+            connection.getConnectionFigure().add(new ConnectorLabel(labelObj1String, this), nameLocatorObject1);
          if (!labelObj2String.isEmpty())
-            connection.getConnectionFigure().add( new ConnectorLabel(labelObj2String, this), nameLocatorObject2);
+            connection.getConnectionFigure().add(new ConnectorLabel(labelObj2String, this), nameLocatorObject2);
       }
 	}
-
-   /**
-    * Get connector name for map link
-    *
-    * @param link map link
-    * @param second true if name for second connector is requested
-    * @return name for connector or null
-    */
-   private String getConnectorName(NetworkMapLink link, boolean second)
-   {
-      String name = second ? link.getConnectorName2() : link.getConnectorName1();
-      if ((name != null) && !name.isBlank())
-         return name;
-
-      long interfaceId = second ? link.getInterfaceId2() : link.getInterfaceId1();
-      return (interfaceId > 0) ? session.getObjectName(interfaceId) : null;
-   }
 
    /**
     * @param link

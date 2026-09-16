@@ -36,7 +36,7 @@ static const char *s_mapContentKeys[] =
    "mapType", "layout", "flags", "seedObjects", "discoveryRadius",
    "defaultLinkColor", "defaultLinkColorSource", "defaultLinkRouting", "defaultLinkWidth", "defaultLinkStyle",
    "objectDisplayMode", "backgroundColor", "background", "backgroundLatitude", "backgroundLongitude", "backgroundZoom",
-   "filter", "linkScript", "width", "height", "canvasType", "initialViewMode", "displayPriority",
+   "filter", "linkScript", "width", "height", "canvasType", "initialViewMode", "displayPriority", "linkMergeThreshold",
    "elements", "links",
    nullptr
 };

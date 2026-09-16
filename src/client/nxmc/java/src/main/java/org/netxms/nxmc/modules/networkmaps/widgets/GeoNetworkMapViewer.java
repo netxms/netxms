@@ -65,6 +65,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.GeoLinkRenderer;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.LinkDciValueProvider;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.LinkTooltip;
+import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ParallelLinkGroup;
 import org.netxms.nxmc.modules.worldmap.GeoLocationCache;
 import org.netxms.nxmc.modules.worldmap.widgets.AbstractGeoMapViewer;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -101,6 +102,8 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
    private static final Color HANDLE_BORDER = new Color(Display.getCurrent(), 0, 0, 0);
 
    private NetworkMapPage content;
+   private List<NetworkMapLink> displayLinks = new ArrayList<>();
+   private int parallelLinkMergeThreshold = ParallelLinkGroup.DEFAULT_MERGE_THRESHOLD;
    private final List<AbstractObject> placedObjects = new ArrayList<>();
    private final List<ObjectIcon> objectIcons = new ArrayList<>();
    private final List<LinkGeometry> linkGeometries = new ArrayList<>();
@@ -204,6 +207,7 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
    public void setContent(NetworkMapPage page)
    {
       this.content = page;
+      displayLinks = (page != null) ? ParallelLinkGroup.merge(page.getLinks(), parallelLinkMergeThreshold) : new ArrayList<>();
       // Re-resolve cached link refs against the new page (server saves replace instances).
       editedLink = relinkInPage(editedLink, page);
       if (editedLink == null)
@@ -463,6 +467,16 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
    public NetworkMapLink getEditedLink()
    {
       return editedLink;
+   }
+
+   /**
+    * Set number of parallel links above which they are drawn as a single link. Takes effect on next {@link #setContent}.
+    *
+    * @param threshold threshold (0 to disable merging)
+    */
+   public void setParallelLinkMergeThreshold(int threshold)
+   {
+      this.parallelLinkMergeThreshold = threshold;
    }
 
    /**
@@ -780,7 +794,7 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
          return;
       Rectangle client = getClientArea();
       NXCSession session = Registry.getSession();
-      for(NetworkMapLink link : content.getLinks())
+      for(NetworkMapLink link : displayLinks)
       {
          // elementPixels is keyed by NetworkMapElement.id, populated only for
          // elements whose object resolved + has a usable location. A missing

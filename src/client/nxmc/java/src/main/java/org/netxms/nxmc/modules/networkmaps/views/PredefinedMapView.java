@@ -89,6 +89,7 @@ import org.netxms.nxmc.modules.networkmaps.propertypages.LinkGeneral;
 import org.netxms.nxmc.modules.networkmaps.propertypages.TextBoxGeneral;
 import org.netxms.nxmc.modules.networkmaps.views.helpers.LinkEditor;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.MapObjectSyncer;
+import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ParallelLinkGroup;
 import org.netxms.nxmc.modules.objects.ObjectPropertiesManager;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -253,6 +254,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       {
          super.onObjectUpdate(object);
          applyGeoLinkDefaults();
+         setParallelLinkMergeThreshold(((NetworkMap)object).getLinkMergeThreshold());
          geoViewer.redraw();
          syncObjects();
          updateWarningMessage(object);
@@ -369,6 +371,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       labelProvider.setDefaultLinkColorSource(mapObject.getDefaultLinkColorSource());
       labelProvider.setDefaultLinkStyle(mapObject.getDefaultLinkStyle());
       labelProvider.setDefaultLinkWidth(mapObject.getDefaultLinkWidth());
+      setParallelLinkMergeThreshold(mapObject.getLinkMergeThreshold());
 
       actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
       actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
@@ -796,7 +799,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
 	protected void fillLinkContextMenu(IMenuManager manager)
 	{
-	   if (readOnly)
+	   if (readOnly || (currentSelection().getFirstElement() instanceof ParallelLinkGroup))
 	   {
 	      super.fillLinkContextMenu(manager);
 	      return;
@@ -1064,7 +1067,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if (readOnly)
          return;
       org.netxms.nxmc.modules.networkmaps.widgets.GeoNetworkMapViewer.LinkHitInfo hit = geoViewer.getRightClickLinkHit();
-      if ((hit == null) || (hit.segmentIndex < 0))
+      if ((hit == null) || (hit.segmentIndex < 0) || (hit.link instanceof ParallelLinkGroup))
          return;
       org.netxms.base.GeoLocation loc = geoViewer.getRightClickLocation();
       if (loc == null)
@@ -1133,6 +1136,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			else if (element instanceof NetworkMapElement)
 			{
 				mapPage.removeElement(((NetworkMapElement)element).getId());
+			}
+			else if (element instanceof ParallelLinkGroup)
+			{
+				for(NetworkMapLink link : ((ParallelLinkGroup)element).getLinks())
+					mapPage.removeLink(link);
 			}
 			else if (element instanceof NetworkMapLink)
 			{
@@ -1439,7 +1447,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 		updateObjectPositions();
 
       IStructuredSelection selection = currentSelection();
-		if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapLink))
+		if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapLink) || (selection.getFirstElement() instanceof ParallelLinkGroup))
 			return;
 
 		LinkEditor link = new LinkEditor((NetworkMapLink)selection.getFirstElement(), mapPage, disableLinkTextAutoUpdate);

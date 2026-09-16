@@ -44,6 +44,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ParallelLinkGroup;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -67,6 +68,8 @@ public class MapOptions extends ObjectPropertyPage
    private Button checkTranslucentLabelBkgnd;
    private Button checkUseL1Topology;
    private Button checkDontUpdateLinkText;
+   private Button checkMergeLinks;
+   private LabeledSpinner spinnerLinkMerge;
    private Combo objectDisplayMode;
 	private Combo routingAlgorithm;
 	private Button radioColorDefault;
@@ -293,19 +296,53 @@ public class MapOptions extends ObjectPropertyPage
       gd.horizontalSpan = (map.getMapType() != MapType.CUSTOM) ? 2 : 1;
       linkDisplayGroup.setLayoutData(gd);
       layout = new GridLayout();
+      layout.numColumns = 2;
       linkDisplayGroup.setLayout(layout);
 
-      checkShowLinkDirection = new Button(linkDisplayGroup, SWT.CHECK);
+      Composite linkCheckArea = new Composite(linkDisplayGroup, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      linkCheckArea.setLayout(layout);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkCheckArea.setLayoutData(gd);
+
+      checkShowLinkDirection = new Button(linkCheckArea, SWT.CHECK);
       checkShowLinkDirection.setText(i18n.tr("Show link direction"));
       checkShowLinkDirection.setSelection((map.getFlags() & NetworkMap.MF_SHOW_LINK_DIRECTION) != 0);
 
-      checkShowTraffic = new Button(linkDisplayGroup, SWT.CHECK);
+      checkShowTraffic = new Button(linkCheckArea, SWT.CHECK);
       checkShowTraffic.setText(i18n.tr("Display traffic data"));
       checkShowTraffic.setSelection((map.getFlags() & NetworkMap.MF_SHOW_TRAFFIC) != 0);
 
-      checkDontUpdateLinkText = new Button(linkDisplayGroup, SWT.CHECK);
+      checkDontUpdateLinkText = new Button(linkCheckArea, SWT.CHECK);
       checkDontUpdateLinkText.setText(i18n.tr("Disable link &texts update"));
       checkDontUpdateLinkText.setSelection(map.isDontUpdateLinkText());
+
+      int linkMergeThreshold = map.getLinkMergeThreshold();
+
+      checkMergeLinks = new Button(linkCheckArea, SWT.CHECK);
+      checkMergeLinks.setText(i18n.tr("&Merge parallel links"));
+      checkMergeLinks.setSelection(linkMergeThreshold > 0);
+      checkMergeLinks.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            spinnerLinkMerge.setEnabled(checkMergeLinks.getSelection());
+         }
+      });
+
+      spinnerLinkMerge = new LabeledSpinner(linkDisplayGroup, SWT.NONE);
+      spinnerLinkMerge.setLabel(i18n.tr("Number of links to show unmerged between objects"));
+      spinnerLinkMerge.setRange(1, 100);
+      spinnerLinkMerge.setSelection((linkMergeThreshold > 0) ? linkMergeThreshold : ParallelLinkGroup.DEFAULT_MERGE_THRESHOLD);
+      spinnerLinkMerge.setEnabled(linkMergeThreshold > 0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.BOTTOM;
+      spinnerLinkMerge.setLayoutData(gd);
 
 		/**** advanced options ****/
 		Group advGroup = new Group(dialogArea, SWT.NONE);
@@ -364,6 +401,8 @@ public class MapOptions extends ObjectPropertyPage
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);
       md.setNetworkMapLinkWidth(spinerLineWidth.getSelection());
       md.setNetworkMapLinkStyle(comboLinkStyle.getSelectionIndex() + 1);
+
+      md.setMapLinkMergeThreshold(checkMergeLinks.getSelection() ? spinnerLinkMerge.getSelection() : 0);
 
 		if (radioColorCustom.getSelection())
 		{

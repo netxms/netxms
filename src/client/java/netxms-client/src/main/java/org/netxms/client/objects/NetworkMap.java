@@ -94,6 +94,7 @@ public class NetworkMap extends GenericObject implements AutoBindObject, Polling
    private int displayPriority; // For maps shown in object context
    private MapCanvasType canvasType;
    private MapInitialViewMode initialViewMode;
+   private int linkMergeThreshold;
 
 	/**
     * Create from NXCP message.
@@ -128,6 +129,7 @@ public class NetworkMap extends GenericObject implements AutoBindObject, Polling
       displayPriority = msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_PRIORITY);
       canvasType = MapCanvasType.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_MAP_CANVAS_TYPE));
       initialViewMode = MapInitialViewMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_MAP_INITIAL_VIEW_MODE));
+      linkMergeThreshold = msg.getFieldAsInt32(NXCPCodes.VID_LINK_MERGE_THRESHOLD);
 
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
@@ -650,5 +652,15 @@ public class NetworkMap extends GenericObject implements AutoBindObject, Polling
    public MapInitialViewMode getInitialViewMode()
    {
       return initialViewMode;
+   }
+
+   /**
+    * Get number of parallel links between the same pair of elements above which they are displayed as a single link.
+    *
+    * @return threshold: 0 to never merge, positive number to merge when more links than that
+    */
+   public int getLinkMergeThreshold()
+   {
+      return linkMergeThreshold;
    }
 }

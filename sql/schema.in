@@ -2592,6 +2592,7 @@ CREATE TABLE network_maps
   display_priority integer not null,
   canvas_type integer not null,
   initial_view_mode integer not null,
+  link_merge_threshold integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

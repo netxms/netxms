@@ -15386,6 +15386,9 @@ components:
         displayPriority:
           type: integer
           description: Display ordering priority.
+        linkMergeThreshold:
+          type: integer
+          description: Number of parallel links between the same pair of elements above which the client draws them as a single link (0 to never merge).
         elements:
           type: array
           description: Map elements. On update this fully replaces the element layout.
