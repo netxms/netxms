@@ -738,6 +738,21 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!wcscmp(name, L"DataCollection.DefaultDCIPollingInterval"))
    {
       DCObject::m_defaultPollingInterval = ConvertToInt32(value, 60);
+
+      // Reconcile data collection configuration on agents that collect data in cache mode
+      ThreadPoolExecute(g_mainThreadPool,
+         static_cast<void (*)()>([] () -> void
+         {
+            nxlog_debug_tag(_T("dc.agent.cache"), 2, _T("Queue data collection configuration synchronization with agents"));
+            g_idxNodeById.forEach(
+               [] (NetObj *object) -> EnumerationCallbackResult
+               {
+                  Node *node = static_cast<Node*>(object);
+                  if (node->getAgentCacheElementCount() > 0)
+                     node->scheduleDataCollectionSyncWithAgent();
+                  return _CONTINUE;
+               });
+         }));
    }
    else if (!wcscmp(name, L"DataCollection.DefaultDCIRetentionTime"))
    {
