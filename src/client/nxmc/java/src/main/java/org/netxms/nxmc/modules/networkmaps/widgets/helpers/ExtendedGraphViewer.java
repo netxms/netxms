@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.networkmaps.widgets.helpers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,6 +52,7 @@ import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomListener;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -135,6 +137,10 @@ public class ExtendedGraphViewer extends GraphViewer
    private Point backgroundDragStart = null; // in absolute screen coordinates
    private org.eclipse.draw2d.geometry.Point backgroundDragStartViewLocation = null;
    private org.eclipse.draw2d.geometry.Point objectDragLastPosition = null;
+   private boolean boxSelectionActive = false;
+   private boolean boxSelectionAdditive = false; // modifier state latched at press time (RWT drag events carry no modifiers)
+   private org.eclipse.draw2d.geometry.Point boxSelectionStart = null; // in map coordinates
+   private BoxSelectionFigure boxSelectionFigure = null;
 
 	/**
 	 * @param composite
@@ -221,6 +227,12 @@ public class ExtendedGraphViewer extends GraphViewer
                return;
             }
 
+            if (boxSelectionActive)
+            {
+               updateBoxSelection(me.x, me.y);
+               return;
+            }
+
             if (!backgroundDragActive)
                return;
 
@@ -279,6 +291,12 @@ public class ExtendedGraphViewer extends GraphViewer
                return;
             }
 
+            if (boxSelectionActive)
+            {
+               finishBoxSelection(me.x, me.y);
+               return;
+            }
+
             if (!backgroundDragged)
             {
                setSelection(null);
@@ -298,6 +316,20 @@ public class ExtendedGraphViewer extends GraphViewer
             // Don't start background drag if object drag is in progress
             if (dragStarted)
                return;
+
+            // Shift+drag on background selects objects within rectangle instead of panning
+            if ((me.getState() & SWT.SHIFT) != 0)
+            {
+               boxSelectionActive = true;
+               boxSelectionAdditive = (me.getState() & SWT.MOD1) != 0;
+               boxSelectionStart = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
+               graph.setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_CROSS));
+               // Consuming press event makes event dispatcher capture mouse on this layer, so drag events are
+               // delivered here even when cursor passes over nodes or links (otherwise object move listener on
+               // node layer would take over the drag when object move is unlocked)
+               me.consume();
+               return;
+            }
 
             backgroundDragActive = true;
             backgroundDragged = false;
@@ -512,6 +544,78 @@ public class ExtendedGraphViewer extends GraphViewer
          graph.getZestRootLayer().addMouseMotionListener(moveMouseMoutionListener);
 		}
 	}
+
+   /**
+    * Get box selection area spanning from drag start point to given point (both in map coordinates).
+    *
+    * @param x current X coordinate
+    * @param y current Y coordinate
+    * @return normalized selection rectangle
+    */
+   private org.eclipse.draw2d.geometry.Rectangle getBoxSelectionArea(int x, int y)
+   {
+      return new org.eclipse.draw2d.geometry.Rectangle(boxSelectionStart, new org.eclipse.draw2d.geometry.Point(x, y));
+   }
+
+   /**
+    * Update box selection rectangle figure during drag.
+    *
+    * @param x current X coordinate in map coordinates
+    * @param y current Y coordinate in map coordinates
+    */
+   private void updateBoxSelection(int x, int y)
+   {
+      if (boxSelectionFigure == null)
+      {
+         boxSelectionFigure = new BoxSelectionFigure();
+         controlLayer.add(boxSelectionFigure);
+      }
+      boxSelectionFigure.setBounds(getBoxSelectionArea(x, y));
+   }
+
+   /**
+    * Finish box selection: remove rectangle figure and select all map elements fully enclosed by it.
+    *
+    * @param x release X coordinate in map coordinates
+    * @param y release Y coordinate in map coordinates
+    */
+   private void finishBoxSelection(int x, int y)
+   {
+      org.eclipse.draw2d.geometry.Rectangle area = getBoxSelectionArea(x, y);
+      if (boxSelectionFigure != null)
+      {
+         controlLayer.remove(boxSelectionFigure);
+         boxSelectionFigure = null;
+      }
+      boxSelectionActive = false;
+      boxSelectionStart = null;
+      graph.setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
+
+      List<Object> selection = new ArrayList<Object>();
+      if (boxSelectionAdditive)
+         selection.addAll(((IStructuredSelection)getSelection()).toList());
+
+      // Links are intentionally not selectable by box: zest viewer maps selection into GraphNode[] and
+      // would fail on connection items
+      for(Object o : graph.getNodes())
+      {
+         if (!(o instanceof CGraphNode))
+            continue;
+         CGraphNode n = (CGraphNode)o;
+         Object element = n.getData();
+         if ((element != null) && !selection.contains(element) &&
+             area.contains(new org.eclipse.draw2d.geometry.Rectangle(n.getLocation(), n.getSize())))
+            selection.add(element);
+      }
+      for(DecorationLayerAbstractFigure f : decorationFigures.values())
+      {
+         NetworkMapElement element = f.getMapElement();
+         if (!selection.contains(element) && area.contains(f.getBounds()))
+            selection.add(element);
+      }
+
+      setSelection(new StructuredSelection(selection));
+   }
 
    /**
     * Block map from refresh
@@ -1298,6 +1402,29 @@ public class ExtendedGraphViewer extends GraphViewer
 	/**
 	 * Grid
 	 */
+   /**
+    * Rubber band rectangle shown during box selection
+    */
+   private class BoxSelectionFigure extends Figure
+   {
+      /**
+       * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+       */
+      @Override
+      protected void paintFigure(Graphics gc)
+      {
+         org.eclipse.draw2d.geometry.Rectangle r = getBounds();
+         Color color = graph.getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION);
+         gc.setBackgroundColor(color);
+         gc.setForegroundColor(color);
+         gc.setAlpha(48);
+         gc.fillRectangle(r);
+         gc.setAlpha(255);
+         gc.setLineWidth(1);
+         gc.drawRectangle(r.x, r.y, r.width - 1, r.height - 1);
+      }
+   }
+
 	private class GridFigure extends Figure implements IDecorationLayer, IDecorationFigure
 	{
 		/**
