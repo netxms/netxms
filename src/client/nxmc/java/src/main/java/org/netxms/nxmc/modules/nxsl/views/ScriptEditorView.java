@@ -479,7 +479,7 @@ public class ScriptEditorView extends ConfigurationView
                            editor.highlightWarningLine(w.lineNumber);
                      }
 
-                     addMessage(MessageArea.SUCCESS, "Save successful", false);
+                     addMessage(MessageArea.SUCCESS, i18n.tr("Save successful"), false);
                   }
                });
             }

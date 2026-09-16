@@ -116,7 +116,7 @@ public class DashboardView extends AbstractDashboardView
       };
       actionEditMode.setImageDescriptor(SharedIcons.EDIT);
 
-      actionAddColumn = new Action("Add &column", ResourceManager.getImageDescriptor("icons/add-column.png")) {
+      actionAddColumn = new Action(i18n.tr("Add &column"), ResourceManager.getImageDescriptor("icons/add-column.png")) {
          @Override
          public void run()
          {
@@ -127,7 +127,7 @@ public class DashboardView extends AbstractDashboardView
          }
       };
 
-      actionRemoveColumn = new Action("&Remove column", ResourceManager.getImageDescriptor("icons/remove-column.png")) {
+      actionRemoveColumn = new Action(i18n.tr("&Remove column"), ResourceManager.getImageDescriptor("icons/remove-column.png")) {
          @Override
          public void run()
          {
@@ -138,7 +138,7 @@ public class DashboardView extends AbstractDashboardView
          }
       };
 
-      actionSelectContext = new Action("Select c&ontext...") {
+      actionSelectContext = new Action(i18n.tr("Select c&ontext...")) {
          @Override
          public void run()
          {

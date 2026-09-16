@@ -128,7 +128,7 @@ public class AlarmSounds extends PropertyPage
 
       for(int i = 0; i < 6; i++)
       {
-         final String soundId = (i < 5) ? StatusDisplayInfo.getStatusText(i) : "Outstanding alarm reminder";
+         final String soundId = (i < 5) ? StatusDisplayInfo.getStatusText(i) : i18n.tr("Outstanding alarm reminder");
          newCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, 
                soundId, WidgetHelper.DEFAULT_LAYOUT_DATA);
          newCombo.setEnabled(false);

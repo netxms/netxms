@@ -174,7 +174,7 @@ public class MapBackground extends ObjectPropertyPage
       sizeGroup.setLayout(layout);
 
       fitToScreen = new Button(sizeGroup, SWT.CHECK);
-      fitToScreen.setText(i18n.tr("Fit to scrren"));
+      fitToScreen.setText(i18n.tr("Fit to screen"));
       fitToScreen.setSelection(map.isFitToScreen());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;

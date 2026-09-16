@@ -50,7 +50,7 @@ public class FileFingerprintDialog extends Dialog
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
 
-      addField(dialogArea, "File size (in bytes)", Long.toString(fp.getSize()), false);
+      addField(dialogArea, i18n.tr("File size (in bytes)"), Long.toString(fp.getSize()), false);
       addField(dialogArea, "CRC32", Long.toHexString(fp.getCRC32()), false);
       addField(dialogArea, "MD5", hexString(fp.getMD5()), false);
       addField(dialogArea, "SHA256", hexString(fp.getSHA256()), false);
@@ -86,7 +86,7 @@ public class FileFingerprintDialog extends Dialog
             sb.append(text);
             sb.append(" \n");
          }
-         addField(dialogArea, String.format("First %d bytes of file", data.length), sb.toString(), true);
+         addField(dialogArea, String.format(i18n.tr("First %d bytes of file"), data.length), sb.toString(), true);
       }
 
       return dialogArea;

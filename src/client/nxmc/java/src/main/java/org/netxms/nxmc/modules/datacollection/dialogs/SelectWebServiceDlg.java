@@ -88,7 +88,7 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(i18n.tr("Web Service Defenition Selection"));
+      newShell.setText(i18n.tr("Web Service Definition Selection"));
       PreferenceStore settings = PreferenceStore.getInstance();
       newShell.setSize(settings.getAsPoint("SelectWebServiceDlg.size", 400, 250)); 
       newShell.setLocation(settings.getAsPoint("SelectWebServiceDlg.location", 100, 100));
@@ -143,7 +143,7 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
    private void getWebServiceDefinitions()
    {
       final NXCSession session = Registry.getSession();
-      Job job = new Job("Get web service definitions", null) {
+      Job job = new Job(i18n.tr("Get web service definitions"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -186,7 +186,7 @@ public class SelectWebServiceDlg extends Dialog implements IParameterSelectionDi
       IStructuredSelection viewerSelection = viewer.getStructuredSelection();
       if (viewerSelection.isEmpty())
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Web service definition should be selected");
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Web service definition should be selected"));
          return;
       }
 

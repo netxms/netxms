@@ -27,8 +27,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class PowerDomainTypeLabels
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PowerDomainTypeLabels.class);
-
    /**
     * Get label for given power domain type.
     *
@@ -36,6 +34,18 @@ public final class PowerDomainTypeLabels
     * @return localized label
     */
    public static String get(PowerDomainType type)
+   {
+      return get(type, LocalizationHelper.getI18n(PowerDomainTypeLabels.class));
+   }
+
+   /**
+    * Get label for given power domain type using provided I18n instance.
+    *
+    * @param type power domain type
+    * @param i18n I18n instance for current locale
+    * @return localized label
+    */
+   private static String get(PowerDomainType type, I18n i18n)
    {
       switch(type)
       {
@@ -63,8 +73,9 @@ public final class PowerDomainTypeLabels
    {
       PowerDomainType[] types = PowerDomainType.values();
       String[] labels = new String[types.length];
+      I18n i18n = LocalizationHelper.getI18n(PowerDomainTypeLabels.class);
       for(PowerDomainType type : types)
-         labels[type.getValue()] = get(type);
+         labels[type.getValue()] = get(type, i18n);
       return labels;
    }
 }

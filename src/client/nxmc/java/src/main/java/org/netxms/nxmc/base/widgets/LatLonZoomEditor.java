@@ -108,7 +108,7 @@ public class LatLonZoomEditor extends Composite
       zoomRow.setLayoutData(gd);
 
       zoomLabel = new Label(zoomRow, SWT.NONE);
-      zoomLabel.setText(i18n.tr("Zoom level")); //$NON-NLS-1$
+      zoomLabel.setText(i18n.tr("Zoom level"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       gd.horizontalSpan = 2;

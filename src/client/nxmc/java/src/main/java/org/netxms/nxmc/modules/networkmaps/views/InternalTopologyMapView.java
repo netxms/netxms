@@ -24,12 +24,15 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Internal connection topology view for given object
  */
 public class InternalTopologyMapView extends AdHocTopologyMapView
 {
+   private final I18n i18n = LocalizationHelper.getI18n(InternalTopologyMapView.class);
+
    private static final String ID = "InternalConnectionTopology";
 
    /**
@@ -59,7 +62,7 @@ public class InternalTopologyMapView extends AdHocTopologyMapView
       if (mapPage == null)
          mapPage = new NetworkMapPage(ID + getObjectName());
 
-      new Job(String.format("Building internal connection map for %s", getObjectName()), this) {
+      new Job(String.format(i18n.tr("Building internal connection map for %s"), getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

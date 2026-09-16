@@ -142,7 +142,7 @@ public class ServicesView extends ObjectView
     */
    private void createActions()
    {
-      actionStart = new Action("&Start") {
+      actionStart = new Action(i18n.tr("&Start")) {
          @Override
          public void run()
          {
@@ -158,7 +158,7 @@ public class ServicesView extends ObjectView
          }
       };
 
-      actionSetAutoStart = new Action("&Automatic") {
+      actionSetAutoStart = new Action(i18n.tr("&Automatic")) {
          @Override
          public void run()
          {
@@ -208,7 +208,7 @@ public class ServicesView extends ObjectView
 
       if (((Node)getObject()).getPlatformName().startsWith("windows-"))
       {
-         MenuManager startTypeMenu = new MenuManager("&Change start type");
+         MenuManager startTypeMenu = new MenuManager(i18n.tr("&Change start type"));
          startTypeMenu.add(actionSetAutoStart);
          startTypeMenu.add(actionSetManualStart);
          startTypeMenu.add(actionDisable);

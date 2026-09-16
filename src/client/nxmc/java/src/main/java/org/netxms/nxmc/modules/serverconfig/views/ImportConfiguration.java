@@ -328,7 +328,7 @@ public class ImportConfiguration extends ConfigurationView
                   @Override
                   public void run()
                   {
-                     text.setText(result + "[SUCCESS] Import completed successfully");
+                     text.setText(result + i18n.tr("[SUCCESS] Import completed successfully"));
                   }
                });
             }
@@ -339,7 +339,7 @@ public class ImportConfiguration extends ConfigurationView
                   public void run()
                   {
                      String output = e.getAdditionalInfo();
-                     text.setText(((output != null) ? output : "") + "[FAILURE] Import failed (" + e.getLocalizedMessage() + ")");
+                     text.setText(((output != null) ? output : "") + String.format(i18n.tr("[FAILURE] Import failed (%s)"), e.getLocalizedMessage()));
                   }
                });         
             }

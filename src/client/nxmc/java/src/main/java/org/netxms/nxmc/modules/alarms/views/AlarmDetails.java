@@ -561,7 +561,7 @@ public class AlarmDetails extends AdHocObjectView
    						   else
    						   {
    	                     Label label = new Label(dataArea, SWT.NONE);
-   	                     label.setText(String.format("DCI with ID %d is not accessible", alarm.getDciId()));
+   	                     label.setText(String.format(i18n.tr("DCI with ID %d is not accessible"), alarm.getDciId()));
                            dataSection.setExpanded(false);
    	                     DashboardLayoutData dd = (DashboardLayoutData)dataSection.getLayoutData();
    	                     dd.fill = false;
@@ -848,7 +848,7 @@ public class AlarmDetails extends AdHocObjectView
 
       updateInProgress = true;
 
-      Job job = new Job("Update DCI data view", this) {
+      Job job = new Job(i18n.tr("Update DCI data view"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

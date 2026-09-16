@@ -565,7 +565,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
 		actionCreateSnmpTableDci = new CreateSnmpTableDci(this);
 		actionCreateSnmpTableDciFromWalk = new CreateSnmpTableDciFromWalk(this);
 
-      actionShortTextualNames = new Action("S&hort textual names", Action.AS_CHECK_BOX) {
+      actionShortTextualNames = new Action(i18n.tr("S&hort textual names"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -575,7 +575,7 @@ public class MibExplorer extends AdHocObjectView implements SnmpWalkListener
          }
       };
 
-      actionShowResultFilter = new Action("Show result &filter", Action.AS_CHECK_BOX) {
+      actionShowResultFilter = new Action(i18n.tr("Show result &filter"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {

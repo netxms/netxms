@@ -73,7 +73,7 @@ public class BulkUpdateDialog extends Dialog
       }));
 
       String[] retentionTypes = {i18n.tr("No change"), i18n.tr("Use default retention time"), i18n.tr("Use custom retention time"), i18n.tr("Do not save collected data to database")};
-      BulkDciUpdateElementUI retentionType = new BulkDciUpdateElementUI("Retention mode", NXCPCodes.VID_RETENTION_TYPE, retentionTypes);
+      BulkDciUpdateElementUI retentionType = new BulkDciUpdateElementUI(i18n.tr("Retention mode"), NXCPCodes.VID_RETENTION_TYPE, retentionTypes);
       elements.add(retentionType);
       elements.add(new BulkDciUpdateElementUI(i18n.tr("Retention time (days)"), NXCPCodes.VID_RETENTION_TIME, null, new BulkDciUpdateElementUI.EditModeSelector() {
          @Override
@@ -86,7 +86,7 @@ public class BulkUpdateDialog extends Dialog
       ArrayList<String> dataUnits = new ArrayList<String>();
       dataUnits.add(i18n.tr("No change"));
       Collections.addAll(dataUnits, General.DATA_UNITS);
-      BulkDciUpdateElementUI unitName = new BulkDciUpdateElementUI("Unit name", NXCPCodes.VID_UNITS_NAME, dataUnits.toArray(new String[dataUnits.size()]));
+      BulkDciUpdateElementUI unitName = new BulkDciUpdateElementUI(i18n.tr("Unit name"), NXCPCodes.VID_UNITS_NAME, dataUnits.toArray(new String[dataUnits.size()]));
       unitName.setEditableDropdown(true);
       elements.add(unitName);
    }

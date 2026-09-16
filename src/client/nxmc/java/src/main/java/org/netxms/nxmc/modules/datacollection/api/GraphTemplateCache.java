@@ -20,6 +20,8 @@ import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.ViewPlacement;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -228,7 +230,8 @@ public class GraphTemplateCache
       else
       {
          display.syncExec(() -> {
-            MessageDialogHelper.openError(viewPlacement.getWindow().getShell(), "Error", "None of template DCI were found on a node.");
+            I18n i18n = LocalizationHelper.getI18n(GraphTemplateCache.class);
+            MessageDialogHelper.openError(viewPlacement.getWindow().getShell(), i18n.tr("Error"), i18n.tr("None of template DCI were found on a node."));
          });
       }
    }

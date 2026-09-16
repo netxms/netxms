@@ -1097,7 +1097,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	 */
 	protected void createActions()
 	{
-      actionShowLinkDirection = new Action("Show link &direction", Action.AS_CHECK_BOX) {
+      actionShowLinkDirection = new Action(i18n.tr("Show link &direction"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -1277,7 +1277,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       actionToggleCanvasType.setImageDescriptor(ResourceManager.getImageDescriptor("icons/worldmap.png"));
       actionToggleCanvasType.setChecked(isGeographicalCanvas());
 
-		actionOpenDrillDownObject = new Action("Open drill-down object") {
+		actionOpenDrillDownObject = new Action(i18n.tr("Open drill-down object")) {
 			@Override
 			public void run()
 			{
@@ -1491,7 +1491,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       addKeyBinding("M1+M3+L", actionShowLineChart);
 
 
-      actionFindObject = new Action("&Find object", Action.AS_CHECK_BOX) {
+      actionFindObject = new Action(i18n.tr("&Find object"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {

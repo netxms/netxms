@@ -104,7 +104,7 @@ public class WelcomePage extends Composite
       header.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       Label title = new Label(header, SWT.NONE);
-      title.setText(i18n.tr("Welcome to NetXMS ") + serverVersion);
+      title.setText(i18n.tr("Welcome to NetXMS {0}", serverVersion));
       title.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderBold");
       title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
@@ -144,7 +144,7 @@ public class WelcomePage extends Composite
          });
 
          final String url = "https://netxms.github.io/changelog/" + serverVersion.replace('.', '_') + ".html";
-         new Job("Loading welcome page", null) {
+         new Job(i18n.tr("Loading welcome page"), null) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -206,7 +206,7 @@ public class WelcomePage extends Composite
       ps.set("WelcomePage.SeenVersions", addVersion(localSeen, serverVersion));
 
       // Update server-side storage (async, best effort)
-      Job job = new Job("Saving welcome page state", null) {
+      Job job = new Job(LocalizationHelper.getI18n(WelcomePage.class).tr("Saving welcome page state"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

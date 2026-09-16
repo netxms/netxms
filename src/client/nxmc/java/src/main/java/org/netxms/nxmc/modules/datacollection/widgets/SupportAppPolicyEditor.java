@@ -189,14 +189,14 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       textColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Text", WidgetHelper.DEFAULT_LAYOUT_DATA);      
       borderColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Border", WidgetHelper.DEFAULT_LAYOUT_DATA);     
       highlightColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);     
-      menuBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu background", WidgetHelper.DEFAULT_LAYOUT_DATA);   
-      menuTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu text", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      menuSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Menu highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      notificationBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification background", WidgetHelper.DEFAULT_LAYOUT_DATA);   
-      notificationTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification text", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      notificationSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification selection", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      notificationHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, "Notification highlight", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, i18n.tr("Menu background"), WidgetHelper.DEFAULT_LAYOUT_DATA);   
+      menuTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, i18n.tr("Menu text"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, i18n.tr("Menu selection"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      menuHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, i18n.tr("Menu highlight"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      notificationBackgroundColor = WidgetHelper.createLabeledColorSelector(colorSelectors, i18n.tr("Notification background"), WidgetHelper.DEFAULT_LAYOUT_DATA);   
+      notificationTextColor = WidgetHelper.createLabeledColorSelector(colorSelectors, i18n.tr("Notification text"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      notificationSelectionColor = WidgetHelper.createLabeledColorSelector(colorSelectors, i18n.tr("Notification selection"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      notificationHighligtColor = WidgetHelper.createLabeledColorSelector(colorSelectors, i18n.tr("Notification highlight"), WidgetHelper.DEFAULT_LAYOUT_DATA);
 
       Composite messageArea = new Composite(topArea, SWT.NONE);
       messageArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -443,7 +443,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     */
    protected void createActions()
    {
-      addSubMenuAction = new Action("Add sub menu", SharedIcons.ADD_OBJECT) {
+      addSubMenuAction = new Action(i18n.tr("Add sub menu"), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -451,7 +451,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
          }
       };
       
-      addItemAction = new Action("Add item", SharedIcons.ADD_OBJECT) {
+      addItemAction = new Action(i18n.tr("Add item"), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -561,7 +561,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    {
       FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
       WidgetHelper.setFileDialogFilterExtensions(dlg, new String[] { "*.ico", "*.*" });
-      WidgetHelper.setFileDialogFilterNames(dlg, new String[] { "Icon files", "All files" });
+      WidgetHelper.setFileDialogFilterNames(dlg, new String[] { i18n.tr("Icon files"), "All files" });
       String fileName = dlg.open();
       if (fileName == null)
          return;
@@ -582,7 +582,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot load image: %s", e.getLocalizedMessage()));
+         MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot load image: %s"), e.getLocalizedMessage()));
       }
       finally
       {

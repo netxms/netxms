@@ -32,12 +32,16 @@ import org.netxms.client.objects.Circuit;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Custom extension of tree viewer for object tree
  */
 public class ObjectTreeViewer extends TreeViewer
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectTreeViewer.class);
+
    private NXCSession session;
    private boolean objectsFullySync;
 
@@ -142,7 +146,7 @@ public class ObjectTreeViewer extends TreeViewer
     */
    private void syncChildren(final AbstractObject object)
    {
-      Job job = new Job("Synchronizing node components", null) {
+      Job job = new Job(i18n.tr("Synchronizing node components"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

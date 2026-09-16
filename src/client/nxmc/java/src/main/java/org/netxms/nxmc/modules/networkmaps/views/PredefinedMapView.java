@@ -212,7 +212,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       else
       {
          readOnly = true;
-         Job job = new Job("Get map effective rights", this) {
+         Job job = new Job(i18n.tr("Get map effective rights"), this) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -713,7 +713,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			}
 		};
 
-      actionAddTextBox = new Action("Text box") {
+      actionAddTextBox = new Action(i18n.tr("Text box")) {
          @Override
          public void run()
          {
@@ -1416,7 +1416,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          }
       }
 
-      new Job("Auto link network map nodes", this) {
+      new Job(i18n.tr("Auto link network map nodes"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -1717,7 +1717,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if (elementListLocalCopy.size() > 0)
          updateObjectPositions();
 
-      new Job("Save object's new positions", this) {
+      new Job(i18n.tr("Save object's new positions"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

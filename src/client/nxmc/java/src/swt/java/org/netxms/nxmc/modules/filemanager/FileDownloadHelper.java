@@ -90,7 +90,7 @@ public class FileDownloadHelper
       for(Object o : selection.toList())
          files.add((AgentFile)o);
 
-      Job job = new Job("Download from agent", view) {
+      Job job = new Job(i18n.tr("Download from agent"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -107,7 +107,7 @@ public class FileDownloadHelper
                   catch(Exception e)
                   {
                   }
-                  monitor.beginTask(String.format("Downloading directory %s", f.getName()), (dirSize >= 0) ? (int)dirSize : IProgressMonitor.UNKNOWN);
+                  monitor.beginTask(String.format(i18n.tr("Downloading directory %s"), f.getName()), (dirSize >= 0) ? (int)dirSize : IProgressMonitor.UNKNOWN);
                   downloadDir(session, objectId, f, target + "/" + f.getName(), monitor);
                   monitor.done();
                }
@@ -139,7 +139,7 @@ public class FileDownloadHelper
                   }
                }
                
-               monitor.beginTask("Downloading files", (int)total);
+               monitor.beginTask(i18n.tr("Downloading files"), (int)total);
                for(AgentFile f : files)
                {
                   if (monitor.isCanceled())
@@ -176,13 +176,13 @@ public class FileDownloadHelper
          throws IOException, NXCException
    {
       if (subTask)
-         monitor.subTask(String.format("Downloading file %s", sf.getFullName()));
+         monitor.subTask(String.format(i18n.tr("Downloading file %s"), sf.getFullName()));
       final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), 0, false, new ProgressListener() {
          @Override
          public void setTotalWorkAmount(long workTotal)
          {
             if (!subTask)
-               monitor.beginTask(String.format("Downloading file %s", sf.getFullName()), (int)workTotal);
+               monitor.beginTask(String.format(i18n.tr("Downloading file %s"), sf.getFullName()), (int)workTotal);
          }
 
          @Override

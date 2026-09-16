@@ -178,7 +178,7 @@ public class PolicyListView extends ObjectView implements SessionListener
       if (!isActive())
          return;
 
-      Job job = new Job("Save agent policy", this) {
+      Job job = new Job(i18n.tr("Save agent policy"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

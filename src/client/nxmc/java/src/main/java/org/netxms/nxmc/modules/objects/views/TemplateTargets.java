@@ -215,7 +215,7 @@ public class TemplateTargets extends ObjectView
       };
       actionAddTarget.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
-      actionRemoveTarget = new Action("&Remove from this template", SharedIcons.DELETE_OBJECT) {
+      actionRemoveTarget = new Action(i18n.tr("&Remove from this template"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {

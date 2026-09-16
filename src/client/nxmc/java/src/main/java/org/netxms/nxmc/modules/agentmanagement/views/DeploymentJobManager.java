@@ -178,7 +178,7 @@ public class DeploymentJobManager extends ConfigurationView implements SessionLi
     */
    private void createActions()
    {
-      actionCancel = new Action("&Cancel", SharedIcons.DELETE_OBJECT) {
+      actionCancel = new Action(i18n.tr("&Cancel"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {

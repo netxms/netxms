@@ -424,7 +424,7 @@ public class DataCollectionView extends BaseDataCollectionView
       actionEdit.setEnabled(false);
       addKeyBinding("M1+E", actionEdit);
 
-      actionBulkUpdate = new Action("&Bulk update...") {
+      actionBulkUpdate = new Action(i18n.tr("&Bulk update...")) {
          @Override
          public void run()
          {
@@ -562,7 +562,7 @@ public class DataCollectionView extends BaseDataCollectionView
       actionHideTemplateItems.setChecked(PreferenceStore.getInstance().getAsBoolean("DataCollectionConfiguration.hideTemplateItems", false));
       addKeyBinding("M1+M2+T", actionHideTemplateItems);
 
-      actionApplyChanges = new Action("Appl&y changes", ResourceManager.getImageDescriptor("icons/commit.png")) {
+      actionApplyChanges = new Action(i18n.tr("Appl&y changes"), ResourceManager.getImageDescriptor("icons/commit.png")) {
          @Override
          public void run()
          {

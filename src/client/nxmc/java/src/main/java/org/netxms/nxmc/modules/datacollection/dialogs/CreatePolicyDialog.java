@@ -119,7 +119,7 @@ public class CreatePolicyDialog extends Dialog
       }
 		if (policyName.isEmpty())
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "Policy name can not be empty");
+			MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Policy name can not be empty"));
 			return;
 		}
 		super.okPressed();

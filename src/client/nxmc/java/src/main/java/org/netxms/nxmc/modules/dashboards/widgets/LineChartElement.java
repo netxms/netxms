@@ -159,7 +159,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
     */
    private void configureMetrics()
    {
-      Job job = new Job("Get DCI info", view, this) {
+      Job job = new Job(i18n.tr("Get DCI info"), view, this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

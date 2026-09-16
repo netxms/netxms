@@ -126,8 +126,8 @@ public class AuditLogRecordDetailsDialog extends Dialog
       diffEngine.diff_cleanupSemantic(diffs);
       diffEngine.diff_prettyHtml(diffs);
 
-      createTextValueTab("Old value", "icons/old_value.png", oldValue);
-      createTextValueTab("New value", "icons/new_value.png", newValue);
+      createTextValueTab(i18n.tr("Old value"), "icons/old_value.png", oldValue);
+      createTextValueTab(i18n.tr("New value"), "icons/new_value.png", newValue);
       createDiffTab(diffs);
 
       tabFolder.setSelection(2);

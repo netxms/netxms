@@ -198,7 +198,7 @@ public class Polling extends ObjectPropertyPage
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_STATUS_POLL, i18n.tr("Disable s&tatus polling"));
       if (pollingTarget.canHaveInterfaces())
       {
-         addFlag(optionsGroup, AbstractNode.NF_DISABLE_8021X_STATUS_POLL, "Disable &802.1x port state checking during status poll");
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_8021X_STATUS_POLL, i18n.tr("Disable &802.1x port state checking during status poll"));
       }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_CONF_POLL, i18n.tr("Disable &configuration polling"));
       if (pollingTarget.canHaveInterfaces())
@@ -213,7 +213,7 @@ public class Polling extends ObjectPropertyPage
       }
       if (pollingTarget.canHaveAgent())
       {
-         addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, "Disable reading of &Windows performance counters metadata");
+         addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, i18n.tr("Disable reading of &Windows performance counters metadata"));
       }
 
 		/* use ifXTable */

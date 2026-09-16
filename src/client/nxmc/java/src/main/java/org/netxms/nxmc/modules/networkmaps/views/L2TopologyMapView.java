@@ -78,7 +78,7 @@ public class L2TopologyMapView extends AdHocTopologyMapView
    @Override
    protected void createActions()
    {
-      actionShowPhysicalLinks = new Action("Show physical links", Action.AS_CHECK_BOX) {
+      actionShowPhysicalLinks = new Action(i18n.tr("Show physical links"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {

@@ -78,7 +78,7 @@ public class NetworkScanView extends View
 {
    private final I18n i18n = LocalizationHelper.getI18n(NetworkScanView.class);
 
-   private static final String[] COLUMN_NAMES = { "IP Address", "RTT (ms)", "Agent", "SNMP", "Modbus", "EtherNet/IP", "Open TCP ports", "Node", "Node creation status" };
+   private final String[] columnNames = { i18n.tr("IP Address"), i18n.tr("RTT (ms)"), i18n.tr("Agent"), i18n.tr("SNMP"), i18n.tr("Modbus"), i18n.tr("EtherNet/IP"), i18n.tr("Open TCP ports"), i18n.tr("Node"), i18n.tr("Node creation status") };
    private static final int[] COLUMN_WIDTHS = { 130, 80, 60, 80, 60, 80, 200, 150, 200 };
    private static final int COLUMN_IP = 0;
    private static final int COLUMN_RTT = 1;
@@ -229,7 +229,7 @@ public class NetworkScanView extends View
       gd.verticalIndent = 8;
       separator.setLayoutData(gd);
 
-      viewer = new SortableTableViewer(parent, COLUMN_NAMES, COLUMN_WIDTHS, COLUMN_IP, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer = new SortableTableViewer(parent, columnNames, COLUMN_WIDTHS, COLUMN_IP, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ResultLabelProvider());
       viewer.setInput(rows);

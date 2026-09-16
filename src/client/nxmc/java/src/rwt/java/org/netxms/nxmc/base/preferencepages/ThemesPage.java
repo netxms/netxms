@@ -301,7 +301,7 @@ public class ThemesPage extends PropertyPage
          }
          catch(Exception e)
          {
-            MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot save theme (%s)", e.getLocalizedMessage()));
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot save theme (%s)"), e.getLocalizedMessage()));
             logger.error("Cannot save theme", e);
          }
       }
@@ -328,7 +328,7 @@ public class ThemesPage extends PropertyPage
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot import theme (%s)", e.getLocalizedMessage()));
+         MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot import theme (%s)"), e.getLocalizedMessage()));
          logger.error("Cannot import theme", e);
       }
    }
@@ -357,7 +357,7 @@ public class ThemesPage extends PropertyPage
          }
          catch(Exception e)
          {
-            MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot save theme (%s)", e.getLocalizedMessage()));
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot save theme (%s)"), e.getLocalizedMessage()));
             logger.error("Cannot save theme", e);
          }
       }
@@ -392,7 +392,7 @@ public class ThemesPage extends PropertyPage
          return;
 
       final Theme theme = themes.get(index - 3);
-      new Job("Export theme", null) {
+      new Job(i18n.tr("Export theme"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

@@ -72,7 +72,7 @@ public class ThemeElementEditDialog extends Dialog
       dialogArea.setLayout(layout);
 
       foreground = new ExtendedColorSelector(dialogArea);
-      foreground.setLabels("Foreground color", null, null);
+      foreground.setLabels(i18n.tr("Foreground color"), null, null);
       foreground.setColorValue(element.foreground);
 
       background = new ExtendedColorSelector(dialogArea);

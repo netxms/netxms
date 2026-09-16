@@ -102,7 +102,7 @@ public abstract class ComparisonChartElement extends ElementWidget
     */
    protected void configureMetrics()
    {
-      Job job = new Job("Reading measurement unit information", view, this) {
+      Job job = new Job(i18n.tr("Reading measurement unit information"), view, this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

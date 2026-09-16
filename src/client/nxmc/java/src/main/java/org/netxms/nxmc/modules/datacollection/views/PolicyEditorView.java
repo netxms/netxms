@@ -234,7 +234,7 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
       }      
       modifiedByOtherUser = false;
 
-      Job job = new Job("Get agent policy", this) {
+      Job job = new Job(i18n.tr("Get agent policy"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -355,7 +355,7 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
          saveException = e;
          if (!throwExceptionOnSave)
          {
-            MessageDialogHelper.openError(getWindow().getShell(), "Error", String.format("Cannot save policy object: %s", e.getLocalizedMessage()));
+            MessageDialogHelper.openError(getWindow().getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot save policy object: %s"), e.getLocalizedMessage()));
          }
       }
    }
@@ -378,7 +378,7 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
       throwExceptionOnSave = true;
       editor.updatePolicyFromControl();
       editor.onSave();
-      new Job("Saving agent policy", this) {
+      new Job(i18n.tr("Saving agent policy"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

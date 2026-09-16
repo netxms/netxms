@@ -135,7 +135,7 @@ public class ImagePreview extends Composite
          return;
 
       this.imageDescriptor = imageDescriptor;
-      imageName.setText((imageDescriptor != null) ? imageDescriptor.getName() : "No image selected");
+      imageName.setText((imageDescriptor != null) ? imageDescriptor.getName() : i18n.tr("No image selected"));
 
       if (image != null)
          image.dispose();
@@ -161,7 +161,7 @@ public class ImagePreview extends Composite
             if (svgImage != null)
             {
                if ((svgImage.getWidth() > 0) && (svgImage.getHeight() > 0))
-                  imageSize.setText(String.format("SVG (%.0f x %.0f)", svgImage.getWidth(), svgImage.getHeight()));
+                  imageSize.setText(String.format(i18n.tr("SVG (%.0f x %.0f)"), svgImage.getWidth(), svgImage.getHeight()));
                else
                   imageSize.setText("SVG");
             }

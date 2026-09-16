@@ -270,14 +270,14 @@ public class PhysicalLinkEditDialog extends Dialog
    {
       if (objectSelectorLeft.getObject() == null || objectSelectorRight.getObject() == null)
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Please select objects for both sides of the link");
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select objects for both sides of the link"));
          return;
       }
 
       if ((objectSelectorLeft.getObject() instanceof Rack && patchPanelSelectorLeft.getPatchPanelId() == 0) ||
             (objectSelectorRight.getObject() instanceof Rack && patchPanelSelectorRight.getPatchPanelId() == 0))
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Please select patch panel(s) for rack(s)");
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select patch panel(s) for rack(s)"));
          return;
       }
 

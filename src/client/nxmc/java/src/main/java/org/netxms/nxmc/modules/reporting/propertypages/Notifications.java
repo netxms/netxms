@@ -181,7 +181,7 @@ public class Notifications extends PropertyPage
 	 */
 	private void addMail()
 	{
-      InputDialog dlg = new InputDialog(emailGroup.getShell(), "Add mail", "Enter mail", "", new IInputValidator() { //$NON-NLS-1$
+      InputDialog dlg = new InputDialog(emailGroup.getShell(), i18n.tr("Add mail"), i18n.tr("Enter mail"), "", new IInputValidator() {
          private static final String VALIDATOR_REGEXP = "^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$"; //$NON-NLS-1$
          
          @Override

@@ -115,7 +115,7 @@ public class ObjectTooltip extends Figure
          {
             addInformationBlock(((Node)object).getHardwareProductName(), null);
          }
-         addInformationBlock(((Node)object).getHardwareVendor(), "Vendor: ");
+         addInformationBlock(((Node)object).getHardwareVendor(), i18n.tr("Vendor: "));
       }
 
 		if ((object instanceof Node) && ((Node)object).getPrimaryIP().isValidAddress() && !((Node)object).getPrimaryIP().getAddress().isAnyLocalAddress())
@@ -214,7 +214,7 @@ public class ObjectTooltip extends Figure
 	      return;
 	   
       final long nodeId = object.getObjectId();
-      Job job = new Job("Get DCI data for object tooltip", null) {
+      Job job = new Job(i18n.tr("Get DCI data for object tooltip"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

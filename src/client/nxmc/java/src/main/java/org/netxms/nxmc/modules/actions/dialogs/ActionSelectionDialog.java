@@ -118,7 +118,7 @@ public class ActionSelectionDialog extends Dialog
       if (localCache == null)
       {
          NXCSession session = Registry.getSession();
-         new Job("Get server actions", null) {
+         new Job(i18n.tr("Get server actions"), null) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {

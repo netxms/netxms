@@ -247,45 +247,7 @@ public class ObjectFinder extends View
          "ZONE"
       };
 
-   private static final List<ObjectClass> OBJECT_CLASSES;
-
-   static
-   {
-      OBJECT_CLASSES = new ArrayList<ObjectClass>();
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_ACCESSPOINT, "Access Point"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_BUSINESSSERVICE, "Business Service"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_BUSINESSSERVICEROOT, "Business Service Root"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CHASSIS, "Chassis"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CIRCUIT, "Circuit"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CLUSTER, "Cluster"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CONDITION, "Condition"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_COLLECTOR, "Collector"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_CONTAINER, "Container"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_COOLINGZONE, "Cooling Zone"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARD, "Dashboard"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDGROUP, "Dashboard Group"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDROOT, "Dashboard Root"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDTEMPLATE, "Dashboard Template"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_FACILITY, "Facility"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_INTERFACE, "Interface"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_MOBILEDEVICE, "Mobile Device"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORK, "Network"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORKMAP, "Network Map"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORKMAPGROUP, "Network Map Group"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORKMAPROOT, "Network Map Root"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NETWORKSERVICE, "Network Service"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_NODE, "Node"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_POWERDOMAIN, "Power Domain"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_RACK, "Rack"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SENSOR, "Sensor"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SERVICEROOT, "Service Root"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_SUBNET, "Subnet"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_TEMPLATE, "Template"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_TEMPLATEGROUP, "Template Group"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_TEMPLATEROOT, "Template Root"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_VPNCONNECTOR, "VPN Connector"));
-      OBJECT_CLASSES.add(new ObjectClass(AbstractObject.OBJECT_ZONE, "Zone"));
-   }
+   private final List<ObjectClass> objectClasses = createObjectClassList();
 
    private final String[] defaultNames = { "ID", "Class", "Name", "IP Address", "Parent", "Zone" };
    private final int[] defaultWidths = { 90, 120, 300, 250, 300, 200 };
@@ -451,7 +413,7 @@ public class ObjectFinder extends View
 
       classList = CheckboxTableViewer.newCheckList(classFilterGroup, SWT.BORDER | SWT.CHECK);
       classList.setContentProvider(new ArrayContentProvider());
-      classList.setInput(OBJECT_CLASSES);
+      classList.setInput(objectClasses);
       classList.setAllChecked(true);
       gd = new GridData(SWT.FILL, SWT.FILL, true, true);
       gd.heightHint = 100;
@@ -814,7 +776,7 @@ public class ObjectFinder extends View
     */
    private void createActions()
    {
-      actionStartSearch = new Action("&Search", ResourceManager.getImageDescriptor("icons/find.png")) {
+      actionStartSearch = new Action(i18n.tr("&Search"), ResourceManager.getImageDescriptor("icons/find.png")) {
          @Override
          public void run()
          {
@@ -836,7 +798,7 @@ public class ObjectFinder extends View
          }
       };
 
-      actionSaveAs = new Action("&Save as predefined query...", SharedIcons.SAVE_AS) {
+      actionSaveAs = new Action(i18n.tr("&Save as predefined query..."), SharedIcons.SAVE_AS) {
          @Override
          public void run()
          {
@@ -1084,7 +1046,7 @@ public class ObjectFinder extends View
          }
          catch(UnknownHostException e)
          {
-            MessageDialogHelper.openWarning(getWindow().getShell(), "Warning", "IP address range start is invalid");
+            MessageDialogHelper.openWarning(getWindow().getShell(), i18n.tr("Warning"), i18n.tr("IP address range start is invalid"));
          }
          try
          {
@@ -1092,7 +1054,7 @@ public class ObjectFinder extends View
          }
          catch(UnknownHostException e)
          {
-            MessageDialogHelper.openWarning(getWindow().getShell(), "Warning", "IP address range end is invalid");
+            MessageDialogHelper.openWarning(getWindow().getShell(), i18n.tr("Warning"), i18n.tr("IP address range end is invalid"));
          }
       }
 
@@ -1124,7 +1086,7 @@ public class ObjectFinder extends View
     */
    private void doSearch(final String searchString, final int mode, final List<Integer> classFilter, final List<Integer> zoneFilter, final InetAddress addrStart, final InetAddress addrEnd)
    {
-      new Job("Find objects", this) {
+      new Job(i18n.tr("Find objects"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -1360,7 +1322,7 @@ public class ObjectFinder extends View
       if (tabFolder.getSelectionIndex() != 1)
          return;
 
-      InputDialog dlg = new InputDialog(getWindow().getShell(), "Save Object Query", "Query name", "", new IInputValidator() {
+      InputDialog dlg = new InputDialog(getWindow().getShell(), i18n.tr("Save Object Query"), i18n.tr("Query name"), "", new IInputValidator() {
          @Override
          public String isValid(String newText)
          {
@@ -1373,7 +1335,7 @@ public class ObjectFinder extends View
          return;
 
       final ObjectQuery query = new ObjectQuery(dlg.getValue(), "", queryEditor.getText());
-      new Job("Save object query", this) {
+      new Job(i18n.tr("Save object query"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -1415,7 +1377,7 @@ public class ObjectFinder extends View
     */
    private void loadQueries()
    {
-      Job job = new Job("Load saved queries", this) {
+      Job job = new Job(i18n.tr("Load saved queries"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -1431,6 +1393,50 @@ public class ObjectFinder extends View
       };
       job.setUser(false);
       job.start();
+   }
+
+   /**
+    * Create list of object classes available for class filter.
+    *
+    * @return list of object class descriptors with localized names
+    */
+   private List<ObjectClass> createObjectClassList()
+   {
+      List<ObjectClass> objectClasses = new ArrayList<ObjectClass>();
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_ACCESSPOINT, i18n.tr("Access Point")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_BUSINESSSERVICE, i18n.tr("Business Service")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_BUSINESSSERVICEROOT, i18n.tr("Business Service Root")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_CHASSIS, i18n.tr("Chassis")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_CIRCUIT, i18n.tr("Circuit")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_CLUSTER, i18n.tr("Cluster")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_CONDITION, i18n.tr("Condition")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_COLLECTOR, i18n.tr("Collector")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_CONTAINER, i18n.tr("Container")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_COOLINGZONE, i18n.tr("Cooling Zone")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARD, i18n.tr("Dashboard")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDGROUP, i18n.tr("Dashboard Group")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDROOT, i18n.tr("Dashboard Root")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_DASHBOARDTEMPLATE, i18n.tr("Dashboard Template")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_FACILITY, i18n.tr("Facility")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_INTERFACE, i18n.tr("Interface")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_MOBILEDEVICE, i18n.tr("Mobile Device")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_NETWORK, i18n.tr("Network")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_NETWORKMAP, i18n.tr("Network Map")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_NETWORKMAPGROUP, i18n.tr("Network Map Group")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_NETWORKMAPROOT, i18n.tr("Network Map Root")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_NETWORKSERVICE, i18n.tr("Network Service")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_NODE, i18n.tr("Node")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_POWERDOMAIN, i18n.tr("Power Domain")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_RACK, i18n.tr("Rack")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_SENSOR, i18n.tr("Sensor")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_SERVICEROOT, i18n.tr("Service Root")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_SUBNET, i18n.tr("Subnet")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_TEMPLATE, i18n.tr("Template")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_TEMPLATEGROUP, i18n.tr("Template Group")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_TEMPLATEROOT, i18n.tr("Template Root")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_VPNCONNECTOR, i18n.tr("VPN Connector")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_ZONE, i18n.tr("Zone")));
+      return objectClasses;
    }
 
    /**

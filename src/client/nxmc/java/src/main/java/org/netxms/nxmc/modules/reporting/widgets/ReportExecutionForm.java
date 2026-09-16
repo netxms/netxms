@@ -250,7 +250,7 @@ public class ReportExecutionForm extends Composite
       };
       actionDeleteResult.setEnabled(false);
 
-      actionRenderPDF = new Action("Render to &PDF", ResourceManager.getImageDescriptor("icons/file-types/pdf.png")) {
+      actionRenderPDF = new Action(i18n.tr("Render to &PDF"), ResourceManager.getImageDescriptor("icons/file-types/pdf.png")) {
          @Override
          public void run()
          {
@@ -259,7 +259,7 @@ public class ReportExecutionForm extends Composite
       };
       actionRenderPDF.setEnabled(false);
 
-      actionRenderXLSX = new Action("Render to &XLSX", ResourceManager.getImageDescriptor("icons/file-types/xls.png")) {
+      actionRenderXLSX = new Action(i18n.tr("Render to &XLSX"), ResourceManager.getImageDescriptor("icons/file-types/xls.png")) {
          @Override
          public void run()
          {

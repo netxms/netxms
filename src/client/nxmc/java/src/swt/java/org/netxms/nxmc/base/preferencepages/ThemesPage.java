@@ -298,7 +298,7 @@ public class ThemesPage extends PropertyPage
          }
          catch(Exception e)
          {
-            MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot save theme (%s)", e.getLocalizedMessage()));
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot save theme (%s)"), e.getLocalizedMessage()));
             logger.error("Cannot save theme", e);
          }
       }
@@ -326,7 +326,7 @@ public class ThemesPage extends PropertyPage
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot import theme (%s)", e.getLocalizedMessage()));
+         MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot import theme (%s)"), e.getLocalizedMessage()));
          logger.error("Cannot import theme", e);
       }
    }
@@ -355,7 +355,7 @@ public class ThemesPage extends PropertyPage
          }
          catch(Exception e)
          {
-            MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot save theme (%s)", e.getLocalizedMessage()));
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot save theme (%s)"), e.getLocalizedMessage()));
             logger.error("Cannot save theme", e);
          }
       }
@@ -402,7 +402,7 @@ public class ThemesPage extends PropertyPage
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot export theme (%s)", e.getLocalizedMessage()));
+         MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Cannot export theme (%s)"), e.getLocalizedMessage()));
          logger.error("Cannot export theme", e);
       }
    }

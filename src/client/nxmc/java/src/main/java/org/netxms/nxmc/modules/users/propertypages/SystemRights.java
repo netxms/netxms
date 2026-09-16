@@ -91,10 +91,10 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AI_OPERATORS, i18n.tr("Manage AI operators")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AI_SKILLS, i18n.tr("Manage AI skills and functions")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_AI_TASKS, i18n.tr("Manage AI tasks")));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, "Manage geographical areas"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_GEO_AREAS, i18n.tr("Manage geographical areas")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, i18n.tr("Manage Image Library")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, i18n.tr("Manage mapping tables")));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES, "Manage object queries"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES, i18n.tr("Manage object queries")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_PACKAGES, i18n.tr("Manage packages")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SCRIPTS, i18n.tr("Manage script library")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_MANAGE_SERVER_FILES, i18n.tr("Manage server files")));

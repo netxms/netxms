@@ -67,7 +67,7 @@ public class ReportView extends ViewWithContext
       content = new Composite(parent, SWT.NONE);
       content.setLayout(new FillLayout());
 
-      actionExecuteReport = new Action("E&xecute report", SharedIcons.EXECUTE) {
+      actionExecuteReport = new Action(i18n.tr("E&xecute report"), SharedIcons.EXECUTE) {
          @Override
          public void run()
          {
@@ -76,7 +76,7 @@ public class ReportView extends ViewWithContext
       };
       addKeyBinding("F9", actionExecuteReport);
 
-      actionScheduleExecution = new Action("&Schedule report execution...", SharedIcons.CALENDAR) {
+      actionScheduleExecution = new Action(i18n.tr("&Schedule report execution..."), SharedIcons.CALENDAR) {
          @Override
          public void run()
          {

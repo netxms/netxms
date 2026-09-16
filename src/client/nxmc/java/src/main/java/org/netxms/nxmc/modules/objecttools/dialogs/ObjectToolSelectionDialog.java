@@ -125,7 +125,7 @@ public class ObjectToolSelectionDialog extends Dialog
    {
       if (viewer.getSelection().isEmpty())
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Please select tool from the list");
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select tool from the list"));
          return;
       }
       tool = (ObjectTool)((IStructuredSelection)viewer.getSelection()).getFirstElement();

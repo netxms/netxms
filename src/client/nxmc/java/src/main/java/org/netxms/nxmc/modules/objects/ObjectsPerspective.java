@@ -864,7 +864,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private void createMenuToolItem(String name, final MenuManager menuManager, final Menu menu)
    {
       ToolItem item = new ToolItem(objectMenuBar, SWT.PUSH);
-      item.setText("  " + name + i18n.tr(" \u25BE  "));
+      item.setText("  " + name + " \u25BE  ");
       item.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

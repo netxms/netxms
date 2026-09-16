@@ -43,18 +43,22 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorCache;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Widget representing object status as radial ("sunburst") diagram
  */
 public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectStatusSunburstDiagram.class);
+
 	private AbstractObject rootObject;
 	private int maxLvl;
 	private int leafObjectCount;
@@ -484,7 +488,7 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
       gc.setAdvanced(true);
       if (!gc.getAdvanced()) 
       {
-        gc.drawText("Advanced graphics not supported", 30, 30, true);
+        gc.drawText(i18n.tr("Advanced graphics not supported"), 30, 30, true);
         return;
       } 
 

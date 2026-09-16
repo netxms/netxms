@@ -24,13 +24,17 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Server command executor and output provider widget
  */
 public class ServerCommandExecutor extends AbstractObjectToolExecutor
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ServerCommandExecutor.class);
+
    private NXCSession session;
 
    /**
@@ -67,7 +71,7 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor
    {
       if (streamId > 0)
       {
-         Job job = new Job(String.format("Stop server command for node %s", objectContext.object.getObjectName()), null) {
+         Job job = new Job(String.format(i18n.tr("Stop server command for node %s"), objectContext.object.getObjectName()), null) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {

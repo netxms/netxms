@@ -226,7 +226,7 @@ public class VariableEditDialog extends Dialog
 	      case CHOICE:
 	         if (comboValue.getSelectionIndex() == -1)
 	         {
-	            MessageDialogHelper.openWarning(getShell(), "Warning", "Please select valid value and then press OK");
+	            MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select valid value and then press OK"));
 	            return;
 	         }
 	         value = valueMap.get(comboValue.getSelectionIndex());

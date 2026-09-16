@@ -24,15 +24,19 @@ import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.services.LoginListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Map tiles housekeeper
  */
 public class MapTilesHousekeeper implements LoginListener
 {
+   private final I18n i18n = LocalizationHelper.getI18n(MapTilesHousekeeper.class);
+
    private static final Logger logger = LoggerFactory.getLogger(MapTilesHousekeeper.class);
 
 	/**
@@ -42,7 +46,7 @@ public class MapTilesHousekeeper implements LoginListener
 	public void afterLogin(NXCSession session, Display display)
 	{
 		GeoLocationCache.attachSession(display, session);
-      Job housekeeper = new Job("Map tiles housekeeper", null, null, display) {
+      Job housekeeper = new Job(i18n.tr("Map tiles housekeeper"), null, null, display) {
          @Override
          protected void run(IProgressMonitor monitor)
          {

@@ -73,7 +73,7 @@ public class Graph extends PreferencePage
 	 */
    public Graph(GraphDefinition settings, boolean saveToDatabase)
 	{
-      super(settings.isTemplate() ? "Template Graph" : "Predefined Graph");
+      super(settings.isTemplate() ? LocalizationHelper.getI18n(Graph.class).tr("Template Graph") : LocalizationHelper.getI18n(Graph.class).tr("Predefined Graph"));
       this.settings = settings;	   
       this.saveToDatabase = saveToDatabase;
 	}

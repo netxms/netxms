@@ -1735,7 +1735,7 @@ public class WidgetHelper
       if (fileName == null)
          return;
 
-      Job job = new Job("Exporting data", view) {
+      Job job = new Job(LocalizationHelper.getI18n(WidgetHelper.class).tr("Exporting data"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

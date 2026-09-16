@@ -252,7 +252,7 @@ public class RackPassiveElements extends ObjectPropertyPage
       final NXCObjectModificationData md = new NXCObjectModificationData(rack.getObjectId());
       md.setPassiveElements(passiveElements);
       final NXCSession session = Registry.getSession();
-      new Job("Updating list of passive rack elements", null, messageArea) {
+      new Job(i18n.tr("Updating list of passive rack elements"), null, messageArea) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

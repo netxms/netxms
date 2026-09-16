@@ -85,7 +85,7 @@ public class EventReferenceViewDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(showWarning ? "Warning" : String.format("Event References - %s", eventName));
+      newShell.setText(showWarning ? i18n.tr("Warning") : String.format(i18n.tr("Event References - %s"), eventName));
    }
 
    /**
@@ -152,7 +152,7 @@ public class EventReferenceViewDialog extends Dialog
          label.setImage(parent.getDisplay().getSystemImage(SWT.ICON_WARNING));
 
          label = new Label(warningArea, SWT.LEFT);
-         label.setText(String.format("Event %s is used in the following entities. Deleting it may cause unexpected system behavior. Are you sure?", eventName));
+         label.setText(String.format(i18n.tr("Event %s is used in the following entities. Deleting it may cause unexpected system behavior. Are you sure?"), eventName));
          label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
       }
 

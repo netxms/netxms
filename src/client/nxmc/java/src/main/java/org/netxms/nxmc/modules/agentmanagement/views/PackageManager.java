@@ -143,7 +143,7 @@ public class PackageManager extends ConfigurationView
 			}
 		};
 
-      actionEditMetadata = new Action("&Edit metadata...", SharedIcons.EDIT) {
+      actionEditMetadata = new Action(i18n.tr("&Edit metadata..."), SharedIcons.EDIT) {
          @Override
          public void run()
          {
@@ -487,7 +487,7 @@ public class PackageManager extends ConfigurationView
          return;
 
       final NXCSession session = Registry.getSession();
-      new Job("Update package metadata", this) {
+      new Job(i18n.tr("Update package metadata"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

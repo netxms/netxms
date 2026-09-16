@@ -184,7 +184,7 @@ public class DynamicFileViewer extends BaseFileViewer
                      @Override
                      public void setTotalWorkAmount(long workTotal)
                      {
-                        monitor.beginTask("Track file " + remoteFileName, (int)workTotal);
+                        monitor.beginTask(String.format(i18n.tr("Track file %s"), remoteFileName), (int)workTotal);
                      }
 
                      @Override

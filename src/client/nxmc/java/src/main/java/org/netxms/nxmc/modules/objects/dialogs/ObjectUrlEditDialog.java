@@ -128,7 +128,7 @@ public class ObjectUrlEditDialog extends Dialog
       }
       catch(MalformedURLException e)
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Entered URL is invalid. Please enter valid URL.");
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Entered URL is invalid. Please enter valid URL."));
          return;
       }
 		description = textDescription.getText();

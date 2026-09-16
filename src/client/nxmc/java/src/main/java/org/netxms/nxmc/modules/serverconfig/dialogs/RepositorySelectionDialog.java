@@ -136,7 +136,7 @@ public class RepositorySelectionDialog extends Dialog
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() != 1)
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Plese select repository from the list then press OK");
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Plese select repository from the list then press OK"));
          return;
       }
       

@@ -31,6 +31,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.TableValueConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.datacollection.widgets.TableValueViewer;
@@ -38,12 +39,15 @@ import org.netxms.nxmc.tools.ViewRefreshController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * "Table value" element for dashboard
  */
 public class TableValueElement extends ElementWidget
 {
+   private final I18n i18n = LocalizationHelper.getI18n(TableValueElement.class);
+
    private static final Logger logger = LoggerFactory.getLogger(TableValueElement.class);
 
 	private TableValueConfig config;
@@ -114,7 +118,7 @@ public class TableValueElement extends ElementWidget
          return;
 
       final NXCSession session = Registry.getSession();
-      new Job("Configuring context", view) {
+      new Job(i18n.tr("Configuring context"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

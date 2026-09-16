@@ -315,7 +315,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
    {
       if (isRunning())
       {
-         MessageDialog.openError(Display.getCurrent().getActiveShell(), "Error", "Command already running!");
+         MessageDialog.openError(Display.getCurrent().getActiveShell(), i18n.tr("Error"), i18n.tr("Command already running!"));
          return;
       }
 

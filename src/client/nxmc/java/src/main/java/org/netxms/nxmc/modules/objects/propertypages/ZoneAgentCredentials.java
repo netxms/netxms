@@ -285,7 +285,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
     */
    private void addSharedSecret()
    {
-      InputDialog dlg = new InputDialog(getShell(), "Add Shared Secret", "Please enter shared secret", "", null); //$NON-NLS-3$
+      InputDialog dlg = new InputDialog(getShell(), i18n.tr("Add Shared Secret"), i18n.tr("Please enter shared secret"), "", null);
       if (dlg.open() == Window.OK)
       {
          String value = dlg.getValue();

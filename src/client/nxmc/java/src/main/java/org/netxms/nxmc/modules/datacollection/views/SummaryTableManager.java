@@ -171,7 +171,7 @@ public class SummaryTableManager extends ConfigurationView
 	@Override
 	public void refresh()
 	{
-		new Job("Get configured DCI summary tables", this) { //$NON-NLS-1$
+		new Job(i18n.tr("Get configured DCI summary tables"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -202,7 +202,7 @@ public class SummaryTableManager extends ConfigurationView
 	private void createActions()
 	{
 		// create add action for single value table
-		actionCreateSingleValue = new Action("Create new summary table...", SharedIcons.ADD_OBJECT) {
+		actionCreateSingleValue = new Action(i18n.tr("Create new summary table..."), SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -210,7 +210,7 @@ public class SummaryTableManager extends ConfigurationView
 			}
 		};
 
-		actionCreateTableValue = new Action("Create new summary table for table DCIs...", ResourceManager.getImageDescriptor("icons/new_table.png")) {
+		actionCreateTableValue = new Action(i18n.tr("Create new summary table for table DCIs..."), ResourceManager.getImageDescriptor("icons/new_table.png")) {
 		   @Override
 		   public void run()
 		   {

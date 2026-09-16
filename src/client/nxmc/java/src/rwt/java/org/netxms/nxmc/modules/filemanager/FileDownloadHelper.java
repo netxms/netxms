@@ -68,7 +68,7 @@ public class FileDownloadHelper
          }
          else
          {      
-            Job job = new Job("Download from agent", null) {
+            Job job = new Job(i18n.tr("Download from agent"), null) {
                @Override
                protected void run(final IProgressMonitor monitor) throws Exception
                {
@@ -80,7 +80,7 @@ public class FileDownloadHelper
                   catch(Exception e)
                   {
                   }
-                  monitor.beginTask(String.format("Downloading directory %s", file.getName()), (int)dirSize);
+                  monitor.beginTask(String.format(i18n.tr("Downloading directory %s"), file.getName()), (int)dirSize);
 
                   final File zipFile = File.createTempFile("download_", ".zip");
                   FileOutputStream fos = new FileOutputStream(zipFile);
@@ -178,6 +178,7 @@ public class FileDownloadHelper
     */
    private static void downloadDir(NXCSession session, long objectId, final AgentFile sf, String localFileName, ZipOutputStream zos, final IProgressMonitor monitor) throws NXCException, IOException
    {
+      final I18n i18n = LocalizationHelper.getI18n(FileDownloadHelper.class);
       List<AgentFile> files = sf.getChildren();
       if (files == null)
       {
@@ -194,7 +195,7 @@ public class FileDownloadHelper
          }
          else
          {
-            monitor.subTask(String.format("Compressing file %s", f.getFullName()));
+            monitor.subTask(String.format(i18n.tr("Compressing file %s"), f.getFullName()));
             final AgentFileData file = session.downloadFileFromAgent(objectId, f.getFullName(), 0, false, new ProgressListener() {
                @Override
                public void setTotalWorkAmount(long workTotal)

@@ -635,7 +635,7 @@ public class RuleEditor extends Composite
          }
 
          if (rule.getSourceExclusions().size() > 0)
-            addConditionGroupLabel(clientArea, "except:", needAnd, rule.isSourceInverted(), listener);
+            addConditionGroupLabel(clientArea, i18n.tr("except:"), needAnd, rule.isSourceInverted(), listener);
          sortedObjects = session.findMultipleObjects(rule.getSourceExclusions(), true);
          sortedObjects.sort(new Comparator<AbstractObject>() {
             @Override
@@ -696,7 +696,7 @@ public class RuleEditor extends Composite
       if (rule.getTimeFrames().size() != 0)
       {
          final MouseListener listener = createMouseListener("TimeFilter");
-         addConditionGroupLabel(clientArea, "current time is within:", needAnd, rule.isTimeFramesInverted(), listener);
+         addConditionGroupLabel(clientArea, i18n.tr("current time is within:"), needAnd, rule.isTimeFramesInverted(), listener);
 
          final DateFormat dfTime = DateFormatFactory.getShortTimeFormat();
          for(TimeFrame tf : rule.getTimeFrames())

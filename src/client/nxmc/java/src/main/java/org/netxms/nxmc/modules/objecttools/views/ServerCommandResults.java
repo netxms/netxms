@@ -124,7 +124,7 @@ public class ServerCommandResults extends AbstractCommandResultView
       
       if (isRunning)
       {
-         MessageDialog.openError(Display.getCurrent().getActiveShell(), "Error", "Command already running!");
+         MessageDialog.openError(Display.getCurrent().getActiveShell(), i18n.tr("Error"), i18n.tr("Command already running!"));
          return;
       }
 
@@ -179,7 +179,7 @@ public class ServerCommandResults extends AbstractCommandResultView
    {
       if (streamId > 0)
       {
-         Job job = new Job("Stop server command for node: " + object.object.getObjectName(), this) {
+         Job job = new Job(String.format(i18n.tr("Stop server command for node: %s"), object.object.getObjectName()), this) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {

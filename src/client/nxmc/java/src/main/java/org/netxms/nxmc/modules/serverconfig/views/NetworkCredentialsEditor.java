@@ -307,7 +307,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
             if (bothModified)
             {
                if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Save Network Credentials"),
-                     i18n.tr(i18n.tr("Network credentials are modified by you and other users. Do you want to save your changes and overwrite other users' changes?"))))
+                     i18n.tr("Network credentials are modified by you and other users. Do you want to save your changes and overwrite other users' changes?")))
                   return;
             }
 

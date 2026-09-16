@@ -170,7 +170,7 @@ public class IssueTokenDialog extends Dialog
       final NXCSession session = Registry.getSession();
       final String d = description.getText().trim();
       final int v = (int)validFor;
-      new Job("Issuing authentication token", null) {
+      new Job(i18n.tr("Issuing authentication token"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

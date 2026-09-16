@@ -342,7 +342,7 @@ public class ScreenshotView extends AdHocObjectView
     */
    private void createActions()
    {      
-      actionAutoRefresh = new Action("Auto refresh", Action.AS_CHECK_BOX) {
+      actionAutoRefresh = new Action(i18n.tr("Auto refresh"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {

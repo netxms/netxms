@@ -125,7 +125,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 	 */
 	private void createActions()
 	{
-		actionEdit = new Action("Edit graph") {
+		actionEdit = new Action(i18n.tr("Edit graph")) {
 			@Override
 			public void run()
 			{
@@ -133,7 +133,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
 			}
 		};
 
-		actionAdd = new Action("Create new template graph", SharedIcons.ADD_OBJECT) {
+		actionAdd = new Action(i18n.tr("Create new template graph"), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -141,7 +141,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
          }
       };
 
-      actionDelete = new Action("Delete template graph") {
+      actionDelete = new Action(i18n.tr("Delete template graph")) {
          @Override
          public void run()
          {
@@ -290,7 +290,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
          final GraphDefinition newSettings = settings;
          try
          {
-            new Job("Update template graph", this) {
+            new Job(i18n.tr("Update template graph"), this) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -462,7 +462,7 @@ public class TemplateGraphView extends ConfigurationView implements SessionListe
          protected void configureShell(Shell newShell)
          {
             super.configureShell(newShell);
-            newShell.setText(i18n.tr("Properties for ") + settings.getDisplayName());
+            newShell.setText(i18n.tr("Properties for {0}", settings.getDisplayName()));
          }
       };
       dlg.setBlockOnOpen(true);

@@ -87,11 +87,11 @@ public class ReportRenderingHelper
          switch(format)
          {
             case PDF:
-               fileDialog.setFilterNames(new String[] { "PDF Files", "All Files" });
+               fileDialog.setFilterNames(new String[] { i18n.tr("PDF Files"), "All Files" });
                fileDialog.setFilterExtensions(new String[] { "*.pdf", "*.*" });
                break;
             case XLSX:
-               fileDialog.setFilterNames(new String[] { "Excel Files", "All Files" });
+               fileDialog.setFilterNames(new String[] { i18n.tr("Excel Files"), "All Files" });
                fileDialog.setFilterExtensions(new String[] { "*.xlsx", "*.*" });
                break;
             default:

@@ -24,9 +24,13 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 public class AlarmCategoryEditor
 {
+   private final I18n i18n = LocalizationHelper.getI18n(AlarmCategoryEditor.class);
+
    AlarmCategory category;
    private Runnable timer;
    private NXCSession session;
@@ -52,7 +56,7 @@ public class AlarmCategoryEditor
     */
    private void doCategoryModification()
    {
-      new Job("Update alarm category", null) {
+      new Job(i18n.tr("Update alarm category"), null) {
          
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

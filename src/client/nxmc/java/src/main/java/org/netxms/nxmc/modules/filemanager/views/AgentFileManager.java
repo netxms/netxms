@@ -302,7 +302,7 @@ public class AgentFileManager extends ObjectView
     */
    private void doRename(final AgentFile agentFile, final String newName)
    {
-      new Job("Rename file", this) {
+      new Job(i18n.tr("Rename file"), this) {
          @Override
          protected String getErrorMessage()
          {
@@ -436,7 +436,7 @@ public class AgentFileManager extends ObjectView
       };
       addKeyBinding("Ctrl+N", actionCreateDirectory);
 
-      actionCalculateFolderSize = new Action("Calculate folder &size") {
+      actionCalculateFolderSize = new Action(i18n.tr("Calculate folder &size")) {
          @Override
          public void run()
          {
@@ -445,7 +445,7 @@ public class AgentFileManager extends ObjectView
       };
       addKeyBinding("Ctrl+S", actionCalculateFolderSize);
 
-      actionCopyFileName = new Action("Copy file &name") {
+      actionCopyFileName = new Action(i18n.tr("Copy file &name")) {
          @Override
          public void run()
          {
@@ -454,7 +454,7 @@ public class AgentFileManager extends ObjectView
       };
       addKeyBinding("Ctrl+C", actionCopyFileName);
 
-      actionCopyFilePath = new Action("Copy file &path") {
+      actionCopyFilePath = new Action(i18n.tr("Copy file &path")) {
          @Override
          public void run()
          {
@@ -983,7 +983,7 @@ public class AgentFileManager extends ObjectView
     */
    private void copyFile(final AgentFile target, final AgentFile object)
    {
-      new Job("Copying file", this) {
+      new Job(i18n.tr("Copying file"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -1086,7 +1086,7 @@ public class AgentFileManager extends ObjectView
       for(Object o : selection.toList())
          files.add((AgentFile)o);
 
-      new Job("Calculate folder size", this) {
+      new Job(i18n.tr("Calculate folder size"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

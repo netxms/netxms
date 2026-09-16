@@ -44,6 +44,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.client.objects.interfaces.HardwareEntity;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
 import org.netxms.nxmc.modules.objects.views.AdHocChassisView;
@@ -53,12 +54,15 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Rack display widget
  */
 public class RackWidget extends Canvas implements PaintListener, ImageUpdateListener, MouseListener
 {
+   private final I18n i18n = LocalizationHelper.getI18n(RackWidget.class);
+
    private static final double UNIT_WH_RATIO = 10.85;
    private static final int BORDER_WIDTH_RATIO = 16;
    private static final int FULL_UNIT_WIDTH = 482;
@@ -582,7 +586,7 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
          } 
          catch (PartInitException ex) 
          {
-            MessageDialogHelper.openError(getShell(), "Error openning Physical link view", String.format("Cannot open Physical link view: %s", ex.getLocalizedMessage()));
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error openning Physical link view"), String.format(i18n.tr("Cannot open Physical link view: %s"), ex.getLocalizedMessage()));
          }
          */
       }

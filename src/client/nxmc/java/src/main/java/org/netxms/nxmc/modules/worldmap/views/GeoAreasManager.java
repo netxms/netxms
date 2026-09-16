@@ -508,7 +508,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
    {
       FileDialog dlg = new FileDialog(getWindow().getShell(), SWT.OPEN);
       WidgetHelper.setFileDialogFilterExtensions(dlg, new String[] { "*.kml", "*.*" });
-      WidgetHelper.setFileDialogFilterNames(dlg, new String[] { "KML files", "All files" });
+      WidgetHelper.setFileDialogFilterNames(dlg, new String[] { i18n.tr("KML files"), "All files" });
       String fileName = dlg.open();
       if (fileName == null)
          return;

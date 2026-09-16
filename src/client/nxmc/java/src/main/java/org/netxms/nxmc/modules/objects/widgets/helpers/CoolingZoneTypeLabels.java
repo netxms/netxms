@@ -27,8 +27,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class CoolingZoneTypeLabels
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(CoolingZoneTypeLabels.class);
-
    /**
     * Get label for given cooling zone type.
     *
@@ -36,6 +34,18 @@ public final class CoolingZoneTypeLabels
     * @return localized label
     */
    public static String get(CoolingZoneType type)
+   {
+      return get(type, LocalizationHelper.getI18n(CoolingZoneTypeLabels.class));
+   }
+
+   /**
+    * Get label for given cooling zone type using provided I18n instance.
+    *
+    * @param type cooling zone type
+    * @param i18n I18n instance for current locale
+    * @return localized label
+    */
+   private static String get(CoolingZoneType type, I18n i18n)
    {
       switch(type)
       {
@@ -57,8 +67,9 @@ public final class CoolingZoneTypeLabels
    {
       CoolingZoneType[] types = CoolingZoneType.values();
       String[] labels = new String[types.length];
+      I18n i18n = LocalizationHelper.getI18n(CoolingZoneTypeLabels.class);
       for(CoolingZoneType type : types)
-         labels[type.getValue()] = get(type);
+         labels[type.getValue()] = get(type, i18n);
       return labels;
    }
 }

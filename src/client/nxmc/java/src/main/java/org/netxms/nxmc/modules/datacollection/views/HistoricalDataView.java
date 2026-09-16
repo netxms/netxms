@@ -465,7 +465,7 @@ public class HistoricalDataView extends ViewWithContext
       if (selection.isEmpty())
 	      return;
 
-      new Job("Delete DCI value", null) {
+      new Job(i18n.tr("Delete DCI value"), null) {
          @SuppressWarnings("unchecked")
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

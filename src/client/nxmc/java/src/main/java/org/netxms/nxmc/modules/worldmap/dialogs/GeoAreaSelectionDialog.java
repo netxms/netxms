@@ -120,7 +120,7 @@ public class GeoAreaSelectionDialog extends Dialog
       else
       {
          final NXCSession session = Registry.getSession();
-         Job job = new Job("Read configured geographical areas", null) {
+         Job job = new Job(i18n.tr("Read configured geographical areas"), null) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {

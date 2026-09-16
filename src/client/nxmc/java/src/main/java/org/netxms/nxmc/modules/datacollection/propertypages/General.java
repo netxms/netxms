@@ -414,7 +414,7 @@ public class General extends AbstractDCIPropertyPage
       };
 
       storageDefault = new Button(groupRetention, SWT.RADIO);
-      storageDefault.setText(String.format("Server default (%d days)", session.getDefaultDciRetentionTime()));
+      storageDefault.setText(String.format(i18n.tr("Server default (%d days)"), session.getDefaultDciRetentionTime()));
       storageDefault.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_DEFAULT);
       storageDefault.addSelectionListener(storageButtons);
       gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
