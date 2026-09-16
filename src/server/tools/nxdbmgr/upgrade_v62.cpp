@@ -25,6 +25,17 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.41 to 62.42
+ */
+static bool H_UpgradeFromV41()
+{
+   CHK_EXEC(SQLQuery(L"UPDATE config SET description='Polling interval (in seconds) for DCIs with collection schedule set to server default.' WHERE var_name='DataCollection.DefaultDCIPollingInterval'"));
+   CHK_EXEC(SQLQuery(L"UPDATE config SET description='Retention time (in days) for DCIs with history retention set to server default.' WHERE var_name='DataCollection.DefaultDCIRetentionTime'"));
+   CHK_EXEC(SetMinorSchemaVersion(42));
+   return true;
+}
+
+/**
  * Upgrade from 62.40 to 62.41
  */
 static bool H_UpgradeFromV40()
@@ -1350,6 +1361,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 41, 62, 42, H_UpgradeFromV41 },
    { 40, 62, 41, H_UpgradeFromV40 },
    { 39, 62, 40, H_UpgradeFromV39 },
    { 38, 62, 39, H_UpgradeFromV38 },
