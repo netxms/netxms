@@ -34,6 +34,9 @@ public class PieChartConfig extends AbstractChartConfig
    private boolean showTotal = false;
 
    @Element(required = false)
+   private boolean showValuesInLabels = false;
+
+   @Element(required = false)
    private int labelFontSize = 0;
 
    /**
@@ -69,9 +72,29 @@ public class PieChartConfig extends AbstractChartConfig
    }
 
    /**
-    * Get font size for percentage labels. Value 0 means that font size should be selected automatically.
+    * Check if sector labels should show actual values instead of percentages.
     *
-    * @return font size for percentage labels
+    * @return true if sector labels should show actual values instead of percentages
+    */
+   public boolean isShowValuesInLabels()
+   {
+      return showValuesInLabels;
+   }
+
+   /**
+    * Set if sector labels should show actual values instead of percentages.
+    *
+    * @param showValuesInLabels true to show actual values in sector labels, false to show percentages
+    */
+   public void setShowValuesInLabels(boolean showValuesInLabels)
+   {
+      this.showValuesInLabels = showValuesInLabels;
+   }
+
+   /**
+    * Get font size for sector labels. Value 0 means that font size should be selected automatically.
+    *
+    * @return font size for sector labels
     */
    public int getLabelFontSize()
    {
@@ -79,9 +102,9 @@ public class PieChartConfig extends AbstractChartConfig
    }
 
    /**
-    * Set font size for percentage labels. Value 0 means that font size should be selected automatically.
+    * Set font size for sector labels. Value 0 means that font size should be selected automatically.
     *
-    * @param labelFontSize new font size for percentage labels
+    * @param labelFontSize new font size for sector labels
     */
    public void setLabelFontSize(int labelFontSize)
    {
