@@ -157,14 +157,8 @@ public class PieChart extends GenericComparisonChart
    @Override
    protected void render(GC gc)
    {
-      final Font markFont = (fixedScaleFont != null) ? fixedScaleFont :
-            WidgetHelper.getBestFittingFont(gc, scaleFonts, "100%", MARK_TEXT_WIDTH, MARK_TEXT_HEIGHT); //$NON-NLS-1$
-      gc.setFont(markFont);
-      Point markSize = gc.textExtent("100%");
-
-      Point size = getSize();
       List<ChartDciConfig> items = chart.getItems();
-      if (items.isEmpty() || (size.x < MARGIN_WIDTH * 2 + MARKS_OFFSET * 2 - markSize.x * 2) || (size.y < MARGIN_HEIGHT * 2 + MARKS_OFFSET * 2 - markSize.y * 2))
+      if (items.isEmpty())
          return;
 
       List<DataSeries> series = chart.getDataSeries();
@@ -179,6 +173,41 @@ public class PieChart extends GenericComparisonChart
          total += values[i] < 0 ? 0 : values[i];
       }
       if (total == 0)
+         return;
+
+      // Font size is always selected to fit "100%", so that label size does not depend on actual values
+      final Font markFont = (fixedScaleFont != null) ? fixedScaleFont :
+            WidgetHelper.getBestFittingFont(gc, scaleFonts, "100%", MARK_TEXT_WIDTH, MARK_TEXT_HEIGHT); //$NON-NLS-1$
+      gc.setFont(markFont);
+      Point markSize = gc.textExtent("100%");
+
+      // Sector labels (null for sectors too small to be labelled); space around pie is reserved for the widest one
+      boolean showValues = chart.getConfiguration().isShowValuesInLabels();
+      String[] labels = new String[values.length];
+      for(int i = 0; i < values.length; i++)
+      {
+         int pct = (int)(values[i] / total * 100.0);
+         if (pct <= 0)
+            continue;
+
+         if (showValues)
+         {
+            DataFormatter formatter = series.get(i).getDataFormatter().setFormatString(items.get(i).getDisplayFormat());
+            if (!chart.getConfiguration().isUseMultipliers())
+               formatter.setUseMultipliers(DciValue.MULTIPLIERS_NO);
+            labels[i] = formatter.format(series.get(i).getCurrentValueAsString(), DateFormatFactory.getTimeFormatter());
+            Point ext = gc.textExtent(labels[i]);
+            markSize.x = Math.max(markSize.x, ext.x);
+            markSize.y = Math.max(markSize.y, ext.y);
+         }
+         else
+         {
+            labels[i] = Integer.toString(pct) + "%";
+         }
+      }
+
+      Point size = getSize();
+      if ((size.x < MARGIN_WIDTH * 2 + MARKS_OFFSET * 2 - markSize.x * 2) || (size.y < MARGIN_HEIGHT * 2 + MARKS_OFFSET * 2 - markSize.y * 2))
          return;
 
       double[] angularSize = new double[series.size()];
@@ -215,8 +244,7 @@ public class PieChart extends GenericComparisonChart
          int sectorSize = (i == values.length - 1) ? 360 - startAngle : (int)Math.round(angularSize[i]);
          gc.fillArc(x, y, boxSize, boxSize, startAngle, sectorSize);
 
-         int pct = (int)(values[i] / total * 100.0);
-         if (drawMarks && (pct > 0))
+         if (drawMarks && (labels[i] != null))
          {
             int centerAngle = startAngle + sectorSize / 2;
             Point l1 = positionOnArc(centerX, centerY, boxSize / 2 + MARKS_OFFSET, centerAngle);
@@ -225,9 +253,8 @@ public class PieChart extends GenericComparisonChart
 
             gc.setBackground(plotAreaColor);
             Point tc = positionOnArc(centerX, centerY, boxSize / 2 + MARKS_OFFSET + markSize.y, centerAngle);
-            String mark = Integer.toString(pct) + "%";
-            Point ext = gc.textExtent(mark);
-            gc.drawText(mark, tc.x - ext.x / 2, tc.y - ext.y / 2);
+            Point ext = gc.textExtent(labels[i]);
+            gc.drawText(labels[i], tc.x - ext.x / 2, tc.y - ext.y / 2);
          }
 
          startAngle += sectorSize;

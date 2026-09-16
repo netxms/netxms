@@ -69,6 +69,7 @@ public class AbstractChart extends DashboardElementPropertyPage
    private Button checkShowPercentInLegend;
    private Button checkDoughnutRendering;
    private Button checkShowTotal;
+   private Button checkShowValuesInLabels;
    private Button checkLogScale;
    private Button checkUseMultipliers;
    private Button checkStacked;
@@ -150,8 +151,9 @@ public class AbstractChart extends DashboardElementPropertyPage
       optionsGroup.setText(i18n.tr("Options"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.TOP;
 		gd.grabExcessHorizontalSpace = true;
-		gd.verticalSpan = (config instanceof LineChartConfig) ? 3 : 2;
+      gd.verticalSpan = 3;
 		optionsGroup.setLayoutData(gd);
 		GridLayout optionsLayout = new GridLayout();
 		optionsGroup.setLayout(optionsLayout);
@@ -270,8 +272,16 @@ public class AbstractChart extends DashboardElementPropertyPage
          gd.grabExcessHorizontalSpace = true;
          checkShowTotal.setLayoutData(gd);
 
+         checkShowValuesInLabels = new Button(optionsGroup, SWT.CHECK);
+         checkShowValuesInLabels.setText(i18n.tr("Show &values instead of percentages"));
+         checkShowValuesInLabels.setSelection((config instanceof PieChartConfig) ? ((PieChartConfig)config).isShowValuesInLabels() : ((ScriptedPieChartConfig)config).isShowValuesInLabels());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         checkShowValuesInLabels.setLayoutData(gd);
+
          labelFontSize = new LabeledSpinner(dialogArea, SWT.NONE);
-         labelFontSize.setLabel(i18n.tr("Percentage label font size (0 for autoscale)"));
+         labelFontSize.setLabel(i18n.tr("Sector label font size (0 for autoscale)"));
          labelFontSize.setRange(0, 72);
          labelFontSize.setSelection((config instanceof PieChartConfig) ? ((PieChartConfig)config).getLabelFontSize() : ((ScriptedPieChartConfig)config).getLabelFontSize());
          gd = new GridData();
@@ -432,12 +442,14 @@ public class AbstractChart extends DashboardElementPropertyPage
       {
          ((PieChartConfig)config).setDoughnutRendering(checkDoughnutRendering.getSelection());
          ((PieChartConfig)config).setShowTotal(checkShowTotal.getSelection());
+         ((PieChartConfig)config).setShowValuesInLabels(checkShowValuesInLabels.getSelection());
          ((PieChartConfig)config).setLabelFontSize(labelFontSize.getSelection());
       }
       else if (config instanceof ScriptedPieChartConfig)
       {
          ((ScriptedPieChartConfig)config).setDoughnutRendering(checkDoughnutRendering.getSelection());
          ((ScriptedPieChartConfig)config).setShowTotal(checkShowTotal.getSelection());
+         ((ScriptedPieChartConfig)config).setShowValuesInLabels(checkShowValuesInLabels.getSelection());
          ((ScriptedPieChartConfig)config).setLabelFontSize(labelFontSize.getSelection());
       }
       else

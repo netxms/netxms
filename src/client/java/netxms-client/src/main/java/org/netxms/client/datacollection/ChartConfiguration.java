@@ -108,6 +108,9 @@ public class ChartConfiguration
    protected boolean showTotal = false;
 
    @Element(required = false)
+   protected boolean showValuesInLabels = false;
+
+   @Element(required = false)
    protected boolean area = false;
 
    @Element(required = false)
@@ -251,6 +254,7 @@ public class ChartConfiguration
       show95thPercentile = src.show95thPercentile;
       doughnutRendering = src.doughnutRendering;
       showTotal = src.showTotal;
+      showValuesInLabels = src.showValuesInLabels;
       area = src.area;
       lineWidth = src.lineWidth;
       autoScale = src.autoScale;
@@ -608,6 +612,26 @@ public class ChartConfiguration
    public void setShowTotal(boolean showTotal)
    {
       this.showTotal = showTotal;
+   }
+
+   /**
+    * Check if pie chart sector labels should show actual values instead of percentages.
+    *
+    * @return true if sector labels should show actual values instead of percentages
+    */
+   public boolean isShowValuesInLabels()
+   {
+      return showValuesInLabels;
+   }
+
+   /**
+    * Set if pie chart sector labels should show actual values instead of percentages.
+    *
+    * @param showValuesInLabels true to show actual values in sector labels, false to show percentages
+    */
+   public void setShowValuesInLabels(boolean showValuesInLabels)
+   {
+      this.showValuesInLabels = showValuesInLabels;
    }
 
    /**

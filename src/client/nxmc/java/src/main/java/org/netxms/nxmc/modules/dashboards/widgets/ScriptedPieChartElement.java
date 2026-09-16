@@ -73,6 +73,7 @@ public class ScriptedPieChartElement extends ScriptedChartElement
       chartConfig.setTranslucent(elementConfig.isTranslucent());
       chartConfig.setDoughnutRendering(elementConfig.isDoughnutRendering());
       chartConfig.setShowTotal(elementConfig.isShowTotal());
+      chartConfig.setShowValuesInLabels(elementConfig.isShowValuesInLabels());
       chartConfig.setUseMultipliers(elementConfig.isUseMultipliers());
       chartConfig.setLabelFontSize(elementConfig.getLabelFontSize());
 
