@@ -32,6 +32,7 @@ import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
@@ -53,6 +54,7 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.PortSelectionListener;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorCache;
+import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -76,11 +78,6 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
                                                 //  2 4 6 8
                                                 //  1 3 5 7
    
-	private static final int HORIZONTAL_MARGIN = 20;
-	private static final int VERTICAL_MARGIN = 10;
-	private static final int PORT_WIDTH = 44;
-	private static final int PORT_HEIGHT = 30;
-
 	public static final int DISPLAY_MODE_NONE = 0;
    public static final int DISPLAY_MODE_STATE = 1;
    public static final int DISPLAY_MODE_STATUS = 2;
@@ -91,6 +88,10 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	private String slotName;
 	private Point nameSize;
 	private int displayMode = DISPLAY_MODE_NONE;
+   private int scale = 100;
+   private int portWidth = PortCalculator.DEFAULT_PORT_WIDTH;
+   private int portHeight = PortCalculator.DEFAULT_PORT_HEIGHT;
+   private Font labelFont = null;
 	private PortInfo selection = null;
 	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
 	private ColorCache colors;
@@ -132,7 +133,41 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
    public void dispose()
    {
       removePaintListener(this);
+      if (labelFont != null)
+         labelFont.dispose();
       super.dispose();
+   }
+
+   /**
+    * Set port size scale. Port boxes, spacing between them, and port number font are scaled proportionally.
+    *
+    * @param scale scale in percents (100 = default size)
+    */
+   public void setScale(int scale)
+   {
+      this.scale = scale;
+      portWidth = PortCalculator.scaled(PortCalculator.DEFAULT_PORT_WIDTH, scale);
+      portHeight = PortCalculator.scaled(PortCalculator.DEFAULT_PORT_HEIGHT, scale);
+
+      if (labelFont != null)
+      {
+         labelFont.dispose();
+         labelFont = null;
+      }
+      int baseHeight = getFont().getFontData()[0].getHeight();
+      int adjustment = Math.max(baseHeight * scale / 100, 4) - baseHeight;
+      if (adjustment != 0)
+         labelFont = FontTools.createAdjustedFont(getFont(), adjustment);
+   }
+
+   /**
+    * Get port size scale.
+    *
+    * @return scale in percents
+    */
+   public int getScale()
+   {
+      return scale;
    }
 
    /**
@@ -151,7 +186,9 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-		e.gc.drawText(slotName, HORIZONTAL_MARGIN, (getSize().y - nameSize.y) / 2);
+		e.gc.drawText(slotName, PortCalculator.HORIZONTAL_MARGIN, (getSize().y - nameSize.y) / 2);
+      if (labelFont != null)
+         e.gc.setFont(labelFont);
 
       int pic = 0;
       Point pos = null;
@@ -162,7 +199,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
          {
             pic = p.getPIC();
             if (pos != null)
-               portCalculator = createPortCalculator(pos.x + PORT_WIDTH);
+               portCalculator = createPortCalculator(pos.x + portWidth);
          }
          pos = portCalculator.calculateNextPos();
          drawPort(p, pos, e.gc);
@@ -180,16 +217,16 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
       switch(numberingScheme)
       {
          case NDD_PN_DU_LR:
-            return new PortCalculatorDownUpLeftRight(baseX, rowCount);
+            return new PortCalculatorDownUpLeftRight(baseX, rowCount, scale);
          case NDD_PN_LR_UD:
-            return new PortCalculatorLeftRightUpDown(baseX, ports.size(), rowCount);
+            return new PortCalculatorLeftRightUpDown(baseX, ports.size(), rowCount, scale);
          case NDD_PN_LR_DU:
-            return new PortCalculatorLeftRightDownUp(baseX, ports.size(), rowCount);
+            return new PortCalculatorLeftRightDownUp(baseX, ports.size(), rowCount, scale);
          case NDD_PN_CUSTOM:
          case NDD_PN_UNKNOWN:
          case NDD_PN_UD_LR:
          default:
-            return new PortCalculatorUpDownLeftRight(baseX, rowCount);
+            return new PortCalculatorUpDownLeftRight(baseX, rowCount, scale);
       }
    }
 
@@ -203,7 +240,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	private void drawPort(PortInfo p, Point point, GC gc)
 	{
 		final String label = Integer.toString(p.getPort());
-		Rectangle rect = new Rectangle(point.x, point.y, PORT_WIDTH, PORT_HEIGHT);
+		Rectangle rect = new Rectangle(point.x, point.y, portWidth, portHeight);
 
 		finder.addPortLocation(rect, p);
 
@@ -271,7 +308,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 		}
 
 		Point ext = gc.textExtent(label);
-      gc.drawText(label, point.x + (PORT_WIDTH - ext.x) / 2, point.y + (PORT_HEIGHT - ext.y) / 2, true);
+      gc.drawText(label, point.x + (portWidth - ext.x) / 2, point.y + (portHeight - ext.y) / 2, true);
 	}
 
    /**
@@ -291,7 +328,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
          {
             pic = p.getPIC();
             if (pos != null)
-               portCalculator = createPortCalculator(pos.x + PORT_WIDTH);
+               portCalculator = createPortCalculator(pos.x + portWidth);
          }
          pos = portCalculator.calculateNextPos();
          if (pos.x > maxX)
@@ -300,7 +337,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
             maxY = pos.y;
       }
 
-      return new Point(maxX + PORT_WIDTH + HORIZONTAL_MARGIN, maxY + PORT_HEIGHT + VERTICAL_MARGIN);
+      return new Point(maxX + portWidth + PortCalculator.HORIZONTAL_MARGIN, maxY + portHeight + PortCalculator.VERTICAL_MARGIN);
 	}
 
 	/**
@@ -487,7 +524,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	   {
 	      for(Rectangle r : sortedRectangles)
 	      {
-	         if ((x >= r.x) && x < (r.x + PORT_WIDTH))
+	         if ((x >= r.x) && x < (r.x + r.width))
 	         {
                if (r.contains(x, y))
                   return portLocations.get(r);
