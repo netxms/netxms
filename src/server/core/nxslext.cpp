@@ -2978,6 +2978,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("NodeCapability::LocalManagement", NC_IS_LOCAL_MGMT);
       NXSL_ENV_CONSTANT("NodeCapability::LocalVNC", NC_IS_LOCAL_VNC);
       NXSL_ENV_CONSTANT("NodeCapability::ModbusTCP", NC_IS_MODBUS_TCP);
+      NXSL_ENV_CONSTANT("NodeCapability::NETCONF", NC_IS_NETCONF);
       NXSL_ENV_CONSTANT("NodeCapability::NDP", NC_IS_NDP);
       NXSL_ENV_CONSTANT("NodeCapability::NewPolicyTypes", NC_IS_NEW_POLICY_TYPES);
       NXSL_ENV_CONSTANT("NodeCapability::OSPF", NC_IS_OSPF);
