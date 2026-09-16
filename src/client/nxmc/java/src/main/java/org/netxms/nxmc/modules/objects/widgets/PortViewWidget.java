@@ -57,6 +57,7 @@ public class PortViewWidget extends DashboardComposite
 	private Label header = null;
 	private Font headerFont = null;
 	private int portDisplayMode = SlotViewWidget.DISPLAY_MODE_STATE;
+   private int portScale = 100;
 	private boolean headerVisible = false;
 	private Set<PortSelectionListener> selectionListeners = new HashSet<PortSelectionListener>();
 	private PortSelectionListener listener;
@@ -161,6 +162,7 @@ public class PortViewWidget extends DashboardComposite
 			{
 				sv = new SlotViewWidget(this, SWT.NONE, String.format("%d/%d", iface.getChassis(), iface.getModule()), ((Node)object).getPortRowCount(), ((Node)object).getPortNumberingScheme());
 				sv.setPortDisplayMode(portDisplayMode);
+            sv.setScale(portScale);
 				slots.put(hash, sv);
 			}
 
@@ -211,6 +213,26 @@ public class PortViewWidget extends DashboardComposite
 		this.portDisplayMode = portDisplayMode;
 	}
 	
+   /**
+    * Get port size scale.
+    *
+    * @return scale in percents
+    */
+   public int getPortScale()
+   {
+      return portScale;
+   }
+
+   /**
+    * Set port size scale. Takes effect on next refresh.
+    *
+    * @param portScale scale in percents (100 = default size)
+    */
+   public void setPortScale(int portScale)
+   {
+      this.portScale = portScale;
+   }
+
 	/**
     * @return the headerVisible
     */

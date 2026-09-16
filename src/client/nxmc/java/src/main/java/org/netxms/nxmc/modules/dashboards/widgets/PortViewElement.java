@@ -345,6 +345,7 @@ public class PortViewElement extends ElementWidget
 	{
       PortViewWidget d = new PortViewWidget(content, SWT.NONE);
       d.setHeaderVisible(true);
+      d.setPortScale(config.getPortScale());
       d.setNodeId(n.getObjectId());
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;

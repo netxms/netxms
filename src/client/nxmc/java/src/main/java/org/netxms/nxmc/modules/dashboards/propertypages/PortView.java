@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,15 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.PortViewConfig;
 import org.netxms.nxmc.modules.dashboards.widgets.TitleConfigurator;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -41,6 +44,7 @@ public class PortView extends DashboardElementPropertyPage
 	private PortViewConfig config;
    private TitleConfigurator title;
 	private ObjectSelector objectSelector;
+   private Spinner portScale;
 
    /**
     * Create page.
@@ -107,6 +111,17 @@ public class PortView extends DashboardElementPropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		objectSelector.setLayoutData(gd);
 
+      Label label = new Label(dialogArea, SWT.NONE);
+      label.setText(i18n.tr("Port size (%)"));
+      gd = new GridData();
+      gd.verticalIndent = WidgetHelper.OUTER_SPACING;
+      label.setLayoutData(gd);
+
+      portScale = new Spinner(dialogArea, SWT.BORDER);
+      portScale.setMinimum(25);
+      portScale.setMaximum(400);
+      portScale.setSelection(config.getPortScale());
+
 		return dialogArea;
 	}
 
@@ -118,6 +133,7 @@ public class PortView extends DashboardElementPropertyPage
 	{
       title.updateConfiguration(config);
 		config.setRootObjectId(objectSelector.getObjectId());
+      config.setPortScale(portScale.getSelection());
 		return true;
 	}
 }

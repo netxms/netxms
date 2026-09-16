@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2026 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,10 @@ import org.simpleframework.xml.Root;
 public class PortViewConfig extends DashboardElementConfig
 {
    @Element(required=false)
-   long rootObjectId = 0;
+   private long rootObjectId = 0;
+
+   @Element(required=false)
+   private int portScale = 100; // in percents
 
    /**
     * @see org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig#getObjects()
@@ -70,5 +73,21 @@ public class PortViewConfig extends DashboardElementConfig
    public void setRootObjectId(long rootObjectId)
    {
       this.rootObjectId = rootObjectId;
+   }
+
+   /**
+    * @return port size scale in percents
+    */
+   public int getPortScale()
+   {
+      return portScale;
+   }
+
+   /**
+    * @param portScale port size scale in percents
+    */
+   public void setPortScale(int portScale)
+   {
+      this.portScale = portScale;
    }
 }

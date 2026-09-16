@@ -39,11 +39,13 @@ public class PortCalculatorLeftRightDownUp extends PortCalculator
     * @param baseX
     * @param portCount
     * @param rowCount
+    * @param scale port size scale in percents
     */
-   public PortCalculatorLeftRightDownUp(int baseX, int portCount, int rowCount)
+   public PortCalculatorLeftRightDownUp(int baseX, int portCount, int rowCount, int scale)
    {
-      this.x = this.baseX = HORIZONTAL_MARGIN + HORIZONTAL_SPACING + baseX;
-      this.y = VERTICAL_MARGIN + (rowCount - 1) * (VERTICAL_SPACING + PORT_HEIGHT);
+      super(scale);
+      this.x = this.baseX = HORIZONTAL_MARGIN + horizontalSpacing + baseX;
+      this.y = VERTICAL_MARGIN + (rowCount - 1) * (verticalSpacing + portHeight);
       this.portCount = portCount;
       this.rowCount = rowCount;
    }
@@ -65,12 +67,12 @@ public class PortCalculatorLeftRightDownUp extends PortCalculator
       if (col == colCount && y > VERTICAL_MARGIN)
       {
          col = 0;
-         y -= VERTICAL_SPACING + PORT_HEIGHT;
+         y -= verticalSpacing + portHeight;
          x = baseX;
       }
       else
       {
-         x += HORIZONTAL_SPACING + PORT_WIDTH;
+         x += horizontalSpacing + portWidth;
       }
 
       col++;
