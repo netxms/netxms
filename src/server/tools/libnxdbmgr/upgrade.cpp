@@ -106,6 +106,7 @@ bool LIBNXDBMGR_EXPORTABLE CreateTable(const TCHAR *pszQuery)
       query.replace(L"$SQL:TEXT", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
       query.replace(L"$SQL:TXT4K", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
       query.replace(L"$SQL:INT64", g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+      query.replace(L"$SQL:DOUBLE", g_sqlTypes[g_dbSyntax][SQL_TYPE_DOUBLE]);
    }
    if (g_dbSyntax == DB_SYNTAX_MYSQL)
       query.append(g_tableSuffix);

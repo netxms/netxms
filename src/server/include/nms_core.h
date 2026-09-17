@@ -107,6 +107,7 @@ void SaveCurrentFreeId();
 #include <nddrv.h>
 #include <nxcore_smclp.h>
 #include <nxproc.h>
+#include <nxkpi.h>
 
 /**
  * Server includes
@@ -1392,6 +1393,8 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId,
          uint32_t maxRows, HistoricalDataType historicalDataType, const TCHAR *condition);
 DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32_t nodeId, DCObjectStorageClass storageClass,
          int64_t bucketSizeMs, const TCHAR *condition);
+uint32_t NXCORE_EXPORTABLE RegisterComputationMethod(const MethodDescriptor& method);
+bool NXCORE_EXPORTABLE ReadAttributedSamples(const DCItem& dci, Timestamp from, Timestamp to, std::vector<AttributedSample>& samples);
 DB_STATEMENT NXCORE_EXPORTABLE PrepareTieredDataSelect(DB_HANDLE hdb, uint32_t nodeId, DciTier tier,
          DciAggregationFunction function, uint32_t maxRows, const wchar_t *condition);
 DciTier NXCORE_EXPORTABLE ResolveDciTier(DciTier requested, const DCObject& dci, int dciType, int64_t timeFrom, int64_t timeTo,
@@ -1454,7 +1457,9 @@ void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData);
 
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
-void QueueIDataInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass);
+void QueueIDataInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue,
+      DCObjectStorageClass storageClass, const SampleAttributes *attributes);
+void QueueSampleAttributesInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, const SampleAttributes& attributes);  // Intentionally not exported - DCItem::processNewValue is the only producer
 void QueueRawDciDataUpdate(Timestamp timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, Timestamp cacheTimestamp, bool anomalyDetected);
 void QueueRawDciDataDelete(uint32_t dciId);
 int64_t GetIDataWriterQueueSize();

@@ -1084,6 +1084,8 @@ void DCItem::deleteFromDatabase()
    _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM thresholds WHERE item_id=%u"), m_id);
    QueueSQLRequest(query);
    QueueRawDciDataDelete(m_id);
+   nx_swprintf(query, 256, L"DELETE FROM dci_sample_attributes WHERE item_id=%u", m_id);
+   QueueSQLRequest(query);
 
    auto owner = m_owner.lock();
    if ((owner != nullptr) && owner->isDataCollectionTarget() && (g_dbSyntax != DB_SYNTAX_TSDB))
@@ -1200,14 +1202,67 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
 }
 
 /**
+ * Process new value with sample attributes. This is the only way to write sample attributes, and it is
+ * accepted only for DCIs with origin "computed". Past data points are always allowed. Sample with
+ * quality MISSING has no value: only attributes are written, so it is a gap for consumers
+ * that are not aware of sample attributes.
+ *
+ * @return true if sample was accepted
+ */
+bool DCItem::processNewValue(Timestamp timestamp, double value, const SampleAttributes& attributes)
+{
+   if (m_source != DS_COMPUTED)
+      return false;
+
+   if (attributes.bounded && (attributes.quality != SampleQuality::MISSING) && (!std::isfinite(attributes.lower) || !std::isfinite(attributes.upper)))
+      return false;
+
+   if (!std::isfinite(attributes.completeness))
+      return false;
+
+   if (attributes.quality == SampleQuality::MISSING)
+   {
+      lock();
+      bool store = (m_retentionType != DC_RETENTION_NONE);
+      unlock();
+      if (store)
+         QueueSampleAttributesInsert(timestamp, m_ownerId, m_id, getStorageClass(), attributes);
+      return true;
+   }
+
+   if (!std::isfinite(value))
+      return false;
+
+   wchar_t buffer[64];
+   nx_swprintf(buffer, 64, L"%.15g", value);
+
+   bool updateStatus;
+   DataCollectionError error = processNewValue(timestamp, buffer, &updateStatus, true, &attributes);
+   if (error != DCE_SUCCESS)
+   {
+      processNewError(error, Timestamp::now());
+      return false;
+   }
+
+   if (updateStatus)
+   {
+      auto owner = m_owner.lock();
+      if (owner != nullptr)
+         owner->calculateCompoundStatus(false);
+   }
+   return true;
+}
+
+/**
  * Process new collected value. Any returned value other than DCE_SUCCESS will be converted
  * into data collection error with that error as a reason code.
  * If allowPastDataPoints is false, data points with timestamp older than last stored one
- * will be rejected.
+ * will be rejected. Sample attributes (can be nullptr) are written only if value itself
+ * is written into database.
  *
  * @return DCE_SUCCESS on success or reason code on failure
  */
-DataCollectionError DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints)
+DataCollectionError DCItem::processNewValue(Timestamp timestamp, const wchar_t *originalValue, bool *updateStatus, bool allowPastDataPoints, const SampleAttributes *attributes)
 {
    ItemValue rawValue, *pValue;
 
@@ -1311,7 +1366,7 @@ DataCollectionError DCItem::processNewValue(Timestamp timestamp, const wchar_t *
       // Save transformed value to database
       if (m_retentionType != DC_RETENTION_NONE)
       {
-         QueueIDataInsert(timestamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass());
+         QueueIDataInsert(timestamp, owner->getId(), m_id, originalValue, pValue->getString(), getStorageClass(), attributes);
          storedInDb = true;
 
          // If aggregation is active and this sample pre-dates our rollup watermark,
@@ -2906,6 +2961,11 @@ bool DCItem::deleteAllData()
          success = DBQuery(hdb, query);
       }
    }
+   if (success)
+   {
+      nx_swprintf(query, 256, L"DELETE FROM dci_sample_attributes WHERE item_id=%u", m_id);
+      success = DBQuery(hdb, query);
+   }
 	clearCache();
 	updateCacheSizeInternal(true);
    unlock();
@@ -2942,6 +3002,11 @@ bool DCItem::deleteEntry(Timestamp timestamp)
    unlock();
 
    bool success = DBQuery(hdb, query);
+   if (success)
+   {
+      nx_swprintf(query, 256, L"DELETE FROM dci_sample_attributes WHERE item_id=%u AND sample_timestamp=" INT64_FMT, m_id, timestamp.asMilliseconds());
+      success = DBQuery(hdb, query);
+   }
    DBConnectionPoolReleaseConnection(hdb);
 
    if (!success)

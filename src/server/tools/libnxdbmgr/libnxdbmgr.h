@@ -33,7 +33,7 @@
 #include <nxdbmgr_tools.h>
 
 extern bool g_queryTrace;
-extern const wchar_t *g_sqlTypes[8][4];
+extern const wchar_t *g_sqlTypes[8][5];
 extern const wchar_t *g_tableSuffix;
 
 #endif   /* _libnxdbmgr_h_ */

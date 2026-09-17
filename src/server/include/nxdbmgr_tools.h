@@ -40,6 +40,7 @@
 #define SQL_TYPE_TEXT4K    1
 #define SQL_TYPE_INT64     2
 #define SQL_TYPE_BLOB      3
+#define SQL_TYPE_DOUBLE    4
 
 /**
  * Pre-defined GUID mapping for GenerateGUID

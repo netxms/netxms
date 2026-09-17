@@ -15,6 +15,7 @@
 #define SQL_TEXT_TEXT   'varchar(max)'
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
+#define SQL_DOUBLE      float
 #define TABLE_TYPE
 #define CRLF            char(13)+char(10)
 #define CONCAT          +
@@ -28,6 +29,7 @@
 #define SQL_TEXT_TEXT   'text'
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
+#define SQL_DOUBLE      double precision
 #define TABLE_TYPE
 #define CRLF            chr(13)||chr(10)
 #define CONCAT          ||
@@ -41,6 +43,7 @@
 #define SQL_TEXT_TEXT   'clob'
 #define SQL_INT64       number(20)
 #define SQL_INT64_TEXT  'number(20)'
+#define SQL_DOUBLE      binary_double
 #define TABLE_TYPE
 #define CRLF            chr(13)||chr(10)
 #define CONCAT          ||
@@ -55,6 +58,7 @@
 #define SQL_TEXT_TEXT   'varchar'
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
+#define SQL_DOUBLE      double
 #define TABLE_TYPE
 #define CRLF            char(13,10)
 #define CONCAT          ||
@@ -68,6 +72,7 @@
 #define SQL_TEXT_TEXT   'longtext'
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
+#define SQL_DOUBLE      double
 #define TABLE_TYPE
 #define CRLF            '\r\n'
 #define CONCAT
@@ -81,6 +86,7 @@
 #define SQL_TEXT_TEXT   'LONG VARCHAR'
 #define SQL_INT64       BIGINT
 #define SQL_INT64_TEXT  'BIGINT'
+#define SQL_DOUBLE      DOUBLE
 #define TABLE_TYPE
 #define CRLF            chr(13)||chr(10)
 #define CONCAT          ||
@@ -94,6 +100,7 @@
 #define SQL_TEXT_TEXT   'text'
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'
+#define SQL_DOUBLE      double precision
 #define TABLE_TYPE
 #define CRLF            chr(13)||chr(10)
 #define CONCAT          ||

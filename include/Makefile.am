@@ -40,6 +40,7 @@ include_HEADERS = \
 	nxevent.h \
 	nxjava.h \
 	nxjson.h \
+	nxkpi.h \
 	nxlibcurl.h \
 	nxlog.h \
 	nxmarkdown.h \

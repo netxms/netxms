@@ -127,6 +127,8 @@ job.manager	Job manager
 
 housekeeper	Housekeeper messages
 
+kpi		KPI engine (computation methods, sample attributes)
+
 leef
 
 linux		Linux platform subagent messages

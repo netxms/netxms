@@ -82,6 +82,10 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM dct_node_map WHERE node_id=?"));
 
+   // Should be done while DCI configuration still exist in database
+   if (success)
+      success = executeQueryOnObject(hdb, L"DELETE FROM dci_sample_attributes WHERE item_id IN (SELECT item_id FROM items WHERE node_id=?)");
+
    // TSDB: to avoid heavy query on idata tables let collected data expire instead of deleting it immediately
    if (success && ((g_dbSyntax != DB_SYNTAX_TSDB) || !(g_flags & AF_SINGLE_TABLE_PERF_DATA)))
    {

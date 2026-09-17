@@ -44,6 +44,7 @@ void TestAuthenticationTokens();
 void TestCustomAttributes();
 void TestNXSLHttp();
 void TestObjectHierarchy();
+void TestSampleAttributes();
 
 /**
  * Scratch work directory holding the configuration file, database, data directory and log
@@ -258,6 +259,7 @@ int main(int argc, char *argv[])
    TestCustomAttributes();
    TestNXSLHttp();
    TestObjectHierarchy();
+   TestSampleAttributes();
 
    SetTestFailureHook(nullptr);
 

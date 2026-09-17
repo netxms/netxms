@@ -1602,7 +1602,7 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
             if (!_tcsncmp(table, _T("idata"), 5) || !_tcsncmp(table, _T("tdata"), 5))
                continue;
 
-            if (((g_skipDataMigration || g_skipDataSchemaMigration) && !_tcscmp(table, _T("raw_dci_values"))) ||
+            if (((g_skipDataMigration || g_skipDataSchemaMigration) && (!_tcscmp(table, _T("raw_dci_values")) || !_tcscmp(table, _T("dci_sample_attributes")))) ||
                 excludedTables.contains(table) ||
                 (!includedTables.isEmpty() && !includedTables.contains(table)))
             {
@@ -1636,7 +1636,7 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
             if (!_tcsncmp(table, _T("idata"), 5) || !_tcsncmp(table, _T("tdata"), 5))
                continue;
 
-            if (((g_skipDataMigration || g_skipDataSchemaMigration) && !_tcscmp(table, _T("raw_dci_values"))) ||
+            if (((g_skipDataMigration || g_skipDataSchemaMigration) && (!_tcscmp(table, _T("raw_dci_values")) || !_tcscmp(table, _T("dci_sample_attributes")))) ||
                 excludedTables.contains(table) ||
                 (!includedTables.isEmpty() && !includedTables.contains(table)))
             {

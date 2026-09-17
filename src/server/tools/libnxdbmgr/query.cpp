@@ -87,16 +87,16 @@ bool LIBNXDBMGR_EXPORTABLE SQLExecute(DB_STATEMENT hStmt)
 /**
  * Non-standard SQL data type names
  */
-const wchar_t *g_sqlTypes[8][4] =
+const wchar_t *g_sqlTypes[8][5] =
 {
-   { L"longtext",     L"text",           L"bigint",     L"longblob"       }, // MySQL
-   { L"text",         L"varchar(4000)",  L"bigint",     L"bytea"          }, // PostgreSQL
-   { L"varchar(max)", L"varchar(4000)",  L"bigint",     L"varbinary(max)" }, // Microsoft SQL
-   { L"clob",         L"varchar(4000)",  L"number(20)", L"blob"           }, // Oracle
-   { L"varchar",      L"varchar(4000)",  L"bigint",     L"blob"           }, // SQLite
-   { L"long varchar", L"varchar(4000)",  L"bigint",     L"blob"           }, // DB/2
-   { L"text",         L"lvarchar(4000)", L"bigint",     L"blob"           }, // Informix
-   { L"text",         L"varchar(4000)",  L"bigint",     L"bytea"          }  // TimescaleDB
+   { L"longtext",     L"text",           L"bigint",     L"longblob",       L"double"           }, // MySQL
+   { L"text",         L"varchar(4000)",  L"bigint",     L"bytea",          L"double precision" }, // PostgreSQL
+   { L"varchar(max)", L"varchar(4000)",  L"bigint",     L"varbinary(max)", L"float"            }, // Microsoft SQL
+   { L"clob",         L"varchar(4000)",  L"number(20)", L"blob",           L"binary_double"    }, // Oracle
+   { L"varchar",      L"varchar(4000)",  L"bigint",     L"blob",           L"double"           }, // SQLite
+   { L"long varchar", L"varchar(4000)",  L"bigint",     L"blob",           L"double"           }, // DB/2
+   { L"text",         L"lvarchar(4000)", L"bigint",     L"blob",           L"float"            }, // Informix
+   { L"text",         L"varchar(4000)",  L"bigint",     L"bytea",          L"double precision" }  // TimescaleDB
 };
 
 /**
@@ -139,6 +139,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const wchar_t *query, bool showOutput)
       realQuery.replace(L"$SQL:TEXT", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT]);
       realQuery.replace(L"$SQL:TXT4K", g_sqlTypes[g_dbSyntax][SQL_TYPE_TEXT4K]);
       realQuery.replace(L"$SQL:INT64", g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
+      realQuery.replace(L"$SQL:DOUBLE", g_sqlTypes[g_dbSyntax][SQL_TYPE_DOUBLE]);
    }
 
    if (g_queryTrace)

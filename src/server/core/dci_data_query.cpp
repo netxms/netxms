@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <cmath>
 
 #define SELECTION_COLUMNS (historicalDataType != HDT_RAW) ? tablePrefix : _T(""), (historicalDataType == HDT_RAW_AND_PROCESSED) ? _T("_value,raw_value") : ((historicalDataType == HDT_PROCESSED) || (historicalDataType == HDT_FULL_TABLE)) ?  _T("_value") : _T("raw_value")
 
@@ -101,6 +102,112 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareDataSelect(DB_HANDLE hdb, uint32_t nodeId,
       }
    }
    return DBPrepare(hdb, query);
+}
+
+/**
+ * Read collected DCI data for given time range (inclusive) together with sample attributes. Samples are returned
+ * ordered by timestamp, newest first. Samples without stored attributes get default ones; samples with
+ * quality MISSING have no collected value and are returned with value set to NaN.
+ */
+bool NXCORE_EXPORTABLE ReadAttributedSamples(const DCItem& dci, Timestamp from, Timestamp to, std::vector<AttributedSample>& samples)
+{
+   samples.clear();
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   // Sample attributes, newest first
+   std::vector<AttributedSample> attributes;
+   bool success = false;
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+      L"SELECT sample_timestamp,quality,CASE WHEN lower_bound IS NULL THEN 0 ELSE 1 END,lower_bound,upper_bound,completeness,method_id "
+      L"FROM dci_sample_attributes WHERE item_id=? AND sample_timestamp>=? AND sample_timestamp<=? ORDER BY sample_timestamp DESC");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dci.getId());
+      DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, from);
+      DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, to);
+      DB_UNBUFFERED_RESULT hResult = DBSelectPreparedUnbuffered(hStmt);
+      if (hResult != nullptr)
+      {
+         while(DBFetch(hResult))
+         {
+            AttributedSample s;
+            s.timestamp = DBGetFieldTimestamp(hResult, 0);
+            s.value = NAN;
+            s.attributes.quality = static_cast<SampleQuality>(DBGetFieldLong(hResult, 1));
+            s.attributes.bounded = (DBGetFieldLong(hResult, 2) != 0);
+            if (s.attributes.bounded)
+            {
+               s.attributes.lower = DBGetFieldDouble(hResult, 3);
+               s.attributes.upper = DBGetFieldDouble(hResult, 4);
+            }
+            s.attributes.completeness = DBGetFieldDouble(hResult, 5);
+            s.attributes.methodId = DBGetFieldULong(hResult, 6);
+            attributes.push_back(s);
+         }
+         DBFreeResult(hResult);
+         success = true;
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   if (success)
+   {
+      success = false;
+      hStmt = PrepareDataSelect(hdb, dci.getOwnerId(), DCO_TYPE_ITEM, dci.getStorageClass(), 0x7FFFFFFF, HDT_PROCESSED,
+         ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA)) ?
+            L" AND idata_timestamp>=ms_to_timestamptz(?) AND idata_timestamp<=ms_to_timestamptz(?)" :
+            L" AND idata_timestamp>=? AND idata_timestamp<=?");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dci.getId());
+         DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, from);
+         DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, to);
+         DB_UNBUFFERED_RESULT hResult = DBSelectPreparedUnbuffered(hStmt);
+         if (hResult != nullptr)
+         {
+            // Merge values with attributes, both are ordered by timestamp, newest first
+            size_t ai = 0;
+            while(DBFetch(hResult))
+            {
+               AttributedSample s;
+               s.timestamp = DBGetFieldTimestamp(hResult, 0);
+               s.value = DBGetFieldDouble(hResult, 1);
+
+               // Attribute records newer than current value have no matching value
+               while((ai < attributes.size()) && (attributes[ai].timestamp > s.timestamp))
+               {
+                  if (attributes[ai].attributes.quality == SampleQuality::MISSING)
+                     samples.push_back(attributes[ai]);
+                  ai++;
+               }
+
+               if ((ai < attributes.size()) && (attributes[ai].timestamp == s.timestamp))
+               {
+                  s.attributes = attributes[ai].attributes;
+                  if (s.attributes.quality == SampleQuality::MISSING)
+                     s.value = NAN;
+                  ai++;
+               }
+               samples.push_back(s);
+            }
+            for(; ai < attributes.size(); ai++)
+            {
+               if (attributes[ai].attributes.quality == SampleQuality::MISSING)
+                  samples.push_back(attributes[ai]);
+            }
+            DBFreeResult(hResult);
+            success = true;
+         }
+         DBFreeStatement(hStmt);
+      }
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
+
+   if (!success)
+      samples.clear();
+   return success;
 }
 
 /**

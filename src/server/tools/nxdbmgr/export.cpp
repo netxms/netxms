@@ -641,7 +641,7 @@ void ExportDatabase(const char *file, const StringList& excludedTables, const St
       if (!wcsncmp(g_tables[i], L"idata", 5) ||
           !wcsncmp(g_tables[i], L"tdata", 5))
          continue;  // idata and tdata exported separately
-	   if (((g_skipDataMigration || g_skipDataSchemaMigration) && !wcscmp(table, L"raw_dci_values")) ||
+	   if (((g_skipDataMigration || g_skipDataSchemaMigration) && (!wcscmp(table, L"raw_dci_values") || !wcscmp(table, L"dci_sample_attributes"))) ||
 	       excludedTables.contains(table) ||
 	       (!includedTables.isEmpty() && !includedTables.contains(table)))
 	   {

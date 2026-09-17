@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <map>
 
 #define DEBUG_TAG _T("housekeeper")
 
@@ -267,6 +268,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
  */
 struct CutoffTimes
 {
+   time_t cutoffTimeDefault;   // Cutoff time for default storage class
    time_t cutoffTimeIData[static_cast<size_t>(DCObjectStorageClass::OTHER)];
    time_t cutoffTimeTData[static_cast<size_t>(DCObjectStorageClass::OTHER)];
 };
@@ -295,9 +297,9 @@ static EnumerationCallbackResult CalculateDciCutoffTimes(NetObj *object, CutoffT
 /**
  * Clean collected data in Timescale database
  */
-static void CleanTimescaleData(DB_HANDLE hdb)
+static void CleanTimescaleData(DB_HANDLE hdb, CutoffTimes *usedCutoffTimes)
 {
-   CutoffTimes cutoffTimes;
+   CutoffTimes& cutoffTimes = *usedCutoffTimes;
    memset(&cutoffTimes, 0, sizeof(cutoffTimes));
 
    g_idxAccessPointById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
@@ -319,6 +321,7 @@ static void CleanTimescaleData(DB_HANDLE hdb)
 
    // Always run on default storage class
    time_t defaultCutoffTime = time(nullptr) - DCObject::m_defaultRetentionTime * 86400;
+   cutoffTimes.cutoffTimeDefault = defaultCutoffTime;
    DropChunksForStorageClass(hdb, defaultCutoffTime, 'i', DCObjectStorageClass::DEFAULT);
    DropChunksForStorageClass(hdb, defaultCutoffTime, 't', DCObjectStorageClass::DEFAULT);
 
@@ -328,6 +331,84 @@ static void CleanTimescaleData(DB_HANDLE hdb)
          DropChunksForStorageClass(hdb, cutoffTimes.cutoffTimeIData[c - 1], 'i', static_cast<DCObjectStorageClass>(c));
       if (cutoffTimes.cutoffTimeTData[c - 1] != 0)
          DropChunksForStorageClass(hdb, cutoffTimes.cutoffTimeTData[c - 1], 't', static_cast<DCObjectStorageClass>(c));
+   }
+}
+
+/**
+ * Delete sample attributes older than given cutoff time for given list of DCIs
+ */
+static void DeleteSampleAttributes(DB_HANDLE hdb, time_t cutoffTime, const StringBuffer& idList)
+{
+   StringBuffer query(L"DELETE FROM dci_sample_attributes WHERE sample_timestamp<");
+   query.append(static_cast<int64_t>(cutoffTime) * 1000);
+   query.append(L" AND item_id IN (");
+   query.append(idList);
+   query.append(L')');
+   nxlog_debug_tag(DEBUG_TAG, 6, L"Executing query \"%s\"", query.cstr());
+   DBQuery(hdb, query);
+}
+
+/**
+ * Clean sample attributes of collected DCI data. Attributes should not expire before sample itself, so cutoff time
+ * is DCI retention time, or cutoff time used for DCI's storage class if idata is cleared with drop_chunks()
+ * (storageClassCutoffTimes is not null).
+ */
+static void CleanSampleAttributes(DB_HANDLE hdb, const CutoffTimes *storageClassCutoffTimes)
+{
+   time_t now = time(nullptr);
+   std::map<time_t, StringBuffer> cleanupList;   // DCI ID list for each cutoff time
+   std::map<time_t, int> listSize;
+
+   unique_ptr<SharedObjectArray<NetObj>> targets = g_idxObjectById.getObjects([] (NetObj *object) -> bool { return object->isDataCollectionTarget(); });
+   for(int i = 0; (i < targets->size()) && !s_shutdown; i++)
+   {
+      // Only DCIs with origin "computed" can have sample attributes
+      SharedObjectArray<DCObject> items = static_cast<DataCollectionTarget*>(targets->get(i))->getDCObjectsByFilter(
+         [] (DCObject *o) -> bool
+         {
+            return (o->getType() == DCO_TYPE_ITEM) && (o->getDataSource() == DS_COMPUTED) && o->isDataStorageEnabled();
+         });
+      for(int j = 0; j < items.size(); j++)
+      {
+         DCObject *dci = items.get(j);
+
+         time_t cutoffTime;
+         if (storageClassCutoffTimes != nullptr)
+         {
+            DCObjectStorageClass sclass = dci->getStorageClass();
+            cutoffTime = (sclass == DCObjectStorageClass::DEFAULT) ? storageClassCutoffTimes->cutoffTimeDefault : storageClassCutoffTimes->cutoffTimeIData[static_cast<int>(sclass) - 1];
+            if (cutoffTime == 0)
+               continue;   // Should not happen, but cutoff time 0 means that no data was removed for that storage class
+         }
+         else
+         {
+            cutoffTime = now - static_cast<time_t>(dci->getEffectiveRetentionTime()) * 86400;
+         }
+
+         StringBuffer& idList = cleanupList[cutoffTime];
+         if (!idList.isEmpty())
+            idList.append(L',');
+         idList.append(dci->getId());
+
+         // Avoid too long ID lists
+         if (++listSize[cutoffTime] >= 500)
+         {
+            DeleteSampleAttributes(hdb, cutoffTime, idList);
+            idList.clear();
+            listSize[cutoffTime] = 0;
+            if (!ThrottleHousekeeper())
+               return;
+         }
+      }
+   }
+
+   for(auto it = cleanupList.begin(); (it != cleanupList.end()) && !s_shutdown; ++it)
+   {
+      if (it->second.isEmpty())
+         continue;
+      DeleteSampleAttributes(hdb, it->first, it->second);
+      if (!ThrottleHousekeeper())
+         return;
    }
 }
 
@@ -566,7 +647,11 @@ static void HouseKeeper()
          if ((g_dbSyntax == DB_SYNTAX_TSDB) && (g_flags & AF_SINGLE_TABLE_PERF_DATA))
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Using drop_chunks()"));
-            CleanTimescaleData(hdb);
+            CutoffTimes cutoffTimes;
+            CleanTimescaleData(hdb, &cutoffTimes);
+
+            nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing sample attributes of collected DCI data"));
+            CleanSampleAttributes(hdb, &cutoffTimes);
 
             // Process pending storage class migrations
             nxlog_debug_tag(DEBUG_TAG, 2, _T("Processing storage class migrations"));
@@ -598,6 +683,9 @@ static void HouseKeeper()
                static_cast<DataCollectionTarget*>(objects.get(i))->cleanDCIData(hdb);
                ThrottleHousekeeper();
             }
+
+            nxlog_debug_tag(DEBUG_TAG, 2, _T("Clearing sample attributes of collected DCI data"));
+            CleanSampleAttributes(hdb, nullptr);
          }
 
          // Prune expired DCI aggregate rows (non-TSDB only - TSDB uses chunk-drop retention)

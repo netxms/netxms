@@ -21,6 +21,7 @@
 **/
 
 #include "nxcore.h"
+#include <nxkpi.h>
 #include <uthash.h>
 
 #define DEBUG_TAG _T("db.writer")
@@ -44,6 +45,8 @@ struct DELAYED_IDATA_INSERT
    Timestamp timestamp;
    uint32_t nodeId;
    uint32_t dciId;
+   SampleAttributes *attributes; // Sample attributes (located in same memory block) or nullptr if sample has default attributes
+   bool attributesOnly;          // true if only sample attributes should be written (sample without value)
    TCHAR *transformedValue;
    TCHAR rawValue[2]; // Actual size determined by text part length
 };
@@ -225,29 +228,51 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 }
 
 /**
- * Queue INSERT request for idata_xxx table
+ * Create INSERT request for idata_xxx table. Sample attributes (if provided) are placed into same memory block after value strings.
  */
-void QueueIDataInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, DCObjectStorageClass storageClass)
+static DELAYED_IDATA_INSERT *CreateIDataInsertRequest(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, const SampleAttributes *attributes)
 {
-   if (s_queueMonitorDiscardFlag)
-      return;
-
    size_t rawValueLength = _tcslen(rawValue);
    size_t transformedValueLength = _tcslen(transformedValue);
-	auto rq = static_cast<DELAYED_IDATA_INSERT*>(MemAlloc(sizeof(DELAYED_IDATA_INSERT) + (rawValueLength + transformedValueLength) * sizeof(TCHAR)));
-	rq->timestamp = timestamp;
-	rq->nodeId = nodeId;
-	rq->dciId = dciId;
+   size_t size = sizeof(DELAYED_IDATA_INSERT) + (rawValueLength + transformedValueLength) * sizeof(TCHAR);
+   size_t attributesOffset = 0;
+   if (attributes != nullptr)
+   {
+      attributesOffset = size + (sizeof(SampleAttributes) - size % sizeof(SampleAttributes)) % sizeof(SampleAttributes);  // MemAlloc result is suitably aligned for any type
+      size = attributesOffset + sizeof(SampleAttributes);
+   }
+   auto rq = static_cast<DELAYED_IDATA_INSERT*>(MemAlloc(size));
+   rq->timestamp = timestamp;
+   rq->nodeId = nodeId;
+   rq->dciId = dciId;
+   rq->attributesOnly = false;
    rq->transformedValue = rq->rawValue + rawValueLength + 1;
    memcpy(rq->rawValue, rawValue, (rawValueLength + 1) * sizeof(TCHAR));
    memcpy(rq->transformedValue, transformedValue, (transformedValueLength + 1) * sizeof(TCHAR));
+   if (attributes != nullptr)
+   {
+      rq->attributes = reinterpret_cast<SampleAttributes*>(reinterpret_cast<char*>(rq) + attributesOffset);
+      memcpy(rq->attributes, attributes, sizeof(SampleAttributes));
+   }
+   else
+   {
+      rq->attributes = nullptr;
+   }
+   return rq;
+}
+
+/**
+ * Put INSERT request for idata_xxx table into appropriate writer queue
+ */
+static void EnqueueIDataInsertRequest(DELAYED_IDATA_INSERT *rq, DCObjectStorageClass storageClass)
+{
    if ((g_flags & AF_SINGLE_TABLE_PERF_DATA) && (g_dbSyntax == DB_SYNTAX_TSDB))
    {
       s_idataWriters[static_cast<int>(storageClass)].queue->put(rq);
    }
    else if (s_idataWriterCount > 1)
    {
-      int hash = nodeId % s_idataWriterCount;
+      int hash = rq->nodeId % s_idataWriterCount;
       s_idataWriters[hash].queue->put(rq);
    }
    else
@@ -255,6 +280,76 @@ void QueueIDataInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, cons
       s_idataWriters[0].queue->put(rq);
    }
 	InterlockedIncrement64(&g_idataWriteRequests);
+}
+
+/**
+ * Queue INSERT request for idata_xxx table. If sample attributes are provided and are not default ones, matching
+ * record in dci_sample_attributes will be written by same writer right after idata record.
+ */
+void QueueIDataInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue,
+      DCObjectStorageClass storageClass, const SampleAttributes *attributes)
+{
+   if (s_queueMonitorDiscardFlag)
+      return;
+
+   if ((attributes != nullptr) && attributes->isDefault())
+      attributes = nullptr;
+   EnqueueIDataInsertRequest(CreateIDataInsertRequest(timestamp, nodeId, dciId, rawValue, transformedValue, attributes), storageClass);
+}
+
+/**
+ * Queue INSERT request for dci_sample_attributes table only (sample without value). Request is placed into same queue
+ * as idata INSERT requests for that DCI.
+ */
+void QueueSampleAttributesInsert(Timestamp timestamp, uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, const SampleAttributes& attributes)
+{
+   if (s_queueMonitorDiscardFlag)
+      return;
+
+   DELAYED_IDATA_INSERT *rq = CreateIDataInsertRequest(timestamp, nodeId, dciId, _T(""), _T(""), &attributes);
+   rq->attributesOnly = true;
+   EnqueueIDataInsertRequest(rq, storageClass);
+}
+
+/**
+ * Append column values for dci_sample_attributes INSERT to given query
+ */
+static void AppendSampleAttributesValues(StringBuffer& query, const DELAYED_IDATA_INSERT *rq)
+{
+   const SampleAttributes *a = rq->attributes;
+   query.append(_T('('));
+   query.append(rq->dciId);
+   query.append(_T(','));
+   query.append(rq->timestamp);
+   query.append(_T(','));
+   query.append(static_cast<int32_t>(a->quality));
+   if (a->bounded && (a->quality != SampleQuality::MISSING))
+   {
+      query.append(_T(','));
+      query.append(a->lower, _T("%.17g"));
+      query.append(_T(','));
+      query.append(a->upper, _T("%.17g"));
+      query.append(_T(','));
+   }
+   else
+   {
+      query.append(_T(",NULL,NULL,"));
+   }
+   query.append(a->completeness, _T("%.17g"));
+   query.append(_T(','));
+   query.append(a->methodId);
+   query.append(_T(')'));
+}
+
+/**
+ * Write sample attributes from given request
+ */
+static bool WriteSampleAttributes(DB_HANDLE hdb, StringBuffer& query, const DELAYED_IDATA_INSERT *rq)
+{
+   query.clear(false);
+   query.append(_T("INSERT INTO dci_sample_attributes (item_id,sample_timestamp,quality,lower_bound,upper_bound,completeness,method_id) VALUES "));
+   AppendSampleAttributesValues(query, rq);
+   return DBQuery(hdb, query);
 }
 
 /**
@@ -389,7 +484,11 @@ static void IDataWriteThread(IDataWriter *writer)
 
 				// For Oracle preparing statement even for one time execution is preferred
 				// For other databases it will actually slow down inserts
-				if (g_dbSyntax == DB_SYNTAX_ORACLE)
+				if (rq->attributesOnly)
+				{
+				   success = true;
+				}
+				else if (g_dbSyntax == DB_SYNTAX_ORACLE)
 				{
 				   query.append(_T("INSERT INTO idata_")).append(rq->nodeId).append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"));
                DB_STATEMENT hStmt = DBPrepare(hdb, query);
@@ -423,6 +522,9 @@ static void IDataWriteThread(IDataWriter *writer)
                   .append(_T(')'));
                success = DBQuery(hdb, query);
 				}
+
+				if (success && (rq->attributes != nullptr))
+				   success = WriteSampleAttributes(hdb, query, rq);
 
 				MemFree(rq);
 
@@ -490,18 +592,24 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
          int count = 0;
          while(true)
          {
-            query.clear(false);
-            query.append(_T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
-            query.append(rq->dciId);
-            query.append(_T(','));
-            query.append(rq->timestamp);
-            query.append(_T(','));
-            query.append(DBPrepareString(hdb, rq->transformedValue));
-            query.append(_T(','));
-            query.append(DBPrepareString(hdb, rq->rawValue));
-            query.append(_T(')'));
+            bool success = true;
+            if (!rq->attributesOnly)
+            {
+               query.clear(false);
+               query.append(_T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
+               query.append(rq->dciId);
+               query.append(_T(','));
+               query.append(rq->timestamp);
+               query.append(_T(','));
+               query.append(DBPrepareString(hdb, rq->transformedValue));
+               query.append(_T(','));
+               query.append(DBPrepareString(hdb, rq->rawValue));
+               query.append(_T(')'));
+               success = DBQuery(hdb, query);
+            }
 
-            bool success = DBQuery(hdb, query);
+            if (success && (rq->attributes != nullptr))
+               success = WriteSampleAttributes(hdb, query, rq);
 
             MemFree(rq);
 
@@ -537,9 +645,23 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
  */
 struct PreparedStatement_PostgreSQL
 {
-   TCHAR *statement;
+   TCHAR *statement;             // INSERT into idata table, nullptr if all requests are for sample attributes only
+   TCHAR *attributesStatement;   // INSERT into dci_sample_attributes table, nullptr if there are no samples with attributes
    int32_t numRecords;
 };
+
+/**
+ * Execute prepared PostgreSQL INSERT statement and free statement text
+ */
+static bool ExecutePreparedStatement_PostgreSQL(DB_HANDLE hdb, PreparedStatement_PostgreSQL *s)
+{
+   bool success = (s->statement != nullptr) ? DBQuery(hdb, s->statement) : true;
+   if (success && (s->attributesStatement != nullptr))
+      success = DBQuery(hdb, s->attributesStatement);
+   MemFree(s->statement);
+   MemFree(s->attributesStatement);
+   return success;
+}
 
 /**
  * Worker thread that prepares INSERT statements for PostgreSQL database
@@ -567,6 +689,8 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
    StringBuffer query;
    query.setAllocationStep(65536);
 
+   StringBuffer attributesQuery;
+
    while(true)
    {
       DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
@@ -577,27 +701,41 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
          break;   // node fenced - no further role-sensitive work
 
       query.append(queryBase);
-      int count = 0;
+      int count = 0, dataCount = 0, attributesCount = 0;
       while(true)
       {
-         query.append((count > 0) ? _T(",(") : _T(" ("), 2);
-         query.append(rq->dciId);
-         if (convertTimestamps)
+         if (rq->attributes != nullptr)
          {
-            query.append(L",ms_to_timestamptz(", 19);
-            query.append(rq->timestamp);
-            query.append(L"),", 2);
+            if (attributesCount == 0)
+               attributesQuery.append(L"INSERT INTO dci_sample_attributes (item_id,sample_timestamp,quality,lower_bound,upper_bound,completeness,method_id) VALUES ");
+            else
+               attributesQuery.append(L',');
+            AppendSampleAttributesValues(attributesQuery, rq);
+            attributesCount++;
          }
-         else
+
+         if (!rq->attributesOnly)
          {
+            query.append((dataCount > 0) ? _T(",(") : _T(" ("), 2);
+            dataCount++;
+            query.append(rq->dciId);
+            if (convertTimestamps)
+            {
+               query.append(L",ms_to_timestamptz(", 19);
+               query.append(rq->timestamp);
+               query.append(L"),", 2);
+            }
+            else
+            {
+               query.append(L',');
+               query.append(rq->timestamp);
+               query.append(L',');
+            }
+            query.append(DBPrepareString(g_dbDriver, rq->transformedValue));
             query.append(L',');
-            query.append(rq->timestamp);
-            query.append(L',');
+            query.append(DBPrepareString(g_dbDriver, rq->rawValue));
+            query.append(L')');
          }
-         query.append(DBPrepareString(g_dbDriver, rq->transformedValue));
-         query.append(L',');
-         query.append(DBPrepareString(g_dbDriver, rq->rawValue));
-         query.append(L')');
          MemFree(rq);
 
          count++;
@@ -609,10 +747,27 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
             break;
       }
 
-      query.append(L" ON CONFLICT DO NOTHING");
       InterlockedAdd(&writer->pendingRequests, count);
       PreparedStatement_PostgreSQL *s = memoryPool->allocate();
-      s->statement = query.takeBuffer();
+      if (dataCount > 0)
+      {
+         query.append(L" ON CONFLICT DO NOTHING");
+         s->statement = query.takeBuffer();
+      }
+      else
+      {
+         query.clear(false);
+         s->statement = nullptr;
+      }
+      if (attributesCount > 0)
+      {
+         attributesQuery.append(L" ON CONFLICT DO NOTHING");
+         s->attributesStatement = attributesQuery.takeBuffer();
+      }
+      else
+      {
+         s->attributesStatement = nullptr;
+      }
       s->numRecords = count;
       statementQueue->put(s);
 
@@ -693,9 +848,8 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
             [writer, statement, &memoryPool] ()
             {
                DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-               DBQuery(hdb, statement->statement);
+               ExecutePreparedStatement_PostgreSQL(hdb, statement);
                InterlockedAdd(&writer->pendingRequests, -statement->numRecords);
-               MemFree(statement->statement);
                memoryPool.free(statement);
                DBConnectionPoolReleaseConnection(hdb);
             });
@@ -711,10 +865,9 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
             int count = 0;
             while(true)
             {
-               bool success = DBQuery(hdb, statement->statement);
+               bool success = ExecutePreparedStatement_PostgreSQL(hdb, statement);
                count += statement->numRecords;
                InterlockedAdd(&writer->pendingRequests, -statement->numRecords);
-               MemFree(statement->statement);
                memoryPool.free(statement);
 
                if (!success || (count >= maxRecordsPerTxn))
@@ -729,6 +882,7 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
          else
          {
             MemFree(statement->statement);
+            MemFree(statement->attributesStatement);
             memoryPool.free(statement);
          }
          DBConnectionPoolReleaseConnection(hdb);
@@ -786,13 +940,21 @@ static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
          DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)");
          if (hStmt != nullptr)
          {
+            StringBuffer attributesQuery;
             while(true)
             {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
-               DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, rq->timestamp);
-               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
-               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
-               bool success = DBExecute(hStmt);
+               bool success = true;
+               if (!rq->attributesOnly)
+               {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
+                  DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, rq->timestamp);
+                  DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
+                  DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
+                  success = DBExecute(hStmt);
+               }
+
+               if (success && (rq->attributes != nullptr))
+                  success = WriteSampleAttributes(hdb, attributesQuery, rq);
 
                MemFree(rq);
 

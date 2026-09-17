@@ -1125,6 +1125,81 @@ static void CheckCollectedDataSingleTable_TSDB(bool isTable)
 }
 
 /**
+ * Check sample attributes of collected DCI data
+ */
+static void CheckSampleAttributes()
+{
+   StartStage(L"DCI sample attributes", 3);
+
+   wchar_t query[1024];
+   int64_t now = GetCurrentTimeMs();
+   nx_swprintf(query, 1024, L"SELECT count(*) FROM dci_sample_attributes WHERE sample_timestamp>" INT64_FMT, now);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != nullptr)
+   {
+      if (DBGetFieldLong(hResult, 0, 0) > 0)
+      {
+         g_dbCheckErrors++;
+         if (GetYesNoEx(L"Found DCI sample attributes with timestamp in the future. Delete invalid records?"))
+         {
+            nx_swprintf(query, 1024, L"DELETE FROM dci_sample_attributes WHERE sample_timestamp>" INT64_FMT, now);
+            if (SQLQuery(query))
+               g_dbCheckFixes++;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   UpdateStageProgress(1);
+   ResetBulkYesNo();
+
+   hResult = SQLSelect(L"SELECT distinct(item_id) FROM dci_sample_attributes");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t id = DBGetFieldULong(hResult, i, 0);
+         if (!IsDciExists(id, 0, false))
+         {
+            g_dbCheckErrors++;
+            if (GetYesNoEx(L"Found sample attributes for non-existing DCI [%u]. Delete invalid records?", id))
+            {
+               nx_swprintf(query, 1024, L"DELETE FROM dci_sample_attributes WHERE item_id=%u", id);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   UpdateStageProgress(1);
+   ResetBulkYesNo();
+
+   // Computation method records are never deleted, so reference to missing method cannot be repaired by deleting sample attributes
+   hResult = SQLSelect(L"SELECT distinct(method_id) FROM dci_sample_attributes WHERE method_id<>0 AND method_id NOT IN (SELECT id FROM kpi_methods)");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t id = DBGetFieldULong(hResult, i, 0);
+         g_dbCheckErrors++;
+         if (GetYesNoEx(L"Found sample attributes referencing non-existing computation method [%u]. Reset method reference in those records?", id))
+         {
+            nx_swprintf(query, 1024, L"UPDATE dci_sample_attributes SET method_id=0 WHERE method_id=%u", id);
+            if (SQLQuery(query))
+               g_dbCheckFixes++;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   EndStage();
+}
+
+/**
  * Check raw DCI values
  */
 static void CheckRawDciValues()
@@ -1903,6 +1978,7 @@ void CheckDatabase()
                CheckCollectedData(false);
                CheckCollectedData(true);
             }
+            CheckSampleAttributes();
          }
          CheckModuleSchemas();
       }

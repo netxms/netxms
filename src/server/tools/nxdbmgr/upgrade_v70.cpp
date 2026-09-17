@@ -24,6 +24,39 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.40 to 70.41
+ */
+static bool H_UpgradeFromV40()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE dci_sample_attributes ("
+      L"   item_id integer not null,"
+      L"   sample_timestamp $SQL:INT64 not null,"
+      L"   quality integer not null,"
+      L"   lower_bound $SQL:DOUBLE null,"
+      L"   upper_bound $SQL:DOUBLE null,"
+      L"   completeness $SQL:DOUBLE not null,"
+      L"   method_id integer not null,"
+      L"   PRIMARY KEY(item_id,sample_timestamp))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE kpi_methods ("
+      L"   id integer not null,"
+      L"   method_id varchar(63) not null,"
+      L"   version varchar(31) not null,"
+      L"   engine varchar(63) not null,"
+      L"   display_name varchar(255) not null,"
+      L"   tier char(1) not null,"
+      L"   coverage_level $SQL:DOUBLE not null,"
+      L"   registered_at $SQL:INT64 not null,"
+      L"   PRIMARY KEY(id),"
+      L"   UNIQUE(method_id,version))"));
+
+   CHK_EXEC(SetMinorSchemaVersion(41));
+   return true;
+}
+
+/**
  * Upgrade from 70.39 to 70.40
  */
 static bool H_UpgradeFromV39()
@@ -1279,6 +1312,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 40, 70, 41, H_UpgradeFromV40 },
    { 39, 70, 40, H_UpgradeFromV39 },
    { 38, 70, 39, H_UpgradeFromV38 },
    { 37, 70, 38, H_UpgradeFromV37 },

@@ -648,6 +648,8 @@ protected:
 
    using DCObject::updateFromMessage;
 
+   DataCollectionError processNewValue(Timestamp timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints, const SampleAttributes *attributes);
+
 public:
    DCItem(const DCItem *src, bool shadowCopy, bool copyThresholds = true);
    DCItem(DB_HANDLE hdb, DB_STATEMENT *preparedStatements, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay);
@@ -718,7 +720,11 @@ public:
 
 	uint64_t getCacheMemoryUsage() const;
 
-   DataCollectionError processNewValue(Timestamp timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints);
+   DataCollectionError processNewValue(Timestamp timestamp, const wchar_t *value, bool *updateStatus, bool allowPastDataPoints)
+   {
+      return processNewValue(timestamp, value, updateStatus, allowPastDataPoints, nullptr);
+   }
+   bool processNewValue(Timestamp timestamp, double value, const SampleAttributes& attributes);
    void feedValueFromPeer(Timestamp timestamp, const wchar_t *rawValue, const wchar_t *transformedValue, bool storedInDb, bool anomalyDetected);
 
    virtual void processNewError(DataCollectionError error, Timestamp timestamp) override;
