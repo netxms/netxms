@@ -79,10 +79,6 @@ RouteBuilder("v1/my-resource/:resource-id")
    .build();
 ```
 
-### Optional Components
-
-Routes of a subsystem that may be not initialized (e.g. AI assistant without configured provider) must be registered with `.requiresComponent(ID)`, using the ID passed to `RegisterComponent()`. The router then answers 503 without calling the handler, so handlers do not need to check for uninitialized state. Clients detect component availability via `components` in `GET /v1/server-info`.
-
 ## Modifying Objects — Use `modifyFromJSON`, Not NXCP Translation
 
 Do **not** translate incoming JSON into an `NXCPMessage` just to reuse `modifyFromMessage()` / `updateFromMessage()`. Instead, extend the affected class with a parallel `modifyFromJSON()` / `updateFromJSON()` method that operates on `json_t*` directly (same virtual dispatch, per-class overrides, stage1/stage2 split where applicable). The webapi handler stays thin: load → ACL check → call the JSON method → return the updated representation. No `NXCPMessage` construction belongs in `webapi/` source files.
@@ -110,7 +106,6 @@ When changes are made to API endpoints (adding, modifying, or removing), the Ope
 | 404 | Resource not found |
 | 409 | Conflict (e.g., duplicate name) |
 | 500 | Internal server error / database failure |
-| 503 | Service unavailable (standby cluster node, or required component not registered) |
 
 ## Access Control
 

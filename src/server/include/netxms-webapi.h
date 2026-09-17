@@ -122,7 +122,6 @@ private:
    bool m_acceptJson;
    bool m_acceptProtobuf;
    bool m_acceptImage;
-   const TCHAR *m_requiredComponent;
    char m_scope[32];
    RouteHandler m_handlers[5];
    MHD_UpgradeHandler m_upgradeHandler;
@@ -136,7 +135,6 @@ public:
       m_acceptJson = true;
       m_acceptProtobuf = false;
       m_acceptImage = false;
-      m_requiredComponent = nullptr;
       m_scope[0] = 0;
       memset(m_handlers, 0, sizeof(m_handlers));
    }
@@ -184,16 +182,6 @@ public:
    RouteBuilder& availableOnStandby()
    {
       m_availableOnStandby = true;
-      return *this;
-   }
-
-   /**
-    * Make route available only if given server component is registered (checked on each
-    * request). Otherwise request is answered with 503. Component ID should be a string constant.
-    */
-   RouteBuilder& requiresComponent(const TCHAR *id)
-   {
-      m_requiredComponent = id;
       return *this;
    }
 

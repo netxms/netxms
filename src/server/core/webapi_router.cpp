@@ -40,7 +40,6 @@ struct Route
    bool acceptJson;
    bool acceptProtobuf;
    bool acceptImage;
-   const TCHAR *requiredComponent;
    char scope[32];
 };
 
@@ -115,7 +114,6 @@ void RouteBuilder::build()
       s_root->acceptJson = m_acceptJson;
       s_root->acceptProtobuf = m_acceptProtobuf;
       s_root->acceptImage = m_acceptImage;
-      s_root->requiredComponent = m_requiredComponent;
       strlcpy(s_root->scope, m_scope, sizeof(s_root->scope));
       return;
    }
@@ -171,7 +169,6 @@ void RouteBuilder::build()
    r->acceptJson = m_acceptJson;
    r->acceptProtobuf = m_acceptProtobuf;
    r->acceptImage = m_acceptImage;
-   r->requiredComponent = m_requiredComponent;
    strlcpy(r->scope, m_scope, sizeof(r->scope));
 }
 
@@ -358,14 +355,6 @@ Context *RouteRequest(MHD_Connection *connection, const char *path, const char *
             }
          }
       }
-   }
-
-   // Checked after authentication, so unauthenticated clients cannot probe server configuration
-   if ((curr->requiredComponent != nullptr) && !IsComponentRegistered(curr->requiredComponent))
-   {
-      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"Request rejected: required component %s is not registered", curr->requiredComponent);
-      *responseCode = 503;  // Service Unavailable
-      return nullptr;
    }
 
    Context *context = new Context(connection, path, methodId, handler, token, userId, loginName, systemAccessRights, std::move(placeholderValues), curr->upgradeHandler);

@@ -2308,6 +2308,12 @@ Chat NXCORE_EXPORTABLE *GetCurrentAIChat()
  */
 shared_ptr<Chat> NXCORE_EXPORTABLE CreateAIAssistantChat(uint32_t userId, uint32_t incidentId, uint32_t *rcc)
 {
+   if (!IsComponentRegistered(AI_ASSISTANT_COMPONENT))
+   {
+      *rcc = RCC_AI_ASSISTANT_NOT_AVAILABLE;
+      return nullptr;
+   }
+
    // Validate incident if specified
    if (incidentId != 0)
    {

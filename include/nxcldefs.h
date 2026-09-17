@@ -846,6 +846,7 @@ enum SessionState
 #define RCC_INVALID_DATA                  ((uint32_t)196)
 #define RCC_EXEC_TIMEOUT                  ((uint32_t)197)
 #define RCC_OBJECT_HIERARCHY_VIOLATION    ((uint32_t)198)
+#define RCC_AI_ASSISTANT_NOT_AVAILABLE    ((uint32_t)199)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
