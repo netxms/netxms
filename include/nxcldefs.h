@@ -797,6 +797,7 @@ enum SessionState
 #define RCC_ZONE_PROXY_NOT_AVAILABLE      ((uint32_t)190)
 #define RCC_UNTRUSTED_PACKAGE             ((uint32_t)191)
 #define RCC_DOWNGRADE_NOT_ALLOWED         ((uint32_t)192)
+#define RCC_AI_ASSISTANT_NOT_AVAILABLE    ((uint32_t)199)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

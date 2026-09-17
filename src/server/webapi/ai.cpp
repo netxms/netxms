@@ -46,6 +46,11 @@ int H_AiChatCreate(Context *context)
          context->setErrorResponse("Invalid incident ID");
          return 400;
       }
+      if (rcc == RCC_AI_ASSISTANT_NOT_AVAILABLE)
+      {
+         context->setErrorResponse("AI assistant is not available");
+         return 503;
+      }
       context->setErrorResponse("Failed to create chat");
       return 500;
    }
@@ -88,6 +93,12 @@ int H_AiChatSendMessage(Context *context)
 {
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_USE_AI_ASSISTANT))
       return 403;
+
+   if (!IsComponentRegistered(AI_ASSISTANT_COMPONENT))
+   {
+      context->setErrorResponse("AI assistant is not available");
+      return 503;
+   }
 
    uint32_t chatId = context->getPlaceholderValueAsUInt32(_T("chat-id"));
    if (chatId == 0)
