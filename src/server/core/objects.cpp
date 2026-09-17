@@ -2987,10 +2987,16 @@ uint32_t NXCORE_EXPORTABLE ChangeObjectBinding(const shared_ptr<NetObj>& parent,
          // Prevent loops
          if (!child->isChild(parent->getId()))
          {
-            NetObj::linkObjects(parent, child);
-            parent->calculateCompoundStatus();
-            rcc = RCC_SUCCESS;
-            success = true;
+            if (NetObj::linkObjects(parent, child))
+            {
+               parent->calculateCompoundStatus();
+               rcc = RCC_SUCCESS;
+               success = true;
+            }
+            else
+            {
+               rcc = RCC_INVALID_OBJECT_ID;
+            }
          }
          else
          {
