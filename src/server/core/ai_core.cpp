@@ -1928,10 +1928,16 @@ char *Chat::sendRequest(const char *prompt, const char *context)
 
 /**
  * Start async request processing (for WebAPI)
- * Returns false if a request is already in progress
+ * Returns false if AI task thread pool is not initialized or a request is already in progress
  */
 bool Chat::startAsyncRequest(const char *prompt, const char *context)
 {
+   if (s_aiTaskThreadPool == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Chat [%u]: cannot start async request, AI task thread pool not initialized"), m_id);
+      return false;
+   }
+
    m_asyncMutex.lock();
    if (m_asyncState == AsyncRequestState::PROCESSING)
    {
@@ -2260,6 +2266,12 @@ char NXCORE_EXPORTABLE *QueryAIAssistant(const char *prompt, NetObj *context, co
  */
 void ProcessEventWithAIAssistant(Event *event, const shared_ptr<NetObj>& object, const wchar_t *instructions)
 {
+   if (s_aiTaskThreadPool == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Cannot process event " UINT64_FMT L" with AI assistant: AI task thread pool not initialized", event->getId());
+      return;
+   }
+
    char *prompt = event->expandText(instructions).getUTF8String();
    json_t *eventData = event->toJson();
    uint64_t eventId = event->getId();

@@ -22,6 +22,7 @@
 
 #include "webapi.h"
 #include <netxms-version.h>
+#include <nxai.h>
 
 /**
  * Module metadata
@@ -361,72 +362,92 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/ai/chat")
       .POST(H_AiChatCreate)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/chat/:chat-id/message")
       .POST(H_AiChatSendMessage)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/chat/:chat-id/question")
       .GET(H_AiCharPollQuestion)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/chat/:chat-id/status")
       .GET(H_AiChatGetStatus)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/chat/:chat-id/answer")
       .POST(H_AiChatAnswerQuestion)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/chat/:chat-id/clear")
       .POST(H_AiChatClear)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/chat/:chat-id")
       .DELETE(H_AiChatDelete)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/disabled-items")
       .POST(H_AiDisabledItemCreate)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/disabled-items/:item-type/:item-name")
       .DELETE(H_AiDisabledItemDelete)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/observations")
       .GET(H_AiObservations)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/observations/:observation-id/state")
       .PUT(H_AiObservationStateUpdate)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/operators")
       .GET(H_AiOperators)
       .POST(H_AiOperatorCreate)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/operators/:operator-id")
       .GET(H_AiOperatorDetails)
       .PATCH(H_AiOperatorUpdate)
       .DELETE(H_AiOperatorDelete)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/operators/:operator-id/checks")
       .GET(H_AiOperatorChecks)
       .POST(H_AiOperatorCheckCreate)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/operators/:operator-id/checks/:check-id")
       .GET(H_AiOperatorCheckDetails)
       .PATCH(H_AiOperatorCheckUpdate)
       .DELETE(H_AiOperatorCheckDelete)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/operators/:operator-id/instructions-history")
       .GET(H_AiOperatorInstructionsHistory)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/operators/:operator-id/reset-memento")
       .POST(H_AiOperatorResetMemento)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/saved-prompts")
       .GET(H_AiSavedPrompts)
       .POST(H_AiSavedPromptCreate)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/saved-prompts/:prompt-id")
       .GET(H_AiSavedPromptDetails)
       .PUT(H_AiSavedPromptUpdate)
       .DELETE(H_AiSavedPromptDelete)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/ai/skills-and-functions")
       .GET(H_AiSkillsAndFunctions)
+      .requiresComponent(AI_ASSISTANT_COMPONENT)
       .build();
    RouteBuilder("v1/background-tasks/:task-id")
       .GET(H_BackgroundTaskDetails)
