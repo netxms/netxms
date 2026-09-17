@@ -175,8 +175,9 @@ paths:
                   components:
                     type: array
                     items:
-                      type: object
-                    description: Registered server components
+                      type: string
+                    example: ["CORE", "AI-ASSISTANT"]
+                    description: Registered server components. Endpoints of a component that is not registered return 503.
                   clientConfigurationHints:
                     type: object
                     additionalProperties:
@@ -576,6 +577,8 @@ paths:
           description: Unauthorized
         '500':
           description: Failed to create chat session
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -630,6 +633,8 @@ paths:
           description: Chat session not found
         '409':
           description: Another request is already in progress
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -686,6 +691,8 @@ paths:
           description: Access denied
         '404':
           description: Chat session not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -724,6 +731,8 @@ paths:
           description: Access denied
         '404':
           description: Chat session not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -777,6 +786,8 @@ paths:
           description: Access denied
         '404':
           description: Chat session not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -804,6 +815,8 @@ paths:
           description: Access denied
         '404':
           description: Chat session not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -831,6 +844,8 @@ paths:
           description: Access denied
         '404':
           description: Chat session not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -905,6 +920,8 @@ paths:
           description: Unauthorized
         '403':
           description: Insufficient access rights
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -945,6 +962,8 @@ paths:
           description: Insufficient access rights
         '500':
           description: Database failure
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -980,6 +999,8 @@ paths:
           description: Insufficient access rights
         '500':
           description: Database failure
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1047,6 +1068,8 @@ paths:
           description: Object given in "object" parameter not found
         '500':
           description: Database failure
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1091,6 +1114,8 @@ paths:
           description: Observation not found
         '500':
           description: Database failure
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1113,6 +1138,8 @@ paths:
                   $ref: '#/components/schemas/AiOperator'
         '403':
           description: Insufficient access rights
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1142,6 +1169,8 @@ paths:
           description: Insufficient access rights
         '500':
           description: Internal server error
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1167,6 +1196,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Instance not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1202,6 +1233,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Instance not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1223,6 +1256,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Instance not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1254,6 +1289,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Instance not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1293,6 +1330,8 @@ paths:
           description: Instance not found
         '409':
           description: Check limit reached
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1323,6 +1362,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Instance or check not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1364,6 +1405,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Instance or check not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1389,6 +1432,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Instance or check not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1421,6 +1466,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Instance not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1447,6 +1494,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Instance not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1467,6 +1516,8 @@ paths:
                   $ref: '#/components/schemas/AiSavedPrompt'
         '403':
           description: Insufficient access rights
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1507,6 +1558,8 @@ paths:
           description: Insufficient access rights
         '500':
           description: Database failure
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1535,6 +1588,8 @@ paths:
           description: Insufficient access rights
         '404':
           description: Prompt not found
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1581,6 +1636,8 @@ paths:
           description: Insufficient access rights
         '500':
           description: Database failure
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
@@ -1604,6 +1661,8 @@ paths:
           description: Insufficient access rights
         '500':
           description: Database failure
+        '503':
+          description: AI assistant is not available
       security:
         - BearerAuth: []
       tags:
