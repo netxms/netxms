@@ -28,8 +28,8 @@ import org.netxms.client.maps.LinkDataLocation;
 import org.netxms.client.maps.NetworkMapLink;
 
 /**
- * Locator for OBJECT1 / CENTER / OBJECT2 labels on a link. Labels at OBJECT1 and OBJECT2 are placed proportionally along
- * the link but never closer to the endpoint than needed to clear the connector label at that end.
+ * Locator for OBJECT1 / CENTER / OBJECT2 labels on a link. OBJECT1 and OBJECT2 labels are pushed away from the endpoint
+ * to clear the connector label, but only within their own section of the link, so they can still overlap on short links.
  */
 public class MultiLabelConnectionLocator extends ConnectionLocator
 {
@@ -160,7 +160,7 @@ public class MultiLabelConnectionLocator extends ConnectionLocator
    }
 
    /**
-    * Distance from the endpoint at which the center of this label clears the connector label at the same end.
+    * Minimum distance from the endpoint to the center of this label at which it does not overlap the connector label.
     *
     * @param theta angle between the link and the horizontal axis
     * @return minimum distance from endpoint to label center, 0 if there is no connector label

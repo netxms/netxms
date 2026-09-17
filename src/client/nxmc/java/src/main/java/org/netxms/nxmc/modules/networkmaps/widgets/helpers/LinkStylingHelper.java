@@ -134,8 +134,8 @@ public final class LinkStylingHelper
    }
 
    /**
-    * Select member of parallel link group with the most critical calculated status (first member when no member has a
-    * known status); the group takes its color from that member.
+    * Get group member with the most critical status (first member if none is known). The group is colored as that
+    * member.
     */
    private static NetworkMapLink mostCriticalMember(ParallelLinkGroup group, NXCSession session)
    {

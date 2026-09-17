@@ -31,8 +31,6 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class LinkLabelText
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(LinkLabelText.class);
-
    private LinkLabelText()
    {
    }
@@ -73,9 +71,8 @@ public final class LinkLabelText
    }
 
    /**
-    * Get formatted values of data sources at given location. For a group: one row per member that has values there, each
-    * row prefixed with the member's connector name on that end (for OBJECT1/OBJECT2) or the member's identity (for
-    * CENTER).
+    * Get formatted values of data sources at given location. For a group: one row per member with values there,
+    * prefixed with the member's connector name (OBJECT1/OBJECT2) or identity (CENTER).
     *
     * @param link map link
     * @param location location on the link
@@ -120,7 +117,7 @@ public final class LinkLabelText
       if (link instanceof ParallelLinkGroup)
       {
          ParallelLinkGroup group = (ParallelLinkGroup)link;
-         StringBuilder sb = new StringBuilder(i18n.tr("{0} links", group.getLinks().size()));
+         StringBuilder sb = new StringBuilder(LocalizationHelper.getI18n(LinkLabelText.class).tr("{0} links", group.getLinks().size()));
          for(NetworkMapLink member : group.getLinks())
          {
             String text = values.getDciDataAsString(member, LinkDataLocation.CENTER);
@@ -147,8 +144,8 @@ public final class LinkLabelText
    }
 
    /**
-    * Identity of a group member for display: its name if set, otherwise connector names on both ends ordered as the
-    * group's ends.
+    * Display name of a group member: link name if set, otherwise connector names of both ends in the group's
+    * orientation.
     *
     * @param group parallel link group
     * @param member member link
@@ -162,6 +159,7 @@ public final class LinkLabelText
       boolean inverted = group.isInverted(member);
       String name1 = connectorName(member, inverted, session);
       String name2 = connectorName(member, !inverted, session);
+      I18n i18n = LocalizationHelper.getI18n(LinkLabelText.class);
       return ((name1 != null) ? name1 : i18n.tr("<unknown>")) + " - " + ((name2 != null) ? name2 : i18n.tr("<unknown>"));
    }
 }

@@ -327,8 +327,8 @@ public final class GeoLinkRenderer
    }
 
    /**
-    * Distance along the link from the endpoint at which the center of a pill with given text clears the connector pill
-    * centered at {@code connectorOffset}. The link direction is taken from the segment adjacent to that endpoint.
+    * Minimum distance from the endpoint to the center of a data pill at which it does not overlap the connector pill.
+    * Measured along the link segment adjacent to that endpoint.
     */
    private static double minimumLabelDistance(GC gc, Point connectorPillSize, double connectorOffset, String text, Point segmentStart, Point segmentEnd)
    {

@@ -73,8 +73,8 @@ public class ParallelLinkGroup extends NetworkMapLink
    }
 
    /**
-    * Replace groups of parallel links with a single group link each. Links of type NORMAL sharing the same pair of elements
-    * are grouped when their count exceeds given threshold; all other links are returned unchanged.
+    * Replace each set of more than {@code threshold} NORMAL links between the same pair of elements with a single group
+    * link. Other links are passed through. Fan-out of all returned links is recomputed.
     *
     * @param links all links of the map page
     * @param threshold group size above which links are merged (0 or negative disables merging)
@@ -86,6 +86,7 @@ public class ParallelLinkGroup extends NetworkMapLink
       if (threshold <= 0)
       {
          result.addAll(links);
+         updateFanOut(result);
          return result;
       }
 
@@ -124,8 +125,8 @@ public class ParallelLinkGroup extends NetworkMapLink
    }
 
    /**
-    * Recompute fan-out position and duplicate count of every displayed link from the display list, so that links sharing
-    * a pair of elements are spread evenly whether or not some of them were merged.
+    * Recompute position and duplicate count of given links, so that links between the same pair of elements are spread
+    * evenly.
     *
     * @param links links to display
     */

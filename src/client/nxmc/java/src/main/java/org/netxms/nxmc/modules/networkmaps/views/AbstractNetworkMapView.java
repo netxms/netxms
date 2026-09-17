@@ -170,6 +170,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected boolean readOnly = true;
 	protected boolean saveSchedulted = false;
    private int parallelLinkMergeThreshold = ParallelLinkGroup.DEFAULT_MERGE_THRESHOLD;
+   private long parallelLinkMergeThresholdMapId = 0;
 
 	protected Action actionShowStatusIcon;
 	protected Action actionShowStatusBackground;
@@ -658,23 +659,27 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 
    /**
     * Set number of parallel links between the same pair of elements above which they are drawn as a single link (0 to
-    * never merge). The "Merge parallel links" toggle follows the configured value; the canvases are rebuilt if the
-    * threshold in effect changes.
+    * never merge). Repeated calls with the same value for the same map keep the "Merge parallel links" state chosen
+    * by the user.
     *
     * @param threshold threshold configured on the map
     */
    protected void setParallelLinkMergeThreshold(int threshold)
    {
+      if ((threshold == parallelLinkMergeThreshold) && (getObjectId() == parallelLinkMergeThresholdMapId))
+         return;
+
       int previous = activeParallelLinkMergeThreshold();
       parallelLinkMergeThreshold = threshold;
+      parallelLinkMergeThresholdMapId = getObjectId();
       actionMergeParallelLinks.setChecked(threshold > 0);
       if (activeParallelLinkMergeThreshold() != previous)
          applyParallelLinkMergeThreshold();
    }
 
    /**
-    * Threshold currently in effect: 0 when merging is switched off in this view, otherwise the configured one, or the
-    * default when the map is configured not to merge and the user switched merging on.
+    * Threshold in effect for this view: 0 when the toggle is off, otherwise the map's threshold (the default one if the
+    * map is set not to merge).
     *
     * @return threshold in effect
     */
