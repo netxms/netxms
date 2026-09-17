@@ -2992,8 +2992,6 @@ bool InitAIAssistant()
       return true;
    }
 
-   RegisterComponent(AI_ASSISTANT_COMPONENT);
-
    LoadAIDisabledLists();
 
    RegisterAIAssistantFunction(
@@ -3127,6 +3125,8 @@ bool InitAIAssistant()
    ThreadCreate(AITaskSchedulerThread, s_aiTaskThreadPool);
 
    RegisterSchedulerTaskHandler(L"Execute.AIAgentTask", ExecuteAIAgentTask, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
+
+   RegisterComponent(AI_ASSISTANT_COMPONENT);
 
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d global functions registered", static_cast<int>(s_globalFunctions.size()));
    nxlog_debug_tag(DEBUG_TAG, 2, L"%d skills registered", static_cast<int>(GetRegisteredSkillCount()));
