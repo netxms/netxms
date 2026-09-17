@@ -6848,7 +6848,7 @@ NXSL_Value *NXSL_TemplateClass::getAttr(NXSL_Object *object, const NXSL_Identifi
 }
 
 /**
- * Tunnel::bind(node)
+ * Tunnel::bind(node) method (returns true on success)
  */
 NXSL_METHOD_DEFINITION(Tunnel, bind)
 {
@@ -6862,7 +6862,9 @@ NXSL_METHOD_DEFINITION(Tunnel, bind)
    shared_ptr<AgentTunnel> tunnel = *static_cast<shared_ptr<AgentTunnel>*>(object->getData());
    uint32_t nodeId = (*static_cast<shared_ptr<Node>*>(node->getData()))->getId();
    uint32_t rcc = tunnel->isInbound() ? static_cast<InboundAgentTunnel&>(*tunnel).bind(nodeId, 0) : RCC_OUT_OF_STATE_REQUEST;
-   *result = vm->createValue(rcc);
+   if (rcc != RCC_SUCCESS)
+      nxlog_debug_tag(L"nxsl.tunnel", 5, L"Tunnel::bind() failed for tunnel [%u] and node [%u] (RCC = %u)", tunnel->getId(), nodeId, rcc);
+   *result = vm->createValue(rcc == RCC_SUCCESS);
    return 0;
 }
 
@@ -7423,7 +7425,17 @@ bool NXSL_EventClass::setAttr(NXSL_Object *object, const NXSL_Identifier& attr, 
 }
 
 /**
- * Alarm::acknowledge() method
+ * Create return value for Alarm method from RCC returned by alarm manager (true on success)
+ */
+static NXSL_Value *AlarmMethodResult(NXSL_VM *vm, const Alarm *alarm, const wchar_t *method, uint32_t rcc)
+{
+   if (rcc != RCC_SUCCESS)
+      nxlog_debug_tag(L"nxsl.alarm", 5, L"Alarm::%s() failed for alarm [%u] (RCC = %u)", method, alarm->getAlarmId(), rcc);
+   return vm->createValue(rcc == RCC_SUCCESS);
+}
+
+/**
+ * Alarm::acknowledge() method (returns true on success)
  */
 NXSL_METHOD_DEFINITION(Alarm, acknowledge)
 {
@@ -7431,12 +7443,12 @@ NXSL_METHOD_DEFINITION(Alarm, acknowledge)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    Alarm *alarm = static_cast<Alarm*>(object->getData());
-   *result = vm->createValue(AckAlarmById(alarm->getAlarmId(), nullptr, false, 0, (argc == 1) ? argv[0]->getValueAsBoolean() : false));
+   *result = AlarmMethodResult(vm, alarm, L"acknowledge", AckAlarmById(alarm->getAlarmId(), nullptr, false, 0, (argc == 1) ? argv[0]->getValueAsBoolean() : false));
    return 0;
 }
 
 /**
- * Alarm::resolve() method
+ * Alarm::resolve() method (returns true on success)
  */
 NXSL_METHOD_DEFINITION(Alarm, resolve)
 {
@@ -7444,12 +7456,12 @@ NXSL_METHOD_DEFINITION(Alarm, resolve)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    Alarm *alarm = static_cast<Alarm*>(object->getData());
-   *result = vm->createValue(ResolveAlarmById(alarm->getAlarmId(), nullptr, false, (argc == 1) ? argv[0]->getValueAsBoolean() : false));
+   *result = AlarmMethodResult(vm, alarm, L"resolve", ResolveAlarmById(alarm->getAlarmId(), nullptr, false, (argc == 1) ? argv[0]->getValueAsBoolean() : false));
    return 0;
 }
 
 /**
- * Alarm::terminate() method
+ * Alarm::terminate() method (returns true on success)
  */
 NXSL_METHOD_DEFINITION(Alarm, terminate)
 {
@@ -7457,7 +7469,7 @@ NXSL_METHOD_DEFINITION(Alarm, terminate)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    Alarm *alarm = static_cast<Alarm*>(object->getData());
-   *result = vm->createValue(ResolveAlarmById(alarm->getAlarmId(), nullptr, true, (argc == 1) ? argv[0]->getValueAsBoolean() : false));
+   *result = AlarmMethodResult(vm, alarm, L"terminate", ResolveAlarmById(alarm->getAlarmId(), nullptr, true, (argc == 1) ? argv[0]->getValueAsBoolean() : false));
    return 0;
 }
 
@@ -7512,7 +7524,7 @@ NXSL_METHOD_DEFINITION(Alarm, requestAiAssistantComment)
 }
 
 /**
- * Alarm::setHelpdeskReference(ref) method
+ * Alarm::setHelpdeskReference(ref) method (returns true on success)
  */
 NXSL_METHOD_DEFINITION(Alarm, setHelpdeskReference)
 {
@@ -7520,27 +7532,27 @@ NXSL_METHOD_DEFINITION(Alarm, setHelpdeskReference)
       return NXSL_ERR_NOT_STRING;
 
    Alarm *alarm = static_cast<Alarm*>(object->getData());
-   *result = vm->createValue(SetHelpdeskReference(alarm->getAlarmId(), argv[0]->getValueAsCString()));
+   *result = AlarmMethodResult(vm, alarm, L"setHelpdeskReference", SetHelpdeskReference(alarm->getAlarmId(), argv[0]->getValueAsCString()));
    return 0;
 }
 
 /**
- * Alarm::closeHelpdeskIssue() method
+ * Alarm::closeHelpdeskIssue() method (returns true on success)
  */
 NXSL_METHOD_DEFINITION(Alarm, closeHelpdeskIssue)
 {
    Alarm *alarm = static_cast<Alarm*>(object->getData());
-   *result = vm->createValue(CloseHelpdeskIssue(alarm->getAlarmId()));
+   *result = AlarmMethodResult(vm, alarm, L"closeHelpdeskIssue", CloseHelpdeskIssue(alarm->getAlarmId()));
    return 0;
 }
 
 /**
- * Alarm::unlinkFromHelpdesk() method
+ * Alarm::unlinkFromHelpdesk() method (returns true on success)
  */
 NXSL_METHOD_DEFINITION(Alarm, unlinkFromHelpdesk)
 {
    Alarm *alarm = static_cast<Alarm*>(object->getData());
-   *result = vm->createValue(UnlinkHelpdeskIssueById(alarm->getAlarmId(), nullptr));
+   *result = AlarmMethodResult(vm, alarm, L"unlinkFromHelpdesk", UnlinkHelpdeskIssueById(alarm->getAlarmId(), nullptr));
    return 0;
 }
 

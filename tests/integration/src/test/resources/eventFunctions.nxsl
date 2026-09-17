@@ -40,4 +40,5 @@ assert(value != parameterName);
 value = GetEventParameter(event, "Non existing");
 assert(value != parameterName);
 
-alarm.terminate();
+assert(alarm.terminate());
+assert(!alarm.terminate());
