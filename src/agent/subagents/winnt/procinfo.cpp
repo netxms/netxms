@@ -425,7 +425,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    int counter = 0;
 
    SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
-   do
+   while(true)
    {
       if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer,
           (cmdLine[0] != 0) || (user[0] != 0) || (windowTitle[0] != 0), procName, cmdLine, user, windowTitle))
@@ -433,8 +433,12 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
          counter++;  // Number of processes with specific name
          attributeValue = GetProcessAttribute(process, mse.ullTotalPhys, attribute, aggregationMethod, counter, attributeValue);
       }
+
+      if (process->NextEntryOffset == 0)
+         break;
+
       process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
-   } while (process->NextEntryOffset != 0);
+   }
 
    MemFree(processInfoBuffer);
 
@@ -499,14 +503,16 @@ LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
    int count = 0;
 
    SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
-   do
+   while(true)
    {
 	   if (MatchProcess(static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId)), process->ImageName.Buffer, *arg == 'E', procName, cmdLine, user, windowTitle))
-	   {
 		   count++;        
-	   }
+
+      if (process->NextEntryOffset == 0)
+         break;
+
       process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
-   } while (process->NextEntryOffset != 0);
+   }
 
    MemFree(processInfoBuffer);
    ret_int(value, count);
@@ -536,7 +542,7 @@ LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
 
    WCHAR buffer[4096];
    SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
-   do
+   while(true)
    {
       uint32_t pid = static_cast<uint32_t>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId));
       if (*arg == '2')
@@ -560,8 +566,12 @@ LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
          snwprintf(buffer, 4096, L"%u %s", pid, (process->ImageName.Buffer == nullptr) ? L"System Idle Process" : process->ImageName.Buffer);
       }
       value->add(buffer);
+
+      if (process->NextEntryOffset == 0)
+         break;
+
       process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
-   } while (process->NextEntryOffset != 0);
+   }
 
    MemFree(processInfoBuffer);
    return SYSINFO_RC_SUCCESS;
@@ -610,7 +620,7 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
    value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
 
    SYSTEM_PROCESS_INFORMATION *process = static_cast<SYSTEM_PROCESS_INFORMATION*>(processInfoBuffer);
-   do
+   while(true)
    {
       DWORD pid = static_cast<DWORD>(reinterpret_cast<ULONG_PTR>(process->UniqueProcessId));
 
@@ -656,8 +666,11 @@ LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCo
          value->set(11, cmdLine);
       }
 
+      if (process->NextEntryOffset == 0)
+         break;
+
       process = reinterpret_cast<SYSTEM_PROCESS_INFORMATION*>(reinterpret_cast<char*>(process) + process->NextEntryOffset);
-   } while (process->NextEntryOffset != 0);
+   }
 
    MemFree(processInfoBuffer);
    return SYSINFO_RC_SUCCESS;
