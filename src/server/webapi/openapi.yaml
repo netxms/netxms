@@ -8201,6 +8201,98 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/details:
+    post:
+      operationId: getObjectDetailsBulk
+      summary: Get multiple objects
+      description: >-
+        Retrieve up to 500 objects in one request. Each object the caller can read is returned
+        as the same document GET /v1/objects/{object-id} returns. When `delegate` names a
+        network map or dashboard the caller can read, objects on it that the caller holds
+        only "delegated read" on are returned as reduced documents marked `partial`. Failures
+        for individual ids are reported in `notFound` and `denied` and do not fail the
+        request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+              properties:
+                ids:
+                  type: array
+                  maxItems: 500
+                  items:
+                    type: integer
+                    minimum: 1
+                  description: Object IDs. Duplicates are ignored.
+                delegate:
+                  type: integer
+                  description: >-
+                    ID of a network map or dashboard. Objects referenced by it are returned as
+                    partial documents when the caller holds delegated read on them.
+                since:
+                  oneOf:
+                    - type: integer
+                      format: int32
+                      minimum: 0
+                      description: UNIX timestamp in seconds.
+                    - type: string
+                      description: >-
+                        ISO 8601 timestamp, UNIX timestamp in seconds, relative offset
+                        (`[+|-]<number>[s|m|h|d]`), or `now`.
+                  description: >-
+                    Leave out readable objects whose timestamp is older. Pass the `timestamp`
+                    of a previous response. Note that interface utilization updates do not
+                    change the object timestamp, so an interface whose only change is its
+                    utilization is left out.
+      responses:
+        '200':
+          description: Objects retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  objects:
+                    type: array
+                    description: >-
+                      Full object documents, and partial documents (marked with `partial: true`)
+                      for objects readable only through the delegate.
+                    items:
+                      anyOf:
+                        - $ref: '#/components/schemas/ObjectDetails'
+                        - $ref: '#/components/schemas/PartialObject'
+                  notFound:
+                    type: array
+                    items:
+                      type: integer
+                    description: IDs that do not exist or refer to unpublished objects.
+                  denied:
+                    type: array
+                    items:
+                      type: integer
+                    description: IDs the caller has no access to.
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Server time when the request started, for use as `since`.
+        '400':
+          description: >-
+            Invalid request - missing or malformed `ids`, more than 500 ids, `delegate` is not
+            a network map or dashboard, or unparseable or out of range `since`.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: The caller cannot read the delegate object.
+        '404':
+          description: The delegate object does not exist.
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/scheduled-task-handlers:
     get:
       operationId: listScheduledTaskHandlers
@@ -16500,8 +16592,9 @@ components:
             - $ref: '#/components/schemas/EffectiveRights'
           description: |
             Access rights the calling user effectively has on this object. Present in
-            object listing, sub-tree, search and query responses; absent where an object
-            summary is embedded into another resource (alarms, log records, topology).
+            object listing, sub-tree, search and query responses and in partial objects;
+            absent where an object summary is embedded into another resource (alarms, log
+            records, topology).
         guid:
           type: string
           format: uuid
@@ -16529,6 +16622,24 @@ components:
           description: Object last change timestamp
         status:
           $ref: '#/components/schemas/Status'
+    PartialObject:
+      description: >-
+        Reduced object document returned for objects the caller can see only through
+        delegated read on a network map or dashboard.
+      allOf:
+        - $ref: '#/components/schemas/ObjectSummary'
+        - type: object
+          properties:
+            nameOnMap:
+              type: string
+            mapImage:
+              type: string
+              format: uuid
+            drilldownObjectId:
+              type: integer
+            partial:
+              type: boolean
+              description: Always true.
     ObjectTreeNode:
       description: Object summary with recursively nested child objects. The `children` property is present only when the object has at least one accessible child matching the request filter.
       allOf:
