@@ -398,6 +398,147 @@ int H_DataCollectionCurrentValues(Context *context)
 }
 
 /**
+ * Maximum number of items accepted by POST /v1/data-collection/current-values
+ */
+#define MAX_BULK_DCI_ITEMS   500
+
+/**
+ * Get positive 32 bit identifier from given JSON object field (0 if missing or invalid)
+ */
+static uint32_t GetPositiveId(json_t *object, const char *tag)
+{
+   json_t *value = json_object_get(object, tag);
+   json_int_t id = json_is_integer(value) ? json_integer_value(value) : 0;
+   return ((id > 0) && (id <= static_cast<json_int_t>(UINT32_MAX))) ? static_cast<uint32_t>(id) : 0;
+}
+
+/**
+ * Replace data type and value in last value document with the value of given table cell
+ */
+static void SetTableCellValue(json_t *value, DCTable *table, const char *column, const char *instance)
+{
+   Timestamp timestamp;
+   shared_ptr<Table> lastValue = table->getLastValue(&timestamp);
+   if (lastValue == nullptr)
+      return;
+
+   wchar_t columnName[MAX_COLUMN_NAME], instanceName[1024];
+   utf8_to_wchar(column, -1, columnName, MAX_COLUMN_NAME);
+   utf8_to_wchar(instance, -1, instanceName, 1024);
+   int columnIndex = lastValue->getColumnIndex(columnName);
+   int rowIndex = lastValue->findRowByInstance(instanceName);
+   if ((columnIndex < 0) || (rowIndex < 0))
+      return;
+
+   json_object_set_new(value, "dataType", json_integer(lastValue->getColumnDataType(columnIndex)));
+   json_object_set_new(value, "value", json_string_t(lastValue->getAsString(rowIndex, columnIndex, L"")));
+   json_object_set_new(value, "timestamp", timestamp.asJson());
+}
+
+/**
+ * Handler for POST /v1/data-collection/current-values - last values of given list of DCIs
+ */
+int H_DataCollectionCurrentValuesBulk(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"H_DataCollectionCurrentValuesBulk: empty request");
+      return 400;
+   }
+
+   json_t *items = json_object_get(request, "items");
+   if (!json_is_array(items))
+   {
+      context->setErrorResponse("Missing or invalid \"items\" array");
+      return 400;
+   }
+   if (json_array_size(items) > MAX_BULK_DCI_ITEMS)
+   {
+      context->setErrorResponse("Too many items (maximum is 500)");
+      return 400;
+   }
+
+   size_t index;
+   json_t *item;
+   json_array_foreach(items, index, item)
+   {
+      if ((GetPositiveId(item, "objectId") == 0) || (GetPositiveId(item, "dciId") == 0))
+      {
+         context->setErrorResponse("Each item must have positive integer \"objectId\" and \"dciId\"");
+         return 400;
+      }
+   }
+
+   uint32_t userId = context->getUserId();
+
+   shared_ptr<NetObj> delegate;
+   json_t *delegateValue = json_object_get(request, "delegate");
+   if ((delegateValue != nullptr) && !json_is_null(delegateValue))
+   {
+      uint32_t delegateId = GetPositiveId(request, "delegate");
+      if (delegateId == 0)
+      {
+         context->setErrorResponse("Invalid \"delegate\" object ID");
+         return 400;
+      }
+      delegate = FindObjectById(delegateId);
+      if (delegate == nullptr)
+      {
+         context->setErrorResponse("Delegate object not found");
+         return 404;
+      }
+      if (!delegate->isDelegate())
+      {
+         context->setErrorResponse("Delegate object must be a network map or dashboard");
+         return 400;
+      }
+      if (!delegate->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      {
+         context->writeAuditLog(AUDIT_OBJECTS, false, delegateId, L"Access denied on reading map related DCI values");
+         return 403;
+      }
+   }
+
+   json_t *values = json_array();
+   json_array_foreach(items, index, item)
+   {
+      uint32_t objectId = GetPositiveId(item, "objectId");
+      uint32_t dciId = GetPositiveId(item, "dciId");
+
+      shared_ptr<NetObj> object = FindObjectById(objectId);
+      if ((object == nullptr) || !object->isDataCollectionTarget())
+         continue;
+
+      if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ) &&
+          !((delegate != nullptr) && object->checkAccessRights(userId, OBJECT_ACCESS_DELEGATED_READ) && delegate->getAsDelegate()->containsDci(dciId)))
+         continue;
+
+      shared_ptr<DCObject> dco = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, userId);
+      if (dco == nullptr)
+         continue;
+
+      json_t *value = dco->lastValueToJSON();
+      const char *column = json_object_get_string_utf8(item, "column", nullptr);
+      const char *instance = json_object_get_string_utf8(item, "instance", nullptr);
+      if ((column != nullptr) && (*column != 0) && (instance != nullptr) && (*instance != 0))
+      {
+         json_object_set_new(value, "column", json_string(column));
+         json_object_set_new(value, "instance", json_string(instance));
+         if (dco->getType() == DCO_TYPE_TABLE)
+            SetTableCellValue(value, static_cast<DCTable*>(dco.get()), column, instance);
+      }
+      json_array_append_new(values, value);
+   }
+
+   json_t *output = json_object();
+   json_object_set_new(output, "values", values);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
  * Handler for /v1/objects/:object-id/data-collection/performance-view
  * Returns list of DCIs configured for performance view
  */
