@@ -600,6 +600,64 @@ static inline uint32_t IntFromLinkLocation(LinkDataLocation location)
 }
 
 /**
+ * Direction of data shown by link data source, relative to link direction (element 1 to element 2)
+ */
+enum class LinkDataDirection
+{
+   NONE = 0,
+   FORWARD = 1,
+   REVERSE = 2
+};
+
+#define LINK_DATA_DIRECTION_NONE "NONE"
+#define LINK_DATA_DIRECTION_FORWARD "FORWARD"
+#define LINK_DATA_DIRECTION_REVERSE "REVERSE"
+
+/**
+ * Convert network map link data direction to string
+ */
+static inline const char *LinkDirectionToString(LinkDataDirection d)
+{
+   switch (d)
+   {
+      case LinkDataDirection::NONE:
+         return LINK_DATA_DIRECTION_NONE;
+      case LinkDataDirection::FORWARD:
+         return LINK_DATA_DIRECTION_FORWARD;
+      case LinkDataDirection::REVERSE:
+         return LINK_DATA_DIRECTION_REVERSE;
+   }
+   return LINK_DATA_DIRECTION_NONE;
+}
+
+/**
+ * Convert network map link data direction int to enum
+ */
+static inline LinkDataDirection LinkDirectionFromInt(uint32_t direction)
+{
+   switch (direction)
+   {
+      case 1:
+         return LinkDataDirection::FORWARD;
+      case 2:
+         return LinkDataDirection::REVERSE;
+   }
+   return LinkDataDirection::NONE;
+}
+
+/**
+ * Convert network map link data direction string to enum
+ */
+static inline LinkDataDirection LinkDirectionFromString(const char *direction)
+{
+   if (!stricmp(direction, LINK_DATA_DIRECTION_FORWARD))
+      return LinkDataDirection::FORWARD;
+   if (!stricmp(direction, LINK_DATA_DIRECTION_REVERSE))
+      return LinkDataDirection::REVERSE;
+   return LinkDataDirection::NONE;
+}
+
+/**
  * Link data shource provider
  * Used also for NXSL
  */
@@ -612,7 +670,7 @@ private:
    String m_name;
    bool m_system;
    LinkDataLocation m_location;
-
+   LinkDataDirection m_direction;
 
 public:
    LinkDataSouce(json_t *config);
@@ -622,6 +680,7 @@ public:
    const String& getName() const { return m_name; }
    const String& getFormat() const { return m_format; }
    LinkDataLocation getLocation() const { return m_location; }
+   LinkDataDirection getDirection() const { return m_direction; }
 
    bool isSystem() const { return m_system; }
 };
@@ -672,9 +731,8 @@ public:
    unique_ptr<ObjectArray<LinkDataSouce>> getDataSource();
    void updateConfig();
 
-   void updateDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location);
-   void addSystemDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location);
-   void updateDataSourceLocation(const shared_ptr<DCObjectInfo> &dci, LinkDataLocation location);
+   void updateDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location, LinkDataDirection direction);
+   void addSystemDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location, LinkDataDirection direction);
    void clearDataSource();
    void clearSystemDataSource();
    void removeDataSource(uint32_t index);

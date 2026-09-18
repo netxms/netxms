@@ -63,7 +63,8 @@ public class LinkDataSources extends LinkPropertyPage
    public static final int COLUMN_METRIC = 2;
    public static final int COLUMN_FORMAT = 3;
    public static final int COLUMN_LOCATION = 4;
-   public static final int COLUMN_SOURCE = 5;
+   public static final int COLUMN_DIRECTION = 5;
+   public static final int COLUMN_SOURCE = 6;
 
    private DciListLabelProvider labelProvider;
    private SortableTableViewer viewer;
@@ -97,8 +98,8 @@ public class LinkDataSources extends LinkPropertyPage
       labelProvider = new DciListLabelProvider(dciList, linkEditor);
       labelProvider.resolveDciNames(dciList);
 
-      final String[] columnNames = { i18n.tr("Position"), i18n.tr("Node"), i18n.tr("Metric"), i18n.tr("Format"), i18n.tr("Location"), i18n.tr("Source") };
-      final int[] columnWidths = { 40, 130, 200, 150, 100, 100 };
+      final String[] columnNames = { i18n.tr("Position"), i18n.tr("Node"), i18n.tr("Metric"), i18n.tr("Format"), i18n.tr("Location"), i18n.tr("Direction"), i18n.tr("Source") };
+      final int[] columnWidths = { 40, 130, 200, 150, 100, 200, 100 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI
             | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -287,7 +288,7 @@ public class LinkDataSources extends LinkPropertyPage
             labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), item.getDescription());
 
             dciList.add(dci);
-            
+
          }
          viewer.setInput(dciList.toArray());
          viewer.setSelection(new StructuredSelection(select));

@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.networkmaps.widgets.helpers;
 
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -27,6 +28,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.LinkDataDirection;
 import org.netxms.client.maps.LinkDataLocation;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.nxmc.tools.ColorCache;
@@ -79,6 +81,7 @@ public final class GeoLinkRenderer
    private static final int LABEL_GAP = 4;
    private static final int PILL_PAD_X = 4;
    private static final int PILL_PAD_Y = 2;
+   private static final int ARROW_GAP = 2;
 
    private GeoLinkRenderer()
    {
@@ -259,50 +262,55 @@ public final class GeoLinkRenderer
       double connectorOffset = Math.min(CONNECTOR_OFFSET_PX, totalLength / 3.0);
       double connectorFracSrc = (totalLength > 0) ? (connectorOffset / totalLength) : 0;
       double connectorFracDst = (totalLength > 0) ? (1.0 - connectorOffset / totalLength) : 1.0;
+      // Data direction arrows are parallel to the first segment of the link
+      double[] linkDirection = DirectionArrow.unitVector(polyline[0].x, polyline[0].y, polyline[1].x, polyline[1].y);
+
       String srcLabel = LinkLabelText.connectorName(link, false, session);
       Point srcLabelSize = null;
       if (srcLabel != null)
       {
-         drawPillAt(gc, pointAtFraction(polyline, cumDist, connectorFracSrc), srcLabel, null, colors);
-         srcLabelSize = pillSize(gc, srcLabel);
+         List<LinkLabelLine> srcLines = Collections.singletonList(new LinkLabelLine(srcLabel));
+         drawPillAt(gc, pointAtFraction(polyline, cumDist, connectorFracSrc), srcLines, null, colors, linkDirection);
+         srcLabelSize = pillSize(gc, srcLines);
       }
       String dstLabel = LinkLabelText.connectorName(link, true, session);
       Point dstLabelSize = null;
       if (dstLabel != null)
       {
-         drawPillAt(gc, pointAtFraction(polyline, cumDist, connectorFracDst), dstLabel, null, colors);
-         dstLabelSize = pillSize(gc, dstLabel);
+         List<LinkLabelLine> dstLines = Collections.singletonList(new LinkLabelLine(dstLabel));
+         drawPillAt(gc, pointAtFraction(polyline, cumDist, connectorFracDst), dstLines, null, colors, linkDirection);
+         dstLabelSize = pillSize(gc, dstLines);
       }
 
       // Center label: link name + CENTER DCI values.
       // For proxy / tunnel link types the graph canvas paints the CENTER label
       // with the link's line color as background (text auto-contrasted) — match it here.
-      String centerText = LinkLabelText.centerLabel(link, session, dciValueProvider);
-      if (!centerText.isEmpty())
+      List<LinkLabelLine> centerLines = LinkLabelText.centerLabel(link, session, dciValueProvider);
+      if (!centerLines.isEmpty())
       {
          Color centerBg = isProxyOrTunnel(link.getType()) ? lineColor : null;
-         drawPillAt(gc, pointAtFraction(polyline, cumDist, fracCenter), centerText, centerBg, colors);
+         drawPillAt(gc, pointAtFraction(polyline, cumDist, fracCenter), centerLines, centerBg, colors, linkDirection);
       }
 
       // OBJECT1 / OBJECT2 pills keep their proportional position but are
       // pushed along the link when they would overlap the connector pill.
-      String obj1 = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT1, session, dciValueProvider);
+      List<LinkLabelLine> obj1 = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT1, session, dciValueProvider);
       if (!obj1.isEmpty())
       {
          double frac = fracObj1;
          if ((srcLabelSize != null) && (totalLength > 0))
             frac = Math.max(frac, minimumLabelDistance(gc, srcLabelSize, connectorOffset, obj1, polyline[0], polyline[1]) / totalLength);
          frac = Math.min(frac, 4.0 / 11.0);
-         drawPillAt(gc, pointAtFraction(polyline, cumDist, frac), obj1, null, colors);
+         drawPillAt(gc, pointAtFraction(polyline, cumDist, frac), obj1, null, colors, linkDirection);
       }
-      String obj2 = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT2, session, dciValueProvider);
+      List<LinkLabelLine> obj2 = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT2, session, dciValueProvider);
       if (!obj2.isEmpty())
       {
          double frac = fracObj2;
          if ((dstLabelSize != null) && (totalLength > 0))
             frac = Math.min(frac, 1.0 - minimumLabelDistance(gc, dstLabelSize, connectorOffset, obj2, polyline[polyline.length - 1], polyline[polyline.length - 2]) / totalLength);
          frac = Math.max(frac, 7.0 / 11.0);
-         drawPillAt(gc, pointAtFraction(polyline, cumDist, frac), obj2, null, colors);
+         drawPillAt(gc, pointAtFraction(polyline, cumDist, frac), obj2, null, colors, linkDirection);
       }
 
       gc.setLineStyle(oldStyle);
@@ -330,7 +338,7 @@ public final class GeoLinkRenderer
     * Minimum distance from the endpoint to the center of a data pill at which it does not overlap the connector pill.
     * Measured along the link segment adjacent to that endpoint.
     */
-   private static double minimumLabelDistance(GC gc, Point connectorPillSize, double connectorOffset, String text, Point segmentStart, Point segmentEnd)
+   private static double minimumLabelDistance(GC gc, Point connectorPillSize, double connectorOffset, List<LinkLabelLine> lines, Point segmentStart, Point segmentEnd)
    {
       double dx = segmentEnd.x - segmentStart.x;
       double dy = segmentEnd.y - segmentStart.y;
@@ -339,19 +347,33 @@ public final class GeoLinkRenderer
          return 0;
       double cos = Math.abs(dx / len);
       double sin = Math.abs(dy / len);
-      Point size = pillSize(gc, text);
+      Point size = pillSize(gc, lines);
       double connectorExtent = connectorPillSize.x * cos + connectorPillSize.y * sin;
       double labelExtent = size.x * cos + size.y * sin;
       return connectorOffset + connectorExtent / 2 + LABEL_GAP + labelExtent / 2;
    }
 
    /**
-    * Size of the pill drawn by {@link #drawPillLabel} for given text.
+    * Size of the pill drawn by {@link #drawPillLabel} for given lines. Space reserved for direction arrow is a square with
+    * side equal to line height, so pill size does not depend on link direction.
     */
-   private static Point pillSize(GC gc, String text)
+   private static Point pillSize(GC gc, List<LinkLabelLine> lines)
    {
-      Point textSize = gc.textExtent(text, SWT.DRAW_DELIMITER);
-      return new Point(textSize.x + PILL_PAD_X * 2, textSize.y + PILL_PAD_Y * 2);
+      int lineHeight = gc.getFontMetrics().getHeight();
+      int separatorWidth = gc.textExtent(LinkLabelLine.SEGMENT_SEPARATOR).x;
+      int width = 0;
+      for(LinkLabelLine line : lines)
+      {
+         int lineWidth = separatorWidth * (line.getSegments().size() - 1);
+         for(LinkLabelLine.Segment s : line.getSegments())
+         {
+            if (s.direction != LinkDataDirection.NONE)
+               lineWidth += lineHeight + ARROW_GAP;
+            lineWidth += gc.textExtent(s.text).x;
+         }
+         width = Math.max(width, lineWidth);
+      }
+      return new Point(width + PILL_PAD_X * 2, lineHeight * lines.size() + PILL_PAD_Y * 2);
    }
 
    /**
@@ -360,9 +382,9 @@ public final class GeoLinkRenderer
     * text is drawn in black. When non-null, the text color is auto-selected
     * for contrast against the supplied background.
     */
-   private static void drawPillAt(GC gc, Point center, String text, Color background, ColorCache colors)
+   private static void drawPillAt(GC gc, Point center, List<LinkLabelLine> lines, Color background, ColorCache colors, double[] linkDirection)
    {
-      drawPillLabel(gc, center.x, center.y, text, background, colors);
+      drawPillLabel(gc, center.x, center.y, lines, background, colors, linkDirection);
    }
 
    /**
@@ -426,15 +448,17 @@ public final class GeoLinkRenderer
    }
 
    /**
-    * Draw {@code text} inside a rounded, filled rectangle centered at
-    * {@code (cx, cy)}. Matches the style of {@link ConnectorLabel} used on the
+    * Draw {@code lines} inside a rounded, filled rectangle centered at
+    * {@code (cx, cy)}. Data direction is shown as an arrow before the text,
+    * parallel to {@code linkDirection} (unit vector of the link's first
+    * segment, null if unknown). Matches the style of {@link ConnectorLabel} used on the
     * Zest-based graph canvas. With {@code background == null}: light-grey
     * fill, black text, dark border. With a custom {@code background}: filled
     * with that color, text auto-contrasted against it.
     */
-   private static void drawPillLabel(GC gc, int cx, int cy, String text, Color background, ColorCache colors)
+   private static void drawPillLabel(GC gc, int cx, int cy, List<LinkLabelLine> lines, Color background, ColorCache colors, double[] linkDirection)
    {
-      Point size = pillSize(gc, text);
+      Point size = pillSize(gc, lines);
       int w = size.x;
       int h = size.y;
       int x = cx - w / 2;
@@ -454,7 +478,36 @@ public final class GeoLinkRenderer
       gc.drawRoundRectangle(x, y, w, h, 8, 8);
       Color textColor = (background != null) ? ColorConverter.selectTextColorByBackgroundColor(background, colors) : LABEL_FG;
       gc.setForeground(textColor);
-      gc.drawText(text, x + PILL_PAD_X, y + PILL_PAD_Y, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
+      gc.setBackground(textColor);
+      int lineHeight = gc.getFontMetrics().getHeight();
+      int separatorWidth = gc.textExtent(LinkLabelLine.SEGMENT_SEPARATOR).x;
+      int lineY = y + PILL_PAD_Y;
+      for(LinkLabelLine line : lines)
+      {
+         int segmentX = x + PILL_PAD_X;
+         boolean first = true;
+         for(LinkLabelLine.Segment s : line.getSegments())
+         {
+            if (!first)
+               segmentX += separatorWidth;
+            first = false;
+            if (s.direction != LinkDataDirection.NONE)
+            {
+               if (linkDirection != null)
+               {
+                  double sign = (s.direction == LinkDataDirection.FORWARD) ? 1 : -1;
+                  DirectionArrow arrow = new DirectionArrow(segmentX + lineHeight / 2, lineY + lineHeight / 2, linkDirection[0] * sign, linkDirection[1] * sign, lineHeight - 2);
+                  gc.setLineWidth(arrow.shaftWidth);
+                  gc.drawLine(arrow.shaft[0], arrow.shaft[1], arrow.shaft[2], arrow.shaft[3]);
+                  gc.fillPolygon(arrow.head);
+               }
+               segmentX += lineHeight + ARROW_GAP;
+            }
+            gc.drawText(s.text, segmentX, lineY, SWT.DRAW_TRANSPARENT);
+            segmentX += gc.textExtent(s.text).x;
+         }
+         lineY += lineHeight;
+      }
 
       gc.setBackground(oldBg);
       gc.setForeground(oldFg);

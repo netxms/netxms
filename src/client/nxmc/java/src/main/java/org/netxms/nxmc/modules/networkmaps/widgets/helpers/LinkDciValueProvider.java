@@ -106,7 +106,7 @@ public class LinkDciValueProvider implements DisposableSingleton
 					{
                   if (dciIDList.size() > 0)
 					   {
-   						DciValue[] values = session.getLastValues(dciIDList); 
+   						DciValue[] values = session.getLastValues(dciIDList);
    						for(DciValue v : values)
    						   cachedDciValues.put(v.getId(), v);
 					   }
@@ -119,7 +119,7 @@ public class LinkDciValueProvider implements DisposableSingleton
 			}
 			try
 			{
-				Thread.sleep(30000); 
+				Thread.sleep(30000);
 			}
 			catch(InterruptedException e1)
 			{
@@ -131,7 +131,7 @@ public class LinkDciValueProvider implements DisposableSingleton
 
 	/**
 	 * Get last DCI value for given DCI id
-	 * 
+	 *
 	 * @param dciID
 	 * @return
 	 */
@@ -157,7 +157,7 @@ public class LinkDciValueProvider implements DisposableSingleton
 
 	/**
 	 * Adds DCI to value request list. Should be used for DCO_TYPE_ITEM
-	 * 
+	 *
 	 * @param nodeID
 	 * @param dciID
 	 * @param mapPage
@@ -186,7 +186,7 @@ public class LinkDciValueProvider implements DisposableSingleton
 
 	/**
 	 * Adds DCI to value request list. Should be used for DCO_TYPE_TABLE
-    * 
+    *
 	 * @param nodeID
 	 * @param dciID
 	 * @param column
@@ -237,30 +237,37 @@ public class LinkDciValueProvider implements DisposableSingleton
 	}
 
    /**
-    * @param link
-    * @return
+    * Get formatted values of link's data sources at given location, one line per data source that has a value.
+    *
+    * @param link map link
+    * @param location location on the link
+    * @return label lines
     */
-   public String getDciDataAsString(NetworkMapLink link, LinkDataLocation location)
+   public List<LinkLabelLine> getDciData(NetworkMapLink link, LinkDataLocation location)
    {
+      List<LinkLabelLine> lines = new ArrayList<>();
       if (!link.hasDciData())
-         return "";
+         return lines;
 
-      MapLinkDataSource[] dciList =  link.getDciList();
       TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
-      StringBuilder sb = new StringBuilder();
-      for(int i = 0; i < dciList.length; i++)
+      for(MapLinkDataSource dataSource : link.getDciList())
       {
-         if (dciList[i].getLocation() != location)
+         if (dataSource.getLocation() != location)
             continue;
 
-         if (!sb.isEmpty())
-            sb.append('\n');
-         
-         DciValue v = getDciLastValue(dciList[i].getDciId());
-         if (v != null)
-            sb.append(v.isDataCollectionError() ? DataCollectionDisplayInfo.getErrorText(v.getLastCollectionError()) : DciValueFormatter.format(v, dciList[i].getFormatString(), timeFormatter));
+         DciValue v = getDciLastValue(dataSource.getDciId());
+         if (v == null)
+            continue;
+
+         String text = v.isDataCollectionError() ? DataCollectionDisplayInfo.getErrorText(v.getLastCollectionError()) : DciValueFormatter.format(v, dataSource.getFormatString(), timeFormatter);
+         if (text.isEmpty())
+            continue;
+
+         LinkLabelLine line = new LinkLabelLine();
+         line.add(dataSource.getDirection(), text);
+         lines.add(line);
       }
-      return sb.toString();
+      return lines;
    }
 
    /**
@@ -293,7 +300,7 @@ public class LinkDciValueProvider implements DisposableSingleton
       {
          DciValue value = getDciLastValue(dciList.get(i).getDciId());
          if (value != null)
-            result.add(value); 
+            result.add(value);
       }
       return result;
    }
@@ -304,6 +311,6 @@ public class LinkDciValueProvider implements DisposableSingleton
     */
    public DciValue getLastDciData(MapDataSource dci)
    {
-      return getDciLastValue(dci.getDciId()); 
+      return getDciLastValue(dci.getDciId());
    }
 }

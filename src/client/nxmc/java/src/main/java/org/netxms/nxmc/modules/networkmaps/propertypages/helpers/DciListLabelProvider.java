@@ -47,16 +47,16 @@ import org.xnap.commons.i18n.I18n;
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
    private final Color systemElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
-   
+
    private I18n i18n = LocalizationHelper.getI18n(DciListLabelProvider.class);
    private NXCSession session = Registry.getSession();
 	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
 	private List<? extends MapDataSource> elementList;
    private LinkEditor linkEditor;
-	
+
 	/**
 	 * Constructor for DciListLabelProvider class
-	 * @param linkEditor 
+	 * @param linkEditor
 	 */
 	public DciListLabelProvider(List<? extends MapDataSource> elementList, LinkEditor linkEditor)
 	{
@@ -88,7 +88,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				AbstractObject object = session.findObjectById(dci.getNodeId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case LinkDataSources.COLUMN_METRIC:
-            return (dciNameCache.get(dci.getDciId()) != null && dciNameCache.get(dci.getDciId()).displayName != null) ? 
+            return (dciNameCache.get(dci.getDciId()) != null && dciNameCache.get(dci.getDciId()).displayName != null) ?
                   dciNameCache.get(dci.getDciId()).displayName : i18n.tr("Unresolved DCI name");
          case LinkDataSources.COLUMN_FORMAT:
             return dci.getFormatString();
@@ -102,6 +102,16 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
                case OBJECT2:
                   return session.getObjectNameWithAlias(linkEditor.getElement2());
             }
+         case LinkDataSources.COLUMN_DIRECTION:
+            switch(((MapLinkDataSource)dci).getDirection())
+            {
+               case FORWARD:
+                  return session.getObjectNameWithAlias(linkEditor.getElement1()) + " \u2192 " + session.getObjectNameWithAlias(linkEditor.getElement2());
+               case REVERSE:
+                  return session.getObjectNameWithAlias(linkEditor.getElement2()) + " \u2192 " + session.getObjectNameWithAlias(linkEditor.getElement1());
+               default:
+                  return "";
+            }
          case LinkDataSources.COLUMN_SOURCE:
             return ((MapLinkDataSource)dci).isSystem() ? i18n.tr("System") : i18n.tr("User");
 		}
@@ -110,7 +120,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 
 	/**
 	 * Resolve DCI names for given collection of condition DCIs and add to cache
-	 * 
+	 *
 	 * @param dciList
 	 */
 	public void resolveDciNames(final Collection<? extends MapDataSource> dciList)
@@ -139,7 +149,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 
 	/**
 	 * Add single cache entry
-	 * 
+	 *
 	 * @param nodeId
 	 * @param dciId
 	 * @param name
@@ -157,7 +167,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
          return systemElementColor;
       return null;
    }
-   
+
    /**
     * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
     */

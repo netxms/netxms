@@ -1807,82 +1807,102 @@ static SharedObjectArray<DCObject> CollectDcis(shared_ptr<Node> node, uint32_t i
 }
 
 /**
- * Update links with DCI information
+ * Update system data sources of the link: traffic in each direction, taken from first link end that has traffic DCI for that direction
  */
 void NetworkMap::updateLinkDataSource(NetworkMapLinkContainer *linkContainer)
 {
-   shared_ptr<Interface> interface1 = static_pointer_cast<Interface>(FindObjectById(linkContainer->get()->getInterface1() , OBJECT_INTERFACE));
-   shared_ptr<Interface> interface2 = static_pointer_cast<Interface>(FindObjectById(linkContainer->get()->getInterface2() , OBJECT_INTERFACE));
+   if (!isShowTraffic())
+   {
+      linkContainer->clearSystemDataSource();
+      return;
+   }
+
+   shared_ptr<Interface> interface1 = static_pointer_cast<Interface>(FindObjectById(linkContainer->get()->getInterface1(), OBJECT_INTERFACE));
+   shared_ptr<Interface> interface2 = static_pointer_cast<Interface>(FindObjectById(linkContainer->get()->getInterface2(), OBJECT_INTERFACE));
    shared_ptr<Node> node1 = (interface1 != nullptr) ? interface1->getParentNode() : nullptr;
    shared_ptr<Node> node2 = (interface2 != nullptr) ? interface2->getParentNode() : nullptr;
-   if (isShowTraffic() && ((node1 != nullptr) || (node2 != nullptr)))
-   {
-      SharedObjectArray<DCObject> dcis;
-      if (node1 != nullptr)
-         dcis.addAll(CollectDcis(node1, interface1->getId()));
-      if (node2 != nullptr)
-         dcis.addAll(CollectDcis(node2, interface2->getId()));
 
-      unique_ptr<ObjectArray<LinkDataSouce>> linkDataSource = linkContainer->getDataSource();
-      for (int i = 0, j = 0; i < linkDataSource->size(); i++, j++)
+   // First link end is preferred: DCIs of the second end are used only for directions not found on the first one
+   SharedObjectArray<DCObject> dcis;
+   if (node1 != nullptr)
+      dcis.addAll(CollectDcis(node1, interface1->getId()));
+   if (node2 != nullptr)
+      dcis.addAll(CollectDcis(node2, interface2->getId()));
+
+   unique_ptr<ObjectArray<LinkDataSouce>> linkDataSource = linkContainer->getDataSource();
+
+   // Forward direction is from element 1 to element 2. Direction already shown by user defined data source gets no system one.
+   shared_ptr<DCObject> forwardDci, reverseDci;
+   bool forwardFound = false, reverseFound = false;
+   for (const shared_ptr<DCObject> &dci : dcis)
+   {
+      String tag = dci->getSystemTag();
+      bool outbound = tag.startsWith(L"iface.outbound.");
+      bool onInterface1 = (dci->getRelatedObject() == linkContainer->get()->getInterface1());
+      bool forward = (outbound == onInterface1);
+      if (forward ? forwardFound : reverseFound)
+         continue;
+
+      bool userDefined = false;
+      for (const LinkDataSouce *lds : *linkDataSource)
       {
-         LinkDataSouce *lds = linkDataSource->get(i);
-         if (!lds->isSystem())
-            continue;
-         bool found = false;
-         for (const shared_ptr<DCObject> &dci : dcis)
+         if (!lds->isSystem() && (lds->getDciId() == dci->getId()))
          {
-            if (lds->getDciId() == dci->getId())
-            {
-               found = true;
-               LinkDataLocation loc = (dci->getRelatedObject() == linkContainer->get()->getInterface1()) ? LinkDataLocation::OBJECT1 : LinkDataLocation::OBJECT2;
-               if (lds->getLocation() != loc)
-               {
-                  linkContainer->updateDataSourceLocation(dci->createDescriptor(), loc);
-               }
-            }
-         }
-         if (!found)
-         {
-            linkContainer->removeDataSource(j);
-            j--;
+            userDefined = true;
+            break;
          }
       }
 
-      for (const shared_ptr<DCObject> &dci : dcis)
+      if (forward)
       {
-         bool found = false;
-         for (const LinkDataSouce *lds : *linkDataSource)
-         {
-            if (lds->getDciId() == dci->getId())
-            {
-               //Location already checked and updated in previous cycle
-               found = true;
-               break;
-            }
-         }
-         if (!found)
-         {
-            String tag = dci->getSystemTag();
-            wchar_t format[128];
-            _sntprintf(format, 128, L"%s: %s", tag.startsWith(L"iface.inbound.") ? L"RX" : L"TX", L" %{u,m}s");
-            LinkDataLocation loc = (dci->getRelatedObject() == linkContainer->get()->getInterface1()) ? LinkDataLocation::OBJECT1 : LinkDataLocation::OBJECT2;
-            linkContainer->addSystemDataSource(dci->createDescriptor(), format, loc);
-         }
+         forwardFound = true;
+         if (!userDefined)
+            forwardDci = dci;
+      }
+      else
+      {
+         reverseFound = true;
+         if (!userDefined)
+            reverseDci = dci;
       }
    }
-   else
+
+   shared_ptr<DCObject> trafficDcis[2];
+   LinkDataDirection directions[2];
+   int count = 0;
+   if (forwardDci != nullptr)
    {
-      unique_ptr<ObjectArray<LinkDataSouce>> linkDataSource = linkContainer->getDataSource();
-      for (int i = 0; i < linkDataSource->size(); i++)
-      {
-         LinkDataSouce *lds = linkDataSource->get(i);
-         if (lds->isSystem())
-         {
-            linkContainer->clearSystemDataSource();
-         }
-      }
+      trafficDcis[count] = forwardDci;
+      directions[count++] = LinkDataDirection::FORWARD;
    }
+   if (reverseDci != nullptr)
+   {
+      trafficDcis[count] = reverseDci;
+      directions[count++] = LinkDataDirection::REVERSE;
+   }
+
+   const wchar_t *format = L"%{u,m}s";
+
+   int matched = 0;
+   bool upToDate = true;
+   for (const LinkDataSouce *lds : *linkDataSource)
+   {
+      if (!lds->isSystem())
+         continue;
+      if ((matched == count) || (lds->getDciId() != trafficDcis[matched]->getId()) || (lds->getDirection() != directions[matched]) ||
+          (lds->getLocation() != LinkDataLocation::CENTER) || (wcscmp(lds->getFormat(), format) != 0))
+      {
+         upToDate = false;
+         break;
+      }
+      matched++;
+   }
+   if (upToDate && (matched == count))
+      return;
+
+   linkContainer->clearSystemDataSource();
+   for (int i = 0; i < count; i++)
+      linkContainer->addSystemDataSource(trafficDcis[i]->createDescriptor(), format, LinkDataLocation::CENTER, directions[i]);
 }
 
 /**

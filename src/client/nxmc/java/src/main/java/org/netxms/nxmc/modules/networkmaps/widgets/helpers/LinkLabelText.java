@@ -18,7 +18,10 @@
  */
 package org.netxms.nxmc.modules.networkmaps.widgets.helpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.LinkDataDirection;
 import org.netxms.client.maps.LinkDataLocation;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -27,10 +30,12 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Text of network map link labels, shared by the graph canvas and the geographical canvas. Each label location (connector
  * name at either end, OBJECT1/OBJECT2 values, center) is built separately; for a {@link ParallelLinkGroup} every location
- * lists its members, one row per member.
+ * lists its members, one line per member.
  */
 public final class LinkLabelText
 {
+   private static final LinkDataDirection[] DIRECTION_ORDER = { LinkDataDirection.FORWARD, LinkDataDirection.REVERSE, LinkDataDirection.NONE };
+
    private LinkLabelText()
    {
    }
@@ -71,76 +76,95 @@ public final class LinkLabelText
    }
 
    /**
-    * Get formatted values of data sources at given location. For a group: one row per member with values there,
-    * prefixed with the member's connector name (OBJECT1/OBJECT2) or identity (CENTER).
+    * Get formatted values of data sources at given location. For a group: one line per member with values there,
+    * followed by the member's connector name (OBJECT1/OBJECT2) or identity (CENTER) in parentheses.
     *
     * @param link map link
     * @param location location on the link
     * @param session client session
     * @param values DCI value provider
-    * @return label text, empty string if there are no values
+    * @return label lines, empty list if there are no values
     */
-   public static String locationValues(NetworkMapLink link, LinkDataLocation location, NXCSession session, LinkDciValueProvider values)
+   public static List<LinkLabelLine> locationValues(NetworkMapLink link, LinkDataLocation location, NXCSession session, LinkDciValueProvider values)
    {
       if (!(link instanceof ParallelLinkGroup))
-         return values.getDciDataAsString(link, location);
+         return values.getDciData(link, location);
 
       ParallelLinkGroup group = (ParallelLinkGroup)link;
-      StringBuilder sb = new StringBuilder();
+      List<LinkLabelLine> lines = new ArrayList<>();
       for(NetworkMapLink member : group.getLinks())
       {
-         String text = values.getDciDataAsString(member, group.memberLocation(member, location));
-         if (text.isEmpty())
+         List<LinkLabelLine> memberValues = values.getDciData(member, group.memberLocation(member, location));
+         if (memberValues.isEmpty())
             continue;
-         if (sb.length() > 0)
-            sb.append('\n');
-         String prefix = (location == LinkDataLocation.CENTER) ? memberIdentity(group, member, session)
+         String name = (location == LinkDataLocation.CENTER) ? memberIdentity(group, member, session)
                : connectorName(member, (location == LinkDataLocation.OBJECT2) != group.isInverted(member), session);
-         if (prefix != null)
-            sb.append(prefix).append(": ");
-         sb.append(text.replace("\n", "  "));
+         lines.add(memberLine(name, memberValues, group.isInverted(member)));
       }
-      return sb.toString();
+      return lines;
    }
 
    /**
-    * Get text of the center label: link name and CENTER values. For a group: member count, then one row per member that
-    * has a name or CENTER values.
+    * Get lines of the center label: link name and CENTER values. For a group: member count, then one line per member
+    * that has a name or CENTER values.
     *
     * @param link map link
     * @param session client session
     * @param values DCI value provider
-    * @return label text, empty string if there is nothing to show
+    * @return label lines, empty list if there is nothing to show
     */
-   public static String centerLabel(NetworkMapLink link, NXCSession session, LinkDciValueProvider values)
+   public static List<LinkLabelLine> centerLabel(NetworkMapLink link, NXCSession session, LinkDciValueProvider values)
    {
+      List<LinkLabelLine> lines = new ArrayList<>();
       if (link instanceof ParallelLinkGroup)
       {
          ParallelLinkGroup group = (ParallelLinkGroup)link;
-         StringBuilder sb = new StringBuilder(LocalizationHelper.getI18n(LinkLabelText.class).tr("{0} links", group.getLinks().size()));
+         lines.add(new LinkLabelLine(LocalizationHelper.getI18n(LinkLabelText.class).tr("{0} links", group.getLinks().size())));
          for(NetworkMapLink member : group.getLinks())
          {
-            String text = values.getDciDataAsString(member, LinkDataLocation.CENTER);
-            if (!member.hasName() && text.isEmpty())
-               continue;
-            sb.append('\n').append(memberIdentity(group, member, session));
-            if (!text.isEmpty())
-               sb.append(": ").append(text.replace("\n", "  "));
+            List<LinkLabelLine> memberValues = values.getDciData(member, LinkDataLocation.CENTER);
+            if (member.hasName() || !memberValues.isEmpty())
+               lines.add(memberLine(memberIdentity(group, member, session), memberValues, group.isInverted(member)));
          }
-         return sb.toString();
+         return lines;
       }
 
-      StringBuilder sb = new StringBuilder();
       if (link.hasName())
-         sb.append(link.getName());
-      String text = values.getDciDataAsString(link, LinkDataLocation.CENTER);
-      if (!text.isEmpty())
+         lines.add(new LinkLabelLine(link.getName()));
+      lines.addAll(values.getDciData(link, LinkDataLocation.CENTER));
+      return lines;
+   }
+
+   /**
+    * Build single line for a group member: its values followed by the member name in parentheses, so values of all
+    * members start at the same position. Data direction of an inverted member is reversed to match the group's
+    * orientation, and values are ordered by direction (forward, reverse, no direction) so arrows of all members line up.
+    *
+    * @param name member name (can be null)
+    * @param memberValues member's values
+    * @param inverted true if member's element order is opposite to the group's
+    * @return line for the member
+    */
+   private static LinkLabelLine memberLine(String name, List<LinkLabelLine> memberValues, boolean inverted)
+   {
+      LinkLabelLine line = new LinkLabelLine();
+      for(LinkDataDirection direction : DIRECTION_ORDER)
       {
-         if (sb.length() > 0)
-            sb.append('\n');
-         sb.append(text);
+         for(LinkLabelLine value : memberValues)
+         {
+            for(LinkLabelLine.Segment s : value.getSegments())
+            {
+               LinkDataDirection groupDirection = s.direction;
+               if (inverted && (groupDirection != LinkDataDirection.NONE))
+                  groupDirection = (groupDirection == LinkDataDirection.FORWARD) ? LinkDataDirection.REVERSE : LinkDataDirection.FORWARD;
+               if (groupDirection == direction)
+                  line.add(groupDirection, s.text);
+            }
+         }
       }
-      return sb.toString();
+      if (name != null)
+         line.add(LinkDataDirection.NONE, memberValues.isEmpty() ? name : "(" + name + ")");
+      return line;
    }
 
    /**

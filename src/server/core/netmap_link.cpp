@@ -424,42 +424,14 @@ unique_ptr<ObjectArray<LinkDataSouce>> NetworkMapLinkContainer::getDataSource()
 }
 
 /**
- * Update data source location on link
- *
- * @param dci to change location
- * @param location new location
- */
-void NetworkMapLinkContainer::updateDataSourceLocation(const shared_ptr<DCObjectInfo> &dci, LinkDataLocation location)
-{
-   json_t *dciList = json_object_get(getConfigInstance(), "dciList");
-   if (!json_is_array(dciList))
-   {
-      return;
-   }
-
-   size_t i;
-   json_t *m;
-   json_array_foreach(dciList, i, m)
-   {
-      LinkDataSouce dataSource(m);
-      if (dataSource.getDciId() == dci->getId())
-      {
-         json_object_set_new(m, "location", json_string(LinkLocationToString(location)));
-         setModified();
-         break;
-      }
-   }
-}
-
-
-/**
- * Add new system data source entry alphabetically sorted
+ * Add new system data source entry
  *
  * @param dci dci to add
  * @param format format that should be used to display data
  * @param location data location on the link
+ * @param direction direction of data relative to link direction
  */
-void NetworkMapLinkContainer::addSystemDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location)
+void NetworkMapLinkContainer::addSystemDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location, LinkDataDirection direction)
 {
    json_t *dciList = json_object_get(getConfigInstance(), "dciList");
    if (!json_is_array(dciList))
@@ -468,29 +440,17 @@ void NetworkMapLinkContainer::addSystemDataSource(const shared_ptr<DCObjectInfo>
       json_object_set_new(getConfigInstance(), "dciList", dciList);
    }
 
-   size_t i;
-   json_t *m;
-   json_array_foreach(dciList, i, m)
-   {
-      LinkDataSouce dataSource(m);
-      if (dataSource.isSystem())
-      {
-         if (wcscmp(format, dataSource.getFormat()) < 0)
-            break;
-      }
-   }
-
    json_t *dciElement = json_object();
    json_object_set_new(dciElement, "nodeId", json_integer(dci->getOwnerId()));
    json_object_set_new(dciElement, "dciId", json_integer(dci->getId()));
    json_object_set_new(dciElement, "type", json_integer(1));
    json_object_set_new(dciElement, "location", json_string(LinkLocationToString(location)));
+   json_object_set_new(dciElement, "direction", json_string(LinkDirectionToString(direction)));
    json_object_set_new(dciElement, "system", json_boolean(true));
    json_object_set_new(dciElement, "formatString", json_string_t(format));
-   json_array_insert_new(dciList, i, dciElement);
+   json_array_append_new(dciList, dciElement);
    setModified();
 }
-
 
 /**
  * Update existing or add new data source entry
@@ -498,8 +458,9 @@ void NetworkMapLinkContainer::addSystemDataSource(const shared_ptr<DCObjectInfo>
  * @param dci dci to add
  * @param format format that should be used to display data
  * @param location data location on the link
+ * @param direction direction of data relative to link direction
  */
-void NetworkMapLinkContainer::updateDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location)
+void NetworkMapLinkContainer::updateDataSource(const shared_ptr<DCObjectInfo> &dci, const wchar_t *format, LinkDataLocation location, LinkDataDirection direction)
 {
    json_t *dciList = json_object_get(getConfigInstance(), "dciList");
    if (!json_is_array(dciList))
@@ -524,7 +485,11 @@ void NetworkMapLinkContainer::updateDataSource(const shared_ptr<DCObjectInfo> &d
          if (dataSource.getLocation() != location)
          {
             json_object_set_new(m, "location", json_string(LinkLocationToString(location)));
-
+            setModified();
+         }
+         if (dataSource.getDirection() != direction)
+         {
+            json_object_set_new(m, "direction", json_string(LinkDirectionToString(direction)));
             setModified();
          }
          if (dataSource.isSystem())
@@ -542,6 +507,7 @@ void NetworkMapLinkContainer::updateDataSource(const shared_ptr<DCObjectInfo> &d
    json_object_set_new(dciElement, "dciId", json_integer(dci->getId()));
    json_object_set_new(dciElement, "type", json_integer(1));
    json_object_set_new(dciElement, "location", json_string(LinkLocationToString(location)));
+   json_object_set_new(dciElement, "direction", json_string(LinkDirectionToString(direction)));
    json_object_set_new(dciElement, "system", json_boolean(false));
    json_object_set_new(dciElement, "formatString", json_string_t(format));
    json_array_append_new(dciList, dciElement);
@@ -803,4 +769,5 @@ LinkDataSouce::LinkDataSouce(json_t *config) : m_format(json_object_get_string_u
    m_dciId = json_object_get_uint32(config, "dciId", 0);
    m_system = json_object_get_boolean(config, "system", false);
    m_location = LinkLocationFromString(json_object_get_string_utf8(config, "location", ""));
+   m_direction = LinkDirectionFromString(json_object_get_string_utf8(config, "direction", ""));
 }

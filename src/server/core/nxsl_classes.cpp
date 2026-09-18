@@ -10305,11 +10305,11 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, setStyle)
 }
 
 /**
- * NetworkMapLink::updateDataSource(dci, format, location) method
+ * NetworkMapLink::updateDataSource(dci, format, location, direction) method
  */
 NXSL_METHOD_DEFINITION(NetworkMapLink, updateDataSource)
 {
-   if (argc < 1 || argc > 3)
+   if (argc < 1 || argc > 4)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    if (!argv[0]->isObject(g_nxslDciClass.getName()))
@@ -10321,11 +10321,15 @@ NXSL_METHOD_DEFINITION(NetworkMapLink, updateDataSource)
    if ((argc > 2) && !argv[2]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
+   if ((argc > 3) && !argv[3]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
    auto link = static_cast<NetworkMapLinkContainer*>(object->getData());
 
    const shared_ptr<DCObjectInfo> dci = *static_cast<shared_ptr<DCObjectInfo>*>(argv[0]->getValueAsObject()->getData());
    LinkDataLocation location = LinkLocationFromInt((argc > 2) ? argv[2]->getValueAsUInt32() : 0);
-   link->updateDataSource(dci, (argc > 1) ? argv[1]->getValueAsCString() : _T(""), location);
+   LinkDataDirection direction = LinkDirectionFromInt((argc > 3) ? argv[3]->getValueAsUInt32() : 0);
+   link->updateDataSource(dci, (argc > 1) ? argv[1]->getValueAsCString() : _T(""), location, direction);
 
    return 0;
 }
@@ -10536,6 +10540,10 @@ NXSL_Value *NXSL_LinkDataSourceClass::getAttr(NXSL_Object *object, const NXSL_Id
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("dciId"))
    {
       value = vm->createValue(linkDataSource->getDciId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("direction"))
+   {
+      value = vm->createValue(static_cast<int32_t>(linkDataSource->getDirection()));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("format"))
    {

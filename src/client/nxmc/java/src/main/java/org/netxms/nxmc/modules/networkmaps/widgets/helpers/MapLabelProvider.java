@@ -564,9 +564,9 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
       if (connectionLabelsVisible)
       {
-         String labelString = LinkLabelText.centerLabel(link, session, dciValueProvider);
-         String labelObj1String = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT1, session, dciValueProvider);
-         String labelObj2String = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT2, session, dciValueProvider);
+         List<LinkLabelLine> centerLines = LinkLabelText.centerLabel(link, session, dciValueProvider);
+         List<LinkLabelLine> object1Lines = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT1, session, dciValueProvider);
+         List<LinkLabelLine> object2Lines = LinkLabelText.locationValues(link, LinkDataLocation.OBJECT2, session, dciValueProvider);
 
          ConnectionLocator nameLocatorCenter;
          ConnectionLocator nameLocatorObject1;
@@ -586,7 +586,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
             nameLocatorObject2 = new MultiLabelConnectionLocator(connection.getConnectionFigure(), link, LinkDataLocation.OBJECT2, targetConnectorLabel);
          }
 
-         if (!labelString.isEmpty())
+         if (!centerLines.isEmpty())
          {
             final Label label;
             if (link.getType() == NetworkMapLink.AGENT_TUNEL ||
@@ -595,15 +595,15 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
                 link.getType() == NetworkMapLink.SNMP_PROXY ||
                 link.getType() == NetworkMapLink.SSH_PROXY ||
                 link.getType() == NetworkMapLink.ZONE_PROXY)
-               label = new ConnectorLabel(labelString, this, connection.getLineColor());
+               label = new ConnectorLabel(centerLines, this, connection.getLineColor());
             else
-               label = new ConnectorLabel(labelString, this);
+               label = new ConnectorLabel(centerLines, this);
             connection.getConnectionFigure().add(label, nameLocatorCenter);
          }
-         if (!labelObj1String.isEmpty())
-            connection.getConnectionFigure().add(new ConnectorLabel(labelObj1String, this), nameLocatorObject1);
-         if (!labelObj2String.isEmpty())
-            connection.getConnectionFigure().add(new ConnectorLabel(labelObj2String, this), nameLocatorObject2);
+         if (!object1Lines.isEmpty())
+            connection.getConnectionFigure().add(new ConnectorLabel(object1Lines, this), nameLocatorObject1);
+         if (!object2Lines.isEmpty())
+            connection.getConnectionFigure().add(new ConnectorLabel(object2Lines, this), nameLocatorObject2);
       }
 	}
 
