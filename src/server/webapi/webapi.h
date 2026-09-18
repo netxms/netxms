@@ -39,6 +39,11 @@ json_t *CreateObjectSummary(const NetObj& object);
 json_t *CreateObjectSummary(const NetObj& object, uint32_t userId);
 
 /**
+ * Add already evaluated effective access rights to object's JSON document
+ */
+void AddEffectiveRights(json_t *json, uint64_t rights);
+
+/**
  * Add effective access rights of given user on given object to object's JSON document
  */
 void AddEffectiveRights(json_t *json, const NetObj& object, uint32_t userId);

@@ -91,16 +91,24 @@ static struct
 };
 
 /**
+ * Add already evaluated effective access rights to object's JSON document.
+ * Each right is reported as separate boolean attribute.
+ */
+void AddEffectiveRights(json_t *json, uint64_t rights)
+{
+   json_t *effectiveRights = json_object();
+   for(int i = 0; s_accessRights[i].name != nullptr; i++)
+      json_object_set_new(effectiveRights, s_accessRights[i].name, json_boolean((rights & s_accessRights[i].bit) != 0));
+   json_object_set_new(json, "effectiveRights", effectiveRights);
+}
+
+/**
  * Add effective access rights of given user on given object to object's JSON document.
  * Each right is reported as separate boolean attribute.
  */
 void AddEffectiveRights(json_t *json, const NetObj& object, uint32_t userId)
 {
-   uint64_t rights = object.getUserRights(userId);
-   json_t *effectiveRights = json_object();
-   for(int i = 0; s_accessRights[i].name != nullptr; i++)
-      json_object_set_new(effectiveRights, s_accessRights[i].name, json_boolean((rights & s_accessRights[i].bit) != 0));
-   json_object_set_new(json, "effectiveRights", effectiveRights);
+   AddEffectiveRights(json, object.getUserRights(userId));
 }
 
 /**
@@ -425,6 +433,178 @@ int H_ObjectDetails(Context *context)
    bool includeSensitiveData = object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS);
    json_t *output = object->toJson(includeSensitiveData);
    AddEffectiveRights(output, *object, userId);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Maximum number of object IDs accepted by POST /v1/objects/details
+ */
+#define MAX_BULK_OBJECT_IDS   500
+
+/**
+ * Create reduced object document for an object the user can see only through delegated
+ * read (via a network map or dashboard). Serves the same purpose as the partial object
+ * sent by NetObj::fillMessage(..., false) on NXCP.
+ */
+static json_t *CreatePartialObjectDocument(const NetObj& object, uint64_t rights)
+{
+   json_t *json = CreateObjectSummary(object);
+   AddEffectiveRights(json, rights);
+
+   // On NXCP only nodes report primary IP address in a partial object (Node::fillMessageLockedEssential).
+   // For access points, interfaces and subnets the address is part of the full object only.
+   if (object.getObjectClass() != OBJECT_NODE)
+      json_object_set_new(json, "ipAddress", json_null());
+
+   json_object_set_new(json, "nameOnMap", json_string_t(object.getNameOnMap().cstr()));
+   json_object_set_new(json, "comments", json_string_t(object.getComments().cstr()));
+   json_object_set_new(json, "mapImage", object.getMapImage().toJson());
+   json_object_set_new(json, "drilldownObjectId", json_integer(object.getDrillDownObjectId()));
+   json_object_set_new(json, "partial", json_true());
+   return json;
+}
+
+/**
+ * Handler for POST /v1/objects/details - get multiple objects in one request
+ */
+int H_ObjectDetailsBulk(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"H_ObjectDetailsBulk: empty request");
+      return 400;
+   }
+
+   json_t *idList = json_object_get(request, "ids");
+   if (!json_is_array(idList))
+   {
+      context->setErrorResponse("Missing or invalid \"ids\" array");
+      return 400;
+   }
+   if (json_array_size(idList) > MAX_BULK_OBJECT_IDS)
+   {
+      char errorMessage[64];
+      snprintf(errorMessage, sizeof(errorMessage), "Too many object IDs (maximum is %d)", MAX_BULK_OBJECT_IDS);
+      context->setErrorResponse(errorMessage);
+      return 400;
+   }
+
+   IntegerArray<uint32_t> ids(static_cast<int>(json_array_size(idList)));
+   std::unordered_set<uint32_t> seen;
+   size_t index;
+   json_t *element;
+   json_array_foreach(idList, index, element)
+   {
+      json_int_t value = json_is_integer(element) ? json_integer_value(element) : 0;
+      if ((value <= 0) || (value > static_cast<json_int_t>(UINT32_MAX)))
+      {
+         context->setErrorResponse("Object IDs must be positive integers");
+         return 400;
+      }
+      if (seen.insert(static_cast<uint32_t>(value)).second)
+         ids.add(static_cast<uint32_t>(value));
+   }
+
+   time_t since = 0;
+   json_t *sinceValue = json_object_get(request, "since");
+   if ((sinceValue != nullptr) && !json_is_null(sinceValue))
+   {
+      json_int_t t;
+      if (json_is_integer(sinceValue))
+         t = json_integer_value(sinceValue);
+      else if (json_is_string(sinceValue))
+         t = ParseTimestamp(json_string_value(sinceValue), -1);
+      else
+         t = -1;
+
+      // Timestamps are stored in database as 32 bit values
+      if ((t < 0) || (t > 0x7FFFFFFF))
+      {
+         context->setErrorResponse("Invalid \"since\" timestamp");
+         return 400;
+      }
+      since = static_cast<time_t>(t);
+   }
+
+   uint32_t userId = context->getUserId();
+
+   shared_ptr<NetObj> delegate;
+   uint32_t delegateId = 0;
+   json_t *delegateValue = json_object_get(request, "delegate");
+   if ((delegateValue != nullptr) && !json_is_null(delegateValue))
+   {
+      json_int_t id = json_is_integer(delegateValue) ? json_integer_value(delegateValue) : -1;
+      if ((id < 0) || (id > static_cast<json_int_t>(UINT32_MAX)))
+      {
+         context->setErrorResponse("Delegate object ID must be a positive integer");
+         return 400;
+      }
+      delegateId = static_cast<uint32_t>(id);
+   }
+   if (delegateId != 0)
+   {
+      delegate = FindObjectById(delegateId);
+      if (delegate == nullptr)
+      {
+         context->setErrorResponse("Delegate object not found");
+         return 404;
+      }
+      if (!delegate->isDelegate())
+      {
+         context->setErrorResponse("Delegate object must be a network map or dashboard");
+         return 400;
+      }
+      if (!delegate->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      {
+         context->writeAuditLog(AUDIT_OBJECTS, false, delegateId, L"Access denied on reading map related objects");
+         return 403;
+      }
+   }
+
+   time_t now = time(nullptr);
+   json_t *objects = json_array();
+   json_t *notFound = json_array();
+   json_t *denied = json_array();
+   for(int i = 0; i < ids.size(); i++)
+   {
+      uint32_t id = ids.get(i);
+      shared_ptr<NetObj> object = FindObjectById(id);
+      if ((object == nullptr) || object->isUnpublished() || object->isDeleted())
+      {
+         json_array_append_new(notFound, json_integer(id));
+         continue;
+      }
+
+      uint64_t rights = object->getUserRights(userId);
+      if ((rights & OBJECT_ACCESS_READ) != 0)
+      {
+         if (object->getTimeStamp() < since)
+            continue;
+         bool includeSensitiveData = (rights & (OBJECT_ACCESS_MODIFY | OBJECT_ACCESS_READ_CREDENTIALS)) != 0;
+         json_t *json = object->toJson(includeSensitiveData);
+         AddEffectiveRights(json, rights);
+         json_array_append_new(objects, json);
+      }
+      else if ((delegate != nullptr) && ((rights & OBJECT_ACCESS_DELEGATED_READ) != 0) && delegate->getAsDelegate()->containsObject(object))
+      {
+         if (object->getTimeStamp() < since)
+            continue;
+         json_array_append_new(objects, CreatePartialObjectDocument(*object, rights));
+      }
+      else
+      {
+         json_array_append_new(denied, json_integer(id));
+      }
+   }
+
+   json_t *output = json_object();
+   json_object_set_new(output, "objects", objects);
+   json_object_set_new(output, "notFound", notFound);
+   json_object_set_new(output, "denied", denied);
+   json_object_set_new(output, "timestamp", json_time_string(now));
    context->setResponseData(output);
    json_decref(output);
    return 200;
