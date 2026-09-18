@@ -20,6 +20,7 @@
 **/
 
 #include "webapi.h"
+#include <map>
 
 /**
  * Parse `tier` query parameter — auto/raw/hourly/daily, case-insensitive. Numeric values
@@ -398,6 +399,215 @@ int H_DataCollectionCurrentValues(Context *context)
 
    context->setResponseData(response);
    json_decref(response);
+   return 200;
+}
+
+/**
+ * Maximum number of items accepted by POST /v1/data-collection/current-values
+ */
+#define MAX_BULK_DCI_ITEMS   500
+
+/**
+ * Get positive 32 bit identifier from given JSON object field (0 if missing or invalid)
+ */
+static uint32_t GetPositiveId(json_t *object, const char *tag)
+{
+   json_t *value = json_object_get(object, tag);
+   json_int_t id = json_is_integer(value) ? json_integer_value(value) : 0;
+   return ((id > 0) && (id <= static_cast<json_int_t>(UINT32_MAX))) ? static_cast<uint32_t>(id) : 0;
+}
+
+/**
+ * Replace data type, value, and timestamp in last value document with the value of given table
+ * cell. Missing cell is reported the same way as DCI without collected value.
+ */
+static void SetTableCellValue(json_t *value, DCTable *table, const char *column, const char *instance)
+{
+   Timestamp timestamp;
+   shared_ptr<Table> lastValue = table->getLastValue(&timestamp);
+   int columnIndex = -1, rowIndex = -1;
+   if (lastValue != nullptr)
+   {
+      wchar_t columnName[MAX_COLUMN_NAME], instanceName[1024];
+      utf8_to_wchar(column, -1, columnName, MAX_COLUMN_NAME);
+      utf8_to_wchar(instance, -1, instanceName, 1024);
+      columnIndex = lastValue->getColumnIndex(columnName);
+      rowIndex = lastValue->findRowByInstance(instanceName);
+   }
+   if ((columnIndex < 0) || (rowIndex < 0))
+   {
+      json_object_set_new(value, "timestamp", json_null());
+      return;
+   }
+
+   json_object_set_new(value, "dataType", json_integer(lastValue->getColumnDataType(columnIndex)));
+   json_object_set_new(value, "value", json_string_t(lastValue->getAsString(rowIndex, columnIndex, L"")));
+   json_object_set_new(value, "timestamp", timestamp.asJson());
+}
+
+/**
+ * Item of bulk DCI last values request
+ */
+struct BulkDciItem
+{
+   uint32_t objectId;
+   uint32_t dciId;
+   const char *column;     // Empty if table cell is not selected
+   const char *instance;   // Empty if table cell is not selected
+};
+
+/**
+ * Object referenced by bulk DCI last values request and caller's access to it
+ */
+struct BulkDciObject
+{
+   shared_ptr<NetObj> object;
+   bool read;
+   bool delegatedRead;
+};
+
+/**
+ * Add entry for request item that cannot be served to error list
+ */
+static void AddBulkDciError(json_t *errors, int index, const char *reason)
+{
+   json_t *error = json_object();
+   json_object_set_new(error, "index", json_integer(index));
+   json_object_set_new(error, "reason", json_string(reason));
+   json_array_append_new(errors, error);
+}
+
+/**
+ * Handler for POST /v1/data-collection/current-values - last values of given list of DCIs
+ */
+int H_DataCollectionCurrentValuesBulk(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, L"H_DataCollectionCurrentValuesBulk: empty request");
+      return 400;
+   }
+
+   json_t *items = json_object_get(request, "items");
+   if (!json_is_array(items))
+   {
+      context->setErrorResponse("Missing or invalid \"items\" array");
+      return 400;
+   }
+   if (json_array_size(items) > MAX_BULK_DCI_ITEMS)
+   {
+      char message[64];
+      snprintf(message, sizeof(message), "Too many items (maximum is %d)", MAX_BULK_DCI_ITEMS);
+      context->setErrorResponse(message);
+      return 400;
+   }
+
+   StructArray<BulkDciItem> requestItems(static_cast<int>(json_array_size(items)));
+   size_t index;
+   json_t *item;
+   json_array_foreach(items, index, item)
+   {
+      BulkDciItem *requestItem = requestItems.addPlaceholder();
+      requestItem->objectId = GetPositiveId(item, "objectId");
+      requestItem->dciId = GetPositiveId(item, "dciId");
+      if ((requestItem->objectId == 0) || (requestItem->dciId == 0))
+      {
+         context->setErrorResponse("Each item must have positive integer \"objectId\" and \"dciId\"");
+         return 400;
+      }
+      requestItem->column = json_object_get_string_utf8(item, "column", "");
+      requestItem->instance = json_object_get_string_utf8(item, "instance", "");
+      if ((*requestItem->column == 0) != (*requestItem->instance == 0))
+      {
+         context->setErrorResponse("Table cell selection requires both \"column\" and \"instance\"");
+         return 400;
+      }
+   }
+
+   uint32_t userId = context->getUserId();
+
+   shared_ptr<NetObj> delegate;
+   json_t *delegateValue = json_object_get(request, "delegate");
+   if ((delegateValue != nullptr) && !json_is_null(delegateValue))
+   {
+      uint32_t delegateId = GetPositiveId(request, "delegate");
+      if (delegateId == 0)
+      {
+         context->setErrorResponse("Invalid \"delegate\" object ID");
+         return 400;
+      }
+      delegate = FindObjectById(delegateId);
+      if (delegate == nullptr)
+      {
+         context->setErrorResponse("Delegate object not found");
+         return 404;
+      }
+      if (!delegate->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      {
+         context->writeAuditLog(AUDIT_OBJECTS, false, delegateId, L"Access denied on reading DCI values through network map or dashboard");
+         return 403;
+      }
+      if (!delegate->isDelegate())
+      {
+         context->setErrorResponse("Delegate object must be a network map or dashboard");
+         return 400;
+      }
+   }
+
+   std::map<uint32_t, BulkDciObject> objects;
+   json_t *values = json_array();
+   json_t *errors = json_array();
+   for(int i = 0; i < requestItems.size(); i++)
+   {
+      BulkDciItem *requestItem = requestItems.get(i);
+
+      auto it = objects.find(requestItem->objectId);
+      if (it == objects.end())
+      {
+         BulkDciObject entry;
+         entry.object = FindObjectById(requestItem->objectId);
+         entry.read = (entry.object != nullptr) && entry.object->checkAccessRights(userId, OBJECT_ACCESS_READ);
+         entry.delegatedRead = !entry.read && (delegate != nullptr) && (entry.object != nullptr) && entry.object->checkAccessRights(userId, OBJECT_ACCESS_DELEGATED_READ);
+         it = objects.insert(std::make_pair(requestItem->objectId, entry)).first;
+      }
+      const BulkDciObject& o = it->second;
+
+      if (o.object == nullptr)
+      {
+         AddBulkDciError(errors, i, "Object not found");
+         continue;
+      }
+      if (!o.read && !(o.delegatedRead && delegate->getAsDelegate()->containsDci(requestItem->dciId)))
+      {
+         AddBulkDciError(errors, i, "Access denied");
+         continue;
+      }
+      if (!o.object->isDataCollectionTarget())
+      {
+         AddBulkDciError(errors, i, "Object is not data collection target");
+         continue;
+      }
+
+      shared_ptr<DCObject> dco = static_cast<DataCollectionTarget&>(*o.object).getDCObjectById(requestItem->dciId, userId);
+      if (dco == nullptr)
+      {
+         AddBulkDciError(errors, i, "DCI not found");
+         continue;
+      }
+
+      json_t *value = dco->lastValueToJSON();
+      json_object_set_new(value, "index", json_integer(i));
+      if ((*requestItem->column != 0) && (dco->getType() == DCO_TYPE_TABLE))
+         SetTableCellValue(value, static_cast<DCTable*>(dco.get()), requestItem->column, requestItem->instance);
+      json_array_append_new(values, value);
+   }
+
+   json_t *output = json_object();
+   json_object_set_new(output, "values", values);
+   json_object_set_new(output, "errors", errors);
+   context->setResponseData(output);
+   json_decref(output);
    return 200;
 }
 
