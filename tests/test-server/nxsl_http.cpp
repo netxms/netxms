@@ -140,19 +140,27 @@ static MHD_Result HandleEcho(MHD_Connection *connection, const char *method, Req
 
 /**
  * /basic endpoint: basic authentication, returns user name on success
+ *
+ * Authentication handlers use the libmicrohttpd API that predates version 1.0, so the test builds
+ * against both 0.9.x and 1.0.x (the newer calls are absent before 1.0, the older ones are still
+ * present in 1.0 and are not marked as deprecated for the compiler).
  */
 static MHD_Result HandleBasicAuth(MHD_Connection *connection)
 {
-   MHD_BasicAuthInfo *auth = MHD_basic_auth_get_username_password3(connection);
-   bool valid = (auth != nullptr) && !strcmp(auth->username, "user") && !strcmp(auth->password, "pass");
+   char *password = nullptr;
+   char *username = MHD_basic_auth_get_username_password(connection, &password);
+   bool valid = (username != nullptr) && !strcmp(username, "user") && (password != nullptr) && !strcmp(password, "pass");
    if (valid)
    {
-      MHD_Result rc = SendText(connection, MHD_HTTP_OK, auth->username);
-      MHD_free(auth);
+      MHD_Result rc = SendText(connection, MHD_HTTP_OK, username);
+      MHD_free(username);
+      MHD_free(password);
       return rc;
    }
-   if (auth != nullptr)
-      MHD_free(auth);
+   if (username != nullptr)
+      MHD_free(username);
+   if (password != nullptr)
+      MHD_free(password);
    MHD_Response *response = CreateResponse("unauthorized", 12, "text/plain");
    MHD_Result rc = MHD_queue_basic_auth_fail_response(connection, AUTH_REALM, response);
    MHD_destroy_response(response);
@@ -164,14 +172,13 @@ static MHD_Result HandleBasicAuth(MHD_Connection *connection)
  */
 static MHD_Result HandleDigestAuth(MHD_Connection *connection)
 {
-   MHD_DigestAuthResult result = MHD_digest_auth_check3(connection, AUTH_REALM, "duser", "dpass", 300, 0,
-      MHD_DIGEST_AUTH_MULT_QOP_AUTH, MHD_DIGEST_AUTH_MULT_ALGO3_MD5);
-   if (result == MHD_DAUTH_OK)
+   int result = MHD_digest_auth_check2(connection, AUTH_REALM, "duser", "dpass", 300, MHD_DIGEST_ALG_MD5);
+   if (result == MHD_YES)
       return SendText(connection, MHD_HTTP_OK, "duser");
 
    MHD_Response *response = CreateResponse("unauthorized", 12, "text/plain");
-   MHD_Result rc = MHD_queue_auth_required_response3(connection, AUTH_REALM, nullptr, nullptr, response,
-      (result == MHD_DAUTH_NONCE_STALE) ? MHD_YES : MHD_NO, MHD_DIGEST_AUTH_MULT_QOP_AUTH, MHD_DIGEST_AUTH_MULT_ALGO3_MD5, MHD_NO, MHD_NO);
+   MHD_Result rc = MHD_queue_auth_fail_response2(connection, AUTH_REALM, nullptr, response,
+      (result == MHD_INVALID_NONCE) ? MHD_YES : MHD_NO, MHD_DIGEST_ALG_MD5);
    MHD_destroy_response(response);
    return rc;
 }
@@ -330,7 +337,7 @@ static void StartHttpServer()
       TEST_HTTP_PORT, nullptr, nullptr, ConnectionHandler, nullptr,
       MHD_OPTION_NOTIFY_COMPLETED, RequestCompleted, nullptr,
       MHD_OPTION_NONCE_NC_SIZE, static_cast<unsigned int>(300),
-      MHD_OPTION_DIGEST_AUTH_RANDOM_COPY, sizeof(s_digestAuthRandom), s_digestAuthRandom,
+      MHD_OPTION_DIGEST_AUTH_RANDOM, sizeof(s_digestAuthRandom), s_digestAuthRandom,
       MHD_OPTION_SOCK_ADDR, reinterpret_cast<struct sockaddr*>(&sa),
       MHD_OPTION_END);
    AssertNotNullEx(s_daemon, _T("Cannot start embedded HTTP server"));
