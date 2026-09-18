@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.UserSession;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -29,7 +30,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class UserSessionFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -37,14 +38,8 @@ public class UserSessionFilter extends ViewerFilter implements AbstractViewerFil
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-
       UserSession s = (UserSession)element;
-      return s.getLoginName().toLowerCase().contains(filterString) 
-            || s.getTerminal().toLowerCase().contains(filterString)
-            || s.getClientName().toLowerCase().contains(filterString)
-            || addressToText(s.getClientAddress()).contains(filterString);
+      return filter.matches(s.getLoginName(), s.getTerminal(), s.getClientName(), addressToText(s.getClientAddress()));
    }
 
    /**
@@ -64,6 +59,6 @@ public class UserSessionFilter extends ViewerFilter implements AbstractViewerFil
    @Override
    public void setFilterString(String text)
    {
-      filterString = text;
+      filter = new TokenizedFilter(text);
    }
 }

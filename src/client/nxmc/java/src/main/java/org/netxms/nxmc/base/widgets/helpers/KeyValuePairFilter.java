@@ -21,6 +21,7 @@ package org.netxms.nxmc.base.widgets.helpers;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class KeyValuePairFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.netxms.nxmc.base.views.AbstractViewerFilter#setFilterString(java.lang.String)
@@ -36,7 +37,7 @@ public class KeyValuePairFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 
    /**
@@ -45,14 +46,6 @@ public class KeyValuePairFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || filterString.isEmpty())
-         return true;
-
-      String key = ((Entry<?, ?>)element).getKey().toString().toLowerCase();
-      if (key.contains(filterString))
-         return true;
-
-      String value = ((Entry<?, ?>)element).getValue().toString().toLowerCase();
-      return value.contains(filterString);
+      return filter.matches(((Entry<?, ?>)element).getKey().toString(), ((Entry<?, ?>)element).getValue().toString());
    }
 }

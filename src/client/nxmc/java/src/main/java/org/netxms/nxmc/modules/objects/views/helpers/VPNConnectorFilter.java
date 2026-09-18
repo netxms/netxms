@@ -45,16 +45,11 @@ public class VPNConnectorFilter extends NodeSubObjectFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       final VPNConnector vpn = (VPNConnector)element;
-      return 
-         Long.toString(vpn.getObjectId()).contains(filterString) ||
-         vpn.getObjectName().contains(filterString) ||
-         lp.getPeerName(vpn).contains(filterString) ||
-         StatusDisplayInfo.getStatusText(vpn.getStatus()).contains(filterString) ||
-         lp.getSubnetsAsString(vpn.getLocalSubnets()).contains(filterString) ||
-         lp.getSubnetsAsString(vpn.getRemoteSubnets()).contains(filterString);
+      return filter.matches(Long.toString(vpn.getObjectId()), vpn.getObjectName(), lp.getPeerName(vpn), StatusDisplayInfo.getStatusText(vpn.getStatus()),
+            lp.getSubnetsAsString(vpn.getLocalSubnets()), lp.getSubnetsAsString(vpn.getRemoteSubnets()));
    }
 }

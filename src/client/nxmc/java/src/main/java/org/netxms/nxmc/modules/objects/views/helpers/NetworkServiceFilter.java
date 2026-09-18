@@ -42,34 +42,12 @@ public class NetworkServiceFilter extends NodeSubObjectFilter
    {
       final NetworkService ns = (NetworkService)element;
       
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
-      boolean matched = false;
-      
-      if (Long.toString(ns.getObjectId()).contains(filterString))
-         matched = true;
-      else if (ns.getObjectName().contains(filterString))
-         matched = true;
-      else if (StatusDisplayInfo.getStatusText(ns.getStatus()).contains(filterString))
-         matched = true;
-      else if (lp.types[ns.getServiceType()].contains(filterString))
-         matched = true;
-      else if (ns.getIpAddress().getHostAddress().contains(filterString))
-         matched = true;
-      else if (Integer.toString(ns.getProtocol()).contains(filterString))
-         matched = true;
-      else if (Integer.toString(ns.getPort()).contains(filterString))
-         matched = true;
-      else if (ns.getRequest().contains(filterString))
-         matched = true;
-      else if (ns.getResponse().contains(filterString))
-         matched = true;
-      else if (lp.getPollerName(ns).contains(filterString))
-         matched = true;
-      else if (Integer.toString(ns.getPollCount()).contains(filterString))
-         matched = true;
-      
-      return matched;
+      return filter.matches(Long.toString(ns.getObjectId()), ns.getObjectName(), StatusDisplayInfo.getStatusText(ns.getStatus()),
+            lp.types[ns.getServiceType()], ns.getIpAddress().getHostAddress(), Integer.toString(ns.getProtocol()),
+            Integer.toString(ns.getPort()), ns.getRequest(), ns.getResponse(), lp.getPollerName(ns),
+            Integer.toString(ns.getPollCount()));
    }
 }

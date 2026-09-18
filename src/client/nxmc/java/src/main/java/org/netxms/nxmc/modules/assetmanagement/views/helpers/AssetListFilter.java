@@ -25,6 +25,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -32,7 +33,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class AssetListFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private NXCSession session = Registry.getSession();
    private AssetPropertyReader propertyReader;
 
@@ -52,22 +53,31 @@ public class AssetListFilter extends ViewerFilter implements AbstractViewerFilte
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
-      if (((AbstractObject)element).getObjectName().toLowerCase().contains(filterString))
-         return true;
+      final String name = ((AbstractObject)element).getObjectName().toLowerCase();
+      final Asset asset = getAsset(element);
+      return filter.matchesEachToken(token -> name.contains(token) || matchProperties(asset, token));
+   }
 
-      Asset asset = getAsset(element);
+   /**
+    * Match asset properties against single filter token.
+    *
+    * @param asset asset object (can be null)
+    * @param token filter token
+    * @return true if any property value contains given token
+    */
+   private boolean matchProperties(Asset asset, String token)
+   {
       if (asset == null)
          return false;
 
       for(Entry<String, String> p : asset.getProperties().entrySet())
       {
-         if (propertyReader.valueToText(p.getKey(), p.getValue()).toLowerCase().contains(filterString))
+         if (propertyReader.valueToText(p.getKey(), p.getValue()).toLowerCase().contains(token))
             return true;
       }
-
       return false;
    }
 
@@ -90,6 +100,6 @@ public class AssetListFilter extends ViewerFilter implements AbstractViewerFilte
    @Override
    public void setFilterString(String string)
    {
-      this.filterString = (string != null) ? string.toLowerCase() : null;
+      this.filter = new TokenizedFilter(string);
    }
 }

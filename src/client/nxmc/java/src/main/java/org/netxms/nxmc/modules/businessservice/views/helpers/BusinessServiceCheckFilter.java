@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.businessservice.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.businessservices.BusinessServiceCheck;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class BusinessServiceCheckFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private BusinessServiceCheckLabelProvider labelProvider;
    
    public BusinessServiceCheckFilter(BusinessServiceCheckLabelProvider labelProvider)
@@ -42,16 +43,12 @@ public class BusinessServiceCheckFilter extends ViewerFilter implements Abstract
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       BusinessServiceCheck check = (BusinessServiceCheck)element;
-      return check.getDescription().toLowerCase().contains(filterString) ||
-             labelProvider.getTypeName(check).toLowerCase().contains(filterString) ||
-             labelProvider.getCheckStateText(check).toLowerCase().contains(filterString) ||
-             labelProvider.getObjectName(check).toLowerCase().contains(filterString) ||
-             labelProvider.getDciName(check).toLowerCase().contains(filterString) ||
-             check.getFailureReason().toLowerCase().contains(filterString);
+      return filter.matches(check.getDescription(), labelProvider.getTypeName(check), labelProvider.getCheckStateText(check),
+            labelProvider.getObjectName(check), labelProvider.getDciName(check), check.getFailureReason());
    }
 
    /**
@@ -59,7 +56,7 @@ public class BusinessServiceCheckFilter extends ViewerFilter implements Abstract
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 
    /**
@@ -67,6 +64,6 @@ public class BusinessServiceCheckFilter extends ViewerFilter implements Abstract
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }   
 }

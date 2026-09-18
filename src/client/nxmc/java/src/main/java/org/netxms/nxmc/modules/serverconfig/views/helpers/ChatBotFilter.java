@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.ChatBot;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class ChatBotFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,13 +37,11 @@ public class ChatBotFilter extends ViewerFilter implements AbstractViewerFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       final ChatBot bot = (ChatBot)element;
-      return bot.getName().toLowerCase().contains(filterString) ||
-            bot.getDescription().toLowerCase().contains(filterString) ||
-            bot.getDriverName().toLowerCase().contains(filterString);
+      return filter.matches(bot.getName(), bot.getDescription(), bot.getDriverName());
    }
 
    /**
@@ -50,7 +49,7 @@ public class ChatBotFilter extends ViewerFilter implements AbstractViewerFilter
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 
    /**
@@ -58,6 +57,6 @@ public class ChatBotFilter extends ViewerFilter implements AbstractViewerFilter
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

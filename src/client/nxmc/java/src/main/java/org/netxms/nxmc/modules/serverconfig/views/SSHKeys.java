@@ -51,6 +51,7 @@ import org.netxms.client.SshKeyPair;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -76,7 +77,7 @@ public class SSHKeys extends ConfigurationView
    public static final int COLUMN_NMAE = 1;
 
    private SortableTableViewer viewer;
-   private String filterString;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private Action actionCopyToClipboard;
    private Action actionImport;
    private Action actionEdit;
@@ -93,7 +94,6 @@ public class SSHKeys extends ConfigurationView
    {
       super(LocalizationHelper.getI18n(SSHKeys.class).tr("SSH Keys"), ResourceManager.getImageDescriptor("icons/config-views/ssh-keys.png"), "config.ssh-keys", true);
       session = Registry.getSession();
-      filterString = "";
    }
 
    /**
@@ -112,14 +112,14 @@ public class SSHKeys extends ConfigurationView
          @Override
          public boolean select(Viewer viewer, Object parentElement, Object element)
          {
-            return filterString.isEmpty() || ((SshKeyPair)element).getName().toLowerCase().contains(filterString);
+            return filter.matches(((SshKeyPair)element).getName());
          }
       });
       setFilterClient(viewer, new AbstractViewerFilter() {
          @Override
          public void setFilterString(String string)
          {
-            filterString = string.toLowerCase();
+            filter = new TokenizedFilter(string);
          }
       });
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {

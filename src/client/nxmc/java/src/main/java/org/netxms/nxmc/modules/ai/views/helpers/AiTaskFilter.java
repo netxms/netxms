@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.ai.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.ai.AiAgentTask;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public final class AiTaskFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private AiTaskLabelProvider labelProvider;
 
    public AiTaskFilter(AiTaskLabelProvider labelProvider)
@@ -42,17 +43,11 @@ public final class AiTaskFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       final AiAgentTask task = (AiAgentTask)element;
-      if (task.getDescription().toLowerCase().contains(filterString) ||
-          labelProvider.stateNames[task.getState().getValue()].toLowerCase().contains(filterString) ||
-          task.getExplanation().toLowerCase().contains(filterString))
-      {
-         return true;
-      }
-      return false;
+      return filter.matches(task.getDescription(), labelProvider.stateNames[task.getState().getValue()], task.getExplanation());
    }
 
    /**
@@ -61,6 +56,6 @@ public final class AiTaskFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public void setFilterString(String text)
    {
-      filterString = text.toLowerCase();
+      filter = new TokenizedFilter(text);
    }
 }

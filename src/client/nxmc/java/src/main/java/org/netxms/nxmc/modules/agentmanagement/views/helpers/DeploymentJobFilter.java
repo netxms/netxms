@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.packages.PackageDeploymentJob;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.modules.agentmanagement.views.DeploymentJobManager;
 
@@ -32,7 +33,7 @@ import org.netxms.nxmc.modules.agentmanagement.views.DeploymentJobManager;
  */
 public class DeploymentJobFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private boolean hideInactive = false;
 
    /**
@@ -46,32 +47,12 @@ public class DeploymentJobFilter extends ViewerFilter implements AbstractViewerF
       if (hideInactive && !job.isActive())
          return false;
       
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-      
-      if (job.getPackageName().toLowerCase().contains(filterString))
+      if (filter.isEmpty())
          return true;
 
-      if (job.getPackageFile().toLowerCase().contains(filterString))
-         return true;
-
-      if (job.getDescription().toLowerCase().contains(filterString))
-         return true;
-      
-      if (Registry.getSession().getObjectName(job.getNodeId()).toLowerCase().contains(filterString))
-         return true;
-
-      if (job.getPlatform().toLowerCase().contains(filterString))
-         return true;
-
-      if (job.getErrorMessage().toLowerCase().contains(filterString))
-         return true;
-      
       String status = ((ITableLabelProvider)((TableViewer)viewer).getLabelProvider()).getColumnText(job, DeploymentJobManager.COL_STATUS);
-      if (status.toLowerCase().contains(filterString))
-         return true;
-
-      return false;
+      return filter.matches(job.getPackageName(), job.getPackageFile(), job.getDescription(), Registry.getSession().getObjectName(job.getNodeId()),
+            job.getPlatform(), job.getErrorMessage(), status);
    }
 
    /**
@@ -81,7 +62,7 @@ public class DeploymentJobFilter extends ViewerFilter implements AbstractViewerF
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 
    /**

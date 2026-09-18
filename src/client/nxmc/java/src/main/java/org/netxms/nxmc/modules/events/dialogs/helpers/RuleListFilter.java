@@ -21,13 +21,14 @@ package org.netxms.nxmc.modules.events.dialogs.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 
 /**
  * Filter for rule list
  */
 public class RuleListFilter extends ViewerFilter
 {
-	private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -35,10 +36,7 @@ public class RuleListFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		if (filterString == null)
-			return true;
-		
-		return ((EventProcessingPolicyRule)element).getComments().toLowerCase().contains(filterString);
+      return filter.matches(((EventProcessingPolicyRule)element).getComments());
 	}
 
 	/**
@@ -46,6 +44,6 @@ public class RuleListFilter extends ViewerFilter
 	 */
 	public void setFilterString(final String filterString)
 	{
-		this.filterString = filterString.isEmpty() ? null : filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
 	}
 }

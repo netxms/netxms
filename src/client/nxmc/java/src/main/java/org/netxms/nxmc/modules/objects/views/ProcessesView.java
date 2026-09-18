@@ -46,6 +46,7 @@ import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -83,7 +84,7 @@ public class ProcessesView extends ObjectView
    private Action actionTerminate;
    private Action actionAutoRefresh;
    private boolean autoRefreshEnabled = true;
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private Map<Long, long[]> previousCpuTimes = new HashMap<>();
    private long previousTimestamp = 0;
    private int cpuCount = 0;
@@ -367,7 +368,7 @@ public class ProcessesView extends ObjectView
    @Override
    protected void onFilterModify()
    {
-      filterString = getFilterText();
+      filter = new TokenizedFilter(getFilterText());
       viewer.refresh(false);
    }
 
@@ -533,11 +534,8 @@ public class ProcessesView extends ObjectView
       @Override
       public boolean select(Viewer viewer, Object parentElement, Object element)
       {
-         if ((filterString == null) || (filterString.isEmpty()))
-            return true;
-
          Process process = (Process)element;
-         return process.name.toLowerCase().contains(filterString) || process.commandLine.toLowerCase().contains(filterString) || process.user.toLowerCase().contains(filterString);
+         return filter.matches(process.name, process.commandLine, process.user);
       }
    }
 }

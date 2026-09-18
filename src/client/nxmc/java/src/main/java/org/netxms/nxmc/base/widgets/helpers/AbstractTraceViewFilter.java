@@ -19,6 +19,7 @@
 package org.netxms.nxmc.base.widgets.helpers;
 
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -26,7 +27,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public abstract class AbstractTraceViewFilter extends ViewerFilter implements AbstractViewerFilter
 {
-	protected String filterString = null;
+   protected TokenizedFilter filter = new TokenizedFilter(null);
    protected long rootObjectId = 0;
 
 	/**
@@ -34,7 +35,7 @@ public abstract class AbstractTraceViewFilter extends ViewerFilter implements Ab
 	 */
 	public String getFilterString()
 	{
-		return filterString;
+      return filter.getFilterString();
 	}
 
 	/**
@@ -43,7 +44,7 @@ public abstract class AbstractTraceViewFilter extends ViewerFilter implements Ab
    @Override
 	public void setFilterString(String filterString)
 	{
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
 	}
 
    /**

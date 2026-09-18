@@ -40,6 +40,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.reporting.ReportDefinition;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.NavigationView;
@@ -198,7 +199,7 @@ public class ReportNavigationView extends NavigationView implements SessionListe
     */
    private static class ReportListFilter extends ViewerFilter implements AbstractViewerFilter
    {
-      private String filterString = null;
+      private TokenizedFilter filter = new TokenizedFilter(null);
 
       /**
        * @see org.netxms.nxmc.base.views.AbstractViewerFilter#setFilterString(java.lang.String)
@@ -206,7 +207,7 @@ public class ReportNavigationView extends NavigationView implements SessionListe
       @Override
       public void setFilterString(String string)
       {
-         this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+         this.filter = new TokenizedFilter(string);
       }
 
       /**
@@ -215,9 +216,7 @@ public class ReportNavigationView extends NavigationView implements SessionListe
       @Override
       public boolean select(Viewer viewer, Object parentElement, Object element)
       {
-         if ((filterString == null) || filterString.isEmpty())
-            return true;
-         return ((ReportDefinition)element).getName().toLowerCase().contains(filterString);
+         return filter.matches(((ReportDefinition)element).getName());
       }
    }
 }

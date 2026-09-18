@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.SoftwarePackage;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class SoftwarePackageFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,14 +37,14 @@ public class SoftwarePackageFilter extends ViewerFilter implements AbstractViewe
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || filterString.isEmpty())
+      if (filter.isEmpty())
          return true;
 
       if (element instanceof SoftwareInventoryNode)
          return true; // FIXME: do correct node filtering
 
       SoftwarePackage p = (SoftwarePackage)element;
-      return p.getName().toLowerCase().contains(filterString) || p.getVendor().toLowerCase().contains(filterString) || p.getDescription().toLowerCase().contains(filterString) || p.getUser().toLowerCase().contains(filterString);
+      return filter.matches(p.getName(), p.getVendor(), p.getDescription(), p.getUser());
    }
 
    /**
@@ -52,6 +53,6 @@ public class SoftwarePackageFilter extends ViewerFilter implements AbstractViewe
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

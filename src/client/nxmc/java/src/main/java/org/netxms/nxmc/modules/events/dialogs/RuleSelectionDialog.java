@@ -49,6 +49,7 @@ import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -68,7 +69,7 @@ public class RuleSelectionDialog extends Dialog
    private boolean multiSelection = true;
    private FilterText filterText;
    private TreeViewer viewer;
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private List<EventProcessingPolicyRule> selectedRules = new ArrayList<EventProcessingPolicyRule>();
 
    /**
@@ -116,7 +117,7 @@ public class RuleSelectionDialog extends Dialog
     */
    private boolean isRuleMatching(EventProcessingPolicyRule rule)
    {
-      return (filterString == null) || rule.getComments().toLowerCase().contains(filterString);
+      return filter.matches(rule.getComments());
    }
 
    /**
@@ -142,7 +143,7 @@ public class RuleSelectionDialog extends Dialog
       final String savedFilter = settings.getAsString("SelectRule.Filter");
       if (savedFilter != null)
          filterText.setText(savedFilter);
-      filterString = ((savedFilter != null) && !savedFilter.isEmpty()) ? savedFilter.toLowerCase() : null;
+      filter = new TokenizedFilter(savedFilter);
 
       viewer = new TreeViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | (multiSelection ? SWT.MULTI : SWT.SINGLE) | SWT.H_SCROLL | SWT.V_SCROLL);
       viewer.getTree().setLinesVisible(true);
@@ -213,12 +214,12 @@ public class RuleSelectionDialog extends Dialog
          @Override
          public boolean select(Viewer viewer, Object parentElement, Object element)
          {
-            if (filterString == null)
+            if (filter.isEmpty())
                return true;
             if (element instanceof EventProcessingPolicyRule)
                return isRuleMatching((EventProcessingPolicyRule)element);
             EventProcessingPolicyChain chain = (EventProcessingPolicyChain)element;
-            if (getChainName(chain).toLowerCase().contains(filterString))
+            if (filter.matches(getChainName(chain)))
                return true;
             for(EventProcessingPolicyRule rule : chain.getRules())
                if (isRuleMatching(rule))
@@ -238,8 +239,7 @@ public class RuleSelectionDialog extends Dialog
          @Override
          public void modifyText(ModifyEvent e)
          {
-            String text = filterText.getText();
-            filterString = text.isEmpty() ? null : text.toLowerCase();
+            filter = new TokenizedFilter(filterText.getText());
             viewer.refresh();
             viewer.expandAll();
          }

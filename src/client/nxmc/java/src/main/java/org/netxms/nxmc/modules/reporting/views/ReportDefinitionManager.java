@@ -50,6 +50,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportPackageInfo;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -79,7 +80,7 @@ public class ReportDefinitionManager extends ConfigurationView implements Sessio
 
    private NXCSession session = Registry.getSession();
    private SortableTableViewer viewer;
-   private String filterString = "";
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private Action actionUpload;
    private Action actionDelete;
 
@@ -107,18 +108,15 @@ public class ReportDefinitionManager extends ConfigurationView implements Sessio
          @Override
          public boolean select(Viewer viewer, Object parentElement, Object element)
          {
-            if (filterString.isEmpty())
-               return true;
             ReportPackageInfo p = (ReportPackageInfo)element;
-            return p.getFileName().toLowerCase().contains(filterString) ||
-                  (p.getReportName() != null && p.getReportName().toLowerCase().contains(filterString));
+            return filter.matches(p.getFileName(), p.getReportName());
          }
       });
       setFilterClient(viewer, new AbstractViewerFilter() {
          @Override
          public void setFilterString(String string)
          {
-            filterString = string.toLowerCase();
+            filter = new TokenizedFilter(string);
          }
       });
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {

@@ -22,13 +22,14 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.AgentParameter;
 import org.netxms.client.AgentTable;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 
 /**
  * Filter for agent parameters list
  */
 public class AgentParameterFilter extends ViewerFilter
 {
-	private String filter = ""; //$NON-NLS-1$
+   private TokenizedFilter filter = new TokenizedFilter(null);
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -37,7 +38,7 @@ public class AgentParameterFilter extends ViewerFilter
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
 	   String name = (element instanceof AgentTable) ? ((AgentTable)element).getName() : ((AgentParameter)element).getName();
-		return (filter == null) || filter.isEmpty() || name.toLowerCase().contains(filter);
+		return filter.matches(name);
 	}
 
 	/**
@@ -45,7 +46,7 @@ public class AgentParameterFilter extends ViewerFilter
 	 */
 	public String getFilter()
 	{
-		return filter;
+      return filter.getFilterString();
 	}
 
 	/**
@@ -53,6 +54,6 @@ public class AgentParameterFilter extends ViewerFilter
 	 */
 	public void setFilter(String filter)
 	{
-		this.filter = filter.toLowerCase();
+      this.filter = new TokenizedFilter(filter);
 	}
 }

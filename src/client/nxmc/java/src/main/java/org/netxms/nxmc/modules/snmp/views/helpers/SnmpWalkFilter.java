@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
 
@@ -30,68 +31,28 @@ import org.netxms.nxmc.modules.snmp.shared.MibCache;
  */
 public class SnmpWalkFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
-   
+   private TokenizedFilter filter = new TokenizedFilter(null);
+
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-     
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
-      
+
       final SnmpValue vl = (SnmpValue)element;
-      if (containsValue(vl))
-         return true;
-      else if (containsOid(vl))
-         return true;
-      else if (containsOidText(vl))
-         return true;
-      return false;
-   }
-   
-   /**
-    * Checks if contains SNMP walk value
-    */
-   public boolean containsValue(SnmpValue vl)
-   {
-      if (vl.getValue().toLowerCase().contains(filterString.toLowerCase()))
-         return true;
-      return false;
-   }
-   
-   /**
-    * Checks if contains SNMP walk OID
-    */
-   public boolean containsOid(SnmpValue vl)
-   {
-      if (vl.getObjectId().toString().toLowerCase().contains(filterString.toLowerCase()))
-         return true;
-      return false;
-   }
-   
-   /**
-    * Checks if contains SNMP walk OID as text
-    */
-   public boolean containsOidText(SnmpValue vl)
-   {
       MibObject object = MibCache.findObject(vl.getName(), false);
-      if (object == null)
-         return false;
-      else if (object.getFullName().toLowerCase().contains(filterString.toLowerCase()))
-         return true;
-      
-      return false;
+      return filter.matches(vl.getValue(), vl.getObjectId().toString(), (object != null) ? object.getFullName() : null);
    }
-   
+
    /**
     * @return the filterString
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
    
    /**
@@ -99,6 +60,6 @@ public class SnmpWalkFilter extends ViewerFilter implements AbstractViewerFilter
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

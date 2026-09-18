@@ -24,6 +24,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -32,7 +33,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 public class SnmpTrapFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private NXCSession session = Registry.getSession();
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -40,23 +41,12 @@ public class SnmpTrapFilter extends ViewerFilter implements AbstractViewerFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || filterString.isEmpty())
+      if (filter.isEmpty())
          return true;
 
       SnmpTrap trap = (SnmpTrap)element;
-
-      if (trap.getObjectId().toString().toLowerCase().contains(filterString))
-         return true;
-
       EventTemplate event = session.findEventTemplateByCode(trap.getEventCode());
-      if ((event != null) && event.getName().toLowerCase().contains(filterString))
-         return true;
-
-      String description = trap.getDescription();
-      if ((description != null) && description.toLowerCase().contains(filterString))
-         return true;
-
-      return false;
+      return filter.matches(trap.getObjectId().toString(), (event != null) ? event.getName() : null, trap.getDescription());
    }
 
    /**
@@ -65,6 +55,6 @@ public class SnmpTrapFilter extends ViewerFilter implements AbstractViewerFilter
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 }

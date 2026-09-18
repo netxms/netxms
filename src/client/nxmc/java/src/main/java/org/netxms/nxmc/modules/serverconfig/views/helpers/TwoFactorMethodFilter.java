@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.users.TwoFactorAuthenticationMethod;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class TwoFactorMethodFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,11 +37,11 @@ public class TwoFactorMethodFilter extends ViewerFilter implements AbstractViewe
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || filterString.isEmpty())
+      if (filter.isEmpty())
          return true;
 
       TwoFactorAuthenticationMethod m = (TwoFactorAuthenticationMethod)element;
-      return m.getName().toLowerCase().contains(filterString) || m.getDescription().toLowerCase().contains(filterString) || m.getDriver().toLowerCase().contains(filterString);
+      return filter.matches(m.getName(), m.getDescription(), m.getDriver());
    }
 
    /**
@@ -49,6 +50,6 @@ public class TwoFactorMethodFilter extends ViewerFilter implements AbstractViewe
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 }

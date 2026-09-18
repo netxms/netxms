@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -31,7 +32,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 public class ScheduledTaskFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private NXCSession session = Registry.getSession();
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private boolean showSystemTasks = false;
    private boolean showDisabledTasks = true;
    private boolean showCompletedTasks = true;
@@ -49,14 +50,10 @@ public class ScheduledTaskFilter extends ViewerFilter implements AbstractViewerF
          return false;
       if (!showCompletedTasks && task.isCompleted() && !task.isRecurring())
          return false;
-      if ((filterString != null) && !filterString.isEmpty())
-      {
-         return task.getComments().toLowerCase().contains(filterString) || 
-               task.getParameters().toLowerCase().contains(filterString) || 
-               task.getTaskHandlerId().toLowerCase().contains(filterString) ||
-               ((task.getObjectId() != 0) && session.getObjectName(task.getObjectId()).toLowerCase().contains(filterString));
-      }
-      return true;
+      if (filter.isEmpty())
+         return true;
+      return filter.matches(task.getComments(), task.getParameters(), task.getTaskHandlerId(),
+            (task.getObjectId() != 0) ? session.getObjectName(task.getObjectId()) : null);
    }
 
    /**
@@ -113,6 +110,6 @@ public class ScheduledTaskFilter extends ViewerFilter implements AbstractViewerF
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString;
+      this.filter = new TokenizedFilter(filterString);
    }
 }

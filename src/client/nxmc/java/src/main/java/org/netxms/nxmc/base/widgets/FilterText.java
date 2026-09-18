@@ -125,6 +125,8 @@ public class FilterText extends Composite
 		text = new Text(textArea, SWT.SINGLE);
 		text.setTextLimit(64);
       text.setMessage(i18n.tr("Filter is empty"));
+      if (proposalProvider == null)
+         text.setToolTipText(i18n.tr("Words separated by spaces should all match (in any field). Use double quotes to match exact phrase."));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

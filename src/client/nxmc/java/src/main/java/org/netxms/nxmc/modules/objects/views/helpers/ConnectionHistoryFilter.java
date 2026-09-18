@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.ConnectionHistoryRecord;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -31,7 +32,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 public class ConnectionHistoryFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private NXCSession session = Registry.getSession();
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -39,24 +40,14 @@ public class ConnectionHistoryFilter extends ViewerFilter implements AbstractVie
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       final ConnectionHistoryRecord r = (ConnectionHistoryRecord)element;
-      if (r.getMacAddress().toString().toLowerCase().contains(filterString))
-         return true;
-      if ((r.getIpAddress() != null) && r.getIpAddress().toLowerCase().contains(filterString))
-         return true;
-      if (r.getEventTypeText().toLowerCase().contains(filterString))
-         return true;
-      if ((r.getNodeId() != 0) && session.getObjectName(r.getNodeId()).toLowerCase().contains(filterString))
-         return true;
-      if ((r.getSwitchId() != 0) && session.getObjectName(r.getSwitchId()).toLowerCase().contains(filterString))
-         return true;
-      if ((r.getInterfaceId() != 0) && session.getObjectName(r.getInterfaceId()).toLowerCase().contains(filterString))
-         return true;
-
-      return false;
+      return filter.matches(r.getMacAddress().toString(), r.getIpAddress(), r.getEventTypeText(),
+            (r.getNodeId() != 0) ? session.getObjectName(r.getNodeId()) : null,
+            (r.getSwitchId() != 0) ? session.getObjectName(r.getSwitchId()) : null,
+            (r.getInterfaceId() != 0) ? session.getObjectName(r.getInterfaceId()) : null);
    }
 
    /**
@@ -65,6 +56,6 @@ public class ConnectionHistoryFilter extends ViewerFilter implements AbstractVie
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

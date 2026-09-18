@@ -32,6 +32,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.modules.worldmap.tools.Area;
 import org.netxms.nxmc.modules.worldmap.tools.QuadTree;
 
@@ -188,10 +189,10 @@ public class GeoLocationCache implements SessionListener
     * 
     * @param area geographical area
     * @param parentId parent object ID or 0
-    * @param filterString object name filter
+    * @param filter object name filter
     * @return
     */
-   public List<AbstractObject> getObjectsInArea(Area area, long parentId, String filterString)
+   public List<AbstractObject> getObjectsInArea(Area area, long parentId, TokenizedFilter filter)
 	{
 		List<AbstractObject> list = null;
 		synchronized(locationTree)
@@ -202,7 +203,7 @@ public class GeoLocationCache implements SessionListener
 			{
 				AbstractObject o = objects.get(id);
 				if ((o != null) && ((parentId == 0) || (o.getObjectId() == parentId) || o.isChildOf(parentId)) &&
-					 (filterString != null ? o.getObjectName().toLowerCase().contains(filterString) : true))
+					 filter.matches(o.getObjectName()))
 					list.add(o);
 			}
 		}

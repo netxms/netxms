@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.ai.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.ai.AiOperator;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public final class AiOperatorFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private AiOperatorLabelProvider labelProvider;
 
    public AiOperatorFilter(AiOperatorLabelProvider labelProvider)
@@ -42,15 +43,12 @@ public final class AiOperatorFilter extends ViewerFilter implements AbstractView
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       final AiOperator operator = (AiOperator)element;
-      return operator.getName().toLowerCase().contains(filterString) ||
-            operator.getDescription().toLowerCase().contains(filterString) ||
-            operator.getCurrentFocus().toLowerCase().contains(filterString) ||
-            operator.getLastExplanation().toLowerCase().contains(filterString) ||
-            labelProvider.getStateText(operator).toLowerCase().contains(filterString);
+      return filter.matches(operator.getName(), operator.getDescription(), operator.getCurrentFocus(), operator.getLastExplanation(),
+            labelProvider.getStateText(operator));
    }
 
    /**
@@ -59,6 +57,6 @@ public final class AiOperatorFilter extends ViewerFilter implements AbstractView
    @Override
    public void setFilterString(String text)
    {
-      filterString = text.toLowerCase();
+      filter = new TokenizedFilter(text);
    }
 }

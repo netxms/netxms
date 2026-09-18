@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.actions.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.ServerAction;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public final class ActionManagerFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private ActionLabelProvider labelProvider;
    
    public ActionManagerFilter(ActionLabelProvider labelProvider)
@@ -42,25 +43,17 @@ public final class ActionManagerFilter extends ViewerFilter implements AbstractV
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
-      
+
       final ServerAction action = (ServerAction)element;
-      if (action.getName().toLowerCase().contains(filterString) ||
-          labelProvider.actionType[action.getType().getValue()].toLowerCase().contains(filterString) ||
-          action.getRecipientAddress().toLowerCase().contains(filterString) ||
-          action.getEmailSubject().toLowerCase().contains(filterString) ||
-          action.getData().toLowerCase().contains(filterString) ||
-          action.getChannelName().toLowerCase().contains(filterString))
-      {
-         return true;
-      }
-      return false;
+      return filter.matches(action.getName(), labelProvider.actionType[action.getType().getValue()], action.getRecipientAddress(),
+            action.getEmailSubject(), action.getData(), action.getChannelName());
    }
 
    public void setFilterString(String text)
    {
-      filterString = text.toLowerCase();
+      filter = new TokenizedFilter(text);
    }
 
    /**
@@ -68,6 +61,6 @@ public final class ActionManagerFilter extends ViewerFilter implements AbstractV
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 }

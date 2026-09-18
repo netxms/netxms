@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.nxsl.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.mt.MappingTableDescriptor;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public final class MappingTableListFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,11 +37,8 @@ public final class MappingTableListFilter extends ViewerFilter implements Abstra
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-
       final MappingTableDescriptor mt = (MappingTableDescriptor)element;
-      return mt.getName().toLowerCase().contains(filterString) || mt.getDescription().toLowerCase().contains(filterString);
+      return filter.matches(mt.getName(), mt.getDescription());
    }
 
    /**
@@ -49,6 +47,6 @@ public final class MappingTableListFilter extends ViewerFilter implements Abstra
    @Override
    public void setFilterString(String text)
    {
-      filterString = (text != null) ? text.toLowerCase() : null;
+      filter = new TokenizedFilter(text);
    }
 }

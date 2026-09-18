@@ -40,6 +40,7 @@ import org.netxms.client.Table;
 import org.netxms.client.TableRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -69,7 +70,7 @@ public class ServicesView extends ObjectView
    private Action actionSetAutoStart;
    private Action actionSetManualStart;
    private Action actionDisable;
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * Create "Services" view
@@ -335,7 +336,7 @@ public class ServicesView extends ObjectView
    @Override
    protected void onFilterModify()
    {
-      filterString = getFilterText();
+      filter = new TokenizedFilter(getFilterText());
       viewer.refresh(false);
    }
 
@@ -421,17 +422,7 @@ public class ServicesView extends ObjectView
       @Override
       public boolean select(Viewer viewer, Object parentElement, Object element)
       {
-         if ((filterString == null) || (filterString.isEmpty()))
-            return true;
-
-         Service service = (Service)element;
-         for(int i = 0; i < service.data.length; i++)
-         {
-            if ((service.data[i] != null) && service.data[i].toLowerCase().contains(filterString))
-               return true;
-         }
-
-         return false;
+         return filter.matches(((Service)element).data);
       }
    }
 }

@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.datacollection.dialogs;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
@@ -49,6 +50,7 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -319,29 +321,23 @@ public class SelectOtlpMetricDlg extends Dialog implements IParameterSelectionDi
     */
    private static class MetricFilter extends ViewerFilter
    {
-      private String filterString = null;
+      private TokenizedFilter tokenizedFilter = new TokenizedFilter(null);
 
       @Override
       public boolean select(Viewer viewer, Object parentElement, Object element)
       {
-         if ((filterString == null) || filterString.isEmpty())
+         if (tokenizedFilter.isEmpty())
             return true;
          OTLPMetric metric = (OTLPMetric)element;
-         if (metric.getName().toLowerCase().contains(filterString))
-            return true;
-         if (metric.getTypeName().toLowerCase().contains(filterString))
-            return true;
-         for(String key : metric.getAttributeKeys())
-         {
-            if (key.toLowerCase().contains(filterString))
-               return true;
-         }
-         return false;
+         List<String> fields = new ArrayList<>(metric.getAttributeKeys());
+         fields.add(metric.getName());
+         fields.add(metric.getTypeName());
+         return tokenizedFilter.matches(fields.toArray(new String[fields.size()]));
       }
 
       public void setFilter(String filterString)
       {
-         this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+         this.tokenizedFilter = new TokenizedFilter(filterString);
       }
    }
 }

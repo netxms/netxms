@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.ai.widgets.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.ai.AiMessage;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public final class AiMessageListFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private AiMessageListLabelProvider labelProvider;
 
    /**
@@ -47,18 +48,11 @@ public final class AiMessageListFilter extends ViewerFilter implements AbstractV
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       final AiMessage message = (AiMessage)element;
-      if (message.getTitle().toLowerCase().contains(filterString) ||
-          message.getText().toLowerCase().contains(filterString) ||
-          labelProvider.getTypeName(message).toLowerCase().contains(filterString) ||
-          labelProvider.getStatusName(message).toLowerCase().contains(filterString))
-      {
-         return true;
-      }
-      return false;
+      return filter.matches(message.getTitle(), message.getText(), labelProvider.getTypeName(message), labelProvider.getStatusName(message));
    }
 
    /**
@@ -67,6 +61,6 @@ public final class AiMessageListFilter extends ViewerFilter implements AbstractV
    @Override
    public void setFilterString(String text)
    {
-      filterString = text.toLowerCase();
+      filter = new TokenizedFilter(text);
    }
 }

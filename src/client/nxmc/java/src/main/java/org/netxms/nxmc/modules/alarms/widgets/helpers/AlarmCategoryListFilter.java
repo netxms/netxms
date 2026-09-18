@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.alarms.widgets.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.events.AlarmCategory;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class AlarmCategoryListFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /*
     * (non-Javadoc)
@@ -38,45 +39,8 @@ public class AlarmCategoryListFilter extends ViewerFilter implements AbstractVie
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-      else if (checkId(element))
-         return true;
-      else if (checkName(element))
-         return true;
-      else if (checkDescr(element))
-         return true;
-      return false;
-   }
-
-   /**
-    * Check if contains id
-    */
-   public boolean checkId(Object element)
-   {
-      if (Long.toString(((AlarmCategory)element).getId()).toLowerCase().contains(filterString))
-         return true;
-      return false;
-   }
-
-   /**
-    * Check if contains name
-    */
-   public boolean checkName(Object element)
-   {
-      if (((AlarmCategory)element).getName().toLowerCase().contains(filterString))
-         return true;
-      return false;
-   }
-
-   /**
-    * Check if contains description
-    */
-   public boolean checkDescr(Object element)
-   {
-      if (((AlarmCategory)element).getDescription().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      final AlarmCategory c = (AlarmCategory)element;
+      return filter.matches(Long.toString(c.getId()), c.getName(), c.getDescription());
    }
 
    /**
@@ -84,7 +48,7 @@ public class AlarmCategoryListFilter extends ViewerFilter implements AbstractVie
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 
    /**
@@ -92,6 +56,6 @@ public class AlarmCategoryListFilter extends ViewerFilter implements AbstractVie
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

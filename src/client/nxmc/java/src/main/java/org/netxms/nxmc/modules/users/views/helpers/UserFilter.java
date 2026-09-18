@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -32,7 +33,7 @@ public final class UserFilter extends ViewerFilter
 {
    private final I18n i18n = LocalizationHelper.getI18n(UserFilter.class);
 
-   private String filterString;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private DecoratingUserLabelProvider labelProvider;
 
    /**
@@ -51,14 +52,14 @@ public final class UserFilter extends ViewerFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
-      
+
       final AbstractUserObject user = (AbstractUserObject)element;
-      boolean found = false;
+      String authMethod = null;
+      String fullName = null;
       if (element instanceof User)
       {
-         String authMethod = "";
          try
          {
             authMethod = labelProvider.AUTH_METHOD[((User)user).getAuthMethod().getValue()];
@@ -67,23 +68,12 @@ public final class UserFilter extends ViewerFilter
          {
             authMethod = i18n.tr("Unknown");
          }
-
-         if (authMethod.toLowerCase().contains(filterString) || ((User)user).getFullName().toLowerCase().contains(filterString))
-            return true;
+         fullName = ((User)user).getFullName();
       }
 
       String objClass = (element instanceof User) ? i18n.tr("User") : i18n.tr("Group");
       String objType = ((user.getFlags() & AbstractUserObject.LDAP_USER) != 0) ? i18n.tr("LDAP") : i18n.tr("Local");
-      if (objClass.toLowerCase().contains(filterString) || 
-            objType.toLowerCase().contains(filterString) ||
-            user.getName().toLowerCase().contains(filterString) || 
-            user.getDescription().toLowerCase().contains(filterString) ||
-            user.getLdapDn().toLowerCase().contains(filterString))
-      {
-         found = true;
-      }
-
-      return found;
+      return filter.matches(authMethod, fullName, objClass, objType, user.getName(), user.getDescription(), user.getLdapDn());
    }
 
    /**
@@ -93,7 +83,7 @@ public final class UserFilter extends ViewerFilter
     */
    public void setFilterString(String text)
    {
-      filterString = text.trim().toLowerCase();
+      filter = new TokenizedFilter(text);
    }
 
    /**
@@ -103,6 +93,6 @@ public final class UserFilter extends ViewerFilter
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 }

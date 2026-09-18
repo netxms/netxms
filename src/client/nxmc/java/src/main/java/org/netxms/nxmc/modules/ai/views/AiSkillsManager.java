@@ -43,6 +43,7 @@ import org.netxms.client.ai.AiAssistantSkill;
 import org.netxms.client.ai.AiDisabledItem;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -458,7 +459,7 @@ public class AiSkillsManager extends ConfigurationView
     */
    private static class AiItemFilter extends ViewerFilter implements AbstractViewerFilter
    {
-      private String filterString = null;
+      private TokenizedFilter filter = new TokenizedFilter(null);
 
       /**
        * @see org.netxms.nxmc.base.views.AbstractViewerFilter#setFilterString(java.lang.String)
@@ -466,7 +467,7 @@ public class AiSkillsManager extends ConfigurationView
       @Override
       public void setFilterString(String string)
       {
-         filterString = ((string != null) && !string.isEmpty()) ? string.toLowerCase() : null;
+         filter = new TokenizedFilter(string);
       }
 
       /**
@@ -475,11 +476,11 @@ public class AiSkillsManager extends ConfigurationView
       @Override
       public boolean select(Viewer viewer, Object parentElement, Object element)
       {
-         if (filterString == null)
+         if (filter.isEmpty())
             return true;
 
          AiItemEntry e = (AiItemEntry)element;
-         return e.getDescription().toLowerCase().contains(filterString) || e.getName().toLowerCase().contains(filterString);
+         return filter.matches(e.getDescription(), e.getName());
       }
    }
 

@@ -48,6 +48,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -530,7 +531,7 @@ public class AgentConfigurationsManager extends ConfigurationView
     */
    private static class ConfigurationFilter extends ViewerFilter implements AbstractViewerFilter
    {
-      private String filterString = null;
+      private TokenizedFilter filter = new TokenizedFilter(null);
 
       /**
        * @see org.netxms.nxmc.base.views.AbstractViewerFilter#setFilterString(java.lang.String)
@@ -538,7 +539,7 @@ public class AgentConfigurationsManager extends ConfigurationView
       @Override
       public void setFilterString(String filterString)
       {
-         this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+         this.filter = new TokenizedFilter(filterString);
       }
 
       /**
@@ -547,7 +548,7 @@ public class AgentConfigurationsManager extends ConfigurationView
       @Override
       public boolean select(Viewer viewer, Object parentElement, Object element)
       {
-         return (filterString == null) || filterString.isEmpty() || ((AgentConfigurationHandle)element).getName().toLowerCase().contains(filterString);
+         return filter.matches(((AgentConfigurationHandle)element).getName());
       }
    }
 }

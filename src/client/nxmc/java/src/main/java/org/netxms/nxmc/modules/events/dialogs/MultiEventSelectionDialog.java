@@ -55,6 +55,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -76,7 +77,7 @@ public class MultiEventSelectionDialog extends Dialog
    private List<SelectableEvent> events = new ArrayList<>();
    private Set<Integer> initialSelection;
    private int[] selectedEventCodes;
-   private String filterText = "";
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * Create multi-event selection dialog.
@@ -141,7 +142,7 @@ public class MultiEventSelectionDialog extends Dialog
          @Override
          public void modifyText(ModifyEvent e)
          {
-            filterText = filterTextWidget.getText().toLowerCase();
+            filter = new TokenizedFilter(filterTextWidget.getText());
             viewer.refresh();
          }
       });
@@ -194,12 +195,8 @@ public class MultiEventSelectionDialog extends Dialog
          @Override
          public boolean select(Viewer v, Object parentElement, Object element)
          {
-            if (filterText.isEmpty())
-               return true;
             SelectableEvent se = (SelectableEvent)element;
-            return se.event.getName().toLowerCase().contains(filterText) ||
-                   String.valueOf(se.event.getCode()).contains(filterText) ||
-                   se.event.getTagList().toLowerCase().contains(filterText);
+            return filter.matches(se.event.getName(), String.valueOf(se.event.getCode()), se.event.getTagList());
          }
       });
       viewer.addCheckStateListener(new ICheckStateListener() {

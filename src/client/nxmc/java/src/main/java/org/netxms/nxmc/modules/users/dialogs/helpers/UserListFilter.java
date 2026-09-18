@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.users.dialogs.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.modules.users.views.helpers.BaseUserLabelProvider;
 
@@ -28,7 +29,7 @@ import org.netxms.nxmc.modules.users.views.helpers.BaseUserLabelProvider;
  */
 public class UserListFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filter = "";
+   private TokenizedFilter filter = new TokenizedFilter(null);
 	private final BaseUserLabelProvider baseLabelProvider;
 
    /**
@@ -45,7 +46,7 @@ public class UserListFilter extends ViewerFilter implements AbstractViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-      return (filter == null) || filter.isEmpty() || (element instanceof String) || baseLabelProvider.getText(element).toLowerCase().contains(filter);
+      return filter.isEmpty() || (element instanceof String) || filter.matches(baseLabelProvider.getText(element));
 	}
 
 	/**
@@ -53,7 +54,7 @@ public class UserListFilter extends ViewerFilter implements AbstractViewerFilter
 	 */
 	public String getFilter()
 	{
-		return filter;
+      return filter.getFilterString();
 	}
 
 	/**
@@ -61,6 +62,6 @@ public class UserListFilter extends ViewerFilter implements AbstractViewerFilter
 	 */
 	public void setFilterString(String filter)
 	{
-		this.filter = filter.toLowerCase();
+      this.filter = new TokenizedFilter(filter);
 	}	
 }

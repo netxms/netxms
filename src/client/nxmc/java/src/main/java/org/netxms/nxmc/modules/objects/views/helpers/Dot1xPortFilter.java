@@ -33,13 +33,7 @@ public class Dot1xPortFilter extends NodeSubObjectFilter
    {
       final Dot1xPortSummary p1 = (Dot1xPortSummary)element;
       
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-      
-      return p1.getNodeName().contains(filterString) || 
-         Integer.toString(p1.getPort()).contains(filterString) ||
-         p1.getInterfaceName().contains(filterString) ||
-         p1.getPaeStateAsText().contains(filterString) ||
-         p1.getBackendStateAsText().contains(filterString);
+      return filter.matches(p1.getNodeName(), Integer.toString(p1.getPort()), p1.getInterfaceName(), p1.getPaeStateAsText(),
+            p1.getBackendStateAsText());
    }
 }

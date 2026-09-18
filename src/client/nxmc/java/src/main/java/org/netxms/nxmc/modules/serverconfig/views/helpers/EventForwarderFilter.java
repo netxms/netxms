@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.EventForwarder;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class EventForwarderFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,13 +37,11 @@ public class EventForwarderFilter extends ViewerFilter implements AbstractViewer
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       final EventForwarder forwarder = (EventForwarder)element;
-      return forwarder.getName().toLowerCase().contains(filterString) ||
-            forwarder.getDescription().toLowerCase().contains(filterString) ||
-            forwarder.getDriverName().toLowerCase().contains(filterString);
+      return filter.matches(forwarder.getName(), forwarder.getDescription(), forwarder.getDriverName());
    }
 
    /**
@@ -50,7 +49,7 @@ public class EventForwarderFilter extends ViewerFilter implements AbstractViewer
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 
    /**
@@ -58,6 +57,6 @@ public class EventForwarderFilter extends ViewerFilter implements AbstractViewer
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

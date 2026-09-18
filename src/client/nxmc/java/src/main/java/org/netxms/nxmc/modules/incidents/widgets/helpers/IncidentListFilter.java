@@ -26,6 +26,7 @@ import org.netxms.client.events.IncidentSummary;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -41,7 +42,7 @@ public class IncidentListFilter extends ViewerFilter implements AbstractViewerFi
    public static final int STATE_FILTER_CLOSED = 1 << IncidentState.CLOSED.getValue();
 
    private NXCSession session;
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private int stateFilter = STATE_FILTER_ALL;
 
    /**
@@ -65,31 +66,14 @@ public class IncidentListFilter extends ViewerFilter implements AbstractViewerFi
          return false;
 
       // Check text filter
-      if ((filterString == null) || filterString.isEmpty())
+      if (filter.isEmpty())
          return true;
 
-      // Match against title
-      if (incident.getTitle().toLowerCase().contains(filterString))
-         return true;
-
-      // Match against object name
+      // Match against title, source object name, assigned user name, and ID
       AbstractObject object = session.findObjectById(incident.getSourceObjectId());
-      if (object != null && object.getObjectName().toLowerCase().contains(filterString))
-         return true;
-
-      // Match against assigned user
-      if (incident.getAssignedUserId() != 0)
-      {
-         AbstractUserObject user = session.findUserDBObjectById(incident.getAssignedUserId(), null);
-         if (user != null && user.getName().toLowerCase().contains(filterString))
-            return true;
-      }
-
-      // Match against ID
-      if (Long.toString(incident.getId()).contains(filterString))
-         return true;
-
-      return false;
+      AbstractUserObject user = (incident.getAssignedUserId() != 0) ? session.findUserDBObjectById(incident.getAssignedUserId(), null) : null;
+      return filter.matches(incident.getTitle(), (object != null) ? object.getObjectName() : null, (user != null) ? user.getName() : null,
+            Long.toString(incident.getId()));
    }
 
    /**
@@ -98,7 +82,7 @@ public class IncidentListFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 
    /**
@@ -108,7 +92,7 @@ public class IncidentListFilter extends ViewerFilter implements AbstractViewerFi
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 
    /**

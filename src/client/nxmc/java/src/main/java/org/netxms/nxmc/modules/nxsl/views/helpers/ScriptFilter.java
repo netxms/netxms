@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.nxsl.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.Script;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public final class ScriptFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,11 +37,7 @@ public final class ScriptFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-      
-      final Script script = (Script)element;      
-      return script.getName().toLowerCase().contains(filterString);
+      return filter.matches(((Script)element).getName());
    }
 
    /**
@@ -49,6 +46,6 @@ public final class ScriptFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public void setFilterString(String text)
    {
-      filterString = (text != null) ? text.toLowerCase() : null;
+      filter = new TokenizedFilter(text);
    }
 }

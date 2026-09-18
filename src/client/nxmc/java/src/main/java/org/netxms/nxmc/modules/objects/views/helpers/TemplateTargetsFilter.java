@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class TemplateTargetsFilter extends ViewerFilter  implements AbstractViewerFilter
 {
-   private String filterString;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private TemplateTargetsLabelProvider labelProvider;
    
    /**
@@ -47,16 +48,12 @@ public class TemplateTargetsFilter extends ViewerFilter  implements AbstractView
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {      
+      if (filter.isEmpty())
+         return true;
+
       AbstractObject object = (AbstractObject)element;
-      if ((filterString != null) && !filterString.isEmpty())
-      {         
-         return Long.toString(object.getObjectId()).contains(filterString) || 
-               labelProvider.getName(element).toLowerCase().contains(filterString) ||
-               TemplateTargetsLabelProvider.getZone(element).toLowerCase().contains(filterString) ||
-               TemplateTargetsLabelProvider.getPrimaryHostName(element).toLowerCase().contains(filterString) ||
-               TemplateTargetsLabelProvider.getDescription(element).toLowerCase().contains(filterString);
-      }
-      return true;
+      return filter.matches(Long.toString(object.getObjectId()), labelProvider.getName(element), TemplateTargetsLabelProvider.getZone(element),
+            TemplateTargetsLabelProvider.getPrimaryHostName(element), TemplateTargetsLabelProvider.getDescription(element));
    }
 
    /**
@@ -64,7 +61,7 @@ public class TemplateTargetsFilter extends ViewerFilter  implements AbstractView
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 
    /**
@@ -72,6 +69,6 @@ public class TemplateTargetsFilter extends ViewerFilter  implements AbstractView
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

@@ -33,17 +33,11 @@ public class AccessPointFilter extends NodeSubObjectFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       final AccessPoint ap = (AccessPoint)element;
-      return 
-         Long.toString(ap.getObjectId()).contains(filterString) ||
-         ap.getObjectName().toLowerCase().contains(filterString) ||
-         ap.getVendor().toLowerCase().contains(filterString) ||
-         ap.getModel().toLowerCase().contains(filterString) ||
-         ap.getSerialNumber().toLowerCase().contains(filterString) ||
-         ap.getMacAddress().toString().toLowerCase().contains(filterString) ||
-         StatusDisplayInfo.getStatusText(ap.getStatus()).contains(filterString);
+      return filter.matches(Long.toString(ap.getObjectId()), ap.getObjectName(), ap.getVendor(), ap.getModel(), ap.getSerialNumber(),
+            ap.getMacAddress().toString(), StatusDisplayInfo.getStatusText(ap.getStatus()));
    }
 }

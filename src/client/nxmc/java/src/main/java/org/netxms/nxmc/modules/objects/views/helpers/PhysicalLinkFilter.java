@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.PhysicalLink;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class PhysicalLinkFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private PhysicalLinkLabelProvider labelProvider;
    
    /**
@@ -47,23 +48,12 @@ public class PhysicalLinkFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       PhysicalLink link = (PhysicalLink)element;
-      if (Long.toString(link.getId()).contains(filterString))
-         return true;
-      if (link.getDescription().toLowerCase().contains(filterString))
-         return true;
-      if (labelProvider.getObjectText(link, true).toLowerCase().contains(filterString))
-         return true;
-      if (labelProvider.getPortText(link, true).toLowerCase().contains(filterString))
-         return true;
-      if (labelProvider.getObjectText(link, false).toLowerCase().contains(filterString))
-         return true;
-      if (labelProvider.getPortText(link, false).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return filter.matches(Long.toString(link.getId()), link.getDescription(), labelProvider.getObjectText(link, true),
+            labelProvider.getPortText(link, true), labelProvider.getObjectText(link, false), labelProvider.getPortText(link, false));
    }
 
    /**
@@ -72,6 +62,6 @@ public class PhysicalLinkFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 }

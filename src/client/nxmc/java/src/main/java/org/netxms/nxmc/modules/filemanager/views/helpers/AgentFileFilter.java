@@ -22,6 +22,7 @@ import java.util.List;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.server.AgentFile;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -29,7 +30,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class AgentFileFilter extends ViewerFilter implements AbstractViewerFilter
 {
-	private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -37,12 +38,12 @@ public class AgentFileFilter extends ViewerFilter implements AbstractViewerFilte
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		if ((filterString == null) || (filterString.isEmpty()))
-			return true;
-		
+      if (filter.isEmpty())
+         return true;
+
 		final AgentFile filename = (AgentFile)element;
-		
-		boolean pass = filename.getName().toLowerCase().contains(filterString.toLowerCase());
+
+      boolean pass = filter.matches(filename.getName());
 		List<AgentFile> children = filename.getChildren();
       if (!pass && children != null)
       {
@@ -61,7 +62,7 @@ public class AgentFileFilter extends ViewerFilter implements AbstractViewerFilte
       {
          for(AgentFile f :children)
          {
-            if (f.getName().toLowerCase().contains(filterString.toLowerCase()))
+            if (filter.matches(f.getName()))
                return true;
          }
          
@@ -79,7 +80,7 @@ public class AgentFileFilter extends ViewerFilter implements AbstractViewerFilte
 	 */
 	public String getFilterString()
 	{
-		return filterString;
+      return filter.getFilterString();
 	}
 
 	/**
@@ -87,6 +88,6 @@ public class AgentFileFilter extends ViewerFilter implements AbstractViewerFilte
 	 */
 	public void setFilterString(String filterString)
 	{
-		this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
 	}
 }

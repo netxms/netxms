@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.assetmanagement.views.helpers;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private AssetPropertyReader propertyReader;
 
    /**
@@ -47,14 +48,13 @@ public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerF
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       @SuppressWarnings("unchecked")
       Entry<String, String> entry = (Entry<String, String>)element;
 
-      return propertyReader.getDisplayName(entry.getKey()).toUpperCase().contains(filterString) || 
-            propertyReader.valueToText(entry.getKey(), entry.getValue()).toUpperCase().contains(filterString);
+      return filter.matches(propertyReader.getDisplayName(entry.getKey()), propertyReader.valueToText(entry.getKey(), entry.getValue()));
    }
 
    /**
@@ -63,6 +63,6 @@ public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerF
    @Override
    public void setFilterString(String string)
    {
-      this.filterString = (string != null) ? string.toUpperCase() : null;
+      this.filter = new TokenizedFilter(string);
    }
 }

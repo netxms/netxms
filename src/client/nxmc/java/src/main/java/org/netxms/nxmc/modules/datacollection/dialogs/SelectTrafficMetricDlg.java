@@ -51,6 +51,7 @@ import org.netxms.client.objects.ObservationPoint;
 import org.netxms.client.objects.TrafficObserver;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -364,26 +365,18 @@ public class SelectTrafficMetricDlg extends Dialog implements IParameterSelectio
     */
    private static class MetricFilter extends ViewerFilter
    {
-      private String filterString = null;
+      private TokenizedFilter tokenizedFilter = new TokenizedFilter(null);
 
       @Override
       public boolean select(Viewer viewer, Object parentElement, Object element)
       {
-         if ((filterString == null) || filterString.isEmpty())
-            return true;
          TrafficMetric metric = (TrafficMetric)element;
-         if (metric.getName().toLowerCase().contains(filterString))
-            return true;
-         if (metric.getDisplayName().toLowerCase().contains(filterString))
-            return true;
-         if (metric.getDescription().toLowerCase().contains(filterString))
-            return true;
-         return false;
+         return tokenizedFilter.matches(metric.getName(), metric.getDisplayName(), metric.getDescription());
       }
 
       public void setFilter(String filterString)
       {
-         this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+         this.tokenizedFilter = new TokenizedFilter(filterString);
       }
    }
 }

@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.datacollection.NetconfQueryDefinition;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class NetconfQueryFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,13 +37,8 @@ public class NetconfQueryFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-
       final NetconfQueryDefinition d = (NetconfQueryDefinition)element;
-      return d.getName().toLowerCase().contains(filterString) ||
-             d.getFilter().toLowerCase().contains(filterString) ||
-             d.getDescription().toLowerCase().contains(filterString);
+      return filter.matches(d.getName(), d.getFilter(), d.getDescription());
    }
 
    /**
@@ -51,6 +47,6 @@ public class NetconfQueryFilter extends ViewerFilter implements AbstractViewerFi
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

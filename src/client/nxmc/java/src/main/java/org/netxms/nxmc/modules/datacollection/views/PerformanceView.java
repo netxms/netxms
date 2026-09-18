@@ -37,6 +37,7 @@ import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.xml.XMLTools;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -297,11 +298,10 @@ public class PerformanceView extends ObjectView
    @Override
    protected void onFilterModify()
    {
-      String filterString = getFilterText();
-      filterString = (filterString != null) ? filterString.trim() : "";
+      TokenizedFilter filter = new TokenizedFilter(getFilterText());
       for(PerfTabGraph chart : charts.values())
       {
-         if (filterString.isEmpty() || chart.matchesFilter(filterString))
+         if (chart.matchesFilter(filter))
          {
             chart.setVisible(true);
             ((GridData)chart.getLayoutData()).exclude = false;

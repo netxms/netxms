@@ -63,6 +63,7 @@ import org.netxms.client.events.EventProcessingPolicyChain;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -92,7 +93,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    private EventProcessingPolicy policy;
    private SessionListener sessionListener;
    private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
-   private String filterText = null;
+   private TokenizedFilter ruleFilter = new TokenizedFilter(null);
    private CTabFolder tabFolder;
    private List<ChainTab> chainTabs = new ArrayList<ChainTab>();
    private boolean globalRights = false;
@@ -1803,7 +1804,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
    @Override
    protected void onFilterModify()
    {
-      filterText = getFilterText().trim().toLowerCase();
+      ruleFilter = new TokenizedFilter(getFilterText());
       for(ChainTab tab : chainTabs)
       {
          // change editors visibility
@@ -1845,17 +1846,26 @@ public class EventProcessingPolicyEditor extends ConfigurationView
     */
    private boolean isRuleVisible(EventProcessingPolicyRule rule)
    {
-      if ((filterText == null) || filterText.isEmpty())
-         return true;
+      return ruleFilter.matchesEachToken(token -> isRuleMatchingToken(rule, token));
+   }
 
-      if (rule.getComments().toLowerCase().contains(filterText))
+   /**
+    * Check if given rule matches single filter token
+    *
+    * @param rule rule to check
+    * @param token filter token (lowercase)
+    * @return true if any of rule's searchable fields contains given token
+    */
+   private boolean isRuleMatchingToken(EventProcessingPolicyRule rule, String token)
+   {
+      if (rule.getComments().toLowerCase().contains(token))
          return true;
 
       // check event names
       for(Integer code : rule.getEvents())
       {
          EventTemplate evt = session.findEventTemplateByCode(code);
-         if ((evt != null) && evt.getName().toLowerCase().contains(filterText))
+         if ((evt != null) && evt.getName().toLowerCase().contains(token))
             return true;
       }
 
@@ -1863,18 +1873,18 @@ public class EventProcessingPolicyEditor extends ConfigurationView
       for(Long id : rule.getSources())
       {
          String name = session.getObjectName(id);
-         if ((name != null) && name.toLowerCase().contains(filterText))
+         if ((name != null) && name.toLowerCase().contains(token))
             return true;
       }
       for(Long id : rule.getSourceExclusions())
       {
          String name = session.getObjectName(id);
-         if ((name != null) && name.toLowerCase().contains(filterText))
+         if ((name != null) && name.toLowerCase().contains(token))
             return true;
       }
 
       // Check rule GUID
-      if (rule.getGuid().toString().toLowerCase().contains(filterText))
+      if (rule.getGuid().toString().toLowerCase().contains(token))
          return true;
 
       return false;

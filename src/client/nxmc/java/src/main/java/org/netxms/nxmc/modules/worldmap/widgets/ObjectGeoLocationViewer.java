@@ -49,6 +49,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -84,7 +85,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements ISe
    private long rootObjectId = 0;
    private boolean singleObjectMode = false;
    private boolean showObjectNames = true;
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private ISelection selection = new StructuredSelection();
    private Set<ISelectionChangedListener> selectionChangeListeners = new HashSet<ISelectionChangedListener>();
 
@@ -245,7 +246,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements ISe
       }
       else
       {
-         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filterString);
+         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filter);
       }
       redraw();
    }
@@ -262,7 +263,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements ISe
             || ((prevLocation != null) && (prevLocation.getType() != GeoLocation.UNSET) && 
                   coverage.contains(prevLocation.getLatitude(), prevLocation.getLongitude())))
       {
-         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filterString);
+         objects = GeoLocationCache.getInstance().getObjectsInArea(coverage, rootObjectId, filter);
          redraw();
       }
    }
@@ -659,6 +660,6 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements ISe
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString;      
+      this.filter = new TokenizedFilter(filterString);
    }
 }

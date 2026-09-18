@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class DciFilter extends ViewerFilter implements AbstractViewerFilter
 {
-	private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private boolean hideTemplateItems = false;
 
    /**
@@ -41,13 +42,7 @@ public class DciFilter extends ViewerFilter implements AbstractViewerFilter
       if (hideTemplateItems && dci.getTemplateId() != 0)
          return false;
 
-		if ((filterString == null) || (filterString.isEmpty()))
-			return true;
-
-		return dci.getDescription().toLowerCase().contains(filterString) || 
-		      dci.getName().toLowerCase().contains(filterString) ||
-		      Long.toString(dci.getId()).contains(filterString) ||
-		      dci.getUserTag().toLowerCase().contains(filterString);
+      return filter.matches(dci.getDescription(), dci.getName(), Long.toString(dci.getId()), dci.getUserTag());
 	}
 
 	/**
@@ -55,7 +50,7 @@ public class DciFilter extends ViewerFilter implements AbstractViewerFilter
 	 */
 	public String getFilterString()
 	{
-		return filterString;
+      return filter.getFilterString();
 	}
 
 	/**
@@ -63,7 +58,7 @@ public class DciFilter extends ViewerFilter implements AbstractViewerFilter
 	 */
 	public void setFilterString(String filterString)
 	{
-		this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
 	}
 
    /**

@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
@@ -38,7 +39,7 @@ public class FDBFilter extends ViewerFilter implements AbstractViewerFilter
    private final String typeMatchUnknown = i18n.tr("Unknown").toLowerCase();
 
    private NXCSession session = Registry.getSession();
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -46,40 +47,29 @@ public class FDBFilter extends ViewerFilter implements AbstractViewerFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       final FdbEntry e = (FdbEntry)element;
-      if (e.getAddress().toString().toLowerCase().contains(filterString))
-         return true;
-      if (Integer.toString(e.getPort()).contains(filterString))
-         return true;
-      if (e.getInterfaceName().toLowerCase().contains(filterString))
-         return true;
-      if (Integer.toString(e.getVlanId()).contains(filterString))
-         return true;
-      if ((e.getNodeId() != 0) && session.getObjectName(e.getNodeId()).toLowerCase().contains(filterString))
-         return true;
-      if (matchType(e))
-         return true;
-
-      String vendor = session.getVendorByMac(e.getAddress(), null);
-      return (vendor != null) && vendor.toLowerCase().contains(filterString);
+      return filter.matches(e.getAddress().toString(), Integer.toString(e.getPort()), e.getInterfaceName(), Integer.toString(e.getVlanId()),
+            (e.getNodeId() != 0) ? session.getObjectName(e.getNodeId()) : null,
+            getTypeText(e),
+            session.getVendorByMac(e.getAddress(), null));
    }
 
    /**
-    * Checks if filterString contains FDB type
+    * Get text for FDB entry type
     */
-   private boolean matchType(FdbEntry en)
+   private String getTypeText(FdbEntry en)
    {
       switch(en.getType())
       {
          case 3:
-            return typeMatchDynamic.contains(filterString);
+            return typeMatchDynamic;
          case 5:
-            return typeMatchStatic.contains(filterString);
+            return typeMatchStatic;
          default:
-            return typeMatchUnknown.contains(filterString);
+            return typeMatchUnknown;
       }
    }
 
@@ -89,6 +79,6 @@ public class FDBFilter extends ViewerFilter implements AbstractViewerFilter
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }   
 }

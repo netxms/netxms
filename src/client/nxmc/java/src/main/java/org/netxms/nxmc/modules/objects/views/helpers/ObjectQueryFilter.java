@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objects.queries.ObjectQuery;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class ObjectQueryFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,11 +37,8 @@ public class ObjectQueryFilter extends ViewerFilter implements AbstractViewerFil
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-
       ObjectQuery query = (ObjectQuery)element;
-      return query.getName().toLowerCase().contains(filterString) || query.getDescription().toLowerCase().contains(filterString);
+      return filter.matches(query.getName(), query.getDescription());
    }
 
    /**
@@ -49,6 +47,6 @@ public class ObjectQueryFilter extends ViewerFilter implements AbstractViewerFil
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 }

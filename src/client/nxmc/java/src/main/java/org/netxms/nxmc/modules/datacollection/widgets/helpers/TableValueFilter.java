@@ -3,6 +3,7 @@ package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.TableRow;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -10,12 +11,12 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class TableValueFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {      
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
       else if (compareRow((TableRow)element))
          return true;
@@ -24,12 +25,10 @@ public class TableValueFilter extends ViewerFilter implements AbstractViewerFilt
    
    private boolean compareRow(TableRow row)
    {
-      for(int i = 0; i < row.size(); i++)
-      {
-         if (row.get(i).getValue().toLowerCase().contains(filterString))
-            return true;
-      }
-      return false;
+      String[] values = new String[row.size()];
+      for(int i = 0; i < values.length; i++)
+         values[i] = row.get(i).getValue();
+      return filter.matches(values);
    }
    
    /**
@@ -37,7 +36,7 @@ public class TableValueFilter extends ViewerFilter implements AbstractViewerFilt
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 
    /**
@@ -45,6 +44,6 @@ public class TableValueFilter extends ViewerFilter implements AbstractViewerFilt
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

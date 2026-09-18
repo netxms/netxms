@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.MaintenanceJournalEntry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
 
@@ -29,7 +30,7 @@ import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
  */
 public class MaintenanceJournalFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private MaintenanceJournalLabelProvider labelProvider;
 
    /**
@@ -50,25 +51,14 @@ public class MaintenanceJournalFilter extends ViewerFilter implements AbstractVi
    {
       MaintenanceJournalEntry me = (MaintenanceJournalEntry)element;
 
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
-      if (labelProvider.getColumnText(me, MaintenanceJournalView.COL_ID).contains(filterString))
-         return true;
-
-      if (labelProvider.getColumnText(me, MaintenanceJournalView.COL_OBJECT).toLowerCase().contains(filterString))
-         return true;
-
-      if (labelProvider.getColumnText(me, MaintenanceJournalView.COL_AUHTHOR).toLowerCase().contains(filterString))
-         return true;
-
-      if (labelProvider.getColumnText(me, MaintenanceJournalView.COL_EDITOR).toLowerCase().contains(filterString))
-         return true;
-
-      if (me.getDescription().toLowerCase().contains(filterString))
-         return true;
-
-      return false;
+      return filter.matches(labelProvider.getColumnText(me, MaintenanceJournalView.COL_ID),
+            labelProvider.getColumnText(me, MaintenanceJournalView.COL_OBJECT),
+            labelProvider.getColumnText(me, MaintenanceJournalView.COL_AUHTHOR),
+            labelProvider.getColumnText(me, MaintenanceJournalView.COL_EDITOR),
+            me.getDescription());
    }
 
    /**
@@ -78,6 +68,6 @@ public class MaintenanceJournalFilter extends ViewerFilter implements AbstractVi
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 }

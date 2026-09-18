@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -56,7 +57,7 @@ public class ObjectViewManagerDialog extends Dialog
 
    private List<View> objectViews;
    private PreferenceStore preferenceStore = PreferenceStore.getInstance();
-   private String filterString = null;
+   private TokenizedFilter tokenizedFilter = new TokenizedFilter(null);
    private Map<String, Boolean> changedElements = new HashMap<>();
 
    /**
@@ -125,7 +126,7 @@ public class ObjectViewManagerDialog extends Dialog
          @Override
          public boolean select(Viewer viewer, Object parentElement, Object element)
          {
-            return (filterString == null) || filterString.isEmpty() || ((View)element).getName().toLowerCase().contains(filterString);
+            return tokenizedFilter.matches(((View)element).getName());
          }
       });
       viewer.setCheckStateProvider(new ICheckStateProvider() {
@@ -155,7 +156,7 @@ public class ObjectViewManagerDialog extends Dialog
          @Override
          public void modifyText(ModifyEvent e)
          {
-            filterString = filter.getText();
+            tokenizedFilter = new TokenizedFilter(filter.getText());
             viewer.refresh();
          }
       });

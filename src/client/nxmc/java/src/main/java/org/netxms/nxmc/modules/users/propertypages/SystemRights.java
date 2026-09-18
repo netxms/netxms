@@ -41,6 +41,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.FilterText;
@@ -58,7 +59,7 @@ public class SystemRights extends PropertyPage
    private NXCSession session = Registry.getSession();
 	private AbstractUserObject object;
    private List<AccessAttribute> attributes = new ArrayList<AccessAttribute>();
-   private String filterText = "";
+   private TokenizedFilter tokenizedFilter = new TokenizedFilter(null);
    private FilterText filter;
    private CheckboxTableViewer viewer;
 
@@ -153,7 +154,7 @@ public class SystemRights extends PropertyPage
          @Override
          public void modifyText(ModifyEvent e)
          {
-            filterText = filter.getText();
+            tokenizedFilter = new TokenizedFilter(filter.getText());
             viewer.refresh();
          }
       });
@@ -198,7 +199,7 @@ public class SystemRights extends PropertyPage
          @Override
          public boolean select(Viewer viewer, Object parentElement, Object element)
          {
-            return filterText.isEmpty() ? true : ((AccessAttribute)element).comparatorName.contains(filterText);
+            return tokenizedFilter.matches(((AccessAttribute)element).comparatorName);
          }
       });
       viewer.addCheckStateListener(new ICheckStateListener() {

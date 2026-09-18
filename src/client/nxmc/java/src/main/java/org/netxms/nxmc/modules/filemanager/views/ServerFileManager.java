@@ -51,6 +51,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.server.ServerFile;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -80,7 +81,7 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
 
    private NXCSession session = Registry.getSession();
    private SortableTableViewer viewer;
-   private String filterString = "";
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private Action actionUpload;
    private Action actionRename;
    private Action actionDelete;
@@ -109,14 +110,14 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
          @Override
          public boolean select(Viewer viewer, Object parentElement, Object element)
          {
-            return filterString.isEmpty() || ((ServerFile)element).getName().toLowerCase().contains(filterString);
+            return filter.matches(((ServerFile)element).getName());
          }
       });
       setFilterClient(viewer, new AbstractViewerFilter() {
          @Override
          public void setFilterString(String string)
          {
-            filterString = string.toLowerCase();
+            filter = new TokenizedFilter(string);
          }
       });
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {

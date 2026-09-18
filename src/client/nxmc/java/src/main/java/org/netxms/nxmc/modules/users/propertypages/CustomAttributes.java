@@ -52,6 +52,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.FilterText;
@@ -73,7 +74,7 @@ public class CustomAttributes extends PropertyPage
    private NXCSession session = Registry.getSession();
 	private AbstractUserObject object;
    private Map<String, String> attributes;
-   private String filterText = "";
+   private TokenizedFilter tokenizedFilter = new TokenizedFilter(null);
    private FilterText filter;
    private SortableTableViewer viewer;
 
@@ -120,7 +121,7 @@ public class CustomAttributes extends PropertyPage
          @Override
          public void modifyText(ModifyEvent e)
          {
-            filterText = filter.getText();
+            tokenizedFilter = new TokenizedFilter(filter.getText());
             viewer.refresh();
          }
       });
@@ -150,7 +151,7 @@ public class CustomAttributes extends PropertyPage
          @Override
          public boolean select(Viewer viewer, Object parentElement, Object element)
          {
-            return filterText.isEmpty() ? true : ((Entry<String, String>)element).getKey().toLowerCase().contains(filterText);
+            return tokenizedFilter.matches(((Entry<String, String>)element).getKey());
          }
       });
       viewer.setInput(attributes.entrySet());

@@ -47,24 +47,10 @@ public class SyslogMonitorFilter extends AbstractTraceViewFilter
             return false;
       }
 
-		if ((filterString == null) || filterString.isEmpty())
-			return true;
-		
-      if (record.getMessage().toLowerCase().contains(filterString))
-			return true;
-		
-      if (record.getHostname().toLowerCase().contains(filterString))
-			return true;
-		
-      if (record.getTag().toLowerCase().contains(filterString))
-			return true;
-		
-      AbstractObject object = session.findObjectById(record.getSourceObjectId());
-		if (object != null)
-		{
-			return object.getObjectName().toLowerCase().contains(filterString);
-		}
+      if (filter.isEmpty())
+         return true;
 
-		return false;
+      AbstractObject object = session.findObjectById(record.getSourceObjectId());
+      return filter.matches(record.getMessage(), record.getHostname(), record.getTag(), (object != null) ? object.getObjectName() : null);
 	}
 }

@@ -48,6 +48,7 @@ import org.netxms.client.AgentList;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -68,7 +69,7 @@ public class SelectAgentListDlg extends Dialog
    private long nodeId;
    private Text filterText;
    private SortableTableViewer viewer;
-   private String filterString = "";
+   private TokenizedFilter tokenizedFilter = new TokenizedFilter(null);
    private String selectedListName;
 
    /**
@@ -122,7 +123,7 @@ public class SelectAgentListDlg extends Dialog
          @Override
          public void modifyText(ModifyEvent e)
          {
-            filterString = filterText.getText().toLowerCase();
+            tokenizedFilter = new TokenizedFilter(filterText.getText());
             viewer.refresh(false);
          }
       });
@@ -138,7 +139,7 @@ public class SelectAgentListDlg extends Dialog
          @Override
          public boolean select(Viewer viewer, Object parentElement, Object element)
          {
-            return filterString.isEmpty() || ((AgentList)element).getName().toLowerCase().contains(filterString);
+            return tokenizedFilter.matches(((AgentList)element).getName());
          }
       });
 

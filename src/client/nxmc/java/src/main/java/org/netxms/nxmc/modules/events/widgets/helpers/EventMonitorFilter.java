@@ -95,12 +95,9 @@ public class EventMonitorFilter extends AbstractTraceViewFilter
             return false;
       }
 
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
-      return
-         message.toLowerCase().contains(filterString) ||
-         session.getEventName(code).toLowerCase().contains(filterString) ||
-         session.getObjectName(sourceId).toLowerCase().contains(filterString);
+      return filter.matches(message, session.getEventName(code), session.getObjectName(sourceId));
 	}
 }

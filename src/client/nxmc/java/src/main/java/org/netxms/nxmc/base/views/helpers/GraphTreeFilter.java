@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -29,7 +30,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class GraphTreeFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private GraphDefinition lastMatch = null;
 
    /**
@@ -38,12 +39,12 @@ public class GraphTreeFilter extends ViewerFilter implements AbstractViewerFilte
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {      
-      if ((filterString == null) || filterString.isEmpty())
+      if (filter.isEmpty())
          return true;
       
       if (element instanceof GraphDefinition)
       {
-         if (((GraphDefinition)element).getName().toLowerCase().contains(filterString))
+         if (filter.matches(((GraphDefinition)element).getName()))
          {
             lastMatch = (GraphDefinition)element;
             return true;
@@ -70,7 +71,7 @@ public class GraphTreeFilter extends ViewerFilter implements AbstractViewerFilte
     */
    public void setFilterString(final String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 
    /**

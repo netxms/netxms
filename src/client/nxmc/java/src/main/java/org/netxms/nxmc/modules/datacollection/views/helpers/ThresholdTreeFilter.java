@@ -24,6 +24,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -32,7 +33,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 public class ThresholdTreeFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private NXCSession session = Registry.getSession();
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -40,30 +41,23 @@ public class ThresholdTreeFilter extends ViewerFilter implements AbstractViewerF
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || filterString.isEmpty())
+      if (filter.isEmpty())
          return true;
 
       if (element instanceof ThresholdViolationSummary)
       {
          String objectName = session.getObjectNameWithAlias(((ThresholdViolationSummary)element).getNodeId());
-         if (objectName.toLowerCase().contains(filterString))
+         if (filter.matches(objectName))
             return true;
          for(DciValue v : ((ThresholdViolationSummary)element).getDciList())
          {
-            if (v.getDescription().toLowerCase().contains(filterString))
+            if (filter.matches(v.getDescription(), objectName))
                return true;
          }
-      }
-      else
-      {
-         if (((DciValue)element).getDescription().toLowerCase().contains(filterString))
-            return true;
-         String objectName = session.getObjectNameWithAlias(((DciValue)element).getNodeId());
-         if (objectName.toLowerCase().contains(filterString))
-            return true;
+         return false;
       }
 
-      return false;
+      return filter.matches(((DciValue)element).getDescription(), session.getObjectNameWithAlias(((DciValue)element).getNodeId()));
    }
 
    /**
@@ -72,6 +66,6 @@ public class ThresholdTreeFilter extends ViewerFilter implements AbstractViewerF
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

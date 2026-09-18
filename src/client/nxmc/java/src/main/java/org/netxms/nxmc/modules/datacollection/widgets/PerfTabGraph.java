@@ -39,6 +39,7 @@ import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.DashboardComposite;
@@ -315,27 +316,23 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
    /**
     * Check if this graph matches given filter string.
     *
-    * @param filter filter string
+    * @param filter tokenized filter
     * @return true if graph matches filter
     */
-   public boolean matchesFilter(String filter)
+   public boolean matchesFilter(TokenizedFilter filter)
    {
-      String lcFilter = filter.toLowerCase();
-      if (settings.getRuntimeTitle().toLowerCase().contains(lcFilter))
-         return true;
-      if (settings.getGroupName().toLowerCase().contains(lcFilter))
-         return true;
+      List<String> fields = new ArrayList<>();
+      fields.add(settings.getRuntimeTitle());
+      fields.add(settings.getGroupName());
       synchronized(items)
       {
          for(PerfTabDci item : items)
          {
-            if (item.getDescription().toLowerCase().contains(lcFilter))
-               return true;
-            if ((item.getInstanceName() != null) && item.getInstanceName().toLowerCase().contains(lcFilter))
-               return true;
+            fields.add(item.getDescription());
+            fields.add(item.getInstanceName());
          }
       }
-      return false;
+      return filter.matches(fields.toArray(new String[fields.size()]));
    }
 
    /**

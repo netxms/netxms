@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.worldmap.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.GeoArea;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class GeoAreaFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,10 +37,7 @@ public class GeoAreaFilter extends ViewerFilter implements AbstractViewerFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-      return ((GeoArea)element).getName().toLowerCase().contains(filterString) ||
-             ((GeoArea)element).getComments().toLowerCase().contains(filterString);
+      return filter.matches(((GeoArea)element).getName(), ((GeoArea)element).getComments());
    }
 
    /**
@@ -48,6 +46,6 @@ public class GeoAreaFilter extends ViewerFilter implements AbstractViewerFilter
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

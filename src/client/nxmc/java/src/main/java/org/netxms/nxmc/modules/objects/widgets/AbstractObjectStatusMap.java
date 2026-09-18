@@ -55,6 +55,7 @@ import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.WirelessDomain;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.modules.alarms.views.AdHocAlarmsView;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -73,7 +74,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    protected Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
    protected MenuManager menuManager;
    protected int severityFilter = 0xFF;
-   protected String textFilter = "";
+   protected TokenizedFilter textFilter = new TokenizedFilter(null);
    protected boolean hideObjectsInMaintenance = false;
    protected Set<Runnable> refreshListeners = new HashSet<Runnable>();
    protected RefreshTimer refreshTimer;
@@ -166,20 +167,8 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       if (hideObjectsInMaintenance && object.isInMaintenanceMode())
          return false;
 
-      if (!textFilter.isEmpty())
-      {
-         boolean match = false;
-         for(String s : object.getStrings())
-         {
-            if (s.toLowerCase().contains(textFilter))
-            {
-               match = true;
-               break;
-            }
-         }
-         if (!match)
-            return false;
-      }
+      if (!textFilter.isEmpty() && !textFilter.matches(object.getStrings().toArray(new String[0])))
+         return false;
       
       return true;
    }
@@ -279,7 +268,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     */
    public String getTextFilter()
    {
-      return textFilter;
+      return textFilter.getFilterString();
    }
 
    /**
@@ -287,7 +276,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     */
    public void setTextFilter(String textFilter)
    {
-      this.textFilter = (textFilter != null) ? textFilter.strip().toLowerCase() : "";
+      this.textFilter = new TokenizedFilter(textFilter);
    }
 
    /**

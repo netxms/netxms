@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.DeviceConfigBackup;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.DateFormatFactory;
 
@@ -29,7 +30,7 @@ import org.netxms.nxmc.localization.DateFormatFactory;
  */
 public class DeviceConfigBackupFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -37,15 +38,12 @@ public class DeviceConfigBackupFilter extends ViewerFilter implements AbstractVi
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || filterString.isEmpty())
+      if (filter.isEmpty())
          return true;
 
       DeviceConfigBackup backup = (DeviceConfigBackup)element;
-      if (DateFormatFactory.getDateTimeFormat().format(backup.getTimestamp()).toLowerCase().contains(filterString))
-         return true;
-      if ((backup.getLastCheckTime() != null) && DateFormatFactory.getDateTimeFormat().format(backup.getLastCheckTime()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return filter.matches(DateFormatFactory.getDateTimeFormat().format(backup.getTimestamp()),
+            (backup.getLastCheckTime() != null) ? DateFormatFactory.getDateTimeFormat().format(backup.getLastCheckTime()) : null);
    }
 
    /**
@@ -54,6 +52,6 @@ public class DeviceConfigBackupFilter extends ViewerFilter implements AbstractVi
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

@@ -41,305 +41,267 @@ public class InterfaceListFilter extends NodeSubObjectFilter
       if (hideSubInterfaces && (iface.getParentInterfaceId() != 0))
          return false;
       
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
-      return matchOId(iface) ||
-            matchName(iface) ||
-            matchAlias(iface) ||
-            matchIfType(iface) ||
-            matchIfIndex(iface) ||
-            matchIfTypeName(iface) ||
-            matchSlot(iface) ||
-            matchPort(iface) ||
-            matchMtu(iface) ||
-            matchSpeed(iface) ||
-            matchDescription(iface) ||
-            matchMac(iface) ||
-            matchIp(iface) ||
-            matchPeerInterface(iface) ||
-            matchPeerNode(iface) ||
-            matchPeerMac(iface) ||
-            matchPeerIp(iface) ||
-            matchPeerDiscoveryProtocol(iface) ||
-            matchAdminState(iface) ||
-            matchOperState(iface) ||
-            matchStpState(iface) ||
-            matchStatus(iface) ||
-            matchDot1xPaeState(iface) ||
-            matchDot1xBackendState(iface) ||
-            matchVendor(iface) ||
-            matchPeerVendor(iface);
+      return filter.matchesEachToken(token -> matchOId(iface, token) ||
+            matchName(iface, token) ||
+            matchAlias(iface, token) ||
+            matchIfType(iface, token) ||
+            matchIfIndex(iface, token) ||
+            matchIfTypeName(iface, token) ||
+            matchSlot(iface, token) ||
+            matchPort(iface, token) ||
+            matchMtu(iface, token) ||
+            matchSpeed(iface, token) ||
+            matchDescription(iface, token) ||
+            matchMac(iface, token) ||
+            matchIp(iface, token) ||
+            matchPeerInterface(iface, token) ||
+            matchPeerNode(iface, token) ||
+            matchPeerMac(iface, token) ||
+            matchPeerIp(iface, token) ||
+            matchPeerDiscoveryProtocol(iface, token) ||
+            matchAdminState(iface, token) ||
+            matchOperState(iface, token) ||
+            matchStpState(iface, token) ||
+            matchStatus(iface, token) ||
+            matchDot1xPaeState(iface, token) ||
+            matchDot1xBackendState(iface, token) ||
+            matchVendor(iface, token) ||
+            matchPeerVendor(iface, token));
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchOId(Interface iface)
+   private boolean matchOId(Interface iface, String token)
    {
-      if (Long.toString(iface.getObjectId()).contains(filterString))
-         return true;
-      return false;
+      return Long.toString(iface.getObjectId()).contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchName(Interface iface)
+   private boolean matchName(Interface iface, String token)
    {
-      if (iface.getObjectName().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return iface.getObjectName().toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchAlias(Interface interf)
+   private boolean matchAlias(Interface interf, String token)
    {
-      if (interf.getAlias().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return interf.getAlias().toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchIfType(Interface interf)
+   private boolean matchIfType(Interface interf, String token)
    {
-      if (Integer.toString(interf.getIfType()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return Integer.toString(interf.getIfType()).toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchIfTypeName(Interface iface)
+   private boolean matchIfTypeName(Interface iface, String token)
    {
-      if (iface.getIfTypeName().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return iface.getIfTypeName().toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchIfIndex(Interface interf)
+   private boolean matchIfIndex(Interface interf, String token)
    {
-      if (Integer.toString(interf.getIfIndex()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return Integer.toString(interf.getIfIndex()).toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchSlot(Interface interf)
+   private boolean matchSlot(Interface interf, String token)
    {
-      if (Integer.toString(interf.getModule()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return Integer.toString(interf.getModule()).toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchPort(Interface interf)
+   private boolean matchPort(Interface interf, String token)
    {
-      if (Integer.toString(interf.getPort()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return Integer.toString(interf.getPort()).toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchMtu(Interface interf)
+   private boolean matchMtu(Interface interf, String token)
    {
-      if (Integer.toString(interf.getMtu()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return Integer.toString(interf.getMtu()).toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchSpeed(Interface interf)
+   private boolean matchSpeed(Interface interf, String token)
    {
-      if (Long.toString(interf.getSpeed()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return Long.toString(interf.getSpeed()).toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchDescription(Interface interf)
+   private boolean matchDescription(Interface interf, String token)
    {
-      if (interf.getDescription().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return interf.getDescription().toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchMac(Interface interf)
+   private boolean matchMac(Interface interf, String token)
    {
-      if (interf.getMacAddress().toString().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return interf.getMacAddress().toString().toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchIp(Interface interf)
+   private boolean matchIp(Interface interf, String token)
    {
-      if (interf.getIpAddressListAsString().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return interf.getIpAddressListAsString().toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchPeerNode(Interface iface)
+   private boolean matchPeerNode(Interface iface, String token)
    {
-      if (Long.toString(iface.getPeerNodeId()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return Long.toString(iface.getPeerNodeId()).toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchPeerInterface(Interface iface)
+   private boolean matchPeerInterface(Interface iface, String token)
    {
-      if (Long.toString(iface.getPeerInterfaceId()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return Long.toString(iface.getPeerInterfaceId()).toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchPeerMac(Interface iface)
+   private boolean matchPeerMac(Interface iface, String token)
    {
       Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       if (peer == null)
          return false;
-      if (peer.getMacAddress().toString().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return peer.getMacAddress().toString().toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchPeerIp(Interface iface)
+   private boolean matchPeerIp(Interface iface, String token)
    {
       Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       if (peer == null)
          return false;
-      if (peer.getIpAddressListAsString().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return peer.getIpAddressListAsString().toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchPeerDiscoveryProtocol(Interface iface)
+   private boolean matchPeerDiscoveryProtocol(Interface iface, String token)
    {
-      return iface.getPeerDiscoveryProtocol().toString().toLowerCase().contains(filterString);
+      return iface.getPeerDiscoveryProtocol().toString().toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchAdminState(Interface iface)
+   private boolean matchAdminState(Interface iface, String token)
    {
-      return iface.getAdminStateAsText().toLowerCase().contains(filterString);
+      return iface.getAdminStateAsText().toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchOperState(Interface iface)
+   private boolean matchOperState(Interface iface, String token)
    {
-      return iface.getOperStateAsText().toLowerCase().contains(filterString);
+      return iface.getOperStateAsText().toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchStpState(Interface iface)
+   private boolean matchStpState(Interface iface, String token)
    {
-      return iface.getStpPortState().getText().toLowerCase().contains(filterString);
+      return iface.getStpPortState().getText().toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return
     */
-   private boolean matchStatus(Interface iface)
+   private boolean matchStatus(Interface iface, String token)
    {
-      return iface.getStatus().toString().toLowerCase().contains(filterString);
+      return iface.getStatus().toString().toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return
     */
-   private boolean matchDot1xPaeState(Interface interf)
+   private boolean matchDot1xPaeState(Interface interf, String token)
    {
-      if (interf.getDot1xPaeStateAsText().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return interf.getDot1xPaeStateAsText().toLowerCase().contains(token);
    }
 
    /**
     * @param interf
     * @return true if matched
     */
-   private boolean matchDot1xBackendState(Interface interf)
+   private boolean matchDot1xBackendState(Interface interf, String token)
    {
-      if (interf.getDot1xBackendStateAsText().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return interf.getDot1xBackendStateAsText().toLowerCase().contains(token);
    }
 
    /**
     * @param iface
     * @return true if matched
     */
-   private boolean matchVendor(Interface iface)
+   private boolean matchVendor(Interface iface, String token)
    {
       String vendor = session.getVendorByMac(iface.getMacAddress(), null);
-      return (vendor != null) && vendor.toLowerCase().contains(filterString);
+      return (vendor != null) && vendor.toLowerCase().contains(token);
    }
 
    /**
@@ -348,13 +310,13 @@ public class InterfaceListFilter extends NodeSubObjectFilter
     * @param iface interface
     * @return true if matched
     */
-   private boolean matchPeerVendor(Interface iface)
+   private boolean matchPeerVendor(Interface iface, String token)
    {
       Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       if (peer == null)
          return false;
       String vendor = session.getVendorByMac(peer.getMacAddress(), null);
-      return (vendor != null) && vendor.toLowerCase().contains(filterString);
+      return (vendor != null) && vendor.toLowerCase().contains(token);
    }
 
    /**

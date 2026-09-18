@@ -39,6 +39,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 
 /**
  * Filter for object tree
@@ -54,6 +55,7 @@ public class ObjectViewerFilter extends ViewerFilter
    private static final int ZONE = 6;
 
 	private String filterString = null;
+   private TokenizedFilter tokenizedFilter = new TokenizedFilter(null); // Used for substring matching of names and comments
 	private boolean hideUnmanaged = false;
 	private boolean hideTemplateChecks = false;
 	private boolean hideSubInterfaces = false;
@@ -88,7 +90,7 @@ public class ObjectViewerFilter extends ViewerFilter
 		switch(mode)
 		{
          case COMMENTS:
-            return object.getComments().toLowerCase().contains(filterString);
+            return tokenizedFilter.matches(object.getComments());
          case IP_ADDRESS_PATTERN:
          case IP_ADDRESS_EXACT:
             if (object instanceof Interface)
@@ -134,7 +136,7 @@ public class ObjectViewerFilter extends ViewerFilter
                return (mode == IP_ADDRESS_EXACT) ? address.equals(filterString) : address.startsWith(filterString);
             }
          case NAME:
-            return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getNameWithAlias()) : object.getNameWithAlias().toLowerCase().contains(filterString);
+            return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getNameWithAlias()) : tokenizedFilter.matches(object.getNameWithAlias());
 			case OBJECT_ID:
 			   if (object instanceof AbstractObject)
 			   {
@@ -230,9 +232,10 @@ public class ObjectViewerFilter extends ViewerFilter
 			{
 				mode = COMMENTS;
             String newFilterString = filterString.substring(1).toLowerCase();
-            if ((this.filterString != null) && newFilterString.startsWith(this.filterString))
+            if ((this.filterString != null) && newFilterString.startsWith(this.filterString) && (newFilterString.indexOf('"') == -1))
                fullSearch = false;
             this.filterString = newFilterString;
+            tokenizedFilter = new TokenizedFilter(newFilterString);
 			}
 			else if (filterString.charAt(0) == '>')
 			{
@@ -265,9 +268,10 @@ public class ObjectViewerFilter extends ViewerFilter
 				else
 				{
 					String newFilterString = filterString.toLowerCase();
-					if ((this.filterString != null) && newFilterString.startsWith(this.filterString))
+               if ((this.filterString != null) && newFilterString.startsWith(this.filterString) && (newFilterString.indexOf('"') == -1))
 					   fullSearch = false;
 					this.filterString = newFilterString;
+               tokenizedFilter = new TokenizedFilter(newFilterString);
 				}
 			}
 		}

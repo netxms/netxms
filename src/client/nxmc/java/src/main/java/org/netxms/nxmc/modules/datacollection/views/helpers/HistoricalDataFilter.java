@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.DateFormatFactory;
 
@@ -29,7 +30,7 @@ import org.netxms.nxmc.localization.DateFormatFactory;
  */
 public class HistoricalDataFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -37,11 +38,11 @@ public class HistoricalDataFilter extends ViewerFilter implements AbstractViewer
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || filterString.isEmpty())
+      if (filter.isEmpty())
          return true;
 
-      return DateFormatFactory.getDateTimeFormat().format(((DciDataRow)element).getTimestamp()).contains(filterString) || ((DciDataRow)element).getValueAsString().contains(filterString) ||
-            ((DciDataRow)element).getRawValue().contains(filterString);
+      final DciDataRow row = (DciDataRow)element;
+      return filter.matches(DateFormatFactory.getDateTimeFormat().format(row.getTimestamp()), row.getValueAsString(), row.getRawValue());
    }
 
    /**
@@ -51,6 +52,6 @@ public class HistoricalDataFilter extends ViewerFilter implements AbstractViewer
     */
    public void setFilterString(final String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 }

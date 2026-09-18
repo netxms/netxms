@@ -24,6 +24,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
@@ -35,7 +36,7 @@ public class ClusterResourceListFilter extends ViewerFilter implements AbstractV
 {
    private I18n i18n = LocalizationHelper.getI18n(ClusterResourceListFilter.class);
    
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private NXCSession session;
    
    /**
@@ -52,15 +53,10 @@ public class ClusterResourceListFilter extends ViewerFilter implements AbstractV
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
 
       ClusterResource resource = (ClusterResource)element;
-      if (resource.getVirtualAddress().getHostAddress().contains(filterString))
-         return true;
-      if (resource.getName().toLowerCase().contains(filterString))
-         return true;
-      
       String ownerName;
       long ownerId = ((ClusterResource)element).getCurrentOwner();
       if (ownerId > 0)
@@ -72,11 +68,8 @@ public class ClusterResourceListFilter extends ViewerFilter implements AbstractV
       {
          ownerName = i18n.tr("NONE");
       }
-      
-      if (ownerName.toLowerCase().contains(filterString))
-         return true;
-      
-      return false;
+
+      return filter.matches(resource.getVirtualAddress().getHostAddress(), resource.getName(), ownerName);
    }
 
    /**
@@ -85,6 +78,6 @@ public class ClusterResourceListFilter extends ViewerFilter implements AbstractV
    @Override
    public void setFilterString(String filterString)
    {
-      this.filterString = (filterString != null) ? filterString.toLowerCase() : null;
+      this.filter = new TokenizedFilter(filterString);
    }
 }

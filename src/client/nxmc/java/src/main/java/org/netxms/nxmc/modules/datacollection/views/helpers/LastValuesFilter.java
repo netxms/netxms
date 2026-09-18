@@ -26,6 +26,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -34,7 +35,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private NXCSession session = Registry.getSession();
-	private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 	private boolean showDisabled = false;
 	private boolean showUnsupported = true;
    private boolean showHidden = false;
@@ -56,50 +57,21 @@ public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilt
       if (!showHidden && ((value.getFlags() & DataCollectionObject.DCF_HIDE_ON_LAST_VALUES_PAGE) != 0))
          return false;
 
-		if ((filterString == null) || (filterString.isEmpty()))
-			return true;
+      if (filter.isEmpty())
+         return true;
 
-      return value.getDescription().toLowerCase().contains(filterString) ||
-             value.getUserTag().toLowerCase().contains(filterString) ||
-             value.getComments().toLowerCase().contains(filterString) ||
-             matchEventMessage(value) ||
-             matchEventName(value);
+      Threshold t = value.getActiveThreshold();
+      return filter.matches(value.getDescription(), value.getUserTag(), value.getComments(),
+            (t != null) ? t.getLastEventMessage() : null,
+            (t != null) ? session.getEventName(t.getFireEvent()) : null);
 	}
-
-   /**
-    * Match threshold activation event message against filter string.
-    *
-    * @param value DCI value
-    * @return true if matched
-    */
-   private boolean matchEventMessage(DciValue value)
-   {
-      Threshold t = value.getActiveThreshold();
-      return (t != null) && t.getLastEventMessage().toLowerCase().contains(filterString);
-   }
-
-   /**
-    * Match threshold activation event name against filter string.
-    *
-    * @param value DCI value
-    * @return true if matched
-    */
-   private boolean matchEventName(DciValue value)
-   {
-      Threshold t = value.getActiveThreshold();
-      if (t == null)
-         return false;
-
-      String eventName = session.getEventName(t.getFireEvent());
-      return eventName.toLowerCase().contains(filterString);
-   }
 
 	/**
 	 * @return the filterString
 	 */
 	public String getFilterString()
 	{
-		return filterString;
+      return filter.getFilterString();
 	}
 
 	/**
@@ -107,7 +79,7 @@ public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilt
 	 */
 	public void setFilterString(String filterString)
 	{
-		this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
 	}
 
 	/**

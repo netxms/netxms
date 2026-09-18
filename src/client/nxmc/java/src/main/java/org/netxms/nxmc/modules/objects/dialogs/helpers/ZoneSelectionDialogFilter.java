@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.dialogs.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class ZoneSelectionDialogFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,11 +37,7 @@ public class ZoneSelectionDialogFilter extends ViewerFilter implements AbstractV
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || filterString.isEmpty())
-         return true;
-      else if (((AbstractObject)element).getObjectName().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return filter.matches(((AbstractObject)element).getObjectName());
    }
 
    /**
@@ -49,6 +46,6 @@ public class ZoneSelectionDialogFilter extends ViewerFilter implements AbstractV
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

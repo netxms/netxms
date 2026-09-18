@@ -47,24 +47,11 @@ public class SnmpTrapMonitorFilter extends AbstractTraceViewFilter
             return false;
       }
 
-		if ((filterString == null) || (filterString.isEmpty()))
-			return true;
-		
-      if (record.getTrapObjectId().contains(filterString))
-			return true;
-		
-      if (record.getVarbinds().toLowerCase().contains(filterString))
-			return true;
-		
-      if (record.getSourceAddress().getHostAddress().contains(filterString))
-			return true;
-		
+      if (filter.isEmpty())
+         return true;
+
       AbstractObject object = session.findObjectById(record.getSourceNode());
-		if (object != null)
-		{
-			return object.getObjectName().toLowerCase().contains(filterString);
-		}
-		
-		return false;
+      return filter.matches(record.getTrapObjectId(), record.getVarbinds(), record.getSourceAddress().getHostAddress(),
+            (object != null) ? object.getObjectName() : null);
 	}
 }

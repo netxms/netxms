@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.AgentPolicy;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class PolicyFilter extends ViewerFilter implements AbstractViewerFilter
 {
-	private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,19 +37,8 @@ public class PolicyFilter extends ViewerFilter implements AbstractViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		if ((filterString == null) || (filterString.isEmpty()))
-			return true;
-		
-		final AgentPolicy policy = (AgentPolicy)element;
-		boolean found = false;
-		if(policy.getName().toLowerCase().contains(filterString) ||
-		      policy.getPolicyType().toLowerCase().contains(filterString) ||
-		      policy.getGuid().toString().toLowerCase().contains(filterString) )
-		{
-		   found = true;
-		}
-		
-		return found;
+      final AgentPolicy policy = (AgentPolicy)element;
+      return filter.matches(policy.getName(), policy.getPolicyType(), policy.getGuid().toString());
 	}
 
 	/**
@@ -56,7 +46,7 @@ public class PolicyFilter extends ViewerFilter implements AbstractViewerFilter
 	 */
 	public String getFilterString()
 	{
-		return filterString;
+      return filter.getFilterString();
 	}
 
 	/**
@@ -64,6 +54,6 @@ public class PolicyFilter extends ViewerFilter implements AbstractViewerFilter
 	 */
 	public void setFilterString(String filterString)
 	{
-		this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
 	}
 }

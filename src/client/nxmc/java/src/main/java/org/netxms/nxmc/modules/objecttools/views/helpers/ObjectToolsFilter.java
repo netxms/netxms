@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objecttools.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class ObjectToolsFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private String[] toolTypes = ObjectToolsLabelProvider.getToolTypeNames();
 
    /**
@@ -37,67 +38,18 @@ public class ObjectToolsFilter extends ViewerFilter implements AbstractViewerFil
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
-      else if (containsId(element))
-         return true;
-      else if (containsName(element))
-         return true;
-      else if (containsType(element))
-         return true;
-      else if (containsDescription(element))
-         return true;
-      return false;
+
+      final ObjectTool tool = (ObjectTool)element;
+      return filter.matches(Long.toString(tool.getId()), tool.getName(), toolTypes[tool.getToolType()], tool.getDescription());
    }
-   
-   /**
-    * @param element
-    * @return
-    */
-   public boolean containsId(Object element)
-   {
-      if (Long.toString(((ObjectTool)element).getId()).toLowerCase().contains(filterString))
-         return true;
-      return false;
-   }
-   
-   /**
-    * @param element
-    * @return
-    */
-   public boolean containsName(Object element)
-   {
-      if (((ObjectTool)element).getName().toLowerCase().contains(filterString))
-         return true;
-      return false;
-   }
-   
-   /**
-    * @param element
-    * @return
-    */
-   public boolean containsType(Object element)
-   {
-      if (toolTypes[((ObjectTool)element).getToolType()].toLowerCase().contains(filterString))
-         return true;
-      return false;
-   }
-   
-   /**
-    * @param element
-    * @return
-    */
-   public boolean containsDescription(Object element)
-   {
-      if (((ObjectTool)element).getDescription().toLowerCase().contains(filterString))
-         return true;
-      return false;
-   }
+
    /**
     * @param filterString the filterString to set
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

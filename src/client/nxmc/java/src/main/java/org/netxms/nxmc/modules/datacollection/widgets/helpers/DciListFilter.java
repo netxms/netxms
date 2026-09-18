@@ -21,13 +21,14 @@ package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 
 /**
  * DCI list filter
  */
 public class DciListFilter extends ViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -35,11 +36,8 @@ public class DciListFilter extends ViewerFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-
       DciValue value = (DciValue)element;
-      return value.getDescription().toLowerCase().contains(filterString) || value.getName().toLowerCase().contains(filterString);
+      return filter.matches(value.getDescription(), value.getName());
    }
 
    /**
@@ -47,7 +45,7 @@ public class DciListFilter extends ViewerFilter
     */
    public String getFilterString()
    {
-      return filterString;
+      return filter.getFilterString();
    }
 
    /**
@@ -55,6 +53,6 @@ public class DciListFilter extends ViewerFilter
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 }

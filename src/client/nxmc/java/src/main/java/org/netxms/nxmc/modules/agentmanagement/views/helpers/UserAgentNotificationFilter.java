@@ -22,6 +22,7 @@ import java.util.Date;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.UserAgentNotification;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -34,7 +35,7 @@ public class UserAgentNotificationFilter extends ViewerFilter implements Abstrac
 {
    private final I18n i18n = LocalizationHelper.getI18n(UserAgentNotificationFilter.class);
    
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private UserAgentNotificationLabelProvider provider;
    private boolean showAllOneTime = true;
    private boolean showAllOneScheduled = true;
@@ -59,27 +60,18 @@ public class UserAgentNotificationFilter extends ViewerFilter implements Abstrac
       if (!showAllOneScheduled && uam.getEndTime().getTime() != 0 && uam.getEndTime().before(new Date()))
          return false;
       
-      if ((filterString == null) || (filterString.isEmpty()))
+      if (filter.isEmpty())
          return true;
-      else if (Long.toString(uam.getId()).toLowerCase().contains(filterString))
-         return true;
-      else if (uam.getMessage().toLowerCase().contains(filterString))
-         return true;
-      else if (uam.getObjectNames().toLowerCase().contains(filterString))
-         return true;
-      else if (DateFormatFactory.getDateTimeFormat().format(uam.getEndTime()).contains(filterString))
-         return true;
-      else if (DateFormatFactory.getDateTimeFormat().format(uam.getStartTime()).contains(filterString))
-         return true;
-      else if (uam.isRecalled() ? i18n.tr("yes").contains(filterString) : i18n.tr("no").contains(filterString))
-         return true;
-      else if (uam.isStartupNotification() ? i18n.tr("yes").contains(filterString) : i18n.tr("no").contains(filterString))
-         return true;
-      else if (DateFormatFactory.getDateTimeFormat().format(uam.getCreationTime()).contains(filterString))
-         return true;
-      else if (provider.getUserName(uam).contains(filterString))
-         return true;
-      return false;
+
+      return filter.matches(Long.toString(uam.getId()),
+            uam.getMessage(),
+            uam.getObjectNames(),
+            DateFormatFactory.getDateTimeFormat().format(uam.getEndTime()),
+            DateFormatFactory.getDateTimeFormat().format(uam.getStartTime()),
+            uam.isRecalled() ? i18n.tr("yes") : i18n.tr("no"),
+            uam.isStartupNotification() ? i18n.tr("yes") : i18n.tr("no"),
+            DateFormatFactory.getDateTimeFormat().format(uam.getCreationTime()),
+            provider.getUserName(uam));
    }
    
    /**
@@ -87,7 +79,7 @@ public class UserAgentNotificationFilter extends ViewerFilter implements Abstrac
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 
    /**

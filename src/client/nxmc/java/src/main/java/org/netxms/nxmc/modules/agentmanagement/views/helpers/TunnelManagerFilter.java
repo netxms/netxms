@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.AgentTunnel;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -29,7 +30,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class TunnelManagerFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
    private boolean hideNonProxy = false;
    private boolean hideNonUA = false;
 
@@ -47,40 +48,19 @@ public class TunnelManagerFilter extends ViewerFilter implements AbstractViewerF
       if (hideNonProxy && !t.isAgentProxy() && !t.isSnmpProxy() && !t.isSnmpTrapProxy() && !t.isSyslogProxy())
          return false;
       
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
-      
-      if (t.getAgentVersion().toLowerCase().contains(filterString))
+      if (filter.isEmpty())
          return true;
 
-      if (t.isBound() ? Integer.toString(t.getActiveChannelCount()).toLowerCase().contains(filterString) : false)
-         return true;
-      
-      if (Integer.toString(t.getId()).toLowerCase().contains(filterString))
-         return true;
-      
-      if (t.getAddress().getHostAddress().toLowerCase().contains(filterString))
-         return true;
-      
-      if (t.isBound() ? Registry.getSession().getObjectName(t.getNodeId()).toLowerCase().contains(filterString) : false)
-         return true;
-      
-      if (t.getPlatformName().toLowerCase().contains(filterString))
-         return true;
-      
-      if (t.isBound() ? "bound".contains(filterString) : "unbound".contains(filterString))
-         return true;
-      
-      if (t.getSystemInformation().toLowerCase().contains(filterString))
-         return true;
-      
-      if (t.getSystemName().toLowerCase().contains(filterString))
-         return true;
-
-      if (t.getHardwareIdAsText().toLowerCase().contains(filterString))
-         return true;
-
-      return false;
+      return filter.matches(t.getAgentVersion(),
+            t.isBound() ? Integer.toString(t.getActiveChannelCount()) : null,
+            Integer.toString(t.getId()),
+            t.getAddress().getHostAddress(),
+            t.isBound() ? Registry.getSession().getObjectName(t.getNodeId()) : null,
+            t.getPlatformName(),
+            t.isBound() ? "bound" : "unbound",
+            t.getSystemInformation(),
+            t.getSystemName(),
+            t.getHardwareIdAsText());
    }
 
    /**
@@ -90,7 +70,7 @@ public class TunnelManagerFilter extends ViewerFilter implements AbstractViewerF
     */
    public void setFilterString(String filterString)
    {
-      this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
    }
 
    /**

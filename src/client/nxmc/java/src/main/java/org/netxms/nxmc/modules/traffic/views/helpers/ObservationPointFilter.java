@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.traffic.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objects.ObservationPoint;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class ObservationPointFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,13 +37,8 @@ public class ObservationPointFilter extends ViewerFilter implements AbstractView
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if ((filterString == null) || filterString.isEmpty())
-         return true;
-
       ObservationPoint point = (ObservationPoint)element;
-      return point.getObjectName().toLowerCase().contains(filterString) ||
-            point.getExternalId().toLowerCase().contains(filterString) ||
-            point.getPointType().toLowerCase().contains(filterString);
+      return filter.matches(point.getObjectName(), point.getExternalId(), point.getPointType());
    }
 
    /**
@@ -51,6 +47,6 @@ public class ObservationPointFilter extends ViewerFilter implements AbstractView
    @Override
    public void setFilterString(String string)
    {
-      filterString = (string != null) ? string.toLowerCase() : null;
+      filter = new TokenizedFilter(string);
    }
 }

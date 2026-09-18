@@ -36,6 +36,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
@@ -138,8 +139,7 @@ public class ConfigurationPerspective extends Perspective
                @Override
                public boolean select(Viewer viewer, Object parentElement, Object element)
                {
-                  String filter = getFilterText();
-                  return (filter == null) || filter.isEmpty() || ((ConfigurationPerspectiveElement)element).getName().toLowerCase().contains(filter.toLowerCase());
+                  return new TokenizedFilter(getFilterText()).matches(((ConfigurationPerspectiveElement)element).getName());
                }
             });
             viewer.setInput(elements);

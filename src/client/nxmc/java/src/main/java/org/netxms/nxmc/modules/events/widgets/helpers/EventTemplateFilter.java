@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.events.widgets.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class EventTemplateFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private String filterText = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,15 +37,8 @@ public class EventTemplateFilter extends ViewerFilter implements AbstractViewerF
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      if (filterText == null)
-         return true;
-      else if (((EventTemplate)element).getName().toLowerCase().contains(filterText.toLowerCase()))
-         return true;
-      else if (((EventTemplate)element).getMessage().toLowerCase().contains(filterText.toLowerCase()))
-         return true;
-      else if (((EventTemplate)element).getTagList().toLowerCase().contains(filterText.toLowerCase()))
-         return true;
-      return false;
+      final EventTemplate t = (EventTemplate)element;
+      return filter.matches(t.getName(), t.getMessage(), t.getTagList());
    }
 
    /**
@@ -54,9 +48,6 @@ public class EventTemplateFilter extends ViewerFilter implements AbstractViewerF
     */
    public void setFilterString(String filterText)
    {
-      if ((filterText == null) || filterText.trim().isEmpty())
-         this.filterText = null;
-      else
-         this.filterText = filterText.trim().toLowerCase();
+      this.filter = new TokenizedFilter(filterText);
    }
 }

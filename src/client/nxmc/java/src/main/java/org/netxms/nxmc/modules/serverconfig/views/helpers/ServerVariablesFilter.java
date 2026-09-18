@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.server.ServerVariable;
+import org.netxms.nxmc.base.helpers.TokenizedFilter;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -28,7 +29,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class ServerVariablesFilter extends ViewerFilter implements AbstractViewerFilter
 {
-	private String filterString = null;
+   private TokenizedFilter filter = new TokenizedFilter(null);
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,11 +37,11 @@ public class ServerVariablesFilter extends ViewerFilter implements AbstractViewe
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		if ((filterString == null) || (filterString.isEmpty()))
-			return true;
-		
-		final ServerVariable var = (ServerVariable)element;
-		return var.getName().toLowerCase().contains(filterString.toLowerCase());
+      if (filter.isEmpty())
+         return true;
+
+      final ServerVariable var = (ServerVariable)element;
+      return filter.matches(var.getName());
 	}
 
 	/**
@@ -48,7 +49,7 @@ public class ServerVariablesFilter extends ViewerFilter implements AbstractViewe
 	 */
 	public String getFilterString()
 	{
-		return filterString;
+      return filter.getFilterString();
 	}
 
 	/**
@@ -56,6 +57,6 @@ public class ServerVariablesFilter extends ViewerFilter implements AbstractViewe
 	 */
 	public void setFilterString(String filterString)
 	{
-		this.filterString = filterString.toLowerCase();
+      this.filter = new TokenizedFilter(filterString);
 	}
 }
