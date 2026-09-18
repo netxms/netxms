@@ -149,17 +149,21 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       final Display display = viewer.getControl().getDisplay();
       fontLabel = new Font[ExtendedGraphViewer.zoomLevels.length];
       fontTitle = new Font[ExtendedGraphViewer.zoomLevels.length];
+      // Font height is in points on desktop and in pixels on web; web browser also needs fallback font families
+      final String fontName = Registry.IS_WEB_CLIENT ? "Verdana, DejaVu Sans, Liberation Sans, Arial, sans-serif" : "Verdana"; //$NON-NLS-1$ //$NON-NLS-2$
+      final int labelFontHeight = Registry.IS_WEB_CLIENT ? 9 : 7;
+      final int titleFontHeight = Registry.IS_WEB_CLIENT ? 13 : 10;
       for(int i = 0; i < ExtendedGraphViewer.zoomLevels.length; i++)
       {
          if (ExtendedGraphViewer.zoomLevels[i] < 1)
          {
-            fontLabel[i] = new Font(display, "Verdana", (int)Math.round(7 / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL); //$NON-NLS-1$
-            fontTitle[i] = new Font(display, "Verdana", (int)Math.round(10 / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL); //$NON-NLS-1$
+            fontLabel[i] = new Font(display, fontName, (int)Math.round(labelFontHeight / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL);
+            fontTitle[i] = new Font(display, fontName, (int)Math.round(titleFontHeight / ExtendedGraphViewer.zoomLevels[i]), SWT.NORMAL);
          }
          else
          {
-            fontLabel[i] = new Font(display, "Verdana", 7, SWT.NORMAL); //$NON-NLS-1$
-            fontTitle[i] = new Font(display, "Verdana", 10, SWT.NORMAL); //$NON-NLS-1$
+            fontLabel[i] = new Font(display, fontName, labelFontHeight, SWT.NORMAL);
+            fontTitle[i] = new Font(display, fontName, titleFontHeight, SWT.NORMAL);
          }
       }
 
