@@ -752,7 +752,7 @@ static int ExecuteServerScript(Context *context, const shared_ptr<NetObj>& objec
    }
 
    SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
-   vm->setSecurityContext(new NXSL_UserSecurityContext(context->getUserId()));
+   vm->setSecurityContext(new NXSL_UserSecurityContext(context));
    vm->setGlobalVariable("$INPUT", vm->createValue(new NXSL_HashMap(vm, inputFields)));
 
    ObjectRefArray<NXSL_Value> sargs(scriptArgs->size() - 1, 1);

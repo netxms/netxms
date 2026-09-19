@@ -996,6 +996,7 @@ public:
 
    virtual bool validateAccess(int subsystem, uint64_t requiredAccess = 0, const void *object = nullptr);
    virtual uint32_t getUserId() const;
+   virtual void writeAuditLog(const TCHAR *subsystem, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *message);
 };
 
 class NXSL_Library;
@@ -1572,6 +1573,9 @@ public:
    {
       return (m_securityContext != nullptr) ? m_securityContext->getUserId() : 0;
    }
+
+   void writeAuditLog(const TCHAR *subsystem, bool success, uint32_t objectId, const TCHAR *format, ...);
+   void writeAuditLogWithValues(const TCHAR *subsystem, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...);
 
    void setAssertMessage(const TCHAR *msg) { MemFree(m_assertMessage); m_assertMessage = MemCopyString(msg); }
 

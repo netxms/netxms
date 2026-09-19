@@ -807,7 +807,7 @@ int H_ObjectExecuteDashboardScript(Context *context)
    }
 
    SetupServerScriptVM(vm, contextObject, shared_ptr<DCObjectInfo>());
-   vm->setSecurityContext(new NXSL_UserSecurityContext(context->getUserId()));
+   vm->setSecurityContext(new NXSL_UserSecurityContext(context));
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, contextObject->getId(), nullptr, script, 'T',
       _T("Executed %s [%u] dashboard element %d script for object %s [%u]"),
       dashboard->getName(), dashboard->getId(), elementIndex, contextObject->getName(), contextObject->getId());
@@ -916,7 +916,7 @@ int H_ObjectExecuteScript(Context *context)
    }
 
    SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
-   vm->setSecurityContext(new NXSL_UserSecurityContext(context->getUserId()));
+   vm->setSecurityContext(new NXSL_UserSecurityContext(context));
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script.get(), 'T', _T("Executed ad-hoc script for object %s [%u]"), object->getName(), object->getId());
 
    ObjectRefArray<NXSL_Value> sargs(0, 8);

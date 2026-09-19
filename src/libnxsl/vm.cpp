@@ -210,6 +210,13 @@ uint32_t NXSL_SecurityContext::getUserId() const
    return 0;
 }
 
+/**
+ * Write audit log record for change made by script. Default implementation does nothing.
+ */
+void NXSL_SecurityContext::writeAuditLog(const TCHAR *subsystem, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *message)
+{
+}
+
 
 /**
  * Constructor
@@ -3619,6 +3626,38 @@ void NXSL_VM::setSecurityContext(NXSL_SecurityContext *context)
 {
    delete m_securityContext;
    m_securityContext = context;
+}
+
+/**
+ * Write audit log record using security context
+ */
+void NXSL_VM::writeAuditLog(const TCHAR *subsystem, bool success, uint32_t objectId, const TCHAR *format, ...)
+{
+   if (m_securityContext == nullptr)
+      return;
+
+   va_list args;
+   va_start(args, format);
+   StringBuffer message;
+   message.appendFormattedStringV(format, args);
+   va_end(args);
+   m_securityContext->writeAuditLog(subsystem, success, objectId, nullptr, nullptr, 0, message);
+}
+
+/**
+ * Write audit log record with old and new values using security context
+ */
+void NXSL_VM::writeAuditLogWithValues(const TCHAR *subsystem, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)
+{
+   if (m_securityContext == nullptr)
+      return;
+
+   va_list args;
+   va_start(args, format);
+   StringBuffer message;
+   message.appendFormattedStringV(format, args);
+   va_end(args);
+   m_securityContext->writeAuditLog(subsystem, success, objectId, oldValue, newValue, valueType, message);
 }
 
 /**

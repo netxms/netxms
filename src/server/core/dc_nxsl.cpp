@@ -751,6 +751,8 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
 		         origin, dataType, scheduleType, argv[5]->isString() ? argv[5]->getValueAsCString() : nullptr,
 		         retentionType, argv[6]->isString() ? argv[6]->getValueAsCString() : nullptr, node, argv[3]->getValueAsCString());
 		node->addDCObject(dci);
+      vm->writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"DCI \"%s\" [%u] created on object %s by script",
+         dci->getName().cstr(), dci->getId(), node->getName());
 		*result = dci->createNXSLObject(vm);
 	}
 	else

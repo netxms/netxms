@@ -516,15 +516,19 @@ class NXCORE_EXPORTABLE NXSL_UserSecurityContext : public NXSL_SecurityContext
 {
 private:
    uint32_t m_userId;
+   const GenericClientSession *m_session;
 
 public:
    NXSL_UserSecurityContext(uint32_t userId)
    {
       m_userId = userId;
+      m_session = nullptr;
    }
+   NXSL_UserSecurityContext(const GenericClientSession *session);
 
    virtual bool validateAccess(int subsystem, uint64_t requiredAccess = 0, const void *object = nullptr) override;
    virtual uint32_t getUserId() const override;
+   virtual void writeAuditLog(const TCHAR *subsystem, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *message) override;
 };
 
 /**

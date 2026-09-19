@@ -30,6 +30,15 @@ void RegisterAIFunctionScriptHandler(const NXSL_LibraryScript *script, bool runt
 void UnregisterAIFunctionScriptHandler(const NXSL_LibraryScript *script);
 
 /**
+ * Create security context for script executed within client session. Session must stay valid for VM lifetime.
+ */
+NXSL_UserSecurityContext::NXSL_UserSecurityContext(const GenericClientSession *session)
+{
+   m_userId = session->getUserId();
+   m_session = session;
+}
+
+/**
  * Validate access for user-initiated NXSL scripts
  */
 bool NXSL_UserSecurityContext::validateAccess(int subsystem, uint64_t requiredAccess, const void *object)
@@ -59,6 +68,17 @@ bool NXSL_UserSecurityContext::validateAccess(int subsystem, uint64_t requiredAc
 uint32_t NXSL_UserSecurityContext::getUserId() const
 {
    return m_userId;
+}
+
+/**
+ * Write audit log record for change made by user-initiated script
+ */
+void NXSL_UserSecurityContext::writeAuditLog(const TCHAR *subsystem, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *message)
+{
+   if (m_session != nullptr)
+      m_session->writeAuditLogWithValues(subsystem, success, objectId, oldValue, newValue, valueType, L"%s", message);
+   else
+      WriteAuditLogWithValues(subsystem, success, m_userId, nullptr, AUDIT_SYSTEM_SID, objectId, oldValue, newValue, valueType, L"%s", message);
 }
 
 /**

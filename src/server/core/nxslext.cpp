@@ -153,6 +153,9 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
       vm->destroyValue(value);
       return rc;
    }
+   vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netxmsObject->getId(), (value != nullptr) ? value->getValueAsCString() : nullptr,
+      netxmsObject->getCustomAttribute(argv[1]->getValueAsCString()), 'T', L"Custom attribute \"%s\" of object %s set by script",
+      argv[1]->getValueAsCString(), netxmsObject->getName());
    *ppResult = (value != nullptr) ? value : vm->createValue(); // Return nullptr if attribute not found
 	return NXSL_ERR_SUCCESS;
 }
@@ -179,7 +182,11 @@ static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
       *ppResult = vm->createValue();
       return NXSL_ERR_SUCCESS;
    }
+   SharedString oldValue = netxmsObject->getCustomAttribute(argv[1]->getValueAsCString());
 	netxmsObject->deleteCustomAttribute(argv[1]->getValueAsCString());
+   if (!oldValue.isNull())
+      vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netxmsObject->getId(), oldValue, nullptr, 'T',
+         L"Custom attribute \"%s\" of object %s deleted by script", argv[1]->getValueAsCString(), netxmsObject->getName());
    *ppResult = vm->createValue();
 	return 0;
 }
@@ -1125,6 +1132,8 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
 		node->setPrimaryHostName(pname);
 		if (NetObj::linkObjects(parent, node))
 		{
+         vm->writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"Node %s [%u] created under %s %s [%u] by script",
+            node->getName(), node->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
 			node->publish();
 			*result = node->createNXSLObject(vm);
 		}
@@ -1186,6 +1195,8 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **result, N
 	}
 	container->publish();
 
+   vm->writeAuditLog(AUDIT_OBJECTS, true, container->getId(), L"Container %s [%u] created under %s %s [%u] by script",
+      container->getName(), container->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
 	*result = container->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }
@@ -1210,7 +1221,10 @@ static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
    NetObj *netobj = static_cast<shared_ptr<NetObj>*>(obj->getData())->get();
    if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, netobj))
+   {
+      vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s deleted by script", netobj->getName());
       netobj->deleteObject();
+   }
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -1259,7 +1273,11 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
    {
       bool success = NetObj::linkObjects(parent, child);
       if (success)
+      {
          parent->calculateCompoundStatus();
+         vm->writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), L"%s %s [%u] bound to %s %s [%u] by script",
+         child->getObjectClassName(), child->getName(), child->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
+      }
       *ppResult = vm->createValue(success);
    }
    else
@@ -1302,6 +1320,8 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
    if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, parent) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, child))
    {
       NetObj::unlinkObjects(parent, child);
+      vm->writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), L"%s %s [%u] unbound from %s %s [%u] by script",
+         child->getObjectClassName(), child->getName(), child->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
       *ppResult = vm->createValue(true);
    }
    else
@@ -1336,7 +1356,10 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
    NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    if (vm->validateAccess(NXSL_AC_OBJECT,  OBJECT_ACCESS_MODIFY, netobj))
    {
+      String oldName(netobj->getName());
       netobj->setName(argv[1]->getValueAsCString());
+      vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netobj->getId(), oldName, argv[1]->getValueAsCString(), 'T',
+         L"Object %s renamed to %s by script", oldName.cstr(), argv[1]->getValueAsCString());
       *ppResult = vm->createValue(true);
    }
    else
@@ -1368,6 +1391,7 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
    if (vm->validateAccess(NXSL_AC_OBJECT,  OBJECT_ACCESS_MODIFY, netobj))
    {
       netobj->setMgmtStatus(true);
+      vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s set to managed state by script", netobj->getName());
       *ppResult = vm->createValue(true);
    }
    else
@@ -1399,6 +1423,7 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
    if (vm->validateAccess(NXSL_AC_OBJECT,  OBJECT_ACCESS_MODIFY, netobj))
    {
       netobj->setMgmtStatus(false);
+      vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s set to unmanaged state by script", netobj->getName());
       *ppResult = vm->createValue(true);
    }
    else
@@ -1438,7 +1463,8 @@ static int F_EnterMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
       *ppResult = vm->createValue();
       return NXSL_ERR_SUCCESS;
    }
-   netobj->enterMaintenanceMode(0, (argc > 1) ? argv[1]->getValueAsCString() : nullptr);
+   netobj->enterMaintenanceMode(vm->getUserId(), (argc > 1) ? argv[1]->getValueAsCString() : nullptr);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Requested maintenance mode enter for object %s [%u] by script", netobj->getName(), netobj->getId());
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -1468,7 +1494,8 @@ static int F_LeaveMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
       *ppResult = vm->createValue();
       return NXSL_ERR_SUCCESS;
    }
-   netobj->leaveMaintenanceMode(0);
+   netobj->leaveMaintenanceMode(vm->getUserId());
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Requested maintenance mode exit for object %s [%u] by script", netobj->getName(), netobj->getId());
 
 	*ppResult = vm->createValue();
 	return 0;
@@ -1515,7 +1542,13 @@ static int F_SetInterfaceExpectedState(int argc, NXSL_Value **argv, NXSL_Value *
 	{
 	   Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
 	   if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, iface))
+	   {
+	      static const wchar_t *stateNames[] = { L"UP", L"DOWN", L"IGNORE" };
+	      int oldState = iface->getExpectedState();
 	      iface->setExpectedState(state);
+	      vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, iface->getId(), ((oldState >= 0) && (oldState <= 2)) ? stateNames[oldState] : L"UNKNOWN", stateNames[state], 'T',
+	         L"Expected state of interface %s [%u] on node %s changed by script", iface->getName(), iface->getId(), iface->getParentNodeName().cstr());
+	   }
 	}
 
 	*ppResult = vm->createValue();
@@ -1776,6 +1809,8 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
       {
          nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: %s"), SnmpGetErrorText(snmpResult));
       }
+      vm->writeAuditLog(AUDIT_NETWORK, success, 0, L"SNMP SET request for %s sent to %s by script",
+         argv[1]->getValueAsCString(), transport->getPeerIpAddress().toString().cstr());
    }
 
    *result = vm->createValue(success);
@@ -1870,6 +1905,7 @@ static int F_AgentExecuteCommand(int argc, NXSL_Value **argv, NXSL_Value **resul
       uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list);
       *result = vm->createValue(rcc == ERR_SUCCESS);
       nxlog_debug_tag(_T("nxsl.agent"), 5, _T("F_AgentExecuteCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      vm->writeAuditLog(AUDIT_OBJECTS, rcc == ERR_SUCCESS, node->getId(), L"Executed agent action %s on node %s by script", argv[1]->getValueAsCString(), node->getName());
    }
    else
    {
@@ -1925,6 +1961,7 @@ static int F_AgentExecuteCommandWithOutput(int argc, NXSL_Value **argv, NXSL_Val
          }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
       nxlog_debug_tag(_T("nxsl.agent"), 5, _T("F_AgentExecuteCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      vm->writeAuditLog(AUDIT_OBJECTS, rcc == ERR_SUCCESS, node->getId(), L"Executed agent action %s on node %s by script", argv[1]->getValueAsCString(), node->getName());
    }
    else
    {
@@ -2209,7 +2246,10 @@ static int F_CancelScheduledTasksByKey(int argc, NXSL_Value **argv, NXSL_Value *
       return NXSL_ERR_SUCCESS;
    }
 
-   *result = vm->createValue(DeleteScheduledTasksByKey(argv[0]->getValueAsCString()));
+   int count = DeleteScheduledTasksByKey(argv[0]->getValueAsCString());
+   if (count > 0)
+      vm->writeAuditLog(AUDIT_SYSCFG, true, 0, L"%d scheduled tasks with key \"%s\" deleted by script", count, argv[0]->getValueAsCString());
+   *result = vm->createValue(count);
    return 0;
 }
 
@@ -2269,7 +2309,8 @@ static int F_CreateUserAgentNotification(int argc, NXSL_Value **argv, NXSL_Value
    time_t startTime = (time_t)argv[2]->getValueAsUInt64();
    time_t endTime = (time_t)argv[3]->getValueAsUInt64();
 
-   UserAgentNotificationItem *n = CreateNewUserAgentNotification(message, idList, startTime, endTime, (argc > 4) ? argv[4]->getValueAsBoolean() : false, 0);
+   UserAgentNotificationItem *n = CreateNewUserAgentNotification(message, idList, startTime, endTime, (argc > 4) ? argv[4]->getValueAsBoolean() : false, vm->getUserId());
+   vm->writeAuditLog(AUDIT_OBJECTS, true, idList.get(0), L"User support application notification %u created by script", n->getId());
 
    *result = vm->createValue(n->getId());
    n->decRefCount();
@@ -2509,6 +2550,7 @@ static int F_SQLQuery(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
          success = false;
       }
    }
+   vm->writeAuditLogWithValues(AUDIT_SYSCFG, success, 0, nullptr, argv[0]->getValueAsCString(), 'T', L"SQL query executed by script");
 
    *result = vm->createValue(success);
    return NXSL_ERR_SUCCESS;
@@ -2623,6 +2665,7 @@ static int F_RegisterAITask(int argc, NXSL_Value **argv, NXSL_Value **result, NX
    if (vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_MANAGE_AI_TASKS))
    {
       uint32_t taskId = RegisterAITask(argv[0]->getValueAsCString(), 0, argv[1]->getValueAsCString());
+      vm->writeAuditLog(AUDIT_AI, true, 0, L"AI task \"%s\" [%u] registered by script", argv[0]->getValueAsCString(), taskId);
       *result = vm->createValue(taskId);
    }
    else

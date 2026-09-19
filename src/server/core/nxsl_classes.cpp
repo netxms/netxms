@@ -88,9 +88,18 @@ template<typename T> static T *SharedObjectFromData(NXSL_Object *nxslObject)
 }
 
 /**
+ * Write audit record for object modification made by NXSL method
+ */
+static void AuditObjectModification(NXSL_VM *vm, NXSL_Object *object, const wchar_t *method)
+{
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s modified by script (%s called)", netobj->getName(), method);
+}
+
+/**
  * Generic implementation for flag changing methods
  */
-static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, uint32_t flag, bool invert)
+static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, uint32_t flag, bool invert, const wchar_t *methodName)
 {
    NetObj *nobject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    if (arg->isTrue())
@@ -107,6 +116,8 @@ static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **r
       else
          nobject->clearFlag(flag);
    }
+   object->vm()->writeAuditLog(AUDIT_OBJECTS, true, nobject->getId(), L"Object %s modified by script (%s(%s) called)",
+      nobject->getName(), methodName, arg->isTrue() ? L"true" : L"false");
 
    *result = object->vm()->createValue();
    return 0;
@@ -147,6 +158,8 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
 
    NetObj::linkObjects(thisObject, child);
    thisObject->calculateCompoundStatus();
+   vm->writeAuditLog(AUDIT_OBJECTS, true, thisObject->getId(), L"%s %s [%u] bound to %s %s [%u] by script",
+      child->getObjectClassName(), child->getName(), child->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
 
    *result = vm->createValue();
    return 0;
@@ -188,6 +201,8 @@ NXSL_METHOD_DEFINITION(NetObj, bindTo)
 
    NetObj::linkObjects(parent, thisObject);
    parent->calculateCompoundStatus();
+   vm->writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), L"%s %s [%u] bound to %s %s [%u] by script",
+      thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
 
    *result = vm->createValue();
    return 0;
@@ -231,7 +246,9 @@ NXSL_METHOD_DEFINITION(NetObj, clearGeoLocation)
       *result = vm->createValue(false);
       return 0;
    }
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setGeoLocation(GeoLocation());
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   netobj->setGeoLocation(GeoLocation());
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Geolocation of object %s cleared by script", netobj->getName());
    *result = vm->createValue();
    return 0;
 }
@@ -266,7 +283,8 @@ NXSL_METHOD_DEFINITION(NetObj, createUserAgentNotification)
    time_t startTime = static_cast<time_t>(argv[1]->getValueAsInt64());
    time_t endTime = static_cast<time_t>(argv[2]->getValueAsInt64());
 
-   UserAgentNotificationItem *n = CreateNewUserAgentNotification(message, idList, startTime, endTime, (argc > 3) ? argv[3]->getValueAsBoolean() : false, 0);
+   UserAgentNotificationItem *n = CreateNewUserAgentNotification(message, idList, startTime, endTime, (argc > 3) ? argv[3]->getValueAsBoolean() : false, vm->getUserId());
+   vm->writeAuditLog(AUDIT_OBJECTS, true, idList.get(0), L"User support application notification %u created by script", n->getId());
    *result = vm->createValue(n->getId());
    n->decRefCount();
    return NXSL_ERR_SUCCESS;
@@ -282,7 +300,9 @@ NXSL_METHOD_DEFINITION(NetObj, delete)
       *result = vm->createValue(false);
       return 0;
    }
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->deleteObject();
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s deleted by script", netobj->getName());
+   netobj->deleteObject();
    *result = vm->createValue();
    return 0;
 }
@@ -307,6 +327,9 @@ NXSL_METHOD_DEFINITION(NetObj, deleteCustomAttribute)
    NXSL_Value *value = netobj->getCustomAttributeForNXSL(vm, name);
    *result = (value != nullptr) ? value : vm->createValue();
    netobj->deleteCustomAttribute(name);
+   if (value != nullptr)
+      vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netobj->getId(), value->getValueAsCString(), nullptr, 'T',
+         L"Custom attribute \"%s\" of object %s deleted by script", name, netobj->getName());
    return 0;
 }
 
@@ -327,7 +350,9 @@ NXSL_METHOD_DEFINITION(NetObj, enterMaintenance)
    if ((argc != 0) && !argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->enterMaintenanceMode(0, (argc != 0) ? argv[0]->getValueAsCString() : nullptr);
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   netobj->enterMaintenanceMode(vm->getUserId(), (argc != 0) ? argv[0]->getValueAsCString() : nullptr);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Requested maintenance mode enter for object %s [%u] by script", netobj->getName(), netobj->getId());
    *result = vm->createValue();
    return 0;
 }
@@ -526,7 +551,9 @@ NXSL_METHOD_DEFINITION(NetObj, leaveMaintenance)
       *result = vm->createValue(false);
       return 0;
    }
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->leaveMaintenanceMode(0);
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   netobj->leaveMaintenanceMode(vm->getUserId());
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Requested maintenance mode exit for object %s [%u] by script", netobj->getName(), netobj->getId());
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
@@ -541,7 +568,9 @@ NXSL_METHOD_DEFINITION(NetObj, manage)
       *result = vm->createValue(false);
       return 0;
    }
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(true);
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   netobj->setMgmtStatus(true);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s set to managed state by script", netobj->getName());
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
@@ -578,7 +607,11 @@ NXSL_METHOD_DEFINITION(NetObj, rename)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setName(argv[0]->getValueAsCString());
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   String oldName(netobj->getName());
+   netobj->setName(argv[0]->getValueAsCString());
+   vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netobj->getId(), oldName, argv[0]->getValueAsCString(), 'T',
+      L"Object %s renamed to %s by script", oldName.cstr(), argv[0]->getValueAsCString());
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
@@ -597,7 +630,11 @@ NXSL_METHOD_DEFINITION(NetObj, setAlias)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setAlias(argv[0]->getValueAsCString());
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   SharedString oldAlias = netobj->getAlias();
+   netobj->setAlias(argv[0]->getValueAsCString());
+   vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netobj->getId(), oldAlias, argv[0]->getValueAsCString(), 'T',
+      L"Alias of object %s changed by script", netobj->getName());
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
@@ -622,7 +659,9 @@ NXSL_METHOD_DEFINITION(NetObj, setCategory)
                      FindObjectCategoryByName(argv[0]->getValueAsCString());
    if (category != nullptr)
    {
-      static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setCategoryId(category->getId());
+      NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+      netobj->setCategoryId(category->getId());
+      vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Category of object %s set to \"%s\" by script", netobj->getName(), category->getName());
       *result = vm->createValue(true);
    }
    else
@@ -649,6 +688,8 @@ NXSL_METHOD_DEFINITION(NetObj, setComments)
    if (!argv[0]->isString() && !argv[0]->isNull())
       return NXSL_ERR_NOT_STRING;
 
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   SharedString oldComments = netobj->getComments();
    if ((argc == 1) || argv[1]->isNull())
    {
       static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setComments(argv[0]->getValueAsCString());
@@ -678,6 +719,8 @@ NXSL_METHOD_DEFINITION(NetObj, setComments)
          }
       }
    }
+   vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netobj->getId(), oldComments, netobj->getComments(), 'T',
+      L"Comments of object %s changed by script", netobj->getName());
 
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
@@ -734,6 +777,8 @@ NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
       vm->destroyValue(value);
       return rc;
    }
+   vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netxmsObject->getId(), (value != nullptr) ? value->getValueAsCString() : nullptr,
+      netxmsObject->getCustomAttribute(name), 'T', L"Custom attribute \"%s\" of object %s set by script", name, netxmsObject->getName());
    *result = (value != nullptr) ? value : vm->createValue(); // Return nullptr if attribute not found
    return NXSL_ERR_SUCCESS;
 }
@@ -757,7 +802,10 @@ NXSL_METHOD_DEFINITION(NetObj, setGeoLocation)
       return NXSL_ERR_BAD_CLASS;
 
    GeoLocation *gl = (GeoLocation *)o->getData();
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setGeoLocation(*gl);
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   netobj->setGeoLocation(*gl);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Geolocation of object %s set to %s %s by script",
+      netobj->getName(), gl->getLatitudeAsString(), gl->getLongitudeAsString());
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
@@ -806,6 +854,12 @@ NXSL_METHOD_DEFINITION(NetObj, setMapImage)
       DBConnectionPoolReleaseConnection(hdb);
    }
 
+   if (success)
+   {
+      NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+      vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Map image of object %s set to %s by script",
+         netobj->getName(), netobj->getMapImage().toString().cstr());
+   }
    *result = vm->createValue(success);
    return NXSL_ERR_SUCCESS;
 }
@@ -824,7 +878,11 @@ NXSL_METHOD_DEFINITION(NetObj, setNameOnMap)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setNameOnMap(argv[0]->getValueAsCString());
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   SharedString oldName = netobj->getNameOnMap();
+   netobj->setNameOnMap(argv[0]->getValueAsCString());
+   vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netobj->getId(), oldName, argv[0]->getValueAsCString(), 'T',
+      L"Name on map of object %s changed by script", netobj->getName());
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
@@ -855,7 +913,9 @@ NXSL_METHOD_DEFINITION(NetObj, setPostalAddress)
       argv[3]->isNull() ? nullptr : argv[3]->getValueAsCString(),
       argv[4]->isNull() ? nullptr : argv[4]->getValueAsCString(),
       argv[5]->isNull() ? nullptr : argv[5]->getValueAsCString());
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setPostalAddress(addr);
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   netobj->setPostalAddress(addr);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Postal address of object %s changed by script", netobj->getName());
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
@@ -907,6 +967,8 @@ NXSL_METHOD_DEFINITION(NetObj, setStatusCalculation)
          success = 0;   // invalid method
          break;
    }
+   if (success)
+      vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Status calculation method of object %s set to %d by script", netobj->getName(), method);
    *result = vm->createValue(success);
    return 0;
 }
@@ -959,6 +1021,8 @@ NXSL_METHOD_DEFINITION(NetObj, setStatusPropagation)
          success = 0;   // invalid method
          break;
    }
+   if (success)
+      vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Status propagation method of object %s set to %d by script", netobj->getName(), method);
    *result = vm->createValue(success);
    return 0;
 }
@@ -988,6 +1052,8 @@ NXSL_METHOD_DEFINITION(NetObj, unbind)
 
    NetObj *child = static_cast<shared_ptr<NetObj>*>(nxslChild->getData())->get();
    NetObj::unlinkObjects(thisObject, child);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, thisObject->getId(), L"%s %s [%u] unbound from %s %s [%u] by script",
+      child->getObjectClassName(), child->getName(), child->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
 
    *result = vm->createValue();
    return 0;
@@ -1019,6 +1085,8 @@ NXSL_METHOD_DEFINITION(NetObj, unbindFrom)
       return NXSL_ERR_BAD_CLASS;
 
    NetObj::unlinkObjects(parent, thisObject);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), L"%s %s [%u] unbound from %s %s [%u] by script",
+      thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
 
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
@@ -1034,7 +1102,9 @@ NXSL_METHOD_DEFINITION(NetObj, unmanage)
       *result = vm->createValue(false);
       return 0;
    }
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(false);
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   netobj->setMgmtStatus(false);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s set to unmanaged state by script", netobj->getName());
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
@@ -1054,7 +1124,8 @@ NXSL_METHOD_DEFINITION(NetObj, writeMaintenanceJournal)
       return NXSL_ERR_NOT_STRING;
 
    NetObj *thisObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
-   *result = vm->createValue(AddMaintenanceJournalRecord(thisObject->getId(), 0, argv[0]->getValueAsCString()));
+   *result = vm->createValue(AddMaintenanceJournalRecord(thisObject->getId(), vm->getUserId(), argv[0]->getValueAsCString()));
+   vm->writeAuditLog(AUDIT_OBJECTS, true, thisObject->getId(), L"Maintenance journal record for object %s added by script", thisObject->getName());
    return NXSL_ERR_SUCCESS;
 }
 
@@ -1642,6 +1713,8 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, applyTemplate)
    }
 
    templateObject->applyToTarget(thisObject);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, thisObject->getId(), L"Template %s [%u] applied to %s %s [%u] by script",
+      templateObject->getName(), templateObject->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
 
    *result = vm->createValue(true);
    return 0;
@@ -1657,7 +1730,7 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, enableConfigurationPolling)
       *result = vm->createValue(false);
       return 0;
    }
-   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_CONF_POLL, true);
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_CONF_POLL, true, L"enableConfigurationPolling");
 }
 
 /**
@@ -1670,7 +1743,7 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, enableDataCollection)
       *result = vm->createValue(false);
       return 0;
    }
-   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_DATA_COLLECT, true);
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_DATA_COLLECT, true, L"enableDataCollection");
 }
 
 /**
@@ -1683,7 +1756,7 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, enableStatusPolling)
       *result = vm->createValue(false);
       return 0;
    }
-   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_STATUS_POLL, true);
+   return ChangeFlagMethod(object, argv[0], result, DCF_DISABLE_STATUS_POLL, true, L"enableStatusPolling");
 }
 
 /**
@@ -1725,6 +1798,8 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, removeTemplate)
    Template *tmpl = static_cast<shared_ptr<Template>*>(nxslTemplate->getData())->get();
    NetObj::unlinkObjects(tmpl, thisObject);
    tmpl->queueRemoveFromTarget(thisObject->getId(), true);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, thisObject->getId(), L"Template %s [%u] removed from %s %s [%u] by script",
+      tmpl->getName(), tmpl->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
 
    *result = vm->createValue();
    return 0;
@@ -1937,6 +2012,8 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, createDCI)
             ((argc > 5) && argv[5]->isString()) ? argv[5]->getValueAsCString() : nullptr,
             target, argv[2]->getValueAsCString());
    target->addDCObject(dci);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, target->getId(), L"DCI \"%s\" [%u] created on object %s by script",
+      dci->getName().cstr(), dci->getId(), target->getName());
    *result = dci->createNXSLObject(vm);
    return 0;
 }
@@ -1974,6 +2051,9 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, deleteDCI)
    }
 
    bool success = target->deleteDCObject(dci->getId(), true, vm->getUserId());
+   if (success)
+      vm->writeAuditLog(AUDIT_OBJECTS, true, target->getId(), L"DCI \"%s\" [%u] deleted from object %s by script",
+         dci->getName().cstr(), dci->getId(), target->getName());
    *result = vm->createValue(success);
    return 0;
 }
@@ -2387,7 +2467,7 @@ NXSL_METHOD_DEFINITION(Node, enable8021xStatusPolling)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_8021X_STATUS_POLL, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_8021X_STATUS_POLL, true, L"enable8021xStatusPolling");
 }
 
 /**
@@ -2397,7 +2477,7 @@ NXSL_METHOD_DEFINITION(Node, enableAgent)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NXCP, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NXCP, true, L"enableAgent");
 }
 
 /**
@@ -2407,7 +2487,7 @@ NXSL_METHOD_DEFINITION(Node, enableDiscoveryPolling)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_DISCOVERY_POLL, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_DISCOVERY_POLL, true, L"enableDiscoveryPolling");
 }
 
 /**
@@ -2417,7 +2497,7 @@ NXSL_METHOD_DEFINITION(Node, enableEtherNetIP)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ETHERNET_IP, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ETHERNET_IP, true, L"enableEtherNetIP");
 }
 
 /**
@@ -2427,7 +2507,7 @@ NXSL_METHOD_DEFINITION(Node, enableIcmp)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ICMP, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ICMP, true, L"enableIcmp");
 }
 
 /**
@@ -2437,7 +2517,7 @@ NXSL_METHOD_DEFINITION(Node, enableModbusTcp)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_MODBUS_TCP, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_MODBUS_TCP, true, L"enableModbusTcp");
 }
 
 /**
@@ -2447,7 +2527,7 @@ NXSL_METHOD_DEFINITION(Node, enablePrimaryIPPing)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_PING_PRIMARY_IP, false);
+   return ChangeFlagMethod(object, argv[0], result, NF_PING_PRIMARY_IP, false, L"enablePrimaryIPPing");
 }
 
 /**
@@ -2457,7 +2537,7 @@ NXSL_METHOD_DEFINITION(Node, enableRoutingTablePolling)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ROUTE_POLL, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ROUTE_POLL, true, L"enableRoutingTablePolling");
 }
 
 /**
@@ -2467,7 +2547,7 @@ NXSL_METHOD_DEFINITION(Node, enableSmclpPropertyPolling)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SMCLP_PROPERTIES, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SMCLP_PROPERTIES, true, L"enableSmclpPropertyPolling");
 }
 
 /**
@@ -2477,7 +2557,7 @@ NXSL_METHOD_DEFINITION(Node, enableSnmp)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SNMP, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SNMP, true, L"enableSnmp");
 }
 
 /**
@@ -2487,7 +2567,7 @@ NXSL_METHOD_DEFINITION(Node, enableSsh)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SSH, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SSH, true, L"enableSsh");
 }
 
 /**
@@ -2497,7 +2577,7 @@ NXSL_METHOD_DEFINITION(Node, enableNetconf)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NETCONF, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NETCONF, true, L"enableNetconf");
 }
 
 /**
@@ -2507,7 +2587,7 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_TOPOLOGY_POLL, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_TOPOLOGY_POLL, true, L"enableTopologyPolling");
 }
 
 /**
@@ -2517,7 +2597,7 @@ NXSL_METHOD_DEFINITION(Node, enableVnc)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_VNC, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_VNC, true, L"enableVnc");
 }
 
 /**
@@ -2527,7 +2607,7 @@ NXSL_METHOD_DEFINITION(Node, enableWinPerfCountersCache)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_PERF_COUNT, true);
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_PERF_COUNT, true, L"enableWinPerfCountersCache");
 }
 
 /**
@@ -2558,6 +2638,7 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommand)
       uint32_t rcc = conn->executeCommand(argv[0]->getValueAsCString(), list);
       *result = vm->createValue(rcc == ERR_SUCCESS);
       nxlog_debug_tag(_T("nxsl.agent"), 5, _T("NXSL: Node::executeAgentCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      vm->writeAuditLog(AUDIT_OBJECTS, rcc == ERR_SUCCESS, node->getId(), L"Executed agent action %s on node %s by script", argv[0]->getValueAsCString(), node->getName());
    }
    else
    {
@@ -2600,6 +2681,7 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommandWithOutput)
          }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
       nxlog_debug_tag(_T("nxsl.agent"), 5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      vm->writeAuditLog(AUDIT_OBJECTS, rcc == ERR_SUCCESS, node->getId(), L"Executed agent action %s on node %s by script", argv[0]->getValueAsCString(), node->getName());
    }
    else
    {
@@ -2646,6 +2728,7 @@ NXSL_METHOD_DEFINITION(Node, executeSSHCommand)
 
          StringList *list;
          uint32_t rcc = proxyNode->getListFromAgent(request, &list);
+         vm->writeAuditLog(AUDIT_OBJECTS, rcc == DCE_SUCCESS, node->getId(), L"Executed SSH command \"%s\" on node %s by script", argv[0]->getValueAsCString(), node->getName());
          *result = (rcc == DCE_SUCCESS) ? vm->createValue(new NXSL_Array(vm, *list)) : vm->createValue();
          delete list;
       }
@@ -3089,6 +3172,7 @@ NXSL_METHOD_DEFINITION(Node, setExpectedCapabilities)
    uint64_t capabilities = argv[0]->getValueAsUInt64();
    capabilities &= NC_IS_NATIVE_AGENT | NC_IS_SNMP | NC_IS_ETHERNET_IP | NC_IS_MODBUS_TCP | NC_IS_SSH;
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setExpectedCapabilities(capabilities);
+   AuditObjectModification(vm, object, L"Node::setExpectedCapabilities");
    *result = vm->createValue();
    return 0;
 }
@@ -3112,6 +3196,7 @@ NXSL_METHOD_DEFINITION(Node, setIfXTableUsageMode)
       mode = IFXTABLE_DEFAULT;
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setIfXtableUsageMode(mode);
+   AuditObjectModification(vm, object, L"Node::setIfXTableUsageMode");
    *result = vm->createValue();
    return 0;
 }
@@ -3132,7 +3217,10 @@ NXSL_METHOD_DEFINITION(Node, setPollCountForStatusChange)
 
    int count = argv[0]->getValueAsInt32();
    if (count >= 0)
+   {
       static_cast<shared_ptr<Node>*>(object->getData())->get()->setRequiredPollCount(count);
+      AuditObjectModification(vm, object, L"Node::setPollCountForStatusChange");
+   }
    *result = vm->createValue();
    return 0;
 }
@@ -3152,6 +3240,7 @@ NXSL_METHOD_DEFINITION(Node, setProductCode)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setProductCode(argv[0]->getValueAsCString());
+   AuditObjectModification(vm, object, L"Node::setProductCode");
    *result = vm->createValue();
    return 0;
 }
@@ -3171,6 +3260,7 @@ NXSL_METHOD_DEFINITION(Node, setProductName)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setProductName(argv[0]->getValueAsCString());
+   AuditObjectModification(vm, object, L"Node::setProductName");
    *result = vm->createValue();
    return 0;
 }
@@ -3190,6 +3280,7 @@ NXSL_METHOD_DEFINITION(Node, setProductVersion)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setProductVersion(argv[0]->getValueAsCString());
+   AuditObjectModification(vm, object, L"Node::setProductVersion");
    *result = vm->createValue();
    return 0;
 }
@@ -3210,6 +3301,7 @@ NXSL_METHOD_DEFINITION(Node, setSNMPCommunity)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setSnmpCommunity(argv[0]->getValueAsMBString());
+   AuditObjectModification(vm, object, L"Node::setSNMPCommunity");
    *result = vm->createValue(true);
    return 0;
 }
@@ -3270,6 +3362,7 @@ NXSL_METHOD_DEFINITION(Node, setSNMPTrapCommunity)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setSnmpTrapCommunity(argv[0]->getValueAsMBString());
+   AuditObjectModification(vm, object, L"Node::setSNMPTrapCommunity");
    *result = vm->createValue(true);
    return 0;
 }
@@ -3302,6 +3395,7 @@ NXSL_METHOD_DEFINITION(Node, setSNMPTrapUSMCredentials)
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setSnmpTrapUSMCredentials(
             argv[0]->getValueAsMBString(), argv[1]->getValueAsMBString(), argv[2]->getValueAsMBString(),
             authMethod, privMethod);
+   AuditObjectModification(vm, object, L"Node::setSNMPTrapUSMCredentials");
    *result = vm->createValue(true);
    return 0;
 }
@@ -3319,6 +3413,7 @@ NXSL_METHOD_DEFINITION(Node, clearSNMPTrapCredentials)
    }
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->clearSnmpTrapCredentials();
+   AuditObjectModification(vm, object, L"Node::clearSNMPTrapCredentials");
    *result = vm->createValue(true);
    return 0;
 }
@@ -3351,6 +3446,7 @@ NXSL_METHOD_DEFINITION(Node, setSNMPUSMCredentials)
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setSnmpUSMCredentials(
             argv[0]->getValueAsMBString(), argv[1]->getValueAsMBString(), argv[2]->getValueAsMBString(),
             authMethod, privMethod);
+   AuditObjectModification(vm, object, L"Node::setSNMPUSMCredentials");
    *result = vm->createValue(true);
    return 0;
 }
@@ -3378,6 +3474,7 @@ NXSL_METHOD_DEFINITION(Node, setSNMPVersion)
    }
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setSnmpVersion(version);
+   AuditObjectModification(vm, object, L"Node::setSNMPVersion");
    *result = vm->createValue(true);
    return 0;
 }
@@ -3397,6 +3494,7 @@ NXSL_METHOD_DEFINITION(Node, setSerialNumber)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setSerialNumber(argv[0]->getValueAsCString());
+   AuditObjectModification(vm, object, L"Node::setSerialNumber");
    *result = vm->createValue();
    return 0;
 }
@@ -3416,6 +3514,7 @@ NXSL_METHOD_DEFINITION(Node, setVendor)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setVendor(argv[0]->getValueAsCString());
+   AuditObjectModification(vm, object, L"Node::setVendor");
    *result = vm->createValue();
    return 0;
 }
@@ -3436,6 +3535,7 @@ NXSL_METHOD_DEFINITION(Node, setVNCPassword)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Node>*>(object->getData())->get()->setVncPassword(argv[0]->getValueAsCString());
+   AuditObjectModification(vm, object, L"Node::setVNCPassword");
    *result = vm->createValue(true);
    return 0;
 }
@@ -3560,7 +3660,10 @@ NXSL_METHOD_DEFINITION(Node, wakeUp)
       return 0;
    }
 
-   *result = vm->createValue(static_cast<shared_ptr<Node>*>(object->getData())->get()->wakeUp() == RCC_SUCCESS);
+   Node *node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+   uint32_t rcc = node->wakeUp();
+   vm->writeAuditLog(AUDIT_OBJECTS, rcc == RCC_SUCCESS, node->getId(), L"Wakeup packet sent to node %s by script", node->getName());
+   *result = vm->createValue(rcc == RCC_SUCCESS);
    return 0;
 }
 
@@ -4392,6 +4495,7 @@ NXSL_METHOD_DEFINITION(Interface, clearPeer)
    {
       ClearPeer(iface->getPeerInterfaceId());
       ClearPeer(iface->getId());
+      AuditObjectModification(vm, object, L"Interface::clearPeer");
    }
    return 0;
 }
@@ -4434,7 +4538,11 @@ NXSL_METHOD_DEFINITION(Interface, setPeer)
       return 0;
    }
 
-   *result = vm->createValue(LinkInterfaces(localInterface, peerInterface.get()));
+   bool success = LinkInterfaces(localInterface, peerInterface.get());
+   if (success)
+      vm->writeAuditLog(AUDIT_OBJECTS, true, localInterface->getId(), L"Peer of interface %s [%u] set to interface %s [%u] by script",
+         localInterface->getName(), localInterface->getId(), peerInterface->getName(), peerInterface->getId());
+   *result = vm->createValue(success);
    return 0;
 }
 
@@ -4445,7 +4553,7 @@ NXSL_METHOD_DEFINITION(Interface, enableAgentStatusPolling)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_AGENT_STATUS_POLL, true);
+   return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_AGENT_STATUS_POLL, true, L"enableAgentStatusPolling");
 }
 
 /**
@@ -4455,7 +4563,7 @@ NXSL_METHOD_DEFINITION(Interface, enableICMPStatusPolling)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_ICMP_STATUS_POLL, true);
+   return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_ICMP_STATUS_POLL, true, L"enableICMPStatusPolling");
 }
 
 /**
@@ -4465,7 +4573,7 @@ NXSL_METHOD_DEFINITION(Interface, enableSNMPStatusPolling)
 {
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(false); return 0; }
-   return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_SNMP_STATUS_POLL, true);
+   return ChangeFlagMethod(object, argv[0], result, IF_DISABLE_SNMP_STATUS_POLL, true, L"enableSNMPStatusPolling");
 }
 
 /**
@@ -4480,6 +4588,7 @@ NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
    }
    Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
    iface->setExcludeFromTopology(argv[0]->getValueAsBoolean());
+   AuditObjectModification(vm, object, L"Interface::setExcludeFromTopology");
    *result = vm->createValue();
    return 0;
 }
@@ -4514,7 +4623,14 @@ NXSL_METHOD_DEFINITION(Interface, setExpectedState)
    }
 
    if ((state >= 0) && (state <= 2))
-      static_cast<shared_ptr<Interface>*>(object->getData())->get()->setExpectedState(state);
+   {
+      static const wchar_t *stateNames[] = { L"UP", L"DOWN", L"IGNORE" };
+      Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
+      int oldState = iface->getExpectedState();
+      iface->setExpectedState(state);
+      vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, iface->getId(), ((oldState >= 0) && (oldState <= 2)) ? stateNames[oldState] : L"UNKNOWN", stateNames[state], 'T',
+         L"Expected state of interface %s [%u] on node %s changed by script", iface->getName(), iface->getId(), iface->getParentNodeName().cstr());
+   }
 
    *result = vm->createValue();
    return 0;
@@ -4532,6 +4648,7 @@ NXSL_METHOD_DEFINITION(Interface, setIncludeInIcmpPoll)
    }
    Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
    iface->setIncludeInIcmpPoll(argv[0]->getValueAsBoolean());
+   AuditObjectModification(vm, object, L"Interface::setIncludeInIcmpPoll");
    *result = vm->createValue();
    return 0;
 }
@@ -4552,7 +4669,10 @@ NXSL_METHOD_DEFINITION(Interface, setPollCountForStatusChange)
 
    int count = argv[0]->getValueAsInt32();
    if (count >= 0)
+   {
       static_cast<shared_ptr<Interface>*>(object->getData())->get()->setRequiredPollCount(count);
+      AuditObjectModification(vm, object, L"Interface::setPollCountForStatusChange");
+   }
    *result = vm->createValue();
    return 0;
 }
@@ -4568,7 +4688,10 @@ NXSL_METHOD_DEFINITION(Interface, wakeUp)
       return 0;
    }
 
-   *result = vm->createValue(static_cast<shared_ptr<Interface>*>(object->getData())->get()->wakeUp() == RCC_SUCCESS);
+   Interface *iface = static_cast<shared_ptr<Interface>*>(object->getData())->get();
+   uint32_t rcc = iface->wakeUp();
+   vm->writeAuditLog(AUDIT_OBJECTS, rcc == RCC_SUCCESS, iface->getId(), L"Wakeup packet sent via interface %s [%u] by script", iface->getName(), iface->getId());
+   *result = vm->createValue(rcc == RCC_SUCCESS);
    return 0;
 }
 
@@ -5439,7 +5562,11 @@ NXSL_METHOD_DEFINITION(Cluster, add)
 
    shared_ptr<Cluster> thisObject = *static_cast<shared_ptr<Cluster>*>(object->getData());
 
-   *result = vm->createValue(thisObject->addNode(static_pointer_cast<Node>(child)));
+   bool success = thisObject->addNode(static_pointer_cast<Node>(child));
+   if (success)
+      vm->writeAuditLog(AUDIT_OBJECTS, true, thisObject->getId(), L"Node %s [%u] added to cluster %s [%u] by script",
+         child->getName(), child->getId(), thisObject->getName(), thisObject->getId());
+   *result = vm->createValue(success);
    return 0;
 }
 
@@ -5462,6 +5589,8 @@ NXSL_METHOD_DEFINITION(Cluster, remove)
    shared_ptr<Cluster> thisObject = *static_cast<shared_ptr<Cluster>*>(object->getData());
    NetObj::unlinkObjects(thisObject.get(), child.get());
    thisObject->removeNode(static_pointer_cast<Node>(child));
+   vm->writeAuditLog(AUDIT_OBJECTS, true, thisObject->getId(), L"Node %s [%u] removed from cluster %s [%u] by script",
+      child->getName(), child->getId(), thisObject->getName(), thisObject->getId());
 
    *result = vm->createValue();
    return 0;
@@ -5539,6 +5668,8 @@ static int CreateContainerImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    }
    container->publish();
 
+   vm->writeAuditLog(AUDIT_OBJECTS, true, container->getId(), L"%s %s [%u] created under %s %s [%u] by script",
+      container->getObjectClassName(), container->getName(), container->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
    *result = container->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }
@@ -5562,6 +5693,8 @@ static int CreateCollectorImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
    }
    collector->publish();
 
+   vm->writeAuditLog(AUDIT_OBJECTS, true, collector->getId(), L"%s %s [%u] created under %s %s [%u] by script",
+      collector->getObjectClassName(), collector->getName(), collector->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
    *result = collector->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }
@@ -5586,6 +5719,8 @@ static int CreateFacilityImpl(NXSL_Object *object, int argc, NXSL_Value **argv, 
    }
    facility->publish();
 
+   vm->writeAuditLog(AUDIT_OBJECTS, true, facility->getId(), L"%s %s [%u] created under %s %s [%u] by script",
+      facility->getObjectClassName(), facility->getName(), facility->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
    *result = facility->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }
@@ -5625,6 +5760,8 @@ static int CreatePowerDomainImpl(NXSL_Object *object, int argc, NXSL_Value **arg
    }
    domain->publish();
 
+   vm->writeAuditLog(AUDIT_OBJECTS, true, domain->getId(), L"%s %s [%u] created under %s %s [%u] by script",
+      domain->getObjectClassName(), domain->getName(), domain->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
    *result = domain->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }
@@ -5662,6 +5799,8 @@ static int CreateCoolingZoneImpl(NXSL_Object *object, int argc, NXSL_Value **arg
    }
    zone->publish();
 
+   vm->writeAuditLog(AUDIT_OBJECTS, true, zone->getId(), L"%s %s [%u] created under %s %s [%u] by script",
+      zone->getObjectClassName(), zone->getName(), zone->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
    *result = zone->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }
@@ -5692,6 +5831,8 @@ static int CreateRackImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
    }
    rack->publish();
 
+   vm->writeAuditLog(AUDIT_OBJECTS, true, rack->getId(), L"%s %s [%u] created under %s %s [%u] by script",
+      rack->getObjectClassName(), rack->getName(), rack->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
    *result = rack->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }
@@ -5735,6 +5876,8 @@ static int CreateNodeImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
       if (NetObj::linkObjects(thisObject, node))
       {
          node->publish();
+         vm->writeAuditLog(AUDIT_OBJECTS, true, node->getId(), L"%s %s [%u] created under %s %s [%u] by script",
+            node->getObjectClassName(), node->getName(), node->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
          *result = node->createNXSLObject(vm);
       }
       else
@@ -5785,6 +5928,8 @@ static int CreateSensorImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NX
       return NXSL_ERR_SUCCESS;
    }
    sensor->publish();
+   vm->writeAuditLog(AUDIT_OBJECTS, true, sensor->getId(), L"%s %s [%u] created under %s %s [%u] by script",
+      sensor->getObjectClassName(), sensor->getName(), sensor->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
    *result = sensor->createNXSLObject(vm);
    return NXSL_ERR_SUCCESS;
 }
@@ -5860,6 +6005,7 @@ NXSL_METHOD_DEFINITION(Container, setAutoBindMode)
       return 0;
    }
    static_cast<shared_ptr<Container>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   AuditObjectModification(vm, object, L"Container::setAutoBindMode");
    *result = vm->createValue();
    return 0;
 }
@@ -5879,6 +6025,7 @@ NXSL_METHOD_DEFINITION(Container, setAutoBindScript)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Container>*>(object->getData())->get()->setAutoBindFilter(0, argv[0]->getValueAsCString());
+   AuditObjectModification(vm, object, L"Container::setAutoBindScript");
    *result = vm->createValue();
    return 0;
 }
@@ -5998,6 +6145,7 @@ static int SetAutoBindModeImpl(NXSL_Object *object, int argc, NXSL_Value **argv,
       return 0;
    }
    static_cast<shared_ptr<DataCollectionContainer>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   AuditObjectModification(vm, object, L"setAutoBindMode");
    *result = vm->createValue();
    return 0;
 }
@@ -6017,6 +6165,7 @@ static int SetAutoBindScriptImpl(NXSL_Object *object, int argc, NXSL_Value **arg
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<DataCollectionContainer>*>(object->getData())->get()->setAutoBindFilter(0, argv[0]->getValueAsCString());
+   AuditObjectModification(vm, object, L"setAutoBindScript");
    *result = vm->createValue();
    return 0;
 }
@@ -6732,6 +6881,8 @@ NXSL_METHOD_DEFINITION(Template, applyTo)
    }
 
    thisObject->applyToTarget(target);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, target->getId(), L"Template %s [%u] applied to %s %s [%u] by script",
+      thisObject->getName(), thisObject->getId(), target->getObjectClassName(), target->getName(), target->getId());
 
    *result = vm->createValue(true);
    return 0;
@@ -6760,6 +6911,8 @@ NXSL_METHOD_DEFINITION(Template, removeFrom)
    DataCollectionTarget *target = static_cast<shared_ptr<DataCollectionTarget>*>(nxslTarget->getData())->get();
    NetObj::unlinkObjects(thisObject, target);
    thisObject->queueRemoveFromTarget(target->getId(), true);
+   vm->writeAuditLog(AUDIT_OBJECTS, true, target->getId(), L"Template %s [%u] removed from %s %s [%u] by script",
+      thisObject->getName(), thisObject->getId(), target->getObjectClassName(), target->getName(), target->getId());
 
    *result = vm->createValue();
    return 0;
@@ -6776,6 +6929,7 @@ NXSL_METHOD_DEFINITION(Template, setAutoApplyMode)
       return 0;
    }
    static_cast<shared_ptr<Template>*>(object->getData())->get()->setAutoBindMode(0, argv[0]->getValueAsBoolean(), argv[1]->getValueAsBoolean());
+   AuditObjectModification(vm, object, L"Template::setAutoApplyMode");
    *result = vm->createValue();
    return 0;
 }
@@ -6795,6 +6949,7 @@ NXSL_METHOD_DEFINITION(Template, setAutoApplyScript)
       return NXSL_ERR_NOT_STRING;
 
    static_cast<shared_ptr<Template>*>(object->getData())->get()->setAutoBindFilter(0, argv[0]->getValueAsCString());
+   AuditObjectModification(vm, object, L"Template::setAutoApplyScript");
    *result = vm->createValue();
    return 0;
 }
@@ -6861,9 +7016,11 @@ NXSL_METHOD_DEFINITION(Tunnel, bind)
 
    shared_ptr<AgentTunnel> tunnel = *static_cast<shared_ptr<AgentTunnel>*>(object->getData());
    uint32_t nodeId = (*static_cast<shared_ptr<Node>*>(node->getData()))->getId();
-   uint32_t rcc = tunnel->isInbound() ? static_cast<InboundAgentTunnel&>(*tunnel).bind(nodeId, 0) : RCC_OUT_OF_STATE_REQUEST;
+   uint32_t rcc = tunnel->isInbound() ? static_cast<InboundAgentTunnel&>(*tunnel).bind(nodeId, vm->getUserId()) : RCC_OUT_OF_STATE_REQUEST;
    if (rcc != RCC_SUCCESS)
       nxlog_debug_tag(L"nxsl.tunnel", 5, L"Tunnel::bind() failed for tunnel [%u] and node [%u] (RCC = %u)", tunnel->getId(), nodeId, rcc);
+   else
+      vm->writeAuditLog(AUDIT_SYSCFG, true, nodeId, L"Agent tunnel [%u] bound to node [%u] by script", tunnel->getId(), nodeId);
    *result = vm->createValue(rcc == RCC_SUCCESS);
    return 0;
 }
@@ -7431,6 +7588,9 @@ static NXSL_Value *AlarmMethodResult(NXSL_VM *vm, const Alarm *alarm, const wcha
 {
    if (rcc != RCC_SUCCESS)
       nxlog_debug_tag(L"nxsl.alarm", 5, L"Alarm::%s() failed for alarm [%u] (RCC = %u)", method, alarm->getAlarmId(), rcc);
+   else
+      vm->writeAuditLog(AUDIT_OBJECTS, true, alarm->getSourceObject(), L"Alarm %u (%s) on object %s modified by script (Alarm::%s called)",
+         alarm->getAlarmId(), alarm->getMessage(), GetObjectName(alarm->getSourceObject(), L""), method);
    return vm->createValue(rcc == RCC_SUCCESS);
 }
 
@@ -7491,7 +7651,10 @@ NXSL_METHOD_DEFINITION(Alarm, addComment)
 
    Alarm *alarm = static_cast<Alarm*>(object->getData());
    uint32_t id = 0;
-   uint32_t rcc = UpdateAlarmComment(alarm->getAlarmId(), &id, argv[0]->getValueAsCString(), 0, syncWithHelpdesk);
+   uint32_t rcc = UpdateAlarmComment(alarm->getAlarmId(), &id, argv[0]->getValueAsCString(), vm->getUserId(), syncWithHelpdesk);
+   if (rcc == RCC_SUCCESS)
+      vm->writeAuditLog(AUDIT_OBJECTS, true, alarm->getSourceObject(), L"Comment added to alarm %u (%s) on object %s by script",
+         alarm->getAlarmId(), alarm->getMessage(), GetObjectName(alarm->getSourceObject(), L""));
    *result = (rcc == RCC_SUCCESS) ? vm->createValue(id) : vm->createValue();
    return 0;
 }
@@ -7921,6 +8084,9 @@ NXSL_METHOD_DEFINITION(DCI, delete)
    }
 
    bool success = target->deleteDCObject(dci->getId(), true, vm->getUserId());
+   if (success)
+      vm->writeAuditLog(AUDIT_OBJECTS, true, target->getId(), L"DCI \"%s\" [%u] deleted from object %s by script",
+         dci->getName().cstr(), dci->getId(), target->getName());
    *result = vm->createValue(success);
    return 0;
 }
@@ -8124,7 +8290,11 @@ NXSL_METHOD_DEFINITION(DCI, enable)
    unique_ptr<IntegerArray<uint32_t>> rcc = target->setItemStatus(dciList, status, vm->getUserId(), true);
    bool success = (rcc->get(0) == RCC_SUCCESS);
    if (success)
+   {
       target->applyDCIChanges(false);
+      vm->writeAuditLog(AUDIT_OBJECTS, true, target->getId(), L"DCI \"%s\" [%u] on object %s %s by script",
+         dci->getName().cstr(), dci->getId(), target->getName(), (status == ITEM_STATUS_ACTIVE) ? L"enabled" : L"disabled");
+   }
    *result = vm->createValue(success);
    return 0;
 }
@@ -9011,6 +9181,8 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
       {
          nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: %s"), SnmpGetErrorText(snmpResult));
       }
+      vm->writeAuditLog(AUDIT_NETWORK, success, 0, L"SNMP SET request for %s sent to %s by script",
+         argv[0]->getValueAsCString(), transport->getPeerIpAddress().toString().cstr());
    }
 
    *result = vm->createValue(success);
@@ -10935,6 +11107,8 @@ NXSL_METHOD_DEFINITION(SSHSession, execute)
 #endif
 
    StringList *output = session->channel->executeCommand(command, timeout);
+   vm->writeAuditLog(AUDIT_OBJECTS, output != nullptr, session->nodeId, L"Executed SSH command \"%s\" on node %s by script (interactive session)",
+      argv[0]->getValueAsCString(), GetObjectName(session->nodeId, L""));
    if (output != nullptr)
    {
       *result = vm->createValue(new NXSL_Array(vm, *output));
@@ -11295,6 +11469,8 @@ NXSL_METHOD_DEFINITION(NETCONFSession, editConfig)
    }
 
    NETCONF_Response *response = ExecuteNetconfOperation(session, request);
+   vm->writeAuditLogWithValues(AUDIT_OBJECTS, response != nullptr, session->node->getId(), nullptr, argv[0]->getValueAsCString(), 'T',
+      L"NETCONF edit-config on datastore %hs of node %s executed by script", target, session->node->getName());
    *result = vm->createValue(response != nullptr);
    delete response;
    return 0;
@@ -11309,6 +11485,7 @@ NXSL_METHOD_DEFINITION(NETCONFSession, commit)
    pugi::xml_document request;
    request.append_child("commit");
    NETCONF_Response *response = ExecuteNetconfOperation(session, request);
+   vm->writeAuditLog(AUDIT_OBJECTS, response != nullptr, session->node->getId(), L"NETCONF commit on node %s executed by script", session->node->getName());
    *result = vm->createValue(response != nullptr);
    delete response;
    return 0;
@@ -11323,6 +11500,7 @@ NXSL_METHOD_DEFINITION(NETCONFSession, discardChanges)
    pugi::xml_document request;
    request.append_child("discard-changes");
    NETCONF_Response *response = ExecuteNetconfOperation(session, request);
+   vm->writeAuditLog(AUDIT_OBJECTS, response != nullptr, session->node->getId(), L"NETCONF discard-changes on node %s executed by script", session->node->getName());
    *result = vm->createValue(response != nullptr);
    delete response;
    return 0;
@@ -11380,6 +11558,8 @@ NXSL_METHOD_DEFINITION(NETCONFSession, rpc)
 
    uint32_t agentRcc;
    char *reply = ExecuteNetconfRpc(*session->node, content, 0, &agentRcc);
+   vm->writeAuditLogWithValues(AUDIT_OBJECTS, reply != nullptr, session->node->getId(), nullptr, argv[0]->getValueAsCString(), 'T',
+      L"NETCONF RPC on node %s executed by script", session->node->getName());
    MemFree(content);
    if (reply == nullptr)
    {
