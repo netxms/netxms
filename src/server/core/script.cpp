@@ -830,6 +830,7 @@ void ExecuteScheduledScript(const shared_ptr<ScheduledTaskParameters>& parameter
          nxlog_debug_tag(DEBUG_TAG_SCHEDULED, 4, _T("ExecuteScheduledScript(%s): cannot create VM (not attached to object)"), name);
       return;
    }
+   vm->setSecurityContext(new NXSL_UserSecurityContext(parameters->m_userId));
 
    ObjectRefArray<NXSL_Value> args(16, 16);
 

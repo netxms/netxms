@@ -758,9 +758,13 @@ static std::string ScriptFunctionHandler(const wchar_t *scriptName, bool objectC
    if (objectContext && (object == nullptr))
       return std::string("Error: invalid or missing object context; valid object must be provided for this tool");
 
-   ScriptVMHandle vm = CreateServerScriptVM(scriptName, nullptr, shared_ptr<DCObjectInfo>());
+   if ((object != nullptr) && !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Error: access denied");
+
+   ScriptVMHandle vm = CreateServerScriptVM(scriptName, object);
    if (!vm.isValid())
       return std::string("Error: cannot create script VM");
+   vm->setSecurityContext(new NXSL_UserSecurityContext(userId));
 
    ObjectRefArray<NXSL_Value> args(0, 16);
    if (arguments != nullptr)
