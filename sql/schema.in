@@ -1487,8 +1487,9 @@ CREATE TABLE dci_sample_attributes
    item_id integer not null,
    sample_timestamp SQL_INT64 not null,  // milliseconds, same as timestamp of idata record
    quality integer not null,
-   lower_bound SQL_DOUBLE null,
-   upper_bound SQL_DOUBLE null,
+   flags integer not null,  // bit 0: lower_bound and upper_bound are valid
+   lower_bound SQL_DOUBLE not null,  // 0 if bounds are not valid
+   upper_bound SQL_DOUBLE not null,  // 0 if bounds are not valid
    completeness SQL_DOUBLE not null,
    method_id integer not null,
    PRIMARY KEY(item_id,sample_timestamp)

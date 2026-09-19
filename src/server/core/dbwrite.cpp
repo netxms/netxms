@@ -325,15 +325,17 @@ static void AppendSampleAttributesValues(StringBuffer& query, const DELAYED_IDAT
    query.append(static_cast<int32_t>(a->quality));
    if (a->bounded && (a->quality != SampleQuality::MISSING))
    {
-      query.append(_T(','));
-      query.append(a->lower, _T("%.17g"));
-      query.append(_T(','));
-      query.append(a->upper, _T("%.17g"));
-      query.append(_T(','));
+      query.append(L',');
+      query.append(static_cast<uint32_t>(SAMPLE_ATTR_FLAG_BOUNDED));
+      query.append(L',');
+      query.append(a->lower, L"%.17g");
+      query.append(L',');
+      query.append(a->upper, L"%.17g");
+      query.append(L',');
    }
    else
    {
-      query.append(_T(",NULL,NULL,"));
+      query.append(L",0,0,0,");
    }
    query.append(a->completeness, _T("%.17g"));
    query.append(_T(','));
@@ -347,7 +349,7 @@ static void AppendSampleAttributesValues(StringBuffer& query, const DELAYED_IDAT
 static bool WriteSampleAttributes(DB_HANDLE hdb, StringBuffer& query, const DELAYED_IDATA_INSERT *rq)
 {
    query.clear(false);
-   query.append(_T("INSERT INTO dci_sample_attributes (item_id,sample_timestamp,quality,lower_bound,upper_bound,completeness,method_id) VALUES "));
+   query.append(_T("INSERT INTO dci_sample_attributes (item_id,sample_timestamp,quality,flags,lower_bound,upper_bound,completeness,method_id) VALUES "));
    AppendSampleAttributesValues(query, rq);
    return DBQuery(hdb, query);
 }
@@ -707,7 +709,7 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
          if (rq->attributes != nullptr)
          {
             if (attributesCount == 0)
-               attributesQuery.append(L"INSERT INTO dci_sample_attributes (item_id,sample_timestamp,quality,lower_bound,upper_bound,completeness,method_id) VALUES ");
+               attributesQuery.append(L"INSERT INTO dci_sample_attributes (item_id,sample_timestamp,quality,flags,lower_bound,upper_bound,completeness,method_id) VALUES ");
             else
                attributesQuery.append(L',');
             AppendSampleAttributesValues(attributesQuery, rq);

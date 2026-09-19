@@ -33,8 +33,9 @@ static bool H_UpgradeFromV40()
       L"   item_id integer not null,"
       L"   sample_timestamp $SQL:INT64 not null,"
       L"   quality integer not null,"
-      L"   lower_bound $SQL:DOUBLE null,"
-      L"   upper_bound $SQL:DOUBLE null,"
+      L"   flags integer not null,"
+      L"   lower_bound $SQL:DOUBLE not null,"
+      L"   upper_bound $SQL:DOUBLE not null,"
       L"   completeness $SQL:DOUBLE not null,"
       L"   method_id integer not null,"
       L"   PRIMARY KEY(item_id,sample_timestamp))"));

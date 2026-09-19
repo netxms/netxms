@@ -119,7 +119,7 @@ bool NXCORE_EXPORTABLE ReadAttributedSamples(const DCItem& dci, Timestamp from, 
    std::vector<AttributedSample> attributes;
    bool success = false;
    DB_STATEMENT hStmt = DBPrepare(hdb,
-      L"SELECT sample_timestamp,quality,CASE WHEN lower_bound IS NULL THEN 0 ELSE 1 END,lower_bound,upper_bound,completeness,method_id "
+      L"SELECT sample_timestamp,quality,flags,lower_bound,upper_bound,completeness,method_id "
       L"FROM dci_sample_attributes WHERE item_id=? AND sample_timestamp>=? AND sample_timestamp<=? ORDER BY sample_timestamp DESC");
    if (hStmt != nullptr)
    {
@@ -135,7 +135,7 @@ bool NXCORE_EXPORTABLE ReadAttributedSamples(const DCItem& dci, Timestamp from, 
             s.timestamp = DBGetFieldTimestamp(hResult, 0);
             s.value = NAN;
             s.attributes.quality = static_cast<SampleQuality>(DBGetFieldLong(hResult, 1));
-            s.attributes.bounded = (DBGetFieldLong(hResult, 2) != 0);
+            s.attributes.bounded = (DBGetFieldULong(hResult, 2) & SAMPLE_ATTR_FLAG_BOUNDED) != 0;
             if (s.attributes.bounded)
             {
                s.attributes.lower = DBGetFieldDouble(hResult, 3);
