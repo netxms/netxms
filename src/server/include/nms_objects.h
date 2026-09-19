@@ -2088,15 +2088,24 @@ AutoBindTarget NXCORE_EXPORTABLE *GetObjectAsAutoBindTarget(NetObj *object);
 class NXCORE_EXPORTABLE DelegateObject
 {
 protected:
+   Mutex& m_basePropertiesLock;
    CountingHashSet<uint32_t> m_objectSet;
    CountingHashSet<uint32_t> m_dciSet;
 
 public:
-   DelegateObject(NetObj *_this) { _this->m_asDelegate = this; }
-   DelegateObject(NetObj *_this, const DelegateObject &src) : m_objectSet(src.m_objectSet), m_dciSet(src.m_dciSet) { _this->m_asDelegate = this; }
+   DelegateObject(NetObj *_this) : m_basePropertiesLock(_this->m_mutexProperties) { _this->m_asDelegate = this; }
+   DelegateObject(NetObj *_this, const DelegateObject &src) : m_basePropertiesLock(_this->m_mutexProperties), m_objectSet(src.m_objectSet), m_dciSet(src.m_dciSet) { _this->m_asDelegate = this; }
 
-   bool containsObject(const shared_ptr<NetObj>& object) { return m_objectSet.contains(object->getId()); };
-   bool containsDci(uint32_t dciId) { return m_dciSet.contains(dciId); };
+   bool containsObject(const shared_ptr<NetObj>& object) const
+   {
+      LockGuard lockGuard(m_basePropertiesLock);
+      return m_objectSet.contains(object->getId());
+   }
+   bool containsDci(uint32_t dciId) const
+   {
+      LockGuard lockGuard(m_basePropertiesLock);
+      return m_dciSet.contains(dciId);
+   }
 };
 
 /**
