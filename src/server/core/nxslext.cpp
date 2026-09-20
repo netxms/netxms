@@ -2492,7 +2492,7 @@ static int F_SQLQuery(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
          success = false;
       }
    }
-
+   DBConnectionPoolReleaseConnection(hdb);
    *result = vm->createValue(success);
    return NXSL_ERR_SUCCESS;
 }
