@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.Table;
+import org.netxms.client.TableRow;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ObservationPoint;
@@ -130,7 +131,7 @@ public class ObservationPointView extends ObjectView
          statLabels[i].setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
       }
 
-      SashForm content = new SashForm(parent, SWT.HORIZONTAL);
+      SashForm content = new SashForm(parent, SWT.VERTICAL);
       content.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
       Group activeHostsGroup = new Group(content, SWT.NONE);
@@ -138,8 +139,14 @@ public class ObservationPointView extends ObjectView
       activeHostsGroup.setLayout(new FillLayout());
       activeHostsTable = new TrafficQueryTable(activeHostsGroup, SWT.NONE, this, "ActiveHosts", i18n.tr("Reading active host list"),
             () -> (getObject() != null) ? session.getActiveTrafficHosts(getObjectId()) : null);
+      activeHostsTable.setObjectResolver((data, row) -> {
+         int column = data.getColumnIndex("NODE_ID");
+         return (column != -1) ? row.getValueAsLong(column) : 0;
+      });
 
-      Group l7Group = new Group(content, SWT.NONE);
+      SashForm breakdown = new SashForm(content, SWT.HORIZONTAL);
+
+      Group l7Group = new Group(breakdown, SWT.NONE);
       l7Group.setText(i18n.tr("Application breakdown"));
       l7Group.setLayout(new FillLayout());
       l7Table = new TrafficQueryTable(l7Group, SWT.NONE, this, "PointL7", i18n.tr("Reading application breakdown"),
@@ -147,13 +154,52 @@ public class ObservationPointView extends ObjectView
       l7Table.setNoDataMessage(i18n.tr("Not supported by traffic analyzer"));
       l7Table.setSortColumn("BYTES_RCVD", SWT.DOWN);
 
-      Group topTalkersGroup = new Group(content, SWT.NONE);
+      Group topTalkersGroup = new Group(breakdown, SWT.NONE);
       topTalkersGroup.setText(i18n.tr("Top talkers"));
       topTalkersGroup.setLayout(new FillLayout());
       topTalkersTable = new TrafficQueryTable(topTalkersGroup, SWT.NONE, this, "TopTalkers", i18n.tr("Reading top talkers"),
             () -> queryPointTable("TopTalkers", TrafficObserver.CAP_POINT_TOP_TALKERS));
       topTalkersTable.setNoDataMessage(i18n.tr("Not supported by traffic analyzer"));
       topTalkersTable.setSortColumn("BYTES", SWT.DOWN);
+      topTalkersTable.setObjectResolver((data, row) -> {
+         int column = data.getColumnIndex("HOST");
+         return (column != -1) ? findNodeByHost(row.getValue(column)) : 0;
+      });
+
+      content.setWeights(new int[] { 60, 40 });
+   }
+
+   /**
+    * Find node matched to given host using current content of active hosts table. Top talkers table
+    * identifies hosts only by label, which can be host key, name, or IP address.
+    *
+    * @param host host label
+    * @return node ID or 0 if host is unknown or not matched to a node
+    */
+   private long findNodeByHost(String host)
+   {
+      Table hosts = activeHostsTable.getCurrentData();
+      if ((hosts == null) || (host == null) || host.isEmpty())
+         return 0;
+
+      int nodeIdColumn = hosts.getColumnIndex("NODE_ID");
+      if (nodeIdColumn == -1)
+         return 0;
+
+      final int[] matchColumns = { hosts.getColumnIndex("HOST_KEY"), hosts.getColumnIndex("NAME"), hosts.getColumnIndex("IP") };
+      for(int i = 0; i < hosts.getRowCount(); i++)
+      {
+         TableRow row = hosts.getRow(i);
+         long nodeId = row.getValueAsLong(nodeIdColumn);
+         if (nodeId == 0)
+            continue;
+         for(int column : matchColumns)
+         {
+            if ((column != -1) && host.equalsIgnoreCase(row.getValue(column)))
+               return nodeId;
+         }
+      }
+      return 0;
    }
 
    /**
