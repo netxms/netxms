@@ -58,12 +58,14 @@ import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.NetworkMap;
+import org.netxms.client.objects.ObservationPoint;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Resource;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objects.TrafficObserver;
 import org.netxms.client.objects.WirelessDomain;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.interfaces.PollingTarget;
@@ -135,7 +137,7 @@ public final class ObjectMenuFactory
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
-      else if ((object instanceof BusinessService) || (object instanceof Cluster) || (object instanceof CloudDomain) || (object instanceof WirelessDomain))
+      else if ((object instanceof BusinessService) || (object instanceof Cluster) || (object instanceof CloudDomain) || (object instanceof WirelessDomain) || (object instanceof TrafficObserver))
 		{
          addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
          addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION, viewPlacement);
@@ -163,6 +165,10 @@ public final class ObjectMenuFactory
       else if (object instanceof Rack)
       {
          addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
+      }
+      else if (object instanceof ObservationPoint)
+      {
+         addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
       }
       else if (object instanceof AccessPoint)
       {
