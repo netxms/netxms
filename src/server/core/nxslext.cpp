@@ -2551,7 +2551,7 @@ static int F_SQLQuery(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
       }
    }
    vm->writeAuditLogWithValues(AUDIT_SYSCFG, success, 0, nullptr, argv[0]->getValueAsCString(), 'T', L"SQL query executed by script");
-
+   DBConnectionPoolReleaseConnection(hdb);
    *result = vm->createValue(success);
    return NXSL_ERR_SUCCESS;
 }
