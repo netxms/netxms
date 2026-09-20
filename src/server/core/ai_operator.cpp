@@ -53,6 +53,18 @@ static std::string s_systemPrompt;
 static thread_local AIOperatorInstance *s_currentInstance = nullptr;
 
 /**
+ * Update unsigned integer attribute from JSON configuration. In addition to type check done by
+ * json_object_update_integer, value must fit into signed 32 bit integer database column.
+ */
+static bool UpdateIntegerAttribute(json_t *config, const char *tag, uint32_t *attribute)
+{
+   json_t *value = json_object_get(config, tag);
+   if (json_is_integer(value) && ((json_integer_value(value) < 0) || (json_integer_value(value) > INT32_MAX)))
+      return false;
+   return json_object_update_integer(config, tag, attribute);
+}
+
+/**
  * Create new AI operator instance
  */
 AIOperatorInstance::AIOperatorInstance(const wchar_t *name, uint32_t ownerUserId)
@@ -134,8 +146,9 @@ AIOperatorInstance::AIOperatorInstance(DB_RESULT hResult, int row)
 /**
  * Save AI operator instance to database. Must be called with instance lock held.
  */
-void AIOperatorInstance::saveToDatabase() const
+bool AIOperatorInstance::saveToDatabase() const
 {
+   bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    static const wchar_t *mergeColumns[] = {
@@ -172,11 +185,12 @@ void AIOperatorInstance::saveToDatabase() const
       DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
       DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_modificationTime));
       DBBind(hStmt, 25, DB_SQLTYPE_INTEGER, m_id);
-      DBExecute(hStmt);
+      success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
 
    DBConnectionPoolReleaseConnection(hdb);
+   return success;
 }
 
 /**
@@ -589,11 +603,11 @@ uint32_t AIOperatorInstance::modifyFromJSON(json_t *config)
    uint32_t observationRetentionDays = m_observationRetentionDays;
    uint32_t observationMaxRecords = m_observationMaxRecords;
    if (!json_object_update_string_utf8(config, "modelSlot", modelSlot, 64) ||
-       !json_object_update_integer(config, "minInterval", &minInterval) ||
-       !json_object_update_integer(config, "maxInterval", &maxInterval) ||
-       !json_object_update_integer(config, "dailyTokenBudget", &dailyTokenBudget) ||
-       !json_object_update_integer(config, "observationRetentionDays", &observationRetentionDays) ||
-       !json_object_update_integer(config, "observationMaxRecords", &observationMaxRecords))
+       !UpdateIntegerAttribute(config, "minInterval", &minInterval) ||
+       !UpdateIntegerAttribute(config, "maxInterval", &maxInterval) ||
+       !UpdateIntegerAttribute(config, "dailyTokenBudget", &dailyTokenBudget) ||
+       !UpdateIntegerAttribute(config, "observationRetentionDays", &observationRetentionDays) ||
+       !UpdateIntegerAttribute(config, "observationMaxRecords", &observationMaxRecords))
       return RCC_INVALID_ARGUMENT;
 
    if (minInterval < 60)
@@ -635,8 +649,7 @@ uint32_t AIOperatorInstance::modifyFromJSON(json_t *config)
    }
 
    m_modificationTime = time(nullptr);
-   saveToDatabase();
-   return RCC_SUCCESS;
+   return saveToDatabase() ? RCC_SUCCESS : RCC_DB_FAILURE;
 }
 
 /**
@@ -1328,8 +1341,9 @@ AIOperatorCheck::AIOperatorCheck(DB_RESULT hResult, int row)
 /**
  * Save standing check to database. Must be called with instance lock held.
  */
-void AIOperatorCheck::saveToDatabase() const
+bool AIOperatorCheck::saveToDatabase() const
 {
+   bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    static const wchar_t *mergeColumns[] = {
@@ -1362,11 +1376,12 @@ void AIOperatorCheck::saveToDatabase() const
       DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_creationTime));
       DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_modificationTime));
       DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_id);
-      DBExecute(hStmt);
+      success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
 
    DBConnectionPoolReleaseConnection(hdb);
+   return success;
 }
 
 /**
@@ -1470,12 +1485,12 @@ uint32_t AIOperatorCheck::modifyFromJSON(json_t *config, bool byModel, MutableSt
    uint32_t objectId = m_objectId;
    uint32_t cooldown = m_cooldown;
    uint32_t renotifyInterval = m_renotifyInterval;
-   if (!json_object_update_integer(config, "interval", &interval) ||
+   if (!UpdateIntegerAttribute(config, "interval", &interval) ||
        !json_object_update_integer(config, "objectId", &objectId) ||
-       !json_object_update_integer(config, "cooldown", &cooldown) ||
-       !json_object_update_integer(config, "renotifyInterval", &renotifyInterval))
+       !UpdateIntegerAttribute(config, "cooldown", &cooldown) ||
+       !UpdateIntegerAttribute(config, "renotifyInterval", &renotifyInterval))
    {
-      SetErrorText(errorText, L"interval, objectId, cooldown, and renotifyInterval must be integers");
+      SetErrorText(errorText, L"interval, objectId, cooldown, and renotifyInterval must be non-negative 32 bit integers");
       return RCC_INVALID_ARGUMENT;
    }
    if (interval < 30)
@@ -1791,8 +1806,9 @@ uint32_t AIOperatorInstance::createCheck(json_t *config, bool byModel, uint32_t 
    if (rcc != RCC_SUCCESS)
       return rcc;
 
+   if (!check->saveToDatabase())
+      return RCC_DB_FAILURE;
    m_checks.add(check);
-   check->saveToDatabase();
    ConfigWriteInt(L"AIOperator.LastCheckId", s_checkId, true, false, true);
 
    nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\": standing check [%u] \"%s\" created by %s", m_id, m_name,
@@ -1817,7 +1833,8 @@ uint32_t AIOperatorInstance::modifyCheck(uint32_t checkId, json_t *config, bool 
    if (rcc != RCC_SUCCESS)
       return rcc;
 
-   check->saveToDatabase();
+   if (!check->saveToDatabase())
+      return RCC_DB_FAILURE;
    nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\": standing check [%u] \"%s\" modified by %s", m_id, m_name,
       check->getId(), check->getName(), byModel ? L"model" : L"user");
    return RCC_SUCCESS;
@@ -2283,6 +2300,8 @@ static std::string CheckRccToMessage(uint32_t rcc, const String& errorText)
          return std::string("Error: check with given ID does not exist in this instance");
       case RCC_ACCESS_DENIED:
          return std::string("Error: check is locked by administrator and cannot be modified or deleted");
+      case RCC_DB_FAILURE:
+         return std::string("Error: cannot save check to database");
       case RCC_RESOURCE_NOT_AVAILABLE:
          message = "Error: ";
          break;

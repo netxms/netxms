@@ -67,7 +67,10 @@ int H_AiOperators(Context *context)
 int H_AiOperatorCreate(Context *context)
 {
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on changing AI operator instance");
       return 403;
+   }
 
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
@@ -119,7 +122,10 @@ int H_AiOperatorDetails(Context *context)
 int H_AiOperatorUpdate(Context *context)
 {
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on changing AI operator instance");
       return 403;
+   }
 
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
@@ -153,7 +159,10 @@ int H_AiOperatorUpdate(Context *context)
 int H_AiOperatorDelete(Context *context)
 {
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting AI operator instance [%u]", context->getPlaceholderValueAsUInt32(L"operator-id"));
       return 403;
+   }
 
    uint32_t instanceId = context->getPlaceholderValueAsUInt32(L"operator-id");
    uint32_t rcc = DeleteAIOperatorInstance(instanceId);
@@ -170,7 +179,10 @@ int H_AiOperatorDelete(Context *context)
 int H_AiOperatorResetMemento(Context *context)
 {
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on resetting AI operator instance [%u]", context->getPlaceholderValueAsUInt32(L"operator-id"));
       return 403;
+   }
 
    uint32_t instanceId = context->getPlaceholderValueAsUInt32(L"operator-id");
    uint32_t rcc = ResetAIOperatorInstanceMemento(instanceId);
@@ -247,7 +259,10 @@ int H_AiOperatorChecks(Context *context)
 int H_AiOperatorCheckCreate(Context *context)
 {
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on changing standing check of AI operator instance [%u]", context->getPlaceholderValueAsUInt32(L"operator-id"));
       return 403;
+   }
 
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
@@ -301,7 +316,10 @@ int H_AiOperatorCheckDetails(Context *context)
 int H_AiOperatorCheckUpdate(Context *context)
 {
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on changing standing check of AI operator instance [%u]", context->getPlaceholderValueAsUInt32(L"operator-id"));
       return 403;
+   }
 
    json_t *request = context->getRequestDocument();
    if (request == nullptr)
@@ -337,7 +355,10 @@ int H_AiOperatorCheckUpdate(Context *context)
 int H_AiOperatorCheckDelete(Context *context)
 {
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
+   {
+      context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting standing check [%u] of AI operator instance [%u]", context->getPlaceholderValueAsUInt32(L"check-id"), context->getPlaceholderValueAsUInt32(L"operator-id"));
       return 403;
+   }
 
    uint32_t instanceId = context->getPlaceholderValueAsUInt32(L"operator-id");
    uint32_t checkId = context->getPlaceholderValueAsUInt32(L"check-id");

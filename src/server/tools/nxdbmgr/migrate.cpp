@@ -180,6 +180,8 @@ static COLUMN_IDENTIFIER s_integerFixColumns[] =
  */
 static COLUMN_IDENTIFIER s_timestampColumns[] =
 {
+   { L"ai_operator_execution_log", "execution_timestamp" },
+   { L"ai_operator_observations", "observation_timestamp" },
    { L"ai_task_execution_log", "execution_timestamp" },
    { L"asset_change_log", "operation_timestamp" },
    { L"certificate_action_log", "operation_timestamp" },

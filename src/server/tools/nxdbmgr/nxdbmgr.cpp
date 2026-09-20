@@ -460,6 +460,8 @@ static void AddLogToList(const char *logname, StringList *tableList)
    }
    else if (!stricmp(logname, "all"))
    {
+      tableList->add(_T("ai_operator_execution_log"));
+      tableList->add(_T("ai_operator_observations"));
       tableList->add(_T("ai_task_execution_log"));
       tableList->add(_T("alarms"));
       tableList->add(_T("alarm_events"));
@@ -529,6 +531,8 @@ static void AddLogToList(const char *logname, StringList *tableList)
    }
    else if (!stricmp(logname, "ai"))
    {
+      tableList->add(_T("ai_operator_execution_log"));
+      tableList->add(_T("ai_operator_observations"));
       tableList->add(_T("ai_task_execution_log"));
    }
    else if (!stricmp(logname, "deployment"))

@@ -407,9 +407,7 @@ public class AiOperatorManager extends ConfigurationView
          {
             for(Object o : objects)
             {
-               AiOperator operator = (AiOperator)o;
-               operator.setEnabled(enabled);
-               session.modifyAiOperator(operator);
+               session.setAiOperatorEnabled(((AiOperator)o).getId(), enabled);
             }
             runInUIThread(() -> refresh());
          }

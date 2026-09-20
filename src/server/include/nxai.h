@@ -317,7 +317,7 @@ public:
 
    uint32_t modifyFromJSON(json_t *config, bool byModel, MutableString *errorText);
 
-   void saveToDatabase() const;
+   bool saveToDatabase() const;
    void deleteFromDatabase();
 
    json_t *toJson() const;
@@ -381,7 +381,7 @@ private:
    void handleFailure(const char *error, time_t now);
    void logExecution(wchar_t status, uint32_t durationMs, int64_t inputTokens, int64_t outputTokens, const wchar_t *explanation);
    void clearExecutingState();
-   void saveToDatabase() const;   // must be called with instance lock held
+   bool saveToDatabase() const;   // must be called with instance lock held
    size_t setInstructions(const char *text, time_t now);  // must be called with instance lock held; returns number of characters kept if text was truncated, 0 otherwise
    int findCheckIndex(uint32_t checkId) const;   // must be called with instance lock held
    void appendChecksToPrompt(std::string& prompt) const;   // must be called with instance lock held

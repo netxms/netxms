@@ -17703,6 +17703,23 @@ public class NXCSession
    }
 
    /**
+    * Enable or disable AI operator instance without changing any other configuration attribute.
+    *
+    * @param operatorId instance ID
+    * @param enabled true to enable instance
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void setAiOperatorEnabled(int operatorId, boolean enabled) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_AI_OPERATOR);
+      msg.setFieldUInt32(NXCPCodes.VID_AI_OPERATOR_ID, operatorId);
+      msg.setField(NXCPCodes.VID_ENABLED, enabled);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Delete AI operator instance (also deletes its observations, standing checks, and instructions history).
     *
     * @param operatorId instance ID

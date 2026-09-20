@@ -50,6 +50,7 @@ public class AiOperator
    private int observationMaxRecords;
    private String instructions;
    private boolean instructionsLocked;
+   private boolean instructionsModified;
    private Date lastExecutionTime;
    private Date nextExecutionTime;
    private int iteration;
@@ -85,6 +86,7 @@ public class AiOperator
       observationMaxRecords = 0;
       instructions = "";
       instructionsLocked = false;
+      instructionsModified = false;
       lastExecutionTime = null;
       nextExecutionTime = null;
       iteration = 0;
@@ -129,10 +131,13 @@ public class AiOperator
       modificationTime = msg.getFieldAsDate(baseId + 24);
       instructions = msg.getFieldAsString(baseId + 25);
       instructionsLocked = msg.getFieldAsBoolean(baseId + 26);
+      instructionsModified = false;
    }
 
    /**
-    * Fill NXCP message with configuration data for create/modify request.
+    * Fill NXCP message with configuration data for create/modify request. Standing instructions are written by the operator
+    * itself between client refreshes, so they are sent only if explicitly changed via setInstructions() - server keeps
+    * current text when the field is absent.
     *
     * @param msg NXCP message
     */
@@ -150,7 +155,8 @@ public class AiOperator
       msg.setField(NXCPCodes.VID_PROMPT, personaPrompt);
       msg.setFieldInt32(NXCPCodes.VID_RETENTION_TIME, observationRetentionDays);
       msg.setFieldInt32(NXCPCodes.VID_MAX_RECORDS, observationMaxRecords);
-      msg.setField(NXCPCodes.VID_INSTRUCTIONS, instructions);
+      if (instructionsModified)
+         msg.setField(NXCPCodes.VID_INSTRUCTIONS, instructions);
       msg.setField(NXCPCodes.VID_LOCKED, instructionsLocked);
    }
 
@@ -451,11 +457,13 @@ public class AiOperator
    }
 
    /**
-    * @param instructions standing instructions to set (empty string clears)
+    * @param instructions standing instructions to set (empty string clears); marks instructions as changed so that
+    *           they will be sent to the server on next modify request
     */
    public void setInstructions(String instructions)
    {
       this.instructions = instructions;
+      instructionsModified = true;
    }
 
    /**

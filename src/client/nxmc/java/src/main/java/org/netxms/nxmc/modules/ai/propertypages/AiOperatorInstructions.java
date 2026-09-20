@@ -68,6 +68,7 @@ public class AiOperatorInstructions extends PropertyPage
    private NXCSession session = Registry.getSession();
    private LabeledText textInstructions;
    private Button checkLocked;
+   private boolean instructionsModified = false;
    private SortableTableViewer historyViewer;
    private Button buttonRestore;
 
@@ -100,6 +101,7 @@ public class AiOperatorInstructions extends PropertyPage
       textInstructions = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.WRAP);
       textInstructions.setLabel(i18n.tr("Standing instructions (written by the operator itself; injected after the persona prompt)"));
       textInstructions.setText(operator.getInstructions());
+      textInstructions.getTextControl().addModifyListener((e) -> instructionsModified = true);
       GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
       gd.heightHint = 150;
       gd.widthHint = 500;
@@ -237,7 +239,8 @@ public class AiOperatorInstructions extends PropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
    {
-      operator.setInstructions(textInstructions.getText().trim());
+      if (instructionsModified)
+         operator.setInstructions(textInstructions.getText().trim());
       operator.setInstructionsLocked(checkLocked.getSelection());
       return true;
    }
