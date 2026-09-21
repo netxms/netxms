@@ -777,7 +777,12 @@ uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t own
    shared_ptr<AIOperatorInstance> instance = make_shared<AIOperatorInstance>(wname, ownerUserId);
    uint32_t rcc = instance->modifyFromJSON(config);
    if (rcc != RCC_SUCCESS)
+   {
+      // Instructions history record could be written before instance record save failed
+      if (rcc == RCC_DB_FAILURE)
+         instance->deleteFromDatabase();
       return rcc;
+   }
 
    // New instances are enabled by default unless explicitly created as disabled
    if (json_object_get(config, "enabled") == nullptr)
