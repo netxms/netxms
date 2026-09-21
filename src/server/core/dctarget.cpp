@@ -2675,7 +2675,7 @@ static bool ContainerSelectionFilter(NetObj *object, void *context)
    if (object->getObjectClass() == OBJECT_CONTAINER)
       return static_cast<Container*>(object)->isAutoBindEnabled();
    if ((object->getObjectClass() == OBJECT_COLLECTOR) || (object->getObjectClass() == OBJECT_FACILITY) ||
-       (object->getObjectClass() == OBJECT_POWERDOMAIN) || (object->getObjectClass() == OBJECT_COOLINGZONE))
+       (object->getObjectClass() == OBJECT_POWERDOMAIN) || (object->getObjectClass() == OBJECT_COOLINGZONE) || (object->getObjectClass() == OBJECT_ROOM))
       return static_cast<DataCollectionContainer*>(object)->isAutoBindEnabled();
    return false;
 }

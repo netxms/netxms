@@ -5807,21 +5807,23 @@ static int CreateCoolingZoneImpl(NXSL_Object *object, int argc, NXSL_Value **arg
 
 /**
  * Create rack object - common method implementation
- * Arguments: name, [height]
+ * Arguments: name, [height], [width], [depth]
  */
 static int CreateRackImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if ((argc < 1) || (argc > 2))
+   if ((argc < 1) || (argc > 4))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   if ((argc > 1) && !argv[1]->isInteger())
-      return NXSL_ERR_NOT_INTEGER;
+   for(int i = 1; i < argc; i++)
+      if (!argv[i]->isInteger())
+         return NXSL_ERR_NOT_INTEGER;
 
    shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
-   shared_ptr<Rack> rack = make_shared<Rack>(argv[0]->getValueAsCString(), (argc > 1) ? argv[1]->getValueAsInt32() : 0);
+   shared_ptr<Rack> rack = make_shared<Rack>(argv[0]->getValueAsCString(), (argc > 1) ? argv[1]->getValueAsInt32() : 0,
+      (argc > 2) ? argv[2]->getValueAsInt32() : 0, (argc > 3) ? argv[3]->getValueAsInt32() : 0);
    NetObjInsert(rack, true, false);
    if (!NetObj::linkObjects(thisObject, rack))
    {
@@ -5837,6 +5839,45 @@ static int CreateRackImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL
    return NXSL_ERR_SUCCESS;
 }
 
+
+/**
+ * Create room object - common method implementation
+ * Arguments: name, [roomType], [width], [depth], [height]
+ */
+static int CreateRoomImpl(NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 5))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   for(int i = 1; i < argc; i++)
+      if (!argv[i]->isInteger())
+         return NXSL_ERR_NOT_INTEGER;
+
+   static const char *tags[] = { "roomType", "width", "depth", "height" };
+   json_t *json = json_object();
+   for(int i = 1; i < argc; i++)
+      json_object_set_new(json, tags[i - 1], json_integer(argv[i]->getValueAsInt32()));
+
+   shared_ptr<NetObj> thisObject = *static_cast<shared_ptr<NetObj>*>(object->getData());
+   shared_ptr<Room> room = make_shared<Room>(argv[0]->getValueAsCString(), json);
+   json_decref(json);
+   NetObjInsert(room, true, false);
+   if (!NetObj::linkObjects(thisObject, room))
+   {
+      room->deleteObject();
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+   room->publish();
+
+   vm->writeAuditLog(AUDIT_OBJECTS, true, room->getId(), L"%s %s [%u] created under %s %s [%u] by script",
+      room->getObjectClassName(), room->getName(), room->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
+   *result = room->createNXSLObject(vm);
+   return NXSL_ERR_SUCCESS;
+}
 /**
  * Create node object - common method implementation
  */
@@ -5985,6 +6026,16 @@ NXSL_METHOD_DEFINITION(Container, createRack)
 }
 
 /**
+ * Container::createRoom() method
+ */
+NXSL_METHOD_DEFINITION(Container, createRoom)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRoomImpl(object, argc, argv, result, vm);
+}
+
+/**
  * Container::createSensor() method
  */
 NXSL_METHOD_DEFINITION(Container, createSensor)
@@ -6042,6 +6093,7 @@ NXSL_ContainerClass::NXSL_ContainerClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(Container, createFacility, 1);
    NXSL_REGISTER_METHOD(Container, createNode, -1);
    NXSL_REGISTER_METHOD(Container, createRack, -1);
+   NXSL_REGISTER_METHOD(Container, createRoom, -1);
    NXSL_REGISTER_METHOD(Container, createSensor, -1);
    NXSL_REGISTER_METHOD(Container, setAutoBindMode, 2);
    NXSL_REGISTER_METHOD(Container, setAutoBindScript, 1);
@@ -6122,6 +6174,16 @@ NXSL_METHOD_DEFINITION(Collector, createRack)
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
    { *result = vm->createValue(); return 0; }
    return CreateRackImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Collector::createRoom() method
+ */
+NXSL_METHOD_DEFINITION(Collector, createRoom)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRoomImpl(object, argc, argv, result, vm);
 }
 
 /**
@@ -6221,6 +6283,7 @@ NXSL_CollectorClass::NXSL_CollectorClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Collector, createFacility, 1);
    NXSL_REGISTER_METHOD(Collector, createNode, -1);
    NXSL_REGISTER_METHOD(Collector, createRack, -1);
+   NXSL_REGISTER_METHOD(Collector, createRoom, -1);
    NXSL_REGISTER_METHOD(Collector, createSensor, -1);
    NXSL_REGISTER_METHOD(Collector, setAutoBindMode, 2);
    NXSL_REGISTER_METHOD(Collector, setAutoBindScript, 1);
@@ -6288,6 +6351,16 @@ NXSL_METHOD_DEFINITION(Facility, createRack)
 }
 
 /**
+ * Facility::createRoom() method
+ */
+NXSL_METHOD_DEFINITION(Facility, createRoom)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRoomImpl(object, argc, argv, result, vm);
+}
+
+/**
  * Facility::createSensor() method
  */
 NXSL_METHOD_DEFINITION(Facility, createSensor)
@@ -6325,6 +6398,7 @@ NXSL_FacilityClass::NXSL_FacilityClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Facility, createNode, -1);
    NXSL_REGISTER_METHOD(Facility, createPowerDomain, -1);
    NXSL_REGISTER_METHOD(Facility, createRack, -1);
+   NXSL_REGISTER_METHOD(Facility, createRoom, -1);
    NXSL_REGISTER_METHOD(Facility, createSensor, -1);
    NXSL_REGISTER_METHOD(Facility, setAutoBindMode, 2);
    NXSL_REGISTER_METHOD(Facility, setAutoBindScript, 1);
@@ -6606,6 +6680,138 @@ NXSL_Value *NXSL_CircuitClass::getAttr(NXSL_Object *object, const NXSL_Identifie
 }
 
 /**
+ * Room::createNode() method
+ */
+NXSL_METHOD_DEFINITION(Room, createNode)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateNodeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Room::createRack() method
+ */
+NXSL_METHOD_DEFINITION(Room, createRack)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRackImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Room::createSensor() method
+ */
+NXSL_METHOD_DEFINITION(Room, createSensor)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateSensorImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Room::setAutoBindMode() method
+ */
+NXSL_METHOD_DEFINITION(Room, setAutoBindMode)
+{
+   return SetAutoBindModeImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * Room::setAutoBindScript() method
+ */
+NXSL_METHOD_DEFINITION(Room, setAutoBindScript)
+{
+   return SetAutoBindScriptImpl(object, argc, argv, result, vm);
+}
+
+/**
+ * NXSL class "Room" constructor
+ */
+NXSL_RoomClass::NXSL_RoomClass() : NXSL_DCTargetClass()
+{
+   setName(_T("Room"));
+
+   NXSL_REGISTER_METHOD(Room, createNode, -1);
+   NXSL_REGISTER_METHOD(Room, createRack, -1);
+   NXSL_REGISTER_METHOD(Room, createSensor, -1);
+   NXSL_REGISTER_METHOD(Room, setAutoBindMode, 2);
+   NXSL_REGISTER_METHOD(Room, setAutoBindScript, 1);
+}
+
+/**
+ * NXSL class "Room" attributes
+ */
+NXSL_Value *NXSL_RoomClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_DCTargetClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto room = SharedObjectFromData<Room>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("area"))
+   {
+      value = vm->createValue(room->getArea());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("backgroundImage"))
+   {
+      uuid image = room->getBackgroundImage();
+      value = image.isNull() ? vm->createValue() : vm->createValue(image.toString());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("gridLabels"))
+   {
+      value = vm->createValue(static_cast<int32_t>(room->getGridLabels()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("gridLabelsName"))
+   {
+      value = vm->createValue(RoomGridLabelsName(room->getGridLabels()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("gridOriginX"))
+   {
+      value = vm->createValue(room->getGridOriginX());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("gridOriginY"))
+   {
+      value = vm->createValue(room->getGridOriginY());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("gridTileSize"))
+   {
+      value = vm->createValue(room->getGridTileSize());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("height"))
+   {
+      value = vm->createValue(room->getHeight());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("outline"))
+   {
+      StructArray<RoomPoint> outline = room->getOutline();
+      NXSL_Array *points = new NXSL_Array(vm);
+      for(int i = 0; i < outline.size(); i++)
+      {
+         NXSL_HashMap *point = new NXSL_HashMap(vm);
+         point->set(L"x", vm->createValue(outline.get(i)->x));
+         point->set(L"y", vm->createValue(outline.get(i)->y));
+         points->append(vm->createValue(point));
+      }
+      value = vm->createValue(points);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("roomType"))
+   {
+      value = vm->createValue(static_cast<int32_t>(room->getRoomType()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("roomTypeName"))
+   {
+      value = vm->createValue(RoomTypeName(room->getRoomType()));
+   }
+   else
+   {
+      value = getAutoBindAttr(vm, *room, attr);
+   }
+   return value;
+}
+
+/**
  * NXSL class "Rack" constructor
  */
 NXSL_RackClass::NXSL_RackClass() : NXSL_DCTargetClass()
@@ -6624,13 +6830,43 @@ NXSL_Value *NXSL_RackClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
 
    NXSL_VM *vm = object->vm();
    auto rack = SharedObjectFromData<Rack>(object);
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("height"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("depth"))
+   {
+      value = vm->createValue(rack->getDepth());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("height"))
    {
       value = vm->createValue(rack->getHeight());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPlacedInRoom"))
+   {
+      value = vm->createValue(rack->isPlacedInRoom());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("room"))
+   {
+      unique_ptr<SharedObjectArray<NetObj>> rooms = rack->getParents(OBJECT_ROOM);
+      NetObj *room = rooms->isEmpty() ? nullptr : rooms->get(0);
+      value = ((room != nullptr) && vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, room)) ? room->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("roomRotation"))
+   {
+      value = vm->createValue(rack->getRoomRotation());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("roomX"))
+   {
+      value = vm->createValue(rack->getRoomX());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("roomY"))
+   {
+      value = vm->createValue(rack->getRoomY());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("topBottomNumbering"))
    {
       value = vm->createValue(rack->isTopBottomNumbering());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("width"))
+   {
+      value = vm->createValue(rack->getWidth());
    }
    return value;
 }
@@ -6686,6 +6922,16 @@ NXSL_METHOD_DEFINITION(ServiceRoot, createRack)
 }
 
 /**
+ * ServiceRoot::createRoom() method
+ */
+NXSL_METHOD_DEFINITION(ServiceRoot, createRoom)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   { *result = vm->createValue(); return 0; }
+   return CreateRoomImpl(object, argc, argv, result, vm);
+}
+
+/**
  * ServiceRoot::createSensor() method
  */
 NXSL_METHOD_DEFINITION(ServiceRoot, createSensor)
@@ -6707,6 +6953,7 @@ NXSL_ServiceRootClass::NXSL_ServiceRootClass() : NXSL_NetObjClass()
    NXSL_REGISTER_METHOD(ServiceRoot, createFacility, 1);
    NXSL_REGISTER_METHOD(ServiceRoot, createNode, -1);
    NXSL_REGISTER_METHOD(ServiceRoot, createRack, -1);
+   NXSL_REGISTER_METHOD(ServiceRoot, createRoom, -1);
    NXSL_REGISTER_METHOD(ServiceRoot, createSensor, -1);
 }
 
@@ -11669,6 +11916,7 @@ NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 NXSL_PowerDomainClass g_nxslPowerDomainClass;
 NXSL_RackClass g_nxslRackClass;
+NXSL_RoomClass g_nxslRoomClass;
 NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
 NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 NXSL_SensorClass g_nxslSensorClass;

@@ -37,9 +37,15 @@ import org.netxms.client.objects.interfaces.PollingTarget;
 public class Rack extends DataCollectionTarget implements PollingTarget
 {
    public final static int FRONT_SIDE_ONLY = 0x00010000;
+   public final static int PLACED_IN_ROOM = 0x00020000;
 
 	private int height;
 	private boolean topBottomNumbering;
+   private int width;
+   private int depth;
+   private int roomX;
+   private int roomY;
+   private int roomRotation;
    private List<PassiveRackElement> passiveElements;
 
 	/**
@@ -53,6 +59,11 @@ public class Rack extends DataCollectionTarget implements PollingTarget
 		super(msg, session);
 		height = msg.getFieldAsInt32(NXCPCodes.VID_HEIGHT);
 		topBottomNumbering = msg.getFieldAsBoolean(NXCPCodes.VID_TOP_BOTTOM);
+      width = msg.getFieldAsInt32(NXCPCodes.VID_WIDTH);
+      depth = msg.getFieldAsInt32(NXCPCodes.VID_DEPTH);
+      roomX = msg.getFieldAsInt32(NXCPCodes.VID_ROOM_X);
+      roomY = msg.getFieldAsInt32(NXCPCodes.VID_ROOM_Y);
+      roomRotation = msg.getFieldAsInt32(NXCPCodes.VID_ROTATION);
 		passiveElements = new ArrayList<PassiveRackElement>();
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
@@ -152,6 +163,66 @@ public class Rack extends DataCollectionTarget implements PollingTarget
             return e;
       return null;
 	}
+
+   /**
+    * Get external cabinet width.
+    *
+    * @return external cabinet width in millimetres
+    */
+   public int getWidth()
+   {
+      return width;
+   }
+
+   /**
+    * Get external cabinet depth.
+    *
+    * @return external cabinet depth in millimetres
+    */
+   public int getDepth()
+   {
+      return depth;
+   }
+
+   /**
+    * Get X coordinate of rack footprint reference corner on room floor plan. Only meaningful if rack is placed in room.
+    *
+    * @return X coordinate in room coordinates, millimetres
+    */
+   public int getRoomX()
+   {
+      return roomX;
+   }
+
+   /**
+    * Get Y coordinate of rack footprint reference corner on room floor plan. Only meaningful if rack is placed in room.
+    *
+    * @return Y coordinate in room coordinates, millimetres
+    */
+   public int getRoomY()
+   {
+      return roomY;
+   }
+
+   /**
+    * Get rotation of rack on room floor plan (front direction). Only meaningful if rack is placed in room.
+    *
+    * @return rotation in degrees (0..359)
+    */
+   public int getRoomRotation()
+   {
+      return roomRotation;
+   }
+
+   /**
+    * Check if this rack was positioned on floor plan of its room. Server clears this flag when rack is removed from the room.
+    *
+    * @return true if rack was positioned on room floor plan
+    */
+   public boolean isPlacedInRoom()
+   {
+      return (flags & PLACED_IN_ROOM) != 0;
+   }
 
    /**
     * Check if "front side only" flag is set for this rack.

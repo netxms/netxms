@@ -41,6 +41,8 @@ import org.netxms.client.constants.GeoLocationControlMode;
 import org.netxms.client.constants.IcmpStatCollectionMode;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RackOrientation;
+import org.netxms.client.constants.RoomGridLabels;
+import org.netxms.client.constants.RoomType;
 import org.netxms.client.constants.CoolingZoneType;
 import org.netxms.client.constants.PowerDomainType;
 import org.netxms.client.constants.SensorDeviceClass;
@@ -55,6 +57,8 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
+import org.netxms.client.objects.configs.RoomPassiveElement;
+import org.netxms.client.objects.configs.RoomPoint;
 import org.netxms.client.snmp.SnmpAgentConfiguration;
 import org.netxms.client.snmp.SnmpVersion;
 import org.netxms.client.users.ResponsibleUser;
@@ -242,6 +246,23 @@ public class NXCObjectModificationData
    private Integer ratedPower;
    private CoolingZoneType zoneType;
    private Integer ratedCapacity;
+   private Integer width;
+   private Integer depth;
+   private Integer roomX;
+   private Integer roomY;
+   private Integer roomRotation;
+   private RoomType roomType;
+   private List<RoomPoint> roomOutline;
+   private Integer roomHeight;
+   private Integer gridOriginX;
+   private Integer gridOriginY;
+   private Integer gridTileSize;
+   private RoomGridLabels gridLabels;
+   private UUID roomBackgroundImage;
+   private Integer roomBackgroundScale;
+   private Integer roomBackgroundX;
+   private Integer roomBackgroundY;
+   private List<RoomPassiveElement> roomPassiveElements;
 
    /**
     * Constructor for creating modification data for given object
@@ -3141,5 +3162,277 @@ public class NXCObjectModificationData
    public void setRatedCapacity(int ratedCapacity)
    {
       this.ratedCapacity = ratedCapacity;
+   }
+
+   /**
+    * @return rack footprint width in millimetres
+    */
+   public Integer getWidth()
+   {
+      return width;
+   }
+
+   /**
+    * @param width rack footprint width in millimetres
+    */
+   public void setWidth(int width)
+   {
+      this.width = width;
+   }
+
+   /**
+    * @return rack footprint depth in millimetres
+    */
+   public Integer getDepth()
+   {
+      return depth;
+   }
+
+   /**
+    * @param depth rack footprint depth in millimetres
+    */
+   public void setDepth(int depth)
+   {
+      this.depth = depth;
+   }
+
+   /**
+    * @return X coordinate of rack on room floor plan in millimetres
+    */
+   public Integer getRoomX()
+   {
+      return roomX;
+   }
+
+   /**
+    * @param roomX X coordinate of rack on room floor plan in millimetres
+    */
+   public void setRoomX(int roomX)
+   {
+      this.roomX = roomX;
+   }
+
+   /**
+    * @return Y coordinate of rack on room floor plan in millimetres
+    */
+   public Integer getRoomY()
+   {
+      return roomY;
+   }
+
+   /**
+    * @param roomY Y coordinate of rack on room floor plan in millimetres
+    */
+   public void setRoomY(int roomY)
+   {
+      this.roomY = roomY;
+   }
+
+   /**
+    * @return rotation of rack on room floor plan in degrees
+    */
+   public Integer getRoomRotation()
+   {
+      return roomRotation;
+   }
+
+   /**
+    * @param roomRotation rotation of rack on room floor plan in degrees
+    */
+   public void setRoomRotation(int roomRotation)
+   {
+      this.roomRotation = roomRotation;
+   }
+
+   /**
+    * @return room type
+    */
+   public RoomType getRoomType()
+   {
+      return roomType;
+   }
+
+   /**
+    * @param roomType room type
+    */
+   public void setRoomType(RoomType roomType)
+   {
+      this.roomType = roomType;
+   }
+
+   /**
+    * @return room outline
+    */
+   public List<RoomPoint> getRoomOutline()
+   {
+      return roomOutline;
+   }
+
+   /**
+    * @param roomOutline room outline
+    */
+   public void setRoomOutline(List<RoomPoint> roomOutline)
+   {
+      this.roomOutline = roomOutline;
+   }
+
+   /**
+    * @return room height in millimetres
+    */
+   public Integer getRoomHeight()
+   {
+      return roomHeight;
+   }
+
+   /**
+    * @param roomHeight room height in millimetres
+    */
+   public void setRoomHeight(int roomHeight)
+   {
+      this.roomHeight = roomHeight;
+   }
+
+   /**
+    * @return X coordinate of floor tile grid origin
+    */
+   public Integer getGridOriginX()
+   {
+      return gridOriginX;
+   }
+
+   /**
+    * @param gridOriginX X coordinate of floor tile grid origin
+    */
+   public void setGridOriginX(int gridOriginX)
+   {
+      this.gridOriginX = gridOriginX;
+   }
+
+   /**
+    * @return Y coordinate of floor tile grid origin
+    */
+   public Integer getGridOriginY()
+   {
+      return gridOriginY;
+   }
+
+   /**
+    * @param gridOriginY Y coordinate of floor tile grid origin
+    */
+   public void setGridOriginY(int gridOriginY)
+   {
+      this.gridOriginY = gridOriginY;
+   }
+
+   /**
+    * @return floor tile size in millimetres (0 to disable grid)
+    */
+   public Integer getGridTileSize()
+   {
+      return gridTileSize;
+   }
+
+   /**
+    * @param gridTileSize floor tile size in millimetres (0 to disable grid)
+    */
+   public void setGridTileSize(int gridTileSize)
+   {
+      this.gridTileSize = gridTileSize;
+   }
+
+   /**
+    * @return floor tile label scheme
+    */
+   public RoomGridLabels getGridLabels()
+   {
+      return gridLabels;
+   }
+
+   /**
+    * @param gridLabels floor tile label scheme
+    */
+   public void setGridLabels(RoomGridLabels gridLabels)
+   {
+      this.gridLabels = gridLabels;
+   }
+
+   /**
+    * @return image library UUID of floor plan backdrop (NXCommon.EMPTY_GUID to clear)
+    */
+   public UUID getRoomBackgroundImage()
+   {
+      return roomBackgroundImage;
+   }
+
+   /**
+    * @param roomBackgroundImage image library UUID of floor plan backdrop (NXCommon.EMPTY_GUID to clear)
+    */
+   public void setRoomBackgroundImage(UUID roomBackgroundImage)
+   {
+      this.roomBackgroundImage = roomBackgroundImage;
+   }
+
+   /**
+    * @return backdrop scale in micrometres per pixel
+    */
+   public Integer getRoomBackgroundScale()
+   {
+      return roomBackgroundScale;
+   }
+
+   /**
+    * @param roomBackgroundScale backdrop scale in micrometres per pixel
+    */
+   public void setRoomBackgroundScale(int roomBackgroundScale)
+   {
+      this.roomBackgroundScale = roomBackgroundScale;
+   }
+
+   /**
+    * @return X offset of the backdrop in room coordinates
+    */
+   public Integer getRoomBackgroundX()
+   {
+      return roomBackgroundX;
+   }
+
+   /**
+    * @param roomBackgroundX X offset of the backdrop in room coordinates
+    */
+   public void setRoomBackgroundX(int roomBackgroundX)
+   {
+      this.roomBackgroundX = roomBackgroundX;
+   }
+
+   /**
+    * @return Y offset of the backdrop in room coordinates
+    */
+   public Integer getRoomBackgroundY()
+   {
+      return roomBackgroundY;
+   }
+
+   /**
+    * @param roomBackgroundY Y offset of the backdrop in room coordinates
+    */
+   public void setRoomBackgroundY(int roomBackgroundY)
+   {
+      this.roomBackgroundY = roomBackgroundY;
+   }
+
+   /**
+    * @return room passive elements
+    */
+   public List<RoomPassiveElement> getRoomPassiveElements()
+   {
+      return roomPassiveElements;
+   }
+
+   /**
+    * @param roomPassiveElements room passive elements
+    */
+   public void setRoomPassiveElements(List<RoomPassiveElement> roomPassiveElements)
+   {
+      this.roomPassiveElements = roomPassiveElements;
    }
 }

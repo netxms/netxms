@@ -42,10 +42,14 @@ public class CreateRackDialog extends Dialog
 	private LabeledText nameField;
    private LabeledText aliasField;
    private LabeledSpinner heightField;
+   private LabeledSpinner widthField;
+   private LabeledSpinner depthField;
 
 	private String name;
    private String alias;
    private int height;
+   private int width;
+   private int depth;
 
 	/**
 	 * @param parentShell
@@ -104,6 +108,22 @@ public class CreateRackDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
       heightField.setLayoutData(gd);
 
+      widthField = new LabeledSpinner(dialogArea, SWT.NONE);
+      widthField.setLabel(i18n.tr("Cabinet width (mm)"));
+      widthField.setRange(100, 5000);
+      widthField.setSelection(600);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      widthField.setLayoutData(gd);
+
+      depthField = new LabeledSpinner(dialogArea, SWT.NONE);
+      depthField.setLabel(i18n.tr("Cabinet depth (mm)"));
+      depthField.setRange(100, 5000);
+      depthField.setSelection(1000);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      depthField.setLayoutData(gd);
+
 		return dialogArea;
 	}
 
@@ -116,6 +136,8 @@ public class CreateRackDialog extends Dialog
 		name = nameField.getText().trim();
       alias = aliasField.getText().trim();
       height = heightField.getSelection();
+      width = widthField.getSelection();
+      depth = depthField.getSelection();
 		if (name.isEmpty())
 		{
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please provide non-empty object name"));
@@ -149,4 +171,24 @@ public class CreateRackDialog extends Dialog
 	{
       return height;
 	}
+
+   /**
+    * Get external cabinet width
+    *
+    * @return external cabinet width in millimetres
+    */
+   public int getWidth()
+   {
+      return width;
+   }
+
+   /**
+    * Get external cabinet depth
+    *
+    * @return external cabinet depth in millimetres
+    */
+   public int getDepth()
+   {
+      return depth;
+   }
 }

@@ -43,7 +43,7 @@ static const WCHAR *s_classNameW[]=
       L"WirelessDomain", L"Chassis", L"DashboardGroup",
       L"Sensor", L"CloudDomain", L"Resource",
       L"TrafficObserver", L"ObservationPoint", L"Facility",
-      L"PowerDomain", L"CoolingZone"
+      L"PowerDomain", L"CoolingZone", L"Room"
    };
 static const char *s_classNameA[]=
    {
@@ -60,7 +60,7 @@ static const char *s_classNameA[]=
       "WirelessDomain", "Chassis", "DashboardGroup",
       "Sensor", "CloudDomain", "Resource",
       "TrafficObserver", "ObservationPoint", "Facility",
-      "PowerDomain", "CoolingZone"
+      "PowerDomain", "CoolingZone", "Room"
    };
 
 /**
@@ -230,11 +230,19 @@ void NetObj::unlinkObjects(NetObj *parent, NetObj *child)
 {
    child->deleteParentReference(parent->m_id);
    parent->deleteChildReference(child->m_id);
+   child->onParentRemove(*parent);
    child->markAsModified(MODIFY_RELATIONS);
    parent->markAsModified(MODIFY_RELATIONS);
    child->clearInheritedAccessCache();
    child->notifyClientsOnAccessChange();
    nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 7, _T("NetObj::unlinkObjects: parent=%s [%u]; child=%s [%u]"), parent->m_name, parent->m_id, child->m_name, child->m_id);
+}
+
+/**
+ * Called on child object after link to given parent was removed by unlinkObjects()
+ */
+void NetObj::onParentRemove(const NetObj& parent)
+{
 }
 
 /**
@@ -4861,7 +4869,7 @@ void NetObj::getEffectivePortStopList(IntegerArray<uint16_t> *tcpPorts, IntegerA
       NetObj *parent = parents->get(i);
       int objClass = parent->getObjectClass();
       if ((objClass != OBJECT_CONTAINER) && (objClass != OBJECT_COLLECTOR) &&
-          (objClass != OBJECT_FACILITY) && (objClass != OBJECT_POWERDOMAIN) && (objClass != OBJECT_COOLINGZONE) &&
+          (objClass != OBJECT_FACILITY) && (objClass != OBJECT_POWERDOMAIN) && (objClass != OBJECT_COOLINGZONE) && (objClass != OBJECT_ROOM) &&
           (objClass != OBJECT_CLUSTER) && (objClass != OBJECT_SUBNET))
          continue;
       if (visited.contains(parent->getId()))

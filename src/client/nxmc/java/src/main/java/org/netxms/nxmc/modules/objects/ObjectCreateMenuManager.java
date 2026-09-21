@@ -48,6 +48,7 @@ import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.PowerDomain;
+import org.netxms.client.objects.Room;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
@@ -71,6 +72,7 @@ import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreatePowerDomainDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateRackDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateRoomDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateSensorDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateSubnetDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateTrafficObserverDialog;
@@ -113,6 +115,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateNode;
    private Action actionCreatePowerDomain;
    private Action actionCreateRack;
+   private Action actionCreateRoom;
    private Action actionCreateSensor;
    private Action actionCreateSubnet;
    private Action actionCreateTemplate;
@@ -146,7 +149,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCircuit, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCloudDomain, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
-      addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || ((o instanceof DataCollectionContainer) && !(o instanceof Room)) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCondition, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCollector, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof ServiceRoot));
       addAction(this, actionCreateContainer, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof Facility) || (o instanceof ServiceRoot));
@@ -163,6 +166,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
       addAction(this, actionCreatePowerDomain, (AbstractObject o) -> (o instanceof Facility) || (o instanceof PowerDomain));
       addAction(this, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateRoom, (AbstractObject o) -> (o instanceof Container) || (o instanceof Collector) || (o instanceof Facility) || (o instanceof ServiceRoot));
       addAction(this, actionCreateSensor, (AbstractObject o) -> (o instanceof Container) || (o instanceof DataCollectionContainer) || (o instanceof ServiceRoot));
       addAction(this, actionCreateSubnet, (AbstractObject o) -> (o instanceof Zone) || ((o instanceof EntireNetwork) && !Registry.getSession().isZoningEnabled()));
       addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
@@ -637,6 +641,8 @@ public class ObjectCreateMenuManager extends MenuManager
                   NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_RACK, dlg.getName(), parentId);
                   cd.setObjectAlias(dlg.getAlias());
                   cd.setHeight(dlg.getHeight());
+                  cd.setWidth(dlg.getWidth());
+                  cd.setDepth(dlg.getDepth());
                   session.createObject(cd);
                }
 
@@ -644,6 +650,40 @@ public class ObjectCreateMenuManager extends MenuManager
                protected String getErrorMessage()
                {
                   return String.format(i18n.tr("Cannot create rack object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
+
+      actionCreateRoom = new Action(i18n.tr("R&oom...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateRoomDialog dlg = new CreateRoomDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating room"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_ROOM, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  cd.setRoomType(dlg.getRoomType());
+                  cd.setWidth(dlg.getWidth());
+                  cd.setDepth(dlg.getDepth());
+                  cd.setHeight(dlg.getHeight());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create room object %s"), dlg.getName());
                }
             }.start();
          }

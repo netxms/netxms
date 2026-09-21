@@ -514,6 +514,7 @@ static void CollectAllDCTargets(SharedObjectArray<NetObj> *objects)
    g_idxClusterById.getObjects(objects);
    g_idxCollectorById.getObjects(objects);
    g_idxCoolingZoneById.getObjects(objects);
+   g_idxRoomById.getObjects(objects);
    g_idxFacilityById.getObjects(objects);
    g_idxMobileDeviceById.getObjects(objects);
    g_idxNodeById.getObjects(objects);

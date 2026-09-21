@@ -24,6 +24,62 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.41 to 70.42
+ */
+static bool H_UpgradeFromV41()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE rooms ("
+      L"  id integer not null,"
+      L"  room_type integer not null,"
+      L"  outline $SQL:TEXT null,"
+      L"  height integer not null,"
+      L"  grid_origin_x integer not null,"
+      L"  grid_origin_y integer not null,"
+      L"  grid_tile_size integer not null,"
+      L"  grid_labels integer not null,"
+      L"  background_image varchar(36) null,"
+      L"  background_scale integer not null,"
+      L"  background_x integer not null,"
+      L"  background_y integer not null,"
+      L"  PRIMARY KEY(id))"));
+
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE room_passive_elements ("
+      L"  id integer not null,"
+      L"  room_id integer not null,"
+      L"  name varchar(255) null,"
+      L"  type integer not null,"
+      L"  x integer not null,"
+      L"  y integer not null,"
+      L"  rotation integer not null,"
+      L"  width integer not null,"
+      L"  depth integer not null,"
+      L"  PRIMARY KEY(id))"));
+
+   static const wchar_t *batch =
+      L"ALTER TABLE racks ADD width integer\n"
+      L"ALTER TABLE racks ADD depth integer\n"
+      L"ALTER TABLE racks ADD room_x integer\n"
+      L"ALTER TABLE racks ADD room_y integer\n"
+      L"ALTER TABLE racks ADD room_rotation integer\n"
+      L"UPDATE racks SET width=600,depth=1000,room_x=0,room_y=0,room_rotation=0\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"racks", L"width"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"racks", L"depth"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"racks", L"room_x"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"racks", L"room_y"));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"racks", L"room_rotation"));
+
+   CHK_EXEC(CreateConfigParam(L"Objects.Rooms.ContainerAutoBind", L"0", L"Enable/disable container auto binding for rooms.", nullptr, 'B', true, false, false));
+   CHK_EXEC(CreateConfigParam(L"Objects.Rooms.TemplateAutoApply", L"0", L"Enable/disable template auto apply for rooms.", nullptr, 'B', true, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(42));
+   return true;
+}
+
+/**
  * Upgrade from 70.40 to 70.41
  */
 static bool H_UpgradeFromV40()
@@ -1313,6 +1369,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 41, 70, 42, H_UpgradeFromV41 },
    { 40, 70, 41, H_UpgradeFromV40 },
    { 39, 70, 40, H_UpgradeFromV39 },
    { 38, 70, 39, H_UpgradeFromV38 },

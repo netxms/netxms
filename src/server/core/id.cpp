@@ -40,7 +40,7 @@ void LoadLastEventId(DB_HANDLE hdb);
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   40
+#define NUMBER_OF_GROUPS   41
 
 /**
  * Static data
@@ -57,7 +57,8 @@ static uint32_t s_freeIdTable[NUMBER_OF_GROUPS] =
       1, 1, 1, 1,
       1, 1, 1, 1,
       1, 1, 1, 1,
-      1, 1, 1, 1
+      1, 1, 1, 1,
+      1
    };
 static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
    {
@@ -70,7 +71,8 @@ static uint32_t s_idLimits[NUMBER_OF_GROUPS] =
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
       0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+      0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+      0xFFFFFFFE
    };
 static const wchar_t *s_groupNames[NUMBER_OF_GROUPS] =
 {
@@ -113,7 +115,8 @@ static const wchar_t *s_groupNames[NUMBER_OF_GROUPS] =
    L"Trusted Devices",
    L"Connection History",
    L"AI Saved Prompts",
-   L"NETCONF Queries"
+   L"NETCONF Queries",
+   L"Passive Room Elements"
 };
 
 /**
@@ -341,6 +344,15 @@ bool InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_RACK_ELEMENT] = std::max(s_freeIdTable[IDG_RACK_ELEMENT], DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available room passive element id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM room_passive_elements"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_ROOM_ELEMENT] = std::max(s_freeIdTable[IDG_ROOM_ELEMENT], DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
 

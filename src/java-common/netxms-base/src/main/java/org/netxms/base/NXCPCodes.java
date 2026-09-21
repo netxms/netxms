@@ -1635,6 +1635,20 @@ public class NXCPCodes
    public static final long VID_CHAIN_ACL_COUNT = 1049;
    public static final long VID_CONNECTOR_LOADED = 1050;
    public static final long VID_LINK_MERGE_THRESHOLD = 1051;
+   public static final long VID_ROOM_TYPE = 1052;
+   public static final long VID_OUTLINE = 1053;
+   public static final long VID_AREA = 1054;
+   public static final long VID_GRID_ORIGIN_X = 1055;
+   public static final long VID_GRID_ORIGIN_Y = 1056;
+   public static final long VID_GRID_TILE_SIZE = 1057;
+   public static final long VID_GRID_LABELS = 1058;
+   public static final long VID_BACKGROUND_SCALE = 1059;
+   public static final long VID_BACKGROUND_X = 1060;
+   public static final long VID_BACKGROUND_Y = 1061;
+   public static final long VID_ROOM_X = 1062;
+   public static final long VID_ROOM_Y = 1063;
+   public static final long VID_ROTATION = 1064;
+   public static final long VID_DEPTH = 1065;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

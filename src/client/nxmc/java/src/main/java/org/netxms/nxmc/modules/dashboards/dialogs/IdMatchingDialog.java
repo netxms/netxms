@@ -199,6 +199,7 @@ public class IdMatchingDialog extends Dialog
          case AbstractObject.OBJECT_FACILITY:
          case AbstractObject.OBJECT_POWERDOMAIN:
          case AbstractObject.OBJECT_COOLINGZONE:
+         case AbstractObject.OBJECT_ROOM:
 			case AbstractObject.OBJECT_CONTAINER:
 				classFilter = ObjectSelectionDialog.createContainerSelectionFilter();
 				showFilterToolTip = false;

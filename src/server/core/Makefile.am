@@ -30,7 +30,7 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			np.cpp nxsl_classes.cpp nxsl_http.cpp nxslext.cpp object_categories.cpp observation_point.cpp \
 			object_queries.cpp objects.cpp objtools.cpp ospf.cpp otellog.cpp package.cpp \
 			pds.cpp physical_link.cpp physical_placement.cpp poll.cpp pollable.cpp power_domain.cpp ps.cpp rack.cpp \
-			radius.cpp reporting.cpp resource.cpp rootobj.cpp sc_migration.cpp schedule.cpp script.cpp \
+			radius.cpp reporting.cpp resource.cpp room.cpp rootobj.cpp sc_migration.cpp schedule.cpp script.cpp \
 			search_query.cpp sensor.cpp server_stats.cpp session.cpp skills.cpp \
 			snmp.cpp snmpd.cpp snmptrap.cpp snmptrapd.cpp ssh.cpp sshkeys.cpp stp.cpp \
 			subnet.cpp summary_email.cpp svg.cpp swpkg.cpp syncer.cpp syslog_tls.cpp syslogd.cpp template.cpp \

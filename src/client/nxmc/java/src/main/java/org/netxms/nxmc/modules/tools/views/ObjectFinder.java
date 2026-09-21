@@ -1428,6 +1428,7 @@ public class ObjectFinder extends View
       objectClasses.add(new ObjectClass(AbstractObject.OBJECT_NODE, i18n.tr("Node")));
       objectClasses.add(new ObjectClass(AbstractObject.OBJECT_POWERDOMAIN, i18n.tr("Power Domain")));
       objectClasses.add(new ObjectClass(AbstractObject.OBJECT_RACK, i18n.tr("Rack")));
+      objectClasses.add(new ObjectClass(AbstractObject.OBJECT_ROOM, i18n.tr("Room")));
       objectClasses.add(new ObjectClass(AbstractObject.OBJECT_SENSOR, i18n.tr("Sensor")));
       objectClasses.add(new ObjectClass(AbstractObject.OBJECT_SERVICEROOT, i18n.tr("Service Root")));
       objectClasses.add(new ObjectClass(AbstractObject.OBJECT_SUBNET, i18n.tr("Subnet")));

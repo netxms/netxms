@@ -118,6 +118,7 @@ public abstract class AbstractObject
    public static final int OBJECT_FACILITY = 42;
    public static final int OBJECT_POWERDOMAIN = 43;
    public static final int OBJECT_COOLINGZONE = 44;
+   public static final int OBJECT_ROOM = 45;
 
 	public static final int OBJECT_CUSTOM = 10000;
 

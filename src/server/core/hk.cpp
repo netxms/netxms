@@ -309,6 +309,7 @@ static void CleanTimescaleData(DB_HANDLE hdb, CutoffTimes *usedCutoffTimes)
    g_idxClusterById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxCollectorById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxCoolingZoneById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
+   g_idxRoomById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxFacilityById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxMobileDeviceById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
    g_idxNodeById.forEach(CalculateDciCutoffTimes, &cutoffTimes);
@@ -668,6 +669,7 @@ static void HouseKeeper()
             g_idxClusterById.getObjects(&objects);
             g_idxCollectorById.getObjects(&objects);
             g_idxCoolingZoneById.getObjects(&objects);
+            g_idxRoomById.getObjects(&objects);
             g_idxFacilityById.getObjects(&objects);
             g_idxMobileDeviceById.getObjects(&objects);
             g_idxNodeById.getObjects(&objects);

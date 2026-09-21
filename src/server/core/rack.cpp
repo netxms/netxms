@@ -23,22 +23,40 @@
 #include "nxcore.h"
 
 /**
+ * Normalize rotation angle to range 0..359 degrees
+ */
+static inline int32_t NormalizeRotation(int32_t degrees)
+{
+   return ((degrees % 360) + 360) % 360;
+}
+
+/**
  * Default constructor
  */
 Rack::Rack() : super(Pollable::NONE), ContainerBase(this), m_passiveElements(0, 16, Ownership::True)
 {
 	m_height = 42;
 	m_topBottomNumbering = false;
+   m_width = DEFAULT_RACK_WIDTH;
+   m_depth = DEFAULT_RACK_DEPTH;
+   m_roomX = 0;
+   m_roomY = 0;
+   m_roomRotation = 0;
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;   // No configuration poll, but has instance discovery
 }
 
 /**
  * Constructor for creating new object
  */
-Rack::Rack(const TCHAR *name, int height) : super(name, Pollable::NONE), ContainerBase(this), m_passiveElements(0, 16, Ownership::True)
+Rack::Rack(const TCHAR *name, int height, int32_t width, int32_t depth) : super(name, Pollable::NONE), ContainerBase(this), m_passiveElements(0, 16, Ownership::True)
 {
 	m_height = (height > 0) ? height : 42;
    m_topBottomNumbering = false;
+   m_width = (width > 0) ? width : DEFAULT_RACK_WIDTH;
+   m_depth = (depth > 0) ? depth : DEFAULT_RACK_DEPTH;
+   m_roomX = 0;
+   m_roomY = 0;
+   m_roomRotation = 0;
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;   // No configuration poll, but has instance discovery
 }
 
@@ -69,7 +87,7 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
          return false;
    loadDCIListForCleanup(hdb);
 
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height,top_bottom_num FROM racks WHERE id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height,top_bottom_num,width,depth,room_x,room_y,room_rotation FROM racks WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
 
@@ -83,6 +101,11 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedSt
 		{
 			m_height = DBGetFieldLong(hResult, 0, 0);
 			m_topBottomNumbering = DBGetFieldLong(hResult, 0, 1) ? true : false;
+         m_width = DBGetFieldLong(hResult, 0, 2);
+         m_depth = DBGetFieldLong(hResult, 0, 3);
+         m_roomX = DBGetFieldLong(hResult, 0, 4);
+         m_roomY = DBGetFieldLong(hResult, 0, 5);
+         m_roomRotation = DBGetFieldLong(hResult, 0, 6);
 			success = true;
 		}
 		DBFreeResult(hResult);
@@ -134,11 +157,11 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("racks"), _T("id"), m_id))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE racks SET height=?,top_bottom_num=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE racks SET height=?,top_bottom_num=?,width=?,depth=?,room_x=?,room_y=?,room_rotation=? WHERE id=?"));
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO racks (height,top_bottom_num,id) VALUES (?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO racks (height,top_bottom_num,width,depth,room_x,room_y,room_rotation,id) VALUES (?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == nullptr)
 		return false;
@@ -146,7 +169,12 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
 	lockProperties();
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_height);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_topBottomNumbering ? _T("1") : _T("0"), DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_width);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_depth);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_roomX);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_roomY);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_roomRotation);
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 	bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 	if (success)
@@ -178,11 +206,12 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 }
 
 /**
- * Validate binding to given parent. Rack may have at most one cooling zone parent.
+ * Validate binding to given parent. Rack may have at most one cooling zone parent and at most one room parent.
  */
 uint32_t Rack::validateParent(const NetObj& parent) const
 {
-   if (parent.getObjectClass() != OBJECT_COOLINGZONE)
+   int parentClass = parent.getObjectClass();
+   if ((parentClass != OBJECT_COOLINGZONE) && (parentClass != OBJECT_ROOM))
       return RCC_SUCCESS;
 
    uint32_t rcc = RCC_SUCCESS;
@@ -190,7 +219,7 @@ uint32_t Rack::validateParent(const NetObj& parent) const
    for(int i = 0; i < getParentList().size(); i++)
    {
       NetObj *p = getParentList().get(i);
-      if ((p->getObjectClass() == OBJECT_COOLINGZONE) && (p->getId() != parent.getId()))
+      if ((p->getObjectClass() == parentClass) && (p->getId() != parent.getId()))
       {
          rcc = RCC_OBJECT_HIERARCHY_VIOLATION;
          break;
@@ -198,6 +227,46 @@ uint32_t Rack::validateParent(const NetObj& parent) const
    }
    unlockParentList();
    return rcc;
+}
+
+/**
+ * Check if rack has room parent other than given one
+ */
+bool Rack::hasRoomParent(uint32_t ignoredRoomId) const
+{
+   bool found = false;
+   readLockParentList();
+   for(int i = 0; i < getParentList().size(); i++)
+   {
+      NetObj *p = getParentList().get(i);
+      if ((p->getObjectClass() == OBJECT_ROOM) && (p->getId() != ignoredRoomId))
+      {
+         found = true;
+         break;
+      }
+   }
+   unlockParentList();
+   return found;
+}
+
+/**
+ * Handler for parent removal. Placement on floor plan is only valid for the room it was made in.
+ */
+void Rack::onParentRemove(const NetObj& parent)
+{
+   if ((parent.getObjectClass() == OBJECT_ROOM) && isPlacedInRoom() && !hasRoomParent(parent.getId()))
+      clearFlag(RKF_PLACED_IN_ROOM);
+   super::onParentRemove(parent);
+}
+
+/**
+ * Handler for object deletion
+ */
+void Rack::onObjectDelete(const NetObj& object)
+{
+   if ((object.getObjectClass() == OBJECT_ROOM) && isPlacedInRoom() && !hasRoomParent(object.getId()))
+      clearFlag(RKF_PLACED_IN_ROOM);
+   super::onObjectDelete(object);
 }
 
 /**
@@ -250,6 +319,11 @@ void Rack::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    super::fillMessageLocked(msg, userId);
    msg->setField(VID_HEIGHT, static_cast<uint16_t>(m_height));
    msg->setField(VID_TOP_BOTTOM, m_topBottomNumbering);
+   msg->setField(VID_WIDTH, m_width);
+   msg->setField(VID_DEPTH, m_depth);
+   msg->setField(VID_ROOM_X, m_roomX);
+   msg->setField(VID_ROOM_Y, m_roomY);
+   msg->setField(VID_ROTATION, m_roomRotation);
    msg->setField(VID_NUM_ELEMENTS, m_passiveElements.size());
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < m_passiveElements.size(); i++)
@@ -269,6 +343,29 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
 
    if (msg.isFieldExist(VID_TOP_BOTTOM))
       m_topBottomNumbering = msg.getFieldAsBoolean(VID_TOP_BOTTOM);
+
+   if (msg.isFieldExist(VID_WIDTH))
+   {
+      int32_t width = msg.getFieldAsInt32(VID_WIDTH);
+      if (width <= 0)
+         return RCC_INVALID_ARGUMENT;
+      m_width = width;
+   }
+
+   if (msg.isFieldExist(VID_DEPTH))
+   {
+      int32_t depth = msg.getFieldAsInt32(VID_DEPTH);
+      if (depth <= 0)
+         return RCC_INVALID_ARGUMENT;
+      m_depth = depth;
+   }
+
+   if (msg.isFieldExist(VID_ROOM_X))
+      m_roomX = msg.getFieldAsInt32(VID_ROOM_X);
+   if (msg.isFieldExist(VID_ROOM_Y))
+      m_roomY = msg.getFieldAsInt32(VID_ROOM_Y);
+   if (msg.isFieldExist(VID_ROTATION))
+      m_roomRotation = NormalizeRotation(msg.getFieldAsInt32(VID_ROTATION));
 
    if (msg.isFieldExist(VID_NUM_ELEMENTS))
    {
@@ -324,6 +421,8 @@ json_t *Rack::toJson(bool includeSensitiveData)
    lockProperties();
    json_object_set_new(root, "height", json_integer(m_height));
    json_object_set_new(root, "topBottomNumbering", json_boolean(m_topBottomNumbering));
+   json_object_set_new(root, "width", json_integer(m_width));
+   json_object_set_new(root, "depth", json_integer(m_depth));
    json_t *passiveElements = json_array();
    for(int i = 0; i < m_passiveElements.size(); i++)
    {
@@ -332,7 +431,55 @@ json_t *Rack::toJson(bool includeSensitiveData)
    json_object_set_new(root, "passiveElements", passiveElements);
    unlockProperties();
 
+   json_object_set_new(root, "roomPlacement", roomPlacementToJson());
    return root;
+}
+
+/**
+ * Build "roomPlacement" property group
+ */
+json_t *Rack::roomPlacementToJson()
+{
+   json_t *group = json_object();
+   lockProperties();
+   json_object_set_new(group, "placed", json_boolean((m_flags & RKF_PLACED_IN_ROOM) != 0));
+   json_object_set_new(group, "x", json_integer(m_roomX));
+   json_object_set_new(group, "y", json_integer(m_roomY));
+   json_object_set_new(group, "rotation", json_integer(m_roomRotation));
+   unlockProperties();
+   return group;
+}
+
+/**
+ * Modify object from JSON document (WebAPI path). Handles rack footprint and the "roomPlacement" property group;
+ * all other fields are delegated to the base class implementation.
+ */
+uint32_t Rack::modifyFromJSONInternal(json_t *json, GenericClientSession *session)
+{
+   int32_t width = m_width, depth = m_depth;
+   if (!json_object_update_integer(json, "width", &width) || !json_object_update_integer(json, "depth", &depth) || (width <= 0) || (depth <= 0))
+      return RCC_INVALID_ARGUMENT;
+   m_width = width;
+   m_depth = depth;
+
+   json_t *group = json_object_get(json, "roomPlacement");
+   if (group != nullptr)
+   {
+      if (!json_is_object(group))
+         return RCC_INVALID_ARGUMENT;
+
+      uint32_t flags = 0, mask = 0;
+      int32_t rotation = m_roomRotation;
+      if (!json_object_update_integer(group, "x", &m_roomX) ||
+          !json_object_update_integer(group, "y", &m_roomY) ||
+          !json_object_update_integer(group, "rotation", &rotation) ||
+          !json_object_update_flag(group, "placed", RKF_PLACED_IN_ROOM, &flags, &mask))
+         return RCC_INVALID_ARGUMENT;
+      m_roomRotation = NormalizeRotation(rotation);
+      if (mask != 0)
+         updateFlags(flags, mask);
+   }
+   return super::modifyFromJSONInternal(json, session);
 }
 
 /**

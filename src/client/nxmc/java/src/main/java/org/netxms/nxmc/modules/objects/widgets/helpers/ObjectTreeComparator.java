@@ -59,7 +59,7 @@ public class ObjectTreeComparator extends ViewerComparator
           (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_COLLECTOR) ||
           (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_FACILITY) ||
           (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_POWERDOMAIN) ||
-          (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_COOLINGZONE) ||
+          (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_COOLINGZONE) || (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_ROOM) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_TEMPLATEGROUP) ||
 		    (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_DASHBOARDGROUP) ||
           (((AbstractObject)element).getObjectClass() == AbstractObject.OBJECT_NETWORKMAPGROUP) ||

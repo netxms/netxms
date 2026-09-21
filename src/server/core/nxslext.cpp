@@ -1095,7 +1095,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_V
 	shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(obj->getData());
 	if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
 	         (parent->getObjectClass() != OBJECT_FACILITY) && (parent->getObjectClass() != OBJECT_POWERDOMAIN) &&
-	         (parent->getObjectClass() != OBJECT_COOLINGZONE) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+	         (parent->getObjectClass() != OBJECT_COOLINGZONE) && (parent->getObjectClass() != OBJECT_ROOM) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
 		return NXSL_ERR_BAD_CLASS;
 
 	if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_CREATE, parent.get()))
@@ -1252,7 +1252,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
    shared_ptr<NetObj> parent = *static_cast<shared_ptr<NetObj>*>(nxslParent->getData());
    if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
        (parent->getObjectClass() != OBJECT_FACILITY) && (parent->getObjectClass() != OBJECT_POWERDOMAIN) &&
-       (parent->getObjectClass() != OBJECT_COOLINGZONE) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+       (parent->getObjectClass() != OBJECT_COOLINGZONE) && (parent->getObjectClass() != OBJECT_ROOM) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    NXSL_Object *nxslChild = argv[1]->getValueAsObject();
@@ -1309,7 +1309,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
    NetObj *parent = static_cast<shared_ptr<NetObj>*>(nxslParent->getData())->get();
    if ((parent->getObjectClass() != OBJECT_CONTAINER) && (parent->getObjectClass() != OBJECT_COLLECTOR) &&
        (parent->getObjectClass() != OBJECT_FACILITY) && (parent->getObjectClass() != OBJECT_POWERDOMAIN) &&
-       (parent->getObjectClass() != OBJECT_COOLINGZONE) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
+       (parent->getObjectClass() != OBJECT_COOLINGZONE) && (parent->getObjectClass() != OBJECT_ROOM) && (parent->getObjectClass() != OBJECT_SERVICEROOT))
       return NXSL_ERR_BAD_CLASS;
 
    NXSL_Object *nxslChild = argv[1]->getValueAsObject();

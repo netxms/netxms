@@ -1523,6 +1523,7 @@ protected:
    virtual void prepareForDeletion();
    virtual uint32_t getDeleteEventCode() const;
    virtual void onObjectDelete(const NetObj& object);
+   virtual void onParentRemove(const NetObj& parent);
 
    virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr);
 
@@ -5331,18 +5332,28 @@ protected:
 protected:
    int m_height;   // Rack height in units
    bool m_topBottomNumbering;
+   int32_t m_width;        // External cabinet width in mm
+   int32_t m_depth;        // External cabinet depth in mm
+   int32_t m_roomX;        // Position of footprint reference corner in room coordinates, mm
+   int32_t m_roomY;
+   int32_t m_roomRotation; // Rotation in degrees (front direction)
    ObjectArray<RackPassiveElement> m_passiveElements;
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
 
    virtual void prepareForDeletion() override;
+   virtual void onObjectDelete(const NetObj& object) override;
+   virtual void onParentRemove(const NetObj& parent) override;
+
+   bool hasRoomParent(uint32_t ignoredRoomId) const;
 
    virtual StringMap *getInstanceList(DCObject *dco) override;
 
 public:
    Rack();
-   Rack(const TCHAR *name, int height);
+   Rack(const TCHAR *name, int height, int32_t width = DEFAULT_RACK_WIDTH, int32_t depth = DEFAULT_RACK_DEPTH);
 
    shared_ptr<Rack> self() { return static_pointer_cast<Rack>(NObject::self()); }
    shared_ptr<const Rack> self() const { return static_pointer_cast<const Rack>(NObject::self()); }
@@ -5361,6 +5372,14 @@ public:
 
    int getHeight() const { return m_height; }
    bool isTopBottomNumbering() const { return m_topBottomNumbering; }
+   int32_t getWidth() const { return m_width; }
+   int32_t getDepth() const { return m_depth; }
+   int32_t getRoomX() const { return m_roomX; }
+   int32_t getRoomY() const { return m_roomY; }
+   int32_t getRoomRotation() const { return m_roomRotation; }
+   bool isPlacedInRoom() const { return (m_flags & RKF_PLACED_IN_ROOM) != 0; }
+
+   json_t *roomPlacementToJson();
 
    String getRackPasiveElementDescription(uint32_t id);
 
@@ -6049,6 +6068,138 @@ public:
 
    CoolingZoneType getZoneType() const { return m_zoneType; }
    int32_t getRatedCapacity() const { return m_ratedCapacity; }
+};
+
+/**
+ * Room type conversion helpers (symbolic names are used in JSON)
+ */
+const char NXCORE_EXPORTABLE *RoomTypeName(RoomType type);
+bool NXCORE_EXPORTABLE RoomTypeFromName(const char *name, RoomType *type);
+static inline RoomType RoomTypeFromInt(int n)
+{
+   return ((n >= ROOM_COMPUTER_ROOM) && (n <= ROOM_OTHER)) ? static_cast<RoomType>(n) : ROOM_OTHER;
+}
+const char NXCORE_EXPORTABLE *RoomGridLabelsName(RoomGridLabels labels);
+bool NXCORE_EXPORTABLE RoomGridLabelsFromName(const char *name, RoomGridLabels *labels);
+static inline RoomGridLabels RoomGridLabelsFromInt(int n)
+{
+   return ((n >= ROOM_GRID_LABELS_NONE) && (n <= ROOM_GRID_LABELS_NUMBERS_NUMBERS)) ? static_cast<RoomGridLabels>(n) : ROOM_GRID_LABELS_NONE;
+}
+const char NXCORE_EXPORTABLE *RoomElementTypeName(RoomElementType type);
+bool NXCORE_EXPORTABLE RoomElementTypeFromName(const char *name, RoomElementType *type);
+static inline RoomElementType RoomElementTypeFromInt(int n)
+{
+   return ((n >= ROOM_ELEMENT_COLUMN) && (n <= ROOM_ELEMENT_OTHER)) ? static_cast<RoomElementType>(n) : ROOM_ELEMENT_OTHER;
+}
+
+/**
+ * Point in room-local coordinates (millimetres)
+ */
+struct RoomPoint
+{
+   int32_t x;
+   int32_t y;
+};
+
+/**
+ * Calculate area of simple polygon in square metres (vertices in millimetres)
+ */
+double NXCORE_EXPORTABLE CalculateRoomOutlineArea(const StructArray<RoomPoint>& outline);
+
+/**
+ * Passive room element (column, ramp, stairs, etc. placed on floor plan)
+ */
+class NXCORE_EXPORTABLE RoomPassiveElement
+{
+private:
+   uint32_t m_id;
+   wchar_t *m_name;
+   RoomElementType m_type;
+   int32_t m_x;
+   int32_t m_y;
+   int32_t m_rotation;
+   int32_t m_width;
+   int32_t m_depth;
+
+public:
+   RoomPassiveElement(DB_RESULT hResult, int row);
+   RoomPassiveElement(const NXCPMessage& request, uint32_t base);
+   RoomPassiveElement(json_t *json);
+   ~RoomPassiveElement()
+   {
+      MemFree(m_name);
+   }
+
+   bool saveToDatabase(DB_HANDLE hdb, uint32_t roomId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t base) const;
+   void updateFromJson(json_t *json);
+   json_t *toJson() const;
+
+   uint32_t getId() const { return m_id; }
+   RoomElementType getType() const { return m_type; }
+};
+
+/**
+ * Room object - physical room with floor plan where racks are placed at their real location
+ */
+class NXCORE_EXPORTABLE Room : public DataCollectionContainer
+{
+private:
+   typedef DataCollectionContainer super;
+
+protected:
+   RoomType m_roomType;
+   StructArray<RoomPoint> m_outline;   // Room outline as ordered list of polygon vertices
+   int32_t m_height;                   // Room height in mm; 0 = undeclared
+   int32_t m_gridOriginX;              // Floor tile grid origin, mm
+   int32_t m_gridOriginY;
+   int32_t m_gridTileSize;             // Tile size in mm; 0 = no grid
+   RoomGridLabels m_gridLabels;
+   uuid m_backgroundImage;             // Image library UUID of floor plan backdrop
+   int32_t m_backgroundScale;          // Backdrop calibration, micrometres per pixel
+   int32_t m_backgroundX;              // Backdrop offset in room coordinates, mm
+   int32_t m_backgroundY;
+   ObjectArray<RoomPassiveElement> m_passiveElements;
+
+   virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session) override;
+   virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
+
+   void setRectangularOutline(int32_t width, int32_t depth);
+
+public:
+   Room();
+   Room(const TCHAR *name, const NXCPMessage& request);
+   Room(const TCHAR *name, json_t *json);
+
+   shared_ptr<Room> self() { return static_pointer_cast<Room>(NObject::self()); }
+   shared_ptr<const Room> self() const { return static_pointer_cast<const Room>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_ROOM; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   json_t *roomConfigToJson();
+   json_t *getFloorPlan(uint32_t userId);
+
+   uint32_t createPassiveElementFromJson(json_t *json, json_t **element);
+   uint32_t updatePassiveElementFromJson(uint32_t elementId, json_t *json, json_t **element);
+   uint32_t deletePassiveElement(uint32_t elementId);
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+
+   RoomType getRoomType() const { return m_roomType; }
+   int32_t getHeight() const { return m_height; }
+   int32_t getGridOriginX() const { return m_gridOriginX; }
+   int32_t getGridOriginY() const { return m_gridOriginY; }
+   int32_t getGridTileSize() const { return m_gridTileSize; }
+   RoomGridLabels getGridLabels() const { return m_gridLabels; }
+   uuid getBackgroundImage() const;
+   StructArray<RoomPoint> getOutline() const;
+   double getArea() const;
 };
 
 /**
@@ -7033,6 +7184,7 @@ extern ObjectIndex NXCORE_EXPORTABLE g_idxCollectorById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxFacilityById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxPowerDomainById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxCoolingZoneById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxRoomById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxRackById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;

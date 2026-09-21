@@ -464,6 +464,7 @@ struct AutoBindClassFilterData
    bool processMobileDevices;
    bool processPowerDomains;
    bool processRacks;
+   bool processRooms;
    bool processSensors;
 };
 
@@ -481,6 +482,7 @@ static bool AutoBindObjectFilter(NetObj* object, AutoBindClassFilterData* filter
          (filterData->processMobileDevices && (object->getObjectClass() == OBJECT_MOBILEDEVICE)) ||
          (filterData->processPowerDomains && (object->getObjectClass() == OBJECT_POWERDOMAIN)) ||
          (filterData->processRacks && (object->getObjectClass() == OBJECT_RACK)) ||
+         (filterData->processRooms && (object->getObjectClass() == OBJECT_ROOM)) ||
          (filterData->processSensors && (object->getObjectClass() == OBJECT_SENSOR));
 }
 
@@ -498,6 +500,7 @@ unique_ptr<SharedObjectArray<NetObj>> AutoBindTarget::getObjectsForAutoBind(cons
    filterData.processMobileDevices = ConfigReadBoolean(StringBuffer(_T("Objects.MobileDevices.")).append(configurationSuffix), false);
    filterData.processPowerDomains = ConfigReadBoolean(StringBuffer(_T("Objects.PowerDomains.")).append(configurationSuffix), false);
    filterData.processRacks = ConfigReadBoolean(StringBuffer(_T("Objects.Racks.")).append(configurationSuffix), false);
+   filterData.processRooms = ConfigReadBoolean(StringBuffer(_T("Objects.Rooms.")).append(configurationSuffix), false);
    filterData.processSensors = ConfigReadBoolean(StringBuffer(_T("Objects.Sensors.")).append(configurationSuffix), false);
    return g_idxObjectById.getObjects(AutoBindObjectFilter, &filterData);
 }
@@ -605,6 +608,7 @@ AutoBindTarget *GetObjectAsAutoBindTarget(NetObj *object)
       case OBJECT_COOLINGZONE:
       case OBJECT_FACILITY:
       case OBJECT_POWERDOMAIN:
+      case OBJECT_ROOM:
          return static_cast<DataCollectionContainer*>(object);
       case OBJECT_CONTAINER:
          return static_cast<Container*>(object);

@@ -83,6 +83,7 @@
 #define IDG_CONNECTION_HISTORY      37
 #define IDG_AI_SAVED_PROMPT         38
 #define IDG_NETCONF_QUERY           39
+#define IDG_ROOM_ELEMENT            40
 
 /**** ID functions *****/
 bool InitIdTable();

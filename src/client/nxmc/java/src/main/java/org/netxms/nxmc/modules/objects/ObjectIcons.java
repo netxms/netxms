@@ -66,6 +66,7 @@ public final class ObjectIcons
       images.put(AbstractObject.OBJECT_CONDITION, ResourceManager.getImage(display, "icons/objects/condition.gif"));
       images.put(AbstractObject.OBJECT_CONTAINER, ResourceManager.getImage(display, "icons/objects/container.png"));
       images.put(AbstractObject.OBJECT_COOLINGZONE, ResourceManager.getImage(display, "icons/objects/cooling-zone.png"));
+      images.put(AbstractObject.OBJECT_ROOM, ResourceManager.getImage(display, "icons/objects/room.png"));
       images.put(AbstractObject.OBJECT_FACILITY, ResourceManager.getImage(display, "icons/objects/facility.png"));
       images.put(AbstractObject.OBJECT_POWERDOMAIN, ResourceManager.getImage(display, "icons/objects/power-domain.png"));
       images.put(AbstractObject.OBJECT_DASHBOARD, ResourceManager.getImage(display, "icons/objects/dashboard.png"));

@@ -509,6 +509,7 @@ static void ItemPoller()
       g_idxFacilityById.forEach(QueueItems, &watchdogId);
       g_idxPowerDomainById.forEach(QueueItems, &watchdogId);
       g_idxCoolingZoneById.forEach(QueueItems, &watchdogId);
+      g_idxRoomById.forEach(QueueItems, &watchdogId);
 		g_idxMobileDeviceById.forEach(QueueItems, &watchdogId);
       g_idxNodeById.forEach(QueueItems, &watchdogId);
       g_idxRackById.forEach(QueueItems, &watchdogId);
@@ -979,6 +980,7 @@ static void V5DataMigrationManager()
       g_idxClusterById.getObjects(&objects, filter);
       g_idxCollectorById.getObjects(&objects, filter);
       g_idxCoolingZoneById.getObjects(&objects, filter);
+      g_idxRoomById.getObjects(&objects, filter);
       g_idxFacilityById.getObjects(&objects, filter);
       g_idxMobileDeviceById.getObjects(&objects, filter);
       g_idxNodeById.getObjects(&objects, filter);
@@ -1052,6 +1054,8 @@ void StartV5DataMigration()
       g_idxCollectorById.forEach(callback);
    if (!hasV5Tables)
       g_idxCoolingZoneById.forEach(callback);
+   if (!hasV5Tables)
+      g_idxRoomById.forEach(callback);
    if (!hasV5Tables)
       g_idxFacilityById.forEach(callback);
    if (!hasV5Tables)

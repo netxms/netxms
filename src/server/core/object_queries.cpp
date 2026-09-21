@@ -535,6 +535,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
    vm->addConstant("CONDITION", vm->createValue(OBJECT_CONDITION));
    vm->addConstant("CONTAINER", vm->createValue(OBJECT_CONTAINER));
    vm->addConstant("COOLINGZONE", vm->createValue(OBJECT_COOLINGZONE));
+   vm->addConstant("ROOM", vm->createValue(OBJECT_ROOM));
    vm->addConstant("DASHBOARD", vm->createValue(OBJECT_DASHBOARD));
    vm->addConstant("DASHBOARDGROUP", vm->createValue(OBJECT_DASHBOARDGROUP));
    vm->addConstant("DASHBOARDROOT", vm->createValue(OBJECT_DASHBOARDROOT));

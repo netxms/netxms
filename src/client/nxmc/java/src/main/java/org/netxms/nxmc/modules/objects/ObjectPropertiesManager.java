@@ -78,6 +78,7 @@ import org.netxms.nxmc.modules.objects.propertypages.Polling;
 import org.netxms.nxmc.modules.objects.propertypages.PortStopList;
 import org.netxms.nxmc.modules.objects.propertypages.RackPassiveElements;
 import org.netxms.nxmc.modules.objects.propertypages.RackProperties;
+import org.netxms.nxmc.modules.objects.propertypages.RoomProperties;
 import org.netxms.nxmc.modules.objects.propertypages.ResponsibleUsers;
 import org.netxms.nxmc.modules.objects.propertypages.SNMP;
 import org.netxms.nxmc.modules.objects.propertypages.SNMPAgents;
@@ -151,6 +152,7 @@ public class ObjectPropertiesManager
       pageClasses.add(PortStopList.class);
       pageClasses.add(RackPassiveElements.class);
       pageClasses.add(RackProperties.class);
+      pageClasses.add(RoomProperties.class);
       pageClasses.add(FacilityProperties.class);
       pageClasses.add(PowerDomainProperties.class);
       pageClasses.add(CoolingZoneProperties.class);

@@ -189,6 +189,10 @@ int H_ObjectNetworkMap(Context *context);
 int H_ObjectNetworkMapUpdate(Context *context);
 int H_ObjectCoolingZoneGet(Context *context);
 int H_ObjectCoolingZoneUpdate(Context *context);
+int H_ObjectRoomGet(Context *context);
+int H_ObjectRoomUpdate(Context *context);
+int H_ObjectRoomPlacementGet(Context *context);
+int H_ObjectRoomPlacementUpdate(Context *context);
 int H_ObjectDetails(Context *context);
 int H_ObjectFacilityGet(Context *context);
 int H_ObjectFacilityUpdate(Context *context);
@@ -222,6 +226,10 @@ int H_RackLayout(Context *context);
 int H_RackPassiveElementCreate(Context *context);
 int H_RackPassiveElementUpdate(Context *context);
 int H_RackPassiveElementDelete(Context *context);
+int H_RoomFloorPlan(Context *context);
+int H_RoomPassiveElementCreate(Context *context);
+int H_RoomPassiveElementUpdate(Context *context);
+int H_RoomPassiveElementDelete(Context *context);
 int H_ObjectSetMaintenance(Context *context);
 int H_ObjectSetManaged(Context *context);
 int H_ObjectStatusExplanation(Context *context);
@@ -718,6 +726,16 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/availability")
       .GET(H_BusinessServiceAvailability)
       .build();
+   RouteBuilder("v1/objects/:object-id/floor-plan")
+      .GET(H_RoomFloorPlan)
+      .build();
+   RouteBuilder("v1/objects/:object-id/floor-plan/passive-elements")
+      .POST(H_RoomPassiveElementCreate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/floor-plan/passive-elements/:element-id")
+      .PATCH(H_RoomPassiveElementUpdate)
+      .DELETE(H_RoomPassiveElementDelete)
+      .build();
    RouteBuilder("v1/objects/:object-id/rack-layout")
       .GET(H_RackLayout)
       .build();
@@ -815,6 +833,14 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/objects/:object-id/cooling-zone")
       .GET(H_ObjectCoolingZoneGet)
       .PATCH(H_ObjectCoolingZoneUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/room")
+      .GET(H_ObjectRoomGet)
+      .PATCH(H_ObjectRoomUpdate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/room-placement")
+      .GET(H_ObjectRoomPlacementGet)
+      .PATCH(H_ObjectRoomPlacementUpdate)
       .build();
 
    RouteBuilder("v1/objects/:object-id/snmp")

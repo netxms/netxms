@@ -27,6 +27,7 @@ import java.util.Map;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.client.constants.CoolingZoneType;
+import org.netxms.client.constants.RoomType;
 import org.netxms.client.constants.PowerDomainType;
 import org.netxms.client.constants.SensorDeviceClass;
 import org.netxms.client.maps.MapCanvasType;
@@ -128,6 +129,9 @@ public class NXCObjectCreationData
    private int ratedPower;
    private CoolingZoneType zoneType;
    private int ratedCapacity;
+   private int width;
+   private int depth;
+   private RoomType roomType;
 
 	/**
 	 * Constructor.
@@ -211,6 +215,9 @@ public class NXCObjectCreationData
       ratedPower = 0;
       zoneType = CoolingZoneType.OTHER;
       ratedCapacity = 0;
+      width = 0;
+      depth = 0;
+      roomType = RoomType.OTHER;
 	}
 
 	/**
@@ -320,6 +327,12 @@ public class NXCObjectCreationData
          zoneType = data.getZoneType();
       if (data.getRatedCapacity() != null)
          ratedCapacity = data.getRatedCapacity();
+      if (data.getWidth() != null)
+         width = data.getWidth();
+      if (data.getDepth() != null)
+         depth = data.getDepth();
+      if (data.getRoomType() != null)
+         roomType = data.getRoomType();
 	}
 
 	/**
@@ -1537,6 +1550,54 @@ public class NXCObjectCreationData
    }
 
    /**
+    * @return width in millimetres (rack footprint or generated rectangular room outline)
+    */
+   public int getWidth()
+   {
+      return width;
+   }
+
+   /**
+    * @param width width in millimetres (rack footprint or generated rectangular room outline)
+    */
+   public void setWidth(int width)
+   {
+      this.width = width;
+   }
+
+   /**
+    * @return depth in millimetres (rack footprint or generated rectangular room outline)
+    */
+   public int getDepth()
+   {
+      return depth;
+   }
+
+   /**
+    * @param depth depth in millimetres (rack footprint or generated rectangular room outline)
+    */
+   public void setDepth(int depth)
+   {
+      this.depth = depth;
+   }
+
+   /**
+    * @return room type
+    */
+   public RoomType getRoomType()
+   {
+      return roomType;
+   }
+
+   /**
+    * @param roomType room type
+    */
+   public void setRoomType(RoomType roomType)
+   {
+      this.roomType = roomType;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -1554,6 +1615,7 @@ public class NXCObjectCreationData
             gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + ", linkedObjectId=" + linkedObjectId +
             ", connectorName=" + connectorName + ", credentials=" + credentials +
             ", discoveryFilter=" + discoveryFilter + ", removalPolicy=" + removalPolicy + ", gracePeriod=" + gracePeriod + ", settlementLag=" + settlementLag + ", providerId=" + providerId +
-            ", domainType=" + domainType + ", feedTag=" + feedTag + ", ratedPower=" + ratedPower + ", zoneType=" + zoneType + ", ratedCapacity=" + ratedCapacity + "]";
+            ", domainType=" + domainType + ", feedTag=" + feedTag + ", ratedPower=" + ratedPower + ", zoneType=" + zoneType + ", ratedCapacity=" + ratedCapacity +
+            ", width=" + width + ", depth=" + depth + ", roomType=" + roomType + "]";
    }
 }

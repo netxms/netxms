@@ -46,6 +46,8 @@ public class RackProperties extends ObjectPropertyPage
 
 	private Rack rack;
 	private LabeledSpinner rackHeight;
+   private LabeledSpinner rackWidth;
+   private LabeledSpinner rackDepth;
 	private Combo numberingScheme;
    private Button checkFrontOnly;
 
@@ -123,7 +125,19 @@ public class RackProperties extends ObjectPropertyPage
       checkFrontOnly = new Button(dialogArea, SWT.CHECK);
       checkFrontOnly.setText(i18n.tr("&Front side only"));
       checkFrontOnly.setSelection(rack.isFrontSideOnly());
-      checkFrontOnly.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+      checkFrontOnly.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false, 2, 1));
+
+      rackWidth = new LabeledSpinner(dialogArea, SWT.NONE);
+      rackWidth.setLabel(i18n.tr("Cabinet width (mm)"));
+      rackWidth.setRange(100, 5000);
+      rackWidth.setSelection(rack.getWidth());
+      rackWidth.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      rackDepth = new LabeledSpinner(dialogArea, SWT.NONE);
+      rackDepth.setLabel(i18n.tr("Cabinet depth (mm)"));
+      rackDepth.setRange(100, 5000);
+      rackDepth.setSelection(rack.getDepth());
+      rackDepth.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		return dialogArea;
 	}
@@ -140,6 +154,8 @@ public class RackProperties extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(rack.getObjectId());
 		md.setHeight(rackHeight.getSelection());
 		md.setRackNumberingTopBottom(numberingScheme.getSelectionIndex() == 1);
+      md.setWidth(rackWidth.getSelection());
+      md.setDepth(rackDepth.getSelection());
       md.setObjectFlags(checkFrontOnly.getSelection() ? Rack.FRONT_SIDE_ONLY : 0, Rack.FRONT_SIDE_ONLY);
 
       final NXCSession session = Registry.getSession();
@@ -176,5 +192,7 @@ public class RackProperties extends ObjectPropertyPage
 		rackHeight.setSelection(42);
 		numberingScheme.select(0);
       checkFrontOnly.setSelection(false);
+      rackWidth.setSelection(600);
+      rackDepth.setSelection(1000);
 	}
 }

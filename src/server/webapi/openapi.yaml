@@ -4846,6 +4846,154 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/room:
+    get:
+      operationId: getObjectRoom
+      summary: Get room configuration
+      description: |
+        Return the room configuration (the same shape accepted by the matching PATCH).
+
+        This property group applies to Room objects only; requesting it for any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Room configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomConfig'
+        '400':
+          description: Property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    patch:
+      operationId: updateObjectRoom
+      summary: Update room configuration
+      description: |
+        Update the room configuration: room type, outline, height, floor tile grid and floor plan backdrop. Passive elements and the derived area are read-only here; passive elements are managed through /v1/objects/{object-id}/floor-plan/passive-elements. Merge-patch semantics: any subset of fields can be sent; omitted
+        fields are left unchanged.
+
+        This property group applies to Room objects only; sending it to any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomConfig'
+      responses:
+        '200':
+          description: Room configuration updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body, invalid value, or property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/room-placement:
+    get:
+      operationId: getObjectRoomPlacement
+      summary: Get room placement of a rack
+      description: |
+        Return the room placement of a rack (the same shape accepted by the matching PATCH).
+
+        This property group applies to Rack objects only; requesting it for any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Room placement.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RackRoomPlacement'
+        '400':
+          description: Property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    patch:
+      operationId: updateObjectRoomPlacement
+      summary: Update room placement of a rack
+      description: |
+        Update the room placement of a rack: position, rotation and the placed flag. The server clears the placed flag when the rack is unbound from its room, as placement is only valid for the room it was made in. Merge-patch semantics: any subset of fields can be sent; omitted
+        fields are left unchanged.
+
+        This property group applies to Rack objects only; sending it to any other
+        object class returns 400.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RackRoomPlacement'
+      responses:
+        '200':
+          description: Room placement updated; full updated object returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectDetails'
+        '400':
+          description: Malformed request body, invalid value, or property group not applicable to object class.
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to the object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/objects/{object-id}/snmp:
     get:
       operationId: getObjectSnmpConfig
@@ -7780,6 +7928,202 @@ paths:
           description: User does not have read access to given object
         '404':
           description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/floor-plan:
+    get:
+      operationId: getRoomFloorPlan
+      summary: Get room floor plan
+      description: >-
+        Retrieve the complete floor plan of a room in a single call: room
+        geometry (outline, derived area, tile grid, backdrop), passive elements,
+        and all racks located in the room with their footprint, placement and
+        status. Racks are filtered by the requesting user's read access. Racks
+        with `placed` set to false have not been positioned on the plan yet and
+        their coordinates should be ignored.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Room object ID
+      responses:
+        '200':
+          description: Room floor plan
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/RoomConfig'
+                  - type: object
+                    properties:
+                      roomId:
+                        type: integer
+                        description: Room object ID
+                      name:
+                        type: string
+                        description: Room object name
+                      racks:
+                        type: array
+                        items:
+                          allOf:
+                            - $ref: '#/components/schemas/RackRoomPlacement'
+                            - type: object
+                              properties:
+                                id:
+                                  type: integer
+                                  description: Rack object ID
+                                name:
+                                  type: string
+                                  description: Rack object name
+                                status:
+                                  type: integer
+                                  description: Rack object status code
+                                height:
+                                  type: integer
+                                  description: Rack height in units
+                                width:
+                                  type: integer
+                                  description: External cabinet width in millimetres
+                                depth:
+                                  type: integer
+                                  description: External cabinet depth in millimetres
+        '400':
+          description: Invalid object ID or object is not a room
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/floor-plan/passive-elements:
+    post:
+      operationId: createRoomPassiveElement
+      summary: Create room passive element
+      description: >-
+        Add a new passive element (column, wall, ramp, stairs, door, or other
+        obstruction) to a room floor plan. The server assigns the element
+        identifier. Requires MODIFY access to the room object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Room object ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomPassiveElement'
+      responses:
+        '201':
+          description: Passive element created
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created passive element
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomPassiveElement'
+        '400':
+          description: Invalid request body, object ID, or object is not a room
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+  /v1/objects/{object-id}/floor-plan/passive-elements/{element-id}:
+    patch:
+      operationId: updateRoomPassiveElement
+      summary: Update room passive element
+      description: >-
+        Update an existing room passive element using merge-patch semantics:
+        only fields present in the request are changed. The element type is
+        immutable. Requires MODIFY access to the room object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Room object ID
+        - name: element-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Passive element ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomPassiveElement'
+      responses:
+        '200':
+          description: Passive element updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomPassiveElement'
+        '400':
+          description: Invalid request body, object ID, or object is not a room
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to given object
+        '404':
+          description: Object or passive element with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
+    delete:
+      operationId: deleteRoomPassiveElement
+      summary: Delete room passive element
+      description: >-
+        Remove a passive element from a room floor plan. Requires MODIFY access
+        to the room object.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Room object ID
+        - name: element-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Passive element ID
+      responses:
+        '204':
+          description: Passive element deleted
+        '400':
+          description: Invalid object ID or object is not a room
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have modify access to given object
+        '404':
+          description: Object or passive element with given ID does not exist
       security:
         - BearerAuth: []
       tags:
@@ -15095,6 +15439,7 @@ components:
         - Report
         - ReportGroup
         - ReportRoot
+        - Room
         - Sensor
         - ServiceCheck
         - ServiceRoot
@@ -15652,6 +15997,147 @@ components:
         - PLANT
         - ZONE
         - OTHER
+    RoomConfig:
+      type: object
+      additionalProperties: false
+      description: |
+        Room property group. Returned by GET /v1/objects/{id}/room and embedded as
+        `ObjectDetails.room`; accepted by PATCH /v1/objects/{id}/room with merge-patch
+        semantics (omitted fields are left unchanged). All coordinates and dimensions are in
+        millimetres in room-local coordinates.
+      properties:
+        roomType:
+          $ref: '#/components/schemas/RoomType'
+        outline:
+          type: array
+          minItems: 3
+          maxItems: 1024
+          description: |
+            Room outline as ordered list of vertices of a simple polygon (no holes). Obstructions
+            inside the room are not part of the outline; they are passive elements.
+          items:
+            $ref: '#/components/schemas/RoomPoint'
+        area:
+          type: number
+          readOnly: true
+          description: Floor area in square metres, derived from the outline.
+        height:
+          type: integer
+          minimum: 0
+          description: Room height; 0 means undeclared.
+        gridOriginX:
+          type: integer
+          description: X coordinate of floor tile grid origin.
+        gridOriginY:
+          type: integer
+          description: Y coordinate of floor tile grid origin.
+        gridTileSize:
+          type: integer
+          minimum: 0
+          description: Floor tile size; 0 means no grid.
+        gridLabels:
+          type: string
+          description: Floor tile label scheme (columns x rows).
+          enum:
+            - NONE
+            - LETTERS_NUMBERS
+            - NUMBERS_NUMBERS
+        backgroundImage:
+          type: string
+          format: uuid
+          nullable: true
+          description: Image library UUID of floor plan backdrop; null means no backdrop (send null to clear).
+        backgroundScale:
+          type: integer
+          minimum: 0
+          description: Backdrop calibration in micrometres per image pixel.
+        backgroundX:
+          type: integer
+          description: X offset of the backdrop in room coordinates.
+        backgroundY:
+          type: integer
+          description: Y offset of the backdrop in room coordinates.
+        passiveElements:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/RoomPassiveElement'
+    RoomType:
+      type: string
+      description: Kind of room.
+      enum:
+        - COMPUTER_ROOM
+        - ELECTRICAL
+        - MECHANICAL
+        - TELECOM
+        - OTHER
+    RoomPoint:
+      type: object
+      additionalProperties: false
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: integer
+        y:
+          type: integer
+    RoomPassiveElement:
+      type: object
+      description: A passive element placed on room floor plan (column, wall, ramp, stairs, door, or other obstruction). On create/update only the writable fields are read; the element type is immutable after creation. Coordinates and dimensions are in millimetres.
+      properties:
+        id:
+          type: integer
+          description: Element ID (assigned by the server; ignored on input).
+          readOnly: true
+        name:
+          type: string
+        type:
+          type: string
+          description: Element type (default OTHER). Immutable after creation.
+          enum:
+            - COLUMN
+            - WALL
+            - RAMP
+            - STAIRS
+            - DOOR
+            - OTHER
+        x:
+          type: integer
+          description: X coordinate of footprint reference corner.
+        y:
+          type: integer
+          description: Y coordinate of footprint reference corner.
+        rotation:
+          type: integer
+          description: Rotation in degrees.
+        width:
+          type: integer
+          minimum: 0
+        depth:
+          type: integer
+          minimum: 0
+    RackRoomPlacement:
+      type: object
+      additionalProperties: false
+      description: |
+        Placement of a rack on the floor plan of its room. Returned by GET
+        /v1/objects/{id}/room-placement and embedded as `ObjectDetails.roomPlacement`; accepted
+        by PATCH /v1/objects/{id}/room-placement with merge-patch semantics. Values are only
+        meaningful while the rack has a Room parent and `placed` is true.
+      properties:
+        placed:
+          type: boolean
+          description: True if the rack has been positioned on the floor plan. Cleared by the server when the rack is unbound from its room.
+        x:
+          type: integer
+          description: X coordinate of rack footprint reference corner in room coordinates, millimetres.
+        y:
+          type: integer
+          description: Y coordinate of rack footprint reference corner in room coordinates, millimetres.
+        rotation:
+          type: integer
+          description: Rotation in degrees (front direction); normalised by the server to the range 0..359.
     PollingConfig:
       type: object
       additionalProperties: false
@@ -15956,6 +16442,7 @@ components:
             - Facility
             - PowerDomain
             - CoolingZone
+            - Room
         name:
           type: string
           description: Object name.
@@ -16087,7 +16574,26 @@ components:
           description: (Chassis) Controller node ID.
         height:
           type: integer
-          description: (Rack) Rack height in units.
+          description: (Rack) Rack height in units (default 42). (Room) Room height in millimetres; 0 means undeclared.
+        width:
+          type: integer
+          minimum: 1
+          description: (Rack) External cabinet width in millimetres (default 600). (Room) Width of generated rectangular outline in millimetres (default 6000); ignored if `outline` is provided.
+        depth:
+          type: integer
+          minimum: 1
+          description: (Rack) External cabinet depth in millimetres (default 1000). (Room) Depth of generated rectangular outline in millimetres (default 6000); ignored if `outline` is provided.
+        roomType:
+          allOf:
+            - $ref: '#/components/schemas/RoomType'
+          description: (Room) Room type (default OTHER).
+        outline:
+          type: array
+          minItems: 3
+          maxItems: 1024
+          items:
+            $ref: '#/components/schemas/RoomPoint'
+          description: (Room) Room outline; if omitted a rectangle is generated from `width` and `depth`.
         deviceId:
           type: string
           description: (MobileDevice) Device identifier.

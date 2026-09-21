@@ -582,6 +582,7 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_CONDITION);
             classFilter.add(AbstractObject.OBJECT_CONTAINER);
             classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
+            classFilter.add(AbstractObject.OBJECT_ROOM);
             classFilter.add(AbstractObject.OBJECT_FACILITY);
             classFilter.add(AbstractObject.OBJECT_INTERFACE);
             classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);
@@ -624,6 +625,7 @@ public class ObjectBrowser extends NavigationView
                classFilter.add(AbstractObject.OBJECT_CLUSTER);
                classFilter.add(AbstractObject.OBJECT_COLLECTOR);
                classFilter.add(AbstractObject.OBJECT_COOLINGZONE);
+               classFilter.add(AbstractObject.OBJECT_ROOM);
                classFilter.add(AbstractObject.OBJECT_FACILITY);
                classFilter.add(AbstractObject.OBJECT_INTERFACE);
                classFilter.add(AbstractObject.OBJECT_MOBILEDEVICE);

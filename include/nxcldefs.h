@@ -151,6 +151,7 @@
 #define OBJECT_FACILITY              42
 #define OBJECT_POWERDOMAIN           43
 #define OBJECT_COOLINGZONE           44
+#define OBJECT_ROOM                  45
 
 /**
  * Power domain types
@@ -173,6 +174,41 @@ enum CoolingZoneType
    COOLING_ZONE_PLANT = 0,
    COOLING_ZONE_ZONE = 1,
    COOLING_ZONE_OTHER = 2
+};
+
+/**
+ * Room types
+ */
+enum RoomType
+{
+   ROOM_COMPUTER_ROOM = 0,
+   ROOM_ELECTRICAL = 1,
+   ROOM_MECHANICAL = 2,
+   ROOM_TELECOM = 3,
+   ROOM_OTHER = 4
+};
+
+/**
+ * Room floor tile grid label schemes
+ */
+enum RoomGridLabels
+{
+   ROOM_GRID_LABELS_NONE = 0,
+   ROOM_GRID_LABELS_LETTERS_NUMBERS = 1,
+   ROOM_GRID_LABELS_NUMBERS_NUMBERS = 2
+};
+
+/**
+ * Room passive element types
+ */
+enum RoomElementType
+{
+   ROOM_ELEMENT_COLUMN = 0,
+   ROOM_ELEMENT_WALL = 1,
+   ROOM_ELEMENT_RAMP = 2,
+   ROOM_ELEMENT_STAIRS = 3,
+   ROOM_ELEMENT_DOOR = 4,
+   ROOM_ELEMENT_OTHER = 5
 };
 
 /** Base value for custom object classes */
@@ -405,6 +441,18 @@ enum CoolingZoneType
  * Chassis flags
  */
 #define CHF_BIND_UNDER_CONTROLLER   0x00010000
+
+/**
+ * Rack flags
+ */
+#define RKF_FRONT_SIDE_ONLY         0x00010000
+#define RKF_PLACED_IN_ROOM          0x00020000
+
+/**
+ * Default rack footprint (external cabinet dimensions in millimetres)
+ */
+#define DEFAULT_RACK_WIDTH          600
+#define DEFAULT_RACK_DEPTH          1000
 
 /**
  * Access point flags

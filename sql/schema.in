@@ -363,6 +363,11 @@ CREATE TABLE racks
   id integer not null,
   height integer not null,
   top_bottom_num char(1) not null,
+  width integer not null,  // external cabinet width in mm (default 600)
+  depth integer not null,  // external cabinet depth in mm (default 1000)
+  room_x integer not null, // position of footprint reference corner in room coordinates, mm
+  room_y integer not null,
+  room_rotation integer not null, // rotation in degrees (front direction)
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -850,6 +855,43 @@ CREATE TABLE cooling_zones
   id integer not null,
   zone_type integer not null,
   rated_capacity integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Rooms (physical rooms with floor plan)
+ */
+CREATE TABLE rooms
+(
+  id integer not null,
+  room_type integer not null,
+  outline SQL_TEXT null, // polygon vertices in mm, room-local coordinates: x,y;x,y;...
+  height integer not null, // mm, 0 = undeclared
+  grid_origin_x integer not null,
+  grid_origin_y integer not null,
+  grid_tile_size integer not null, // mm, 0 = no grid
+  grid_labels integer not null,
+  background_image varchar(36) null,
+  background_scale integer not null, // micrometres per pixel
+  background_x integer not null,
+  background_y integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Room passive elements (columns, ramps, stairs, etc.)
+ */
+CREATE TABLE room_passive_elements
+(
+  id integer not null,
+  room_id integer not null,
+  name varchar(255) null,
+  type integer not null,
+  x integer not null,
+  y integer not null,
+  rotation integer not null,
+  width integer not null,
+  depth integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

@@ -77,6 +77,7 @@ ObjectIndex g_idxCollectorById;
 ObjectIndex g_idxFacilityById;
 ObjectIndex g_idxPowerDomainById;
 ObjectIndex g_idxCoolingZoneById;
+ObjectIndex g_idxRoomById;
 ObjectIndex g_idxRackById;
 ObjectIndex g_idxCircuitById;
 
@@ -207,6 +208,7 @@ static void CacheLoadingThread()
    UpdateDataCollectionCache(&g_idxFacilityById);
    UpdateDataCollectionCache(&g_idxPowerDomainById);
    UpdateDataCollectionCache(&g_idxCoolingZoneById);
+   UpdateDataCollectionCache(&g_idxRoomById);
    UpdateDataCollectionCache(&g_idxCircuitById);
    UpdateDataCollectionCache(&g_idxRackById);
 	UpdateDataCollectionCache(&g_idxMobileDeviceById);
@@ -377,6 +379,9 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
             break;
          case OBJECT_COOLINGZONE:
             g_idxCoolingZoneById.put(object->getId(), object);
+            break;
+         case OBJECT_ROOM:
+            g_idxRoomById.put(object->getId(), object);
             break;
          case OBJECT_RACK:
             g_idxRackById.put(object->getId(), object);
@@ -579,6 +584,9 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          break;
       case OBJECT_COOLINGZONE:
          g_idxCoolingZoneById.remove(object.getId());
+         break;
+      case OBJECT_ROOM:
+         g_idxRoomById.remove(object.getId());
          break;
       case OBJECT_RACK:
          g_idxRackById.remove(object.getId());
@@ -1172,6 +1180,8 @@ static ObjectIndex* GetObjectIndexByClass(int objectClassHint)
          return &g_idxPowerDomainById;
       case OBJECT_COOLINGZONE:
          return &g_idxCoolingZoneById;
+      case OBJECT_ROOM:
+         return &g_idxRoomById;
       case OBJECT_RACK:
          return &g_idxRackById;
       case OBJECT_MOBILEDEVICE:
@@ -1551,6 +1561,8 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("facilities"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("power_domains"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("cooling_zones"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("rooms"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("room_passive_elements"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("access_points"), _T("id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("radios"), _T("owner_id,radio_index,bssid"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("interfaces"), _T("id"), _T("*"), intColumns) &&
@@ -1651,6 +1663,7 @@ bool LoadObjects()
    g_idxFacilityById.setStartupMode(true);
    g_idxPowerDomainById.setStartupMode(true);
    g_idxCoolingZoneById.setStartupMode(true);
+   g_idxRoomById.setStartupMode(true);
    g_idxRackById.setStartupMode(true);
 	g_idxMobileDeviceById.setStartupMode(true);
 	g_idxAccessPointById.setStartupMode(true);
@@ -1759,6 +1772,8 @@ bool LoadObjects()
    g_idxPowerDomainById.setStartupMode(false);
    LoadObjectsFromTable<CoolingZone>(_T("cooling zone"), hdb, preparedStatements, _T("cooling_zones"));
    g_idxCoolingZoneById.setStartupMode(false);
+   LoadObjectsFromTable<Room>(_T("room"), hdb, preparedStatements, _T("rooms"));
+   g_idxRoomById.setStartupMode(false);
    LoadObjectsFromTable<Circuit>(_T("circuit"), hdb, preparedStatements, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_CIRCUIT));
    g_idxCircuitById.setStartupMode(false);
 
@@ -2312,6 +2327,7 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_MOBILEDEVICE) ||
              (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_RACK) ||
+             (childClass == OBJECT_ROOM) ||
              (childClass == OBJECT_SENSOR) ||
              (childClass == OBJECT_SUBNET) ||
              (childClass == OBJECT_WIRELESSDOMAIN) ||
@@ -2332,6 +2348,7 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_POWERDOMAIN) ||
              (childClass == OBJECT_RACK) ||
+             (childClass == OBJECT_ROOM) ||
              (childClass == OBJECT_SENSOR))
             return true;
          break;
@@ -2348,6 +2365,13 @@ bool IsValidParentClass(int childClass, int parentClass)
          if ((childClass == OBJECT_CHASSIS) ||
              (childClass == OBJECT_CLUSTER) ||
              (childClass == OBJECT_COOLINGZONE) ||
+             (childClass == OBJECT_NODE) ||
+             (childClass == OBJECT_RACK) ||
+             (childClass == OBJECT_SENSOR))
+            return true;
+         break;
+      case OBJECT_ROOM:
+         if ((childClass == OBJECT_CHASSIS) ||
              (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_RACK) ||
              (childClass == OBJECT_SENSOR))
@@ -2379,6 +2403,7 @@ bool IsValidParentClass(int childClass, int parentClass)
              (childClass == OBJECT_NODE) ||
              (childClass == OBJECT_MOBILEDEVICE) ||
              (childClass == OBJECT_RACK) ||
+             (childClass == OBJECT_ROOM) ||
              (childClass == OBJECT_SENSOR) ||
              (childClass == OBJECT_CLOUDDOMAIN) ||
              (childClass == OBJECT_RESOURCE) ||
@@ -2607,6 +2632,7 @@ bool NXCORE_EXPORTABLE IsEventSource(int objectClass)
           (objectClass == OBJECT_COOLINGZONE) ||
           (objectClass == OBJECT_FACILITY) ||
           (objectClass == OBJECT_POWERDOMAIN) ||
+          (objectClass == OBJECT_ROOM) ||
           (objectClass == OBJECT_MOBILEDEVICE) ||
           (objectClass == OBJECT_OBSERVATIONPOINT) ||
           (objectClass == OBJECT_RACK) ||
@@ -3345,8 +3371,13 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
          NetObjInsert(object, true, false);
          object->calculateCompoundStatus();  // Force status change to NORMAL
          break;
+      case OBJECT_ROOM:
+         object = make_shared<Room>(objectName, json);
+         NetObjInsert(object, true, false);
+         object->calculateCompoundStatus();  // Force status change to NORMAL
+         break;
       case OBJECT_RACK:
-         object = make_shared<Rack>(objectName, json_object_get_int32(json, "height"));
+         object = make_shared<Rack>(objectName, json_object_get_int32(json, "height"), json_object_get_int32(json, "width"), json_object_get_int32(json, "depth"));
          NetObjInsert(object, true, false);
          break;
       case OBJECT_SUBNET:

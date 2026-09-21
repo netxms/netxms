@@ -201,6 +201,7 @@ import org.netxms.client.objects.ObservationPoint;
 import org.netxms.client.objects.ObjectCategory;
 import org.netxms.client.objects.PowerDomain;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Room;
 import org.netxms.client.objects.Resource;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
@@ -215,6 +216,7 @@ import org.netxms.client.objects.WirelessDomain;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.objects.configs.PassiveRackElement;
+import org.netxms.client.objects.configs.RoomPassiveElement;
 import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.netxms.client.objects.queries.ObjectQuery;
 import org.netxms.client.objects.queries.ObjectQueryResult;
@@ -1806,6 +1808,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_RACK:
             object = new Rack(msg, this);
+            break;
+         case AbstractObject.OBJECT_ROOM:
+            object = new Room(msg, this);
             break;
          case AbstractObject.OBJECT_SENSOR:
             object = new Sensor(msg, this);
@@ -7437,6 +7442,14 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_RACK:
             msg.setFieldInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
+            msg.setFieldInt32(NXCPCodes.VID_WIDTH, data.getWidth());
+            msg.setFieldInt32(NXCPCodes.VID_DEPTH, data.getDepth());
+            break;
+         case AbstractObject.OBJECT_ROOM:
+            msg.setFieldInt16(NXCPCodes.VID_ROOM_TYPE, data.getRoomType().getValue());
+            msg.setFieldInt32(NXCPCodes.VID_HEIGHT, data.getHeight());
+            msg.setFieldInt32(NXCPCodes.VID_WIDTH, data.getWidth());
+            msg.setFieldInt32(NXCPCodes.VID_DEPTH, data.getDepth());
             break;
          case AbstractObject.OBJECT_FACILITY:
             msg.setFieldInt32(NXCPCodes.VID_SETTLEMENT_LAG, data.getSettlementLag());
@@ -8545,6 +8558,51 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_ZONE_TYPE, data.getZoneType().getValue());
       if (data.getRatedCapacity() != null)
          msg.setFieldInt32(NXCPCodes.VID_RATED_CAPACITY, data.getRatedCapacity());
+
+      if (data.getWidth() != null)
+         msg.setFieldInt32(NXCPCodes.VID_WIDTH, data.getWidth());
+      if (data.getDepth() != null)
+         msg.setFieldInt32(NXCPCodes.VID_DEPTH, data.getDepth());
+      if (data.getRoomX() != null)
+         msg.setFieldInt32(NXCPCodes.VID_ROOM_X, data.getRoomX());
+      if (data.getRoomY() != null)
+         msg.setFieldInt32(NXCPCodes.VID_ROOM_Y, data.getRoomY());
+      if (data.getRoomRotation() != null)
+         msg.setFieldInt32(NXCPCodes.VID_ROTATION, data.getRoomRotation());
+
+      if (data.getRoomType() != null)
+         msg.setFieldInt16(NXCPCodes.VID_ROOM_TYPE, data.getRoomType().getValue());
+      if (data.getRoomOutline() != null)
+         msg.setField(NXCPCodes.VID_OUTLINE, Room.outlineToArray(data.getRoomOutline()));
+      if (data.getRoomHeight() != null)
+         msg.setFieldInt32(NXCPCodes.VID_HEIGHT, data.getRoomHeight());
+      if (data.getGridOriginX() != null)
+         msg.setFieldInt32(NXCPCodes.VID_GRID_ORIGIN_X, data.getGridOriginX());
+      if (data.getGridOriginY() != null)
+         msg.setFieldInt32(NXCPCodes.VID_GRID_ORIGIN_Y, data.getGridOriginY());
+      if (data.getGridTileSize() != null)
+         msg.setFieldInt32(NXCPCodes.VID_GRID_TILE_SIZE, data.getGridTileSize());
+      if (data.getGridLabels() != null)
+         msg.setFieldInt16(NXCPCodes.VID_GRID_LABELS, data.getGridLabels().getValue());
+      if (data.getRoomBackgroundImage() != null)
+         msg.setField(NXCPCodes.VID_BACKGROUND, data.getRoomBackgroundImage());
+      if (data.getRoomBackgroundScale() != null)
+         msg.setFieldInt32(NXCPCodes.VID_BACKGROUND_SCALE, data.getRoomBackgroundScale());
+      if (data.getRoomBackgroundX() != null)
+         msg.setFieldInt32(NXCPCodes.VID_BACKGROUND_X, data.getRoomBackgroundX());
+      if (data.getRoomBackgroundY() != null)
+         msg.setFieldInt32(NXCPCodes.VID_BACKGROUND_Y, data.getRoomBackgroundY());
+      if (data.getRoomPassiveElements() != null)
+      {
+         List<RoomPassiveElement> elements = data.getRoomPassiveElements();
+         msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, elements.size());
+         long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
+         for(int i = 0; i < elements.size(); i++)
+         {
+            elements.get(i).fillMessage(msg, base);
+            base += 10;
+         }
+      }
 
       if (data.getInScope() != null)
          msg.setField(NXCPCodes.VID_IN_SCOPE, data.getInScope());

@@ -1435,7 +1435,7 @@ bool NetworkMap::buildTopologyGraph(NetworkMapObjectList *graph, int mapType)
          }
          else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_COLLECTOR) ||
                   (seed->getObjectClass() == OBJECT_FACILITY) || (seed->getObjectClass() == OBJECT_POWERDOMAIN) ||
-                  (seed->getObjectClass() == OBJECT_COOLINGZONE) ||
+                  (seed->getObjectClass() == OBJECT_COOLINGZONE) || (seed->getObjectClass() == OBJECT_ROOM) ||
                   (seed->getObjectClass() == OBJECT_CHASSIS) || (seed->getObjectClass() == OBJECT_CLUSTER) ||
                   (seed->getObjectClass() == OBJECT_RACK))
          {
@@ -2246,7 +2246,7 @@ void NetworkMap::autobindPoll(PollerInfo *poller, ClientSession *session, uint32
          if (object->isDataCollectionTarget())
             return true;
          int objectClass = object->getObjectClass();
-         return (objectClass == OBJECT_NETWORK) || (objectClass == OBJECT_SERVICEROOT) || (objectClass == OBJECT_SUBNET) || (objectClass == OBJECT_ZONE) || (objectClass == OBJECT_CONDITION) || (objectClass == OBJECT_CONTAINER) || (objectClass == OBJECT_COLLECTOR) || (objectClass == OBJECT_FACILITY) || (objectClass == OBJECT_POWERDOMAIN) || (objectClass == OBJECT_COOLINGZONE);
+         return (objectClass == OBJECT_NETWORK) || (objectClass == OBJECT_SERVICEROOT) || (objectClass == OBJECT_SUBNET) || (objectClass == OBJECT_ZONE) || (objectClass == OBJECT_CONDITION) || (objectClass == OBJECT_CONTAINER) || (objectClass == OBJECT_COLLECTOR) || (objectClass == OBJECT_FACILITY) || (objectClass == OBJECT_POWERDOMAIN) || (objectClass == OBJECT_COOLINGZONE) || (objectClass == OBJECT_ROOM);
       }, nullptr);
 
    for (int i = 0; i < objects->size(); i++)

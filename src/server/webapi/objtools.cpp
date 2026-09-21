@@ -688,7 +688,7 @@ static int ExecuteServerCommand(Context *context, const shared_ptr<NetObj>& obje
    if ((object->getObjectClass() != OBJECT_NODE) && (object->getObjectClass() != OBJECT_CONTAINER) &&
          (object->getObjectClass() != OBJECT_COLLECTOR) && (object->getObjectClass() != OBJECT_SERVICEROOT) &&
          (object->getObjectClass() != OBJECT_FACILITY) && (object->getObjectClass() != OBJECT_POWERDOMAIN) &&
-         (object->getObjectClass() != OBJECT_COOLINGZONE) &&
+         (object->getObjectClass() != OBJECT_COOLINGZONE) && (object->getObjectClass() != OBJECT_ROOM) &&
          (object->getObjectClass() != OBJECT_SUBNET) && (object->getObjectClass() != OBJECT_CLUSTER) &&
          (object->getObjectClass() != OBJECT_ZONE))
    {

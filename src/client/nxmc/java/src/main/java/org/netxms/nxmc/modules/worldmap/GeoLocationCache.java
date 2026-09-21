@@ -107,7 +107,7 @@ public class GeoLocationCache implements SessionListener
                 (object.getObjectClass() == AbstractObject.OBJECT_COLLECTOR) || 
                 (object.getObjectClass() == AbstractObject.OBJECT_FACILITY) || 
                 (object.getObjectClass() == AbstractObject.OBJECT_POWERDOMAIN) || 
-                (object.getObjectClass() == AbstractObject.OBJECT_COOLINGZONE) || 
+                (object.getObjectClass() == AbstractObject.OBJECT_COOLINGZONE) || (object.getObjectClass() == AbstractObject.OBJECT_ROOM) || 
 					 (object.getObjectClass() == AbstractObject.OBJECT_CONTAINER) ||
 					 (object.getObjectClass() == AbstractObject.OBJECT_RACK) ||
 					 (object.getObjectClass() == AbstractObject.OBJECT_SENSOR))
@@ -136,7 +136,7 @@ public class GeoLocationCache implements SessionListener
           (object.getObjectClass() != AbstractObject.OBJECT_COLLECTOR) && 
           (object.getObjectClass() != AbstractObject.OBJECT_FACILITY) && 
           (object.getObjectClass() != AbstractObject.OBJECT_POWERDOMAIN) && 
-          (object.getObjectClass() != AbstractObject.OBJECT_COOLINGZONE) && 
+          (object.getObjectClass() != AbstractObject.OBJECT_COOLINGZONE) && (object.getObjectClass() != AbstractObject.OBJECT_ROOM) && 
 		    (object.getObjectClass() != AbstractObject.OBJECT_CONTAINER) &&
           (object.getObjectClass() != AbstractObject.OBJECT_RACK) &&
           (object.getObjectClass() != AbstractObject.OBJECT_SENSOR))

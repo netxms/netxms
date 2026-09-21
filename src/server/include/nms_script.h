@@ -218,6 +218,17 @@ public:
 };
 
 /**
+ * NXSL "Room" class
+ */
+class NXSL_RoomClass : public NXSL_DCTargetClass
+{
+public:
+   NXSL_RoomClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+};
+
+/**
  * NXSL "Circuit" class
  */
 class NXSL_CircuitClass : public NXSL_DCTargetClass
@@ -1023,6 +1034,7 @@ extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
 extern NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
 extern NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 extern NXSL_RackClass g_nxslRackClass;
+extern NXSL_RoomClass g_nxslRoomClass;
 extern NXSL_RadioInterfaceClass g_nxslRadioInterfaceClass;
 extern NXSL_ScoredDciValueClass g_nxslScoredDciValueClass;
 extern NXSL_SensorClass g_nxslSensorClass;

@@ -23,6 +23,8 @@
 **   GET/PATCH /v1/objects/:object-id/facility       (Facility settings)
 **   GET/PATCH /v1/objects/:object-id/power-domain   (PowerDomain settings)
 **   GET/PATCH /v1/objects/:object-id/cooling-zone   (CoolingZone settings)
+**   GET/PATCH /v1/objects/:object-id/room           (Room settings)
+**   GET/PATCH /v1/objects/:object-id/room-placement (Rack placement on room floor plan)
 **
 **/
 
@@ -174,4 +176,66 @@ int H_ObjectCoolingZoneUpdate(Context *context)
       return httpCode;
 
    return ApplyJsonPatch(context, object.get(), "coolingZone", L"Modified cooling zone configuration of object %s [%u]");
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/room.
+ * Returns the room property group (room type, outline, derived area, height, tile grid, backdrop,
+ * passive elements). Class-blind URL: returns 400 if the target object is not a room.
+ */
+int H_ObjectRoomGet(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForConfigRead(context, OBJECT_ROOM, L"room", &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   json_t *response = static_cast<Room&>(*object).roomConfigToJson();
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
+ * Handler for PATCH /v1/objects/:object-id/room.
+ */
+int H_ObjectRoomUpdate(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForConfigModify(context, OBJECT_ROOM, L"room", &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   return ApplyJsonPatch(context, object.get(), "room", L"Modified room configuration of object %s [%u]");
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/room-placement.
+ * Returns placement of the rack on room floor plan. Class-blind URL: returns 400 if the
+ * target object is not a rack.
+ */
+int H_ObjectRoomPlacementGet(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForConfigRead(context, OBJECT_RACK, L"room-placement", &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   json_t *response = static_cast<Rack&>(*object).roomPlacementToJson();
+   context->setResponseData(response);
+   json_decref(response);
+   return 200;
+}
+
+/**
+ * Handler for PATCH /v1/objects/:object-id/room-placement.
+ */
+int H_ObjectRoomPlacementUpdate(Context *context)
+{
+   int httpCode = 0;
+   shared_ptr<NetObj> object = LoadObjectForConfigModify(context, OBJECT_RACK, L"room-placement", &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   return ApplyJsonPatch(context, object.get(), "roomPlacement", L"Modified room placement of object %s [%u]");
 }
