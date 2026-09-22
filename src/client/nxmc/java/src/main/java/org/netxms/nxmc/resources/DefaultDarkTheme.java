@@ -77,6 +77,12 @@ public class DefaultDarkTheme extends Theme
       elements.put("MessageArea.Info", new ThemeElement(new RGB(21, 94, 122), new RGB(26, 143, 189)));
       elements.put("MessageArea.Success", new ThemeElement(new RGB(67, 116, 24), new RGB(77, 164, 0)));
       elements.put("MessageArea.Warning", new ThemeElement(new RGB(157, 126, 0), new RGB(241, 196, 14)));
+      elements.put("FloorPlan", new ThemeElement(new RGB(40, 40, 40), new RGB(224, 224, 224)));
+      elements.put("FloorPlan.Floor", new ThemeElement(new RGB(58, 58, 58), new RGB(190, 190, 190)));
+      elements.put("FloorPlan.Grid", new ThemeElement(null, new RGB(90, 90, 90)));
+      elements.put("FloorPlan.Element", new ThemeElement(new RGB(96, 96, 96), new RGB(160, 160, 160)));
+      elements.put("FloorPlan.Rack", new ThemeElement(null, new RGB(230, 230, 230)));
+      elements.put("FloorPlan.Warning", new ThemeElement(null, new RGB(255, 80, 80)));
       elements.put("MessageBar", new ThemeElement(new RGB(138, 148, 47), new RGB(0, 0, 0)));
       elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
       elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));

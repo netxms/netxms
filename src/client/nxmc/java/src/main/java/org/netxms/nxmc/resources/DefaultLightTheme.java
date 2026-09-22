@@ -77,6 +77,12 @@ public class DefaultLightTheme extends Theme
       elements.put("MessageArea.Info", new ThemeElement(new RGB(227, 245, 252), new RGB(0, 114, 163)));
       elements.put("MessageArea.Success", new ThemeElement(new RGB(223, 240, 208), new RGB(60, 133, 0)));
       elements.put("MessageArea.Warning", new ThemeElement(new RGB(255, 244, 199), new RGB(254, 226, 114)));
+      elements.put("FloorPlan", new ThemeElement(new RGB(245, 245, 245), new RGB(32, 32, 32)));
+      elements.put("FloorPlan.Floor", new ThemeElement(new RGB(255, 255, 255), new RGB(64, 64, 64)));
+      elements.put("FloorPlan.Grid", new ThemeElement(null, new RGB(200, 200, 200)));
+      elements.put("FloorPlan.Element", new ThemeElement(new RGB(210, 210, 210), new RGB(110, 110, 110)));
+      elements.put("FloorPlan.Rack", new ThemeElement(null, new RGB(40, 40, 40)));
+      elements.put("FloorPlan.Warning", new ThemeElement(null, new RGB(220, 40, 40)));
       elements.put("MessageBar", new ThemeElement(new RGB(255, 252, 192), new RGB(0, 0, 0)));
       elements.put("MibExplorer.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
       elements.put("ObjectTab.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));

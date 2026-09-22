@@ -135,6 +135,7 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.PhysicalLinkView;
 import org.netxms.nxmc.modules.objects.views.PortView;
 import org.netxms.nxmc.modules.objects.views.ProcessesView;
+import org.netxms.nxmc.modules.objects.views.FloorPlanView;
 import org.netxms.nxmc.modules.objects.views.RackView;
 import org.netxms.nxmc.modules.objects.views.RadioInterfacesAP;
 import org.netxms.nxmc.modules.objects.views.RadioInterfacesController;
@@ -279,6 +280,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new PortView());
       addMainView(new PredefinedMapView());
       addMainView(new ProcessesView());
+      addMainView(new FloorPlanView());
       addMainView(new RackView());
       addMainView(new RadioInterfacesAP());
       addMainView(new RadioInterfacesController());
