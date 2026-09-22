@@ -2612,6 +2612,9 @@ if test "x$SYSTEMD_SUPPORT" = "xyes"; then
 		AC_DEFINE(HAVE_SDBUS, 1, Define to 1 if you have Systemd SD-Bus libraries and headers)
 		AGENT_LIBS="$AGENT_LIBS -lsystemd"
 		SYSTEMD_LIBS="-lsystemd"
+		AC_CHECK_HEADER(systemd/sd-login.h,
+			[AC_CHECK_LIB(systemd, sd_session_get_leader,
+				[AC_DEFINE(HAVE_SD_SESSION_GET_LEADER, 1, Define to 1 if libsystemd provides sd_session_get_leader)])])
 	fi
 	AC_DEFINE(WITH_SYSTEMD, 1, Define to 1 to enable systemd support)
 fi

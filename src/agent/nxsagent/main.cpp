@@ -31,6 +31,9 @@
 #else
 #include <sys/stat.h>
 #include <utmp.h>
+#if defined(HAVE_SDBUS) && defined(HAVE_SD_SESSION_GET_LEADER)
+#include <systemd/sd-login.h>
+#endif
 #if HAVE_X11
 #include <X11/Xlib.h>
 #endif
@@ -139,6 +142,38 @@ static bool SendMsg(const NXCPMessage& msg)
    return success;
 }
 
+#if defined(HAVE_SDBUS) && defined(HAVE_SD_SESSION_GET_LEADER)
+/**
+ * Get leader PID for a user session eligible for System.ActiveUserSessions
+ */
+static uint32_t EligibleSessionLeader(const char *sessionId)
+{
+   uid_t uid;
+   if ((sd_session_get_uid(sessionId, &uid) < 0) || (uid != getuid()))
+      return 0;
+
+   char *sessionClass;
+   if (sd_session_get_class(sessionId, &sessionClass) < 0)
+      return 0;
+   bool eligible = !strncmp(sessionClass, "user", 4) && strcmp(sessionClass, "user-incomplete");
+   // sd-login strings are malloc-allocated and must be released with free().
+   free(sessionClass);
+   if (!eligible)
+      return 0;
+
+   char *state;
+   if (sd_session_get_state(sessionId, &state) < 0)
+      return 0;
+   eligible = strcmp(state, "opening") && strcmp(state, "closing");
+   free(state);
+   if (!eligible)
+      return 0;
+
+   pid_t leader;
+   return (sd_session_get_leader(sessionId, &leader) >= 0) ? static_cast<uint32_t>(leader) : 0;
+}
+#endif
+
 /**
  * Send login message
  */
@@ -223,8 +258,43 @@ static void Login()
    else if (waylandDisplay != nullptr && *waylandDisplay != 0)
       displayId = waylandDisplay;
 
-   // Find matching utmp entry to get session ID (ut_pid) that matches System.ActiveUserSessions
+   // Use the same session ID source as System.ActiveUserSessions: logind leader or utmp PID
    uint32_t sid = 0;
+#if defined(HAVE_SDBUS) && defined(HAVE_SD_SESSION_GET_LEADER)
+   struct stat st;
+   int statResult = stat("/run/systemd/sessions", &st);
+   if ((statResult == 0) && S_ISDIR(st.st_mode))
+   {
+      const char *envSessionId = getenv("XDG_SESSION_ID");
+      if ((envSessionId != nullptr) && (*envSessionId != 0))
+      {
+         sid = EligibleSessionLeader(envSessionId);
+         nxlog_debug(3, _T("Login: XDG_SESSION_ID %hs, leader %u"), envSessionId, sid);
+      }
+
+      char *sessionId;
+      if ((sid == 0) && (sd_pid_get_session(getpid(), &sessionId) >= 0))
+      {
+         sid = EligibleSessionLeader(sessionId);
+         nxlog_debug(3, _T("Login: process session %hs, leader %u"), sessionId, sid);
+         free(sessionId);
+      }
+      if ((sid == 0) && (sd_uid_get_display(getuid(), &sessionId) >= 0))
+      {
+         sid = EligibleSessionLeader(sessionId);
+         nxlog_debug(3, _T("Login: primary display session %hs, leader %u (best effort)"), sessionId, sid);
+         free(sessionId);
+      }
+      if (sid == 0)
+         nxlog_debug(3, _T("Login: no eligible logind session found"));
+   }
+   else if ((statResult == 0) || (errno != ENOENT))
+   {
+      int error = (statResult == 0) ? ENOTDIR : errno;
+      nxlog_debug(3, _T("Login: cannot use /run/systemd/sessions (%hs, errno=%d)"), strerror(error), error);
+   }
+   else
+#endif
    if (displayId != nullptr)
    {
       FILE *f = fopen(UTMP_FILE, "r");

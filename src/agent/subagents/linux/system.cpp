@@ -26,25 +26,201 @@
 #include <sys/utsname.h>
 #include <utmp.h>
 
+#if defined(HAVE_SDBUS) && defined(HAVE_SD_SESSION_GET_LEADER)
+#include <systemd/sd-login.h>
+#define HAVE_LOGIND_SESSIONS 1
+#endif
+
+/**
+ * User session information
+ */
+struct UserSessionInfo
+{
+   uint32_t id;   // logind session leader PID or utmp ut_pid
+   char user[64];
+   char terminal[64];
+   char remoteHost[256];
+   time_t loginTime;
+   bool active;
+};
+
+#ifdef HAVE_LOGIND_SESSIONS
+
+/**
+ * Copy string returned by sd-login call into fixed size buffer and release it.
+ * Strings returned by libsystemd are allocated with malloc() and must be released with free().
+ */
+static void CopyLogindString(char *dst, size_t dstSize, char *src)
+{
+   strlcpy(dst, src, dstSize);
+   free(src);
+}
+
+/**
+ * Read logind session. Returns false if session should not be reported
+ * (not a user session, still opening or already closing, or mandatory attributes cannot be read).
+ */
+static bool ReadLogindSession(const char *id, UserSessionInfo *info)
+{
+   char *sessionClass;
+   if (sd_session_get_class(id, &sessionClass) < 0)
+      return false;
+   bool accepted = !strncmp(sessionClass, "user", 4) && strcmp(sessionClass, "user-incomplete");
+   free(sessionClass);
+   if (!accepted)
+      return false;
+
+   char *state;
+   if (sd_session_get_state(id, &state) < 0)
+      return false;
+   accepted = strcmp(state, "opening") && strcmp(state, "closing");
+   info->active = !strcmp(state, "active");
+   free(state);
+   if (!accepted)
+      return false;
+
+   pid_t leader;
+   if (sd_session_get_leader(id, &leader) < 0)
+      return false;
+   info->id = static_cast<uint32_t>(leader);
+
+   char *user;
+   if (sd_session_get_username(id, &user) < 0)
+      return false;
+   CopyLogindString(info->user, sizeof(info->user), user);
+
+   // X11 desktop sessions carried the display in utmp ut_line and ut_host,
+   // so the display substitutes for missing tty and remote host
+   char display[64] = "";
+   char *s;
+   if (sd_session_get_display(id, &s) >= 0)
+      CopyLogindString(display, sizeof(display), s);
+
+   if (sd_session_get_tty(id, &s) >= 0)
+      CopyLogindString(info->terminal, sizeof(info->terminal), s);
+   else
+      strcpy(info->terminal, display);
+
+   if (sd_session_get_remote_host(id, &s) >= 0)
+      CopyLogindString(info->remoteHost, sizeof(info->remoteHost), s);
+   else
+      strcpy(info->remoteHost, display);
+
+   uint64_t startTime;
+   info->loginTime = (sd_session_get_start_time(id, &startTime) >= 0) ? static_cast<time_t>(startTime / 1000000) : 0;
+   return true;
+}
+
+/**
+ * Read user sessions from logind
+ */
+static bool ReadLogindSessions(StructArray<UserSessionInfo> *sessions)
+{
+   char **ids = nullptr;
+   int count = sd_get_sessions(&ids);
+   if (count < 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("sd_get_sessions() failed (%hs)"), strerror(-count));
+      return false;
+   }
+
+   for(int i = 0; i < count; i++)
+   {
+      UserSessionInfo info;
+      if (ReadLogindSession(ids[i], &info))
+         sessions->add(info);
+      free(ids[i]);
+   }
+   free(ids);
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("logind: %d user sessions"), sessions->size());
+   return true;
+}
+
+#endif /* HAVE_LOGIND_SESSIONS */
+
+/**
+ * Copy utmp field that may lack terminating zero
+ */
+static void CopyUtmpField(char *dst, size_t dstSize, const char *src, size_t srcSize)
+{
+   size_t len = strnlen(src, srcSize);
+   if (len >= dstSize)
+      len = dstSize - 1;
+   memcpy(dst, src, len);
+   dst[len] = 0;
+}
+
+/**
+ * Read user sessions from utmp
+ */
+static bool ReadUtmpSessions(StructArray<UserSessionInfo> *sessions)
+{
+   FILE *f = fopen(UTMP_FILE, "r");
+   if (f == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot open %hs (%hs)"), UTMP_FILE, strerror(errno));
+      return false;
+   }
+
+   struct utmp rec;
+   while(fread(&rec, sizeof(rec), 1, f) == 1)
+   {
+      if (rec.ut_type != USER_PROCESS)
+         continue;
+
+      UserSessionInfo info;
+      info.id = static_cast<uint32_t>(rec.ut_pid);
+      CopyUtmpField(info.user, sizeof(info.user), rec.ut_user, sizeof(rec.ut_user));
+      CopyUtmpField(info.terminal, sizeof(info.terminal), rec.ut_line, sizeof(rec.ut_line));
+      CopyUtmpField(info.remoteHost, sizeof(info.remoteHost), rec.ut_host, sizeof(rec.ut_host));
+      info.loginTime = rec.ut_tv.tv_sec;
+      info.active = true;
+      sessions->add(info);
+   }
+   fclose(f);
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("utmp: %d user sessions"), sessions->size());
+   return true;
+}
+
+/**
+ * Read user sessions. Uses logind when it is present on the system, utmp otherwise.
+ * logind is considered present when /run/systemd/sessions exists; its answer is then
+ * authoritative even when empty, because utmp may not be maintained at all on such hosts.
+ */
+static bool ReadUserSessions(StructArray<UserSessionInfo> *sessions)
+{
+#ifdef HAVE_LOGIND_SESSIONS
+   struct stat st;
+   if (stat("/run/systemd/sessions", &st) == 0)
+   {
+      if (S_ISDIR(st.st_mode))
+         return ReadLogindSessions(sessions);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("/run/systemd/sessions is not a directory"));
+      return false;
+   }
+   if (errno != ENOENT)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot stat /run/systemd/sessions (%hs)"), strerror(errno));
+      return false;
+   }
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("logind not present, reading utmp"));
+#endif
+   return ReadUtmpSessions(sessions);
+}
+
 /**
  * Handler for System.ConnectedUsers parameter
  */
 LONG H_ConnectedUsers(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	FILE *f = fopen(UTMP_FILE, "r");
-	if (f == nullptr)
-	   return SYSINFO_RC_ERROR;
+   StructArray<UserSessionInfo> sessions;
+   if (!ReadUserSessions(&sessions))
+      return SYSINFO_RC_ERROR;
 
-   int count = 0;
-   struct utmp rec;
-   while(fread(&rec, sizeof(rec), 1, f) == 1)
-   {
-      if (rec.ut_type == USER_PROCESS)
-         count++;
-   }
-   fclose(f);
-   ret_uint(value, count);
-	return SYSINFO_RC_SUCCESS;
+   ret_uint(value, sessions.size());
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -52,23 +228,18 @@ LONG H_ConnectedUsers(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
  */
 LONG H_UserSessionList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	FILE *f = fopen(UTMP_FILE, "r");
-	if (f == nullptr)
-	   return SYSINFO_RC_ERROR;
+   StructArray<UserSessionInfo> sessions;
+   if (!ReadUserSessions(&sessions))
+      return SYSINFO_RC_ERROR;
 
-   struct utmp rec;
-   while(fread(&rec, sizeof(rec), 1, f) == 1)
+   for(int i = 0; i < sessions.size(); i++)
    {
-      if (rec.ut_type == USER_PROCESS)
-      {
-         TCHAR buffer[1024];
-         _sntprintf(buffer, 1024, _T("\"%hs\" \"%hs\" \"%hs\""), rec.ut_user, rec.ut_line, rec.ut_host);
-         value->add(buffer);
-      }
+      const UserSessionInfo *s = sessions.get(i);
+      TCHAR buffer[1024];
+      _sntprintf(buffer, 1024, _T("\"%hs\" \"%hs\" \"%hs\""), s->user, s->terminal, s->remoteHost);
+      value->add(buffer);
    }
-   fclose(f);
-
-	return SYSINFO_RC_SUCCESS;
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -76,8 +247,8 @@ LONG H_UserSessionList(const TCHAR *param, const TCHAR *arg, StringList *value, 
  */
 LONG H_UserSessionTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
-   FILE *f = fopen(UTMP_FILE, "r");
-   if (f == nullptr)
+   StructArray<UserSessionInfo> sessions;
+   if (!ReadUserSessions(&sessions))
       return SYSINFO_RC_ERROR;
 
    value->addColumn(_T("ID"), DCI_DT_UINT, _T("ID"), true);
@@ -91,32 +262,32 @@ LONG H_UserSessionTable(const TCHAR *param, const TCHAR *arg, Table *value, Abst
    value->addColumn(_T("LOGON_TIMESTAMP"), DCI_DT_UINT64, _T("Logon time"));
    value->addColumn(_T("IDLE_TIME"), DCI_DT_UINT, _T("Idle for"));
 
-   char tty[128] = "/dev/";
-   struct utmp rec;
-   while(fread(&rec, sizeof(rec), 1, f) == 1)
+   for(int i = 0; i < sessions.size(); i++)
    {
-      if (rec.ut_type != USER_PROCESS)
-         continue;
-
+      const UserSessionInfo *s = sessions.get(i);
       value->addRow();
-      value->set(0, rec.ut_pid);
-      value->set(1, rec.ut_user);
-      value->set(2, rec.ut_line);
-      value->set(3, _T("Active"));
-      value->set(4, rec.ut_host);
+      value->set(0, s->id);
+      value->set(1, s->user);
+      value->set(2, s->terminal);
+      value->set(3, s->active ? _T("Active") : _T("Disconnected"));
+      value->set(4, s->remoteHost);
 
-      InetAddress addr = InetAddress::parse(rec.ut_host);
+      InetAddress addr = InetAddress::parse(s->remoteHost);
       if (addr.isValid())
          value->set(5, addr.toString());
 
-      value->set(8, static_cast<int64_t>(rec.ut_tv.tv_sec));
+      value->set(8, static_cast<int64_t>(s->loginTime));
 
-      strlcpy(&tty[5], rec.ut_line, 123);
-      struct stat st;
-      if (stat(tty, &st) == 0)
-         value->set(9, static_cast<int64_t>(time(nullptr) - st.st_atime));
+      // Terminal may hold X11 display name (":0") for desktop sessions, which has no device node
+      if ((s->terminal[0] != 0) && (s->terminal[0] != ':'))
+      {
+         char tty[128];
+         snprintf(tty, sizeof(tty), "/dev/%s", s->terminal);
+         struct stat st;
+         if (stat(tty, &st) == 0)
+            value->set(9, static_cast<int64_t>(time(nullptr) - st.st_atime));
+      }
    }
-   fclose(f);
 
    return SYSINFO_RC_SUCCESS;
 }
