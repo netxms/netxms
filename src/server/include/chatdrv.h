@@ -81,9 +81,10 @@ public:
     * Send message to given peer. When isMarkdown is true, text is markdown (assistant replies
     * and notifications submitted as markdown) and the driver renders or strips it according to
     * platform capabilities; otherwise text is literal and the driver must ensure it is displayed
-    * as written (escaping it if the platform interprets markup).
+    * as written (escaping it if the platform interprets markup). Location, when set (type other
+    * than GL_UNSET), is sent after the text on platforms with location messages and ignored elsewhere.
     */
-   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) = 0;
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location) = 0;
 
    /**
     * Send question with selectable options to given peer using platform-native interactive

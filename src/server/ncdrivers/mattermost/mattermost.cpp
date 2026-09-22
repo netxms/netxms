@@ -462,7 +462,7 @@ public:
 
    virtual bool start(ChatBotMessageSink *sink) override;
    virtual void stop() override;
-   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) override;
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location) override;
 
    /**
     * Mattermost interactive buttons require inbound HTTP integration endpoint, so questions
@@ -943,9 +943,10 @@ bool MattermostChatBot::postMessage(const char *channelId, const char *text)
 
 /**
  * Send message to given peer. Mattermost renders posts as markdown, so markdown text is posted
- * as is and literal text is escaped to be displayed as written.
+ * as is and literal text is escaped to be displayed as written. Location is ignored (no location
+ * messages in Mattermost).
  */
-bool MattermostChatBot::sendMessage(const char *peerId, const char *text, bool isMarkdown)
+bool MattermostChatBot::sendMessage(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location)
 {
    char channelId[64];
    if (!resolveRecipient(peerId, channelId, sizeof(channelId)))

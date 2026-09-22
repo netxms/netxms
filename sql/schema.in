@@ -1826,6 +1826,7 @@ CREATE TABLE actions
   action_data SQL_TEXT null,
   channel_name varchar(63) null,
   is_markdown integer not null,
+  send_geolocation integer not null,
   PRIMARY KEY(action_id)
 ) TABLE_TYPE;
 

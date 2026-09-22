@@ -987,9 +987,9 @@ public:
 
    /**
     * Send message to given peer. XMPP messages carry no markup, so markdown is stripped;
-    * literal text is sent as is.
+    * literal text is sent as is. Location is ignored (no location messages in XMPP).
     */
-   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) override
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location) override
    {
       if (!isMarkdown)
          return m_driver->sendMessageToPeer(peerId, text) == 0;

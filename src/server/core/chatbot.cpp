@@ -167,7 +167,7 @@ public:
          const char *providerSlot, const StructArray<ChatBotUserMapping>& userMappings);
    void updateName(const wchar_t *newName) { wcslcpy(m_name, newName, MAX_OBJECT_NAME); }
 
-   bool sendMessageToPeer(const char *peerId, const char *text, bool isMarkdown);
+   bool sendMessageToPeer(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location = GeoLocation());
    void deliverQuestion(const QuestionDelivery& question);
 
    void checkHealth();
@@ -218,7 +218,7 @@ public:
       }
       if (body != nullptr)
          text.append(body);
-      return m_bot->sendMessageToPeer(context.recipient, text.c_str(), isMarkdown) ? 0 : -1;
+      return m_bot->sendMessageToPeer(context.recipient, text.c_str(), isMarkdown, context.location) ? 0 : -1;
    }
 
    virtual bool checkHealth() override
@@ -414,12 +414,12 @@ void ChatBot::update(const wchar_t *description, const wchar_t *driverName, char
 /**
  * Send message to given peer through platform driver
  */
-bool ChatBot::sendMessageToPeer(const char *peerId, const char *text, bool isMarkdown)
+bool ChatBot::sendMessageToPeer(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location)
 {
    bool success = false;
    m_driverLock.lock();
    if (m_driver != nullptr)
-      success = m_driver->sendMessage(peerId, text, isMarkdown);
+      success = m_driver->sendMessage(peerId, text, isMarkdown, location);
    m_driverLock.unlock();
    return success;
 }

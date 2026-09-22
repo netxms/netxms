@@ -70,6 +70,7 @@ public class EditActionDlg extends Dialog
 	private Button typeForward;
 	private Button markDisabled;
 	private Button markdownMessage;
+	private Button sendGeoLocation;
 	private List<NotificationChannel> notificationChannels = null;
 	private List<EventForwarder> eventForwarders = null;
 
@@ -181,6 +182,10 @@ public class EditActionDlg extends Dialog
       markdownMessage = new Button(optionsGroup, SWT.CHECK);
       markdownMessage.setText(i18n.tr("Message contains &markdown"));
       markdownMessage.setSelection(action.isMarkdown());
+
+      sendGeoLocation = new Button(optionsGroup, SWT.CHECK);
+      sendGeoLocation.setText(i18n.tr("Send source object's &geolocation"));
+      sendGeoLocation.setSelection(action.isSendGeoLocation());
 
       channelName = new LabeledCombo(dialogArea, SWT.NONE);
       channelName.setLabel(i18n.tr("Channel name"));
@@ -314,6 +319,7 @@ public class EditActionDlg extends Dialog
 		action.setData(data.getText());
 		action.setDisabled(markDisabled.getSelection());
       action.setMarkdown(typeNotification.getSelection() && markdownMessage.getSelection());
+      action.setSendGeoLocation(typeNotification.getSelection() && sendGeoLocation.getSelection());
 
       if (typeNotification.getSelection() && (notificationChannels != null) && (channelName.getSelectionIndex() >= 0))
          action.setChannelName(notificationChannels.get(channelName.getSelectionIndex()).getName());
@@ -429,6 +435,7 @@ public class EditActionDlg extends Dialog
             break;
 		}
       markdownMessage.setEnabled(type == ServerActionType.NOTIFICATION);
+      sendGeoLocation.setEnabled(type == ServerActionType.NOTIFICATION);
 
 		recipient.setLabel(getRcptLabel(type));
 		data.setLabel(getDataLabel(type));

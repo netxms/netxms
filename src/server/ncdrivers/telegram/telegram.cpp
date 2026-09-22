@@ -232,13 +232,15 @@ public:
 
    virtual bool checkHealth() override;
 
+   void sendLocation(const char *recipient, bool useRecipientName, int64_t chatId, int64_t topicId, const GeoLocation& location);
+
    bool isShutdown() const { return m_shutdownFlag; }
    void processUpdate(json_t *data);
    void processCallbackQuery(json_t *callbackQuery);
 
    void setSink(ChatBotMessageSink *sink) { m_sink = sink; }
    void shutdown();
-   int sendMessageToChat(const char *peerId, const char *text, bool isMarkdown);
+   int sendMessageToChat(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location);
    bool sendQuestionToChat(const char *peerId, const char *text, const StringList& options, uint64_t questionId);
 
    static TelegramDriver *createInstance(Config *config, NCDriverStorageManager *storageManager);
@@ -1101,13 +1103,15 @@ void TelegramDriver::processCallbackQuery(json_t *callbackQuery)
 
 /**
  * Send message to given chat (chat bot interface). Markdown text is rendered as HTML by send(),
- * literal text is passed as plain body so that it is sent without parse mode.
+ * literal text is passed as plain body so that it is sent without parse mode. Location, if set,
+ * is sent after the text by send().
  */
-int TelegramDriver::sendMessageToChat(const char *peerId, const char *text, bool isMarkdown)
+int TelegramDriver::sendMessageToChat(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location)
 {
    NotificationContext context;
    context.recipient = peerId;
    context.subject = "";
+   context.location = location;
    if (!isMarkdown)
    {
       context.body = text;
@@ -1271,6 +1275,8 @@ int TelegramDriver::send(const NotificationContext& context)
             {
                nxlog_debug_tag(DEBUG_TAG, 6, _T("Message from bot %s to recipient %hs successfully sent"), m_botName, recipient);
                result = 0;
+               if (context.location.isValid() && (context.location.getType() != GL_UNSET))
+                  sendLocation(recipient, useRecipientName, chatId, topicId, context.location);
             }
             else
             {
@@ -1316,6 +1322,39 @@ int TelegramDriver::send(const NotificationContext& context)
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot find chat ID for recipient %hs and bot %s"), recipient, m_botName);
    }
    return result;
+}
+
+/**
+ * Send location message to already resolved chat. Failure is logged but not reported
+ * to caller: text message was already delivered and retrying it would duplicate the text.
+ */
+void TelegramDriver::sendLocation(const char *recipient, bool useRecipientName, int64_t chatId, int64_t topicId, const GeoLocation& location)
+{
+   json_t *request = json_object();
+   json_object_set_new(request, "chat_id", useRecipientName ? json_string(recipient) : json_integer(chatId));
+   json_object_set_new(request, "latitude", json_real(location.getLatitude()));
+   json_object_set_new(request, "longitude", json_real(location.getLongitude()));
+   if ((location.getAccuracy() > 0) && (location.getAccuracy() <= 1500))   // Range accepted by Telegram API
+      json_object_set_new(request, "horizontal_accuracy", json_integer(location.getAccuracy()));
+   if (topicId != 0)
+      json_object_set_new(request, "message_thread_id", json_integer(topicId));
+
+   CallResponse response = SendTelegramRequest(m_authToken, m_proxies.size() > 0 ? &m_proxies : nullptr, m_ipVersion, m_useLocalResolver && (m_proxies.size() > 0), "sendLocation", request);
+   json_decref(request);
+
+   if (json_is_object(response.data))
+   {
+      if (json_is_true(json_object_get(response.data, "ok")))
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Location %s %s from bot %s to recipient %hs successfully sent"), location.getLatitudeAsString(), location.getLongitudeAsString(), m_botName, recipient);
+      else
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send location from bot %s to recipient %hs: API error (%hs)"),
+                  m_botName, recipient, json_object_get_string_utf8(response.data, "description", "Unknown reason"));
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send location from bot %s to recipient %hs: invalid API response (HTTP response status code %03d)"), m_botName, recipient, response.statusCode);
+   }
+   json_decref(response.data);
 }
 
 /**
@@ -1386,9 +1425,9 @@ public:
       m_driver->shutdown();
    }
 
-   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) override
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location) override
    {
-      return m_driver->sendMessageToChat(peerId, text, isMarkdown) == 0;
+      return m_driver->sendMessageToChat(peerId, text, isMarkdown, location) == 0;
    }
 
    virtual bool sendQuestion(const char *peerId, const char *text, const StringList& options, uint64_t questionId) override

@@ -25,6 +25,7 @@
 
 #include <nms_common.h>
 #include <nxconfig.h>
+#include <geolocation.h>
 #include <functional>
 
 class Event;
@@ -33,7 +34,7 @@ class NetObj;
 /**
  * API version
  */
-#define NCDRV_API_VERSION           6
+#define NCDRV_API_VERSION           7
 
 /**
  * Notification channel status
@@ -98,6 +99,7 @@ struct NotificationContext
    shared_ptr<NetObj> sourceObject; // Source object of the event (can be nullptr)
    const wchar_t *channelName;      // Name of the notification channel
    uuid ruleId;                     // ID of the EPP rule that generated the notification (can be null UUID)
+   GeoLocation location;            // Location to be sent after the message by drivers supporting location messages (type GL_UNSET if not provided)
 
    NotificationContext()
    {

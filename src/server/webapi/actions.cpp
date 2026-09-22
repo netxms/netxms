@@ -106,6 +106,7 @@ int H_ServerActionCreate(Context *context)
    if (json_object_get(request, "type") != nullptr ||
        json_object_get(request, "isDisabled") != nullptr ||
        json_object_get(request, "isMarkdown") != nullptr ||
+       json_object_get(request, "sendGeoLocation") != nullptr ||
        json_object_get(request, "data") != nullptr ||
        json_object_get(request, "recipientAddress") != nullptr ||
        json_object_get(request, "emailSubject") != nullptr ||

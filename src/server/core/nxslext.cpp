@@ -2409,17 +2409,30 @@ static int F_SendMail(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM 
 /**
  * Sends notifications using provided channel to specified recipients
  * Syntax:
- *    SendNotification(channelName, recipients, subject, text, isMarkdown)
+ *    SendNotification(channelName, recipients, subject, text, [isMarkdown], [location])
  * Returned value:
  *    none
  */
 static int F_SendNotification(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if ((argc < 4) || (argc > 5))
+   if ((argc < 4) || (argc > 6))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
    if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString() || !argv[3]->isString())
       return NXSL_ERR_NOT_STRING;
+
+   GeoLocation location;
+   if ((argc > 5) && !argv[5]->isNull())
+   {
+      if (!argv[5]->isObject())
+         return NXSL_ERR_NOT_OBJECT;
+
+      NXSL_Object *o = argv[5]->getValueAsObject();
+      if (_tcscmp(o->getClass()->getName(), g_nxslGeoLocationClass.getName()))
+         return NXSL_ERR_BAD_CLASS;
+
+      location = *static_cast<GeoLocation*>(o->getData());
+   }
 
    if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_SEND_NOTIFICATION))
    {
@@ -2437,7 +2450,7 @@ static int F_SendNotification(int argc, NXSL_Value **argv, NXSL_Value **result, 
    if (!rcpts.isEmpty())
    {
       nxlog_debug_tag(_T("nxsl.sendntfy"), 3, _T("Sending notification using channel %s to %s: \"%s\""), channelName, rcpts.cstr(), text);
-      SendNotification(channelName, rcpts.getBuffer(), subj, text, 0, 0, uuid::NULL_UUID, nullptr, isMarkdown);
+      SendNotification(channelName, rcpts.getBuffer(), subj, text, 0, 0, uuid::NULL_UUID, nullptr, isMarkdown, location);
    }
    else
    {

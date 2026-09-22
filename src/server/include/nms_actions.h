@@ -33,6 +33,7 @@ struct Action
    ServerActionType type;
    bool isDisabled;
    bool isMarkdown;
+   bool sendGeoLocation;   // Send source object's geolocation along with notification (if object has one and channel supports it)
    wchar_t name[MAX_OBJECT_NAME];
    wchar_t rcptAddr[MAX_RCPT_ADDR_LEN];
    wchar_t emailSubject[MAX_EMAIL_SUBJECT_LEN];

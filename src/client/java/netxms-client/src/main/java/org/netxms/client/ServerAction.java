@@ -37,6 +37,7 @@ public class ServerAction
 	private boolean disabled;
 	private String channelName;
    private boolean markdown;
+   private boolean sendGeoLocation;
 
 	/**
 	 * Create server action object with given ID
@@ -52,6 +53,7 @@ public class ServerAction
 		disabled = false;
 		channelName = "";
       markdown = false;
+      sendGeoLocation = false;
 	}
 	
    /**
@@ -71,6 +73,7 @@ public class ServerAction
       disabled = src.disabled;
       channelName = src.channelName;
       markdown = src.markdown;
+      sendGeoLocation = src.sendGeoLocation;
    }
 
 	/**
@@ -89,6 +92,7 @@ public class ServerAction
 		disabled = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DISABLED);
       channelName = msg.getFieldAsString(NXCPCodes.VID_CHANNEL_NAME);
       markdown = msg.getFieldAsBoolean(NXCPCodes.VID_MARKDOWN);
+      sendGeoLocation = msg.getFieldAsBoolean(NXCPCodes.VID_SEND_GEOLOCATION);
 	}
 	
 	/**
@@ -106,6 +110,7 @@ public class ServerAction
 		msg.setFieldInt16(NXCPCodes.VID_IS_DISABLED, disabled ? 1 : 0);
       msg.setField(NXCPCodes.VID_CHANNEL_NAME, channelName);
       msg.setField(NXCPCodes.VID_MARKDOWN, markdown);
+      msg.setField(NXCPCodes.VID_SEND_GEOLOCATION, sendGeoLocation);
 	}
 
 	/**
@@ -250,5 +255,21 @@ public class ServerAction
    public void setMarkdown(boolean markdown)
    {
       this.markdown = markdown;
+   }
+
+   /**
+    * @return true if source object's geolocation should be sent along with notification
+    */
+   public boolean isSendGeoLocation()
+   {
+      return sendGeoLocation;
+   }
+
+   /**
+    * @param sendGeoLocation true if source object's geolocation should be sent along with notification
+    */
+   public void setSendGeoLocation(boolean sendGeoLocation)
+   {
+      this.sendGeoLocation = sendGeoLocation;
    }
 }

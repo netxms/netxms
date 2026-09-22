@@ -1846,6 +1846,7 @@ __PACK_END__
 #define VID_ROOM_Y                  ((uint32_t)1063)
 #define VID_ROTATION                ((uint32_t)1064)
 #define VID_DEPTH                   ((uint32_t)1065)
+#define VID_SEND_GEOLOCATION        ((uint32_t)1066)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

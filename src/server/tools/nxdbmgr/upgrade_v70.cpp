@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.42 to 70.43
+ */
+static bool H_UpgradeFromV42()
+{
+   static const wchar_t *batch =
+      L"ALTER TABLE actions ADD send_geolocation integer\n"
+      L"UPDATE actions SET send_geolocation=0\n"
+      L"<END>";
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"actions", L"send_geolocation"));
+
+   CHK_EXEC(SetMinorSchemaVersion(43));
+   return true;
+}
+
+/**
  * Upgrade from 70.41 to 70.42
  */
 static bool H_UpgradeFromV41()
@@ -1369,6 +1385,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 42, 70, 43, H_UpgradeFromV42 },
    { 41, 70, 42, H_UpgradeFromV41 },
    { 40, 70, 41, H_UpgradeFromV40 },
    { 39, 70, 40, H_UpgradeFromV39 },

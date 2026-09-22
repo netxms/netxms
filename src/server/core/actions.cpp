@@ -34,6 +34,7 @@ Action::Action(const wchar_t *name)
    wcslcpy(this->name, name, MAX_OBJECT_NAME);
    isDisabled = true;
    isMarkdown = false;
+   sendGeoLocation = false;
    type = ServerActionType::LOCAL_COMMAND;
    emailSubject[0] = 0;
    rcptAddr[0] = 0;
@@ -56,6 +57,7 @@ Action::Action(DB_RESULT hResult, int row)
    data = DBGetField(hResult, row, 7, NULL, 0);
    DBGetField(hResult, row, 8, channelName, MAX_OBJECT_NAME);
    isMarkdown = DBGetFieldLong(hResult, row, 9) ? true : false;
+   sendGeoLocation = DBGetFieldLong(hResult, row, 10) ? true : false;
 }
 
 /**
@@ -69,6 +71,7 @@ Action::Action(const Action& src)
    type = src.type;
    isDisabled = src.isDisabled;
    isMarkdown = src.isMarkdown;
+   sendGeoLocation = src.sendGeoLocation;
    wcscpy(rcptAddr, src.rcptAddr);
    wcscpy(emailSubject, src.emailSubject);
    data = MemCopyString(src.data);
@@ -90,6 +93,7 @@ void Action::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_RCPT_ADDR, rcptAddr);
    msg->setField(VID_CHANNEL_NAME, channelName);
    msg->setField(VID_MARKDOWN, isMarkdown);
+   msg->setField(VID_SEND_GEOLOCATION, sendGeoLocation);
 }
 
 /**
@@ -101,7 +105,7 @@ void Action::saveToDatabase() const
 
    static const wchar_t *columns[] = { _T("guid"), _T("action_name"), _T("action_type"),
             _T("is_disabled"), _T("rcpt_addr"), _T("email_subject"), _T("action_data"),
-            _T("channel_name"), _T("is_markdown"), nullptr };
+            _T("channel_name"), _T("is_markdown"), _T("send_geolocation"), nullptr };
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, L"actions", L"action_id", id, columns);
    if (hStmt != nullptr)
    {
@@ -114,7 +118,8 @@ void Action::saveToDatabase() const
       DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, data, DB_BIND_STATIC);
       DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, channelName, DB_BIND_STATIC);
       DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(isMarkdown ? 1 : 0));
-      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, id);
+      DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(sendGeoLocation ? 1 : 0));
+      DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, id);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -180,6 +185,7 @@ json_t *Action::toJson() const
    json_object_set_new(root, "typeDescription", json_string(ServerActionTypeDescription(type)));
    json_object_set_new(root, "isDisabled", json_boolean(isDisabled));
    json_object_set_new(root, "isMarkdown", json_boolean(isMarkdown));
+   json_object_set_new(root, "sendGeoLocation", json_boolean(sendGeoLocation));
    json_object_set_new(root, "recipientAddress", json_string_t(rcptAddr));
    json_object_set_new(root, "emailSubject", json_string_t(emailSubject));
    json_object_set_new(root, ServerActionDataFieldName(type), json_string_t(CHECK_NULL_EX(data)));
@@ -306,7 +312,7 @@ bool LoadActions()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT action_id,guid,action_name,action_type,is_disabled,rcpt_addr,email_subject,action_data,channel_name,is_markdown FROM actions ORDER BY action_id"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT action_id,guid,action_name,action_type,is_disabled,rcpt_addr,email_subject,action_data,channel_name,is_markdown,send_geolocation FROM actions ORDER BY action_id"));
    if (hResult != nullptr)
    {
       s_actions.clear();
@@ -600,7 +606,10 @@ void ExecuteAction(uint32_t actionId, const Event& event, const Alarm *alarm, co
                nxlog_debug_tag(DEBUG_TAG, 3, _T("Sending notification using channel %s to %s: \"%s\""), action->channelName, context->recipient.cstr(), context->data.cstr());
             // Pass event and source object so driver can use event context (optional for drivers)
             shared_ptr<NetObj> sourceObject = FindObjectById(event.getSourceId());
-            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, &event, sourceObject, ruleId, ruleDescription, action->isMarkdown);
+            GeoLocation location;
+            if (action->sendGeoLocation && (sourceObject != nullptr) && sourceObject->getGeoLocation().isValid() && (sourceObject->getGeoLocation().getType() != GL_UNSET))
+               location = sourceObject->getGeoLocation();
+            SendNotification(action->channelName, context->recipient.getBuffer(), context->subject, context->data, &event, sourceObject, ruleId, ruleDescription, action->isMarkdown, location);
          }
          else
          {
@@ -757,6 +766,7 @@ uint32_t ModifyActionFromMessage(const NXCPMessage& msg)
       msg.getFieldAsString(VID_RCPT_ADDR, action->rcptAddr, MAX_RCPT_ADDR_LEN);
       msg.getFieldAsString(VID_CHANNEL_NAME, action->channelName, MAX_OBJECT_NAME);
       action->isMarkdown = msg.getFieldAsBoolean(VID_MARKDOWN);
+      action->sendGeoLocation = msg.getFieldAsBoolean(VID_SEND_GEOLOCATION);
       _tcscpy(action->name, name);
 
       action->saveToDatabase();
@@ -812,6 +822,10 @@ uint32_t NXCORE_EXPORTABLE ModifyActionFromJson(uint32_t actionId, json_t *json,
    v = json_object_get(json, "isMarkdown");
    if (json_is_boolean(v))
       action->isMarkdown = json_boolean_value(v);
+
+   v = json_object_get(json, "sendGeoLocation");
+   if (json_is_boolean(v))
+      action->sendGeoLocation = json_boolean_value(v);
 
    v = json_object_get(json, "recipientAddress");
    if (json_is_string(v))
@@ -985,7 +999,7 @@ json_t *CreateActionExportRecord(uint32_t id)
    json_t *action = nullptr;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name,is_markdown FROM actions WHERE action_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name,is_markdown,send_geolocation FROM actions WHERE action_id=?"));
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
@@ -1009,6 +1023,7 @@ json_t *CreateActionExportRecord(uint32_t id)
          json_object_set_new(action, "data", json_string_t(DBGetField(hResult, 0, 5, buffer, 256)));
          json_object_set_new(action, "channelName", json_string_t(DBGetField(hResult, 0, 6, buffer, 256)));
          json_object_set_new(action, "isMarkdown", json_boolean(DBGetFieldLong(hResult, 0, 7) != 0));
+         json_object_set_new(action, "sendGeoLocation", json_boolean(DBGetFieldLong(hResult, 0, 8) != 0));
       }
       DBFreeResult(hResult);
    }
@@ -1131,6 +1146,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context)
    else
       _tcslcpy(action->channelName, config->getSubEntryValue(_T("channelName")), MAX_OBJECT_NAME);
    action->isMarkdown = config->getSubEntryValueAsBoolean(_T("isMarkdown"), 0, false);
+   action->sendGeoLocation = config->getSubEntryValueAsBoolean(_T("sendGeoLocation"), 0, false);
 
    if (action->data != nullptr)
       MemFree(action->data);
@@ -1195,6 +1211,7 @@ bool ImportAction(json_t *action, bool overwrite, ImportContext *context)
    String channelName = json_object_get_string(action, "channelName", _T(""));
    _tcslcpy(actionObj->channelName, channelName, MAX_OBJECT_NAME);
    actionObj->isMarkdown = json_is_true(json_object_get(action, "isMarkdown"));
+   actionObj->sendGeoLocation = json_is_true(json_object_get(action, "sendGeoLocation"));
    String data = json_object_get_string(action, "data", _T(""));
    if (actionObj->data != nullptr)
       MemFree(actionObj->data);

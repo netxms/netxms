@@ -1649,6 +1649,7 @@ public class NXCPCodes
    public static final long VID_ROOM_Y = 1063;
    public static final long VID_ROTATION = 1064;
    public static final long VID_DEPTH = 1065;
+   public static final long VID_SEND_GEOLOCATION = 1066;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

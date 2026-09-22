@@ -93,11 +93,13 @@ class NotificationMessage
    shared_ptr<NetObj> m_sourceObject; // Source object for NXSL driver (can be nullptr)
    ObjectArray<NotificationMessage> *m_digestMessages;  // Accumulated messages for digest (can be nullptr)
    bool m_isMarkdown;                 // Message body is markdown
+   GeoLocation m_location;            // Location to be sent along with message (type GL_UNSET if not provided)
 
 public:
    NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body, bool isMarkdown,
                        uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const wchar_t *ruleDescription = nullptr,
-                       const Event *event = nullptr, const shared_ptr<NetObj>& sourceObject = shared_ptr<NetObj>());
+                       const Event *event = nullptr, const shared_ptr<NetObj>& sourceObject = shared_ptr<NetObj>(),
+                       const GeoLocation& location = GeoLocation());
    NotificationMessage(const wchar_t *recipient, ObjectArray<NotificationMessage> *digestMessages);
    ~NotificationMessage();
 
@@ -114,6 +116,7 @@ public:
    const wchar_t *getRuleDescription() const { return m_ruleDescription; }
    const Event *getEvent() const { return m_event; }
    const shared_ptr<NetObj>& getSourceObject() const { return m_sourceObject; }
+   const GeoLocation& getLocation() const { return m_location; }
    bool isDigest() const { return m_digestMessages != nullptr; }
    const ObjectArray<NotificationMessage> *getDigestMessages() const { return m_digestMessages; }
 };
@@ -327,9 +330,9 @@ public:
             const wchar_t *errorMessage, bool providedByChatBot = false);
    ~NotificationChannel();
 
-   void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription);
+   void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription, const GeoLocation& location);
    void send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown,
-             const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription);
+             const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription, const GeoLocation& location);
    void clearQueue();
 
    const wchar_t *getName() const { return m_name; }
@@ -387,7 +390,7 @@ int64_t GetLastNotificationId()
  */
 NotificationMessage::NotificationMessage(const wchar_t *recipient, const wchar_t *subject, const wchar_t *body, bool isMarkdown,
       uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const wchar_t *ruleDescription,
-      const Event *event, const shared_ptr<NetObj>& sourceObject) : m_ruleId(ruleId), m_sourceObject(sourceObject)
+      const Event *event, const shared_ptr<NetObj>& sourceObject, const GeoLocation& location) : m_ruleId(ruleId), m_sourceObject(sourceObject), m_location(location)
 {
    m_recipient = MemCopyStringW(recipient);
    m_subject = MemCopyStringW(subject);
@@ -728,6 +731,7 @@ void NotificationChannel::workerThread()
       context.sourceObject = notification->getSourceObject();
       context.channelName = m_name;
       context.ruleId = notification->getRuleId();
+      context.location = notification->getLocation();
 
       int retryCount = ConfigReadInt(L"NotificationChannels.MaxRetryCount", 30);
       while (true)
@@ -1128,7 +1132,7 @@ void NotificationChannel::reloadThrottlingConfig()
 /**
  * Public method to send notification. It adds notification to the queue.
  */
-void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription)
+void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription, const GeoLocation& location)
 {
    if (((m_confTemplate == nullptr) || m_confTemplate->needRecipient) && ((recipient == nullptr) || IsBlankString(recipient)))
    {
@@ -1167,14 +1171,14 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
       return;
    }
 
-   m_notificationQueue.put(new NotificationMessage(recipient, subject, body, isMarkdown, eventCode, eventId, ruleId, ruleDescription));
+   m_notificationQueue.put(new NotificationMessage(recipient, subject, body, isMarkdown, eventCode, eventId, ruleId, ruleDescription, nullptr, shared_ptr<NetObj>(), location));
 }
 
 /**
  * Public method to send notification with event/object context. It adds notification to the queue.
  */
 void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *body, bool isMarkdown,
-                               const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription)
+                               const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription, const GeoLocation& location)
 {
    if (((m_confTemplate == nullptr) || m_confTemplate->needRecipient) && ((recipient == nullptr) || IsBlankString(recipient)))
    {
@@ -1216,7 +1220,7 @@ void NotificationChannel::send(const TCHAR *recipient, const TCHAR *subject, con
       return;
    }
 
-   m_notificationQueue.put(new NotificationMessage(recipient, subject, body, isMarkdown, eventCode, eventId, ruleId, ruleDescription, event, sourceObject));
+   m_notificationQueue.put(new NotificationMessage(recipient, subject, body, isMarkdown, eventCode, eventId, ruleId, ruleDescription, event, sourceObject, location));
 }
 
 /**
@@ -1849,7 +1853,7 @@ char NXCORE_EXPORTABLE *GetNotificationChannelConfiguration(const TCHAR *name)
 /**
  * Send notification
  */
-void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription, bool isMarkdown)
+void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message, uint32_t eventCode, uint64_t eventId, const uuid& ruleId, const TCHAR *ruleDescription, bool isMarkdown, const GeoLocation& location)
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
@@ -1865,13 +1869,13 @@ void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, con
                *next = 0;
             Trim(curr);
             nxlog_debug_tag(DEBUG_TAG, 5, _T("SendNotification: sending message to \"%s\" via channel \"%s\""), curr, name);
-            nc->send(curr, subject, message, isMarkdown, eventCode, eventId, ruleId, ruleDescription);
+            nc->send(curr, subject, message, isMarkdown, eventCode, eventId, ruleId, ruleDescription, location);
             curr = next + 1;
          } while(next != nullptr);
       }
       else
       {
-         nc->send(recipient, subject, message, isMarkdown, eventCode, eventId, ruleId, ruleDescription);
+         nc->send(recipient, subject, message, isMarkdown, eventCode, eventId, ruleId, ruleDescription, location);
       }
    }
    else
@@ -1885,7 +1889,7 @@ void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, con
  * Send notification with event/object context (for NXSL notification channels)
  */
 void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, const TCHAR *subject, const TCHAR *message,
-                                         const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription, bool isMarkdown)
+                                         const Event *event, const shared_ptr<NetObj>& sourceObject, const uuid& ruleId, const TCHAR *ruleDescription, bool isMarkdown, const GeoLocation& location)
 {
    s_channelListLock.lock();
    NotificationChannel *nc = s_channelList.get(name);
@@ -1901,13 +1905,13 @@ void NXCORE_EXPORTABLE SendNotification(const TCHAR *name, TCHAR *recipient, con
                *next = 0;
             Trim(curr);
             nxlog_debug_tag(DEBUG_TAG, 5, _T("SendNotification: sending message to \"%s\" via channel \"%s\""), curr, name);
-            nc->send(curr, subject, message, isMarkdown, event, sourceObject, ruleId, ruleDescription);
+            nc->send(curr, subject, message, isMarkdown, event, sourceObject, ruleId, ruleDescription, location);
             curr = next + 1;
          } while(next != nullptr);
       }
       else
       {
-         nc->send(recipient, subject, message, isMarkdown, event, sourceObject, ruleId, ruleDescription);
+         nc->send(recipient, subject, message, isMarkdown, event, sourceObject, ruleId, ruleDescription, location);
       }
    }
    else

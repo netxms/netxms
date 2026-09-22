@@ -65,7 +65,8 @@ start/stop of driver instances on configuration changes.
 Creating a chat bot registers a notification channel of the same name. The
 channel is backed by a core-side `NCDriver` adapter wrapping the bot's live
 `ChatBotDriver` instance: it receives the full v5 `NotificationContext` and
-forwards `recipient`/`subject`/`body` through `sendMessage()`. One
+forwards `recipient`/`subject`/`body` (and `location`, for platforms with
+location messages) through `sendMessage()`. One
 connection, one token — no transport conflict. Because the adapter is a
 real v5 driver, rich formatting (rendering `context.event` severity/source
 natively) is a later driver-internal improvement with no interface change.
@@ -99,7 +100,7 @@ class ChatBotDriver
 public:
    virtual bool start(ChatBotMessageSink *sink) = 0;   // driver owns its transport thread(s)
    virtual void stop() = 0;
-   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown) = 0;
+   virtual bool sendMessage(const char *peerId, const char *text, bool isMarkdown, const GeoLocation& location) = 0;
    virtual bool sendQuestion(const char *peerId, const char *text, const StringList& options, uint64_t questionId) = 0;
    virtual bool checkHealth() { return true; }
 };

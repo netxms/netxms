@@ -17444,6 +17444,9 @@ components:
         isMarkdown:
           type: boolean
           description: Whether the notification message body is markdown
+        sendGeoLocation:
+          type: boolean
+          description: Whether the source object's geolocation is sent along with the notification (only for channels supporting location messages)
         recipientAddress:
           type: string
           description: Recipient address (supports macros)
@@ -17482,6 +17485,9 @@ components:
         isMarkdown:
           type: boolean
           description: Whether the notification message body is markdown
+        sendGeoLocation:
+          type: boolean
+          description: Whether the source object's geolocation is sent along with the notification (only for channels supporting location messages)
         data:
           type: string
           description: Action data (command, message, or script name depending on type)
@@ -17509,6 +17515,9 @@ components:
         isMarkdown:
           type: boolean
           description: Whether the notification message body is markdown
+        sendGeoLocation:
+          type: boolean
+          description: Whether the source object's geolocation is sent along with the notification (only for channels supporting location messages)
         data:
           type: string
           description: Action data (command, message, or script name depending on type)
