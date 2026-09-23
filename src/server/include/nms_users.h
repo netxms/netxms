@@ -481,8 +481,8 @@ public:
    void clear()
    {
       m_size = 0;
-      if (m_extendedBuffer != nullptr)
-         m_extendedBuffer->clear();
+      delete m_extendedBuffer;
+      m_extendedBuffer = nullptr;
    }
 
    /**
