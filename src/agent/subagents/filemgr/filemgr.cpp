@@ -72,7 +72,7 @@ bool SetPrivilege(HANDLE hToken, const TCHAR* privilege, bool enabled)
 /**
  * Root folders
  */
-static ObjectArray<RootFolder> s_rootDirectories(16, 16, Ownership::True);
+static FileAccessRootList s_rootDirectories(DEBUG_TAG);
 static SynchronizedHashMap<uint64_t, VolatileCounter> s_downloadFileStopMarkers(Ownership::False);
 
 /**
@@ -130,106 +130,6 @@ static void ConvertPathToNetwork(TCHAR *path)
 
 #endif
 
-/*
- * Create new RootFolder
- */
-RootFolder::RootFolder(const TCHAR *folder)
-{
-   m_folder = MemCopyString(folder);
-   m_readOnly = false;
-   m_followSymlinks = true;
-
-   // Parse semicolon-separated flags after the path: "ro", "nofollow"
-   TCHAR *ptr = _tcschr(m_folder, _T(';'));
-   if (ptr != nullptr)
-   {
-      *ptr = 0;
-      TCHAR *flag = ptr + 1;
-      while (flag != nullptr)
-      {
-         TCHAR *next = _tcschr(flag, _T(';'));
-         if (next != nullptr)
-            *next++ = 0;
-         if (_tcscmp(flag, _T("ro")) == 0)
-            m_readOnly = true;
-         else if (_tcscmp(flag, _T("nofollow")) == 0)
-            m_followSymlinks = false;
-         flag = next;
-      }
-   }
-
-   ConvertPathToHost(m_folder, false, false);
-
-   size_t len = _tcslen(m_folder);
-
-#ifdef _WIN32
-   // On Windows a bare drive specification ("C:") is drive-relative — it refers
-   // to the current directory on that drive, not the drive root. Normalize it to
-   // a proper drive root ("C:\") so it cannot be expanded into an arbitrary path.
-   if ((len == 2) && (m_folder[1] == _T(':')))
-   {
-      m_folder = MemReallocArray(m_folder, 4);
-      m_folder[2] = FS_PATH_SEPARATOR_CHAR;
-      m_folder[3] = 0;
-      len = 3;
-   }
-#endif
-
-   // Strip trailing path separator so that "/usr" and "/usr/" are equivalent
-   // and the prefix check in CheckFullPath has a consistent boundary. Bare
-   // length-1 roots ("/" or "\") are kept as-is, and on Windows the trailing
-   // separator of a drive root ("C:\") is kept too — "C:" alone is drive-relative.
-   if ((len > 1) && (m_folder[len - 1] == FS_PATH_SEPARATOR_CHAR)
-#ifdef _WIN32
-       && !((len == 3) && (m_folder[1] == _T(':')))
-#endif
-      )
-      m_folder[len - 1] = 0;
-}
-
-/**
- * Register root directories
- */
-static void RegisterRoots(ConfigEntry *root)
-{
-   for(int i = 0; i < root->getValueCount(); i++)
-   {
-      auto folder = new RootFolder(root->getValue(i));
-
-      bool alreadyRegistered = false;
-      for(int j = 0; j < s_rootDirectories.size(); j++)
-      {
-         RootFolder *curr = s_rootDirectories.get(j);
-#ifdef _WIN32
-         if (!_tcsicmp(curr->getFolder(), folder->getFolder()))
-#else
-         if (!_tcscmp(curr->getFolder(), folder->getFolder()))
-#endif
-         {
-            if (curr->isReadOnly() && !folder->isReadOnly())
-               s_rootDirectories.remove(j); // Replace read-only element with read-write
-            else
-               alreadyRegistered = true;
-            break;
-         }
-      }
-
-      if (!alreadyRegistered)
-      {
-         s_rootDirectories.add(folder);
-         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Added file manager root directory \"%s\" (%s%s)"),
-            folder->getFolder(),
-            folder->isReadOnly() ? _T("R/O") : _T("R/W"),
-            folder->followSymlinks() ? _T("") : _T(", nofollow"));
-      }
-      else
-      {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("File manager root directory \"%s\" already registered"), folder->getFolder());
-         delete folder;
-      }
-   }
-}
-
 /**
  * Subagent initialization
  */
@@ -238,13 +138,13 @@ static bool SubagentInit(Config *config)
    ConfigEntry *root = config->getEntry(_T("/filemgr/RootFolder"));
    if (root != nullptr)
    {
-      RegisterRoots(root);
+      s_rootDirectories.addFromConfig(root);
    }
 
    root = config->getEntry(_T("/filemgr/Root"));
    if (root != nullptr)
    {
-      RegisterRoots(root);
+      s_rootDirectories.addFromConfig(root);
    }
 
    if (s_rootDirectories.isEmpty())
@@ -264,192 +164,6 @@ static void SubagentShutdown()
 {
 }
 
-#ifndef _WIN32
-
-/**
- * Converts path to absolute removing "//", "../", "./" ...
- */
-static TCHAR *GetRealPath(const TCHAR *path)
-{
-   if ((path == nullptr) || (path[0] == 0))
-      return nullptr;
-   TCHAR *result = MemAllocString(MAX_PATH);
-   _tcscpy(result, path);
-   TCHAR *current = result;
-
-   // just remove all dots before path
-   if (!_tcsncmp(current, _T("../"), 3))
-      memmove(current, current + 3, (_tcslen(current+3) + 1) * sizeof(TCHAR));
-
-   if (!_tcsncmp(current, _T("./"), 2))
-      memmove(current, current + 2, (_tcslen(current+2) + 1) * sizeof(TCHAR));
-
-   while(*current != 0)
-   {
-      if (current[0] == '/')
-      {
-         switch(current[1])
-         {
-            case '/':
-               memmove(current, current + 1, _tcslen(current) * sizeof(TCHAR));
-               break;
-            case '.':
-               if (current[2] != 0)
-               {
-                  if (current[2] == '.' && (current[3] == 0 || current[3] == '/'))
-                  {
-                     if (current == result)
-                     {
-                        memmove(current, current + 3, (_tcslen(current + 3) + 1) * sizeof(TCHAR));
-                     }
-                     else
-                     {
-                        TCHAR *tmp = current;
-                        do
-                        {
-                           tmp--;
-                           if (tmp[0] == '/')
-                           {
-                              break;
-                           }
-                        } while(result != tmp);
-                        memmove(tmp, current + 3, (_tcslen(current+3) + 1) * sizeof(TCHAR));
-                     }
-                  }
-                  else
-                  {
-                     // dot + something, skip both
-                     current += 2;
-                  }
-               }
-               else
-               {
-                  // "/." at the end
-                  *current = 0;
-               }
-               break;
-            default:
-               current++;
-               break;
-         }
-      }
-      else
-      {
-         current++;
-      }
-   }
-   return result;
-}
-
-/**
- * Resolve symbolic links in an absolute path using realpath(3). If the target
- * does not yet exist, walk up to the deepest existing ancestor, resolve that,
- * and re-append the unresolved trailing components verbatim. This still ensures
- * that any symbolic link in the existing portion of the path is followed, so
- * the caller can verify the resolved path stays inside the configured root.
- * Returns a newly allocated TCHAR string on success, nullptr on error.
- */
-static TCHAR *ResolveSymlinks(const TCHAR *path)
-{
-   if ((path == nullptr) || (path[0] != _T('/')))
-      return nullptr;
-
-   char workingPath[MAX_PATH];
-#ifdef UNICODE
-   if (wchar_to_mb(path, -1, workingPath, MAX_PATH) == 0)
-      return nullptr;
-   workingPath[MAX_PATH - 1] = 0;
-#else
-   strlcpy(workingPath, path, MAX_PATH);
-#endif
-
-   char resolved[PATH_MAX];
-   char tail[MAX_PATH];
-   tail[0] = 0;
-   size_t tailLen = 0;
-
-   while (realpath(workingPath, resolved) == nullptr)
-   {
-      if (errno != ENOENT)
-         return nullptr;
-
-      char *slash = strrchr(workingPath, '/');
-      if (slash == nullptr)
-         return nullptr;
-
-      const char *segment = slash + 1;
-      size_t segmentLen = strlen(segment);
-      if (segmentLen > 0)
-      {
-         size_t addLen = segmentLen + (tailLen > 0 ? 1 : 0);
-         if (tailLen + addLen + 1 > sizeof(tail))
-            return nullptr;
-         if (tailLen > 0)
-         {
-            memmove(tail + segmentLen + 1, tail, tailLen + 1);
-            tail[segmentLen] = '/';
-         }
-         else
-         {
-            tail[segmentLen] = 0;
-         }
-         memcpy(tail, segment, segmentLen);
-         tailLen += addLen;
-      }
-
-      if (slash == workingPath)
-         workingPath[1] = 0;  // parent of last component is root "/"
-      else
-         *slash = 0;
-   }
-
-   if (tailLen > 0)
-   {
-      size_t resolvedLen = strlen(resolved);
-      bool needsSeparator = (resolvedLen == 0) || (resolved[resolvedLen - 1] != '/');
-      if (resolvedLen + (needsSeparator ? 1 : 0) + tailLen + 1 > sizeof(resolved))
-         return nullptr;
-      if (needsSeparator)
-         resolved[resolvedLen++] = '/';
-      memcpy(resolved + resolvedLen, tail, tailLen + 1);
-   }
-
-   TCHAR *result = MemAllocString(MAX_PATH);
-#ifdef UNICODE
-   if (mb_to_wchar(resolved, -1, result, MAX_PATH) == 0)
-   {
-      MemFree(result);
-      return nullptr;
-   }
-   result[MAX_PATH - 1] = 0;
-#else
-   strlcpy(result, resolved, MAX_PATH);
-#endif
-   return result;
-}
-
-#endif
-
-/**
- * Check whether candidatePath is contained within rootPath. Requires the prefix
- * match to terminate at a path boundary (separator or end of string), so root
- * "/opt/netxms" does not falsely match sibling "/opt/netxms-secret/...".
- */
-static bool IsPathUnderRoot(const TCHAR *rootPath, size_t folderPathLen, const TCHAR *candidatePath)
-{
-#if defined(_WIN32) || defined(__APPLE__)
-   if (_tcsnicmp(rootPath, candidatePath, folderPathLen) != 0)
-      return false;
-#else
-   if (_tcsncmp(rootPath, candidatePath, folderPathLen) != 0)
-      return false;
-#endif
-   if (rootPath[folderPathLen - 1] == FS_PATH_SEPARATOR_CHAR)
-      return true;  // root already ended in separator — boundary covered by prefix compare
-   TCHAR boundary = candidatePath[folderPathLen];
-   return (boundary == 0) || (boundary == FS_PATH_SEPARATOR_CHAR);
-}
-
 /**
  * Takes folder/file path - make it absolute (result will be written to "fullPath" parameter)
  * and check that this folder/file is under allowed root path.
@@ -458,81 +172,14 @@ static bool IsPathUnderRoot(const TCHAR *rootPath, size_t folderPathLen, const T
  */
 static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir, bool isModify = false)
 {
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("CheckFullPath: input is %s"), path);
    if (withHomeDir && !_tcscmp(path, FS_PATH_SEPARATOR))
    {
       *fullPath = MemCopyString(path);
       return true;
    }
 
-   *fullPath = nullptr;
-
-#ifdef _WIN32
-   TCHAR *fullPathBuffer = MemAllocString(MAX_PATH);
-   TCHAR *fullPathT = _tfullpath(fullPathBuffer, path, MAX_PATH);
-#else
-   TCHAR *fullPathT = GetRealPath(path);
-#endif
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("CheckFullPath: Full path %s"), fullPathT);
-   if (fullPathT == nullptr)
-   {
-#ifdef _WIN32
-      MemFree(fullPathBuffer);
-#endif
-      return false;
-   }
-
-   RootFolder *matchedRoot = nullptr;
-   size_t maxPathLen = 0;
-   for(int i = 0; i < s_rootDirectories.size(); i++)
-   {
-      RootFolder *root = s_rootDirectories.get(i);
-      const TCHAR *rootPath = root->getFolder();
-      size_t folderPathLen = _tcslen(rootPath);
-      if (folderPathLen == 0)
-         continue;
-      if (!IsPathUnderRoot(rootPath, folderPathLen, fullPathT))
-         continue;
-
-      if (maxPathLen < folderPathLen)
-      {
-         maxPathLen = folderPathLen;
-         matchedRoot = root;
-      }
-   }
-
-   if (matchedRoot != nullptr)
-   {
-      if (!isModify || !matchedRoot->isReadOnly())
-      {
-#ifndef _WIN32
-         // For roots configured with "nofollow", resolve symbolic links and verify
-         // the resolved path is still under the same root. This blocks a symlink
-         // inside a writable area (placed by another process) from being used to
-         // operate on files outside the configured root.
-         if (!matchedRoot->followSymlinks())
-         {
-            TCHAR *resolved = ResolveSymlinks(fullPathT);
-            if ((resolved == nullptr) || !IsPathUnderRoot(matchedRoot->getFolder(), maxPathLen, resolved))
-            {
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("CheckFullPath: Symlink target outside root for %s (resolved to %s)"),
-                  fullPathT, (resolved != nullptr) ? resolved : _T("(unresolved)"));
-               MemFree(resolved);
-               MemFree(fullPathT);
-               return false;
-            }
-            MemFree(fullPathT);
-            fullPathT = resolved;
-         }
-#endif
-         *fullPath = fullPathT;
-         return true;
-      }
-   }
-
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("CheckFullPath: Access denied to %s"), fullPathT);
-   MemFree(fullPathT);
-   return false;
+   *fullPath = s_rootDirectories.resolvePath(path, isModify);
+   return *fullPath != nullptr;
 }
 
 #define REGULAR_FILE    1

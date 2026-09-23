@@ -192,12 +192,10 @@ static bool AtomicWriteFile(const TCHAR *filePath, const char *content, size_t c
  */
 uint32_t H_FileWrite(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
-   if (file.isEmpty())
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", true, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    const char *content = json_object_get_string_utf8(params, "content", nullptr);
    if (content == nullptr)
@@ -268,12 +266,10 @@ uint32_t H_FileWrite(json_t *params, json_t **result, AbstractCommSession *sessi
  */
 uint32_t H_FileAppend(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
-   if (file.isEmpty())
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", true, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    const char *content = json_object_get_string_utf8(params, "content", nullptr);
    if (content == nullptr)
@@ -361,12 +357,10 @@ uint32_t H_FileAppend(json_t *params, json_t **result, AbstractCommSession *sess
  */
 uint32_t H_FileInsert(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
-   if (file.isEmpty())
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", true, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    int lineNum = json_object_get_int32(params, "line", 0);
    if (lineNum < 1)
@@ -466,12 +460,10 @@ uint32_t H_FileInsert(json_t *params, json_t **result, AbstractCommSession *sess
  */
 uint32_t H_FileDeleteLines(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
-   if (file.isEmpty())
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", true, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    int startLine = json_object_get_int32(params, "start_line", 0);
    int endLine = json_object_get_int32(params, "end_line", 0);
@@ -624,13 +616,6 @@ static char *ApplyReplacement(const char *line, pcre *re, pcre_extra *extra, con
  */
 uint32_t H_FileReplace(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
-   if (file.isEmpty())
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
-
    const char *pattern = json_object_get_string_utf8(params, "pattern", nullptr);
    if (pattern == nullptr)
    {
@@ -649,6 +634,11 @@ uint32_t H_FileReplace(json_t *params, json_t **result, AbstractCommSession *ses
    bool caseInsensitive = json_object_get_boolean(params, "case_insensitive", false);
    bool createBackup = json_object_get_boolean(params, "create_backup", true);
    bool dryRun = json_object_get_boolean(params, "dry_run", false);
+
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", !dryRun, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    // Compile regex
    const char *errorMsg;
@@ -839,12 +829,10 @@ static bool ParseHunkHeader(const char *line, int *oldStart, int *oldCount, int 
  */
 uint32_t H_FilePatch(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
-   if (file.isEmpty())
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", true, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    const char *diff = json_object_get_string_utf8(params, "diff", nullptr);
    if (diff == nullptr)

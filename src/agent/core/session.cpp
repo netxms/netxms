@@ -1503,7 +1503,7 @@ void CommSession::updateConfig(NXCPMessage *request, NXCPMessage *response)
  */
 void CommSession::getAITools(NXCPMessage *request, NXCPMessage *response)
 {
-   char *schema = GenerateAIToolsSchema();
+   char *schema = GenerateAIToolsSchema(this);
    if (schema != nullptr)
    {
       response->setFieldFromUtf8String(VID_AI_TOOL_SCHEMA, schema);

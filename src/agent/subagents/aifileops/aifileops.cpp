@@ -23,6 +23,38 @@
 #include "aifileops.h"
 #include <netxms-version.h>
 
+/**
+ * Root folders accessible to tools
+ */
+static FileAccessRootList s_rootFolders(DEBUG_TAG);
+
+/**
+ * Resolve file or directory path given in tool parameter, checking it against configured
+ * root folders. On success writes absolute path to fullPath and returns ERR_SUCCESS; otherwise
+ * sets error in result and returns error code.
+ */
+uint32_t ResolveToolPath(json_t *params, const char *paramName, bool modify, json_t **result, MutableString *fullPath)
+{
+   String path = json_object_get_string(params, paramName, _T(""));
+   if (path.isEmpty())
+   {
+      char message[128];
+      snprintf(message, sizeof(message), "Required parameter '%s' must be provided", paramName);
+      SetError(result, "MISSING_PARAM", message);
+      return ERR_BAD_ARGUMENTS;
+   }
+
+   TCHAR *resolved = s_rootFolders.resolvePath(path, modify);
+   if (resolved == nullptr)
+   {
+      SetError(result, "ACCESS_DENIED", modify ? "Path is outside of configured writable root folders" : "Path is outside of configured root folders");
+      return ERR_ACCESS_DENIED;
+   }
+
+   *fullPath = String(resolved, -1, Ownership::True);
+   return ERR_SUCCESS;
+}
+
 //
 // Tool parameter definitions
 //
@@ -162,7 +194,8 @@ static AIToolDefinition s_aiTools[] =
       "Search log file for lines matching a regular expression pattern. Returns matching lines with optional context. Use this to find specific errors, events, or patterns in log files.",
       s_logGrepParams,
       sizeof(s_logGrepParams) / sizeof(AIToolParameter),
-      H_LogGrep
+      H_LogGrep,
+      AIToolAccess::ANY_SERVER
    },
    {
       "log_read",
@@ -170,7 +203,8 @@ static AIToolDefinition s_aiTools[] =
       "Read a specific range of lines from a log file by line numbers. Use this when you know exactly which lines you need, for example after using log_find to locate relevant line numbers.",
       s_logReadParams,
       sizeof(s_logReadParams) / sizeof(AIToolParameter),
-      H_LogRead
+      H_LogRead,
+      AIToolAccess::ANY_SERVER
    },
    {
       "log_tail",
@@ -178,7 +212,8 @@ static AIToolDefinition s_aiTools[] =
       "Read the last N lines from a log file. Use this to see recent log entries or check the current state of a log file.",
       s_logTailParams,
       sizeof(s_logTailParams) / sizeof(AIToolParameter),
-      H_LogTail
+      H_LogTail,
+      AIToolAccess::ANY_SERVER
    },
    {
       "log_head",
@@ -186,7 +221,8 @@ static AIToolDefinition s_aiTools[] =
       "Read the first N lines from a log file. Use this to see the beginning of a log file, check file format, or read header information.",
       s_logHeadParams,
       sizeof(s_logHeadParams) / sizeof(AIToolParameter),
-      H_LogHead
+      H_LogHead,
+      AIToolAccess::ANY_SERVER
    },
    {
       "log_find",
@@ -194,7 +230,8 @@ static AIToolDefinition s_aiTools[] =
       "Find line numbers where a pattern matches, without returning content. Use this to locate positions of matches in large files, then use log_read to retrieve specific sections.",
       s_logFindParams,
       sizeof(s_logFindParams) / sizeof(AIToolParameter),
-      H_LogFind
+      H_LogFind,
+      AIToolAccess::ANY_SERVER
    },
    {
       "log_time_range",
@@ -202,7 +239,8 @@ static AIToolDefinition s_aiTools[] =
       "Extract log entries within a specified time range. Use this to get all log entries between two timestamps.",
       s_logTimeRangeParams,
       sizeof(s_logTimeRangeParams) / sizeof(AIToolParameter),
-      H_LogTimeRange
+      H_LogTimeRange,
+      AIToolAccess::ANY_SERVER
    },
    {
       "log_stats",
@@ -210,7 +248,8 @@ static AIToolDefinition s_aiTools[] =
       "Compute frequency statistics for patterns in a log file. Use this to count occurrences of errors, warnings, or other patterns to understand the distribution of events.",
       s_logStatsParams,
       sizeof(s_logStatsParams) / sizeof(AIToolParameter),
-      H_LogStats
+      H_LogStats,
+      AIToolAccess::ANY_SERVER
    },
    {
       "file_info",
@@ -218,7 +257,8 @@ static AIToolDefinition s_aiTools[] =
       "Get file metadata including size, modification time, permissions, and optionally line count. Use this to check if a file exists and get basic information before reading it.",
       s_fileInfoParams,
       sizeof(s_fileInfoParams) / sizeof(AIToolParameter),
-      H_FileInfo
+      H_FileInfo,
+      AIToolAccess::ANY_SERVER
    },
    {
       "file_list",
@@ -226,7 +266,8 @@ static AIToolDefinition s_aiTools[] =
       "List directory contents with optional glob pattern filtering. Use this to discover available log files or explore directory structure.",
       s_fileListParams,
       sizeof(s_fileListParams) / sizeof(AIToolParameter),
-      H_FileList
+      H_FileList,
+      AIToolAccess::ANY_SERVER
    },
    {
       "file_read",
@@ -234,7 +275,8 @@ static AIToolDefinition s_aiTools[] =
       "Read raw file contents with byte offset and limit. Use this for reading configuration files or any text file. For log files, prefer the specialized log_* tools.",
       s_fileReadParams,
       sizeof(s_fileReadParams) / sizeof(AIToolParameter),
-      H_FileRead
+      H_FileRead,
+      AIToolAccess::ANY_SERVER
    },
    {
       "file_write",
@@ -242,7 +284,8 @@ static AIToolDefinition s_aiTools[] =
       "Write content to a file, creating it if it doesn't exist or overwriting if it does. Creates a backup by default before overwriting. Use this for creating new files or completely replacing file contents.",
       s_fileWriteParams,
       sizeof(s_fileWriteParams) / sizeof(AIToolParameter),
-      H_FileWrite
+      H_FileWrite,
+      AIToolAccess::MASTER_SERVER
    },
    {
       "file_append",
@@ -250,7 +293,8 @@ static AIToolDefinition s_aiTools[] =
       "Append content to the end of an existing file. Optionally adds a newline if the file doesn't end with one. Use this for adding entries to log files or appending configuration.",
       s_fileAppendParams,
       sizeof(s_fileAppendParams) / sizeof(AIToolParameter),
-      H_FileAppend
+      H_FileAppend,
+      AIToolAccess::MASTER_SERVER
    },
    {
       "file_insert",
@@ -258,7 +302,8 @@ static AIToolDefinition s_aiTools[] =
       "Insert content at a specific line number in a file. The content is inserted before the specified line. Use this to add lines in the middle of a file.",
       s_fileInsertParams,
       sizeof(s_fileInsertParams) / sizeof(AIToolParameter),
-      H_FileInsert
+      H_FileInsert,
+      AIToolAccess::MASTER_SERVER
    },
    {
       "file_delete_lines",
@@ -266,7 +311,8 @@ static AIToolDefinition s_aiTools[] =
       "Delete a range of lines from a file. Specify start and end line numbers (1-based, inclusive). Use this to remove specific lines from configuration files or logs.",
       s_fileDeleteLinesParams,
       sizeof(s_fileDeleteLinesParams) / sizeof(AIToolParameter),
-      H_FileDeleteLines
+      H_FileDeleteLines,
+      AIToolAccess::MASTER_SERVER
    },
    {
       "file_replace",
@@ -274,7 +320,8 @@ static AIToolDefinition s_aiTools[] =
       "Find and replace text in a file using regular expressions. Supports backreferences ($1, $2, etc.) in replacement text. Use dry_run to preview changes without modifying the file.",
       s_fileReplaceParams,
       sizeof(s_fileReplaceParams) / sizeof(AIToolParameter),
-      H_FileReplace
+      H_FileReplace,
+      AIToolAccess::MASTER_SERVER
    },
    {
       "file_patch",
@@ -282,9 +329,30 @@ static AIToolDefinition s_aiTools[] =
       "Apply a unified diff patch to a file. Supports fuzz factor for flexible context matching. Use this to apply patches or make complex multi-line changes.",
       s_filePatchParams,
       sizeof(s_filePatchParams) / sizeof(AIToolParameter),
-      H_FilePatch
+      H_FilePatch,
+      AIToolAccess::MASTER_SERVER
    }
 };
+
+/**
+ * Subagent initialization
+ */
+static bool SubagentInit(Config *config)
+{
+   ConfigEntry *root = config->getEntry(_T("/aifileops/RootFolder"));
+   if (root != nullptr)
+   {
+      s_rootFolders.addFromConfig(root);
+   }
+
+   if (s_rootFolders.isEmpty())
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("No root folders in AI file operations subagent configuration (at least one RootFolder entry required)"));
+      return false;
+   }
+
+   return true;
+}
 
 /**
  * Subagent information
@@ -293,7 +361,7 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("AIFILEOPS"), NETXMS_VERSION_STRING,
-   nullptr, nullptr, nullptr, nullptr, nullptr,
+   SubagentInit, nullptr, nullptr, nullptr, nullptr,
    0, nullptr,    // parameters
    0, nullptr,    // lists
    0, nullptr,    // tables

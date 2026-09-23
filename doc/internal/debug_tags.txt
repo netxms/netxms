@@ -16,6 +16,7 @@ ai.provider	AI/LLM provider framework (common layer above ai.prov.*)
 ai.skills	AI skill loading and management
 ai.tasks	AI background tasks
 ai.tools	AI assistant tools (server and agent side)
+aifileops	AI file operations subagent
 
 aix		AIX platform subagent messages
 

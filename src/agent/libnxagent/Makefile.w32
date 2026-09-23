@@ -15,6 +15,7 @@ SOURCES = \
 	bridge.cpp \
 	crl.cpp \
 	dfile_info.cpp \
+	fileroot.cpp \
 	hwid.cpp \
 	main.cpp \
 	modbus.cpp \

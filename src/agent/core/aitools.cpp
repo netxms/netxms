@@ -76,9 +76,25 @@ static const AIToolEntry *FindTool(const char *name)
 }
 
 /**
- * Generate JSON schema for all registered tools
+ * Check if tool can be used by server on given session
  */
-char *GenerateAIToolsSchema()
+static bool IsToolAccessible(const AIToolDefinition *def, AbstractCommSession *session)
+{
+   switch(def->access)
+   {
+      case AIToolAccess::MASTER_SERVER:
+         return session->isMasterServer();
+      case AIToolAccess::CONTROL_SERVER:
+         return session->isMasterServer() || session->isControlServer();
+      default:
+         return true;
+   }
+}
+
+/**
+ * Generate JSON schema for all registered tools accessible to server on given session
+ */
+char *GenerateAIToolsSchema(AbstractCommSession *session)
 {
    json_t *root = json_object();
    json_object_set_new(root, "schema_version", json_string("1.0"));
@@ -96,6 +112,9 @@ char *GenerateAIToolsSchema()
    for (int i = 0; i < s_registry.size(); i++)
    {
       const AIToolDefinition *def = s_registry.get(i)->definition;
+      if (!IsToolAccessible(def, session))
+         continue;
+
       json_t *tool = json_object();
       json_object_set_new(tool, "name", json_string(def->name));
       json_object_set_new(tool, "category", json_string(def->category));
@@ -170,6 +189,14 @@ uint32_t ExecuteAITool(const char *toolName, const char *jsonParams, char **json
    {
       *jsonResult = MemCopyStringA("{\"error\":{\"code\":\"TOOL_NOT_FOUND\",\"message\":\"Tool not found\"}}");
       return ERR_UNKNOWN_COMMAND;
+   }
+
+   if (!IsToolAccessible(entry->definition, session))
+   {
+      TCHAR ipAddrText[64];
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteAITool(%hs): access denied for server %s"), toolName, session->getServerAddress().toString(ipAddrText));
+      *jsonResult = MemCopyStringA("{\"error\":{\"code\":\"ACCESS_DENIED\",\"message\":\"Server is not allowed to execute this tool\"}}");
+      return ERR_ACCESS_DENIED;
    }
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Executing AI tool '%hs' from subagent %s"), toolName, entry->subagentName);

@@ -909,7 +909,7 @@ bool AddAction(const TCHAR *name, bool isExternal, const void *arg, uint32_t (*h
 bool AddActionFromConfig(const TCHAR *config);
 
 void RegisterAIToolsFromSubagent(const NETXMS_SUBAGENT_INFO *info);
-char *GenerateAIToolsSchema();
+char *GenerateAIToolsSchema(AbstractCommSession *session);
 uint32_t ExecuteAITool(const char *toolName, const char *jsonParams, char **jsonResult, AbstractCommSession *session);
 int GetAIToolCount();
 

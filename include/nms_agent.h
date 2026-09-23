@@ -1106,6 +1106,16 @@ struct AIToolParameter
 /**
  * AI Tool definition
  */
+/**
+ * Minimal server access level required to see and execute AI tool
+ */
+enum class AIToolAccess
+{
+   ANY_SERVER = 0,      // Any authenticated server
+   CONTROL_SERVER = 1,  // Server listed in ControlServers or MasterServers
+   MASTER_SERVER = 2    // Server listed in MasterServers
+};
+
 struct AIToolDefinition
 {
    const char *name;
@@ -1117,9 +1127,13 @@ struct AIToolDefinition
    // Handler: receives parsed JSON params, returns JSON result object
    // Caller will decref the result. Returns ERR_SUCCESS or error code.
    uint32_t (*handler)(json_t *params, json_t **result, AbstractCommSession *session);
+
+   // Access level required for calling server. Core agent hides the tool from
+   // servers below this level and refuses execution requests from them.
+   AIToolAccess access;
 };
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((uint32_t)0x20260131)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((uint32_t)0x20260923)
 
 class NXCPMessage;
 
@@ -1160,6 +1174,51 @@ typedef bool (*ScreenshotProviderCallback)(const TCHAR *sessionName, NXCPMessage
 
 void LIBNXAGENT_EXPORTABLE AgentRegisterScreenshotProvider(const TCHAR *sessionName, ScreenshotProviderCallback callback);
 void LIBNXAGENT_EXPORTABLE AgentUnregisterScreenshotProvider(const TCHAR *sessionName);
+
+/**
+ * Root folder for restricted file system access. Created from configuration
+ * value in form "path[;ro][;nofollow]".
+ */
+class LIBNXAGENT_EXPORTABLE FileAccessRoot
+{
+private:
+   TCHAR *m_folder;
+   bool m_readOnly;
+   bool m_followSymlinks;
+
+public:
+   FileAccessRoot(const TCHAR *definition);
+   ~FileAccessRoot()
+   {
+      MemFree(m_folder);
+   }
+
+   const TCHAR *getFolder() const { return m_folder; }
+   bool isReadOnly() const { return m_readOnly; }
+   bool followSymlinks() const { return m_followSymlinks; }
+};
+
+/**
+ * List of root folders that restricts file system access of a subagent.
+ * Every path used by the subagent must be validated with resolvePath().
+ */
+class LIBNXAGENT_EXPORTABLE FileAccessRootList
+{
+private:
+   ObjectArray<FileAccessRoot> m_roots;
+   const TCHAR *m_debugTag;
+
+public:
+   FileAccessRootList(const TCHAR *debugTag) : m_roots(16, 16, Ownership::True), m_debugTag(debugTag) {}
+
+   void addFromConfig(const ConfigEntry *entry);
+
+   bool isEmpty() const { return m_roots.isEmpty(); }
+   int size() const { return m_roots.size(); }
+   const FileAccessRoot *get(int index) const { return m_roots.get(index); }
+
+   TCHAR *resolvePath(const TCHAR *path, bool modify) const;
+};
 
 /**
  * Inline functions for returning parameters
