@@ -24,6 +24,22 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 70.43 to 70.44
+ */
+static bool H_UpgradeFromV43()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 43)
+   {
+      CHK_EXEC(CreateConfigParam(L"Objects.Nodes.DefaultDecommissionExpirationTime", L"30",
+            L"Default expiration time in days for decommissioned nodes.", L"days", 'I', true, false, true, false));
+      CHK_EXEC(SQLQuery(L"UPDATE config SET is_public='Y' WHERE var_name='Objects.Nodes.DefaultDecommissionExpirationTime'"));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 43));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(44));
+   return true;
+}
+
+/**
  * Upgrade from 70.42 to 70.43
  */
 static bool H_UpgradeFromV42()
@@ -1385,6 +1401,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 43, 70, 44, H_UpgradeFromV43 },
    { 42, 70, 43, H_UpgradeFromV42 },
    { 41, 70, 42, H_UpgradeFromV41 },
    { 40, 70, 41, H_UpgradeFromV40 },
