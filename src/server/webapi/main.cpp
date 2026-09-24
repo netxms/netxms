@@ -194,6 +194,7 @@ int H_ObjectRoomUpdate(Context *context);
 int H_ObjectRoomPlacementGet(Context *context);
 int H_ObjectRoomPlacementUpdate(Context *context);
 int H_ObjectDetails(Context *context);
+int H_ObjectDetailsBulk(Context *context);
 int H_ObjectFacilityGet(Context *context);
 int H_ObjectFacilityUpdate(Context *context);
 int H_ObjectLocationUpdate(Context *context);
@@ -937,6 +938,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/switch-forwarding-database")
       .GET(H_SwitchForwardingDatabase)
+      .build();
+   RouteBuilder("v1/objects/details")
+      .POST(H_ObjectDetailsBulk)
       .build();
    RouteBuilder("v1/objects/query")
       .POST(H_ObjectQuery)
