@@ -7369,7 +7369,7 @@ paths:
         '204':
           description: Object successfully managed/unmanaged
         '400':
-          description: Invalid arguments
+          description: Invalid arguments, or management status change not allowed for this object (template, decommissioned node)
         '401':
           description: Unauthorized
         '403':

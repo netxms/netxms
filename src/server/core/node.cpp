@@ -17492,8 +17492,6 @@ bool Node::fillReconciliationStatusMessage(NXCPMessage *msg)
  */
 void Node::decommission(time_t expirationTime, bool clearIpAddresses)
 {
-   setMgmtStatus(false);
-
    lockProperties();
    m_state |= NSF_DECOMMISSIONED;
    m_decommissionTime = expirationTime;
@@ -17504,6 +17502,8 @@ void Node::decommission(time_t expirationTime, bool clearIpAddresses)
       m_ipAddress = InetAddress();
    }
    unlockProperties();
+
+   setMgmtStatus(false);
 
    if (clearIpAddresses)
    {

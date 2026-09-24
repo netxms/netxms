@@ -569,6 +569,11 @@ NXSL_METHOD_DEFINITION(NetObj, manage)
       return 0;
    }
    NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!netobj->isManagementStatusChangeAllowed(true))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
    netobj->setMgmtStatus(true);
    vm->writeAuditLog(AUDIT_OBJECTS, true, netobj->getId(), L"Object %s set to managed state by script", netobj->getName());
    *result = vm->createValue();
