@@ -2563,15 +2563,16 @@ void NetObj::notifyClientsOnAccessChange()
  */
 bool NetObj::setMgmtStatus(bool isManaged)
 {
-   if (!isManagementStatusChangeAllowed(isManaged))
-   {
-      nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 5, _T("Management status change to %s refused for object %s [%u]"), isManaged ? _T("managed") : _T("unmanaged"), m_name, m_id);
-      return false;
-   }
-
    int oldStatus = m_status;
 
    lockProperties();
+
+   if (!isManagementStatusChangeAllowed(isManaged))
+   {
+      unlockProperties();
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 5, L"Management status change to %s refused for object %s [%u]", isManaged ? L"managed" : L"unmanaged", m_name, m_id);
+      return false;
+   }
 
    if ((isManaged && (m_status != STATUS_UNMANAGED)) || ((!isManaged) && (m_status == STATUS_UNMANAGED)))
    {
