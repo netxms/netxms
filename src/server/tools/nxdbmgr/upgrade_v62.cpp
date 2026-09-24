@@ -25,6 +25,18 @@
 #include <nxtools.h>
 
 /**
+ * Upgrade from 62.42 to 62.43
+ */
+static bool H_UpgradeFromV42()
+{
+   CHK_EXEC(CreateConfigParam(L"Objects.Nodes.DefaultDecommissionExpirationTime", L"30",
+         L"Default expiration time in days for decommissioned nodes.", L"days", 'I', true, false, true, false));
+   CHK_EXEC(SQLQuery(L"UPDATE config SET is_public='Y' WHERE var_name='Objects.Nodes.DefaultDecommissionExpirationTime'"));
+   CHK_EXEC(SetMinorSchemaVersion(43));
+   return true;
+}
+
+/**
  * Upgrade from 62.41 to 62.42
  */
 static bool H_UpgradeFromV41()
@@ -1361,6 +1373,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 42, 62, 43, H_UpgradeFromV42 },
    { 41, 62, 42, H_UpgradeFromV41 },
    { 40, 62, 41, H_UpgradeFromV40 },
    { 39, 62, 40, H_UpgradeFromV39 },
