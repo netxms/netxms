@@ -636,7 +636,7 @@ static void CheckObjectClassCoverage()
  */
 static void CheckGhostObjectProperties()
 {
-   StartStage(L"Ghost object properties");
+   StartStage(L"Object properties without object");
    StringBuffer query(L"SELECT p.object_id,p.name FROM object_properties p LEFT OUTER JOIN ");
    query.append(BuildClassTableUnion(false)).append(L" u ON u.id=p.object_id WHERE u.id IS NULL ORDER BY p.object_id");
    DB_RESULT hResult = CheckSelect(query);
@@ -2490,6 +2490,7 @@ static void CheckNodePathCheckResults()
  */
 struct EventCodeReference
 {
+   const wchar_t *description;   // plural noun phrase for the operator
    const wchar_t *table;
    const wchar_t *column;
    uint32_t defaultCode;
@@ -2498,14 +2499,14 @@ struct EventCodeReference
 
 static const EventCodeReference s_eventCodeReferences[] =
 {
-   { L"thresholds", L"event_code", EVENT_THRESHOLD_REACHED, false },
-   { L"thresholds", L"rearm_event_code", EVENT_THRESHOLD_REARMED, false },
-   { L"dct_thresholds", L"activation_event", EVENT_TABLE_THRESHOLD_ACTIVATED, false },
-   { L"dct_thresholds", L"deactivation_event", EVENT_TABLE_THRESHOLD_DEACTIVATED, false },
-   { L"conditions", L"activation_event", EVENT_CONDITION_ACTIVATED, false },
-   { L"conditions", L"deactivation_event", EVENT_CONDITION_DEACTIVATED, false },
-   { L"snmp_trap_cfg", L"event_code", EVENT_SNMP_UNMATCHED_TRAP, false },
-   { L"event_policy", L"alarm_timeout_event", EVENT_ALARM_TIMEOUT, true }
+   { L"threshold activation events", L"thresholds", L"event_code", EVENT_THRESHOLD_REACHED, false },
+   { L"threshold rearm events", L"thresholds", L"rearm_event_code", EVENT_THRESHOLD_REARMED, false },
+   { L"table threshold activation events", L"dct_thresholds", L"activation_event", EVENT_TABLE_THRESHOLD_ACTIVATED, false },
+   { L"table threshold deactivation events", L"dct_thresholds", L"deactivation_event", EVENT_TABLE_THRESHOLD_DEACTIVATED, false },
+   { L"condition activation events", L"conditions", L"activation_event", EVENT_CONDITION_ACTIVATED, false },
+   { L"condition deactivation events", L"conditions", L"deactivation_event", EVENT_CONDITION_DEACTIVATED, false },
+   { L"SNMP trap mappings", L"snmp_trap_cfg", L"event_code", EVENT_SNMP_UNMATCHED_TRAP, false },
+   { L"rule alarm timeout events", L"event_policy", L"alarm_timeout_event", EVENT_ALARM_TIMEOUT, true }
 };
 
 /**
@@ -2514,12 +2515,10 @@ static const EventCodeReference s_eventCodeReferences[] =
  */
 static void CheckEventCodeReferences()
 {
+   StartStage(L"Event code references", sizeof(s_eventCodeReferences) / sizeof(EventCodeReference));
    for(size_t i = 0; (i < sizeof(s_eventCodeReferences) / sizeof(EventCodeReference)) && !s_checkAborted; i++)
    {
       const EventCodeReference& r = s_eventCodeReferences[i];
-      wchar_t stageName[256];
-      nx_swprintf(stageName, 256, L"%s.%s", r.table, r.column);
-      StartStage(stageName);
 
       StringBuffer query(L"SELECT t.");
       query.append(r.column).append(L",count(*) FROM ").append(r.table).append(L" t LEFT OUTER JOIN event_cfg e ON e.event_code=t.").append(r.column).append(L" WHERE ");
@@ -2530,7 +2529,6 @@ static void CheckEventCodeReferences()
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
-         SetStageWorkTotal(count);
          // A failed lookup aborts the check through CheckSelect; only an empty result means the default is missing
          bool defaultExists = false;
          if (count > 0)
@@ -2551,21 +2549,21 @@ static void CheckEventCodeReferences()
             g_dbCheckErrors++;
             if (!defaultExists)
             {
-               WriteToTerminalEx(L"\n%d rows in %s.%s refer to non-existing event code %u and default event %u does not exist either\n", rows, r.table, r.column, code, r.defaultCode);
+               WriteToTerminalEx(L"\n%d %s refer to non-existing event code %u (%s.%s) and default event %u does not exist either\n", rows, r.description, code, r.table, r.column, r.defaultCode);
             }
-            else if (GetYesNoEx(L"%d rows in %s.%s refer to non-existing event code %u. Reset to default event %u (EPP behavior may change)?", rows, r.table, r.column, code, r.defaultCode))
+            else if (GetYesNoEx(L"%d %s refer to non-existing event code %u (%s.%s). Reset to default event %u (EPP behavior may change)?", rows, r.description, code, r.table, r.column, r.defaultCode))
             {
                StringBuffer fix(L"UPDATE ");
                fix.append(r.table).append(L" SET ").append(r.column).append(L"=").append(r.defaultCode).append(L" WHERE ").append(r.column).append(L"=").append(code);
                if (CheckQuery(fix))
                   g_dbCheckFixes++;
             }
-            UpdateStageProgress(1);
          }
          DBFreeResult(hResult);
       }
-      EndStage();
+      UpdateStageProgress(1);
    }
+   EndStage();
 }
 
 /**
@@ -2605,10 +2603,23 @@ enum class OrphanFix
 };
 
 /**
+ * Stage a relation is reported under; each stage is one progress line for the operator
+ */
+enum class OrphanStage
+{
+   Object,           // references to objects
+   DataCollection,   // references to DCIs and thresholds
+   EventPolicy,      // event processing policy chains and categories
+   ReportOnly        // findings without an automatic repair
+};
+
+/**
  * Child-to-parent relation checked by CheckOrphanRelation()
  */
 struct OrphanRelation
 {
+   OrphanStage stage;
+   const wchar_t *description;   // plural noun phrase for the operator, e.g. "access control entries"
    const wchar_t *childTable;
    const wchar_t *childKey;
    const wchar_t *parentSource;  // table name or parenthesized subquery, aliased as p
@@ -2627,123 +2638,127 @@ struct OrphanRelation
  */
 static const OrphanRelation s_orphanRelations[] =
 {
-   { L"acl", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"object_custom_attributes", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"object_urls", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"trusted_objects", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"trusted_objects", L"trusted_object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"responsible_users", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"object_access_snapshot", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"pollable_objects", L"id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"dc_targets", L"id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"auto_bind_target", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"versionable_object", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"maintenance_journal", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"active_downtimes", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"downtime_log", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"container_members", L"container_id", L"object_properties", L"object_id", L"container", OrphanFix::DeleteRow, true, nullptr },
-   { L"nsmap", L"subnet_id", L"object_properties", L"object_id", L"subnet", OrphanFix::DeleteRow, true, nullptr },
-   { L"nsmap", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
-   { L"zone_proxies", L"object_id", L"object_properties", L"object_id", L"zone", OrphanFix::DeleteRow, true, nullptr },
-   { L"zone_proxies", L"proxy_node", L"object_properties", L"object_id", L"proxy node", OrphanFix::DeleteRow, true, nullptr },
-   { L"icmp_statistics", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"icmp_target_address_list", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
-   { L"software_inventory", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
-   { L"hardware_inventory", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
-   { L"node_components", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
-   { L"ospf_areas", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
-   { L"ospf_neighbors", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
-   { L"node_snmp_agents", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
-   { L"interface_address_list", L"iface_id", L"object_properties", L"object_id", L"interface", OrphanFix::DeleteRow, false, nullptr },
-   { L"interface_vlan_list", L"iface_id", L"object_properties", L"object_id", L"interface", OrphanFix::DeleteRow, false, nullptr },
-   { L"cluster_members", L"cluster_id", L"object_properties", L"object_id", L"cluster", OrphanFix::DeleteRow, true, nullptr },
-   { L"cluster_sync_subnets", L"cluster_id", L"object_properties", L"object_id", L"cluster", OrphanFix::DeleteRow, true, nullptr },
-   { L"rack_passive_elements", L"rack_id", L"object_properties", L"object_id", L"rack", OrphanFix::DeleteRow, true, nullptr },
-   { L"room_passive_elements", L"room_id", L"object_properties", L"object_id", L"room", OrphanFix::DeleteRow, true, nullptr },
-   { L"physical_links", L"left_object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"physical_links", L"right_object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"network_map_elements", L"map_id", L"object_properties", L"object_id", L"network map", OrphanFix::DeleteRow, true, nullptr },
-   { L"network_map_links", L"map_id", L"object_properties", L"object_id", L"network map", OrphanFix::DeleteRow, true, nullptr },
-   { L"network_map_seed_nodes", L"map_id", L"object_properties", L"object_id", L"network map", OrphanFix::DeleteRow, true, nullptr },
-   { L"network_map_seed_nodes", L"seed_node_id", L"object_properties", L"object_id", L"seed node", OrphanFix::DeleteRow, true, nullptr },
-   { L"network_map_deleted_nodes", L"map_id", L"object_properties", L"object_id", L"network map", OrphanFix::DeleteRow, true, nullptr },
-   { L"dashboard_elements", L"dashboard_id", L"object_properties", L"object_id", L"dashboard", OrphanFix::DeleteRow, true, nullptr },
-   { L"dashboard_template_instances", L"dashboard_template_id", L"object_properties", L"object_id", L"dashboard template", OrphanFix::DeleteRow, true, nullptr },
-   { L"dashboard_associations", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"business_service_downtime", L"service_id", L"object_properties", L"object_id", L"business service", OrphanFix::DeleteRow, true, nullptr },
-   { L"asset_properties", L"asset_id", L"object_properties", L"object_id", L"asset", OrphanFix::DeleteRow, true, nullptr },
-   { L"vpn_connector_networks", L"vpn_id", L"object_properties", L"object_id", L"VPN connector", OrphanFix::DeleteRow, true, nullptr },
-   { L"resource_tags", L"resource_id", L"object_properties", L"object_id", L"resource", OrphanFix::DeleteRow, true, nullptr },
-   { L"observation_point_hosts", L"point_id", L"object_properties", L"object_id", L"observation point", OrphanFix::DeleteRow, true, nullptr },
-   { L"ap_common", L"owner_id", L"object_properties", L"object_id", L"template", OrphanFix::DeleteRow, true, nullptr },
-   { L"cond_dci_map", L"condition_id", L"object_properties", L"object_id", L"condition", OrphanFix::DeleteRow, true, nullptr },
-   { L"port_stop_list", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
-   { L"object_ai_data", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"access control entries", L"acl", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"custom attributes", L"object_custom_attributes", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"object URLs", L"object_urls", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"trusted object lists", L"trusted_objects", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"trusted object entries", L"trusted_objects", L"trusted_object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"responsible user assignments", L"responsible_users", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"access snapshot entries", L"object_access_snapshot", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"polling state records", L"pollable_objects", L"id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"data collection target records", L"dc_targets", L"id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"automatic binding settings", L"auto_bind_target", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"object version records", L"versionable_object", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"maintenance journal entries", L"maintenance_journal", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"active downtime records", L"active_downtimes", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"downtime log entries", L"downtime_log", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"container memberships", L"container_members", L"container_id", L"object_properties", L"object_id", L"container", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"node to subnet links", L"nsmap", L"subnet_id", L"object_properties", L"object_id", L"subnet", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"subnet to node links", L"nsmap", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"zone proxy assignments", L"zone_proxies", L"object_id", L"object_properties", L"object_id", L"zone", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"zone proxy node references", L"zone_proxies", L"proxy_node", L"object_properties", L"object_id", L"proxy node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"ICMP statistics records", L"icmp_statistics", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"ICMP target addresses", L"icmp_target_address_list", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"software inventory records", L"software_inventory", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"hardware inventory records", L"hardware_inventory", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"node component records", L"node_components", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"OSPF area records", L"ospf_areas", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"OSPF neighbor records", L"ospf_neighbors", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"SNMP agent records", L"node_snmp_agents", L"node_id", L"object_properties", L"object_id", L"node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"interface IP addresses", L"interface_address_list", L"iface_id", L"object_properties", L"object_id", L"interface", OrphanFix::DeleteRow, false, nullptr },
+   { OrphanStage::Object, L"interface VLAN assignments", L"interface_vlan_list", L"iface_id", L"object_properties", L"object_id", L"interface", OrphanFix::DeleteRow, false, nullptr },
+   { OrphanStage::Object, L"cluster memberships", L"cluster_members", L"cluster_id", L"object_properties", L"object_id", L"cluster", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"cluster sync subnets", L"cluster_sync_subnets", L"cluster_id", L"object_properties", L"object_id", L"cluster", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"rack passive elements", L"rack_passive_elements", L"rack_id", L"object_properties", L"object_id", L"rack", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"room passive elements", L"room_passive_elements", L"room_id", L"object_properties", L"object_id", L"room", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"physical links (left side)", L"physical_links", L"left_object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"physical links (right side)", L"physical_links", L"right_object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"network map elements", L"network_map_elements", L"map_id", L"object_properties", L"object_id", L"network map", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"network map links", L"network_map_links", L"map_id", L"object_properties", L"object_id", L"network map", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"network map seed node entries", L"network_map_seed_nodes", L"map_id", L"object_properties", L"object_id", L"network map", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"network map seed node references", L"network_map_seed_nodes", L"seed_node_id", L"object_properties", L"object_id", L"seed node", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"network map deleted node records", L"network_map_deleted_nodes", L"map_id", L"object_properties", L"object_id", L"network map", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"dashboard elements", L"dashboard_elements", L"dashboard_id", L"object_properties", L"object_id", L"dashboard", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"dashboard template instances", L"dashboard_template_instances", L"dashboard_template_id", L"object_properties", L"object_id", L"dashboard template", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"dashboard associations", L"dashboard_associations", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"business service downtime records", L"business_service_downtime", L"service_id", L"object_properties", L"object_id", L"business service", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"asset properties", L"asset_properties", L"asset_id", L"object_properties", L"object_id", L"asset", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"VPN connector networks", L"vpn_connector_networks", L"vpn_id", L"object_properties", L"object_id", L"VPN connector", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"resource tags", L"resource_tags", L"resource_id", L"object_properties", L"object_id", L"resource", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"observation point hosts", L"observation_point_hosts", L"point_id", L"object_properties", L"object_id", L"observation point", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"agent policies", L"ap_common", L"owner_id", L"object_properties", L"object_id", L"template", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"condition input mappings", L"cond_dci_map", L"condition_id", L"object_properties", L"object_id", L"condition", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"port stop list entries", L"port_stop_list", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"object AI data records", L"object_ai_data", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::DeleteRow, true, nullptr },
 
    // Class table parents
-   { L"radios", L"owner_id", L"(SELECT id FROM nodes UNION SELECT id FROM access_points)", L"id", L"node or access point", OrphanFix::DeleteRow, true, nullptr },
-   { L"cluster_resources", L"cluster_id", L"clusters", L"id", L"cluster", OrphanFix::DeleteRow, true, nullptr },
-   { L"dashboard_associations", L"dashboard_id", L"dashboards", L"id", L"dashboard", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"radio interface records", L"radios", L"owner_id", L"(SELECT id FROM nodes UNION SELECT id FROM access_points)", L"id", L"node or access point", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"cluster resources", L"cluster_resources", L"cluster_id", L"clusters", L"id", L"cluster", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::Object, L"dashboard associations", L"dashboard_associations", L"dashboard_id", L"dashboards", L"id", L"dashboard", OrphanFix::DeleteRow, true, nullptr },
 
    // DCI parents, then table threshold satellites
-   { L"dci_schedules", L"item_id", L"(SELECT item_id FROM items UNION SELECT item_id FROM dc_tables)", L"item_id", L"DCI", OrphanFix::DeleteRow, true, nullptr },
-   { L"dci_access", L"dci_id", L"(SELECT item_id FROM items UNION SELECT item_id FROM dc_tables)", L"item_id", L"DCI", OrphanFix::DeleteRow, true, nullptr },
-   { L"dc_table_columns", L"table_id", L"dc_tables", L"item_id", L"table DCI", OrphanFix::DeleteRow, true, nullptr },
-   { L"dct_threshold_conditions", L"threshold_id", L"dct_thresholds", L"id", L"table threshold", OrphanFix::DeleteRow, true, nullptr },
-   { L"dct_threshold_instances", L"threshold_id", L"dct_thresholds", L"id", L"table threshold", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::DataCollection, L"DCI custom schedules", L"dci_schedules", L"item_id", L"(SELECT item_id FROM items UNION SELECT item_id FROM dc_tables)", L"item_id", L"DCI", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::DataCollection, L"DCI access entries", L"dci_access", L"dci_id", L"(SELECT item_id FROM items UNION SELECT item_id FROM dc_tables)", L"item_id", L"DCI", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::DataCollection, L"table DCI columns", L"dc_table_columns", L"table_id", L"dc_tables", L"item_id", L"table DCI", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::DataCollection, L"table threshold conditions", L"dct_threshold_conditions", L"threshold_id", L"dct_thresholds", L"id", L"table threshold", OrphanFix::DeleteRow, true, nullptr },
+   { OrphanStage::DataCollection, L"table threshold instances", L"dct_threshold_instances", L"threshold_id", L"dct_thresholds", L"id", L"table threshold", OrphanFix::DeleteRow, true, nullptr },
 
    // Optional references reset to "not set", as Node::onObjectDelete does for a deleted object
-   { L"nodes", L"poller_node_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"proxy_node", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"snmp_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"eip_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"icmp_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"ssh_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"netconf_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"vnc_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"mqtt_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"modbus_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
-   { L"nodes", L"physical_container_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
-   { L"interfaces", L"parent_iface", L"object_properties", L"object_id", L"interface", OrphanFix::ResetToZero, true, nullptr },
-   { L"object_properties", L"drilldown_object_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
-   { L"conditions", L"source_object", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
-   { L"dashboards", L"forced_context_object_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
-   { L"items", L"related_object", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
-   { L"dc_tables", L"related_object", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
+   { OrphanStage::Object, L"poller node assignments", L"nodes", L"poller_node_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"agent proxy assignments", L"nodes", L"proxy_node", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"SNMP proxy assignments", L"nodes", L"snmp_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"EtherNet/IP proxy assignments", L"nodes", L"eip_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"ICMP proxy assignments", L"nodes", L"icmp_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"SSH proxy assignments", L"nodes", L"ssh_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"NETCONF proxy assignments", L"nodes", L"netconf_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"VNC proxy assignments", L"nodes", L"vnc_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"MQTT proxy assignments", L"nodes", L"mqtt_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"Modbus proxy assignments", L"nodes", L"modbus_proxy", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, L"polling routing may change" },
+   { OrphanStage::Object, L"physical container assignments of nodes", L"nodes", L"physical_container_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
+   { OrphanStage::Object, L"parent interface references", L"interfaces", L"parent_iface", L"object_properties", L"object_id", L"interface", OrphanFix::ResetToZero, true, nullptr },
+   { OrphanStage::Object, L"drill-down object references", L"object_properties", L"drilldown_object_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
+   { OrphanStage::Object, L"condition source object references", L"conditions", L"source_object", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
+   { OrphanStage::Object, L"dashboard context object references", L"dashboards", L"forced_context_object_id", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
+   { OrphanStage::DataCollection, L"related object references of DCIs", L"items", L"related_object", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
+   { OrphanStage::DataCollection, L"related object references of table DCIs", L"dc_tables", L"related_object", L"object_properties", L"object_id", L"object", OrphanFix::ResetToZero, true, nullptr },
 
    // Report only: no repair is safe without knowing the operator's intent
-   { L"nodes", L"zone_guid", L"zones", L"zone_guid", L"zone", OrphanFix::ReportOnly, true, nullptr },
-   { L"subnets", L"zone_guid", L"zones", L"zone_guid", L"zone", OrphanFix::ReportOnly, true, nullptr },
-   { L"dci_delete_list", L"node_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
-   { L"business_service_checks", L"related_object", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
-   { L"business_service_checks", L"prototype_service_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
-   { L"business_service_checks", L"related_dci", L"(SELECT item_id FROM items UNION SELECT item_id FROM dc_tables)", L"item_id", L"DCI", OrphanFix::ReportOnly, true, nullptr },
-   { L"cond_dci_map", L"node_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
-   { L"cond_dci_map", L"dci_id", L"(SELECT item_id FROM items UNION SELECT item_id FROM dc_tables)", L"item_id", L"DCI", OrphanFix::ReportOnly, true, nullptr },
-   { L"scheduled_tasks", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
-   { L"dashboard_template_instances", L"instance_object_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"zone assignments of nodes", L"nodes", L"zone_guid", L"zones", L"zone_guid", L"zone", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"zone assignments of subnets", L"subnets", L"zone_guid", L"zones", L"zone_guid", L"zone", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"deleted DCI list entries", L"dci_delete_list", L"node_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"business service check object references", L"business_service_checks", L"related_object", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"business service check prototype references", L"business_service_checks", L"prototype_service_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"business service check DCI references", L"business_service_checks", L"related_dci", L"(SELECT item_id FROM items UNION SELECT item_id FROM dc_tables)", L"item_id", L"DCI", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"condition input node references", L"cond_dci_map", L"node_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"condition input DCI references", L"cond_dci_map", L"dci_id", L"(SELECT item_id FROM items UNION SELECT item_id FROM dc_tables)", L"item_id", L"DCI", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"scheduled task object references", L"scheduled_tasks", L"object_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
+   { OrphanStage::ReportOnly, L"dashboard template instance object references", L"dashboard_template_instances", L"instance_object_id", L"object_properties", L"object_id", L"object", OrphanFix::ReportOnly, true, nullptr },
 
    // Event processing policy chains: chain 0 is the main chain and has its own row, so zero is not "not set"
-   { L"event_policy", L"chain_id", L"event_policy_chain", L"chain_id", L"chain", OrphanFix::DeleteRow, false, nullptr },
-   { L"policy_chain_acl", L"chain_id", L"event_policy_chain", L"chain_id", L"chain", OrphanFix::DeleteRow, false, nullptr },
-   { L"policy_chain_call_list", L"target_chain_id", L"event_policy_chain", L"chain_id", L"chain", OrphanFix::DeleteRow, false, nullptr },
-   { L"alarm_category_map", L"category_id", L"alarm_categories", L"id", L"alarm category", OrphanFix::DeleteRow, true, nullptr }
+   { OrphanStage::EventPolicy, L"event processing rules", L"event_policy", L"chain_id", L"event_policy_chain", L"chain_id", L"chain", OrphanFix::DeleteRow, false, nullptr },
+   { OrphanStage::EventPolicy, L"rule chain access entries", L"policy_chain_acl", L"chain_id", L"event_policy_chain", L"chain_id", L"chain", OrphanFix::DeleteRow, false, nullptr },
+   { OrphanStage::EventPolicy, L"rule chain calls", L"policy_chain_call_list", L"target_chain_id", L"event_policy_chain", L"chain_id", L"chain", OrphanFix::DeleteRow, false, nullptr },
+   { OrphanStage::EventPolicy, L"rule alarm category mappings", L"alarm_category_map", L"category_id", L"alarm_categories", L"id", L"alarm category", OrphanFix::DeleteRow, true, nullptr }
 };
 
 /**
  * Event processing policy tables keyed by (chain_id, rule_id)
  */
-static const wchar_t *s_eppRuleTables[] =
+static const struct
 {
-   L"policy_action_list",
-   L"policy_timer_cancellation_list",
-   L"policy_event_list",
-   L"policy_time_frame_list",
-   L"policy_source_list",
-   L"policy_pstorage_actions",
-   L"policy_cattr_actions",
-   L"alarm_category_map",
-   L"policy_chain_call_list"
+   const wchar_t *table;
+   const wchar_t *description;
+} s_eppRuleTables[] =
+{
+   { L"policy_action_list", L"rule actions" },
+   { L"policy_timer_cancellation_list", L"rule timer cancellations" },
+   { L"policy_event_list", L"rule event filters" },
+   { L"policy_time_frame_list", L"rule time frames" },
+   { L"policy_source_list", L"rule source filters" },
+   { L"policy_pstorage_actions", L"rule persistent storage actions" },
+   { L"policy_cattr_actions", L"rule custom attribute actions" },
+   { L"alarm_category_map", L"rule alarm category mappings" },
+   { L"policy_chain_call_list", L"rule chain calls" }
 };
 
 /**
@@ -2751,10 +2766,10 @@ static const wchar_t *s_eppRuleTables[] =
  */
 static void CheckEppRelations()
 {
+   StartStage(L"Event processing policy rule references", sizeof(s_eppRuleTables) / sizeof(s_eppRuleTables[0]));
    for(size_t i = 0; (i < sizeof(s_eppRuleTables) / sizeof(s_eppRuleTables[0])) && !s_checkAborted; i++)
    {
-      const wchar_t *table = s_eppRuleTables[i];
-      StartStage(table);
+      const wchar_t *table = s_eppRuleTables[i].table;
 
       StringBuffer query(L"SELECT c.chain_id,c.rule_id,count(*) FROM ");
       query.append(table).append(L" c LEFT OUTER JOIN event_policy p ON p.chain_id=c.chain_id AND p.rule_id=c.rule_id WHERE p.rule_id IS NULL GROUP BY c.chain_id,c.rule_id");
@@ -2762,25 +2777,24 @@ static void CheckEppRelations()
       if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
-         SetStageWorkTotal(count);
          for(int j = 0; (j < count) && !s_checkAborted; j++)
          {
             uint32_t chainId = DBGetFieldULong(hResult, j, 0);
             uint32_t ruleId = DBGetFieldULong(hResult, j, 1);
             g_dbCheckErrors++;
-            if (GetYesNoEx(L"%d rows in %s refer to non-existing rule [chain %u, rule %u]. Delete them?", DBGetFieldLong(hResult, j, 2), table, chainId, ruleId))
+            if (GetYesNoEx(L"%d %s refer to non-existing rule [chain %u, rule %u] (%s). Delete them?", DBGetFieldLong(hResult, j, 2), s_eppRuleTables[i].description, chainId, ruleId, table))
             {
                StringBuffer fix(L"DELETE FROM ");
                fix.append(table).append(L" WHERE chain_id=").append(chainId).append(L" AND rule_id=").append(ruleId);
                if (CheckQuery(fix))
                   g_dbCheckFixes++;
             }
-            UpdateStageProgress(1);
          }
          DBFreeResult(hResult);
       }
-      EndStage();
+      UpdateStageProgress(1);
    }
+   EndStage();
 }
 
 /**
@@ -2788,10 +2802,6 @@ static void CheckEppRelations()
  */
 static void CheckOrphanRelation(const OrphanRelation& r)
 {
-   wchar_t stageName[256];
-   nx_swprintf(stageName, 256, L"%s.%s", r.childTable, r.childKey);
-   StartStage(stageName);
-
    StringBuffer query(L"SELECT c.");
    query.append(r.childKey).append(L",count(*) FROM ").append(r.childTable).append(L" c LEFT OUTER JOIN ")
         .append(r.parentSource).append(L" p ON p.").append(r.parentKey).append(L"=c.").append(r.childKey)
@@ -2804,7 +2814,6 @@ static void CheckOrphanRelation(const OrphanRelation& r)
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
-      SetStageWorkTotal(count);
       for(int i = 0; (i < count) && !s_checkAborted; i++)
       {
          uint32_t id = DBGetFieldULong(hResult, i, 0);
@@ -2813,16 +2822,14 @@ static void CheckOrphanRelation(const OrphanRelation& r)
          // Built-in objects (network root, template root, zone 0, ...) exist in the server without a
          // properties row in older databases, so references to them are valid
          if (!wcscmp(r.parentSource, L"object_properties") && IsBuiltinObjectId(id))
-         {
-            UpdateStageProgress(1);
             continue;
-         }
          g_dbCheckErrors++;
 
          StringBuffer message;
-         message.appendFormattedString(L"%d rows in %s.%s refer to non-existing %s [%u]", rows, r.childTable, r.childKey, r.parentName, id);
+         message.appendFormattedString(L"%d %s refer to non-existing %s [%u] (%s.%s", rows, r.description, r.parentName, id, r.childTable, r.childKey);
          if (r.warning != nullptr)
-            message.append(L" (").append(r.warning).append(L")");
+            message.append(L", ").append(r.warning);
+         message.append(L")");
 
          StringBuffer fix;
          switch(r.fix)
@@ -2832,7 +2839,7 @@ static void CheckOrphanRelation(const OrphanRelation& r)
                fix.append(L"DELETE FROM ").append(r.childTable).append(L" WHERE ").append(r.childKey).append(L"=").append(id);
                break;
             case OrphanFix::ResetToZero:
-               message.append(L". Reset reference?");
+               message.append(L". Reset them?");
                fix.append(L"UPDATE ").append(r.childTable).append(L" SET ").append(r.childKey).append(L"=0 WHERE ").append(r.childKey).append(L"=").append(id);
                break;
             case OrphanFix::ReportOnly:
@@ -2845,20 +2852,43 @@ static void CheckOrphanRelation(const OrphanRelation& r)
             if (CheckQuery(fix))
                g_dbCheckFixes++;
          }
-         UpdateStageProgress(1);
       }
       DBFreeResult(hResult);
    }
-   EndStage();
 }
 
 /**
- * Check all relations from s_orphanRelations
+ * Check all relations from s_orphanRelations, one stage per OrphanStage in array order
  */
 static void CheckOrphanRelations()
 {
-   for(size_t i = 0; (i < sizeof(s_orphanRelations) / sizeof(OrphanRelation)) && !s_checkAborted; i++)
-      CheckOrphanRelation(s_orphanRelations[i]);
+   static const struct
+   {
+      OrphanStage stage;
+      const wchar_t *name;
+   } stages[] =
+   {
+      { OrphanStage::Object, L"Object references" },
+      { OrphanStage::DataCollection, L"Data collection references" },
+      { OrphanStage::EventPolicy, L"Event processing policy references" },
+      { OrphanStage::ReportOnly, L"References reported only" }
+   };
+   for(size_t j = 0; (j < sizeof(stages) / sizeof(stages[0])) && !s_checkAborted; j++)
+   {
+      int total = 0;
+      for(size_t i = 0; i < sizeof(s_orphanRelations) / sizeof(OrphanRelation); i++)
+         if (s_orphanRelations[i].stage == stages[j].stage)
+            total++;
+      StartStage(stages[j].name, total);
+      for(size_t i = 0; (i < sizeof(s_orphanRelations) / sizeof(OrphanRelation)) && !s_checkAborted; i++)
+      {
+         if (s_orphanRelations[i].stage != stages[j].stage)
+            continue;
+         CheckOrphanRelation(s_orphanRelations[i]);
+         UpdateStageProgress(1);
+      }
+      EndStage();
+   }
 }
 
 /**
