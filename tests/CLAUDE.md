@@ -9,7 +9,7 @@ the tree is configured `--with-tests`. Within it, `include`, `config`, `suite`,
 `tests/Makefile.am`; everything else comes in through `@TEST_MODULES@` /
 `@AGENT_UNIT_TESTS@` (in `tests/Makefile.am` and `tests/agent/unit/Makefile.am`),
 populated by `configure.ac`. `integration/` is built by Maven separately;
-`nx-2488/` and `tools/` are manual helpers outside the build.
+`nx-2488/`, `nxdbmgr-check/` and `tools/` are manual helpers outside the build.
 
 ## Windows build
 

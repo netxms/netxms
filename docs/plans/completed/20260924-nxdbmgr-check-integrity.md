@@ -95,7 +95,13 @@ in GitHub issues #3691, #3692, #3693, #3694 (see Post-Completion).
   a false positive is plausible
 - **CRITICAL: all tests must pass before starting next task** - no exceptions
 - **CRITICAL: update this plan file when scope changes during implementation**
-- build with `make -C src/server/tools/nxdbmgr && make -C src/server/tools/nxdbmgr install`
+- build with `make -C src/server/tools/nxdbmgr && make -C src/server/tools/nxdbmgr install`; this
+  worktree is configured with `--prefix=/Users/alk/netxms/nxdbmgr-check --with-sqlite --with-pgsql`
+  so the master server install is never touched
+- **roles**: Claude is the only writer in this worktree (tasks 1-11 and 13) and commits after
+  each task; Codex reviews every task commit before the next task starts and owns the task 12
+  acceptance audit, including the PostgreSQL harness runs and the abort/rollback test (Claude
+  applies, builds and reverts the deliberate fault on Codex's instruction)
 - stage names of the eight replaced property stages ("Zone object properties", "Node object
   properties", "Interface object properties", "Network service object properties", "Cluster object
   properties", "Access point object properties", "Business services", "Business service
@@ -105,19 +111,36 @@ in GitHub issues #3691, #3692, #3693, #3694 (see Post-Completion).
 ## Testing Strategy
 
 - **defect injection test** (`tests/nxdbmgr-check/`, manual, not in build). `run.sh`:
-  1. creates a scratch database (`sqlite` default: fresh file; `pgsql`/`tsdb`: drop and recreate
-     via `-C dba/pass` or an explicit `dropdb`/`createdb`), writes `nxdbmgr.conf`, runs
-     `nxdbmgr init <type>` with the type given explicitly;
+  1. creates a scratch database, writes its own `nxdbmgr.conf` in a scratch directory and runs
+     `nxdbmgr init <type>` with the type given explicitly. `sqlite` (default): a fresh file.
+     `pgsql`/`tsdb`: the database name is unique per invocation, `nxdbmgr_check_<random suffix>`,
+     created with `createdb` (never preceded by a drop) using the `-H host -U user` options
+     (password from `PGPASSWORD`); on exit `run.sh` drops only the exact name it created, and
+     only if the create succeeded. There is no option to point the harness at an existing
+     configuration file, so it can never touch an application database or another concurrent
+     harness run;
   2. applies `baseline.sql` (valid fixture graph), runs `nxdbmgr -f check` once so the existing
      stages create the per-object data tables, then `nxdbmgr -E check` and asserts the output
      contains `Database doesn't contain any errors` (baseline is clean);
   3. applies `inject-defects.sql`, runs `nxdbmgr -f check | tee first.log`, asserts every
      fragment in `expected-first-run.txt` is present and every fragment in
-     `unexpected-first-run.txt` is absent;
+     `unexpected-first-run.txt` is absent, then applies `assert-after-first-run.sql` (post-repair
+     state: negative fixtures still present, report-only rows retained, coupled fields reset
+     together, repaired rows gone);
   4. applies `cleanup-report-only.sql`, runs `nxdbmgr -E check`, asserts exit code 0 **and**
      `Database doesn't contain any errors` in the output (the exit code alone is not enough:
-     `check` always exits 0 and `-E` only fires from a prompt);
+     `check` always exits 0 and `-E` only fires from a prompt), then applies
+     `assert-after-cleanup.sql`;
   5. every `batch` invocation fails the run if its output contains `SQL query failed`.
+- **state assertions** are plain SQL because nxdbmgr has no query command. `baseline.sql` creates
+  `nxdbmgr_check_assert (id integer not null primary key)` with one row `0`. An assertion is
+  `INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (<condition>) THEN <unique n> ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0`:
+  a false condition inserts a duplicate key, the statement fails, `ExecSQLBatch` prints
+  `SQL query failed` and stops, and step 5 fails the run. The `FROM ... WHERE id=0` keeps the
+  statement valid on Oracle. Conditions are scalar subqueries, e.g.
+  `(SELECT count(*) FROM acl WHERE object_id=990002)=1`. Assertion IDs are unique across both
+  assertion files (first-run file uses 1xx, after-cleanup file uses 2xx); successful rows are never
+  cleared and sentinel row 0 is never touched.
 - SQL fixture rules (forced by `ExecSQLBatch`): labels are `/* ... */` block comments only, never
   `--`; no `'` or `;` inside a comment; one statement per `;`.
 - negative fixtures carry unique IDs (e.g. 990xxx range) so `unexpected-first-run.txt` can grep
@@ -182,8 +205,12 @@ statement uses the same predicate as the SELECT.
 
 **SQL failure handling.** Any failed statement in a new stage, SELECT or repair, sets a
 file-scoped `s_checkAborted` flag (a small `CheckSelect()` / `CheckQuery()` pair wrapping
-`SQLSelect` / `SQLQuery` does this so the stages stay short). `CheckDatabase()` treats the flag
-as fatal: the transaction is rolled back and the final line is `Database check aborted`, never
+`SQLSelect` / `SQLQuery` does this so the stages stay short). Helpers reused by new stages use
+the wrappers too: `CheckMissingObjectProperties` is converted when it becomes the body of
+`CheckObjectClassCoverage` (task 5), since its old callers are removed in the same task.
+`CheckDatabase()` treats the flag as fatal: no further stage starts once it is set (each stage
+call is guarded, so a poisoned PostgreSQL transaction is not hit with dozens more queries), the
+transaction is rolled back and the final line is `Database check aborted`, never
 `Database doesn't contain any errors`. `DBBegin` and `DBCommit` return values are checked as
 well; a failed commit prints an error and the aborted line. This matters on PostgreSQL where one
 failed statement poisons the whole transaction, so every later query would also fail and a
@@ -335,8 +362,11 @@ power_domains, 44 with cooling_zones, 45 with rooms. Any other combination (clas
 **(d) Duplicate GUIDs.** `SELECT guid, count(*) FROM object_properties GROUP BY guid HAVING count(*) > 1`.
 Report only.
 
-**(e) Container cycles.** Load `container_members` into memory, DFS from every container ID,
-report each cycle once as the ID path. Report only.
+**(e) Container cycles.** Load `container_members` into memory and find the strongly connected
+components (Tarjan, linear). Every component with more than one object, or with a
+self-membership, is one finding listing all its objects and all memberships between them, so
+overlapping cycles are shown completely in one run and the operator can break them all at once.
+Elementary cycles are not enumerated individually (that is exponential). Report only.
 
 **(f) Duplicate subnets.** `GROUP BY ip_addr, ip_netmask, zone_guid HAVING count(*) > 1`.
 Report only. Same address with a different mask (10.0.0.0/8 and 10.0.0.0/16) is not a duplicate.
@@ -354,12 +384,15 @@ polymorphic; classify in this order:
 - `template_id` in `object_properties` but none of the above: report "unexpected template owner
   class", no fix.
 
-**(h) Interface peers.** Rows where `peer_node_id <> 0` or `peer_if_id <> 0` and either ID is not in
-`object_properties` (AP peers store the AP ID in both columns, so class tables cannot be used).
+**(h) Interface peers.** Rows where a **non-zero** `peer_node_id` or a **non-zero** `peer_if_id` is
+not in `object_properties` (AP peers store the AP ID in both columns, so class tables cannot be
+used). Each endpoint is validated on its own: a zero endpoint is never treated as missing, so a row
+with a valid `peer_node_id` and `peer_if_id = 0` is not touched.
 Fix per interface: `UPDATE interfaces SET peer_node_id=0, peer_if_id=0, peer_proto=0, peer_last_updated=0 WHERE id=?`.
 
-**(i) Node path check results.** Rows where `path_check_node_id <> 0` or `path_check_iface_id <> 0`
-and either is not in `object_properties` (polymorphic: may be AP or VPN connector). Fix per node:
+**(i) Node path check results.** Rows where a **non-zero** `path_check_node_id` or a **non-zero**
+`path_check_iface_id` is not in `object_properties` (polymorphic: may be AP or VPN connector).
+Same per-endpoint rule as (h). Fix per node:
 `UPDATE nodes SET path_check_reason=0, path_check_node_id=0, path_check_iface_id=0 WHERE id=?`.
 
 **(j) Event code references.** For each (table, column, default) pair, select rows whose code is
@@ -396,11 +429,15 @@ Otherwise the row is deleted per `(chain_id, rule_id, object_id|event_code)`, ne
 
 ```
 tests/nxdbmgr-check/
-  run.sh                   # usage: run.sh [-d sqlite|pgsql|tsdb] [-c nxdbmgr.conf] [-b /path/to/nxdbmgr]
+  run.sh                   # usage: run.sh [-d sqlite|pgsql|tsdb] [-H host] [-U user] [-b /path/to/nxdbmgr]
+                           # pgsql/tsdb: password from PGPASSWORD, database nxdbmgr_check_<random> per run
   baseline.sql             # valid fixture graph: container 990001, node 990002 as its member with a
-                           # full object_properties row, an interface, a DCI; must check clean
+                           # full object_properties row, interface 990004, DCI 990005 with threshold
+                           # 990006; creates the nxdbmgr_check_assert table; must check clean
   inject-defects.sql       # one block per defect, /* label */ comments only
+  assert-after-first-run.sql   # post-repair state assertions (see Testing Strategy)
   cleanup-report-only.sql  # removes report-only defects so the final run is clean
+  assert-after-cleanup.sql # state assertions after the clean run
   expected-first-run.txt   # message fragments that must appear on the first run
   unexpected-first-run.txt # fragments (negative fixture IDs) that must NOT appear
 ```
@@ -422,17 +459,19 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Create: `tests/nxdbmgr-check/run.sh`
 - Create: `tests/nxdbmgr-check/baseline.sql`
 - Create: `tests/nxdbmgr-check/inject-defects.sql`
+- Create: `tests/nxdbmgr-check/assert-after-first-run.sql`
 - Create: `tests/nxdbmgr-check/cleanup-report-only.sql`
+- Create: `tests/nxdbmgr-check/assert-after-cleanup.sql`
 - Create: `tests/nxdbmgr-check/expected-first-run.txt`
 - Create: `tests/nxdbmgr-check/unexpected-first-run.txt`
 - Modify: `tests/CLAUDE.md` (layout table row)
 
-- [ ] write `run.sh` implementing the five steps from Testing Strategy: scratch DB per driver with explicit `init <type>`, baseline apply + `-f check` + clean `-E check` assertion, inject + `-f check` + expected/unexpected greps, cleanup + `-E check` + `Database doesn't contain any errors` grep, `SQL query failed` detection on every batch, non-zero exit on any failure
-- [ ] write `baseline.sql`: container 990001 and node 990002 (member of the container) with complete `object_properties` rows, one interface, one DCI; labels as `/* */` only
-- [ ] seed `inject-defects.sql` with one defect an existing check already catches (threshold for non-existing DCI) and `expected-first-run.txt` with its fragment
-- [ ] seed `unexpected-first-run.txt` with `[990002]` to prove the baseline node is never reported
-- [ ] add the directory to the layout table in `tests/CLAUDE.md` as manual / not in build
-- [ ] run `run.sh` against SQLite - must pass before task 2
+- [x] write `run.sh` implementing the five steps from Testing Strategy: scratch DB per driver with explicit `init <type>` (pgsql/tsdb: unique name `nxdbmgr_check_<random>` created without a prior drop and dropped on exit only if this run created it, `-H`/`-U`/`PGPASSWORD`, no external config file option), baseline apply + `-f check` + clean `-E check` assertion, inject + `-f check` + expected/unexpected greps + `assert-after-first-run.sql`, cleanup + `-E check` + `Database doesn't contain any errors` grep + `assert-after-cleanup.sql`, `SQL query failed` detection on every batch, non-zero exit on any failure
+- [x] write `baseline.sql`: container 990001 and node 990002 (member of the container) with complete `object_properties` rows, one interface, one DCI, the `nxdbmgr_check_assert` table with row 0; labels as `/* */` only
+- [x] seed `inject-defects.sql` with one defect an existing check already catches (threshold for non-existing DCI) and `expected-first-run.txt` with its fragment; seed `assert-after-first-run.sql` with one assertion that the threshold row is gone and one that node 990002 still exists, and prove the mechanism by running `run.sh` once with a disposable copy of the assertion file in which one condition is negated, and watching it fail
+- [x] seed `unexpected-first-run.txt` with `[990002]` to prove the baseline node is never reported
+- [x] add the directory to the layout table in `tests/CLAUDE.md` as manual / not in build
+- [x] run `run.sh` against SQLite - must pass before task 2 (also passes with `-d pgsql -U alk` against the local PostgreSQL 18; role `alk` has createdb, role `netxms` does not)
 
 ### Task 2: Generic orphan relation stage with object satellite relations
 
@@ -442,14 +481,15 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 - Modify: `tests/nxdbmgr-check/unexpected-first-run.txt`
 
-- [ ] add `s_checkAborted` with `CheckSelect()` / `CheckQuery()` wrappers that set it on any SQL failure
-- [ ] add `OrphanFix`, `OrphanRelation` and `static void CheckOrphanRelation(const OrphanRelation& r)` implementing the grouped LEFT OUTER JOIN query, per-parent prompt with row count, fix by same predicate, using the wrappers
-- [ ] make `CheckDatabase()` honor `s_checkAborted` and check `DBBegin` / `DBCommit` results: roll back and print `Database check aborted` instead of the no-errors line
-- [ ] add `static void CheckOrphanRelations()` iterating the array and call it from `CheckDatabase()` after `CheckAssetNodeLinks()`
-- [ ] add all `DeleteRow` entries with parent `object_properties.object_id` from the relation table, including the two `zeroAllowed=false` entries, `physical_links`, `ap_common` and `object_access_snapshot`
-- [ ] inject one orphan row per entry (deleted-object IDs in the 999xxx range) and a row with key zero in `interface_address_list` to prove `zeroAllowed=false`
-- [ ] inject negative fixtures: an `acl` row and an `object_custom_attributes` row for node 990002; add `[990002]` checks to `unexpected-first-run.txt`
-- [ ] run `run.sh` - must pass before task 3
+- [x] add `s_checkAborted` with `CheckSelect()` / `CheckQuery()` wrappers that set it on any SQL failure
+- [x] add `OrphanFix`, `OrphanRelation` and `static void CheckOrphanRelation(const OrphanRelation& r)` implementing the grouped LEFT OUTER JOIN query, per-parent prompt with row count, fix by same predicate, using the wrappers
+- [x] make `CheckDatabase()` honor `s_checkAborted` (stage calls moved to a `s_checkStages[]` function pointer array iterated until the flag is set; `CheckComponents` got two argument-free wrappers for that) and check `DBBegin` / `DBCommit` results: roll back and print `Database check aborted` instead of the no-errors line
+- [x] add `static void CheckOrphanRelations()` iterating the array and call it from `CheckDatabase()` after `CheckAssetNodeLinks()`
+- [x] add all `DeleteRow` entries with parent `object_properties.object_id` from the relation table, including the two `zeroAllowed=false` entries, `physical_links`, `ap_common` and `object_access_snapshot`
+- [x] inject one orphan row per entry (deleted-object IDs in the 999xxx range; 999101 and up in array order; the injected `network_map_links` row carries two `network_map_elements` rows because `CheckMapLinks` runs first and deletes element-less links; baseline gained subnet 990007 so `nsmap.node_id` can be exercised with an existing subnet) and a row with key zero in `interface_address_list` to prove `zeroAllowed=false`
+- [x] inject negative fixtures: an `acl` row and an `object_custom_attributes` row for node 990002; add `[990002]` checks to `unexpected-first-run.txt`
+- [x] run `run.sh` - must pass before task 3 (SQLite and pgsql)
+- ⚠️ `tsdb` fixtures are not validated: `maintenance_journal.creation_time` is `timestamptz` there, so the integer literal in `inject-defects.sql` would fail; a tsdb variant of that row is needed before `run.sh -d tsdb` can pass
 
 ### Task 3: Class-table, DCI, reset and report-only relations
 
@@ -460,13 +500,13 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 - Modify: `tests/nxdbmgr-check/unexpected-first-run.txt`
 
-- [ ] add class-table parent entries (radios via node-or-AP subquery, cluster_resources, dashboard_associations.dashboard_id, dc_table_columns, dct_threshold_conditions, dct_threshold_instances)
-- [ ] add DCI-parent entries (dci_schedules, dci_access) using the items UNION dc_tables subquery with an alias
-- [ ] add `ResetToZero` entries for nodes, interfaces.parent_iface, object_properties.drilldown_object_id, conditions.source_object, dashboards.forced_context_object_id, items/dc_tables.related_object; proxy prompts include "polling routing may change"
-- [ ] add `ReportOnly` entries: nodes.zone_guid and subnets.zone_guid (parent zones.zone_guid), dci_delete_list.node_id, business_service_checks.related_object / prototype_service_id / related_dci, cond_dci_map.node_id / dci_id, scheduled_tasks.object_id, dashboard_template_instances.instance_object_id
-- [ ] verify the array order is topological (objects, DCIs, dct_thresholds, threshold satellites)
-- [ ] inject one defect per new entry; report-only ones also go into `cleanup-report-only.sql`; negative fixtures: a `radios` row owned by an access point 990003, a DCI on node 990002 with `related_object=990001`
-- [ ] run `run.sh` - must pass before task 4
+- [x] add class-table parent entries (radios via node-or-AP subquery, cluster_resources, dashboard_associations.dashboard_id, dc_table_columns, dct_threshold_conditions, dct_threshold_instances)
+- [x] add DCI-parent entries (dci_schedules, dci_access) using the items UNION dc_tables subquery with an alias
+- [x] add `ResetToZero` entries for nodes, interfaces.parent_iface, object_properties.drilldown_object_id, conditions.source_object, dashboards.forced_context_object_id, items/dc_tables.related_object; proxy prompts include "polling routing may change"
+- [x] add `ReportOnly` entries: nodes.zone_guid and subnets.zone_guid (parent zones.zone_guid), dci_delete_list.node_id, business_service_checks.related_object / prototype_service_id / related_dci, cond_dci_map.node_id / dci_id, scheduled_tasks.object_id, dashboard_template_instances.instance_object_id
+- [x] verify the array order is topological (objects, DCIs, dct_thresholds, threshold satellites)
+- [x] inject one defect per new entry; report-only ones also go into `cleanup-report-only.sql`; negative fixtures: a `radios` row owned by an access point 990003, a DCI on node 990002 with `related_object=990001` (baseline gained node 990008 as holder of the injected proxy references, access point 990003, business service 990020, condition 990012, dashboard 990014, DCI 990010 and table DCI 990011; fixture comments must not contain `;` - `ExecSQLBatch` splits on it inside comments too)
+- [x] run `run.sh` - must pass before task 4 (SQLite and pgsql)
 
 ### Task 4: EPP composite-key and chain relations
 
@@ -476,11 +516,11 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 - Modify: `tests/nxdbmgr-check/unexpected-first-run.txt`
 
-- [ ] add the EPP table name array and `static void CheckEppRelations()` joining on `(chain_id, rule_id)` against `event_policy`, deleting by both columns
-- [ ] add chain-level entries to the generic array (event_policy.chain_id, policy_chain_acl.chain_id, policy_chain_call_list.target_chain_id against event_policy_chain, `zeroAllowed=false`) and alarm_category_map.category_id against alarm_categories
-- [ ] call `CheckEppRelations()` after `CheckOrphanRelations()`
-- [ ] inject one row per policy table with a non-existing rule, one rule on a non-existing chain, one alarm_category_map row with a bad category; negative fixture: a rule 990010 on chain 0 with valid satellite rows (must not be reported, chain 0 row exists from `init`)
-- [ ] run `run.sh` - must pass before task 5
+- [x] add the EPP table name array and `static void CheckEppRelations()` joining on `(chain_id, rule_id)` against `event_policy`, deleting by both columns
+- [x] add chain-level entries to the generic array (event_policy.chain_id, policy_chain_acl.chain_id, policy_chain_call_list.target_chain_id against event_policy_chain, `zeroAllowed=false`) and alarm_category_map.category_id against alarm_categories
+- [x] call `CheckEppRelations()` after `CheckOrphanRelations()`
+- [x] inject one row per policy table with a non-existing rule, one rule on a non-existing chain, one alarm_category_map row with a bad category; negative fixture: a rule 990010 on chain 0 with valid satellite rows (must not be reported, chain 0 row exists from `init`); baseline gained action 990062, alarm category 990063 and chain 990064 so the injected satellites survive the existing `CheckEPP` stage
+- [x] run `run.sh` - must pass before task 5 (SQLite and pgsql)
 
 ### Task 5: Object class coverage, ghost properties, duplicate IDs
 
@@ -491,13 +531,13 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 - Modify: `tests/nxdbmgr-check/unexpected-first-run.txt`
 
-- [ ] add a static class-table list `{ table, displayName, builtinId }` matching the loader in `objects.cpp`
-- [ ] add `CheckObjectClassCoverage()` looping the list through `CheckMissingObjectProperties`; remove `CheckZones`, `CheckAccessPoints`, `CheckBusinessServices`, `CheckAssets` and the properties stages inside `CheckNodes`, `CheckComponents`, `CheckClusters`
-- [ ] add `CheckGhostObjectProperties()` (report only, local `s_builtinObjectIds` array)
-- [ ] add `CheckDuplicateObjectIds()` (report only, matching extension pairs excluded, all other combinations reported)
-- [ ] wire the three at the top of `CheckDatabase()`
-- [ ] inject: a `sensors` row without properties, a properties row 999500 with no class table, ID 999501 in both `nodes` and `object_containers` class 5, ID 999502 in `object_containers` class 32 and `nodes` (must be reported); negative fixture: business service 990020 with both `object_containers` class 28 and `business_services` rows
-- [ ] run `run.sh` - must pass before task 6
+- [x] add a static class-table list `{ table, displayName, builtinId }` matching the loader in `objects.cpp`
+- [x] add `CheckObjectClassCoverage()` looping the list through `CheckMissingObjectProperties`; remove `CheckZones`, `CheckAccessPoints`, `CheckBusinessServices`, `CheckAssets` and the properties stages inside `CheckNodes`, `CheckComponents`, `CheckClusters`
+- [x] add `CheckGhostObjectProperties()` (report only, local `s_builtinObjectIds` array)
+- [x] add `CheckDuplicateObjectIds()` (report only, matching extension pairs excluded, all other combinations reported)
+- [x] wire the three at the top of `CheckDatabase()`
+- [x] inject: a `sensors` row without properties, a properties row 999500 with no class table, ID 999501 in both `nodes` and `object_containers` class 5, ID 999502 in `object_containers` class 32 and `nodes` (must be reported); negative fixture: business service 990020 with both `object_containers` class 28 and `business_services` rows (and dashboard 990014 with class 23; the duplicate node rows are container members so `CheckNodes` keeps them, and cleanup drops the `idata_`/`tdata_` tables the first run created for them)
+- [x] run `run.sh` - must pass before task 6 (SQLite and pgsql)
 
 ### Task 6: Duplicate GUIDs, container cycles, duplicate subnets
 
@@ -508,12 +548,12 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 - Modify: `tests/nxdbmgr-check/unexpected-first-run.txt`
 
-- [ ] add `CheckDuplicateObjectGuids()` (GROUP BY guid HAVING count > 1, report only)
-- [ ] add `CheckContainerCycles()` (in-memory adjacency from `container_members`, DFS, report each cycle once as an ID path)
-- [ ] add `CheckDuplicateSubnets()` (GROUP BY ip_addr, ip_netmask, zone_guid, report only)
-- [ ] wire them in `CheckDatabase()` per the order in Solution Overview
-- [ ] inject: two properties rows sharing a GUID, containers 999600→999601→999600, two subnets with the same address and mask in zone 0; negative fixtures: same address in a different zone (990030), same address with a different mask (990031)
-- [ ] run `run.sh` - must pass before task 7
+- [x] add `CheckDuplicateObjectGuids()` (GROUP BY guid HAVING count > 1, report only; lists the object IDs sharing the GUID)
+- [x] add `CheckContainerCycles()` (in-memory adjacency from `container_members`, Tarjan SCC, one finding per cyclic component listing objects and memberships; review follow-up replaced the back-edge DFS, which missed overlapping cycles through an already finished node)
+- [x] add `CheckDuplicateSubnets()` (GROUP BY ip_addr, ip_netmask, zone_guid, report only; lists the subnet IDs)
+- [x] wire them in `CheckDatabase()` per the order in Solution Overview
+- [x] inject: two properties rows sharing a GUID, containers 999600→999601→999600, overlapping cycles 999630→999631→999632→999630 plus 999630→999632, self-membership 999640, acyclic diamond 999650..999653 (must not be reported), two subnets with the same address and mask in zone 0; negative fixtures: same address in a different zone (990030), same address with a different mask (990031) (baseline gained zone 990032 so the other-zone subnet does not trip the `subnets.zone_guid` report-only relation)
+- [x] run `run.sh` - must pass before task 7 (SQLite and pgsql)
 
 ### Task 7: Template, cluster and instance binding check
 
@@ -524,10 +564,10 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 - Modify: `tests/nxdbmgr-check/unexpected-first-run.txt`
 
-- [ ] add `CheckTemplateBindings()` for `items` and `dc_tables` classifying instance / cluster / template / deleted / unexpected in the documented order; only "deleted" (template_id absent from `object_properties`) gets the unbind fix, one UPDATE resetting both columns
-- [ ] wire after `CheckDCISourceNodes()`
-- [ ] inject: instance DCI with missing root, cluster DCI on a node not in `cluster_members`, template DCI on a node missing from `dct_node_map`, DCI whose template ID exists nowhere; negative fixtures: instance DCI with valid root on node 990002, cluster 990040 with node 990002 as member and a cluster-applied DCI on that node, template 990041 bound via `dct_node_map` with a template DCI on the node, template 990041 also applied to cluster 990040 (template DCI whose `node_id` is the cluster, not a `nodes` row), and an instance DCI whose root is itself a template-inherited DCI
-- [ ] run `run.sh` - must pass before task 8
+- [x] add `CheckTemplateBindings()` for `items` and `dc_tables` classifying instance / cluster / template / deleted / unexpected in the documented order; only "deleted" (template_id absent from `object_properties`) gets the unbind fix, one UPDATE resetting both columns (one query per table with LEFT OUTER JOINs to the root DCI, clusters, templates, object_properties, cluster_members and dct_node_map; classification in code)
+- [x] wire after `CheckDCISourceNodes()`
+- [x] inject: instance DCI with missing root, cluster DCI on a node not in `cluster_members`, template DCI on a node missing from `dct_node_map`, DCI whose template ID exists nowhere; negative fixtures: instance DCI with valid root on node 990002, cluster 990040 with node 990002 as member and a cluster-applied DCI on that node, template 990041 bound via `dct_node_map` with a template DCI on the node, template 990041 also applied to cluster 990040 (template DCI whose `node_id` is the cluster, not a `nodes` row), and an instance DCI whose root is itself a template-inherited DCI
+- [x] run `run.sh` - must pass before task 8 (SQLite and pgsql; the task 1 `[990002]` guard became six specific fragments because binding messages legitimately name node 990002 as the DCI owner)
 
 ### Task 8: Coupled interface peer and node path check repairs
 
@@ -537,11 +577,11 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 - Modify: `tests/nxdbmgr-check/unexpected-first-run.txt`
 
-- [ ] add `CheckInterfacePeers()` clearing peer_node_id, peer_if_id, peer_proto, peer_last_updated together when either endpoint is missing from `object_properties`
-- [ ] add `CheckNodePathCheckResults()` resetting path_check_reason, path_check_node_id, path_check_iface_id together when either ID is missing from `object_properties`
-- [ ] wire both after `CheckTemplateBindings()`
-- [ ] inject: interface peered to a deleted node, node whose path check points at a deleted interface; negative fixture: interface 990050 peered to access point 990003 in both columns
-- [ ] run `run.sh` - must pass before task 9
+- [x] add `CheckInterfacePeers()` clearing peer_node_id, peer_if_id, peer_proto, peer_last_updated together when either endpoint is missing from `object_properties` (shared `CheckCoupledReferences()` for both stages; the prompt names only the missing half)
+- [x] add `CheckNodePathCheckResults()` resetting path_check_reason, path_check_node_id, path_check_iface_id together when either ID is missing from `object_properties`
+- [x] wire both after `CheckTemplateBindings()`
+- [x] inject: interface peered to a deleted node, node whose path check points at a deleted interface; negative fixture: interface 990050 peered to access point 990003 in both columns, interface 990051 with a valid peer node and peer_if_id=0, node 990002 with a valid path check node and path_check_iface_id=0
+- [x] run `run.sh` - must pass before task 9 (SQLite and pgsql)
 
 ### Task 9: Event code references
 
@@ -550,10 +590,10 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/inject-defects.sql`
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 
-- [ ] add a static `{ table, column, idColumn, defaultCode, zeroAllowed }` list for the eight references and `CheckEventCodeReferences()` that verifies the default exists in `event_cfg` before offering the reset; prompt says "EPP behavior may change"
-- [ ] wire after `CheckNodePathCheckResults()`
-- [ ] inject one bad code per table.column, including an `event_policy` rule with a bad `alarm_timeout_event`
-- [ ] run `run.sh` - must pass before task 10
+- [x] add a static `{ table, column, defaultCode, zeroAllowed }` list for the eight references and `CheckEventCodeReferences()` that verifies the default exists in `event_cfg` before offering the reset; prompt says "EPP behavior may change" (findings are grouped per bad code and the reset is `UPDATE ... SET column=default WHERE column=code`, so no per-row ID column is needed and `event_policy`'s composite key is not an issue; one stage per column named `table.column`)
+- [x] wire after `CheckNodePathCheckResults()`
+- [x] inject one bad code per table.column, including an `event_policy` rule with a bad `alarm_timeout_event` (baseline gained trap mapping 990053 and table threshold 990052 as negatives; assertion 169 also proves the 55 seeded rules keep their `alarm_timeout_event`)
+- [x] run `run.sh` - must pass before task 10 (SQLite and pgsql)
 
 ### Task 10: Notification channel references
 
@@ -564,10 +604,10 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 - Modify: `tests/nxdbmgr-check/unexpected-first-run.txt`
 
-- [ ] add `CheckNotificationChannelReferences()` (NOTIFICATION actions only, report only)
-- [ ] wire after `CheckEventCodeReferences()`
-- [ ] inject: notification action with unknown channel; negative fixture: forward-event action 990060 with a non-channel name
-- [ ] run `run.sh` - must pass before task 11
+- [x] add `CheckNotificationChannelReferences()` (NOTIFICATION actions only, report only)
+- [x] wire after `CheckEventCodeReferences()`
+- [x] inject: notification action with unknown channel; negative fixture: forward-event action 990060 with a non-channel name, notification action 990061 on a channel seeded by `init`
+- [x] run `run.sh` - must pass before task 11 (SQLite and pgsql)
 
 ### Task 11: CheckEPP last-entry guard
 
@@ -578,23 +618,76 @@ create the per-object `idata`/`tdata` tables before the clean `-E` assertion.
 - Modify: `tests/nxdbmgr-check/expected-first-run.txt`
 - Modify: `tests/nxdbmgr-check/unexpected-first-run.txt`
 
-- [ ] rewrite the source and event loops in `CheckEPP()` to select `chain_id, rule_id, object_id, exclusion` / `chain_id, rule_id, event_code`, count remaining entries per rule and list kind, report only when deleting an inclusion would empty the rule's inclusion list or deleting an exclusion would leave the rule with no source inclusions and no exclusions, otherwise delete by the full key
-- [ ] inject: rule with two sources one dangling (deleted), rule with one dangling source (reported only, in cleanup script), rule with a dangling exclusion plus a valid inclusion (deleted), rule whose only source filter is one dangling exclusion (reported only), rule with two events one dangling (deleted), rule with one dangling event (reported only)
-- [ ] run `run.sh` - must pass before task 12
+- [x] rewrite the source and event loops in `CheckEPP()` to select `chain_id, rule_id, object_id, exclusion` / `chain_id, rule_id, event_code`, count remaining entries per rule and list kind, report only when deleting an inclusion would empty the rule's inclusion list or deleting an exclusion would leave the rule with no source inclusions and no exclusions, otherwise delete by the full key
+- [x] inject: rule with two sources one dangling (deleted), rule with one dangling source (reported only, in cleanup script), rule with a dangling exclusion plus a valid inclusion (deleted), rule whose only source filter is one dangling exclusion (reported only), rule with two events one dangling (deleted), rule with one dangling event (reported only)
+- [x] inject counting and full-key cases (audit follow-up added: two all-dangling events, three events with two dangling, two dangling exclusions without inclusions): a rule with three sources of which two are dangling (both deleted, one valid remains: the remaining-count must be recomputed after each delete, not read once); a rule with two sources both dangling (first deleted, second reported only because it is now the last inclusion); the same missing object ID referenced by two rules, one where it is the last inclusion (reported only) and one where it is not (deleted), and by a rule on a second chain (deleted) - proving deletion is by `(chain_id, rule_id, object_id)` and never `WHERE object_id=X`; the same shape for events with `event_code`
+- [x] `assert-after-first-run.sql`: the valid sources/events of every EPP fixture rule are still present, the report-only rows are still present, and the deleted rows are gone
+- [x] run `run.sh` - must pass before task 12 (SQLite and pgsql)
 
-### Task 12: Verify acceptance criteria
-- [ ] every relation in Technical Details has an array entry and an injected defect
-- [ ] every hand-written check (a) through (l) is wired in `CheckDatabase()` in the documented order
-- [ ] `nxdbmgr -m check` output for new stages follows the existing stage format
-- [ ] a deliberately broken relation entry (non-existing column) makes `check` print `Database check aborted` on PostgreSQL, then revert it
-- [ ] run `tests/nxdbmgr-check/run.sh` against SQLite and `run.sh -d pgsql` against the local PostgreSQL test server
-- [ ] build shows no new warnings: `make -C src/server/tools/nxdbmgr`
-- [ ] run `nxdbmgr check` against a copy of a real customer database and review every finding for false positives before committing
+### Task 12: Verify acceptance criteria (Codex audit)
+
+Codex runs this audit independently after the task 11 commit is reviewed. It is the final
+acceptance gate before the branch is merged; it does not block the per-task commits.
+
+- [x] every relation in Technical Details has an array entry and an injected defect (Codex audit: 91 generic entries, 9 composite tables, 8 event columns all covered)
+- [x] every hand-written check (a) through (l) is wired in `CheckDatabase()` in the documented order
+- [x] `nxdbmgr -m check` output for new stages follows the existing stage format (`-m` does not alter check output at all)
+- [x] abort/rollback test on PostgreSQL (fault: first relation's column renamed to `object_idx`; error 42703 after earlier repairs were attempted, `Database check aborted`, no later stage, all 221 table fingerprints identical before and after): Codex specifies a deliberately broken relation entry (non-existing column); Claude applies it, builds and hands over; Codex runs the injected scratch database and verifies `check` prints `Database check aborted`, never the no-errors line, and that a state assertion batch afterwards still finds every injected defect (the transaction was rolled back, nothing repaired before the fault was lost); Claude reverts the fault and rebuilds
+- [x] run `tests/nxdbmgr-check/run.sh` against SQLite and `run.sh -d pgsql -H 127.0.0.1 -U alk` against the local PostgreSQL server (each run creates and drops its own `nxdbmgr_check_<random>` database)
+- [x] build shows no new warnings: `make -C src/server/tools/nxdbmgr` (only the macOS linker `-bind_at_load` deprecation, present in every build)
+- [x] run `nxdbmgr check` against a copy of a real customer database and review every finding for false positives. Done 2026-09-24 on a PostgreSQL restore of a customer export (schema 46.2, 9 GB, 1113 nodes, 99k DCIs), see the audit record below
+
+**Customer copy audit record.** Work was done on clones; the restored database itself was never
+modified.
+
+- Preparation: the restore was locked by the customer's server (forced `unlock` on the clone). Master
+  `nxdbmgr` could not upgrade it (GitHub #3696, 61.36 step selects 7.0-only tables), so the clone was
+  upgraded with the installed 6.1 and 6.2 tools first. The export had been made without the alarm and
+  event log tables, so the 70.36 step failed (GitHub #3697); the eight tables were recreated empty
+  from the 6.2 `dbschema_pgsql.sql` and the upgrade finished at 70.43. A pre-check snapshot of the
+  upgraded clone was taken.
+- Original-state run (report only, stdin closed): 2706 findings. False positive class found in this
+  copy and fixed in a4db3bd4a3: ACL rows and template root memberships referencing built-in objects
+  3, 4, 5, 6 in a database whose `object_properties` has rows only for built-ins 1, 2, 7, 9. The
+  EPP source loop had the same gap; it was found by review, reproduced in scratch and fixed with
+  fixtures in f0d3f1b8b8, but could not fire here: this copy has no `policy_source_list` rows.
+  Rerun with a4db3bd4a3: 2701 findings.
+- Forced run, attempt 1 (binary a4db3bd4a3): aborted. The export carried no per-object data tables; the existing
+  "Data tables" stage created 1711 of 2226 missing `idata_`/`tdata_` tables inside the check's
+  single transaction and PostgreSQL failed with "out of shared memory" (max_locks_per_transaction).
+  The old stage does not propagate the failure; the next set-based stage detected the poisoned
+  transaction, the check rolled back and printed `Database check aborted`. Rollback evidence: the
+  report-only rerun showed the identical 2701 findings, all 1113 targets still lacked their `idata_`
+  table, and the later creation of every `tdata_` table succeeded, which would have failed on any
+  table left behind. Pre-existing limitation, GitHub #3698.
+- Prepared-clone acceptance run (binary f0d3f1b8b8): the 3339 missing table and index objects were
+  created outside the check on both the clone and the snapshot with the DDL of `dci_table_creation.h` (export artifact,
+  not a defect). Report only: 475 findings. Forced: 475 found, 466 corrected. Re-run: 9 findings,
+  all report-only.
+- Repairs, each verified as a true positive against the snapshot: 240 DCIs on 60 nodes bound to a
+  template that exists in no class table (unbound); hardware inventory of 76, software inventory of
+  74 and access snapshot of 68 deleted objects (355, 16551 and 950 rows deleted); pollable_objects,
+  dc_targets and icmp_statistics rows of 2 deleted objects; one template mapping to a deleted object
+  (existing stage); one ACL row for object 8, which is not a built-in. Row counts of all 252
+  non-data tables differ between snapshot and clone only in those tables plus `DBLockFlag` in
+  `config` (lock bookkeeping); the set of DCIs with template_id=0 grew by exactly 240.
+- Residuals (report only, correct): 7 duplicate subnet groups in zone 0 (same address and mask,
+  none marked deleted; two of them carry a /26 and /29 name while the mask column says 24) and
+  `dci_delete_list` rows of 2 deleted nodes.
+- Independent content comparison by the reviewer: row counts plus order-independent sums of the
+  two 64-bit halves of each row's MD5 JSON digest for all 252 non-data tables, snapshot with only
+  the documented repairs applied virtually versus the repaired clone, differ in nothing (only the
+  four `DBLock*` config rows excluded). This covers every column, including the 240 two-column
+  unbinds, all preserved rows and the residuals.
+- Logs and scripts are in the session scratch directory: upgrade logs,
+  `missing-tables.sql`, `create-data-tables.sql`, `check-report-only.log`,
+  `check-forced-attempt1-lock-exhaustion.log`, `check-report-only-2.log`, `check-forced.log`,
+  `check-rerun.log`, `rowcount-diff.txt`.
 
 ### Task 13: [Final] Update documentation
-- [ ] update `src/server/tools/nxdbmgr/CLAUDE.md` check.cpp row to mention the relation table, how to add an entry, and the fixture rules for the harness
-- [ ] update `doc/` user documentation for `nxdbmgr check` if such a page exists in this repo (otherwise note in commit message that the admin guide needs an update)
-- [ ] move this plan to `docs/plans/completed/`
+- [x] update `src/server/tools/nxdbmgr/CLAUDE.md` check.cpp row to mention the relation table, how to add an entry, and the fixture rules for the harness
+- [x] update `doc/` user documentation for `nxdbmgr check` if such a page exists in this repo (otherwise note in commit message that the admin guide needs an update) - no such page in `doc/`; the admin guide section on `nxdbmgr check` needs an update for the new stages and the report-only findings
+- [x] move this plan to `docs/plans/completed/`
 
 ## Post-Completion
 
