@@ -44,6 +44,7 @@ void TestAuthenticationTokens();
 void TestCustomAttributes();
 void TestNXSLAudit();
 void TestNXSLHttp();
+void TestNodeIPChange();
 void TestObjectHierarchy();
 void TestSampleAttributes();
 
@@ -260,6 +261,7 @@ int main(int argc, char *argv[])
    TestCustomAttributes();
    TestNXSLAudit();
    TestNXSLHttp();
+   TestNodeIPChange();
    TestObjectHierarchy();
    TestSampleAttributes();
 
