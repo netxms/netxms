@@ -1454,7 +1454,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE InitiateShutdown(ShutdownReason reason);
 void NXCORE_EXPORTABLE WaitForServerStartupCompletion();
 
-int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console);
+int NXCORE_EXPORTABLE ProcessConsoleCommand(const wchar_t *command, ServerConsole *console);
 
 void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData);
 

@@ -46,6 +46,7 @@ void TestNXSLAudit();
 void TestNXSLHttp();
 void TestNodeIPChange();
 void TestObjectHierarchy();
+void TestRecommission();
 void TestSampleAttributes();
 
 /**
@@ -263,6 +264,7 @@ int main(int argc, char *argv[])
    TestNXSLHttp();
    TestNodeIPChange();
    TestObjectHierarchy();
+   TestRecommission();
    TestSampleAttributes();
 
    SetTestFailureHook(nullptr);
