@@ -1,119 +1,119 @@
 # One fragment per line; every line must appear in the forced check output after defect injection.
 Found threshold configuration for non-existing DCI [999002]. Delete?
 # Task 2: generic orphan relation stage
-1 rows in acl.object_id refer to non-existing object [999101]. Delete them?
-1 rows in object_custom_attributes.object_id refer to non-existing object [999102]. Delete them?
-1 rows in object_urls.object_id refer to non-existing object [999103]. Delete them?
-1 rows in trusted_objects.object_id refer to non-existing object [999104]. Delete them?
-1 rows in trusted_objects.trusted_object_id refer to non-existing object [999105]. Delete them?
-1 rows in responsible_users.object_id refer to non-existing object [999106]. Delete them?
-1 rows in object_access_snapshot.object_id refer to non-existing object [999107]. Delete them?
-1 rows in pollable_objects.id refer to non-existing object [999108]. Delete them?
-1 rows in dc_targets.id refer to non-existing object [999109]. Delete them?
-1 rows in auto_bind_target.object_id refer to non-existing object [999110]. Delete them?
-1 rows in versionable_object.object_id refer to non-existing object [999111]. Delete them?
-1 rows in maintenance_journal.object_id refer to non-existing object [999112]. Delete them?
-1 rows in active_downtimes.object_id refer to non-existing object [999113]. Delete them?
-1 rows in downtime_log.object_id refer to non-existing object [999114]. Delete them?
-1 rows in container_members.container_id refer to non-existing container [999115]. Delete them?
-1 rows in nsmap.subnet_id refer to non-existing subnet [999116]. Delete them?
-1 rows in nsmap.node_id refer to non-existing node [999117]. Delete them?
-1 rows in zone_proxies.object_id refer to non-existing zone [999118]. Delete them?
-1 rows in zone_proxies.proxy_node refer to non-existing proxy node [999119]. Delete them?
-1 rows in icmp_statistics.object_id refer to non-existing object [999120]. Delete them?
-1 rows in icmp_target_address_list.node_id refer to non-existing node [999121]. Delete them?
-1 rows in software_inventory.node_id refer to non-existing node [999122]. Delete them?
-1 rows in hardware_inventory.node_id refer to non-existing node [999123]. Delete them?
-1 rows in node_components.node_id refer to non-existing node [999124]. Delete them?
-1 rows in ospf_areas.node_id refer to non-existing node [999125]. Delete them?
-1 rows in ospf_neighbors.node_id refer to non-existing node [999126]. Delete them?
-1 rows in node_snmp_agents.node_id refer to non-existing node [999127]. Delete them?
-1 rows in interface_address_list.iface_id refer to non-existing interface [999128]. Delete them?
-1 rows in interface_vlan_list.iface_id refer to non-existing interface [999129]. Delete them?
-1 rows in cluster_members.cluster_id refer to non-existing cluster [999130]. Delete them?
-1 rows in cluster_sync_subnets.cluster_id refer to non-existing cluster [999131]. Delete them?
-1 rows in rack_passive_elements.rack_id refer to non-existing rack [999132]. Delete them?
-1 rows in room_passive_elements.room_id refer to non-existing room [999133]. Delete them?
-1 rows in physical_links.left_object_id refer to non-existing object [999134]. Delete them?
-1 rows in physical_links.right_object_id refer to non-existing object [999135]. Delete them?
-1 rows in network_map_elements.map_id refer to non-existing network map [999136]. Delete them?
-1 rows in network_map_links.map_id refer to non-existing network map [999137]. Delete them?
-1 rows in network_map_seed_nodes.map_id refer to non-existing network map [999138]. Delete them?
-1 rows in network_map_seed_nodes.seed_node_id refer to non-existing seed node [999139]. Delete them?
-1 rows in network_map_deleted_nodes.map_id refer to non-existing network map [999140]. Delete them?
-1 rows in dashboard_elements.dashboard_id refer to non-existing dashboard [999141]. Delete them?
-1 rows in dashboard_template_instances.dashboard_template_id refer to non-existing dashboard template [999142]. Delete them?
-1 rows in dashboard_associations.object_id refer to non-existing object [999143]. Delete them?
-1 rows in business_service_downtime.service_id refer to non-existing business service [999144]. Delete them?
-1 rows in asset_properties.asset_id refer to non-existing asset [999145]. Delete them?
-1 rows in vpn_connector_networks.vpn_id refer to non-existing VPN connector [999146]. Delete them?
-1 rows in resource_tags.resource_id refer to non-existing resource [999147]. Delete them?
-1 rows in observation_point_hosts.point_id refer to non-existing observation point [999148]. Delete them?
-1 rows in ap_common.owner_id refer to non-existing template [999149]. Delete them?
-1 rows in cond_dci_map.condition_id refer to non-existing condition [999150]. Delete them?
-1 rows in port_stop_list.object_id refer to non-existing object [999151]. Delete them?
-1 rows in object_ai_data.object_id refer to non-existing object [999152]. Delete them?
-1 rows in interface_address_list.iface_id refer to non-existing interface [0]. Delete them?
+1 access control entries refer to non-existing object [999101] (acl.object_id). Delete them?
+1 custom attributes refer to non-existing object [999102] (object_custom_attributes.object_id). Delete them?
+1 object URLs refer to non-existing object [999103] (object_urls.object_id). Delete them?
+1 trusted object lists refer to non-existing object [999104] (trusted_objects.object_id). Delete them?
+1 trusted object entries refer to non-existing object [999105] (trusted_objects.trusted_object_id). Delete them?
+1 responsible user assignments refer to non-existing object [999106] (responsible_users.object_id). Delete them?
+1 access snapshot entries refer to non-existing object [999107] (object_access_snapshot.object_id). Delete them?
+1 polling state records refer to non-existing object [999108] (pollable_objects.id). Delete them?
+1 data collection target records refer to non-existing object [999109] (dc_targets.id). Delete them?
+1 automatic binding settings refer to non-existing object [999110] (auto_bind_target.object_id). Delete them?
+1 object version records refer to non-existing object [999111] (versionable_object.object_id). Delete them?
+1 maintenance journal entries refer to non-existing object [999112] (maintenance_journal.object_id). Delete them?
+1 active downtime records refer to non-existing object [999113] (active_downtimes.object_id). Delete them?
+1 downtime log entries refer to non-existing object [999114] (downtime_log.object_id). Delete them?
+1 container memberships refer to non-existing container [999115] (container_members.container_id). Delete them?
+1 node to subnet links refer to non-existing subnet [999116] (nsmap.subnet_id). Delete them?
+1 subnet to node links refer to non-existing node [999117] (nsmap.node_id). Delete them?
+1 zone proxy assignments refer to non-existing zone [999118] (zone_proxies.object_id). Delete them?
+1 zone proxy node references refer to non-existing proxy node [999119] (zone_proxies.proxy_node). Delete them?
+1 ICMP statistics records refer to non-existing object [999120] (icmp_statistics.object_id). Delete them?
+1 ICMP target addresses refer to non-existing node [999121] (icmp_target_address_list.node_id). Delete them?
+1 software inventory records refer to non-existing node [999122] (software_inventory.node_id). Delete them?
+1 hardware inventory records refer to non-existing node [999123] (hardware_inventory.node_id). Delete them?
+1 node component records refer to non-existing node [999124] (node_components.node_id). Delete them?
+1 OSPF area records refer to non-existing node [999125] (ospf_areas.node_id). Delete them?
+1 OSPF neighbor records refer to non-existing node [999126] (ospf_neighbors.node_id). Delete them?
+1 SNMP agent records refer to non-existing node [999127] (node_snmp_agents.node_id). Delete them?
+1 interface IP addresses refer to non-existing interface [999128] (interface_address_list.iface_id). Delete them?
+1 interface VLAN assignments refer to non-existing interface [999129] (interface_vlan_list.iface_id). Delete them?
+1 cluster memberships refer to non-existing cluster [999130] (cluster_members.cluster_id). Delete them?
+1 cluster sync subnets refer to non-existing cluster [999131] (cluster_sync_subnets.cluster_id). Delete them?
+1 rack passive elements refer to non-existing rack [999132] (rack_passive_elements.rack_id). Delete them?
+1 room passive elements refer to non-existing room [999133] (room_passive_elements.room_id). Delete them?
+1 physical links (left side) refer to non-existing object [999134] (physical_links.left_object_id). Delete them?
+1 physical links (right side) refer to non-existing object [999135] (physical_links.right_object_id). Delete them?
+1 network map elements refer to non-existing network map [999136] (network_map_elements.map_id). Delete them?
+1 network map links refer to non-existing network map [999137] (network_map_links.map_id). Delete them?
+1 network map seed node entries refer to non-existing network map [999138] (network_map_seed_nodes.map_id). Delete them?
+1 network map seed node references refer to non-existing seed node [999139] (network_map_seed_nodes.seed_node_id). Delete them?
+1 network map deleted node records refer to non-existing network map [999140] (network_map_deleted_nodes.map_id). Delete them?
+1 dashboard elements refer to non-existing dashboard [999141] (dashboard_elements.dashboard_id). Delete them?
+1 dashboard template instances refer to non-existing dashboard template [999142] (dashboard_template_instances.dashboard_template_id). Delete them?
+1 dashboard associations refer to non-existing object [999143] (dashboard_associations.object_id). Delete them?
+1 business service downtime records refer to non-existing business service [999144] (business_service_downtime.service_id). Delete them?
+1 asset properties refer to non-existing asset [999145] (asset_properties.asset_id). Delete them?
+1 VPN connector networks refer to non-existing VPN connector [999146] (vpn_connector_networks.vpn_id). Delete them?
+1 resource tags refer to non-existing resource [999147] (resource_tags.resource_id). Delete them?
+1 observation point hosts refer to non-existing observation point [999148] (observation_point_hosts.point_id). Delete them?
+1 agent policies refer to non-existing template [999149] (ap_common.owner_id). Delete them?
+1 condition input mappings refer to non-existing condition [999150] (cond_dci_map.condition_id). Delete them?
+1 port stop list entries refer to non-existing object [999151] (port_stop_list.object_id). Delete them?
+1 object AI data records refer to non-existing object [999152] (object_ai_data.object_id). Delete them?
+1 interface IP addresses refer to non-existing interface [0] (interface_address_list.iface_id). Delete them?
 # Task 3: class table, DCI, reset and report-only relations
-1 rows in radios.owner_id refer to non-existing node or access point [999240]. Delete them?
-1 rows in cluster_resources.cluster_id refer to non-existing cluster [999241]. Delete them?
-1 rows in dashboard_associations.dashboard_id refer to non-existing dashboard [999242]. Delete them?
-1 rows in dc_table_columns.table_id refer to non-existing table DCI [999243]. Delete them?
-1 rows in dct_threshold_conditions.threshold_id refer to non-existing table threshold [999244]. Delete them?
-1 rows in dct_threshold_instances.threshold_id refer to non-existing table threshold [999245]. Delete them?
-1 rows in dci_schedules.item_id refer to non-existing DCI [999246]. Delete them?
-1 rows in dci_access.dci_id refer to non-existing DCI [999247]. Delete them?
-1 rows in nodes.poller_node_id refer to non-existing object [999201] (polling routing may change). Reset reference?
-1 rows in nodes.proxy_node refer to non-existing object [999202] (polling routing may change). Reset reference?
-1 rows in nodes.snmp_proxy refer to non-existing object [999203] (polling routing may change). Reset reference?
-1 rows in nodes.eip_proxy refer to non-existing object [999204] (polling routing may change). Reset reference?
-1 rows in nodes.icmp_proxy refer to non-existing object [999205] (polling routing may change). Reset reference?
-1 rows in nodes.ssh_proxy refer to non-existing object [999206] (polling routing may change). Reset reference?
-1 rows in nodes.netconf_proxy refer to non-existing object [999207] (polling routing may change). Reset reference?
-1 rows in nodes.vnc_proxy refer to non-existing object [999208] (polling routing may change). Reset reference?
-1 rows in nodes.mqtt_proxy refer to non-existing object [999209] (polling routing may change). Reset reference?
-1 rows in nodes.modbus_proxy refer to non-existing object [999210] (polling routing may change). Reset reference?
-1 rows in nodes.physical_container_id refer to non-existing object [999211]. Reset reference?
-1 rows in interfaces.parent_iface refer to non-existing interface [999212]. Reset reference?
-1 rows in object_properties.drilldown_object_id refer to non-existing object [999213]. Reset reference?
-1 rows in conditions.source_object refer to non-existing object [999214]. Reset reference?
-1 rows in dashboards.forced_context_object_id refer to non-existing object [999215]. Reset reference?
-1 rows in items.related_object refer to non-existing object [999216]. Reset reference?
-1 rows in dc_tables.related_object refer to non-existing object [999217]. Reset reference?
-1 rows in nodes.zone_guid refer to non-existing zone [999230]
-1 rows in subnets.zone_guid refer to non-existing zone [999231]
-1 rows in dci_delete_list.node_id refer to non-existing object [999232]
-1 rows in business_service_checks.related_object refer to non-existing object [999233]
-1 rows in business_service_checks.prototype_service_id refer to non-existing object [999234]
-1 rows in business_service_checks.related_dci refer to non-existing DCI [999235]
-1 rows in cond_dci_map.node_id refer to non-existing object [999236]
-1 rows in cond_dci_map.dci_id refer to non-existing DCI [999237]
-1 rows in scheduled_tasks.object_id refer to non-existing object [999238]
-1 rows in dashboard_template_instances.instance_object_id refer to non-existing object [999239]
+1 radio interface records refer to non-existing node or access point [999240] (radios.owner_id). Delete them?
+1 cluster resources refer to non-existing cluster [999241] (cluster_resources.cluster_id). Delete them?
+1 dashboard associations refer to non-existing dashboard [999242] (dashboard_associations.dashboard_id). Delete them?
+1 table DCI columns refer to non-existing table DCI [999243] (dc_table_columns.table_id). Delete them?
+1 table threshold conditions refer to non-existing table threshold [999244] (dct_threshold_conditions.threshold_id). Delete them?
+1 table threshold instances refer to non-existing table threshold [999245] (dct_threshold_instances.threshold_id). Delete them?
+1 DCI custom schedules refer to non-existing DCI [999246] (dci_schedules.item_id). Delete them?
+1 DCI access entries refer to non-existing DCI [999247] (dci_access.dci_id). Delete them?
+1 poller node assignments refer to non-existing object [999201] (nodes.poller_node_id, polling routing may change). Reset them?
+1 agent proxy assignments refer to non-existing object [999202] (nodes.proxy_node, polling routing may change). Reset them?
+1 SNMP proxy assignments refer to non-existing object [999203] (nodes.snmp_proxy, polling routing may change). Reset them?
+1 EtherNet/IP proxy assignments refer to non-existing object [999204] (nodes.eip_proxy, polling routing may change). Reset them?
+1 ICMP proxy assignments refer to non-existing object [999205] (nodes.icmp_proxy, polling routing may change). Reset them?
+1 SSH proxy assignments refer to non-existing object [999206] (nodes.ssh_proxy, polling routing may change). Reset them?
+1 NETCONF proxy assignments refer to non-existing object [999207] (nodes.netconf_proxy, polling routing may change). Reset them?
+1 VNC proxy assignments refer to non-existing object [999208] (nodes.vnc_proxy, polling routing may change). Reset them?
+1 MQTT proxy assignments refer to non-existing object [999209] (nodes.mqtt_proxy, polling routing may change). Reset them?
+1 Modbus proxy assignments refer to non-existing object [999210] (nodes.modbus_proxy, polling routing may change). Reset them?
+1 physical container assignments of nodes refer to non-existing object [999211] (nodes.physical_container_id). Reset them?
+1 parent interface references refer to non-existing interface [999212] (interfaces.parent_iface). Reset them?
+1 drill-down object references refer to non-existing object [999213] (object_properties.drilldown_object_id). Reset them?
+1 condition source object references refer to non-existing object [999214] (conditions.source_object). Reset them?
+1 dashboard context object references refer to non-existing object [999215] (dashboards.forced_context_object_id). Reset them?
+1 related object references of DCIs refer to non-existing object [999216] (items.related_object). Reset them?
+1 related object references of table DCIs refer to non-existing object [999217] (dc_tables.related_object). Reset them?
+1 zone assignments of nodes refer to non-existing zone [999230] (nodes.zone_guid)
+1 zone assignments of subnets refer to non-existing zone [999231] (subnets.zone_guid)
+1 deleted DCI list entries refer to non-existing object [999232] (dci_delete_list.node_id)
+1 business service check object references refer to non-existing object [999233] (business_service_checks.related_object)
+1 business service check prototype references refer to non-existing object [999234] (business_service_checks.prototype_service_id)
+1 business service check DCI references refer to non-existing DCI [999235] (business_service_checks.related_dci)
+1 condition input node references refer to non-existing object [999236] (cond_dci_map.node_id)
+1 condition input DCI references refer to non-existing DCI [999237] (cond_dci_map.dci_id)
+1 scheduled task object references refer to non-existing object [999238] (scheduled_tasks.object_id)
+1 dashboard template instance object references refer to non-existing object [999239] (dashboard_template_instances.instance_object_id)
 # Task 4: EPP composite-key and chain relations
-1 rows in event_policy.chain_id refer to non-existing chain [999302]. Delete them?
-1 rows in policy_chain_acl.chain_id refer to non-existing chain [999303]. Delete them?
-1 rows in policy_chain_call_list.target_chain_id refer to non-existing chain [999304]. Delete them?
-1 rows in alarm_category_map.category_id refer to non-existing alarm category [999305]. Delete them?
-1 rows in policy_action_list refer to non-existing rule [chain 0, rule 999301]. Delete them?
-1 rows in policy_timer_cancellation_list refer to non-existing rule [chain 0, rule 999301]. Delete them?
-1 rows in policy_event_list refer to non-existing rule [chain 0, rule 999301]. Delete them?
-1 rows in policy_time_frame_list refer to non-existing rule [chain 0, rule 999301]. Delete them?
-1 rows in policy_source_list refer to non-existing rule [chain 0, rule 999301]. Delete them?
-1 rows in policy_pstorage_actions refer to non-existing rule [chain 0, rule 999301]. Delete them?
-1 rows in policy_cattr_actions refer to non-existing rule [chain 0, rule 999301]. Delete them?
-1 rows in alarm_category_map refer to non-existing rule [chain 0, rule 999301]. Delete them?
-1 rows in policy_chain_call_list refer to non-existing rule [chain 0, rule 999301]. Delete them?
+1 event processing rules refer to non-existing chain [999302] (event_policy.chain_id). Delete them?
+1 rule chain access entries refer to non-existing chain [999303] (policy_chain_acl.chain_id). Delete them?
+1 rule chain calls refer to non-existing chain [999304] (policy_chain_call_list.target_chain_id). Delete them?
+1 rule alarm category mappings refer to non-existing alarm category [999305] (alarm_category_map.category_id). Delete them?
+1 rule actions refer to non-existing rule [chain 0, rule 999301] (policy_action_list). Delete them?
+1 rule timer cancellations refer to non-existing rule [chain 0, rule 999301] (policy_timer_cancellation_list). Delete them?
+1 rule event filters refer to non-existing rule [chain 0, rule 999301] (policy_event_list). Delete them?
+1 rule time frames refer to non-existing rule [chain 0, rule 999301] (policy_time_frame_list). Delete them?
+1 rule source filters refer to non-existing rule [chain 0, rule 999301] (policy_source_list). Delete them?
+1 rule persistent storage actions refer to non-existing rule [chain 0, rule 999301] (policy_pstorage_actions). Delete them?
+1 rule custom attribute actions refer to non-existing rule [chain 0, rule 999301] (policy_cattr_actions). Delete them?
+1 rule alarm category mappings refer to non-existing rule [chain 0, rule 999301] (alarm_category_map). Delete them?
+1 rule chain calls refer to non-existing rule [chain 0, rule 999301] (policy_chain_call_list). Delete them?
 # Task 4: satellites of the rule on the deleted chain
-1 rows in policy_action_list refer to non-existing rule [chain 999302, rule 1]. Delete them?
-1 rows in policy_timer_cancellation_list refer to non-existing rule [chain 999302, rule 1]. Delete them?
-1 rows in policy_event_list refer to non-existing rule [chain 999302, rule 1]. Delete them?
-1 rows in policy_time_frame_list refer to non-existing rule [chain 999302, rule 1]. Delete them?
-1 rows in policy_source_list refer to non-existing rule [chain 999302, rule 1]. Delete them?
-1 rows in policy_pstorage_actions refer to non-existing rule [chain 999302, rule 1]. Delete them?
-1 rows in policy_cattr_actions refer to non-existing rule [chain 999302, rule 1]. Delete them?
-1 rows in alarm_category_map refer to non-existing rule [chain 999302, rule 1]. Delete them?
-1 rows in policy_chain_call_list refer to non-existing rule [chain 999302, rule 1]. Delete them?
+1 rule actions refer to non-existing rule [chain 999302, rule 1] (policy_action_list). Delete them?
+1 rule timer cancellations refer to non-existing rule [chain 999302, rule 1] (policy_timer_cancellation_list). Delete them?
+1 rule event filters refer to non-existing rule [chain 999302, rule 1] (policy_event_list). Delete them?
+1 rule time frames refer to non-existing rule [chain 999302, rule 1] (policy_time_frame_list). Delete them?
+1 rule source filters refer to non-existing rule [chain 999302, rule 1] (policy_source_list). Delete them?
+1 rule persistent storage actions refer to non-existing rule [chain 999302, rule 1] (policy_pstorage_actions). Delete them?
+1 rule custom attribute actions refer to non-existing rule [chain 999302, rule 1] (policy_cattr_actions). Delete them?
+1 rule alarm category mappings refer to non-existing rule [chain 999302, rule 1] (alarm_category_map). Delete them?
+1 rule chain calls refer to non-existing rule [chain 999302, rule 1] (policy_chain_call_list). Delete them?
 # Task 5: object class coverage, ghost properties, duplicate IDs
 Missing sensor object 999503 properties. Create?
 Object properties [999500] ("ghost") have no object of any known class
@@ -136,14 +136,14 @@ DCI [999707] on object [990002] is bound to object [990001] which is neither a t
 Interface [990004] peer refers to non-existing object [999801] and interface [999802]. Reset it?
 Node [990008] path check result refers to non-existing interface [999803]. Reset it?
 # Task 9: event code references
-1 rows in thresholds.event_code refer to non-existing event code 999901. Reset to default event 17 (EPP behavior may change)?
-1 rows in thresholds.rearm_event_code refer to non-existing event code 999902. Reset to default event 18 (EPP behavior may change)?
-1 rows in dct_thresholds.activation_event refer to non-existing event code 999903. Reset to default event 69 (EPP behavior may change)?
-1 rows in dct_thresholds.deactivation_event refer to non-existing event code 999904. Reset to default event 70 (EPP behavior may change)?
-1 rows in conditions.activation_event refer to non-existing event code 999905. Reset to default event 34 (EPP behavior may change)?
-1 rows in conditions.deactivation_event refer to non-existing event code 999906 and default event 35 does not exist either
-1 rows in snmp_trap_cfg.event_code refer to non-existing event code 999907. Reset to default event 500 (EPP behavior may change)?
-1 rows in event_policy.alarm_timeout_event refer to non-existing event code 999908. Reset to default event 43 (EPP behavior may change)?
+1 threshold activation events refer to non-existing event code 999901 (thresholds.event_code). Reset to default event 17 (EPP behavior may change)?
+1 threshold rearm events refer to non-existing event code 999902 (thresholds.rearm_event_code). Reset to default event 18 (EPP behavior may change)?
+1 table threshold activation events refer to non-existing event code 999903 (dct_thresholds.activation_event). Reset to default event 69 (EPP behavior may change)?
+1 table threshold deactivation events refer to non-existing event code 999904 (dct_thresholds.deactivation_event). Reset to default event 70 (EPP behavior may change)?
+1 condition activation events refer to non-existing event code 999905 (conditions.activation_event). Reset to default event 34 (EPP behavior may change)?
+1 condition deactivation events refer to non-existing event code 999906 (conditions.deactivation_event) and default event 35 does not exist either
+1 SNMP trap mappings refer to non-existing event code 999907 (snmp_trap_cfg.event_code). Reset to default event 500 (EPP behavior may change)?
+1 rule alarm timeout events refer to non-existing event code 999908 (event_policy.alarm_timeout_event). Reset to default event 43 (EPP behavior may change)?
 # Task 10: notification channel references
 Notification action [999910] ("notify-nowhere") uses non-existing notification channel "no-such-channel"
 # Task 11: CheckEPP last-entry guard
@@ -171,4 +171,4 @@ Invalid event code 0x000F421D referenced in policy rule [chain 0, rule 990085]. 
 Invalid object ID 999966 used in policy rule [chain 0, rule 990086]. Delete it from this rule?
 Invalid object ID 999967 is the only source filter of policy rule [chain 0, rule 990086], deleting it would change how the rule matches sources
 # Customer-copy follow-up: object 8 is not a built-in
-1 rows in acl.object_id refer to non-existing object [8]. Delete them?
+1 access control entries refer to non-existing object [8] (acl.object_id). Delete them?

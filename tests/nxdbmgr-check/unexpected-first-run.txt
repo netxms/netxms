@@ -8,7 +8,7 @@ Object ID 990002
 non-existing child 990002
 # Task 3: access point 990003 owns a radio, DCI 990005 has a valid related_object
 [990003]
-[990001]. Reset reference?
+[990001] (items.related_object)
 # Task 4: rule 990010 on chain 0 and its satellites are valid
 rule 990010]
 [990064]
