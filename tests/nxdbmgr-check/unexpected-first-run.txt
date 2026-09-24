@@ -1,0 +1,58 @@
+# One fragment per line; no line may appear in the forced check output after defect injection.
+# Baseline node 990002 is never reported as a problem object itself (it may appear as the owner of an injected DCI)
+object "check-node" [990002]
+non-existing node [990002]
+non-existing object [990002]
+Missing node object 990002
+Object ID 990002
+non-existing child 990002
+# Task 3: access point 990003 owns a radio, DCI 990005 has a valid related_object
+[990003]
+[990001]. Reset reference?
+# Task 4: rule 990010 on chain 0 and its satellites are valid
+rule 990010]
+[990064]
+[990063]
+# Task 4: same rule ID on another chain is a different rule
+[chain 990064, rule 999301]
+# Task 5: business service 990020 and dashboard 990014 are extension pairs, not duplicates
+Object ID 990020
+Object ID 990014
+# Task 6: same address in another zone or with another mask is not a duplicate
+990030
+990031
+# Task 7: valid cluster, template and instance bindings
+DCI [990043]
+DCI [990045]
+DCI [990046]
+DCI [990047]
+DCI [990048]
+# Task 6: an acyclic diamond is not a cycle
+99965
+# Task 8: access point peer and zero peer interface are valid
+Interface [990050]
+Interface [990051]
+Node [990002] path check
+# Task 9: existing event codes and alarm_timeout_event=0 are never reported
+non-existing event code 0.
+non-existing event code 500.
+non-existing event code 17.
+# Task 10: forwarder name is not a channel, seeded channel exists
+action [990060]
+action [990061]
+action [990065]
+action [990066]
+# Task 11: valid EPP references and the old global delete wording
+Invalid object ID 990002
+used in policy. Delete
+referenced in policy. Delete
+# Customer-copy follow-up: built-in object references
+non-existing object [3]
+non-existing object [4]
+non-existing container [3]
+Invalid object ID 1 used in policy
+Invalid object ID 1 is the
+Invalid object ID 3 used in policy
+Invalid object ID 3 is the
+Invalid object ID 4 used in policy
+Invalid object ID 4 is the
