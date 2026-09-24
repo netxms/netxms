@@ -11796,19 +11796,18 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
       setPrimaryIPAddress(ipAddr);
       m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 
-      // Change status of node and all it's children to UNKNOWN
-      m_status = STATUS_UNKNOWN;
+      // Change status of node and all it's children to UNKNOWN, keeping unmanaged objects unmanaged
+      if (m_status != STATUS_UNMANAGED)
+         m_status = STATUS_UNKNOWN;
       readLockChildList();
       for(int i = 0; i < getChildList().size(); i++)
       {
          NetObj *object = getChildList().get(i);
-         object->resetStatus();
-         if (object->getObjectClass() == OBJECT_INTERFACE)
+         if (object->getStatus() != STATUS_UNMANAGED)
+            object->resetStatus();
+         if ((object->getObjectClass() == OBJECT_INTERFACE) && static_cast<Interface*>(object)->isFake())
          {
-            if (static_cast<Interface*>(object)->isFake())
-            {
-               static_cast<Interface*>(object)->setIpAddress(ipAddr);
-            }
+            static_cast<Interface*>(object)->setIpAddress(ipAddr);
          }
       }
       unlockChildList();
