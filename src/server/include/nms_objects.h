@@ -4539,6 +4539,7 @@ public:
    bool isAgentRestartPending() const { return is_bit_set(m_state, NSF_AGENT_RESTART_PENDING); }
    time_t getDecommissionTime() const { return m_decommissionTime; }
    void decommission(time_t expirationTime, bool clearIpAddresses);
+   void recommission();
 
    void setNewTunnelBindFlag() { lockProperties(); m_runtimeFlags |= NDF_NEW_TUNNEL_BIND; unlockProperties(); }
    void clearNewTunnelBindFlag() { lockProperties(); m_runtimeFlags &= ~NDF_NEW_TUNNEL_BIND; unlockProperties(); }

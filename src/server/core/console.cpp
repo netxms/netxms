@@ -1192,6 +1192,37 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsolePrintf(console, _T("Variable name missing\n"));
       }
    }
+   else if (IsCommand(_T("RECOMMISSION"), szBuffer, 4))
+   {
+      // Node name may contain spaces, so take the rest of the line (same as SHOW PARENTS)
+      _tcslcpy(szBuffer, pArg, 256);
+      Trim(szBuffer);
+      if (szBuffer[0] != 0)
+      {
+         shared_ptr<NetObj> object;
+         TCHAR *eptr;
+         uint32_t objectId = _tcstoul(szBuffer, &eptr, 0);
+         if ((objectId != 0) && (*eptr == 0))
+            object = FindObjectById(objectId);
+         else
+            object = FindObjectByName(szBuffer, OBJECT_NODE);
+         if ((object == nullptr) || object->isDeleted())
+            ConsolePrintf(console, _T("ERROR: Object \"%s\" does not exist\n\n"), szBuffer);
+         else if (object->getObjectClass() != OBJECT_NODE)
+            ConsoleWrite(console, _T("ERROR: Object is not a node\n\n"));
+         else if (!static_cast<Node&>(*object).isDecommissioned())
+            ConsolePrintf(console, _T("ERROR: Node %s [%u] is not decommissioned\n\n"), object->getName(), object->getId());
+         else
+         {
+            static_cast<Node&>(*object).recommission();
+            ConsolePrintf(console, _T("Node %s [%u] recommissioned; node remains unmanaged\n\n"), object->getName(), object->getId());
+         }
+      }
+      else
+      {
+         ConsoleWrite(console, _T("ERROR: Invalid or missing node ID or name\n\n"));
+      }
+   }
    else if (IsCommand(_T("RELOAD"), szBuffer, 3))
    {
       pArg = ExtractWord(pArg, szBuffer);
@@ -2231,6 +2262,7 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
             _T("   ping <address>                    - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>                - Initiate node poll\n")
             _T("   raise <exception>                 - Raise exception\n")
+            _T("   recommission <node>               - Clear decommissioned state of node (node stays unmanaged)\n")
             _T("   reload mib                        - Reload MIB tree from compiled file\n")
             _T("   scan <range start> <range end> [proxy <id>|zone <uin>] [discovery] \n")
             _T("                                     - Manual active discovery scan for given range. Without 'discovery' parameter prints results only\n")

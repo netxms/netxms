@@ -16368,3 +16368,18 @@ void Node::decommission(time_t expirationTime, bool clearIpAddresses)
    nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node %s [%u] decommissioned, expiration time %u"),
       m_name, m_id, static_cast<uint32_t>(expirationTime));
 }
+
+/**
+ * Recommission node - clear decommissioned state; node stays unmanaged
+ */
+void Node::recommission()
+{
+   lockProperties();
+   m_state &= ~NSF_DECOMMISSIONED;
+   m_stateBeforeMaintenance &= ~NSF_DECOMMISSIONED;   // Do not let end of maintenance restore the flag
+   m_decommissionTime = 0;
+   setModified(MODIFY_NODE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
+
+   nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node %s [%u] recommissioned"), m_name, m_id);
+}
