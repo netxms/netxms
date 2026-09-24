@@ -1349,7 +1349,7 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
    NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
-   if (vm->validateAccess(NXSL_AC_OBJECT,  OBJECT_ACCESS_MODIFY, netobj))
+   if (vm->validateAccess(NXSL_AC_OBJECT,  OBJECT_ACCESS_MODIFY, netobj) && netobj->isManagementStatusChangeAllowed(true))
    {
       netobj->setMgmtStatus(true);
       *ppResult = vm->createValue(true);

@@ -1135,6 +1135,11 @@ int H_ObjectSetManaged(Context *context)
    }
 
    bool managed = json_object_get_boolean(request, "managed", false);
+   if (!object->isManagementStatusChangeAllowed(managed))
+   {
+      context->setErrorResponse("Management status change is not allowed for this object");
+      return 400;
+   }
    object->setMgmtStatus(managed);
    context->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object %s set to %s state"), object->getName(), managed ? _T("managed") : _T("unmanaged"));
    return 204;

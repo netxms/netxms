@@ -514,7 +514,13 @@ NXSL_METHOD_DEFINITION(NetObj, manage)
       *result = vm->createValue(false);
       return 0;
    }
-   static_cast<shared_ptr<NetObj>*>(object->getData())->get()->setMgmtStatus(true);
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   if (!netobj->isManagementStatusChangeAllowed(true))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+   netobj->setMgmtStatus(true);
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
 }
