@@ -361,6 +361,7 @@ enum RoomElementType
  */
 #define DBF_SHOW_AS_OBJECT_VIEW        0x00010000
 #define DBF_SCROLLABLE                 0x00020000
+#define DBF_SHOW_CONTEXT_SELECTOR      0x00040000
 
 /**
  * Rack flags

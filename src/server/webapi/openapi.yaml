@@ -5578,8 +5578,9 @@ paths:
       summary: Get dashboard content
       description: |
         Return the content of a dashboard or dashboard template object: the column count,
-        the scrollable flag, display priority, and the element (widget) layout. Requires read
-        access. Applies only to objects of class `Dashboard` or `DashboardTemplate`.
+        the scrollable flag, display priority, the object context flags, and the element
+        (widget) layout. Requires read access. Applies only to objects of class `Dashboard`
+        or `DashboardTemplate`.
       parameters:
         - name: object-id
           in: path
@@ -5612,9 +5613,10 @@ paths:
         Replace the content of a dashboard or dashboard template object. The `elements` array,
         when present, fully replaces the element (widget) layout; an element without a `guid`
         is assigned a new one. Only dashboard content fields are applied — other object
-        properties are left untouched. `displayPriority` and `forcedContextObjectId` apply to
-        plain dashboards only and are ignored for dashboard templates. Requires modify access
-        and applies only to objects of class `Dashboard` or `DashboardTemplate`.
+        properties are left untouched. `displayPriority`, `forcedContextObjectId`,
+        `showAsObjectView`, and `showContextSelector` apply to plain dashboards only and are
+        ignored for dashboard templates. Requires modify access and applies only to objects of
+        class `Dashboard` or `DashboardTemplate`.
       parameters:
         - name: object-id
           in: path
@@ -15645,7 +15647,7 @@ components:
         - type
     DashboardContent:
       type: object
-      description: Content of a dashboard or dashboard template object - column count, scrollable flag, display priority, and element layout.
+      description: Content of a dashboard or dashboard template object - column count, scrollable flag, display priority, object context flags, and element layout.
       properties:
         numColumns:
           type: integer
@@ -15662,6 +15664,17 @@ components:
         forcedContextObjectId:
           type: integer
           description: Forced context object ID for dashboards created from a template (plain dashboards only; ignored for templates).
+        showAsObjectView:
+          type: boolean
+          description: |
+            When true the dashboard is shown as a view (tab) of every object it is associated
+            with (see the object's `dashboards` list). Plain dashboards only; ignored for templates.
+        showContextSelector:
+          type: boolean
+          description: |
+            When true the Dashboards perspective shows an object selector above the dashboard, and
+            elements configured for the context object follow the selected object. Plain dashboards
+            only; ignored for templates.
         elements:
           type: array
           description: Dashboard elements. On update this is a full replacement of the element layout.

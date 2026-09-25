@@ -19,8 +19,8 @@
 ** File: object_dashboard.cpp
 **
 ** Handlers for GET/PUT /v1/objects/:object-id/dashboard - the content
-** (column count, scrollable flag, display priority, and element layout) of
-** dashboard and dashboard template objects. Delegates to DashboardBase/Dashboard
+** (column count, scrollable flag, display priority, object context flags, and
+** element layout) of dashboard and dashboard template objects. Delegates to DashboardBase/Dashboard
 ** modifyFromJSON for the actual mutation.
 **
 **/
@@ -29,10 +29,12 @@
 
 /**
  * Content keys forwarded between the dashboard sub-resource and the object
- * modify path. displayPriority/forcedContextObjectId apply to plain dashboards
- * only; they are silently ignored for dashboard templates.
+ * modify path. displayPriority, forcedContextObjectId, showAsObjectView, and
+ * showContextSelector apply to plain dashboards only; they are silently ignored
+ * for dashboard templates.
  */
-static const char *s_dashboardContentKeys[] = { "numColumns", "scrollable", "displayPriority", "forcedContextObjectId", "elements", nullptr };
+static const char *s_dashboardContentKeys[] = { "numColumns", "scrollable", "displayPriority", "forcedContextObjectId",
+   "showAsObjectView", "showContextSelector", "elements", nullptr };
 
 /**
  * Load dashboard (or dashboard template) object by URL placeholder "object-id"
@@ -60,8 +62,8 @@ static shared_ptr<NetObj> LoadDashboardForModify(Context *context, uint64_t requ
 
 /**
  * Handler for GET /v1/objects/:object-id/dashboard - dashboard content view
- * (column count, scrollable flag, display priority, and element layout).
- * Requires read access.
+ * (column count, scrollable flag, display priority, object context flags, and
+ * element layout). Requires read access.
  */
 int H_ObjectDashboard(Context *context)
 {

@@ -735,6 +735,14 @@ uint32_t Dashboard::modifyFromJSONInternal(json_t *json, GenericClientSession *s
    if (!json_object_update_integer(json, "forcedContextObjectId", &m_forcedContextObjectId))
       return RCC_INVALID_ARGUMENT;
 
+   // Object context flags - plain dashboards only, dashboard templates are never shown for an object
+   uint32_t setFlags = 0, mask = 0;
+   if (!json_object_update_flag(json, "showAsObjectView", DBF_SHOW_AS_OBJECT_VIEW, &setFlags, &mask) ||
+       !json_object_update_flag(json, "showContextSelector", DBF_SHOW_CONTEXT_SELECTOR, &setFlags, &mask))
+      return RCC_INVALID_ARGUMENT;
+   if (mask != 0)
+      updateFlags(setFlags, mask);
+
    return super::modifyFromJSONInternal(json, session);
 }
 
@@ -748,6 +756,8 @@ json_t *Dashboard::toJson(bool includeSensitiveData)
    lockProperties();
    json_object_set_new(root, "displayPriority", json_integer(m_displayPriority));
    json_object_set_new(root, "forcedContextObjectId", json_integer(m_forcedContextObjectId));
+   json_object_set_new(root, "showAsObjectView", json_boolean((m_flags & DBF_SHOW_AS_OBJECT_VIEW) != 0));
+   json_object_set_new(root, "showContextSelector", json_boolean((m_flags & DBF_SHOW_CONTEXT_SELECTOR) != 0));
    unlockProperties();
 
    return root;
