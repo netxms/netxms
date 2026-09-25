@@ -731,6 +731,20 @@ static void FreeResult(DBDRV_RESULT result)
 }
 
 /**
+ * Read all outstanding results from connection
+ */
+static void ConsumeAsyncResults(PGconn *handle)
+{
+   while(true)
+   {
+      PGresult *fetchBuffer = PQgetResult(handle);
+      if (fetchBuffer == nullptr)
+         break;
+      PQclear(fetchBuffer);
+   }
+}
+
+/**
  * Perform unbuffered SELECT query
  */
 static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, const WCHAR *query, uint32_t *errorCode, WCHAR *errorText)
@@ -801,6 +815,7 @@ static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, con
                }
                PQclear(result->fetchBuffer);
                result->fetchBuffer = nullptr;
+               ConsumeAsyncResults(result->conn->handle);
                *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
             }
          }
@@ -907,6 +922,7 @@ static DBDRV_UNBUFFERED_RESULT SelectPreparedUnbuffered(DBDRV_CONNECTION connect
                }
                PQclear(result->fetchBuffer);
                result->fetchBuffer = nullptr;
+               ConsumeAsyncResults(static_cast<PG_CONN*>(connection)->handle);
                *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
             }
          }
@@ -1089,14 +1105,7 @@ static void FreeUnbufferedResult(DBDRV_UNBUFFERED_RESULT hResult)
    if (result->fetchBuffer != nullptr)
       PQclear(result->fetchBuffer);
 
-   // read all outstanding results
-   while(true)
-   {
-      result->fetchBuffer = PQgetResult(result->conn->handle);
-      if (result->fetchBuffer == nullptr)
-         break;
-      PQclear(result->fetchBuffer);
-   }
+   ConsumeAsyncResults(result->conn->handle);
 
    result->conn->mutexQueryLock.unlock();
    MemFree(result);
