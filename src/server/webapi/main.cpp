@@ -107,6 +107,7 @@ int H_CloudConnectors(Context *context);
 int H_TrafficConnectors(Context *context);
 int H_GetConnectionHistory(Context *context);
 int H_DataCollectionCurrentValues(Context *context);
+int H_DataCollectionCurrentValuesBulk(Context *context);
 int H_DeviceConfigBackups(Context *context);
 int H_DeviceConfigBackupDetails(Context *context);
 int H_DeviceConfigRestore(Context *context);
@@ -542,6 +543,9 @@ static bool InitModule(Config *config)
       .GET(H_EventTemplateDetails)
       .PUT(H_EventTemplateUpdate)
       .DELETE(H_EventTemplateDelete)
+      .build();
+   RouteBuilder("v1/data-collection/current-values")
+      .POST(H_DataCollectionCurrentValuesBulk)
       .build();
    RouteBuilder("v1/dci-summary-tables")
       .GET(H_SummaryTables)
