@@ -287,6 +287,108 @@ static void TestVariableClass()
 }
 
 /**
+ * Format octet string value with given display hint
+ */
+static const TCHAR *FormatWithHint(const TCHAR *hint, const BYTE *value, size_t size, TCHAR *buffer, size_t bufferSize)
+{
+   SNMP_Variable v(s_oidSysDescription);
+   v.setValueFromByteArray(ASN_OCTET_STRING, value, size);
+   return v.getValueWithDisplayHint(hint, buffer, bufferSize);
+}
+
+/**
+ * Test SNMP_Variable::getValueWithDisplayHint (RFC 2579 display hints)
+ */
+static void TestDisplayHint()
+{
+   TCHAR buffer[1024];
+
+   StartTest(_T("Display hint - DateAndTime (8 octets)"));
+   static const BYTE dateAndTime8[] = { 0x07, 0xEA, 0x09, 0x17, 0x0F, 0x37, 0x34, 0x00 };
+   AssertEquals(FormatWithHint(_T("2d-1d-1d,1d:1d:1d.1d,1a1d:1d"), dateAndTime8, sizeof(dateAndTime8), buffer, 1024), _T("2026-9-23,15:55:52.0"));
+   EndTest();
+
+   StartTest(_T("Display hint - DateAndTime (11 octets)"));
+   static const BYTE dateAndTime11[] = { 0x07, 0xEA, 0x09, 0x17, 0x0F, 0x37, 0x34, 0x00, 0x2B, 0x02, 0x00 };
+   AssertEquals(FormatWithHint(_T("2d-1d-1d,1d:1d:1d.1d,1a1d:1d"), dateAndTime11, sizeof(dateAndTime11), buffer, 1024), _T("2026-9-23,15:55:52.0,+2:0"));
+   EndTest();
+
+   StartTest(_T("Display hint - MAC address (1x:)"));
+   static const BYTE macAddr[] = { 0x00, 0x1B, 0x21, 0x3C, 0x4D, 0x5E };
+   AssertEquals(FormatWithHint(_T("1x:"), macAddr, sizeof(macAddr), buffer, 1024), _T("00:1B:21:3C:4D:5E"));
+   EndTest();
+
+   StartTest(_T("Display hint - IPv6 address (2x:)"));
+   static const BYTE ipv6Addr[] = { 0x20, 0x01, 0x0D, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 };
+   AssertEquals(FormatWithHint(_T("2x:"), ipv6Addr, sizeof(ipv6Addr), buffer, 1024), _T("2001:0DB8:0000:0000:0000:0000:0000:0001"));
+   EndTest();
+
+   StartTest(_T("Display hint - IPv4 address with port (1d.1d.1d.1d:2d)"));
+   static const BYTE ipv4Port[] = { 192, 168, 1, 10, 0x00, 0xA1 };
+   AssertEquals(FormatWithHint(_T("1d.1d.1d.1d:2d"), ipv4Port, sizeof(ipv4Port), buffer, 1024), _T("192.168.1.10:161"));
+   EndTest();
+
+   StartTest(_T("Display hint - excess specifications ignored"));
+   AssertEquals(FormatWithHint(_T("1d.1d.1d.1d:2d"), ipv4Port, 4, buffer, 1024), _T("192.168.1.10"));
+   EndTest();
+
+   StartTest(_T("Display hint - multi-octet decimal (4d)"));
+   static const BYTE uint32Value[] = { 0x00, 0x01, 0x00, 0x00 };
+   AssertEquals(FormatWithHint(_T("4d"), uint32Value, sizeof(uint32Value), buffer, 1024), _T("65536"));
+   EndTest();
+
+   StartTest(_T("Display hint - octal (2o)"));
+   static const BYTE octalValue[] = { 0x01, 0x00 };
+   AssertEquals(FormatWithHint(_T("2o"), octalValue, sizeof(octalValue), buffer, 1024), _T("400"));
+   EndTest();
+
+   StartTest(_T("Display hint - trailing separator suppressed"));
+   static const BYTE threeOctets[] = { 1, 2, 3 };
+   AssertEquals(FormatWithHint(_T("1d."), threeOctets, sizeof(threeOctets), buffer, 1024), _T("1.2.3"));
+   EndTest();
+
+   StartTest(_T("Display hint - repeat indicator with terminator"));
+   static const BYTE repeat2[] = { 0x02, 0xAA, 0xBB, 0xCC, 0xDD };
+   AssertEquals(FormatWithHint(_T("*1x:/1x:"), repeat2, sizeof(repeat2), buffer, 1024), _T("AA:BB/CC:DD"));
+   static const BYTE repeat0[] = { 0x00, 0xCC, 0xDD };
+   AssertEquals(FormatWithHint(_T("*1x:/1x:"), repeat0, sizeof(repeat0), buffer, 1024), _T("/CC:DD"));
+   static const BYTE repeatShort[] = { 0x02, 0xAA };
+   AssertEquals(FormatWithHint(_T("*1x:/1x:"), repeatShort, sizeof(repeatShort), buffer, 1024), _T("AA"));
+   EndTest();
+
+   StartTest(_T("Display hint - ASCII (255a) longer than specification"));
+   BYTE longText[300];
+   memset(longText, 'A', sizeof(longText));
+   longText[299] = 'Z';
+   FormatWithHint(_T("255a"), longText, sizeof(longText), buffer, 1024);
+   AssertEquals(_tcslen(buffer), 300);
+   AssertEquals(buffer[0], _T('A'));
+   AssertEquals(buffer[299], _T('Z'));
+   EndTest();
+
+   StartTest(_T("Display hint - ASCII control characters"));
+   static const BYTE controlText[] = { 'a', 0x01, 'b' };
+   AssertEquals(FormatWithHint(_T("255a"), controlText, sizeof(controlText), buffer, 1024), _T("a.b"));
+   EndTest();
+
+   StartTest(_T("Display hint - UTF-8 (255t)"));
+   static const BYTE utf8Text[] = { 'Z', 0xC3, 0xBC, 'r', 'i', 'c', 'h' };
+   AssertEquals(FormatWithHint(_T("255t"), utf8Text, sizeof(utf8Text), buffer, 1024), _T("Z\u00FCrich"));
+   EndTest();
+
+   StartTest(_T("Display hint - malformed hint falls back to printable string"));
+   static const BYTE plainText[] = { 'a', 'b', 'c' };
+   AssertEquals(FormatWithHint(_T("1q"), plainText, sizeof(plainText), buffer, 1024), _T("abc"));
+   EndTest();
+
+   StartTest(_T("Display hint - not applied to non-octet-string value"));
+   SNMP_Variable intVar(s_oidSysDescription);
+   intVar.setValueFromUInt32(ASN_INTEGER, 42);
+   AssertEquals(intVar.getValueWithDisplayHint(_T("2x:"), buffer, 1024), _T("42"));
+   EndTest();
+}
+
+/**
  * Test PDU encoding
  */
 static void TestPDUEncoding()
@@ -684,6 +786,7 @@ int main(int argc, char *argv[])
    TestOidConversion();
    TestOidClass();
    TestVariableClass();
+   TestDisplayHint();
    TestSecurityContext();
    TestPDUEncoding();
    TestV1TrapEncoding();

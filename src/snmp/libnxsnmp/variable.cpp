@@ -662,143 +662,155 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
 }
 
 /**
- * Get value formatted according to display hint
- * Falls back to getValueAsPrintableString() if hint is null/empty or parsing fails
+ * Get value formatted according to display hint (RFC 2579 section 3.1)
+ * Falls back to getValueAsPrintableString() if hint is null/empty, variable is not an octet string, or hint is malformed
  */
 TCHAR *SNMP_Variable::getValueWithDisplayHint(const TCHAR *hint, TCHAR *buffer, size_t bufferSize) const
 {
-   // Validate inputs
    if ((buffer == nullptr) || (bufferSize == 0))
       return nullptr;
 
-   // Fall back if no hint or not an octet string
+   bool convertToHex = true;
    if ((hint == nullptr) || (*hint == 0) || (m_type != ASN_OCTET_STRING))
-   {
-      bool convertToHex = true;
       return getValueAsPrintableString(buffer, bufferSize, &convertToHex);
-   }
 
-   // Parse and apply display hint
-   // RFC 2579 display-hint format: 1*octet-format
-   // Each octet-format: [*]repeat-count format-char [separator]
-   // For simple hints like "1x:", the pattern repeats for all bytes
+   // Each octet-format specification is [*]octet-length format-char [separator [repeat-terminator]].
+   // Specifications are applied in turn; when all are used and octets remain, the last one is re-applied.
+   // A separator or repeat terminator is never produced as the last character of the output, so
+   // it is held in pendingChar and written only when more output follows.
    StringBuffer result;
+   TCHAR pendingChar = 0;
    size_t valuePos = 0;
    const TCHAR *hintPos = hint;
-   TCHAR lastSeparator = 0;  // Track separator for repeating pattern
-   bool firstElement = true;
-
-   while (valuePos < m_valueLength)
+   const TCHAR *lastSpec = nullptr;
+   while(valuePos < m_valueLength)
    {
-      // If we've exhausted the hint but still have bytes, restart from beginning
-      // This handles simple repeating patterns like "1x:" for MAC addresses
       if (*hintPos == 0)
       {
-         // If the hint had a separator at the end, it means repeat the pattern
-         if (lastSeparator != 0)
-         {
-            hintPos = hint;  // Restart hint from beginning
-         }
-         else
-         {
-            // No separator at end means remaining bytes should be formatted in hex
+         if (lastSpec == nullptr)
             break;
-         }
+         hintPos = lastSpec;
       }
+      const TCHAR *specStart = hintPos;
 
-      // Check for variable repeat indicator
-      bool variableRepeat = false;
-      if (*hintPos == _T('*'))
+      bool repeatIndicator = (*hintPos == _T('*'));
+      if (repeatIndicator)
+         hintPos++;
+
+      size_t octetLength = 0;
+      while(_istdigit(*hintPos))
       {
-         variableRepeat = true;
+         octetLength = octetLength * 10 + (*hintPos - _T('0'));
          hintPos++;
       }
 
-      // Parse repeat count (number of octets to format)
-      int repeatCount = 0;
-      while (_istdigit(*hintPos))
-      {
-         repeatCount = repeatCount * 10 + (*hintPos - _T('0'));
-         hintPos++;
-      }
+      TCHAR formatChar = *hintPos;
+      if ((formatChar != _T('x')) && (formatChar != _T('d')) && (formatChar != _T('o')) && (formatChar != _T('a')) && (formatChar != _T('t')))
+         return getValueAsPrintableString(buffer, bufferSize, &convertToHex);   // malformed hint
+      hintPos++;
 
-      if (repeatCount == 0)
-         repeatCount = 1;
-
-      // If variable repeat, get count from next octet in value
-      if (variableRepeat && valuePos < m_valueLength)
-      {
-         repeatCount = m_value[valuePos++];
-      }
-
-      // Parse format character
-      TCHAR formatChar = *hintPos++;
-      if (formatChar == 0)
-         break;
-
-      // Parse optional separator
+      // Digit or '*' after format character starts next specification (e.g. "1a1d:1d"), so it cannot be a separator
       TCHAR separator = 0;
-      if (*hintPos != 0 && !_istdigit(*hintPos) && *hintPos != _T('*'))
-      {
+      if ((*hintPos != 0) && !_istdigit(*hintPos) && (*hintPos != _T('*')))
          separator = *hintPos++;
-      }
-      lastSeparator = separator;  // Remember for pattern repetition
 
-      // Format the octets according to repeat count
-      for (int i = 0; i < repeatCount && valuePos < m_valueLength; i++)
+      TCHAR terminator = 0;
+      if (repeatIndicator && (separator != 0) && (*hintPos != 0) && !_istdigit(*hintPos) && (*hintPos != _T('*')))
+         terminator = *hintPos++;
+
+      // Re-applying a specification that consumes no octets would never terminate
+      if ((specStart == lastSpec) && (octetLength == 0) && !repeatIndicator)
+         break;
+      lastSpec = specStart;
+
+      size_t repeatCount = 1;
+      if (repeatIndicator)
+         repeatCount = m_value[valuePos++];
+
+      for(size_t r = 0; (r < repeatCount) && (valuePos < m_valueLength); r++)
       {
-         // Add separator between items (not before first one in entire output)
-         if (!firstElement && separator != 0)
-            result.append(separator);
-         firstElement = false;
+         size_t count = std::min(octetLength, m_valueLength - valuePos);
+         const BYTE *octets = &m_value[valuePos];
+         valuePos += count;
 
-         switch (formatChar)
+         if (pendingChar != 0)
          {
-            case _T('x'):  // Hexadecimal (lowercase)
+            result.append(pendingChar);
+            pendingChar = 0;
+         }
+
+         switch(formatChar)
+         {
+            case _T('x'):
+               for(size_t i = 0; i < count; i++)
                {
-                  TCHAR hex[3];
-                  hex[0] = bin2hex(m_value[valuePos] >> 4);
-                  hex[1] = bin2hex(m_value[valuePos] & 0x0F);
-                  hex[2] = 0;
-                  result.append(hex);
-                  valuePos++;
+                  result.append(static_cast<TCHAR>(bin2hex(octets[i] >> 4)));
+                  result.append(static_cast<TCHAR>(bin2hex(octets[i] & 0x0F)));
                }
                break;
-
-            case _T('d'):  // Decimal (unsigned)
+            case _T('d'):
+            case _T('o'):
                {
-                  TCHAR decimal[8];
-                  _sntprintf(decimal, 8, _T("%u"), static_cast<unsigned int>(m_value[valuePos++]));
-                  result.append(decimal);
+                  // Octets form single unsigned number in network byte order; fields wider than 8 octets lose high-order octets
+                  uint64_t n = 0;
+                  for(size_t i = 0; i < count; i++)
+                     n = (n << 8) | octets[i];
+                  if (formatChar == _T('d'))
+                  {
+                     result.append(n);
+                  }
+                  else
+                  {
+                     TCHAR octal[24];
+                     int pos = 23;
+                     octal[pos] = 0;
+                     do
+                     {
+                        octal[--pos] = static_cast<TCHAR>(_T('0') + (n & 7));
+                        n >>= 3;
+                     } while(n != 0);
+                     result.append(&octal[pos]);
+                  }
                }
                break;
-
-            case _T('o'):  // Octal
+            case _T('a'):
                {
-                  TCHAR octal[8];
-                  _sntprintf(octal, 8, _T("%o"), static_cast<unsigned int>(m_value[valuePos++]));
-                  result.append(octal);
+#ifdef UNICODE
+                  Buffer<WCHAR, 256> text(count + 1);
+                  size_t cch = mbcp_to_wchar(reinterpret_cast<const char*>(octets), count, text, count + 1, m_codepage.effectiveValue(nullptr));
+                  if (cch == 0)
+                  {
+                     for(size_t i = 0; i < count; i++)
+                        text[i] = ((octets[i] & 0x80) == 0) ? octets[i] : L'?';
+                     cch = count;
+                  }
+                  for(size_t i = 0; i < cch; i++)
+                     result.append((text[i] < 0x20) ? L'.' : text[i]);
+#else
+                  for(size_t i = 0; i < count; i++)
+                     result.append((octets[i] < 0x20) ? '.' : static_cast<char>(octets[i]));
+#endif
                }
                break;
-
-            case _T('a'):  // ASCII character
-            case _T('t'):  // UTF-8 (treat as ASCII for single bytes)
-               if (m_value[valuePos] >= 0x20 && m_value[valuePos] < 0x7F)
-                  result.append(static_cast<TCHAR>(m_value[valuePos]));
-               else
-                  result.append(_T('.'));  // Non-printable placeholder
-               valuePos++;
-               break;
-
-            default:
-               // Unknown format character, skip byte
-               valuePos++;
+            case _T('t'):
+               result.appendUtf8String(reinterpret_cast<const char*>(octets), count);
                break;
          }
+
+         // Separator follows each application unless it would be immediately followed by repeat terminator
+         bool lastApplication = (r == repeatCount - 1) || (valuePos >= m_valueLength);
+         if ((separator != 0) && !(lastApplication && (terminator != 0)))
+            pendingChar = separator;
+      }
+
+      if (terminator != 0)
+      {
+         if (pendingChar != 0)
+            result.append(pendingChar);
+         pendingChar = terminator;
       }
    }
 
-   // Copy result to buffer
    _tcslcpy(buffer, result.cstr(), bufferSize);
    return buffer;
 }
