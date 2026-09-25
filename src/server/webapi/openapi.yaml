@@ -1013,6 +1013,15 @@ paths:
           description: >-
             Limit to observations related to the given object (requires read
             access to that object)
+        - name: includeChildren
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: >-
+            With "object", also return observations related to any descendant of that
+            object. Ignored without "object".
         - name: state
           in: query
           required: false

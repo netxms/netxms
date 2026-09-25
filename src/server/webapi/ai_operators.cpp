@@ -413,6 +413,7 @@ static const char *ObservationStateName(int state)
  * Query parameters:
  *   instance - limit to observations of given operator instance
  *   object   - limit to observations related to given object
+ *   includeChildren - with object, also include observations about child objects (default false)
  *   state    - limit to observations in given state (new, acknowledged, dismissed)
  *   since    - only observations recorded at or after given time (UNIX timestamp, ISO 8601, or relative like -1h)
  *   limit    - maximum number of records to return (default 100, most recent first)
@@ -459,15 +460,17 @@ int H_AiObservations(Context *context)
    uint32_t limit = context->getQueryParameterAsUInt32("limit", 100);
 
    uint32_t objectId = context->getQueryParameterAsUInt32("object");
+   bool includeChildren = context->getQueryParameterAsBoolean("includeChildren", false);
+   shared_ptr<NetObj> scopeObject;
    if (objectId != 0)
    {
-      shared_ptr<NetObj> object = FindObjectById(objectId);
-      if (object == nullptr)
+      scopeObject = FindObjectById(objectId);
+      if (scopeObject == nullptr)
       {
          context->setErrorResponse("Object not found");
          return 404;
       }
-      if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+      if (!scopeObject->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
          return 403;
    }
 
@@ -477,7 +480,24 @@ int H_AiObservations(Context *context)
    if (instanceId != 0)
       query.append(L" AND instance_id=?");
    if (objectId != 0)
-      query.append(L" AND object_id=?");
+   {
+      if (includeChildren)
+      {
+         query.append(L" AND object_id IN (");
+         query.append(objectId);
+         unique_ptr<SharedObjectArray<NetObj>> children = scopeObject->getAllChildren(false);
+         for(int i = 0; i < children->size(); i++)
+         {
+            query.append(L',');
+            query.append(children->get(i)->getId());
+         }
+         query.append(L')');
+      }
+      else
+      {
+         query.append(L" AND object_id=?");
+      }
+   }
    if (stateFilter != -1)
       query.append(L" AND state=?");
    if (since != 0)
@@ -495,7 +515,7 @@ int H_AiObservations(Context *context)
    int bindIndex = 1;
    if (instanceId != 0)
       DBBind(hStmt, bindIndex++, DB_SQLTYPE_INTEGER, instanceId);
-   if (objectId != 0)
+   if ((objectId != 0) && !includeChildren)
       DBBind(hStmt, bindIndex++, DB_SQLTYPE_INTEGER, objectId);
    if (stateFilter != -1)
    {
