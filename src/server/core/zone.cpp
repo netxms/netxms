@@ -213,14 +213,17 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM zones WHERE id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM zone_proxies WHERE object_id=?"));
+   // Credential tables are keyed by zone UIN, not by zone object ID
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM shared_secrets WHERE zone=?"));
+      success = ExecuteQueryOnObject(hdb, m_uin, _T("DELETE FROM shared_secrets WHERE zone=?"));
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM snmp_communities WHERE zone=?"));
+      success = ExecuteQueryOnObject(hdb, m_uin, _T("DELETE FROM snmp_communities WHERE zone=?"));
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM usm_credentials WHERE zone=?"));
+      success = ExecuteQueryOnObject(hdb, m_uin, _T("DELETE FROM usm_credentials WHERE zone=?"));
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM well_known_ports WHERE zone=?"));
+      success = ExecuteQueryOnObject(hdb, m_uin, _T("DELETE FROM ssh_credentials WHERE zone_uin=?"));
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_uin, _T("DELETE FROM well_known_ports WHERE zone=?"));
    return success;
 }
 
