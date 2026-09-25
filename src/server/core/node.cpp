@@ -17497,6 +17497,16 @@ void Node::decommission(time_t expirationTime, bool clearIpAddresses)
 
    if (clearIpAddresses)
    {
+      if (IsZoningEnabled())
+      {
+         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+         if (zone != nullptr)
+            zone->removeFromNodeIndex(m_ipAddress);
+      }
+      else
+      {
+         g_idxNodeByAddr.remove(m_ipAddress);
+      }
       m_ipAddress = InetAddress();
    }
    unlockProperties();

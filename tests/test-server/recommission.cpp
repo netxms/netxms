@@ -18,7 +18,8 @@
 **
 ** File: recommission.cpp
 **
-** Tests for Node::recommission() and the RECOMMISSION console command.
+** Tests for Node::decommission() address cleanup, Node::recommission() and the
+** RECOMMISSION console command.
 **
 **/
 
@@ -116,6 +117,24 @@ void TestRecommission()
 
    container->deleteObject();
    node->deleteObject();
+
+   EndTest();
+
+   StartTest(_T("Decommission with IP address cleanup releases address"));
+
+   InetAddress address = InetAddress::parse(_T("10.255.255.22"));
+   NewNodeData data2(address);
+   shared_ptr<Node> node2 = make_shared<Node>(&data2, 0);
+   node2->unpublish();
+   NetObjInsert(node2, true, false);
+   AssertTrue(FindNodeByIP(0, address) == node2);
+
+   node2->decommission(time(nullptr) + 86400, true);
+   AssertTrue(node2->isDecommissioned());
+   AssertFalse(node2->getIpAddress().isValid());
+   AssertTrue(FindNodeByIP(0, address) == nullptr);
+
+   node2->deleteObject();
 
    EndTest();
 }
