@@ -1637,7 +1637,16 @@ public:
    void setId(uint32_t dwId) { m_id = dwId; setModified(MODIFY_ALL); }
    void generateGuid() { m_guid = uuid::generate(); }
    void setName(const TCHAR *name) { lockProperties(); _tcslcpy(m_name, name, MAX_OBJECT_NAME); setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
-   void resetStatus() { lockProperties(); m_status = STATUS_UNKNOWN; setModified(MODIFY_RUNTIME); unlockProperties(); }
+   void resetStatus()
+   {
+      lockProperties();
+      if (m_status != STATUS_UNMANAGED)
+      {
+         m_status = STATUS_UNKNOWN;
+         setModified(MODIFY_RUNTIME);
+      }
+      unlockProperties();
+   }
    void setAlias(const TCHAR *alias);
    void setComments(const TCHAR *comments);
    void expandCommentMacros();

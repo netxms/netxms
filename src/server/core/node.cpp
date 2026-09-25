@@ -12726,8 +12726,7 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
       for(int i = 0; i < getChildList().size(); i++)
       {
          NetObj *object = getChildList().get(i);
-         if (object->getStatus() != STATUS_UNMANAGED)
-            object->resetStatus();
+         object->resetStatus();
          if ((object->getObjectClass() == OBJECT_INTERFACE) && static_cast<Interface*>(object)->isFake())
          {
             static_cast<Interface*>(object)->setIpAddress(ipAddr);
