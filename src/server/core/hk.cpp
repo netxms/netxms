@@ -404,6 +404,7 @@ static void HouseKeeper()
       });
 
    int sleepTime = GetSleepTime(hour, minute, 0);
+   bool v5MigrationPaused = false;
    while(!s_shutdown)
    {
       nxlog_debug_tag(DEBUG_TAG, 2, L"Sleeping for %d seconds", sleepTime);
@@ -419,6 +420,15 @@ static void HouseKeeper()
       s_throttlingHighWatermark = ConfigReadULong(_T("Housekeeper.Throttle.HighWatermark"), 250000);
       s_throttlingLowWatermark = ConfigReadULong(_T("Housekeeper.Throttle.LowWatermark"), 50000);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Throttling high watermark = %d, low watermark= %d"), static_cast<int>(s_throttlingHighWatermark), static_cast<int>(s_throttlingLowWatermark));
+
+      // Background v5 data migration competes with housekeeper for database throughput and pool
+      // connections, and both operate on the same v5 data tables; keep it paused for the whole run
+      if (IsV5DataMigrationActive())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 2, _T("Pausing V5 data migration for the duration of housekeeper run"));
+         PauseV5DataMigration();
+         v5MigrationPaused = true;
+      }
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		CleanAlarmHistory(hdb);
@@ -672,10 +682,20 @@ static void HouseKeeper()
          .param(_T("elapsedTime"), elapsedTime)
          .post();
 
+      if (v5MigrationPaused)
+      {
+         ResumeV5DataMigration();
+         v5MigrationPaused = false;
+      }
+
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
       sleepTime = GetSleepTime(hour, minute, 0);
       s_running = false;
    }
+
+   // Loop is left mid-run on shutdown or database error; do not leave migration paused
+   if (v5MigrationPaused)
+      ResumeV5DataMigration();
 
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Housekeeper thread terminated"));
 }

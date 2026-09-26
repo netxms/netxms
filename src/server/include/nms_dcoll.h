@@ -1204,15 +1204,29 @@ void AddScriptDependencies(StringSet *dependencies, const TCHAR *name);
 void AddScriptDependencies(StringSet *dependencies, const NXSL_Program *script);
 
 /**
+ * V5 collected data migration progress
+ */
+struct V5DataMigrationStatus
+{
+   int workers;            // Size of migration worker pool
+   int busyWorkers;        // Workers currently executing a migration chunk (not waiting on pause or throttle)
+   int remainingObjects;   // Objects with v5 tables not yet processed in current sweep
+   int completedObjects;   // Objects fully migrated since server start
+};
+
+/**
  * V5 collected data migration
  */
 void StartV5DataMigration();
 void StopV5DataMigration();
 void PauseV5DataMigration();
 void ResumeV5DataMigration();
+bool PauseV5DataMigrationByOperator();
+bool ResumeV5DataMigrationByOperator();
 bool IsV5DataMigrationPaused();
+bool IsV5DataMigrationPausedByOperator();
 bool IsV5DataMigrationActive();
-int GetV5DataMigrationPendingObjects();
+void GetV5DataMigrationStatus(V5DataMigrationStatus *status);
 
 /**
  * DCI data aggregation
