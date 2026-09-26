@@ -707,6 +707,12 @@ bool DCTable::loadThresholds(DB_HANDLE hdb)
  */
 bool DCTable::saveThresholds(DB_HANDLE hdb)
 {
+   // Delete conditions and instances of all thresholds stored for this table, including ones removed from configuration
+   if (!ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM dct_threshold_conditions WHERE threshold_id IN (SELECT id FROM dct_thresholds WHERE table_id=?)") ||
+       !ExecuteQueryOnObject(hdb, m_id, L"DELETE FROM dct_threshold_instances WHERE threshold_id IN (SELECT id FROM dct_thresholds WHERE table_id=?)"))
+      return false;
+
+   // Current thresholds may not be stored for this table yet, so also delete their conditions and instances by ID
    DB_STATEMENT hStmt = DBPrepare(hdb, L"DELETE FROM dct_threshold_conditions WHERE threshold_id=?");
    if (hStmt == nullptr)
       return false;
@@ -754,12 +760,10 @@ void DCTable::deleteFromDatabase()
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_table_columns WHERE table_id=%d"), (int)m_id);
    QueueSQLRequest(szQuery);
 
-   for(int i = 0; i < m_thresholds->size(); i++)
-   {
-      _sntprintf(szQuery, 256, _T("DELETE FROM dct_threshold_conditions WHERE threshold_id=%d"), (int)m_thresholds->get(i)->getId());
-      QueueSQLRequest(szQuery);
-   }
-
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_threshold_conditions WHERE threshold_id IN (SELECT id FROM dct_thresholds WHERE table_id=%d)"), (int)m_id);
+   QueueSQLRequest(szQuery);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_threshold_instances WHERE threshold_id IN (SELECT id FROM dct_thresholds WHERE table_id=%d)"), (int)m_id);
+   QueueSQLRequest(szQuery);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_thresholds WHERE table_id=%d"), (int)m_id);
    QueueSQLRequest(szQuery);
 
