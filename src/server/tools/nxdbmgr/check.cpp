@@ -26,8 +26,14 @@
 /**
  * Check data tables for given object class
  */
-static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32_t> *list)
+static void CollectObjectIdentifiers(const TCHAR *className, IntegerArray<uint32_t> *list, bool skipTableCheck = false)
 {
+   // This function is used by upgrade procedures for different versions,
+   // and not all data collection target classes exists in older versions
+   // Silently skip missing tables here
+   if (!skipTableCheck && DBIsTableExist(g_dbHandle, className) != DBIsTableExist_Found)
+      return;
+
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("SELECT id FROM %s"), className);
    DB_RESULT hResult = SQLSelect(query);
@@ -78,7 +84,7 @@ IntegerArray<uint32_t> GetDataCollectionTargets()
    CollectObjectIdentifiers(L"sensors", &list);
    CollectObjectIdentifiers(L"resources", &list);
    CollectObjectIdentifiers(L"cloud_domains", &list);
-   CollectObjectIdentifiers(L"object_containers WHERE object_class=29 OR object_class=30", &list);   // objects of class "collector" or "circuit"
+   CollectObjectIdentifiers(L"object_containers WHERE object_class=29 OR object_class=30", &list, true);   // objects of class "collector" or "circuit"
    return list;
 }
 
