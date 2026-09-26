@@ -2280,21 +2280,29 @@ int NXCORE_EXPORTABLE ProcessConsoleCommand(const wchar_t *command, ServerConsol
       }
       else if (IsCommand(_T("STATUS"), szBuffer, 1))
       {
-         ThreadPoolInfo tpi;
-         bool hasPool = ThreadPoolGetInfo(L"V5MIGRATE", &tpi);
-         ConsolePrintf(console, _T("State ............: %s\n"), IsV5DataMigrationPaused() ? _T("paused") : _T("running"));
-         ConsolePrintf(console, _T("Pending objects ..: %d\n"), GetV5DataMigrationPendingObjects());
-         ConsolePrintf(console, _T("Active workers ...: %d\n"), hasPool ? tpi.activeRequests : 0);
+         V5DataMigrationStatus status;
+         GetV5DataMigrationStatus(&status);
+         ConsolePrintf(console, _T("State ..............: %s\n"),
+            IsV5DataMigrationPausedByOperator() ? _T("paused by operator") : IsV5DataMigrationPaused() ? _T("paused by housekeeper") : _T("running"));
+         ConsolePrintf(console, _T("Workers ............: %d (%d busy)\n"), status.workers, status.busyWorkers);
+         ConsolePrintf(console, _T("Remaining objects ..: %d\n"), status.remainingObjects);
+         ConsolePrintf(console, _T("Completed objects ..: %d\n"), status.completedObjects);
       }
       else if (IsCommand(_T("PAUSE"), szBuffer, 1))
       {
-         PauseV5DataMigration();
-         ConsoleWrite(console, _T("V5 data migration paused; running workers will stop at the next chunk boundary\n"));
+         if (PauseV5DataMigrationByOperator())
+            ConsoleWrite(console, _T("V5 data migration paused; running workers will stop at the next chunk boundary\n"));
+         else
+            ConsoleWrite(console, _T("V5 data migration is already paused by operator\n"));
       }
       else if (IsCommand(_T("RESUME"), szBuffer, 1))
       {
-         ResumeV5DataMigration();
-         ConsoleWrite(console, _T("V5 data migration resumed\n"));
+         if (!ResumeV5DataMigrationByOperator())
+            ConsoleWrite(console, _T("V5 data migration is not paused by operator\n"));
+         else if (IsV5DataMigrationPaused())
+            ConsoleWrite(console, _T("Operator pause released; V5 data migration stays paused until housekeeper run completes\n"));
+         else
+            ConsoleWrite(console, _T("V5 data migration resumed\n"));
       }
       else
       {

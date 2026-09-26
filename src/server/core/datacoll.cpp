@@ -766,32 +766,39 @@ bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **sour
 #define DEBUG_TAG_DC_V5MIGRATE  L"dc.v5migrate"
 
 /**
- * V5 data migration state. Written by the migration manager and the server console, polled by
- * migration workers; a stale read only delays a pause or a status line by one poll interval, so
- * plain variables are sufficient.
+ * V5 data migration state. Written by the migration manager, the housekeeper and the server console,
+ * polled by migration workers; a stale read only delays a pause or a status line by one poll interval,
+ * so plain variables are sufficient for flags. Pause requests are counted so that independent
+ * requesters (operator, housekeeper) can pause and resume without undoing each other.
  */
 static bool s_v5MigrationActive = false;
-static bool s_v5MigrationPaused = false;
-static int s_v5MigrationPendingObjects = 0;
+static VolatileCounter s_v5MigrationPauseRequests = 0;
+static bool s_v5MigrationPausedByOperator = false;
+static int s_v5MigrationWorkers = 0;
+static VolatileCounter s_v5MigrationBusyWorkers = 0;
+static VolatileCounter s_v5MigrationRemainingObjects = 0;
+static VolatileCounter s_v5MigrationCompletedObjects = 0;
 
 /**
- * Block while V5 data migration is paused by operator. Returns immediately if not paused,
- * on shutdown, or once migration is resumed.
+ * Block while V5 data migration is paused. Returns immediately if not paused, on shutdown, or once
+ * all pause requests are released. Callers must not hold a pooled database connection.
  */
 static void WaitIfV5DataMigrationPaused()
 {
-   if (!s_v5MigrationPaused)
+   if (s_v5MigrationPauseRequests == 0)
       return;
 
-   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, L"V5 data migration worker paused by operator");
-   while(s_v5MigrationPaused && !SleepAndCheckForShutdown(1))
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, L"V5 data migration worker paused");
+   while((s_v5MigrationPauseRequests > 0) && !SleepAndCheckForShutdown(1))
       ;
    nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 1, L"V5 data migration worker resumed (%s)",
-      IsShutdownInProgress() ? L"shutdown" : L"operator command");
+      IsShutdownInProgress() ? L"shutdown" : L"pause released");
 }
 
 /**
- * Throttle V5 data migration if needed. Returns false if shutdown time has arrived and migration process should be aborted.
+ * Throttle V5 data migration if needed. Blocks while database writer queues are above the housekeeper
+ * high watermark, until they drain below the low watermark or shutdown starts. Callers must not hold
+ * a pooled database connection.
  */
 static void ThrottleV5DataMigration()
 {
@@ -832,9 +839,11 @@ static void ThrottleV5DataMigration()
  * by a server restart is simply restarted from the beginning on next start. Because every chunk
  * boundary is an item_id, each (item_id, timestamp) key is fully contained in a single chunk, so
  * within-chunk deduplication of the source is sufficient.
+ * A pooled database connection is held only for the duration of a single chunk and released before
+ * throttling or pausing, so a stalled migration does not keep pool connections checked out.
  * Returns true if the table was fully migrated and dropped, false on error or shutdown.
  */
-static bool MigrateV5DataTable(DataCollectionTarget *target, DB_HANDLE hdb, bool tdata)
+static bool MigrateV5DataTable(DataCollectionTarget *target, bool tdata)
 {
    uint32_t id = target->getId();
    const wchar_t *prefix = tdata ? L"tdata" : L"idata";
@@ -845,6 +854,9 @@ static bool MigrateV5DataTable(DataCollectionTarget *target, DB_HANDLE hdb, bool
    uint32_t lastItem = 0;
    while(!IsShutdownInProgress())
    {
+      InterlockedIncrement(&s_v5MigrationBusyWorkers);
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       // Find the item_id at the chunk boundary: the V5_MIGRATION_CHUNK_SIZE-th not-yet-processed row
       // in item_id order. The item_id>lastItem predicate lets the item_id index seek straight to the
       // cursor position, so the probe stays O(chunk size) regardless of table size. If fewer rows
@@ -857,7 +869,11 @@ static bool MigrateV5DataTable(DataCollectionTarget *target, DB_HANDLE hdb, bool
             prefix, id, lastItem, V5_MIGRATION_CHUNK_SIZE - 1);
       DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult == nullptr)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         InterlockedDecrement(&s_v5MigrationBusyWorkers);
          return false;
+      }
       bool hasBoundary = (DBGetNumRows(hResult) > 0);
       uint32_t boundaryItem = hasBoundary ? DBGetFieldULong(hResult, 0, 0) : 0;
       DBFreeResult(hResult);
@@ -896,15 +912,19 @@ static bool MigrateV5DataTable(DataCollectionTarget *target, DB_HANDLE hdb, bool
             break;
       }
 
-      if (!DBQuery(hdb, query))
-         return false;
-
-      if (!hasBoundary)
+      bool success = DBQuery(hdb, query);
+      if (success && !hasBoundary)
       {
          // Whole table consumed in this final chunk
          target->deleteV5DataTable(hdb, tdata, L"migration complete");
-         return true;
       }
+      DBConnectionPoolReleaseConnection(hdb);
+      InterlockedDecrement(&s_v5MigrationBusyWorkers);
+
+      if (!success)
+         return false;
+      if (!hasBoundary)
+         return true;
 
       ThrottleV5DataMigration();
       WaitIfV5DataMigrationPaused();
@@ -919,20 +939,17 @@ static bool MigrateV5DataTable(DataCollectionTarget *target, DB_HANDLE hdb, bool
  */
 static void MigrateV5Data(DataCollectionTarget *target)
 {
-   if (IsShutdownInProgress())
-      return;
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
    WaitIfV5DataMigrationPaused();
    if (!IsShutdownInProgress() && target->hasV5IdataTable())
-      MigrateV5DataTable(target, hdb, false);
+      MigrateV5DataTable(target, false);
 
    WaitIfV5DataMigrationPaused();
    if (!IsShutdownInProgress() && target->hasV5TdataTable())
-      MigrateV5DataTable(target, hdb, true);
+      MigrateV5DataTable(target, true);
 
-   DBConnectionPoolReleaseConnection(hdb);
+   if (!target->hasV5IdataTable() && !target->hasV5TdataTable())
+      InterlockedIncrement(&s_v5MigrationCompletedObjects);
+   InterlockedDecrement(&s_v5MigrationRemainingObjects);
 }
 
 /**
@@ -965,6 +982,7 @@ static void V5DataMigrationManager()
    else if (workers > 8)
       workers = 8;
    ThreadPool *migrationPool = ThreadPoolCreate(L"V5MIGRATE", workers, workers);
+   s_v5MigrationWorkers = workers;
 
    while(!SleepAndCheckForShutdown(5))
    {
@@ -991,7 +1009,7 @@ static void V5DataMigrationManager()
       g_idxTrafficObserverById.getObjects(&objects, filter);
       g_idxObservationPointById.getObjects(&objects, filter);
 
-      s_v5MigrationPendingObjects = objects.size();
+      s_v5MigrationRemainingObjects = objects.size();
       if (objects.isEmpty())
       {
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"All v5 data migration completed");
@@ -1090,29 +1108,65 @@ void StopV5DataMigration()
 }
 
 /**
- * Pause background v5 data migration. Workers stop at the next chunk boundary.
+ * Add pause request for background v5 data migration. Workers stop at the next chunk boundary and
+ * stay stopped until every pause request is released with ResumeV5DataMigration().
  */
 void PauseV5DataMigration()
 {
-   s_v5MigrationPaused = true;
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"V5 data migration paused by operator");
+   int32_t requests = InterlockedIncrement(&s_v5MigrationPauseRequests);
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 2, L"V5 data migration pause requested (%d active requests)", requests);
 }
 
 /**
- * Resume background v5 data migration paused by operator
+ * Release one pause request for background v5 data migration
  */
 void ResumeV5DataMigration()
 {
-   s_v5MigrationPaused = false;
+   int32_t requests = InterlockedDecrement(&s_v5MigrationPauseRequests);
+   nxlog_debug_tag(DEBUG_TAG_DC_V5MIGRATE, 2, L"V5 data migration pause request released (%d active requests)", requests);
+}
+
+/**
+ * Pause background v5 data migration on operator request. Returns false if already paused by operator.
+ */
+bool PauseV5DataMigrationByOperator()
+{
+   if (s_v5MigrationPausedByOperator)
+      return false;
+   s_v5MigrationPausedByOperator = true;
+   PauseV5DataMigration();
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"V5 data migration paused by operator");
+   return true;
+}
+
+/**
+ * Resume background v5 data migration paused by operator. Returns false if not paused by operator.
+ * Migration stays paused if other pause requests (e.g. from housekeeper) are still active.
+ */
+bool ResumeV5DataMigrationByOperator()
+{
+   if (!s_v5MigrationPausedByOperator)
+      return false;
+   s_v5MigrationPausedByOperator = false;
+   ResumeV5DataMigration();
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DC_V5MIGRATE, L"V5 data migration resumed by operator");
+   return true;
+}
+
+/**
+ * Check if background v5 data migration is paused (by any requester)
+ */
+bool IsV5DataMigrationPaused()
+{
+   return s_v5MigrationPauseRequests > 0;
 }
 
 /**
  * Check if background v5 data migration is paused by operator
  */
-bool IsV5DataMigrationPaused()
+bool IsV5DataMigrationPausedByOperator()
 {
-   return s_v5MigrationPaused;
+   return s_v5MigrationPausedByOperator;
 }
 
 /**
@@ -1124,9 +1178,12 @@ bool IsV5DataMigrationActive()
 }
 
 /**
- * Get number of objects with v5 data tables found by last migration sweep
+ * Get background v5 data migration progress
  */
-int GetV5DataMigrationPendingObjects()
+void GetV5DataMigrationStatus(V5DataMigrationStatus *status)
 {
-   return s_v5MigrationPendingObjects;
+   status->workers = s_v5MigrationWorkers;
+   status->busyWorkers = s_v5MigrationBusyWorkers;
+   status->remainingObjects = s_v5MigrationRemainingObjects;
+   status->completedObjects = s_v5MigrationCompletedObjects;
 }
