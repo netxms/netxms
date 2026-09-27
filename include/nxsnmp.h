@@ -1426,6 +1426,7 @@ void LIBNXSNMP_EXPORTABLE SnmpSetDefaultRetryCount(int numRetries);
 int LIBNXSNMP_EXPORTABLE SnmpGetDefaultRetryCount();
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const SNMP_ObjectId& oid, void *value, size_t bufferSize, uint32_t flags);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t flags);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetVariable(SNMP_Transport *transport, const SNMP_ObjectId& oid, SNMP_Variable *variable, uint32_t flags = 0);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *transport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen,
       void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen = nullptr, const char *codepage = nullptr);
 bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, const TCHAR *oid, int32_t value);

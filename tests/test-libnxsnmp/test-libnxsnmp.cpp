@@ -555,6 +555,145 @@ static void TestPDUPrivacy(SNMP_EncryptionMethod method, const TCHAR *name)
 }
 
 /**
+ * Fake SNMP transport that answers every request with SNMPv2c response for sysUpTime.0
+ * with given error status and varbind (type and encoded value)
+ */
+class FakeResponseTransport : public SNMP_Transport
+{
+private:
+   uint32_t m_requestId;
+   BYTE m_errorStatus;
+   BYTE m_varbindType;
+   const BYTE *m_value;
+   size_t m_valueLength;
+
+   static void appendTLV(ByteStream *out, BYTE type, const BYTE *data, size_t length)
+   {
+      out->write(type);
+      out->write(static_cast<BYTE>(length));   // Short form length is sufficient for test messages
+      if (length > 0)
+         out->write(data, length);
+   }
+
+public:
+   FakeResponseTransport(BYTE errorStatus, BYTE varbindType, const BYTE *value, size_t valueLength)
+   {
+      m_requestId = 0;
+      m_errorStatus = errorStatus;
+      m_varbindType = varbindType;
+      m_value = value;
+      m_valueLength = valueLength;
+      m_reliable = true;
+   }
+
+   virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender, socklen_t *addrSize, SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t)) override
+   {
+      static const BYTE oid[] = { 0x2B, 0x06, 0x01, 0x02, 0x01, 0x01, 0x03, 0x00 };   // 1.3.6.1.2.1.1.3.0
+      static const BYTE version[] = { 0x01 };   // SNMPv2c
+      static const BYTE zero[] = { 0x00 };
+
+      ByteStream varbind;
+      appendTLV(&varbind, ASN_OBJECT_ID, oid, sizeof(oid));
+      appendTLV(&varbind, m_varbindType, m_value, m_valueLength);
+
+      ByteStream varbindSeq;
+      appendTLV(&varbindSeq, ASN_SEQUENCE, varbind.buffer(), varbind.size());
+
+      BYTE requestId[4];
+      requestId[0] = static_cast<BYTE>(m_requestId >> 24);
+      requestId[1] = static_cast<BYTE>(m_requestId >> 16);
+      requestId[2] = static_cast<BYTE>(m_requestId >> 8);
+      requestId[3] = static_cast<BYTE>(m_requestId);
+
+      ByteStream response;
+      appendTLV(&response, ASN_INTEGER, requestId, 4);
+      appendTLV(&response, ASN_INTEGER, &m_errorStatus, 1);
+      appendTLV(&response, ASN_INTEGER, zero, 1);
+      appendTLV(&response, ASN_SEQUENCE, varbindSeq.buffer(), varbindSeq.size());
+
+      ByteStream content;
+      appendTLV(&content, ASN_INTEGER, version, 1);
+      appendTLV(&content, ASN_OCTET_STRING, reinterpret_cast<const BYTE*>("public"), 6);
+      appendTLV(&content, ASN_RESPONSE_PDU, response.buffer(), response.size());
+
+      ByteStream message;
+      appendTLV(&message, ASN_SEQUENCE, content.buffer(), content.size());
+
+      *pdu = new SNMP_PDU();
+      if (!(*pdu)->parse(message.buffer(), message.size(), m_securityContext, false))
+      {
+         delete_and_null(*pdu);
+         return 0;
+      }
+      return static_cast<int>(message.size());
+   }
+
+   virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override
+   {
+      m_requestId = pdu->getRequestId();
+      return 1;
+   }
+
+   virtual InetAddress getPeerIpAddress() override { return InetAddress::LOOPBACK; }
+   virtual uint16_t getPort() override { return 161; }
+   virtual bool isProxyTransport() override { return false; }
+};
+
+/**
+ * Do SnmpGetVariable() call via fake transport
+ */
+static uint32_t FakeGetVariable(BYTE errorStatus, BYTE varbindType, const BYTE *value, size_t valueLength, SNMP_Variable *variable)
+{
+   FakeResponseTransport transport(errorStatus, varbindType, value, valueLength);
+   return SnmpGetVariable(&transport, SNMP_ObjectId { 1, 3, 6, 1, 2, 1, 1, 3, 0 }, variable);
+}
+
+/**
+ * Test handling of GET responses
+ */
+static void TestGetResponseHandling()
+{
+   static const BYTE timeTicks[] = { 0x01, 0x02, 0x03 };
+
+   StartTest(_T("SnmpGetVariable - value"));
+   SNMP_Variable v;
+   AssertEquals(FakeGetVariable(SNMP_PDU_ERR_SUCCESS, ASN_TIMETICKS, timeTicks, sizeof(timeTicks), &v), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(v.getType(), static_cast<uint32_t>(ASN_TIMETICKS));
+   AssertEquals(v.getValueAsUInt(), 0x010203u);
+   AssertTrue(v.getName().equals({ 1, 3, 6, 1, 2, 1, 1, 3, 0 }));
+   EndTest();
+
+   StartTest(_T("SnmpGetVariable - exception varbinds"));
+   AssertEquals(FakeGetVariable(SNMP_PDU_ERR_SUCCESS, ASN_NO_SUCH_OBJECT, nullptr, 0, &v), static_cast<uint32_t>(SNMP_ERR_NO_OBJECT));
+   AssertEquals(FakeGetVariable(SNMP_PDU_ERR_SUCCESS, ASN_NO_SUCH_INSTANCE, nullptr, 0, &v), static_cast<uint32_t>(SNMP_ERR_NO_OBJECT));
+   AssertEquals(FakeGetVariable(SNMP_PDU_ERR_SUCCESS, ASN_END_OF_MIBVIEW, nullptr, 0, &v), static_cast<uint32_t>(SNMP_ERR_NO_OBJECT));
+   EndTest();
+
+   StartTest(_T("SnmpGetVariable - PDU error status"));
+   AssertEquals(FakeGetVariable(SNMP_PDU_ERR_NO_SUCH_NAME, ASN_NULL, nullptr, 0, &v), static_cast<uint32_t>(SNMP_ERR_NO_OBJECT));
+   AssertEquals(FakeGetVariable(SNMP_PDU_ERR_GENERIC, ASN_NULL, nullptr, 0, &v), static_cast<uint32_t>(SNMP_ERR_AGENT));
+   AssertEquals(FakeGetVariable(SNMP_PDU_ERR_TOO_BIG, ASN_NULL, nullptr, 0, &v), static_cast<uint32_t>(SNMP_ERR_AGENT));
+   EndTest();
+
+   StartTest(_T("SnmpGetVariable - NULL value"));
+   AssertEquals(FakeGetVariable(SNMP_PDU_ERR_SUCCESS, ASN_NULL, nullptr, 0, &v), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(v.getType(), static_cast<uint32_t>(ASN_NULL));
+   EndTest();
+
+   StartTest(_T("SnmpGetEx - response handling"));
+   TCHAR buffer[256];
+   FakeResponseTransport noSuchInstance(SNMP_PDU_ERR_SUCCESS, ASN_NO_SUCH_INSTANCE, nullptr, 0);
+   AssertEquals(SnmpGetEx(&noSuchInstance, _T(".1.3.6.1.2.1.1.3.0"), nullptr, 0, buffer, sizeof(buffer), SG_PSTRING_RESULT), static_cast<uint32_t>(SNMP_ERR_NO_OBJECT));
+   FakeResponseTransport nullValue(SNMP_PDU_ERR_SUCCESS, ASN_NULL, nullptr, 0);
+   uint32_t n;
+   AssertEquals(SnmpGetEx(&nullValue, _T(".1.3.6.1.2.1.1.3.0"), nullptr, 0, &n, sizeof(n), 0), static_cast<uint32_t>(SNMP_ERR_NO_OBJECT));
+   FakeResponseTransport value(SNMP_PDU_ERR_SUCCESS, ASN_TIMETICKS, timeTicks, sizeof(timeTicks));
+   AssertEquals(SnmpGetEx(&value, _T(".1.3.6.1.2.1.1.3.0"), nullptr, 0, &n, sizeof(n), 0), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+   AssertEquals(n, 0x010203u);
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -567,6 +706,7 @@ int main(int argc, char *argv[])
    TestDisplayHint();
    TestPDUEncoding();
    TestV1TrapEncoding();
+   TestGetResponseHandling();
    TestPDUPrivacy(SNMP_ENCRYPT_DES, _T("SNMPv3 privacy (DES)"));
    TestPDUPrivacy(SNMP_ENCRYPT_AES_128, _T("SNMPv3 privacy (AES-128)"));
    return 0;

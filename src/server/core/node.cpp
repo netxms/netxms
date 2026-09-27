@@ -8351,23 +8351,17 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
    {
       if (interpretRawValue == SNMP_RAWTYPE_NONE)
       {
-         SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-         request.bindVariable(new SNMP_Variable(name));
-
-         SNMP_PDU *response;
-         snmpResult = snmp->doRequest(&request, &response);
-         if (snmpResult == SNMP_ERR_SUCCESS)
+         SNMP_ObjectId oid = SNMP_ObjectId::parse(name);
+         if (oid.isValid())
          {
-            if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
-            {
-               SNMP_Variable *varbind = response->getVariable(0);
-               FormatSNMPValue(varbind, buffer, size);
-            }
-            else
-            {
-               snmpResult = SNMP_ERR_NO_OBJECT;
-            }
-            delete response;
+            SNMP_Variable varbind;
+            snmpResult = SnmpGetVariable(snmp, oid, &varbind);
+            if (snmpResult == SNMP_ERR_SUCCESS)
+               FormatSNMPValue(&varbind, buffer, size);
+         }
+         else
+         {
+            snmpResult = SNMP_ERR_BAD_OID;
          }
       }
       else
