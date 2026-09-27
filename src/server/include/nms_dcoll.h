@@ -364,7 +364,7 @@ protected:
    BYTE m_retentionType;         // Retention type - default, custom, do not store
    BYTE m_source;                // origin: SNMP, agent, etc.
    BYTE m_status;                // Item status: active, disabled or not supported
-   BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
+   BYTE m_busy;                  // 1 when item is queued for polling or processed by instance discovery, 0 if not
 	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
    uint32_t m_flags;             // user flags
    uint32_t m_stateFlags;        // runtime flags
@@ -508,7 +508,7 @@ public:
    void setLastPollTime(Timestamp lastPollTime) { m_lastPollTime = lastPollTime; }
    void setStatus(int status, bool generateEvent, bool userChange = false);
    void setBusyFlag() { m_busy = 1; }
-   void clearBusyFlag() { m_busy = 0; }
+   void clearBusyFlag();
    void setNextPollTime(time_t t) { m_nextPollTime = t; }
    void setTemplateId(uint32_t templateId, uint32_t dwItemId) { m_templateId = templateId; m_templateItemId = dwItemId; }
    void updateTimeIntervals() { lock(); updateTimeIntervalsInternal(); unlock(); }

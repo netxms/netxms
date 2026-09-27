@@ -966,6 +966,23 @@ bool DCObject::isCacheLoaded()
 }
 
 /**
+ * Clear busy flag. If object was scheduled for deletion while busy, complete deletion from database.
+ */
+void DCObject::clearBusyFlag()
+{
+   lock();
+   bool deletionPending = (m_busy != 0) && (m_scheduledForDeletion != 0);
+   m_busy = 0;
+   unlock();
+
+   if (deletionPending)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_CONFIG, 7, _T("DCObject::clearBusyFlag: completing delayed destruction of DCO [%u] \"%s\""), m_id, m_name.cstr());
+      deleteFromDatabase();
+   }
+}
+
+/**
  * Prepare object for deletion
  */
 bool DCObject::prepareForDeletion()

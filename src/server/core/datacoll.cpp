@@ -296,7 +296,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
    {
       nxlog_debug_tag(DEBUG_TAG_DC_COLLECTOR, 7, _T("DataCollector(): about to destroy DC object [%u] \"%s\" owner=[%u]"),
             dcObject->getId(), dcObjectName.cstr(), (target != nullptr) ? target->getId() : 0);
-      dcObject->deleteFromDatabase();
+      dcObject->clearBusyFlag();  // Will complete delayed deletion
       return;
    }
 

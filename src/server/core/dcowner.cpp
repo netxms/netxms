@@ -475,7 +475,7 @@ void DataCollectionOwner::deleteDCObject(DCObject *object)
    if (object->prepareForDeletion())
    {
       // Delete DCI from database only if it is not busy
-      // Busy DCIs will be deleted by data collector
+      // Busy DCIs will be deleted when busy flag is cleared
       object->deleteFromDatabase();
    }
    else
