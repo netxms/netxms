@@ -1237,6 +1237,53 @@ static void TestStringToBinaryConversions()
 }
 
 /**
+ * Test URL encoding
+ */
+static void TestURLEncode()
+{
+   StartTest(_T("URLEncode (UTF-8)"));
+   char buffer[256];
+   URLEncode("abc-XYZ_09.~", buffer, sizeof(buffer));
+   AssertTrue(!strcmp(buffer, "abc-XYZ_09.~"));
+   URLEncode("a b&c=d/e", buffer, sizeof(buffer));
+   AssertTrue(!strcmp(buffer, "a%20b%26c%3Dd%2Fe"));
+   URLEncode("\xD0\x9F\xC3\xA9", buffer, sizeof(buffer));  // Cyrillic Pe, e with acute
+   AssertTrue(!strcmp(buffer, "%D0%9F%C3%A9"));
+   URLEncode("abcdef", buffer, 4);
+   AssertTrue(!strcmp(buffer, "abc"));
+   URLEncode("a b", buffer, 4);
+   AssertTrue(!strcmp(buffer, "a"));
+   EndTest();
+
+   StartTest(_T("URLEncode (wide)"));
+   StringBuffer sb;
+   URLEncode(L"", &sb);
+   AssertTrue(sb.isEmpty());
+   URLEncode(L"abc-XYZ_09.~", &sb);
+   AssertEquals(sb.cstr(), _T("abc-XYZ_09.~"));
+   sb.clear();
+   URLEncode(L"zone1/object 1?a=b&c#d+e%", &sb);
+   AssertEquals(sb.cstr(), _T("zone1%2Fobject%201%3Fa%3Db%26c%23d%2Be%25"));
+   sb.clear();
+   URLEncode(L"\x041F\x00E9", &sb);  // 2-byte UTF-8 sequences
+   AssertEquals(sb.cstr(), _T("%D0%9F%C3%A9"));
+   sb.clear();
+   URLEncode(L"\x4E2D", &sb);  // 3-byte UTF-8 sequence
+   AssertEquals(sb.cstr(), _T("%E4%B8%AD"));
+   sb.clear();
+#if WCHAR_MAX == 0xFFFF
+   URLEncode(L"\xD83D\xDE00", &sb);  // U+1F600 as surrogate pair
+#else
+   URLEncode(L"\x0001F600", &sb);
+#endif
+   AssertEquals(sb.cstr(), _T("%F0%9F%98%80"));
+   sb = _T("prefix/");
+   URLEncode(L"a b", &sb);
+   AssertEquals(sb.cstr(), _T("prefix/a%20b"));
+   EndTest();
+}
+
+/**
  * Test string to binary conversion
  */
 static void TestBinaryToStringConversions()
@@ -3841,6 +3888,7 @@ int main(int argc, char *argv[])
    TestStringFunctionsW();
    TestStringToBinaryConversions();
    TestBinaryToStringConversions();
+   TestURLEncode();
    TestByteStream();
    TestUnicodeCase();
    TestPatternMatching();

@@ -5553,6 +5553,15 @@ String Color::toCSS(bool alwaysUseHex) const
 }
 
 /**
+ * Check if character is in RFC 3986 unreserved set (ASCII letters, digits, and "-_.~")
+ */
+static inline bool IsURLUnreservedChar(int c)
+{
+   return ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z')) || ((c >= '0') && (c <= '9')) ||
+          (c == '-') || (c == '_') || (c == '.') || (c == '~');
+}
+
+/**
  * Encode string for URL
  */
 char LIBNETXMS_EXPORTABLE *URLEncode(const char *src, char *dst, size_t size)
@@ -5563,7 +5572,7 @@ char LIBNETXMS_EXPORTABLE *URLEncode(const char *src, char *dst, size_t size)
    while((*s != 0) && (count < size - 1))
    {
       char c = *s++;
-      if (isalnum(c) || (c == '-') || (c == '_') || (c == '.') || (c == '~'))
+      if (IsURLUnreservedChar(static_cast<unsigned char>(c)))
       {
          *d++ = c;
          count++;
@@ -5580,6 +5589,69 @@ char LIBNETXMS_EXPORTABLE *URLEncode(const char *src, char *dst, size_t size)
    }
    *d = 0;
    return dst;
+}
+
+/**
+ * Append percent-encoded byte to string buffer
+ */
+static inline void AppendURLEncodedByte(StringBuffer *output, BYTE b)
+{
+   TCHAR encoded[3];
+   encoded[0] = _T('%');
+   encoded[1] = bin2hex(b >> 4);
+   encoded[2] = bin2hex(b & 15);
+   output->append(encoded, 3);
+}
+
+/**
+ * Encode string for URL and append result to given string buffer. Characters outside of
+ * RFC 3986 unreserved set are encoded as percent-escaped UTF-8 bytes.
+ */
+void LIBNETXMS_EXPORTABLE URLEncode(const wchar_t *src, StringBuffer *output)
+{
+   for(const wchar_t *s = src; *s != 0; s++)
+   {
+      uint32_t cp = static_cast<uint32_t>(*s);
+      if (IsURLUnreservedChar(cp))
+      {
+         output->append(static_cast<TCHAR>(*s));
+         continue;
+      }
+
+#if WCHAR_MAX == 0xFFFF
+      // UTF-16: combine surrogate pairs, replace unpaired surrogates
+      if ((cp >= 0xD800) && (cp <= 0xDBFF) && (s[1] >= 0xDC00) && (s[1] <= 0xDFFF))
+      {
+         cp = 0x10000 + ((cp - 0xD800) << 10) + (static_cast<uint32_t>(s[1]) - 0xDC00);
+         s++;
+      }
+#endif
+      if (((cp >= 0xD800) && (cp <= 0xDFFF)) || (cp > 0x10FFFF))
+         cp = 0xFFFD;
+
+      if (cp < 0x80)
+      {
+         AppendURLEncodedByte(output, static_cast<BYTE>(cp));
+      }
+      else if (cp < 0x800)
+      {
+         AppendURLEncodedByte(output, static_cast<BYTE>(0xC0 | (cp >> 6)));
+         AppendURLEncodedByte(output, static_cast<BYTE>(0x80 | (cp & 0x3F)));
+      }
+      else if (cp < 0x10000)
+      {
+         AppendURLEncodedByte(output, static_cast<BYTE>(0xE0 | (cp >> 12)));
+         AppendURLEncodedByte(output, static_cast<BYTE>(0x80 | ((cp >> 6) & 0x3F)));
+         AppendURLEncodedByte(output, static_cast<BYTE>(0x80 | (cp & 0x3F)));
+      }
+      else
+      {
+         AppendURLEncodedByte(output, static_cast<BYTE>(0xF0 | (cp >> 18)));
+         AppendURLEncodedByte(output, static_cast<BYTE>(0x80 | ((cp >> 12) & 0x3F)));
+         AppendURLEncodedByte(output, static_cast<BYTE>(0x80 | ((cp >> 6) & 0x3F)));
+         AppendURLEncodedByte(output, static_cast<BYTE>(0x80 | (cp & 0x3F)));
+      }
+   }
 }
 
 /**

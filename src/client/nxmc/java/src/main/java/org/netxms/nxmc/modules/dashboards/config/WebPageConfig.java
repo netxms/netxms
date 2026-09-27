@@ -30,6 +30,9 @@ public class WebPageConfig extends DashboardElementConfig
 	@Element(required=true)
    private String url = "";
 
+   @Element(required = false)
+   private boolean expandMacros = false;
+
 	/**
 	 * @return the url
 	 */
@@ -45,4 +48,20 @@ public class WebPageConfig extends DashboardElementConfig
 	{
 		this.url = url;
 	}
+
+   /**
+    * @return true if macros in URL should be expanded using dashboard context object
+    */
+   public boolean isExpandMacros()
+   {
+      return expandMacros;
+   }
+
+   /**
+    * @param expandMacros true to expand macros in URL using dashboard context object
+    */
+   public void setExpandMacros(boolean expandMacros)
+   {
+      this.expandMacros = expandMacros;
+   }
 }

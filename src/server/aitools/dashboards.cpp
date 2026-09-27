@@ -138,7 +138,9 @@ static const std::vector<ElementTypeDescriptor>& GetElementTypeDescriptors()
          "web-page", DCE_WEB_PAGE, "reference",
          "Embed an arbitrary web page",
          {
-            { "url", "URL of the page to embed", true }
+            { "url", "URL of the page to embed", true },
+            { "expandMacros", "expand object macros (e.g. %I object ID, %n object name) in URL using dashboard context object; "
+                              "%~ prefix URL-encodes macro value (e.g. %~n), %% is literal percent sign (default false)", false }
          },
          "{\"url\":\"https://grafana.example.com/d/abc\"}"
       },

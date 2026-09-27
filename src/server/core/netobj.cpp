@@ -4146,6 +4146,17 @@ StringBuffer NXCORE_EXPORTABLE ExpandText(const wchar_t *textTemplate, const sha
          break;   // Abnormal loop termination
       }
 
+      // Optional "~" modifier requests URL encoding of macro value
+      bool urlEncode = false;
+      if (*curr == '~')
+      {
+         curr++;
+         if (*curr == 0)
+            break;   // Abnormal loop termination
+         urlEncode = true;
+      }
+      size_t valueStart = output.length();
+
       switch(*curr)
       {
          case '%':
@@ -4504,6 +4515,13 @@ StringBuffer NXCORE_EXPORTABLE ExpandText(const wchar_t *textTemplate, const sha
             break;
          default:    // All other characters are invalid, ignore
             break;
+      }
+
+      if (urlEncode && (output.length() > valueStart))
+      {
+         String value = output.substring(valueStart, -1);
+         output.truncate(valueStart);
+         URLEncode(value, &output);
       }
    }
    if (loadedEvent != nullptr)

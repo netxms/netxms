@@ -6026,6 +6026,7 @@ char LIBNETXMS_EXPORTABLE *EscapeStringForJSONUtf8(const char *s);
 String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s);
 
 char LIBNETXMS_EXPORTABLE *URLEncode(const char *src, char *dst, size_t size);
+void LIBNETXMS_EXPORTABLE URLEncode(const wchar_t *src, StringBuffer *output);
 
 StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline);
 
