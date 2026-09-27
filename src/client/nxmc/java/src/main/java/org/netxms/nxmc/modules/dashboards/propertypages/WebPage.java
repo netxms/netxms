@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.dashboards.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -39,6 +40,7 @@ public class WebPage extends DashboardElementPropertyPage
 
 	private WebPageConfig config;
 	private LabeledText url;
+   private Button checkExpandMacros;
    private TitleConfigurator title;
 
    /**
@@ -105,6 +107,11 @@ public class WebPage extends DashboardElementPropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		url.setLayoutData(gd);
 
+      checkExpandMacros = new Button(dialogArea, SWT.CHECK);
+      checkExpandMacros.setText(i18n.tr("&Expand macros in URL using dashboard context object"));
+      checkExpandMacros.setToolTipText(i18n.tr("Use %% for literal percent sign and %~ prefix (for example %~n or %~{attribute}) to URL-encode macro value"));
+      checkExpandMacros.setSelection(config.isExpandMacros());
+
 		return dialogArea;
 	}
 
@@ -116,6 +123,7 @@ public class WebPage extends DashboardElementPropertyPage
    {
       title.updateConfiguration(config);
 		config.setUrl(url.getText());
+      config.setExpandMacros(checkExpandMacros.getSelection());
 		return true;
 	}
 }
