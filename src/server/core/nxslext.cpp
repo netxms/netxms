@@ -1689,10 +1689,8 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 	if (!object->getClass()->instanceOf(g_nxslSnmpTransportClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
-   // Create PDU and send request
-   uint32_t oid[MAX_OID_LEN];
-   size_t nameLen = SnmpParseOID(argv[1]->getValueAsCString(), oid, MAX_OID_LEN);
-   if (nameLen == 0)
+   SNMP_ObjectId oid = SNMP_ObjectId::parse(argv[1]->getValueAsCString());
+   if (!oid.isValid())
    {
       *result = vm->createValue();
       return 0;
@@ -1700,23 +1698,11 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL
 
    SNMP_Transport *transport = static_cast<SNMP_Transport*>(object->getData());
 
-   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
-   request.bindVariable(new SNMP_Variable(oid, nameLen));
-
-   SNMP_PDU *response;
-   if (transport->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
+   SNMP_Variable varbind;
+   if (SnmpGetVariable(transport, oid, &varbind) == SNMP_ERR_SUCCESS)
    {
-      if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
-      {
-         TCHAR buffer[4096];
-         SNMP_Variable *pVar = response->getVariable(0);
-         *result = vm->createValue(FormatSNMPValue(pVar, buffer, 4096));
-      }
-      else
-      {
-         *result = vm->createValue();
-      }
-      delete response;
+      TCHAR buffer[4096];
+      *result = vm->createValue(FormatSNMPValue(&varbind, buffer, 4096));
    }
    else
    {

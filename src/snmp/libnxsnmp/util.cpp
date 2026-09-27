@@ -94,6 +94,47 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *tran
 }
 
 /**
+ * Get single SNMP variable. On success, received varbind is moved into provided variable object.
+ * Exception varbinds (noSuchObject, noSuchInstance, endOfMibView) and PDU error status noSuchName
+ * are reported as SNMP_ERR_NO_OBJECT, any other PDU error status as SNMP_ERR_AGENT.
+ * Only SG_GET_NEXT_REQUEST flag is used; for GET NEXT request varbind name must follow requested OID.
+ */
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetVariable(SNMP_Transport *transport, const SNMP_ObjectId& oid, SNMP_Variable *variable, uint32_t flags)
+{
+   if (transport == nullptr)
+      return SNMP_ERR_COMM;
+
+   SNMP_PDU request((flags & SG_GET_NEXT_REQUEST) ? SNMP_GET_NEXT_REQUEST : SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable(oid));
+   SNMP_PDU *response;
+   uint32_t result = transport->doRequest(&request, &response);
+   if (result != SNMP_ERR_SUCCESS)
+      return result;
+
+   if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+   {
+      SNMP_Variable *v = response->getVariable(0);
+      if ((v->getType() != ASN_NO_SUCH_OBJECT) &&
+          (v->getType() != ASN_NO_SUCH_INSTANCE) &&
+          (v->getType() != ASN_END_OF_MIBVIEW) &&
+          (!(flags & SG_GET_NEXT_REQUEST) || (v->getName().compare(oid) == OID_LONGER)))
+      {
+         *variable = std::move(*v);
+      }
+      else
+      {
+         result = SNMP_ERR_NO_OBJECT;
+      }
+   }
+   else
+   {
+      result = (response->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME) ? SNMP_ERR_NO_OBJECT : SNMP_ERR_AGENT;
+   }
+   delete response;
+   return result;
+}
+
+/**
  * Get value for SNMP variable
  * If szOidStr is not NULL, string representation of OID is used, otherwise -
  * binary representation from oidBinary and dwOidLen
@@ -134,124 +175,95 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
 
    if (result == SNMP_ERR_SUCCESS)   // Still no errors
    {
-      SNMP_PDU requestPDU((flags & SG_GET_NEXT_REQUEST) ? SNMP_GET_NEXT_REQUEST : SNMP_GET_REQUEST, (uint32_t)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF, pTransport->getSnmpVersion());
-      requestPDU.bindVariable(new SNMP_Variable(varName, nameLength));
-      SNMP_PDU *responsePDU;
-      result = pTransport->doRequest(&requestPDU, &responsePDU);
-
-      // Analyze response
+      SNMP_Variable var;
+      result = SnmpGetVariable(pTransport, SNMP_ObjectId(varName, nameLength), &var, flags);
       if (result == SNMP_ERR_SUCCESS)
       {
-         if ((responsePDU->getNumVariables() > 0) &&
-             (responsePDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
+         if (flags & SG_RAW_RESULT)
          {
-            SNMP_Variable *pVar = responsePDU->getVariable(0);
-
-            if ((pVar->getType() != ASN_NO_SUCH_OBJECT) &&
-                (pVar->getType() != ASN_NO_SUCH_INSTANCE) &&
-                (pVar->getType() != ASN_END_OF_MIBVIEW) &&
-                (!(flags & SG_GET_NEXT_REQUEST) || (pVar->getName().compare(varName, nameLength) == OID_LONGER)))
-            {
-               if (flags & SG_RAW_RESULT)
-               {
-						pVar->getRawValue((BYTE *)value, bufferSize);
-                  if (dataLen != nullptr)
-                     *dataLen = (UINT32)pVar->getValueLength();
-               }
-               else if (flags & SG_OBJECT_ID_RESULT)
-               {
-                  *static_cast<SNMP_ObjectId*>(value) = pVar->getValueAsObjectId();
-               }
-               else if (flags & SG_HSTRING_RESULT)
-               {
-						size_t rawLen = (bufferSize - sizeof(TCHAR)) / 2 / sizeof(TCHAR);
-						BYTE *raw = static_cast<BYTE*>(SNMP_MemAlloc(rawLen));
-						rawLen = (int)pVar->getRawValue(raw, rawLen);
-						BinToStr(raw, rawLen, (TCHAR *)value);
-						SNMP_MemFree(raw, rawLen);
-               }
-               else if (flags & SG_STRING_RESULT)
-               {
-                  pVar->getValueAsString(static_cast<TCHAR*>(value), bufferSize / sizeof(TCHAR), codepage);
-               }
-               else if (flags & SG_PSTRING_RESULT)
-               {
-						bool convert = true;
-                  pVar->getValueAsPrintableString((TCHAR *)value, bufferSize / sizeof(TCHAR), &convert, codepage);
-               }
-               else
-               {
-                  switch(pVar->getType())
-                  {
-                     case ASN_INTEGER:
-                        if (bufferSize >= sizeof(int32_t))
-                           *((int32_t *)value) = pVar->getValueAsInt();
-                        break;
-                     case ASN_COUNTER32:
-                     case ASN_GAUGE32:
-                     case ASN_TIMETICKS:
-                     case ASN_UINTEGER32:
-                        if (bufferSize >= sizeof(uint32_t))
-                           *((UINT32 *)value) = pVar->getValueAsUInt();
-                        break;
-                     case ASN_INTEGER64:
-                        if (bufferSize >= sizeof(int64_t))
-                           *((int64_t *)value) = pVar->getValueAsInt64();
-                        else if (bufferSize >= sizeof(int32_t))
-                           *((int32_t *)value) = pVar->getValueAsInt();
-                        break;
-                     case ASN_COUNTER64:
-                     case ASN_UINTEGER64:
-                        if (bufferSize >= sizeof(uint64_t))
-                           *((uint64_t *)value) = pVar->getValueAsUInt64();
-                        else if (bufferSize >= sizeof(uint32_t))
-                           *((uint32_t *)value) = pVar->getValueAsUInt();
-                        break;
-                     case ASN_FLOAT:
-                     case ASN_DOUBLE:
-                        if (bufferSize >= sizeof(double))
-                           *((double *)value) = pVar->getValueAsDouble();
-                        else if (bufferSize >= sizeof(float))
-                           *((float *)value) = static_cast<float>(pVar->getValueAsDouble());
-                        break;
-                     case ASN_IP_ADDR:
-                        if (bufferSize >= sizeof(uint32_t))
-                           *((uint32_t *)value) = ntohl(pVar->getValueAsUInt());
-                        break;
-                     case ASN_OCTET_STRING:
-                        pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR), codepage);
-                        break;
-                     case ASN_OBJECT_ID:
-                        pVar->getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR));
-                        break;
-                     case ASN_NULL:
-                        result = SNMP_ERR_NO_OBJECT;
-                        break;
-                     default:
-                        nxlog_write_tag(NXLOG_WARNING, LIBNXSNMP_DEBUG_TAG, _T("Unknown SNMP varbind type %u in GET response PDU"), pVar->getType());
-                        result = SNMP_ERR_BAD_TYPE;
-                        break;
-                  }
-               }
-            }
-            else
-            {
-               result = SNMP_ERR_NO_OBJECT;
-            }
+            var.getRawValue((BYTE *)value, bufferSize);
+            if (dataLen != nullptr)
+               *dataLen = (UINT32)var.getValueLength();
+         }
+         else if (flags & SG_OBJECT_ID_RESULT)
+         {
+            *static_cast<SNMP_ObjectId*>(value) = var.getValueAsObjectId();
+         }
+         else if (flags & SG_HSTRING_RESULT)
+         {
+            size_t rawLen = (bufferSize - sizeof(TCHAR)) / 2 / sizeof(TCHAR);
+            BYTE *raw = static_cast<BYTE*>(SNMP_MemAlloc(rawLen));
+            rawLen = (int)var.getRawValue(raw, rawLen);
+            BinToStr(raw, rawLen, (TCHAR *)value);
+            SNMP_MemFree(raw, rawLen);
+         }
+         else if (flags & SG_STRING_RESULT)
+         {
+            var.getValueAsString(static_cast<TCHAR*>(value), bufferSize / sizeof(TCHAR), codepage);
+         }
+         else if (flags & SG_PSTRING_RESULT)
+         {
+            bool convert = true;
+            var.getValueAsPrintableString((TCHAR *)value, bufferSize / sizeof(TCHAR), &convert, codepage);
          }
          else
          {
-            if (responsePDU->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
-               result = SNMP_ERR_NO_OBJECT;
-            else
-               result = SNMP_ERR_AGENT;
+            switch(var.getType())
+            {
+               case ASN_INTEGER:
+                  if (bufferSize >= sizeof(int32_t))
+                     *((int32_t *)value) = var.getValueAsInt();
+                  break;
+               case ASN_COUNTER32:
+               case ASN_GAUGE32:
+               case ASN_TIMETICKS:
+               case ASN_UINTEGER32:
+                  if (bufferSize >= sizeof(uint32_t))
+                     *((UINT32 *)value) = var.getValueAsUInt();
+                  break;
+               case ASN_INTEGER64:
+                  if (bufferSize >= sizeof(int64_t))
+                     *((int64_t *)value) = var.getValueAsInt64();
+                  else if (bufferSize >= sizeof(int32_t))
+                     *((int32_t *)value) = var.getValueAsInt();
+                  break;
+               case ASN_COUNTER64:
+               case ASN_UINTEGER64:
+                  if (bufferSize >= sizeof(uint64_t))
+                     *((uint64_t *)value) = var.getValueAsUInt64();
+                  else if (bufferSize >= sizeof(uint32_t))
+                     *((uint32_t *)value) = var.getValueAsUInt();
+                  break;
+               case ASN_FLOAT:
+               case ASN_DOUBLE:
+                  if (bufferSize >= sizeof(double))
+                     *((double *)value) = var.getValueAsDouble();
+                  else if (bufferSize >= sizeof(float))
+                     *((float *)value) = static_cast<float>(var.getValueAsDouble());
+                  break;
+               case ASN_IP_ADDR:
+                  if (bufferSize >= sizeof(uint32_t))
+                     *((uint32_t *)value) = ntohl(var.getValueAsUInt());
+                  break;
+               case ASN_OCTET_STRING:
+                  var.getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR), codepage);
+                  break;
+               case ASN_OBJECT_ID:
+                  var.getValueAsString((TCHAR *)value, bufferSize / sizeof(TCHAR));
+                  break;
+               case ASN_NULL:
+                  result = SNMP_ERR_NO_OBJECT;
+                  break;
+               default:
+                  nxlog_write_tag(NXLOG_WARNING, LIBNXSNMP_DEBUG_TAG, _T("Unknown SNMP varbind type %u in GET response PDU"), var.getType());
+                  result = SNMP_ERR_BAD_TYPE;
+                  break;
+            }
          }
-         delete responsePDU;
       }
-      else
+      else if ((flags & SG_VERBOSE) && (result != SNMP_ERR_NO_OBJECT) && (result != SNMP_ERR_AGENT))
       {
-         if (flags & SG_VERBOSE)
-            nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GET request"), result);
+         nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 7, _T("Error %u processing SNMP GET request"), result);
       }
    }
 
