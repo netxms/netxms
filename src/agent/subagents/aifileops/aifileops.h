@@ -52,6 +52,24 @@ static inline void SetError(json_t **result, const char *code, const char *messa
    json_object_set_new(*result, "error", error);
 }
 
+/**
+ * Check that calling server is allowed to modify files (only master servers can)
+ */
+static inline bool CheckModifyAccess(AbstractCommSession *session, json_t **result)
+{
+   if (session->isMasterServer())
+      return true;
+   SetError(result, "ACCESS_DENIED", "Server is not allowed to modify files");
+   return false;
+}
+
+/**
+ * Resolve file or directory path given in tool parameter, checking it against configured
+ * root folders. On success writes absolute path to fullPath and returns ERR_SUCCESS; otherwise
+ * sets error in result and returns error code.
+ */
+uint32_t ResolveToolPath(json_t *params, const char *paramName, bool modify, json_t **result, MutableString *fullPath);
+
 // Tool handlers - log operations
 uint32_t H_LogGrep(json_t *params, json_t **result, AbstractCommSession *session);
 uint32_t H_LogRead(json_t *params, json_t **result, AbstractCommSession *session);

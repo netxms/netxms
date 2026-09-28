@@ -26,9 +26,9 @@
 /**
  * Helper: Read all lines from file into array
  */
-static bool ReadFileLines(const char *path, StringList *lines, int maxLines = DEFAULT_MAX_LINES)
+static bool ReadFileLines(const TCHAR *path, StringList *lines, int maxLines = DEFAULT_MAX_LINES)
 {
-   FILE *f = fopen(path, "r");
+   FILE *f = _tfopen(path, _T("r"));
    if (f == nullptr)
       return false;
 
@@ -99,11 +99,15 @@ static bool MatchPatternWithCapture(pcre *re, const char *str, char *capture, si
  */
 uint32_t H_LogGrep(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   const char *file = json_object_get_string_utf8(params, "file", nullptr);
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", false, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
+
    const char *pattern = json_object_get_string_utf8(params, "pattern", nullptr);
-   if (file == nullptr || pattern == nullptr)
+   if (pattern == nullptr)
    {
-      SetError(result, "MISSING_PARAM", "Required parameters 'file' and 'pattern' must be provided");
+      SetError(result, "MISSING_PARAM", "Required parameter 'pattern' must be provided");
       return ERR_BAD_ARGUMENTS;
    }
 
@@ -193,12 +197,10 @@ uint32_t H_LogGrep(json_t *params, json_t **result, AbstractCommSession *session
  */
 uint32_t H_LogRead(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   const char *file = json_object_get_string_utf8(params, "file", nullptr);
-   if (file == nullptr)
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", false, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    int startLine = json_object_get_int32(params, "start_line", 1);
    int endLine = json_object_get_int32(params, "end_line", startLine + 99);
@@ -209,7 +211,7 @@ uint32_t H_LogRead(json_t *params, json_t **result, AbstractCommSession *session
       return ERR_BAD_ARGUMENTS;
    }
 
-   FILE *f = fopen(file, "r");
+   FILE *f = _tfopen(file, _T("r"));
    if (f == nullptr)
    {
       SetError(result, "FILE_ERROR", "Failed to open file");
@@ -259,12 +261,10 @@ uint32_t H_LogRead(json_t *params, json_t **result, AbstractCommSession *session
  */
 uint32_t H_LogTail(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   const char *file = json_object_get_string_utf8(params, "file", nullptr);
-   if (file == nullptr)
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", false, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    int numLines = json_object_get_int32(params, "lines", 100);
    if (numLines < 1)
@@ -306,12 +306,10 @@ uint32_t H_LogTail(json_t *params, json_t **result, AbstractCommSession *session
  */
 uint32_t H_LogHead(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   const char *file = json_object_get_string_utf8(params, "file", nullptr);
-   if (file == nullptr)
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", false, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    int numLines = json_object_get_int32(params, "lines", 100);
    if (numLines < 1)
@@ -319,7 +317,7 @@ uint32_t H_LogHead(json_t *params, json_t **result, AbstractCommSession *session
    if (numLines > DEFAULT_MAX_LINES)
       numLines = DEFAULT_MAX_LINES;
 
-   FILE *f = fopen(file, "r");
+   FILE *f = _tfopen(file, _T("r"));
    if (f == nullptr)
    {
       SetError(result, "FILE_ERROR", "Failed to open file");
@@ -364,11 +362,15 @@ uint32_t H_LogHead(json_t *params, json_t **result, AbstractCommSession *session
  */
 uint32_t H_LogFind(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   const char *file = json_object_get_string_utf8(params, "file", nullptr);
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", false, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
+
    const char *pattern = json_object_get_string_utf8(params, "pattern", nullptr);
-   if (file == nullptr || pattern == nullptr)
+   if (pattern == nullptr)
    {
-      SetError(result, "MISSING_PARAM", "Required parameters 'file' and 'pattern' must be provided");
+      SetError(result, "MISSING_PARAM", "Required parameter 'pattern' must be provided");
       return ERR_BAD_ARGUMENTS;
    }
 
@@ -384,7 +386,7 @@ uint32_t H_LogFind(json_t *params, json_t **result, AbstractCommSession *session
       return ERR_BAD_ARGUMENTS;
    }
 
-   FILE *f = fopen(file, "r");
+   FILE *f = _tfopen(file, _T("r"));
    if (f == nullptr)
    {
       pcre_free(re);
@@ -426,13 +428,16 @@ uint32_t H_LogFind(json_t *params, json_t **result, AbstractCommSession *session
  */
 uint32_t H_LogTimeRange(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", false, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
+
    const char *startTimeStr = json_object_get_string_utf8(params, "start_time", nullptr);
    const char *endTimeStr = json_object_get_string_utf8(params, "end_time", nullptr);
-
-   if (file.isEmpty() || startTimeStr == nullptr || endTimeStr == nullptr)
+   if (startTimeStr == nullptr || endTimeStr == nullptr)
    {
-      SetError(result, "MISSING_PARAM", "Required parameters 'file', 'start_time', and 'end_time' must be provided");
+      SetError(result, "MISSING_PARAM", "Required parameters 'start_time' and 'end_time' must be provided");
       return ERR_BAD_ARGUMENTS;
    }
 
@@ -513,12 +518,15 @@ uint32_t H_LogTimeRange(json_t *params, json_t **result, AbstractCommSession *se
  */
 uint32_t H_LogStats(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
-   json_t *patterns = json_object_get(params, "patterns");
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", false, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
-   if (file.isEmpty() || patterns == nullptr || !json_is_array(patterns))
+   json_t *patterns = json_object_get(params, "patterns");
+   if (patterns == nullptr || !json_is_array(patterns))
    {
-      SetError(result, "MISSING_PARAM", "Required parameters 'file' and 'patterns' (array) must be provided");
+      SetError(result, "MISSING_PARAM", "Required parameter 'patterns' (array) must be provided");
       return ERR_BAD_ARGUMENTS;
    }
 

@@ -28,12 +28,10 @@
  */
 uint32_t H_FileInfo(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
-   if (file.isEmpty())
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", false, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    bool countLines = json_object_get_boolean(params, "count_lines", false);
 
@@ -136,12 +134,10 @@ static void ListDirectory(const TCHAR *basePath, const TCHAR *pattern, bool recu
  */
 uint32_t H_FileList(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String directory = json_object_get_string(params, "directory", _T(""));
-   if (directory.isEmpty())
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'directory' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString directory;
+   uint32_t rcc = ResolveToolPath(params, "directory", false, result, &directory);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    String pattern = json_object_get_string(params, "pattern", _T("*"));
    bool recursive = json_object_get_boolean(params, "recursive", false);
@@ -173,12 +169,10 @@ uint32_t H_FileList(json_t *params, json_t **result, AbstractCommSession *sessio
  */
 uint32_t H_FileRead(json_t *params, json_t **result, AbstractCommSession *session)
 {
-   String file = json_object_get_string(params, "file", _T(""));
-   if (file.isEmpty())
-   {
-      SetError(result, "MISSING_PARAM", "Required parameter 'file' must be provided");
-      return ERR_BAD_ARGUMENTS;
-   }
+   MutableString file;
+   uint32_t rcc = ResolveToolPath(params, "file", false, result, &file);
+   if (rcc != ERR_SUCCESS)
+      return rcc;
 
    int64_t offset = json_object_get_int64(params, "offset", 0);
    int64_t limit = json_object_get_int64(params, "limit", 65536);

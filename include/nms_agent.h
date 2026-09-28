@@ -1144,6 +1144,51 @@ void LIBNXAGENT_EXPORTABLE AgentRegisterScreenshotProvider(const TCHAR *sessionN
 void LIBNXAGENT_EXPORTABLE AgentUnregisterScreenshotProvider(const TCHAR *sessionName);
 
 /**
+ * Root folder for restricted file system access. Created from configuration
+ * value in form "path[;ro][;nofollow]".
+ */
+class LIBNXAGENT_EXPORTABLE FileAccessRoot
+{
+private:
+   TCHAR *m_folder;
+   bool m_readOnly;
+   bool m_followSymlinks;
+
+public:
+   FileAccessRoot(const TCHAR *definition);
+   ~FileAccessRoot()
+   {
+      MemFree(m_folder);
+   }
+
+   const TCHAR *getFolder() const { return m_folder; }
+   bool isReadOnly() const { return m_readOnly; }
+   bool followSymlinks() const { return m_followSymlinks; }
+};
+
+/**
+ * List of root folders that restricts file system access of a subagent.
+ * Every path used by the subagent must be validated with resolvePath().
+ */
+class LIBNXAGENT_EXPORTABLE FileAccessRootList
+{
+private:
+   ObjectArray<FileAccessRoot> m_roots;
+   const TCHAR *m_debugTag;
+
+public:
+   FileAccessRootList(const TCHAR *debugTag) : m_roots(16, 16, Ownership::True), m_debugTag(debugTag) {}
+
+   void addFromConfig(const ConfigEntry *entry);
+
+   bool isEmpty() const { return m_roots.isEmpty(); }
+   int size() const { return m_roots.size(); }
+   const FileAccessRoot *get(int index) const { return m_roots.get(index); }
+
+   TCHAR *resolvePath(const TCHAR *path, bool modify) const;
+};
+
+/**
  * Inline functions for returning parameters
  */
 static inline void ret_string(TCHAR *rbuf, const TCHAR *value)

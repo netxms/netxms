@@ -23,6 +23,38 @@
 #include "aifileops.h"
 #include <netxms-version.h>
 
+/**
+ * Root folders accessible to tools
+ */
+static FileAccessRootList s_rootFolders(DEBUG_TAG);
+
+/**
+ * Resolve file or directory path given in tool parameter, checking it against configured
+ * root folders. On success writes absolute path to fullPath and returns ERR_SUCCESS; otherwise
+ * sets error in result and returns error code.
+ */
+uint32_t ResolveToolPath(json_t *params, const char *paramName, bool modify, json_t **result, MutableString *fullPath)
+{
+   String path = json_object_get_string(params, paramName, _T(""));
+   if (path.isEmpty())
+   {
+      char message[128];
+      snprintf(message, sizeof(message), "Required parameter '%s' must be provided", paramName);
+      SetError(result, "MISSING_PARAM", message);
+      return ERR_BAD_ARGUMENTS;
+   }
+
+   TCHAR *resolved = s_rootFolders.resolvePath(path, modify);
+   if (resolved == nullptr)
+   {
+      SetError(result, "ACCESS_DENIED", modify ? "Path is outside of configured writable root folders" : "Path is outside of configured root folders");
+      return ERR_ACCESS_DENIED;
+   }
+
+   *fullPath = String(resolved, -1, Ownership::True);
+   return ERR_SUCCESS;
+}
+
 //
 // Tool parameter definitions
 //
@@ -287,13 +319,33 @@ static AIToolDefinition s_aiTools[] =
 };
 
 /**
+ * Subagent initialization
+ */
+static bool SubagentInit(Config *config)
+{
+   ConfigEntry *root = config->getEntry(_T("/aifileops/RootFolder"));
+   if (root != nullptr)
+   {
+      s_rootFolders.addFromConfig(root);
+   }
+
+   if (s_rootFolders.isEmpty())
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("No root folders in AI file operations subagent configuration (at least one RootFolder entry required)"));
+      return false;
+   }
+
+   return true;
+}
+
+/**
  * Subagent information
  */
 static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("AIFILEOPS"), NETXMS_VERSION_STRING,
-   nullptr, nullptr, nullptr, nullptr, nullptr,
+   SubagentInit, nullptr, nullptr, nullptr, nullptr,
    0, nullptr,    // parameters
    0, nullptr,    // lists
    0, nullptr,    // tables

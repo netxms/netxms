@@ -21,6 +21,9 @@
     <ClCompile Include="dfile_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fileroot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

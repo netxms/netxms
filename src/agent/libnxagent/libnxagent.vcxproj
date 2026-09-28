@@ -368,6 +368,7 @@
     <ClCompile Include="bridge.cpp" />
     <ClCompile Include="crl.cpp" />
     <ClCompile Include="dfile_info.cpp" />
+    <ClCompile Include="fileroot.cpp" />
     <ClCompile Include="hwid.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="modbus.cpp" />
