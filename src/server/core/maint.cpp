@@ -39,6 +39,8 @@ static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& para
    if (!object->checkAccessRights(parameters->m_userId, OBJECT_ACCESS_MAINTENANCE))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"ScheduledMaintenance: Access to object %s [%u] denied", object->getName(), object->getId());
+      WriteAuditLog(AUDIT_OBJECTS, false, parameters->m_userId, nullptr, AUDIT_SYSTEM_SID, object->getId(),
+         L"Access denied on scheduled maintenance mode %s for object %s [%u]", enter ? L"enter" : L"exit", object->getName(), object->getId());
       return;
    }
 
@@ -54,6 +56,8 @@ static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& para
       }
 
       object->enterMaintenanceMode(parameters->m_userId, parameters->m_comments);
+      WriteAuditLog(AUDIT_OBJECTS, true, parameters->m_userId, nullptr, AUDIT_SYSTEM_SID, object->getId(),
+         L"Scheduled maintenance mode enter for object %s [%u]", object->getName(), object->getId());
 
       // Task's persistent data may contain maintenance window duration in minutes;
       // if it does, schedule automatic exit from maintenance mode at window end
@@ -85,6 +89,8 @@ static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& para
       }
 
       object->leaveMaintenanceMode(parameters->m_userId);
+      WriteAuditLog(AUDIT_OBJECTS, true, parameters->m_userId, nullptr, AUDIT_SYSTEM_SID, object->getId(),
+         L"Scheduled maintenance mode exit for object %s [%u]", object->getName(), object->getId());
    }
 }
 

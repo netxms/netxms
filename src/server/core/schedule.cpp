@@ -855,9 +855,21 @@ uint32_t NXCORE_EXPORTABLE UpdateOneTimeScheduledTask(uint64_t id, const TCHAR *
 }
 
 /**
- * Removes scheduled task by id
+ * Copy handler ID and object ID of task being deleted to caller-provided variables
  */
-uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint64_t systemRights)
+static inline void GetDeletedTaskInfo(const ScheduledTask *task, SharedString *taskHandlerId, uint32_t *objectId)
+{
+   if (taskHandlerId != nullptr)
+      *taskHandlerId = task->getTaskHandlerId();
+   if (objectId != nullptr)
+      *objectId = task->getObjectId();
+}
+
+/**
+ * Removes scheduled task by id. If task is found, its handler ID and object ID are returned in
+ * taskHandlerId and objectId (if not null), regardless of whether it was deleted.
+ */
+uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint64_t systemRights, SharedString *taskHandlerId, uint32_t *objectId)
 {
    uint32_t rcc = RCC_INVALID_OBJECT_ID;
 
@@ -867,6 +879,7 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint6
       ScheduledTask *task = s_recurrentTasks.get(i);
       if (task->getId() == id)
       {
+         GetDeletedTaskInfo(task, taskHandlerId, objectId);
          if (!task->canAccess(user, systemRights))
          {
             rcc = RCC_ACCESS_DENIED;
@@ -892,6 +905,7 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint6
          ScheduledTask *task = s_oneTimeTasks.get(i);
          if (task->getId() == id)
          {
+            GetDeletedTaskInfo(task, taskHandlerId, objectId);
             if (!task->canAccess(user, systemRights))
             {
                rcc = RCC_ACCESS_DENIED;
@@ -916,6 +930,7 @@ uint32_t NXCORE_EXPORTABLE DeleteScheduledTask(uint64_t id, uint32_t user, uint6
             ScheduledTask *task = s_completedOneTimeTasks.get(i);
             if (task->getId() == id)
             {
+               GetDeletedTaskInfo(task, taskHandlerId, objectId);
                if (!task->canAccess(user, systemRights))
                {
                   rcc = RCC_ACCESS_DENIED;

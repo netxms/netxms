@@ -1304,7 +1304,7 @@ int H_ObjectSetMaintenance(Context *context)
          return 500;
       }
 
-      context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Recurring maintenance for object %s scheduled at \"%s\" for %u minutes",
+      context->writeAuditLog(AUDIT_SYSCFG, true, objectId, L"Recurring maintenance for object %s scheduled at \"%s\" for %u minutes",
                object->getName(), schedule, static_cast<uint32_t>(duration));
       return 204;
    }
@@ -1377,9 +1377,9 @@ int H_ObjectSetMaintenance(Context *context)
 
       wchar_t timeText[64];
       if (startTime != 0)
-         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Maintenance entry for object %s scheduled at %s", object->getName(), FormatTimestamp(startTime, timeText));
+         context->writeAuditLog(AUDIT_SYSCFG, true, objectId, L"Maintenance entry for object %s scheduled at %s", object->getName(), FormatTimestamp(startTime, timeText));
       if (endTime != 0)
-         context->writeAuditLog(AUDIT_OBJECTS, true, objectId, L"Maintenance exit for object %s scheduled at %s", object->getName(), FormatTimestamp(endTime, timeText));
+         context->writeAuditLog(AUDIT_SYSCFG, true, objectId, L"Maintenance exit for object %s scheduled at %s", object->getName(), FormatTimestamp(endTime, timeText));
       return 204;
    }
 

@@ -321,10 +321,12 @@ int H_ScheduledTaskDelete(Context *context)
    if (taskId == 0)
       return 400;
 
-   uint32_t rcc = DeleteScheduledTask(taskId, context->getUserId(), context->getSystemAccessRights());
+   SharedString taskHandlerId;
+   uint32_t objectId = 0;
+   uint32_t rcc = DeleteScheduledTask(taskId, context->getUserId(), context->getSystemAccessRights(), &taskHandlerId, &objectId);
    if (rcc == RCC_ACCESS_DENIED)
    {
-      context->writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting scheduled task [" UINT64_FMT L"]", taskId);
+      context->writeAuditLog(AUDIT_SYSCFG, false, objectId, L"Access denied on deleting scheduled task [" UINT64_FMT L"] with handler %s", taskId, taskHandlerId.cstr());
       return 403;
    }
    if (rcc == RCC_INVALID_OBJECT_ID)
@@ -335,7 +337,7 @@ int H_ScheduledTaskDelete(Context *context)
       return 500;
    }
 
-   context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Deleted scheduled task [" UINT64_FMT L"]", taskId);
+   context->writeAuditLog(AUDIT_SYSCFG, true, objectId, L"Deleted scheduled task [" UINT64_FMT L"] with handler %s", taskId, taskHandlerId.cstr());
    return 204;
 }
 
