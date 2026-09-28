@@ -126,9 +126,9 @@ bool DataCollectionContainer::showThresholdSummary() const
 /**
  * Serialize object to JSON
  */
-json_t *DataCollectionContainer::toJson(bool includeSensitiveData)
+json_t *DataCollectionContainer::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    AutoBindTarget::toJson(root);
    return root;
 }

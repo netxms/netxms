@@ -18,13 +18,23 @@
  */
 package org.netxms.nxmc.modules.objects.propertypages;
 
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.fieldassist.ContentProposal;
+import org.eclipse.jface.fieldassist.ContentProposalAdapter;
+import org.eclipse.jface.fieldassist.IContentProposal;
+import org.eclipse.jface.fieldassist.IContentProposalProvider;
+import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
@@ -41,18 +51,43 @@ import org.xnap.commons.i18n.I18n;
  */
 public class General extends ObjectPropertyPage
 {
+   private static String[] zoneIds = null;
+
    private I18n i18n = LocalizationHelper.getI18n(General.class);
 
    private LabeledText name;
    private LabeledText alias;
    private LabeledText aiHint;
    private ObjectCategorySelector categorySelector;
+   private LabeledText timeZone;
    private Button checkHidden;
 	private String initialName;
    private String initialAlias;
    private String initialAiHint;
    private int initialCategory;
+   private String initialTimeZone;
    private boolean initialHidden;
+
+   /**
+    * Get sorted list of IANA time zone IDs known to the JVM (region-based IDs plus "UTC").
+    *
+    * @return sorted array of time zone IDs
+    */
+   private static synchronized String[] getZoneIds()
+   {
+      if (zoneIds == null)
+      {
+         List<String> list = new ArrayList<>();
+         for(String id : ZoneId.getAvailableZoneIds())
+         {
+            if (id.contains("/") || id.equals("UTC"))
+               list.add(id);
+         }
+         Collections.sort(list);
+         zoneIds = list.toArray(new String[list.size()]);
+      }
+      return zoneIds;
+   }
 
    /**
     * Create new page.
@@ -126,6 +161,36 @@ public class General extends ObjectPropertyPage
       categorySelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       categorySelector.setCategoryId(initialCategory);
 
+      // Time zone (own setting only; inherited zone is shown as a hint)
+      initialTimeZone = ((object.getTimeZone() != null) && !object.isTimeZoneInherited()) ? object.getTimeZone() : "";
+      timeZone = new LabeledText(dialogArea, SWT.NONE);
+      timeZone.setLabel(i18n.tr("Time zone"));
+      timeZone.setText(initialTimeZone);
+      timeZone.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      ContentProposalAdapter proposalAdapter = new ContentProposalAdapter(timeZone.getTextControl(), new TextContentAdapter(), new IContentProposalProvider() {
+         @Override
+         public IContentProposal[] getProposals(String contents, int position)
+         {
+            String filter = contents.trim().toLowerCase();
+            List<IContentProposal> proposals = new ArrayList<>();
+            for(String id : getZoneIds())
+            {
+               if (id.toLowerCase().contains(filter))
+                  proposals.add(new ContentProposal(id));
+            }
+            return proposals.toArray(new IContentProposal[proposals.size()]);
+         }
+      }, null, null);
+      proposalAdapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);
+      proposalAdapter.setPropagateKeys(true);
+
+      Label timeZoneHint = new Label(dialogArea, SWT.WRAP);
+      if (object.isTimeZoneInherited())
+         timeZoneHint.setText(String.format(i18n.tr("Inherited from %s: %s"), Registry.getSession().getObjectName(object.getTimeZoneSourceObjectId()), object.getTimeZone()));
+      else
+         timeZoneHint.setText(i18n.tr("Empty value inherits the time zone from parent objects"));
+      timeZoneHint.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
       // Hidden checkbox
       initialHidden = object.isHidden();
       checkHidden = new Button(dialogArea, SWT.CHECK);
@@ -155,8 +220,10 @@ public class General extends ObjectPropertyPage
       final String newAlias = alias.getText();
       final String newAiHint = aiHint.getText();
       final int newCategory = categorySelector.getCategoryId();
+      final String newTimeZone = timeZone.getText().trim();
       final boolean newHidden = checkHidden.getSelection();
-      if (newName.equals(initialName) && newAlias.equals(initialAlias) && newAiHint.equals(initialAiHint) && (newCategory == initialCategory) && (newHidden == initialHidden))
+      if (newName.equals(initialName) && newAlias.equals(initialAlias) && newAiHint.equals(initialAiHint) && (newCategory == initialCategory) &&
+          newTimeZone.equals(initialTimeZone) && (newHidden == initialHidden))
          return true; // nothing to change
 
 		if (isApply)
@@ -168,6 +235,8 @@ public class General extends ObjectPropertyPage
       data.setAlias(newAlias);
       data.setAiHint(newAiHint);
       data.setCategoryId(newCategory);
+      if (!newTimeZone.equals(initialTimeZone))
+         data.setTimeZone(newTimeZone);
       data.setHidden(newHidden);
       new Job(i18n.tr("Updating object properties"), null, messageArea) {
 			@Override
@@ -195,6 +264,7 @@ public class General extends ObjectPropertyPage
                      initialAlias = newAlias;
                      initialAiHint = newAiHint;
                      initialCategory = newCategory;
+                     initialTimeZone = newTimeZone;
                      initialHidden = newHidden;
 							General.this.setValid(true);
 						}

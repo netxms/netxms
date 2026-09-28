@@ -1214,9 +1214,9 @@ void DataCollectionOwner::updateFromImport(json_t *data, ImportContext *context)
 /**
  * Serialize object to JSON
  */
-json_t *DataCollectionOwner::toJson(bool includeSensitiveData)
+json_t *DataCollectionOwner::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
 
    lockProperties();
    json_object_set_new(root, "flags", json_integer(m_flags));

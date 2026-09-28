@@ -1509,7 +1509,7 @@ bool EPRule::processEvent(Event *event, EventProcessingContext *context) const
       for(KeyValuePair<const TCHAR> *attribute : m_customAttributeSetActions)
       {
          String name = event->expandText(attribute->key);
-         if (!name.isEmpty())
+         if (!name.isEmpty() && !IsInternalCustomAttribute(name))
          {
             String value = event->expandText(attribute->value);
             object->setCustomAttribute(name, value, StateChange::IGNORE);
@@ -1520,7 +1520,7 @@ bool EPRule::processEvent(Event *event, EventProcessingContext *context) const
       for(int i = 0; i < m_customAttributeDeleteActions.size(); i++)
       {
          String name = event->expandText(m_customAttributeDeleteActions.get(i));
-         if (!name.isEmpty())
+         if (!name.isEmpty() && !IsInternalCustomAttribute(name))
          {
             object->deleteCustomAttribute(name);
             if (rec != nullptr)

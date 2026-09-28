@@ -185,9 +185,9 @@ void AbstractContainer::calculateCompoundStatus(bool forcedRecalc)
 /**
  * Serialize object to JSON
  */
-json_t *AbstractContainer::toJson(bool includeSensitiveData)
+json_t *AbstractContainer::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    lockProperties();
    json_object_set_new(root, "flags", json_integer(m_flags));
    unlockProperties();
@@ -327,9 +327,9 @@ void Container::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Serialize object to JSON
  */
-json_t *Container::toJson(bool includeSensitiveData)
+json_t *Container::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    AutoBindTarget::toJson(root);
    return root;
 }

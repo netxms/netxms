@@ -74,6 +74,7 @@ public class NXCObjectModificationData
    private String alias;
    private String aiHint;
    private String nameOnMap;
+   private String timeZone;
    private Collection<AccessListElement> acl;
    private Boolean inheritAccessRights;
    private Boolean isHidden;
@@ -320,6 +321,30 @@ public class NXCObjectModificationData
    public void setAlias(String alias)
    {
       this.alias = alias;
+   }
+
+   /**
+    * Get time zone to be set.
+    *
+    * @return IANA time zone name, empty string if object's own time zone setting should be removed, or null if time zone should
+    *         not be changed
+    */
+   public String getTimeZone()
+   {
+      return timeZone;
+   }
+
+   /**
+    * Set object's time zone. Time zone is inheritable: when set on a container, it applies to all objects within that container
+    * unless they define their own. POSIX rule for the zone is derived from Java time zone rules when request is sent; if the zone
+    * is unknown to the JVM, only the name is sent and the server resolves it using its own time zone database.
+    *
+    * @param timeZone IANA time zone name (for example "Europe/Riga"), or null or empty string to remove object's own time zone
+    *           setting (time zone inherited from parent objects, if any, stays in effect)
+    */
+   public void setTimeZone(String timeZone)
+   {
+      this.timeZone = (timeZone != null) ? timeZone : "";
    }
 
    /**

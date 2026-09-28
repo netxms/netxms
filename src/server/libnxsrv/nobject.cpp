@@ -1139,6 +1139,8 @@ json_t *NObject::getCustomAttributesAsJson(bool (*filter)(const TCHAR *, const C
    StructArray<KeyValuePair<CustomAttribute>> *filtered = m_customAttributes.toArray(filter, context);
    for(int i = 0; i < filtered->size(); i++)
    {
+      if (IsInternalCustomAttribute(filtered->get(i)->key))
+         continue;
       char keyBuffer[256];
       wchar_to_utf8(filtered->get(i)->key, -1, keyBuffer, 256);
       json_object_set_new(attributes, keyBuffer, filtered->get(i)->value->valueToJson());
@@ -1171,6 +1173,9 @@ static NXSL_Value *StructuredValueToNXSL(NXSL_VM *vm, const CustomAttribute *att
  */
 NXSL_Value *NObject::getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const
 {
+   if (IsInternalCustomAttribute(name))
+      return nullptr;
+
    NXSL_Value *value = nullptr;
    lockCustomAttributes();
    const CustomAttribute *attr = m_customAttributes.get(name);
@@ -1214,6 +1219,8 @@ NXSL_Value *NObject::getCustomAttributesForNXSL(NXSL_VM *vm) const
    for(int i = 0; i < attributes->size(); i++)
    {
       KeyValuePair<CustomAttribute> *p = attributes->get(i);
+      if (IsInternalCustomAttribute(p->key))
+         continue;
       NXSL_Value *value = StructuredValueToNXSL(vm, p->value);
       map->set(p->key, (value != nullptr) ? value : vm->createValue(p->value->value));
    }

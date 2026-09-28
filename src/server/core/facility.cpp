@@ -176,9 +176,9 @@ json_t *Facility::facilityConfigToJson()
 /**
  * Serialize object to JSON
  */
-json_t *Facility::toJson(bool includeSensitiveData)
+json_t *Facility::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    json_object_set_new(root, "facility", facilityConfigToJson());
    return root;
 }

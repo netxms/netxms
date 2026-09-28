@@ -266,7 +266,7 @@ int H_ObjectAutoBindUpdate(Context *context)
    if (context->getQueryParameterAsBoolean("validate", true) && !ValidateAutoBindScripts(request, context))
       return 400;
 
-   json_t *oldSnapshot = object->toJson(false);
+   json_t *oldSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    uint32_t rcc = autoBindTarget->modifyFromJSON(request);
    if (rcc != RCC_SUCCESS)
    {
@@ -278,13 +278,15 @@ int H_ObjectAutoBindUpdate(Context *context)
    }
    object->markAsModified(MODIFY_ALL);
 
-   json_t *newSnapshot = object->toJson(false);
+   json_t *newSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldSnapshot, newSnapshot,
       L"Modified auto-bind configuration of object %s [%u]", object->getName(), object->getId());
    json_decref(oldSnapshot);
-
-   AddEffectiveRights(newSnapshot, *object, context->getUserId());
-   context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
+
+   json_t *output = object->toJson();
+   AddEffectiveRights(output, *object, context->getUserId());
+   context->setResponseData(output);
+   json_decref(output);
    return 200;
 }

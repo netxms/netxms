@@ -308,9 +308,9 @@ InetAddress VPNConnector::getPeerGatewayAddr() const
 /**
  * Serialize object to JSON
  */
-json_t *VPNConnector::toJson(bool includeSensitiveData)
+json_t *VPNConnector::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
 
    lockProperties();
 

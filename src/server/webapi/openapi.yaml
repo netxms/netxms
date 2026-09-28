@@ -4028,6 +4028,22 @@ paths:
                   type: string
                   nullable: true
                   description: Object alias. `null` or empty string clears the alias.
+                timeZone:
+                  type: string
+                  nullable: true
+                  description: |
+                    IANA time zone name, for example `Europe/Riga`. The time zone is inheritable: when set on a
+                    container it applies to all objects within it unless they define their own. `null` or empty
+                    string removes the object's own setting, so the zone inherited from parent objects (if any)
+                    applies again. Without `timeZoneRule` the server resolves the name using its system time zone
+                    database; if that is not possible (no zoneinfo database, for example on Windows servers), the
+                    request is rejected with 400.
+                timeZoneRule:
+                  type: string
+                  nullable: true
+                  description: |
+                    Optional POSIX TZ rule for `timeZone`, for example `EET-2EEST,M3.5.0/3,M10.5.0/4`. When supplied
+                    it is validated and used as is instead of resolving the name. Ignored without `timeZone`.
                 nameOnMap:
                   type: string
                   nullable: true
@@ -5174,7 +5190,8 @@ paths:
         representation that is embedded as the `customAttributes` array in the full
         object document. Inherited attributes are included; the `sourceObject` field
         identifies the object an inherited attribute originates from (0 when the
-        attribute is defined directly on this object).
+        attribute is defined directly on this object). Server-side attributes (names
+        starting with `$`) are never returned.
       parameters:
         - name: object-id
           in: path
@@ -5215,7 +5232,8 @@ paths:
       description: |
         Upsert a single custom attribute identified by name. The name is taken from the
         URL path (URL-encoded). It must be 1-127 characters, must not contain a slash or
-        any control character; spaces, dots, dashes, colons and unicode are allowed.
+        any control character; spaces, dots, dashes, colons and unicode are allowed. Names
+        starting with `$` are reserved for server-side attributes and are rejected (400).
 
         A string value is stored as plain text. A JSON object or array value is stored as
         a structured value: it is serialized in canonical form (compact, sorted keys) and the
@@ -16555,6 +16573,12 @@ components:
         alias:
           type: string
           description: Object alias.
+        timeZone:
+          type: string
+          description: IANA time zone name (see `PATCH /v1/objects/{object-id}` for semantics).
+        timeZoneRule:
+          type: string
+          description: Optional POSIX TZ rule for `timeZone`.
         assetId:
           type: integer
           description: Optional ID of an existing asset object to link to the new object.
@@ -16820,6 +16844,17 @@ components:
           type: string
           format: date-time
           description: Object last change timestamp
+        timeZone:
+          type: string
+          nullable: true
+          description: Effective IANA time zone name (own or inherited from a parent object), `null` if not set.
+        timeZoneRule:
+          type: string
+          nullable: true
+          description: POSIX TZ rule of the effective time zone, `null` if not set.
+        timeZoneSource:
+          type: integer
+          description: ID of the parent object the time zone is inherited from, or 0 when the time zone is defined on this object or not set.
         status:
           $ref: '#/components/schemas/Status'
         pollStates:

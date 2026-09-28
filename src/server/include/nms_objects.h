@@ -913,6 +913,12 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define COLUMN_DEFINITION_BY_DESCRIPTION  0x0004
 
 /**
+ * Flags for NetObj::toJson
+ */
+#define OBJECT_JSON_SENSITIVE_DATA           0x0001   /* include sensitive data (credentials, secrets) */
+#define OBJECT_JSON_SERVER_SIDE_ATTRIBUTES   0x0002   /* include server-side custom attributes (prefixed with $) */
+
+/**
  * Object modification flags
  */
 #define MODIFY_RUNTIME              0x00000000
@@ -1535,6 +1541,8 @@ protected:
    virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session);
    virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session);
    virtual uint32_t modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session);
+
+   bool readTimeZoneAttribute(wchar_t *name, size_t nameSize, char *rule, size_t ruleSize, uint32_t *sourceObjectId) const;
    virtual void updateFlags(uint32_t flags, uint32_t mask);
 
    void setResponsibleUsers(StructArray<ResponsibleUser> *responsibleUsers, GenericClientSession *session);
@@ -1649,6 +1657,12 @@ public:
    }
    void setAlias(const TCHAR *alias);
    void setComments(const TCHAR *comments);
+
+   SharedString getTimeZone() const;
+   bool getTimeZoneRule(TimeZoneRule *rule) const;
+   uint32_t getTimeZoneSourceObjectId() const;
+   uint32_t setTimeZone(const wchar_t *name, const wchar_t *rule);
+   void clearTimeZone();
    void expandCommentMacros();
    void setNameOnMap(const TCHAR *name);
    void setCreationTime() { m_creationTime = time(nullptr); }
@@ -1776,7 +1790,7 @@ public:
    void setAIData(const char *key, json_t *value);
    bool removeAIData(const char *key);
 
-   virtual json_t *toJson(bool includeSensitiveData = false);
+   virtual json_t *toJson(uint32_t flags = 0);
 
    virtual int getRackPlacement(json_t *element) const { return 0; }
    virtual json_t *getChassisPlacement() const { return nullptr; }
@@ -2199,7 +2213,7 @@ public:
 
    virtual void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual uint32_t getDataCollectionSummary(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId);
    virtual uint32_t getDataCollectionSummary(json_t *values, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects, uint32_t userId, std::function<bool(DCObject*)> filter = nullptr);
@@ -2431,7 +2445,7 @@ public:
 
    virtual void updateFromImport(ConfigEntry *config, ImportContext *context, bool nxslV5) override;
    virtual void updateFromImport(json_t *data, ImportContext *context) override;
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -2567,7 +2581,7 @@ public:
 
    virtual void onMgmtStatusChange(bool isManaged, int oldStatus) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    shared_ptr<Node> getParentNode() const;
    uint32_t getParentNodeId() const;
@@ -2822,7 +2836,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_NETWORKSERVICE; }
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -2861,7 +2875,7 @@ public:
 
    virtual int getObjectClass() const override { return OBJECT_VPNCONNECTOR; }
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
@@ -3170,7 +3184,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    void updateSystemInfo(const MobileDeviceInfo& deviceInfo);
    void updateStatus(const MobileDeviceStatus& status);
@@ -3250,7 +3264,7 @@ public:
 
    virtual int32_t getZoneUIN() const override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    void statusPollFromController(ClientSession *session, uint32_t requestId, Node *controller, SNMP_Transport *snmpTransport, WirelessControllerBridge *bridge);
 
@@ -3355,7 +3369,7 @@ public:
    virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI) override;
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    bool isSyncAddr(const InetAddress& addr);
    bool isVirtualAddr(const InetAddress& addr);
@@ -3490,7 +3504,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
    virtual int getRackPlacement(json_t *element) const override;
 
    json_t *getChassisLayout(uint32_t userId);
@@ -3602,7 +3616,7 @@ public:
 
    DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size);
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 };
 
 /**
@@ -3663,7 +3677,7 @@ public:
    int16_t getLastDiscoveryStatus() const { return m_lastDiscoveryStatus; }
    time_t getLastDiscoveryTime() const { return m_lastDiscoveryTime; }
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 };
 
 /**
@@ -3732,7 +3746,7 @@ public:
 
    DataCollectionError getMetricFromCloudConnector(const wchar_t *metric, wchar_t *buffer, size_t size);
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 };
 
 /**
@@ -3821,7 +3835,7 @@ public:
 
    void runConfigSync(bool force);
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 };
 
 /**
@@ -3891,7 +3905,7 @@ public:
    DataCollectionError getMetricFromConnector(const wchar_t *metric, wchar_t *buffer, size_t size);
    DataCollectionError getTableFromConnector(const wchar_t *metric, shared_ptr<Table> *table);
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 };
 
 /**
@@ -4614,7 +4628,7 @@ public:
 
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
    json_t *pollingConfigToJson();
    json_t *snmpConfigToJson(bool includeSensitiveData);
    json_t *agentConfigToJson(bool includeSensitiveData);
@@ -5108,7 +5122,7 @@ public:
 
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    void addNode(const shared_ptr<Node>& node)
    {
@@ -5232,7 +5246,7 @@ public:
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 };
 
 /**
@@ -5262,7 +5276,7 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
    virtual bool showThresholdSummary() const override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -5406,7 +5420,7 @@ public:
    uint32_t updatePassiveElementFromJson(uint32_t elementId, json_t *json, json_t **element);
    uint32_t deletePassiveElement(uint32_t elementId);
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 };
@@ -5530,7 +5544,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    int32_t getUIN() const { return m_uin; }
 
@@ -5643,7 +5657,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual bool lockForStatusPoll() override;
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
@@ -5794,7 +5808,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    uint16_t getMapType() const { return m_mapType; }
    uint16_t getDiscoveryRadius() const { return m_discoveryRadius; }
@@ -5922,7 +5936,7 @@ public:
    virtual bool showThresholdSummary() const override;
    virtual void postLoad() override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 };
 
 /**
@@ -5976,7 +5990,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
    json_t *facilityConfigToJson();
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
@@ -6018,7 +6032,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
    json_t *powerDomainConfigToJson();
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
@@ -6078,7 +6092,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
    json_t *coolingZoneConfigToJson();
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
@@ -6198,7 +6212,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
    json_t *roomConfigToJson();
    json_t *getFloorPlan(uint32_t userId);
 
@@ -6253,7 +6267,7 @@ public:
    virtual bool showThresholdSummary() const override;
    virtual void postLoad() override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
@@ -6292,7 +6306,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
    virtual void prepareForDeletion() override;
@@ -6439,7 +6453,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    virtual bool showThresholdSummary() const override;
    String getElementScript(int index) const;
@@ -6487,7 +6501,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 };
 
 /**
@@ -6528,7 +6542,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 };
 
 /**
@@ -6705,7 +6719,7 @@ public:
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
-   virtual json_t *toJson(bool includeSensitiveData = false) override;
+   virtual json_t *toJson(uint32_t flags = 0) override;
 
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> getChecks() const;
    uint32_t getObjectStatusThreshhold() const { return m_objectStatusThreshhold; }

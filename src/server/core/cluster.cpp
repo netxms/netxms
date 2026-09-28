@@ -1046,9 +1046,9 @@ NXSL_Value *Cluster::getNodesForNXSL(NXSL_VM *vm)
 /**
  * Serialize object to JSON
  */
-json_t *Cluster::toJson(bool includeSensitiveData)
+json_t *Cluster::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    AutoBindTarget::toJson(root);
 
    lockProperties();

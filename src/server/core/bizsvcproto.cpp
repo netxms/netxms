@@ -189,7 +189,7 @@ uint32_t BusinessServicePrototype::modifyFromMessageInternalStage2(const NXCPMes
 {
    // Update all services created from this prototype
    processRelatedServices([](BusinessServicePrototype *prototype, BusinessService *service) -> void { service->updateFromPrototype(*prototype); });
-   return RCC_SUCCESS;
+   return super::modifyFromMessageInternalStage2(msg, session);
 }
 
 /**

@@ -894,9 +894,9 @@ void Zone::dumpState(ServerConsole *console) const
 /**
  * Serialize object to JSON
  */
-json_t *Zone::toJson(bool includeSensitiveData)
+json_t *Zone::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
 
    lockProperties();
    json_object_set_new(root, "uin", json_integer(m_uin));

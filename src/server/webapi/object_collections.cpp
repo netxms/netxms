@@ -37,13 +37,19 @@
  * Validate custom attribute name taken from URL placeholder. On failure writes
  * an error response to the context and returns false. Allowed: spaces, unicode,
  * dots, dashes, colons. Rejected: empty, longer than 127 chars, containing '/'
- * or any control character (< 0x20).
+ * or any control character (< 0x20), or starting with '$' (reserved for
+ * server-side attributes, same as in the NXCP path).
  */
 static bool ValidateCustomAttributeName(const wchar_t *name, Context *context)
 {
    if ((name == nullptr) || (name[0] == 0))
    {
       context->setErrorResponse("Custom attribute name cannot be empty");
+      return false;
+   }
+   if (name[0] == L'$')
+   {
+      context->setErrorResponse("Custom attribute names starting with '$' are reserved");
       return false;
    }
    if (wcslen(name) > MAX_CUSTOM_ATTRIBUTE_NAME_LEN)
@@ -64,11 +70,13 @@ static bool ValidateCustomAttributeName(const wchar_t *name, Context *context)
 
 /**
  * Callback for serializing object's custom attributes into a JSON array
- * [ { name, value, flags, sourceObject } ], matching NetObj::toJson.
+ * [ { name, value, flags, sourceObject } ], matching NetObj::toJson. Server-side
+ * attributes (names starting with '$') are not exposed.
  */
 static EnumerationCallbackResult CustomAttributeToArray(const wchar_t *name, const CustomAttribute *attr, json_t *array)
 {
-   json_array_append_new(array, attr->toJson(name));
+   if (name[0] != L'$')
+      json_array_append_new(array, attr->toJson(name));
    return _CONTINUE;
 }
 
@@ -241,7 +249,7 @@ int H_ObjectAssetPropertyUpdate(Context *context)
 
    String value = json_object_get_string(request, "value", L"");
 
-   json_t *oldSnapshot = asset->toJson();
+   json_t *oldSnapshot = asset->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    std::pair<uint32_t, String> result = asset->setProperty(name, value, context->getUserId());
    if (result.first != RCC_SUCCESS)
    {
@@ -250,7 +258,7 @@ int H_ObjectAssetPropertyUpdate(Context *context)
       return (result.first == RCC_UNKNOWN_ATTRIBUTE) ? 404 : 400;
    }
 
-   json_t *newSnapshot = asset->toJson();
+   json_t *newSnapshot = asset->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, asset->getId(), oldSnapshot, newSnapshot,
       L"Asset property \"%s\" of object %s [%u] changed", name, asset->getName(), asset->getId());
    json_decref(oldSnapshot);
@@ -283,7 +291,7 @@ int H_ObjectAssetPropertyDelete(Context *context)
       return 400;
    }
 
-   json_t *oldSnapshot = asset->toJson();
+   json_t *oldSnapshot = asset->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    uint32_t rcc = asset->deleteProperty(name, context->getUserId());
    if (rcc != RCC_SUCCESS)
    {
@@ -294,7 +302,7 @@ int H_ObjectAssetPropertyDelete(Context *context)
       return 400;
    }
 
-   json_t *newSnapshot = asset->toJson();
+   json_t *newSnapshot = asset->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, asset->getId(), oldSnapshot, newSnapshot,
       L"Asset property \"%s\" of object %s [%u] deleted", name, asset->getName(), asset->getId());
    json_decref(oldSnapshot);
@@ -455,17 +463,19 @@ int H_ObjectDashboards(Context *context)
    if (!ParseObjectIdArray(request, &dashboards, context))
       return 400;
 
-   json_t *oldSnapshot = object->toJson(false);
+   json_t *oldSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    object->setDashboards(dashboards);
 
-   json_t *newSnapshot = object->toJson(false);
+   json_t *newSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldSnapshot, newSnapshot,
       L"Associated dashboards of object %s [%u] changed", object->getName(), object->getId());
    json_decref(oldSnapshot);
-
-   AddEffectiveRights(newSnapshot, *object, context->getUserId());
-   context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
+
+   json_t *output = object->toJson();
+   AddEffectiveRights(output, *object, context->getUserId());
+   context->setResponseData(output);
+   json_decref(output);
    return 200;
 }
 
@@ -509,17 +519,19 @@ int H_ObjectTrustedObjects(Context *context)
       }
    }
 
-   json_t *oldSnapshot = object->toJson(false);
+   json_t *oldSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    object->setTrustedObjects(trustedObjects);
 
-   json_t *newSnapshot = object->toJson(false);
+   json_t *newSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldSnapshot, newSnapshot,
       L"Trusted objects of object %s [%u] changed", object->getName(), object->getId());
    json_decref(oldSnapshot);
-
-   AddEffectiveRights(newSnapshot, *object, context->getUserId());
-   context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
+
+   json_t *output = object->toJson();
+   AddEffectiveRights(output, *object, context->getUserId());
+   context->setResponseData(output);
+   json_decref(output);
    return 200;
 }
 
@@ -812,7 +824,7 @@ int H_ObjectBindChild(Context *context)
    if (rcc != RCC_SUCCESS)
       return BindingErrorResponse(context, rcc, *parent, *child, conflictingTemplateName);
 
-   json_t *output = child->toJson(true);
+   json_t *output = child->toJson(OBJECT_JSON_SENSITIVE_DATA);
    AddEffectiveRights(output, *child, context->getUserId());
    context->setResponseData(output);
    json_decref(output);

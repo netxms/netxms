@@ -288,9 +288,9 @@ bool BaseBusinessService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Serialize object to JSON
  */
-json_t *BaseBusinessService::toJson(bool includeSensitiveData)
+json_t *BaseBusinessService::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    AutoBindTarget::toJson(root);
    return root;
 }

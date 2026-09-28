@@ -38,6 +38,8 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
+import java.time.DateTimeException;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -7692,6 +7694,26 @@ public class NXCSession
       if (data.getAiHint() != null)
       {
          msg.setField(NXCPCodes.VID_AI_HINT, data.getAiHint());
+      }
+
+      // Time zone (empty string removes object's own setting)
+      if (data.getTimeZone() != null)
+      {
+         msg.setField(NXCPCodes.VID_TIMEZONE, data.getTimeZone());
+         if (!data.getTimeZone().isEmpty())
+         {
+            String rule = null;
+            try
+            {
+               rule = TimeZoneRules.toPosixRule(ZoneId.of(data.getTimeZone()));
+            }
+            catch(DateTimeException e)
+            {
+               // Zone is unknown to JVM, let server resolve the name
+            }
+            if (rule != null)
+               msg.setField(NXCPCodes.VID_TIMEZONE_RULE, rule);
+         }
       }
 
       // Object name on network map

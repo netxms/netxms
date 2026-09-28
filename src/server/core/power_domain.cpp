@@ -218,9 +218,9 @@ json_t *PowerDomain::powerDomainConfigToJson()
 /**
  * Serialize object to JSON
  */
-json_t *PowerDomain::toJson(bool includeSensitiveData)
+json_t *PowerDomain::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    json_object_set_new(root, "powerDomain", powerDomainConfigToJson());
    return root;
 }

@@ -234,9 +234,9 @@ NXSL_Value *CloudDomain::createNXSLObject(NXSL_VM *vm)
 /**
  * Serialize to JSON
  */
-json_t *CloudDomain::toJson(bool includeSensitiveData)
+json_t *CloudDomain::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
 
    lockProperties();
    json_object_set_new(root, "connectorName", json_string_t(m_connectorName));

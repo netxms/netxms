@@ -16721,9 +16721,10 @@ json_t *Node::agentConfigToJson(bool includeSensitiveData)
 /**
  * Serialize object to JSON
  */
-json_t *Node::toJson(bool includeSensitiveData)
+json_t *Node::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   bool includeSensitiveData = (flags & OBJECT_JSON_SENSITIVE_DATA) != 0;
+   json_t *root = super::toJson(flags);
 
    lockProperties();
    json_object_set_new(root, "ipAddress", m_ipAddress.toJson());

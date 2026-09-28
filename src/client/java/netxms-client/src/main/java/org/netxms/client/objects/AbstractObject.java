@@ -162,6 +162,9 @@ public abstract class AbstractObject
 	protected long drillDownObjectId;
    protected long assetId;
    protected String aiHint;
+   protected String timeZone;
+   protected String timeZoneRule;
+   protected long timeZoneSourceObjectId;
 	protected final HashSet<Long> trustedObjects = new HashSet<Long>(0);
 	protected boolean inheritAccessRights = true;
 	protected HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
@@ -259,6 +262,11 @@ public abstract class AbstractObject
 		drillDownObjectId = msg.getFieldAsInt64(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID);
       assetId = msg.getFieldAsInt64(NXCPCodes.VID_ASSET_ID);
       aiHint = msg.getFieldAsString(NXCPCodes.VID_AI_HINT);
+      timeZone = msg.getFieldAsString(NXCPCodes.VID_TIMEZONE);
+      if ((timeZone != null) && timeZone.isEmpty())
+         timeZone = null;
+      timeZoneRule = (timeZone != null) ? msg.getFieldAsString(NXCPCodes.VID_TIMEZONE_RULE) : null;
+      timeZoneSourceObjectId = (timeZone != null) ? msg.getFieldAsInt64(NXCPCodes.VID_SOURCE_OBJECT_ID) : 0;
 		creationTime = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
 
 		statusCalculationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_CALCULATION_ALG);
@@ -1228,6 +1236,46 @@ public abstract class AbstractObject
    public String getAiHint()
    {
       return aiHint;
+   }
+
+   /**
+    * Get effective time zone of this object (either set on the object itself or inherited from parent object).
+    *
+    * @return IANA time zone name (for example "Europe/Riga") or null if time zone is not set
+    */
+   public String getTimeZone()
+   {
+      return timeZone;
+   }
+
+   /**
+    * Get POSIX TZ rule string for effective time zone of this object (for example "EET-2EEST,M3.5.0/3,M10.5.0/4").
+    *
+    * @return POSIX TZ rule string or null if time zone is not set
+    */
+   public String getTimeZoneRule()
+   {
+      return timeZoneRule;
+   }
+
+   /**
+    * Get ID of object this object's time zone is inherited from.
+    *
+    * @return ID of source object or 0 if time zone is not set or is set on this object itself
+    */
+   public long getTimeZoneSourceObjectId()
+   {
+      return timeZoneSourceObjectId;
+   }
+
+   /**
+    * Check if time zone of this object is inherited from parent object.
+    *
+    * @return true if time zone is set and inherited from parent object
+    */
+   public boolean isTimeZoneInherited()
+   {
+      return (timeZone != null) && (timeZoneSourceObjectId != 0);
    }
 
    /**

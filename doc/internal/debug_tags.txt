@@ -321,6 +321,8 @@ tunnel		Tunnel (in agent log)
 
 tuxedo		Tuxedo subagent messages
 
+tzdb		Time zone database (zoneinfo) lookups
+
 upgrade		Agent upgrade package validation (in agent log)
 
 ups		UPS subagent messages

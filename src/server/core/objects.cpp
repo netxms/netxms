@@ -3481,7 +3481,7 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
       return rcc;
    }
 
-   json_t *objData = object->toJson();
+   json_t *objData = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    session->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), static_cast<json_t*>(nullptr), objData,
          L"Object %s created (class %s)", object->getName(), object->getObjectClassName());
    json_decref(objData);

@@ -75,7 +75,7 @@ int H_ObjectNetworkMap(Context *context)
    if (object == nullptr)
       return httpCode;
 
-   json_t *full = object->toJson(false);
+   json_t *full = object->toJson();
    json_t *view = json_object();
    for(int i = 0; s_mapContentKeys[i] != nullptr; i++)
    {
@@ -117,7 +117,7 @@ int H_ObjectNetworkMapUpdate(Context *context)
          json_object_set(patch, s_mapContentKeys[i], value);
    }
 
-   json_t *oldSnapshot = object->toJson(false);
+   json_t *oldSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    uint32_t rcc = object->modifyFromJSON(patch, context);
    json_decref(patch);
    if (rcc != RCC_SUCCESS)
@@ -129,13 +129,15 @@ int H_ObjectNetworkMapUpdate(Context *context)
       return 400;
    }
 
-   json_t *newSnapshot = object->toJson(false);
+   json_t *newSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldSnapshot, newSnapshot,
       L"Modified network map content of object %s [%u]", object->getName(), object->getId());
    json_decref(oldSnapshot);
-
-   AddEffectiveRights(newSnapshot, *object, context->getUserId());
-   context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
+
+   json_t *output = object->toJson();
+   AddEffectiveRights(output, *object, context->getUserId());
+   context->setResponseData(output);
+   json_decref(output);
    return 200;
 }

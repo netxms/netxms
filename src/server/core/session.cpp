@@ -4205,7 +4205,7 @@ void ClientSession::modifyObject(const NXCPMessage& request)
    {
       if (object->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
       {
-         json_t *oldValue = object->toJson();
+         json_t *oldValue = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
 
          // If user attempts to change object's ACL, check
          // if he has OBJECT_ACCESS_ACL permission
@@ -4245,7 +4245,7 @@ void ClientSession::modifyObject(const NXCPMessage& request)
 
 			if (rcc == RCC_SUCCESS)
 			{
-			   json_t *newValue = object->toJson();
+			   json_t *newValue = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
 			   writeAuditLogWithValues(AUDIT_OBJECTS, true, objectId, oldValue, newValue, _T("Object %s modified from client"), object->getName());
 	         json_decref(newValue);
 			}
@@ -7275,7 +7275,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                   object->setAlias(alias);
                }
 
-               json_t *objData = object->toJson();
+               json_t *objData = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
                WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_userId, m_workstation, m_id, object->getId(), nullptr, objData,
                      _T("Object %s created (class %s)"), object->getName(), object->getObjectClassName());
                json_decref(objData);
@@ -20201,13 +20201,13 @@ void ClientSession::setAssetProperty(const NXCPMessage& request)
       {
          if (object->getObjectClass() == OBJECT_ASSET)
          {
-            json_t *oldObjectValues = object->toJson();
+            json_t *oldObjectValues = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
             SharedString value = request.getFieldAsSharedString(VID_VALUE);
             SharedString oldValue = static_cast<Asset&>(*object).getProperty(name);
             std::pair<uint32_t, String> result = static_cast<Asset&>(*object).setProperty(name, value, m_userId);
             if (result.first == RCC_SUCCESS)
             {
-               json_t *newObjectValues = object->toJson();
+               json_t *newObjectValues = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
                writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldObjectValues, newObjectValues, L"Asset property %s changed", name.cstr());
                json_decref(newObjectValues);
             }
@@ -20261,11 +20261,11 @@ void ClientSession::deleteAssetProperty(const NXCPMessage& request)
       {
          if (object->getObjectClass() == OBJECT_ASSET)
          {
-            json_t *oldValue = object->toJson();
+            json_t *oldValue = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
             uint32_t result = static_cast<Asset&>(*object).deleteProperty(name, m_userId);
             if (result == RCC_SUCCESS)
             {
-               json_t *newValue = object->toJson();
+               json_t *newValue = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
                writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, L"Asset property %s deleted", name.cstr());
                json_decref(newValue);
             }
@@ -20439,9 +20439,9 @@ void ClientSession::updateNetworkMapElementLocaiton(const NXCPMessage& request)
    {
       if (networkMap->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
       {
-         json_t *oldValue = networkMap->toJson();
+         json_t *oldValue = networkMap->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
          networkMap->updateObjectLocation(request);
-         json_t *newValue = networkMap->toJson();
+         json_t *newValue = networkMap->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
          writeAuditLogWithValues(AUDIT_OBJECTS, true, networkMap->getId(), oldValue, newValue, L"Object %s modified from client", networkMap->getName());
          json_decref(oldValue);
          json_decref(newValue);

@@ -402,3 +402,177 @@ time_t TimeZoneRule::localDayStart(int year, int month, int day) const
    }
    return lo;   // not reachable with a consistent rule, kept as a safe fallback
 }
+
+/**
+ * Check that time zone name is a well-formed IANA zone name (e.g. "Europe/Riga", "Etc/GMT+3"). Names accepted by this
+ * function are also safe for use as a relative path inside the zoneinfo database: each "/"-separated segment is non-empty,
+ * starts with a letter or digit (so "." and ".." are rejected) and contains only letters, digits, "_", "-", "+" and ".".
+ */
+bool LIBNETXMS_EXPORTABLE IsValidTimeZoneName(const char *name)
+{
+   if ((name == nullptr) || (*name == 0))
+      return false;
+
+   size_t len = strlen(name);
+   if ((len > 63) || (name[0] == '/') || (name[len - 1] == '/'))
+      return false;
+
+   bool segmentStart = true;
+   for(const char *p = name; *p != 0; p++)
+   {
+      char c = *p;
+      if (c == '/')
+      {
+         if (segmentStart)
+            return false;   // empty segment
+         segmentStart = true;
+         continue;
+      }
+      bool alnum = ((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z')) || ((c >= '0') && (c <= '9'));
+      if (segmentStart)
+      {
+         if (!alnum)
+            return false;
+         segmentStart = false;
+      }
+      else if (!alnum && (c != '_') && (c != '-') && (c != '+') && (c != '.'))
+      {
+         return false;
+      }
+   }
+   return true;
+}
+
+/**
+ * Read big-endian 32-bit unsigned integer
+ */
+static inline uint32_t ReadBE32(const uint8_t *p)
+{
+   return (static_cast<uint32_t>(p[0]) << 24) | (static_cast<uint32_t>(p[1]) << 16) | (static_cast<uint32_t>(p[2]) << 8) | static_cast<uint32_t>(p[3]);
+}
+
+/**
+ * Calculate size of TZif data block that follows given 44-byte header. Transition times and leap second
+ * records use 4-byte times in the version 1 block and 8-byte times in the version 2+ block.
+ */
+static bool TZifBlockSize(const uint8_t *header, size_t timeSize, size_t *size)
+{
+   uint32_t isutcnt = ReadBE32(header + 20);
+   uint32_t isstdcnt = ReadBE32(header + 24);
+   uint32_t leapcnt = ReadBE32(header + 28);
+   uint32_t timecnt = ReadBE32(header + 32);
+   uint32_t typecnt = ReadBE32(header + 36);
+   uint32_t charcnt = ReadBE32(header + 40);
+   if ((isutcnt > 65536) || (isstdcnt > 65536) || (leapcnt > 65536) || (timecnt > 65536) || (typecnt > 65536) || (charcnt > 65536))
+      return false;
+   *size = timecnt * timeSize + timecnt + typecnt * 6 + charcnt + leapcnt * (timeSize + 4) + isstdcnt + isutcnt;
+   return true;
+}
+
+/**
+ * Extract POSIX TZ rule string from footer of TZif (RFC 8536) file. Returns false if data is not a TZif file
+ * of version 2 or later, or if the footer is missing or empty.
+ */
+static bool ExtractTZifFooter(const uint8_t *data, size_t size, char *rule, size_t ruleSize)
+{
+   if ((size < 44) || memcmp(data, "TZif", 4))
+      return false;
+   if (data[4] == 0)
+      return false;   // version 1 file has no footer
+
+   size_t blockSize;
+   if (!TZifBlockSize(data, 4, &blockSize))
+      return false;
+   size_t offset = 44 + blockSize;
+   if ((offset + 44 > size) || memcmp(data + offset, "TZif", 4))
+      return false;
+   if (!TZifBlockSize(data + offset, 8, &blockSize))
+      return false;
+   offset += 44 + blockSize;
+
+   if ((offset >= size) || (data[offset] != '\n'))
+      return false;
+   offset++;
+   size_t end = offset;
+   while((end < size) && (data[end] != '\n'))
+      end++;
+   size_t len = end - offset;
+   if ((end >= size) || (len == 0) || (len >= ruleSize))
+      return false;
+
+   memcpy(rule, data + offset, len);
+   rule[len] = 0;
+   return true;
+}
+
+/**
+ * Resolve IANA time zone name (e.g. "Europe/Riga") into POSIX TZ rule string using the system time zone database
+ * (TZif file footer). Directories searched: $TZDIR, then standard zoneinfo locations on UNIX systems; file without
+ * usable footer or with footer that cannot be parsed by TimeZoneRule is skipped. Returns false if the name is not
+ * well-formed or no searched directory contains usable file for it. Buffer should be at least 128 characters long.
+ */
+bool LIBNETXMS_EXPORTABLE ResolveTimeZoneName(const char *name, char *rule, size_t size)
+{
+   if (!IsValidTimeZoneName(name))
+   {
+      nxlog_debug_tag(_T("tzdb"), 7, _T("ResolveTimeZoneName: invalid time zone name \"%hs\""), CHECK_NULL_A(name));
+      return false;
+   }
+
+   const char *dirs[8];
+   int count = 0;
+   const char *tzdir = getenv("TZDIR");
+   if ((tzdir != nullptr) && (*tzdir != 0))
+      dirs[count++] = tzdir;
+#ifndef _WIN32
+   dirs[count++] = "/usr/share/zoneinfo";
+   dirs[count++] = "/usr/lib/zoneinfo";
+   dirs[count++] = "/usr/share/lib/zoneinfo";
+   dirs[count++] = "/etc/zoneinfo";
+#endif
+
+   for(int i = 0; i < count; i++)
+   {
+      char path[MAX_PATH];
+      snprintf(path, MAX_PATH, "%s/%s", dirs[i], name);
+
+      FILE *f = fopen(path, "rb");
+      if (f == nullptr)
+         continue;
+
+      fseek(f, 0, SEEK_END);
+      long fileSize = ftell(f);
+      if ((fileSize < 90) || (fileSize > 131072))
+      {
+         nxlog_debug_tag(_T("tzdb"), 7, _T("ResolveTimeZoneName: file \"%hs\" has unexpected size (%ld)"), path, fileSize);
+         fclose(f);
+         continue;
+      }
+      fseek(f, 0, SEEK_SET);
+
+      uint8_t *data = MemAllocArrayNoInit<uint8_t>(fileSize);
+      size_t bytes = fread(data, 1, fileSize, f);
+      fclose(f);
+
+      bool success = (bytes == static_cast<size_t>(fileSize)) && ExtractTZifFooter(data, bytes, rule, size);
+      MemFree(data);
+      if (!success)
+      {
+         nxlog_debug_tag(_T("tzdb"), 7, _T("ResolveTimeZoneName: file \"%hs\" is not a TZif version 2+ file with POSIX rule footer"), path);
+         continue;
+      }
+
+      TimeZoneRule check(rule);
+      if (!check.isValid())
+      {
+         nxlog_debug_tag(_T("tzdb"), 7, _T("ResolveTimeZoneName: rule \"%hs\" from file \"%hs\" cannot be parsed"), rule, path);
+         continue;
+      }
+
+      nxlog_debug_tag(_T("tzdb"), 6, _T("ResolveTimeZoneName: time zone \"%hs\" resolved to rule \"%hs\""), name, rule);
+      return true;
+   }
+
+   nxlog_debug_tag(_T("tzdb"), 7, _T("ResolveTimeZoneName: time zone \"%hs\" not found in system time zone database"), name);
+   return false;
+}

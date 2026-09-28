@@ -69,6 +69,11 @@ public class ObjectInfo extends TableElement
          addPair(i18n.tr("Creation time"), DateFormatFactory.getDateTimeFormat().format(object.getCreationTime()), false);		
       if (object.getCategory() != null)
          addPair(i18n.tr("Category"), object.getCategory().getName());
+      if (object.getTimeZone() != null)
+      {
+         addPair(i18n.tr("Time zone"), object.isTimeZoneInherited() ?
+               String.format(i18n.tr("%s (inherited from %s)"), object.getTimeZone(), session.getObjectName(object.getTimeZoneSourceObjectId())) : object.getTimeZone());
+      }
       if ((object instanceof Dashboard) && ((Dashboard)object).isTemplateInstance())
          addPair(i18n.tr("Instance"), i18n.tr("Yes"));
       if (object.getAssetId() != 0)

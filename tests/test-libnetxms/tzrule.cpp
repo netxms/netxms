@@ -357,6 +357,116 @@ static void TestReparseAndCopy()
 }
 
 /**
+ * Test IANA time zone name validation
+ */
+static void TestTimeZoneNameValidation()
+{
+   StartTest(_T("Time zone name validation"));
+
+   AssertTrue(IsValidTimeZoneName("Europe/Riga"));
+   AssertTrue(IsValidTimeZoneName("America/Port-au-Prince"));
+   AssertTrue(IsValidTimeZoneName("America/St_Johns"));
+   AssertTrue(IsValidTimeZoneName("America/Argentina/Buenos_Aires"));
+   AssertTrue(IsValidTimeZoneName("Etc/GMT+3"));
+   AssertTrue(IsValidTimeZoneName("UTC"));
+
+   AssertFalse(IsValidTimeZoneName(nullptr));
+   AssertFalse(IsValidTimeZoneName(""));
+   AssertFalse(IsValidTimeZoneName("/etc/localtime"));
+   AssertFalse(IsValidTimeZoneName("../etc/passwd"));
+   AssertFalse(IsValidTimeZoneName("Europe/../Riga"));
+   AssertFalse(IsValidTimeZoneName("Europe/./Riga"));
+   AssertFalse(IsValidTimeZoneName("Europe//Riga"));
+   AssertFalse(IsValidTimeZoneName("Europe/"));
+   AssertFalse(IsValidTimeZoneName("Europe/.Riga"));
+   AssertFalse(IsValidTimeZoneName("Europe/Riga|x"));
+   AssertFalse(IsValidTimeZoneName("Europe/Riga EET"));
+   AssertFalse(IsValidTimeZoneName("Europe/R\xC3\xADga"));
+   AssertFalse(IsValidTimeZoneName("A234567890123456789012345678901234567890123456789012345678901234"));   // 64 characters
+
+   EndTest();
+}
+
+/**
+ * Test resolution of IANA time zone names via system time zone database
+ */
+static void TestTimeZoneResolver()
+{
+   StartTest(_T("Time zone name resolution"));
+
+#ifdef _WIN32
+   char rule[128];
+   AssertFalse(ResolveTimeZoneName("Europe/Riga", rule, sizeof(rule)));   // no zoneinfo database on Windows
+#else
+   const char *tzdir = getenv("TZDIR");
+   if ((access("/usr/share/zoneinfo/Europe/Riga", R_OK) != 0) && ((tzdir == nullptr) || (*tzdir == 0)))
+   {
+      _tprintf(_T("(skipped, no zoneinfo database) "));
+      EndTest();
+      return;
+   }
+
+   char rule[128];
+   AssertTrue(ResolveTimeZoneName("Europe/Riga", rule, sizeof(rule)));
+   AssertEquals(rule, "EET-2EEST,M3.5.0/3,M10.5.0/4");
+   AssertTrue(ResolveTimeZoneName("UTC", rule, sizeof(rule)));
+   AssertEquals(rule, "UTC0");
+   AssertTrue(ResolveTimeZoneName("Asia/Kolkata", rule, sizeof(rule)));
+   AssertEquals(rule, "IST-5:30");
+
+   AssertFalse(ResolveTimeZoneName("Europe/Nowhere", rule, sizeof(rule)));
+   AssertFalse(ResolveTimeZoneName("Europe", rule, sizeof(rule)));   // directory
+   AssertFalse(ResolveTimeZoneName("zone.tab", rule, sizeof(rule)));   // text file
+   AssertFalse(ResolveTimeZoneName("../zoneinfo/UTC", rule, sizeof(rule)));
+
+   AssertTrue(ResolveTimeZoneName("Europe/Riga", rule, sizeof(rule)));
+   TimeZoneRule tz(rule);
+   AssertTrue(tz.isValid());
+   AssertEquals(tz.offsetAt(UTC(2026, 7, 1)), 10800);
+   AssertEquals(tz.offsetAt(UTC(2026, 1, 15)), 7200);
+   AssertTransition(tz, UTC(2026, 3, 29, 1), 7200, 10800);
+
+   // File with unparseable rule found in $TZDIR should not hide valid file in standard location
+   FILE *f = fopen("/usr/share/zoneinfo/UTC", "rb");
+   if (f != nullptr)
+   {
+      char content[4096];
+      size_t size = fread(content, 1, sizeof(content), f);
+      fclose(f);
+      char dir[] = "/tmp/nxtzXXXXXX";
+      if ((size > 5) && !memcmp(&content[size - 5], "UTC0\n", 5) && (mkdtemp(dir) != nullptr))
+      {
+         memcpy(&content[size - 5], "0UTC\n", 5);   // zone name cannot start with digit
+         AssertFalse(TimeZoneRule("0UTC").isValid());
+
+         char path[MAX_PATH];
+         snprintf(path, MAX_PATH, "%s/UTC", dir);
+         f = fopen(path, "wb");
+         AssertNotNull(f);
+         fwrite(content, 1, size, f);
+         fclose(f);
+
+         char *savedTzdir = MemCopyStringA(tzdir);
+         setenv("TZDIR", dir, 1);
+         bool resolved = ResolveTimeZoneName("UTC", rule, sizeof(rule));
+         if (savedTzdir != nullptr)
+            setenv("TZDIR", savedTzdir, 1);
+         else
+            unsetenv("TZDIR");
+         MemFree(savedTzdir);
+         remove(path);
+         rmdir(dir);
+
+         AssertTrue(resolved);
+         AssertEquals(rule, "UTC0");
+      }
+   }
+#endif
+
+   EndTest();
+}
+
+/**
  * Test POSIX timezone rule evaluation
  */
 void TestTimeZoneRule()
@@ -367,4 +477,6 @@ void TestTimeZoneRule()
    TestSpecialRules();
    TestMalformedRules();
    TestReparseAndCopy();
+   TestTimeZoneNameValidation();
+   TestTimeZoneResolver();
 }

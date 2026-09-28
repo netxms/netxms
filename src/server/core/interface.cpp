@@ -2285,9 +2285,9 @@ void Interface::onMgmtStatusChange(bool isManaged, int oldStatus)
 /**
  * Serialize object to JSON
  */
-json_t *Interface::toJson(bool includeSensitiveData)
+json_t *Interface::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
 
    lockProperties();
 

@@ -203,9 +203,9 @@ NXSL_Value *Sensor::createNXSLObject(NXSL_VM *vm)
 /**
  * Sensor class serialization to JSON
  */
-json_t *Sensor::toJson(bool includeSensitiveData)
+json_t *Sensor::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
 
    lockProperties();
    json_object_set_new(root, "macAddress", json_string_t(m_macAddress.toString()));

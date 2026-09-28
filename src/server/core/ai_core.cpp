@@ -1177,7 +1177,7 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
    if (context != nullptr)
    {
       addMessage("system", "This request is made in the context of the following object:");
-      json_t *json = context->toJson();
+      json_t *json = context->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
       char *jsonText = json_dumps(json, 0);
       json_decref(json);
       addMessage("system", jsonText);
@@ -1250,7 +1250,7 @@ void Chat::bindToIncident(uint32_t incidentId)
    if (sourceObject != nullptr)
    {
       addMessage("system", "The incident source object context:");
-      json_t *objJson = sourceObject->toJson();
+      json_t *objJson = sourceObject->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
       char *objJsonText = json_dumps(objJson, 0);
       json_decref(objJson);
       addMessage("system", objJsonText);

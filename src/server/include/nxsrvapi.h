@@ -544,6 +544,19 @@ public:
 #define CAF_JSON        0x08  /* value is a JSON object or array serialized to text */
 
 /**
+ * Reserved custom attribute name prefixes:
+ *    "$"  - server-side attribute: not sent to clients and not editable through custom attribute interfaces,
+ *           but visible to NXSL scripts and AI tools as per-object storage, and recorded in audit log;
+ *    "$$" - server-internal attribute: storage for object properties managed by server code (for example
+ *           object time zone); hidden from users, scripts, AI tools and APIs alike and never readable or
+ *           writable through custom attribute interfaces (only by explicit name from server code).
+ */
+static inline bool IsInternalCustomAttribute(const wchar_t *name)
+{
+   return (name[0] == L'$') && (name[1] == L'$');
+}
+
+/**
  * Custom attribute
  */
 struct LIBNXSRV_EXPORTABLE CustomAttribute

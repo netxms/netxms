@@ -146,6 +146,11 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
       *ppResult = vm->createValue();
       return NXSL_ERR_SUCCESS;
    }
+   if (IsInternalCustomAttribute(argv[1]->getValueAsCString()))
+   {
+      *ppResult = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, argv[1]->getValueAsCString());
    int rc = SetCustomAttributeFromNXSL(netxmsObject, argv[1]->getValueAsCString(), argv[2], StateChange::IGNORE);
    if (rc != NXSL_ERR_SUCCESS)
@@ -178,6 +183,11 @@ static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 
 	NetObj *netxmsObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, netxmsObject))
+   {
+      *ppResult = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+   if (IsInternalCustomAttribute(argv[1]->getValueAsCString()))
    {
       *ppResult = vm->createValue();
       return NXSL_ERR_SUCCESS;

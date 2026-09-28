@@ -205,9 +205,9 @@ json_t *CoolingZone::coolingZoneConfigToJson()
 /**
  * Serialize object to JSON
  */
-json_t *CoolingZone::toJson(bool includeSensitiveData)
+json_t *CoolingZone::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    json_object_set_new(root, "coolingZone", coolingZoneConfigToJson());
    return root;
 }

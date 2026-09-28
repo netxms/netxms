@@ -955,7 +955,7 @@ void NetObj::onCustomAttributeChange(const TCHAR *name, const TCHAR *value)
       nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 7, _T("Object \"%s\" [%u] custom attribute \"%s\" changed to \"%s\""), m_name, m_id, name, value);
    else
       nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 7, _T("Object \"%s\" [%u] custom attribute \"%s\" deleted"), m_name, m_id, name);
-   setModified(MODIFY_CUSTOM_ATTRIBUTES, name[0] != '$');
+   setModified(MODIFY_CUSTOM_ATTRIBUTES, (name[0] != L'$') || IsInternalCustomAttribute(name));
 }
 
 /**
@@ -1878,6 +1878,16 @@ void NetObj::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_ASSET_ID, m_assetId);
    msg->setField(VID_AI_HINT, m_aiHint);
 	msg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
+
+   wchar_t timeZoneName[64];
+   char timeZoneRule[128];
+   uint32_t timeZoneSource;
+   if (readTimeZoneAttribute(timeZoneName, 64, timeZoneRule, sizeof(timeZoneRule), &timeZoneSource))
+   {
+      msg->setField(VID_TIMEZONE, timeZoneName);
+      msg->setFieldFromUtf8String(VID_TIMEZONE_RULE, timeZoneRule);
+      msg->setField(VID_SOURCE_OBJECT_ID, timeZoneSource);
+   }
 	if ((m_trustedObjects != nullptr) && !m_trustedObjects->isEmpty())
 	{
 		msg->setFieldFromInt32Array(VID_TRUSTED_OBJECTS, m_trustedObjects);
@@ -2254,6 +2264,21 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession
  */
 uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg, ClientSession *session)
 {
+   if (msg.isFieldExist(VID_TIMEZONE))
+   {
+      SharedString timeZone = msg.getFieldAsSharedString(VID_TIMEZONE);
+      if (timeZone.isEmpty())
+      {
+         clearTimeZone();
+      }
+      else
+      {
+         uint32_t rcc = setTimeZone(timeZone, msg.getFieldAsSharedString(VID_TIMEZONE_RULE));
+         if (rcc != RCC_SUCCESS)
+            return rcc;
+      }
+   }
+
    if (msg.isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
    {
       uint32_t rcc = setCustomAttributesFromMessage(msg);
@@ -2502,6 +2527,30 @@ uint32_t NetObj::modifyFromJSONInternal(json_t *json, GenericClientSession *sess
  */
 uint32_t NetObj::modifyFromJSONInternalStage2(json_t *json, GenericClientSession *session)
 {
+   // Time zone: null or empty string removes object's own setting, string sets it; optional "timeZoneRule" supplies POSIX rule
+   json_t *timeZone = json_object_get(json, "timeZone");
+   if (timeZone != nullptr)
+   {
+      if (!json_is_string(timeZone) && !json_is_null(timeZone))
+         return RCC_INVALID_ARGUMENT;
+
+      json_t *rule = json_object_get(json, "timeZoneRule");
+      if ((rule != nullptr) && !json_is_string(rule) && !json_is_null(rule))
+         return RCC_INVALID_ARGUMENT;
+
+      if (json_is_null(timeZone) || (json_string_value(timeZone)[0] == 0))
+      {
+         clearTimeZone();
+      }
+      else
+      {
+         String name(json_string_value(timeZone), "utf8");
+         String ruleText(json_is_string(rule) ? json_string_value(rule) : "", "utf8");
+         uint32_t rcc = setTimeZone(name, ruleText);
+         if (rcc != RCC_SUCCESS)
+            return rcc;
+      }
+   }
    return RCC_SUCCESS;
 }
 
@@ -2997,6 +3046,136 @@ void NetObj::setAlias(const TCHAR *alias)
    m_alias = alias;
    setModified(MODIFY_COMMON_PROPERTIES);
    unlockProperties();
+}
+
+/**
+ * Name of internal custom attribute holding object's time zone. Value format is "<IANA name>|<POSIX TZ rule>",
+ * for example "Europe/Riga|EET-2EEST,M3.5.0/3,M10.5.0/4". Attribute is inheritable, so time zone set on a
+ * container applies to all objects within it unless redefined.
+ */
+#define TIME_ZONE_ATTRIBUTE   L"$$timeZone"
+
+/**
+ * Read effective time zone (own or inherited) from internal custom attribute. Any output argument can be nullptr.
+ * Source object ID is 0 if time zone is defined on this object, or ID of the parent object it is inherited from.
+ * Returns false if time zone is not set.
+ */
+bool NetObj::readTimeZoneAttribute(wchar_t *name, size_t nameSize, char *rule, size_t ruleSize, uint32_t *sourceObjectId) const
+{
+   CustomAttribute attr = getInheritableCustomAttribute(TIME_ZONE_ATTRIBUTE);
+   if (attr.value.isEmpty())
+      return false;
+
+   const wchar_t *separator = wcschr(attr.value.cstr(), L'|');
+   if (separator == nullptr)
+      return false;
+
+   if (name != nullptr)
+   {
+      size_t len = std::min(static_cast<size_t>(separator - attr.value.cstr()), nameSize - 1);
+      memcpy(name, attr.value.cstr(), len * sizeof(wchar_t));
+      name[len] = 0;
+   }
+   if (rule != nullptr)
+      wchar_to_utf8(separator + 1, -1, rule, ruleSize);
+   if (sourceObjectId != nullptr)
+      *sourceObjectId = (attr.isInherited() && !attr.isRedefined()) ? attr.sourceObject : 0;
+   return true;
+}
+
+/**
+ * Get effective time zone name (IANA name, own or inherited). Returns empty string if time zone is not set.
+ */
+SharedString NetObj::getTimeZone() const
+{
+   wchar_t name[64];
+   return readTimeZoneAttribute(name, 64, nullptr, 0, nullptr) ? SharedString(name) : SharedString();
+}
+
+/**
+ * Get effective time zone rule (own or inherited). Returns false if time zone is not set.
+ */
+bool NetObj::getTimeZoneRule(TimeZoneRule *rule) const
+{
+   char text[128];
+   if (!readTimeZoneAttribute(nullptr, 0, text, sizeof(text), nullptr))
+      return false;
+   return rule->parse(text);
+}
+
+/**
+ * Get ID of object from which time zone is inherited. Returns 0 if time zone is not set or is defined on this object.
+ */
+uint32_t NetObj::getTimeZoneSourceObjectId() const
+{
+   uint32_t sourceObjectId;
+   return readTimeZoneAttribute(nullptr, 0, nullptr, 0, &sourceObjectId) ? sourceObjectId : 0;
+}
+
+/**
+ * Set object's time zone. Name is an IANA time zone name. Rule is a POSIX TZ rule string; if null or empty,
+ * the rule is resolved from the name using system time zone database. Returns RCC_INVALID_TIME_ZONE if the
+ * name is malformed, the rule cannot be parsed, or the name cannot be resolved.
+ */
+uint32_t NetObj::setTimeZone(const wchar_t *name, const wchar_t *rule)
+{
+   if ((name == nullptr) || (*name == 0))
+      return RCC_INVALID_ARGUMENT;
+
+   char nameUtf8[256];
+   wchar_to_utf8(name, -1, nameUtf8, sizeof(nameUtf8));
+   if (!IsValidTimeZoneName(nameUtf8))
+   {
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 5, L"NetObj::setTimeZone(%s [%u]): invalid time zone name \"%s\"", m_name, m_id, name);
+      return RCC_INVALID_TIME_ZONE;
+   }
+
+   char ruleText[128];
+   if ((rule != nullptr) && (*rule != 0))
+   {
+      size_t len = wcslen(rule);
+      if (len >= sizeof(ruleText))
+      {
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 5, L"NetObj::setTimeZone(%s [%u]): time zone rule is too long", m_name, m_id);
+         return RCC_INVALID_TIME_ZONE;
+      }
+      for(size_t i = 0; i <= len; i++)
+      {
+         if (rule[i] >= 0x80)
+         {
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 5, L"NetObj::setTimeZone(%s [%u]): time zone rule \"%s\" contains non-ASCII characters", m_name, m_id, rule);
+            return RCC_INVALID_TIME_ZONE;
+         }
+         ruleText[i] = static_cast<char>(rule[i]);
+      }
+
+      TimeZoneRule parsedRule(ruleText);
+      if (!parsedRule.isValid())
+      {
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 5, L"NetObj::setTimeZone(%s [%u]): cannot parse time zone rule \"%s\"", m_name, m_id, rule);
+         return RCC_INVALID_TIME_ZONE;
+      }
+      strlcpy(ruleText, parsedRule.toString(), sizeof(ruleText));
+   }
+   else if (!ResolveTimeZoneName(nameUtf8, ruleText, sizeof(ruleText)))
+   {
+      nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 5, L"NetObj::setTimeZone(%s [%u]): cannot resolve time zone name \"%s\"", m_name, m_id, name);
+      return RCC_INVALID_TIME_ZONE;
+   }
+
+   StringBuffer value(name);
+   value.append(L'|');
+   value.appendUtf8String(ruleText);
+   setCustomAttribute(TIME_ZONE_ATTRIBUTE, SharedString(value), StateChange::SET);
+   return RCC_SUCCESS;
+}
+
+/**
+ * Remove object's own time zone setting. Time zone inherited from parent objects, if any, stays in effect.
+ */
+void NetObj::clearTimeZone()
+{
+   deleteCustomAttribute(TIME_ZONE_ATTRIBUTE);
 }
 
 /**
@@ -3880,9 +4059,10 @@ void NetObj::executeHookScript(const TCHAR *hookName)
 }
 
 /**
- * Serialize object to JSON
+ * Serialize object to JSON. Flags are combination of OBJECT_JSON_* values. Server-internal custom attributes
+ * (prefixed with $$) are never included.
  */
-json_t *NetObj::toJson(bool includeSensitiveData)
+json_t *NetObj::toJson(uint32_t flags)
 {
    json_t *root = json_object();
 
@@ -3920,11 +4100,28 @@ json_t *NetObj::toJson(bool includeSensitiveData)
    json_object_set_new(root, "categoryId", json_integer(m_categoryId));
    json_object_set_new(root, "aiHint", json_string_t(m_aiHint));
 
+   wchar_t timeZoneName[64];
+   char timeZoneRule[128];
+   uint32_t timeZoneSource = 0;
+   if (readTimeZoneAttribute(timeZoneName, 64, timeZoneRule, sizeof(timeZoneRule), &timeZoneSource))
+   {
+      json_object_set_new(root, "timeZone", json_string_t(timeZoneName));
+      json_object_set_new(root, "timeZoneRule", json_string(timeZoneRule));
+   }
+   else
+   {
+      json_object_set_new(root, "timeZone", json_null());
+      json_object_set_new(root, "timeZoneRule", json_null());
+   }
+   json_object_set_new(root, "timeZoneSource", json_integer(timeZoneSource));
+
    json_t *customAttributes = json_array();
+   bool includeServerSideAttributes = (flags & OBJECT_JSON_SERVER_SIDE_ATTRIBUTES) != 0;
    forEachCustomAttribute(
-      [customAttributes] (const TCHAR *key, const CustomAttribute *attr) -> EnumerationCallbackResult
+      [customAttributes, includeServerSideAttributes] (const TCHAR *key, const CustomAttribute *attr) -> EnumerationCallbackResult
       {
-         json_array_append_new(customAttributes, attr->toJson(key));
+         if ((key[0] != L'$') || (includeServerSideAttributes && !IsInternalCustomAttribute(key)))
+            json_array_append_new(customAttributes, attr->toJson(key));
          return _CONTINUE;
       });
    json_object_set_new(root, "customAttributes", customAttributes);
@@ -4397,7 +4594,7 @@ StringBuffer NXCORE_EXPORTABLE ExpandText(const wchar_t *textTemplate, const sha
                }
                TrimW(buffer);
                wchar_t *v = nullptr;
-               if (object != nullptr)
+               if ((object != nullptr) && !IsInternalCustomAttribute(buffer))
                {
                   if (instance != nullptr)
                   {

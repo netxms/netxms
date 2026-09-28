@@ -74,7 +74,7 @@ std::string F_GetObject(json_t *arguments, uint32_t userId)
    if (!object->checkAccessRights(userId, OBJECT_ACCESS_READ))
       return std::string("Access denied");
 
-   return JsonToString(object->toJson());
+   return JsonToString(object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES));
 }
 
 /**
@@ -300,7 +300,7 @@ std::string F_GetNodeInterfaces(json_t *arguments, uint32_t userId)
    json_t *output = json_array();
    for(int i = 0; i < interfaces->size(); i++)
    {
-      json_array_append_new(output, interfaces->get(i)->toJson());
+      json_array_append_new(output, interfaces->get(i)->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES));
    }
    return JsonToString(output);
 }

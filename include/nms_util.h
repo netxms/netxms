@@ -6116,6 +6116,9 @@ public:
    time_t localDayStart(int year, int month, int day) const;
 };
 
+bool LIBNETXMS_EXPORTABLE IsValidTimeZoneName(const char *name);
+bool LIBNETXMS_EXPORTABLE ResolveTimeZoneName(const char *name, char *rule, size_t size);
+
 /**
  * Format timestamp as dd.mm.yyyy HH:MM:SS
  */

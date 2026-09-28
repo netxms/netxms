@@ -342,7 +342,7 @@ int H_ObjectCreate(Context *context)
    nx_swprintf(location, 256, L"/v1/objects/%u", object->getId());
    context->setResponseHeader(L"Location", location);
 
-   json_t *output = object->toJson(true);
+   json_t *output = object->toJson(OBJECT_JSON_SENSITIVE_DATA);
    AddEffectiveRights(output, *object, context->getUserId());
    context->setResponseData(output);
    json_decref(output);
@@ -431,7 +431,7 @@ int H_ObjectDetails(Context *context)
 
    uint32_t userId = context->getUserId();
    bool includeSensitiveData = object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || object->checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS);
-   json_t *output = object->toJson(includeSensitiveData);
+   json_t *output = object->toJson(includeSensitiveData ? OBJECT_JSON_SENSITIVE_DATA : 0);
    AddEffectiveRights(output, *object, userId);
    context->setResponseData(output);
    json_decref(output);
@@ -584,7 +584,7 @@ int H_ObjectDetailsBulk(Context *context)
          if (object->getTimeStamp() < since)
             continue;
          bool includeSensitiveData = (rights & (OBJECT_ACCESS_MODIFY | OBJECT_ACCESS_READ_CREDENTIALS)) != 0;
-         json_t *json = object->toJson(includeSensitiveData);
+         json_t *json = object->toJson(includeSensitiveData ? OBJECT_JSON_SENSITIVE_DATA : 0);
          AddEffectiveRights(json, rights);
          json_array_append_new(objects, json);
       }
@@ -814,7 +814,7 @@ int H_ObjectChildren(Context *context)
          continue;
 
       bool includeSensitiveData = child->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) || child->checkAccessRights(userId, OBJECT_ACCESS_READ_CREDENTIALS);
-      json_t *childObject = child->toJson(includeSensitiveData);
+      json_t *childObject = child->toJson(includeSensitiveData ? OBJECT_JSON_SENSITIVE_DATA : 0);
       AddEffectiveRights(childObject, *child, userId);
       json_array_append_new(output, childObject);
    }

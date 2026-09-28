@@ -83,7 +83,7 @@ int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const
       patch = json_incref(request);
    }
 
-   json_t *oldSnapshot = object->toJson(false);
+   json_t *oldSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    uint32_t rcc = object->modifyFromJSON(patch, context);
    json_decref(patch);
    if (rcc != RCC_SUCCESS)
@@ -108,21 +108,24 @@ int ApplyJsonPatch(Context *context, NetObj *object, const char *groupKey, const
          case RCC_OBJECT_LOOP:
             context->setErrorResponse("Requested change would create a loop in the object tree");
             return 409;
+         case RCC_INVALID_TIME_ZONE:
+            context->setErrorResponse("Invalid or unresolvable time zone");
+            return 400;
          default:
             context->setErrorResponse("Invalid property values in request");
             return 400;
       }
    }
 
-   json_t *newSnapshot = object->toJson(false);
+   json_t *newSnapshot = object->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
    context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldSnapshot, newSnapshot,
       auditLabel, object->getName(), object->getId());
    json_decref(oldSnapshot);
-
-   // Audit log entry is already serialized at this point, so effective rights added below
-   // are not recorded as part of object's new state
-   AddEffectiveRights(newSnapshot, *object, context->getUserId());
-   context->setResponseData(newSnapshot);
    json_decref(newSnapshot);
+
+   json_t *output = object->toJson();
+   AddEffectiveRights(output, *object, context->getUserId());
+   context->setResponseData(output);
+   json_decref(output);
    return 200;
 }

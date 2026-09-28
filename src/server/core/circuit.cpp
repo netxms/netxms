@@ -110,9 +110,9 @@ void Circuit::fillMessageUnlocked(NXCPMessage *msg, uint32_t userId)
 /**
  * Serialize object to JSON
  */
-json_t *Circuit::toJson(bool includeSensitiveData)
+json_t *Circuit::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    AutoBindTarget::toJson(root);
    return root;
 }

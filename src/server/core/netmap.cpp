@@ -2330,9 +2330,9 @@ void NetworkMap::clone(const TCHAR *name, const TCHAR *alias)
 /**
  * Serialize object to JSON
  */
-json_t *NetworkMap::toJson(bool includeSensitiveData)
+json_t *NetworkMap::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    AutoBindTarget::toJson(root);
 
    lockProperties();

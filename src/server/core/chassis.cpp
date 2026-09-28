@@ -499,9 +499,9 @@ void Chassis::setBindUnderController(bool doBind)
 /**
  * Serialize object to JSON
  */
-json_t *Chassis::toJson(bool includeSensitiveData)
+json_t *Chassis::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
 
    lockProperties();
    json_object_set_new(root, "controllerId", json_integer(m_controllerId));

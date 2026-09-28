@@ -356,9 +356,9 @@ NXSL_Value *TrafficObserver::createNXSLObject(NXSL_VM *vm)
 /**
  * Serialize to JSON
  */
-json_t *TrafficObserver::toJson(bool includeSensitiveData)
+json_t *TrafficObserver::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
 
    lockProperties();
    TrafficConnectorInterface *connector = FindTrafficConnector(m_connectorName);

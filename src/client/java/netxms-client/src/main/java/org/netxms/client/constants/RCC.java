@@ -232,6 +232,7 @@ public final class RCC
    public static final int EXEC_TIMEOUT = 197;
    public static final int OBJECT_HIERARCHY_VIOLATION = 198;
    public static final int AI_ASSISTANT_NOT_AVAILABLE = 199;
+   public static final int INVALID_TIME_ZONE = 200;
 
    // Client-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

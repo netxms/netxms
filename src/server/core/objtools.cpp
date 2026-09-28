@@ -2918,6 +2918,8 @@ static bool IsToolFilterApplicable(const char *filterXml, const shared_ptr<NetOb
          object->forEachCustomAttribute(
             [&patterns, &match](const TCHAR *key, const CustomAttribute *value) -> EnumerationCallbackResult
             {
+               if (IsInternalCustomAttribute(key))
+                  return _CONTINUE;
                for(int i = 0; i < patterns.size(); i++)
                {
                   if (RegexpMatch(key, patterns.get(i), true))

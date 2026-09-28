@@ -606,9 +606,9 @@ json_t *Room::roomConfigToJson()
 /**
  * Serialize object to JSON
  */
-json_t *Room::toJson(bool includeSensitiveData)
+json_t *Room::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    json_object_set_new(root, "room", roomConfigToJson());
    return root;
 }

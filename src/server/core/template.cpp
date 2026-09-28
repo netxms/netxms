@@ -627,9 +627,9 @@ void Template::updateFromImport(json_t *data, ImportContext *context)
 /**
  * Serialize object to JSON
  */
-json_t *Template::toJson(bool includeSensitiveData)
+json_t *Template::toJson(uint32_t flags)
 {
-   json_t *root = super::toJson(includeSensitiveData);
+   json_t *root = super::toJson(flags);
    AutoBindTarget::toJson(root);
    VersionableObject::toJson(root);
 

@@ -324,6 +324,12 @@ NXSL_METHOD_DEFINITION(NetObj, deleteCustomAttribute)
 
    NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    const TCHAR *name = argv[0]->getValueAsCString();
+   if (IsInternalCustomAttribute(name))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+
    NXSL_Value *value = netobj->getCustomAttributeForNXSL(vm, name);
    *result = (value != nullptr) ? value : vm->createValue();
    netobj->deleteCustomAttribute(name);
@@ -645,6 +651,59 @@ NXSL_METHOD_DEFINITION(NetObj, setAlias)
 }
 
 /**
+ * setTimeZone(name, [rule])
+ * Sets object's time zone. Name is an IANA time zone name; optional rule is a POSIX TZ rule string, required
+ * when the server cannot resolve the name via system time zone database. Null or empty name removes object's
+ * own setting (time zone inherited from parent objects, if any, stays in effect). Returns true on success.
+ */
+NXSL_METHOD_DEFINITION(NetObj, setTimeZone)
+{
+   if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, static_cast<shared_ptr<NetObj>*>(object->getData())->get()))
+   {
+      *result = vm->createValue(false);
+      return 0;
+   }
+
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() && !argv[0]->isNull())
+      return NXSL_ERR_NOT_STRING;
+
+   if ((argc > 1) && !argv[1]->isString() && !argv[1]->isNull())
+      return NXSL_ERR_NOT_STRING;
+
+   NetObj *netobj = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   SharedString oldTimeZone = netobj->getTimeZone();
+   uint32_t oldSourceObjectId = netobj->getTimeZoneSourceObjectId();
+   TimeZoneRule oldRule;
+   netobj->getTimeZoneRule(&oldRule);
+   uint32_t rcc;
+   if (argv[0]->isNull() || (argv[0]->getValueAsCString()[0] == 0))
+   {
+      netobj->clearTimeZone();
+      rcc = RCC_SUCCESS;
+   }
+   else
+   {
+      rcc = netobj->setTimeZone(argv[0]->getValueAsCString(), ((argc > 1) && argv[1]->isString()) ? argv[1]->getValueAsCString() : nullptr);
+   }
+   if (rcc == RCC_SUCCESS)
+   {
+      SharedString newTimeZone = netobj->getTimeZone();
+      TimeZoneRule newRule;
+      netobj->getTimeZoneRule(&newRule);
+      if (wcscmp(oldTimeZone, newTimeZone) || (oldSourceObjectId != netobj->getTimeZoneSourceObjectId()) || strcmp(oldRule.toString(), newRule.toString()))
+      {
+         vm->writeAuditLogWithValues(AUDIT_OBJECTS, true, netobj->getId(), oldTimeZone, newTimeZone, 'T',
+            L"Time zone of object %s changed by script", netobj->getName());
+      }
+   }
+   *result = vm->createValue(rcc == RCC_SUCCESS);
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * setCategory(idOrName)
  */
 NXSL_METHOD_DEFINITION(NetObj, setCategory)
@@ -774,6 +833,12 @@ NXSL_METHOD_DEFINITION(NetObj, setCustomAttribute)
 
    NetObj *netxmsObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    const TCHAR *name = argv[0]->getValueAsCString();
+   if (IsInternalCustomAttribute(name))
+   {
+      *result = vm->createValue(false);
+      return NXSL_ERR_SUCCESS;
+   }
+
    NXSL_Value *value = netxmsObject->getCustomAttributeForNXSL(vm, name);
    StateChange inherit = (argc == 3) ? (argv[2]->getValueAsBoolean() ? StateChange::SET : StateChange::CLEAR) : StateChange::IGNORE;
    int rc = SetCustomAttributeFromNXSL(netxmsObject, name, argv[1], inherit);
@@ -1178,6 +1243,7 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(NetObj, setPostalAddress, 6);
    NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
    NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
+   NXSL_REGISTER_METHOD(NetObj, setTimeZone, -1);
    NXSL_REGISTER_METHOD(NetObj, unbind, 1);
    NXSL_REGISTER_METHOD(NetObj, unbindFrom, 1);
    NXSL_REGISTER_METHOD(NetObj, unmanage, 0);
@@ -1197,7 +1263,7 @@ void NXSL_NetObjClass::onObjectDelete(NXSL_Object *object)
  */
 json_t *NXSL_NetObjClass::toJson(NXSL_Object *object, int depth)
 {
-   return SharedObjectFromData<NetObj>(object)->toJson();
+   return SharedObjectFromData<NetObj>(object)->toJson(OBJECT_JSON_SERVER_SIDE_ATTRIBUTES);
 }
 
 /**
@@ -1436,6 +1502,16 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("streetAddress"))
    {
       value = vm->createValue(object->getPostalAddress().getStreetAddress());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("timeZone"))
+   {
+      SharedString timeZone = object->getTimeZone();
+      value = timeZone.isEmpty() ? vm->createValue() : vm->createValue(timeZone);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("timeZoneRule"))
+   {
+      TimeZoneRule rule;
+      value = object->getTimeZoneRule(&rule) ? vm->createValue(rule.toString()) : vm->createValue();
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("type"))
    {
