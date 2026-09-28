@@ -247,6 +247,8 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
    bool success = super::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM access_points WHERE id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM radios WHERE owner_id=?"));
    return success;
 }
 

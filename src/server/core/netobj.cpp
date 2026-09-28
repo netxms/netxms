@@ -612,6 +612,12 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_urls WHERE object_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_objects WHERE object_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM port_stop_list WHERE object_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM object_ai_data WHERE object_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM dashboard_associations WHERE object_id=?"));
 
    // Delete events
    bool isEventSource = IsEventSource(getObjectClass());

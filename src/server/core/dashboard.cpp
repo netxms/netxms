@@ -169,6 +169,8 @@ bool DashboardBase::deleteFromDatabase(DB_HANDLE hdb)
    if (success)
       success = executeQueryOnObject(hdb, L"DELETE FROM dashboard_elements WHERE dashboard_id=?");
    if (success)
+      success = executeQueryOnObject(hdb, L"DELETE FROM dashboard_associations WHERE dashboard_id=?");
+   if (success)
       success = AutoBindTarget::deleteFromDatabase(hdb);
    return success;
 }

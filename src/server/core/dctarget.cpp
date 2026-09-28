@@ -92,6 +92,37 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
       _sntprintf(query, 256, (g_flags & AF_SINGLE_TABLE_PERF_DATA) ? _T("DELETE FROM tdata WHERE item_id IN (SELECT item_id FROM dc_tables WHERE node_id=%u)") : _T("DROP TABLE tdata_%u"), m_id);
       QueueSQLRequest(query);
 
+      // Data of DCIs pending cleanup is not covered by queries above because they are already removed from items/dc_tables
+      if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
+      {
+         lockProperties();
+         if (!m_deletedItems.isEmpty())
+         {
+            StringBuffer query(_T("DELETE FROM idata WHERE item_id IN ("));
+            for(int i = 0; i < m_deletedItems.size(); i++)
+            {
+               if (i > 0)
+                  query.append(_T(','));
+               query.append(m_deletedItems.get(i));
+            }
+            query.append(_T(')'));
+            QueueSQLRequest(query);
+         }
+         if (!m_deletedTables.isEmpty())
+         {
+            StringBuffer query(_T("DELETE FROM tdata WHERE item_id IN ("));
+            for(int i = 0; i < m_deletedTables.size(); i++)
+            {
+               if (i > 0)
+                  query.append(_T(','));
+               query.append(m_deletedTables.get(i));
+            }
+            query.append(_T(')'));
+            QueueSQLRequest(query);
+         }
+         unlockProperties();
+      }
+
       if (m_runtimeFlags & ODF_HAS_IDATA_V5_TABLE)
       {
          _sntprintf(query, 256, _T("DROP TABLE idata_v5_%u"), m_id);
@@ -116,6 +147,15 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM dc_targets WHERE id=?"));
+
+   // Persist DCI ID high-water mark in the same transaction: once this target's rows in items, dc_tables,
+   // and dci_delete_list are gone, their IDs no longer contribute to ID recovery on startup, and a reused
+   // ID would pick up data that is still retained (always the case with TimescaleDB until chunk expiration)
+   if (success)
+      success = SaveFirstFreeDCIId(hdb);
+
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM dci_delete_list WHERE node_id=?"));
 
    if (success)
       success = super::deleteFromDatabase(hdb);

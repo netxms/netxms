@@ -89,16 +89,7 @@
 #define IDG_CONNECTION_HISTORY      37
 #define IDG_AI_SAVED_PROMPT         38
 
-/**** ID functions *****/
-bool InitIdTable();
-uint32_t NXCORE_EXPORTABLE CreateUniqueId(int group);
-void SaveCurrentFreeId();
-
-
-//
-// Common includes
-//
-
+/**** Common includes ****/
 #include <nms_util.h>
 #include <dbdrv.h>
 #include <nms_cscp.h>
@@ -113,9 +104,13 @@ void SaveCurrentFreeId();
 #include <nxcore_smclp.h>
 #include <nxproc.h>
 
-/**
- * Server includes
- */
+/**** ID functions *****/
+bool InitIdTable();
+uint32_t NXCORE_EXPORTABLE CreateUniqueId(int group);
+void SaveCurrentFreeId();
+bool SaveFirstFreeDCIId(DB_HANDLE hdb);
+
+/**** Server includes ****/
 #include "server_console.h"
 #include "nms_dcoll.h"
 #include "nxcore_winperf.h"
@@ -1406,10 +1401,15 @@ int64_t NXCORE_EXPORTABLE ConfigReadInt64(const wchar_t *variable, int64_t defau
 uint64_t NXCORE_EXPORTABLE ConfigReadUInt64(const wchar_t *variable, uint64_t defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadBoolean(const wchar_t *variable, bool defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadByteArray(const wchar_t *variable, int *buffer, size_t size, int defaultElementValue);
+bool NXCORE_EXPORTABLE ConfigWriteStr(DB_HANDLE hdb, const wchar_t *variable, const wchar_t *value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteStr(const wchar_t *variable, const wchar_t *value, bool create, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteInt(DB_HANDLE hdb, const TCHAR *variable, int32_t value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int32_t value, bool create, bool isVisible = true, bool needRestart = false);
-bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, uint32_t value, bool create, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteUInt32(DB_HANDLE hdb, const TCHAR *variable, uint32_t value, bool create, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteUInt32(const TCHAR *variable, uint32_t value, bool create, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteInt64(DB_HANDLE hdb, const TCHAR *variable, int64_t value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteInt64(const TCHAR *variable, int64_t value, bool create, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteUInt64(DB_HANDLE hdb, const TCHAR *variable, uint64_t value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, bool create, bool isVisible = true, bool needRestart = false);
 bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *variable, int *value, size_t size, bool create, bool isVisible = true, bool needRestart = false);
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *varariable, const TCHAR *defaultValue);

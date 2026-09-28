@@ -482,7 +482,7 @@ retry:
       ConfigWriteStr(L"DBLockStatus", buffer, true, false);
       GetSysInfoStr(buffer, sizeof(buffer));
       ConfigWriteStr(L"DBLockInfo", buffer, true, false);
-      ConfigWriteULong(L"DBLockPID", GetCurrentProcessId(), true, false);
+      ConfigWriteUInt32(L"DBLockPID", GetCurrentProcessId(), true, false);
       ConfigWriteInt(L"DBLockFlag", 0, true, false, false);
       success = true;
    }
@@ -504,10 +504,12 @@ retry:
  */
 void NXCORE_EXPORTABLE UnlockDatabase()
 {
-   ConfigWriteStr(L"DBLockStatus", L"UNLOCKED", false);
-   ConfigWriteStr(L"DBLockInfo", L"", false);
-   ConfigWriteULong(L"DBLockPID", 0, false);
-   ConfigWriteInt(L"DBLockFlag", 0, false);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   ConfigWriteStr(hdb, L"DBLockStatus", L"UNLOCKED", false);
+   ConfigWriteStr(hdb, L"DBLockInfo", L"", false);
+   ConfigWriteUInt32(hdb, L"DBLockPID", 0, false);
+   ConfigWriteInt(hdb, L"DBLockFlag", 0, false);
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**

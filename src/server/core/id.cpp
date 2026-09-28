@@ -539,6 +539,18 @@ uint32_t NXCORE_EXPORTABLE CreateUniqueId(int group)
 }
 
 /**
+ * Save first free data collection object ID using given database connection
+ * (so it can be part of an ongoing transaction)
+ */
+bool SaveFirstFreeDCIId(DB_HANDLE hdb)
+{
+   s_mutexTableAccess.lock();
+   uint32_t dciId = s_freeIdTable[IDG_ITEM];
+   s_mutexTableAccess.unlock();
+   return ConfigWriteUInt32(hdb, _T("FirstFreeDCIId"), dciId, true, false, true);
+}
+
+/**
  * Save current first free IDs
  */
 void SaveCurrentFreeId()
@@ -549,18 +561,25 @@ void SaveCurrentFreeId()
    uint32_t alarmId = s_freeIdTable[IDG_ALARM];
    uint32_t deploymentJobId = s_freeIdTable[IDG_PACKAGE_DEPLOYMENT_JOB];
    s_mutexTableAccess.unlock();
-   ConfigWriteULong(_T("FirstFreeObjectId"), objectId, true, false, true);
-   ConfigWriteULong(_T("FirstFreeDCIId"), dciId, true, false, true);
-   ConfigWriteULong(_T("FirstFreeAlarmId"), alarmId, true, false, true);
-   ConfigWriteULong(_T("FirstFreeDeploymentJobId"), deploymentJobId, true, false, true);
-   ConfigWriteInt(_T("LastAuditRecordId"), GetLastAuditRecordId(), true, false, true);
-   ConfigWriteInt64(_T("LastEventId"), GetLastEventId(), true, false, true);
-   ConfigWriteInt64(_T("LastSNMPTrapId"), GetLastSnmpTrapId(), true, false, true);
-   ConfigWriteUInt64(_T("FirstFreeSyslogId"), GetNextSyslogId(), true, false, true);
-   ConfigWriteUInt64(_T("FirstFreeWinEventId"), GetNextWinEventId(), true, false, true);
-   ConfigWriteUInt64(_T("FirstFreeOtelLogId"), GetNextOtelLogId(), true, false, true);
-   ConfigWriteInt64(_T("LastActionExecutionLogRecordId"), GetLastActionExecutionLogId(), true, false, true);
-   ConfigWriteInt64(_T("LastNotificationId"), GetLastNotificationId(), true, false, true);
-   ConfigWriteUInt64(_T("LastAssetChangeLogRecordId"), GetLastAssetChangeLogId(), true, false, true);
-   ConfigWriteInt64(_T("AITask.LastLogRecordId"), GetLastAITaskLogRecordId(), true, false, true);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   if (DBBegin(hdb))
+   {
+      ConfigWriteUInt32(hdb, _T("FirstFreeObjectId"), objectId, true, false, true);
+      ConfigWriteUInt32(hdb, _T("FirstFreeDCIId"), dciId, true, false, true);
+      ConfigWriteUInt32(hdb, _T("FirstFreeAlarmId"), alarmId, true, false, true);
+      ConfigWriteUInt32(hdb, _T("FirstFreeDeploymentJobId"), deploymentJobId, true, false, true);
+      ConfigWriteInt(hdb, _T("LastAuditRecordId"), GetLastAuditRecordId(), true, false, true);
+      ConfigWriteInt64(hdb, _T("LastEventId"), GetLastEventId(), true, false, true);
+      ConfigWriteInt64(hdb, _T("LastSNMPTrapId"), GetLastSnmpTrapId(), true, false, true);
+      ConfigWriteUInt64(hdb, _T("FirstFreeSyslogId"), GetNextSyslogId(), true, false, true);
+      ConfigWriteUInt64(hdb, _T("FirstFreeWinEventId"), GetNextWinEventId(), true, false, true);
+      ConfigWriteUInt64(hdb, _T("FirstFreeOtelLogId"), GetNextOtelLogId(), true, false, true);
+      ConfigWriteInt64(hdb, _T("LastActionExecutionLogRecordId"), GetLastActionExecutionLogId(), true, false, true);
+      ConfigWriteInt64(hdb, _T("LastNotificationId"), GetLastNotificationId(), true, false, true);
+      ConfigWriteUInt64(hdb, _T("LastAssetChangeLogRecordId"), GetLastAssetChangeLogId(), true, false, true);
+      ConfigWriteInt64(hdb, _T("AITask.LastLogRecordId"), GetLastAITaskLogRecordId(), true, false, true);
+      DBCommit(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
 }

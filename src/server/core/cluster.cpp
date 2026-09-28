@@ -346,6 +346,8 @@ bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
       if (success)
          success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=?"));
       if (success)
+         success = executeQueryOnObject(hdb, _T("DELETE FROM cluster_resources WHERE cluster_id=?"));
+      if (success)
          success = AutoBindTarget::deleteFromDatabase(hdb);
    }
    return success;
