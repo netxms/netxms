@@ -91,7 +91,7 @@ public class VideoServiceHandler implements ServiceHandler
             String[] s = part.split("-");
             if (s.length != 2)
                continue;
-            
+
             long start = s[0].isEmpty() ? 0 : Long.parseLong(s[0]);
             long end = s[1].isEmpty() ? (contentLength - 1) : Long.parseLong(s[1]);
 
@@ -105,7 +105,7 @@ public class VideoServiceHandler implements ServiceHandler
             ranges.add(new Range(start, end));
          }
       }
-      
+
       // Content features header
       String ch = request.getHeader("GetContentFeatures.DLNA.ORG");
       if ((ch != null) && ch.equals("1"))
@@ -115,8 +115,8 @@ public class VideoServiceHandler implements ServiceHandler
       }
 
 		// Send the file in the response
-      response.setHeader("Accept-Ranges", "bytes");		
-      response.setHeader("Content-Disposition", "attachment; filename=\"" + vf.getName() + "\"");      
+      response.setHeader("Accept-Ranges", "bytes");
+      response.setHeader("Content-Disposition", DownloadServiceHandler.buildContentDisposition(vf.getName()));
 		RandomAccessFile in = new RandomAccessFile(vf, "r");
 		try
 		{
@@ -144,7 +144,7 @@ public class VideoServiceHandler implements ServiceHandler
 			{
             response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
 			   response.setContentType("multipart/byteranges; boundary=" + MULTIPART_BOUNDARY);
-			   
+
 			   // Multipart headers are hardcoded constants and server-derived numeric ranges; no request input written here.
 			   // nosemgrep: java.lang.security.audit.xss.no-direct-response-writer.no-direct-response-writer
 			   for(Range r : ranges)
@@ -166,7 +166,7 @@ public class VideoServiceHandler implements ServiceHandler
 			in.close();
 		}
 	}
-	
+
 	/**
 	 * @param in
 	 * @param out

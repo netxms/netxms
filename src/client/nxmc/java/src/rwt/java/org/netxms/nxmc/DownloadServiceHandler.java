@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -45,6 +46,8 @@ public class DownloadServiceHandler implements ServiceHandler
    private static final Logger logger = LoggerFactory.getLogger(DownloadServiceHandler.class);
 
    public static final String ID = "downloadServiceHandler";
+
+   private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
 
 	private static Map<String, DownloadInfo> downloads = new HashMap<String, DownloadInfo>();
 	private static Deque<String> iframeIds = new ArrayDeque<String>(16);
@@ -74,7 +77,7 @@ public class DownloadServiceHandler implements ServiceHandler
 		// Send the file in the response
 		response.setContentType(info.contentType);
       if (info.attachment)
-         response.setHeader("Content-Disposition", "attachment; filename=\"" + info.name + "\"");
+         response.setHeader("Content-Disposition", buildContentDisposition(info.name));
 
 		if (info.localFile != null)
 		{
@@ -195,13 +198,13 @@ public class DownloadServiceHandler implements ServiceHandler
 
 	/**
 	 * Start download that was added previously
-	 * 
+	 *
 	 * @param id
 	 */
 	public static void startDownload(String id)
 	{
       JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-      if (executor != null) 
+      if (executor != null)
       {
          StringBuilder js = new StringBuilder();
          js.append("var hiddenIFrameID = 'hiddenDownloader_");
@@ -217,7 +220,7 @@ public class DownloadServiceHandler implements ServiceHandler
          js.append(DownloadServiceHandler.createDownloadUrl(id));
          js.append("';");
          executor.execute(js.toString());
-      }                 
+      }
 	}
 
 	/**
@@ -234,6 +237,40 @@ public class DownloadServiceHandler implements ServiceHandler
          return (info != null) ? info.iframeId : "";
       }
 	}
+
+   /**
+    * Build Content-Disposition header value for attachment with given file name. Name is sent as RFC 8187 encoded
+    * "filename*" parameter, with ASCII-only "filename" parameter as fallback for clients not supporting RFC 6266.
+    *
+    * @param name file name
+    * @return header value containing only ASCII characters
+    */
+   static String buildContentDisposition(String name)
+   {
+      StringBuilder sb = new StringBuilder("attachment; filename=\"");
+      for(int i = 0; i < name.length(); i++)
+      {
+         char ch = name.charAt(i);
+         // Some legacy clients decode %HH sequences in "filename"
+         sb.append(((ch >= 0x20) && (ch <= 0x7E) && (ch != '"') && (ch != '\\') && (ch != '%')) ? ch : '_');
+      }
+      sb.append("\"; filename*=UTF-8''");
+      for(byte b : name.getBytes(StandardCharsets.UTF_8))
+      {
+         int c = b & 0xFF;
+         if (((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || ((c >= '0') && (c <= '9')) || ("!#$&+-.^_`|~".indexOf(c) != -1))
+         {
+            sb.append((char)c);
+         }
+         else
+         {
+            sb.append('%');
+            sb.append(HEX_DIGITS[c >> 4]);
+            sb.append(HEX_DIGITS[c & 0x0F]);
+         }
+      }
+      return sb.toString();
+   }
 
 	/**
 	 * Download information
