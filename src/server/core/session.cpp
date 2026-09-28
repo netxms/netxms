@@ -16223,12 +16223,59 @@ void ClientSession::getScheduledTasks(const NXCPMessage& request)
 }
 
 /**
+ * Build scheduled task description for audit log from task handler ID and object ID
+ */
+static StringBuffer ScheduledTaskAuditDescription(const wchar_t *taskHandlerId, uint32_t objectId)
+{
+   StringBuffer description(L"with handler ");
+   description.append(CHECK_NULL_EX(taskHandlerId));
+   if (objectId != 0)
+   {
+      shared_ptr<NetObj> object = FindObjectById(objectId);
+      description.append(L" for object ");
+      description.append((object != nullptr) ? object->getName() : L"<unknown>");
+      description.append(L" [");
+      description.append(objectId);
+      description.append(L"]");
+   }
+   return description;
+}
+
+/**
+ * Build scheduled task description for audit log from create/update request
+ */
+static StringBuffer ScheduledTaskAuditDescription(const NXCPMessage& request)
+{
+   wchar_t taskHandlerId[256];
+   request.getFieldAsString(VID_TASK_HANDLER, taskHandlerId, 256);
+   StringBuffer description = ScheduledTaskAuditDescription(taskHandlerId, request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (request.isFieldExist(VID_SCHEDULE))
+   {
+      description.append(L" (schedule \"");
+      description.appendPreallocated(request.getFieldAsString(VID_SCHEDULE));
+      description.append(L"\")");
+   }
+   else
+   {
+      wchar_t timeText[64];
+      description.append(L" (execution time ");
+      description.append(FormatTimestamp(request.getFieldAsTime(VID_EXECUTION_TIME), timeText));
+      description.append(L")");
+   }
+   return description;
+}
+
+/**
  * Add new schedule
  */
 void ClientSession::addScheduledTask(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t result = CreateScheduledTaskFromMsg(request, m_userId, m_systemAccessRights);
+   if (result == RCC_SUCCESS)
+      writeAuditLog(AUDIT_SYSCFG, true, request.getFieldAsUInt32(VID_OBJECT_ID), L"Created scheduled task %s", ScheduledTaskAuditDescription(request).cstr());
+   else if (result == RCC_ACCESS_DENIED)
+      writeAuditLog(AUDIT_SYSCFG, false, request.getFieldAsUInt32(VID_OBJECT_ID), L"Access denied on creating scheduled task %s", ScheduledTaskAuditDescription(request).cstr());
    response.setField(VID_RCC, result);
    sendMessage(response);
 }
@@ -16240,6 +16287,12 @@ void ClientSession::updateScheduledTask(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t result = UpdateScheduledTaskFromMsg(request, m_userId, m_systemAccessRights);
+   if (result == RCC_SUCCESS)
+      writeAuditLog(AUDIT_SYSCFG, true, request.getFieldAsUInt32(VID_OBJECT_ID), L"Updated scheduled task [" UINT64_FMT L"] %s",
+            request.getFieldAsUInt64(VID_SCHEDULED_TASK_ID), ScheduledTaskAuditDescription(request).cstr());
+   else if (result == RCC_ACCESS_DENIED)
+      writeAuditLog(AUDIT_SYSCFG, false, request.getFieldAsUInt32(VID_OBJECT_ID), L"Access denied on updating scheduled task [" UINT64_FMT L"] %s",
+            request.getFieldAsUInt64(VID_SCHEDULED_TASK_ID), ScheduledTaskAuditDescription(request).cstr());
    response.setField(VID_RCC, result);
    sendMessage(response);
 }
@@ -16250,7 +16303,14 @@ void ClientSession::updateScheduledTask(const NXCPMessage& request)
 void ClientSession::removeScheduledTask(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   uint32_t result = DeleteScheduledTask(request.getFieldAsUInt64(VID_SCHEDULED_TASK_ID), m_userId, m_systemAccessRights);
+   uint64_t taskId = request.getFieldAsUInt64(VID_SCHEDULED_TASK_ID);
+   SharedString taskHandlerId;
+   uint32_t objectId = 0;
+   uint32_t result = DeleteScheduledTask(taskId, m_userId, m_systemAccessRights, &taskHandlerId, &objectId);
+   if (result == RCC_SUCCESS)
+      writeAuditLog(AUDIT_SYSCFG, true, objectId, L"Deleted scheduled task [" UINT64_FMT L"] %s", taskId, ScheduledTaskAuditDescription(taskHandlerId, objectId).cstr());
+   else if (result == RCC_ACCESS_DENIED)
+      writeAuditLog(AUDIT_SYSCFG, false, objectId, L"Access denied on deleting scheduled task [" UINT64_FMT L"] %s", taskId, ScheduledTaskAuditDescription(taskHandlerId, objectId).cstr());
    response.setField(VID_RCC, result);
    sendMessage(response);
 }

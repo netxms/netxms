@@ -37,15 +37,21 @@ static void ScheduledMaintenance(const shared_ptr<ScheduledTaskParameters>& para
          if (enter)
          {
             object->enterMaintenanceMode(parameters->m_userId, parameters->m_comments);
+            WriteAuditLog(AUDIT_OBJECTS, true, parameters->m_userId, nullptr, AUDIT_SYSTEM_SID, object->getId(),
+               _T("Scheduled maintenance mode enter for object %s [%u]"), object->getName(), object->getId());
          }
          else
          {
             object->leaveMaintenanceMode(parameters->m_userId);
+            WriteAuditLog(AUDIT_OBJECTS, true, parameters->m_userId, nullptr, AUDIT_SYSTEM_SID, object->getId(),
+               _T("Scheduled maintenance mode exit for object %s [%u]"), object->getName(), object->getId());
          }
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("ScheduledMaintenance: Access to object %s [%u] denied"), object->getName(), object->getId());
+         WriteAuditLog(AUDIT_OBJECTS, false, parameters->m_userId, nullptr, AUDIT_SYSTEM_SID, object->getId(),
+            _T("Access denied on scheduled maintenance mode %s for object %s [%u]"), enter ? _T("enter") : _T("exit"), object->getName(), object->getId());
       }
    }
    else
