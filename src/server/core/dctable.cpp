@@ -963,13 +963,20 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, m_flags);
    msg->setField(fieldId++, m_description);
    msg->setField(fieldId++, static_cast<uint16_t>(m_source));
-   if ((instance != nullptr) && (column != nullptr))
+   if ((m_lastValue != nullptr) && (instance != nullptr) && (column != nullptr))
    {
-      shared_ptr<Table> t = getLastValue();
-      int columnIndex =  t->getColumnIndex(column);
-      int rowIndex = t->findRowByInstance(instance);
-      msg->setField(fieldId++, t->getColumnDataType(columnIndex));
-      msg->setField(fieldId++, t->getAsString(rowIndex, columnIndex));
+      int columnIndex =  m_lastValue->getColumnIndex(column);
+      if (columnIndex >= 0)
+      {
+         int rowIndex = m_lastValue->findRowByInstance(instance);
+         msg->setField(fieldId++, m_lastValue->getColumnDataType(columnIndex));
+         msg->setField(fieldId++, m_lastValue->getAsString(rowIndex, columnIndex));
+      }
+      else
+      {
+         msg->setField(fieldId++, static_cast<uint16_t>(DCI_DT_NULL));  // compatibility: data type
+         msg->setField(fieldId++, _T(""));             // compatibility: value
+      }
    }
    else
    {
