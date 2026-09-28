@@ -183,6 +183,25 @@ uint32_t ModifyPhysicalPlacementFromJson(json_t *group, const NetObj *object, co
 }
 
 /**
+ * Copy the fields whose keys are present in the physical placement group from staged to target
+ */
+void CommitPhysicalPlacement(json_t *group, const PhysicalPlacementRef& staged, const PhysicalPlacementRef& target)
+{
+   if (json_object_get(group, "containerId") != nullptr)
+      *target.containerId = *staged.containerId;
+   if (json_object_get(group, "position") != nullptr)
+      *target.position = *staged.position;
+   if (json_object_get(group, "height") != nullptr)
+      *target.height = *staged.height;
+   if (json_object_get(group, "orientation") != nullptr)
+      *target.orientation = *staged.orientation;
+   if (json_object_get(group, "imageFront") != nullptr)
+      *target.imageFront = *staged.imageFront;
+   if (json_object_get(group, "imageRear") != nullptr)
+      *target.imageRear = *staged.imageRear;
+}
+
+/**
  * Serialize chassis placement geometry into the <placement> XML document stored in
  * Node::m_chassisPlacementConf. The orientation tag is deliberately spelled
  * "oritentaiton": that is the name the reader (Node::getChassisPlacement) and every

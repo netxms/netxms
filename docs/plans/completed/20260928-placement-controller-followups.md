@@ -80,17 +80,19 @@ No GitHub issue: commit messages reference PR #3633 as a follow-up.
 
 ### Task 2: Commit only the placement keys the PATCH carried
 
-- [ ] `Node::modifyFromJSONInternal`: after relocking, write back each of `m_physicalContainer`,
+- [x] `Node::modifyFromJSONInternal`: after relocking, write back each of `m_physicalContainer`,
       `m_rackPosition`, `m_rackHeight`, `m_rackOrientation`, `m_rackImageFront`, `m_rackImageRear`
       only when the corresponding key (`containerId`, `position`, `height`, `orientation`,
       `imageFront`, `imageRear`) is present in the `physicalPlacement` group
-- [ ] `Chassis::modifyFromJSONInternal`: same for `m_rackId` and the rest of the placement group
-- [ ] `Chassis::modifyFromJSONInternal`: commit `m_controllerId` only when the document carries
+- [x] `Chassis::modifyFromJSONInternal`: same for `m_rackId` and the rest of the placement group
+- [x] `Chassis::modifyFromJSONInternal`: commit `m_controllerId` only when the document carries
       `controllerId` (fold into the existing `json_object_get(json, "controllerId")` check)
-- [ ] Update the "Stage into locals" comments where they now misdescribe the commit
-- [ ] Build server core; sanity-check a partial placement PATCH and a PATCH without `controllerId`
+- [x] Update the "Stage into locals" comments where they now misdescribe the commit (none did: they describe staging and the lock drop, not the commit; left unchanged)
+- [x] Build server core; sanity-check a partial placement PATCH and a PATCH without `controllerId`
       against the local server
-- [ ] `git rm docs/backlog/placement-patch-commits-stale-snapshot.md`
+- [x] `git rm docs/backlog/placement-patch-commits-stale-snapshot.md`
+- ➕ Added `CommitPhysicalPlacement` (physical_placement.cpp, declared next to `ModifyPhysicalPlacementFromJson`) so both call sites share the per-key commit instead of repeating six conditions each
+- ⚠️ Sanity check ran over WebAPI with a bearer token minted via nxshell: `/v1/login` returns 403 "Required license not installed" on this server. The check cannot exercise the race window itself; it confirms partial PATCHes leave unmentioned fields and `controllerId` alone
 
 Known residual, accepted: validation ran against the staged snapshot, so a PATCH carrying only
 `position` is checked against the staged `height`; a concurrent NXCP height change in the window can

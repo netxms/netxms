@@ -11752,12 +11752,8 @@ uint32_t Node::modifyFromJSONInternal(json_t *json, GenericClientSession *sessio
       lockProperties();
       if (rcc != RCC_SUCCESS)
          return rcc;
-      m_physicalContainer = containerId;
-      m_rackPosition = position;
-      m_rackHeight = height;
-      m_rackOrientation = orientation;
-      m_rackImageFront = imageFront;
-      m_rackImageRear = imageRear;
+      PhysicalPlacementRef target = { &m_physicalContainer, &m_rackPosition, &m_rackHeight, &m_rackOrientation, &m_rackImageFront, &m_rackImageRear };
+      CommitPhysicalPlacement(physicalPlacement, placementRef, target);
 
       // Relink at the point the container id is committed, exactly as modifyFromMessageInternal
       // does. The caller marks the object as modified regardless of the result code, so the new

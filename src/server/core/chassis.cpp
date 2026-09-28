@@ -255,12 +255,8 @@ uint32_t Chassis::modifyFromJSONInternal(json_t *json, GenericClientSession *ses
       lockProperties();
       if (rcc != RCC_SUCCESS)
          return rcc;
-      m_rackId = rackId;
-      m_rackPosition = position;
-      m_rackHeight = height;
-      m_rackOrientation = orientation;
-      m_rackImageFront = imageFront;
-      m_rackImageRear = imageRear;
+      PhysicalPlacementRef target = { &m_rackId, &m_rackPosition, &m_rackHeight, &m_rackOrientation, &m_rackImageFront, &m_rackImageRear };
+      CommitPhysicalPlacement(physicalPlacement, placementRef, target);
 
       // Rebinds are scheduled at the point the id is committed, not after the result code:
       // the caller marks the object as modified regardless of the result, so a committed id reaches
@@ -269,9 +265,11 @@ uint32_t Chassis::modifyFromJSONInternal(json_t *json, GenericClientSession *ses
          ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Chassis::updateRackBinding);
    }
 
-   m_controllerId = controllerId;
    if (json_object_get(json, "controllerId") != nullptr)
+   {
+      m_controllerId = controllerId;
       ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Chassis::updateControllerBinding);
+   }
 
    return super::modifyFromJSONInternal(json, session);
 }

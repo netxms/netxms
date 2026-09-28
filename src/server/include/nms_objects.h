@@ -3419,6 +3419,13 @@ json_t NXCORE_EXPORTABLE *PhysicalPlacementToJson(const PhysicalPlacementRef& pl
 uint32_t NXCORE_EXPORTABLE ModifyPhysicalPlacementFromJson(json_t *group, const NetObj *object, const PhysicalPlacementRef& placement, bool allowChassisContainer);
 
 /**
+ * Copy the fields whose keys are present in the physical placement group from staged to target.
+ * Fields the group does not mention are left untouched in target, so a concurrent change made while
+ * the staged copy was validated without the property lock is not overwritten.
+ */
+void NXCORE_EXPORTABLE CommitPhysicalPlacement(json_t *group, const PhysicalPlacementRef& staged, const PhysicalPlacementRef& target);
+
+/**
  * Check that a device of given height placed at given rack unit fits inside the rack.
  */
 bool NXCORE_EXPORTABLE IsValidRackExtent(int position, int height, int rackHeight, bool topBottomNumbering);
