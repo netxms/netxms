@@ -166,7 +166,7 @@ private:
    wchar_t *dnFromMessage(LDAPMessage *entry);
    void updateMembers(StringSet *memberList, const char *firstAttr, LDAPMessage *firstEntry, const LDAP_CHAR *dn);
 
-   static String getErrorString(int code);
+   String getErrorString(int code);
 #endif // WITH_LDAP
 
 public:
