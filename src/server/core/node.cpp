@@ -8025,7 +8025,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   EventBuilder(EVENT_MAC_ADDR_CHANGED, m_id)
                         .param(_T("interfaceObjectId"), iface->getId(), EventBuilder::OBJECT_ID_FORMAT)
                         .param(_T("interfaceIndex"), iface->getIfIndex())
-                        .param(_T("interfaceObjectId"), iface->getName())
+                        .param(_T("interfaceName"), iface->getName())
                         .param(_T("oldMacAddress"), oldMAC)
                         .param(_T("newMacAddress"), newMAC)
                         .post();
