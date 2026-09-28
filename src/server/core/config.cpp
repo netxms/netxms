@@ -1368,12 +1368,11 @@ static DB_STATEMENT PrepareConfigWrite(DB_HANDLE hdb, const wchar_t *variable, c
 /**
  * Write string value to configuration table
  */
-bool NXCORE_EXPORTABLE ConfigWriteStr(const wchar_t *variable, const wchar_t *value, bool create, bool isVisible, bool needRestart)
+bool NXCORE_EXPORTABLE ConfigWriteStr(DB_HANDLE hdb, const wchar_t *variable, const wchar_t *value, bool create, bool isVisible, bool needRestart)
 {
    if (wcslen(variable) > 63)
       return false;
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = PrepareConfigWrite(hdb, variable, value, create, isVisible, needRestart);
    bool success;
    if (hStmt != nullptr)
@@ -1385,10 +1384,29 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const wchar_t *variable, const wchar_t *va
    {
       success = false;
    }
-   DBConnectionPoolReleaseConnection(hdb);
    if (success)
       OnConfigVariableChange(false, variable, value);
    return success;
+}
+
+/**
+ * Write string value to configuration table
+ */
+bool NXCORE_EXPORTABLE ConfigWriteStr(const wchar_t *variable, const wchar_t *value, bool create, bool isVisible, bool needRestart)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool success = ConfigWriteStr(hdb, variable, value, create, isVisible, needRestart);
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
+}
+
+/**
+ * Write integer value to configuration table
+ */
+bool NXCORE_EXPORTABLE ConfigWriteInt(DB_HANDLE hdb, const TCHAR *variable, int32_t value, bool create, bool isVisible, bool needRestart)
+{
+   TCHAR buffer[64];
+   return ConfigWriteStr(hdb, variable, IntegerToString(value, buffer), create, isVisible, needRestart);
 }
 
 /**
@@ -1403,10 +1421,28 @@ bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int32_t value, bool
 /**
  * Write unsigned long value to configuration table
  */
-bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, uint32_t value, bool create, bool isVisible, bool needRestart)
+bool NXCORE_EXPORTABLE ConfigWriteUInt32(DB_HANDLE hdb, const TCHAR *variable, uint32_t value, bool create, bool isVisible, bool needRestart)
+{
+   TCHAR buffer[64];
+   return ConfigWriteStr(hdb, variable, IntegerToString(value, buffer), create, isVisible, needRestart);
+}
+
+/**
+ * Write unsigned long value to configuration table
+ */
+bool NXCORE_EXPORTABLE ConfigWriteUInt32(const TCHAR *variable, uint32_t value, bool create, bool isVisible, bool needRestart)
 {
    TCHAR buffer[64];
    return ConfigWriteStr(variable, IntegerToString(value, buffer), create, isVisible, needRestart);
+}
+
+/**
+ * Write signed long long value to configuration table
+ */
+bool NXCORE_EXPORTABLE ConfigWriteInt64(DB_HANDLE hdb, const TCHAR *variable, int64_t value, bool create, bool isVisible, bool needRestart)
+{
+   TCHAR buffer[64];
+   return ConfigWriteStr(hdb, variable, IntegerToString(value, buffer), create, isVisible, needRestart);
 }
 
 /**
@@ -1416,6 +1452,15 @@ bool NXCORE_EXPORTABLE ConfigWriteInt64(const TCHAR *variable, int64_t value, bo
 {
    TCHAR buffer[64];
    return ConfigWriteStr(variable, IntegerToString(value, buffer), create, isVisible, needRestart);
+}
+
+/**
+ * Write unsigned long long value to configuration table
+ */
+bool NXCORE_EXPORTABLE ConfigWriteUInt64(DB_HANDLE hdb, const TCHAR *variable, uint64_t value, bool create, bool isVisible, bool needRestart)
+{
+   TCHAR buffer[64];
+   return ConfigWriteStr(hdb, variable, IntegerToString(value, buffer), create, isVisible, needRestart);
 }
 
 /**

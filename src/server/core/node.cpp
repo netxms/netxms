@@ -1911,6 +1911,8 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM ospf_neighbors WHERE node_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, L"DELETE FROM node_snmp_agents WHERE node_id=?");
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM radios WHERE owner_id=?"));
    return success;
 }
 
