@@ -190,7 +190,10 @@ void Chassis::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 uint32_t Chassis::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *session)
 {
    if (msg.isFieldExist(VID_CONTROLLER_ID))
+   {
       m_controllerId = msg.getFieldAsUInt32(VID_CONTROLLER_ID);
+      ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Chassis::updateControllerBinding);
+   }
    if (msg.isFieldExist(VID_PHYSICAL_CONTAINER_ID))
    {
       m_rackId = msg.getFieldAsUInt32(VID_PHYSICAL_CONTAINER_ID);

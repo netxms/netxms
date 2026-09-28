@@ -69,13 +69,14 @@ No GitHub issue: commit messages reference PR #3633 as a follow-up.
 
 ### Task 1: Rebind chassis under controller when controller id arrives over NXCP
 
-- [ ] In `Chassis::modifyFromMessageInternal`, schedule
+- [x] In `Chassis::modifyFromMessageInternal`, schedule
       `ThreadPoolExecuteSerialized(g_mainThreadPool, PHYSICAL_BINDING_TASK_KEY, this, &Chassis::updateControllerBinding)`
       when `VID_CONTROLLER_ID` is present, same shape as the `VID_PHYSICAL_CONTAINER_ID` branch
-- [ ] Add an integration test in `tests/integration` that changes only the controller id via the
+- [x] Add an integration test in `tests/integration` that changes only the controller id via the
       Java API and asserts the chassis moves under the new controller
-- [ ] Build server core; run the new integration test against the local server
-- [ ] `git rm docs/backlog/chassis-nxcp-controller-id-does-not-rebind.md`
+- [x] Build server core; run the new integration test against the local server
+- [x] `git rm docs/backlog/chassis-nxcp-controller-id-does-not-rebind.md`
+- ⚠️ Test run green against the local server only with the fix in place; not run red against an unfixed build (needs a reinstall and server restart). By code reading, `Chassis::updateFlags` is the only other rebind trigger, so without the fix the second wait times out.
 
 ### Task 2: Commit only the placement keys the PATCH carried
 
