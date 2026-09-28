@@ -1184,18 +1184,45 @@ LDAPConnection::~LDAPConnection()
 }
 
 /**
- * Converts error string and returns in right format.
+ * Get error text for given LDAP error code. If connection is open, diagnostic message from LDAP library
+ * (like TLS certificate verification failure reason) is appended when available.
  */
 String LDAPConnection::getErrorString(int ldap_error)
 {
+   StringBuffer s;
 #ifdef _WIN32
-  return String(ldap_err2string(ldap_error));
+   s.append(ldap_err2string(ldap_error));
 #else
-  WCHAR *wcs = WideStringFromUTF8String(ldap_err2string(ldap_error));
-  String s(wcs);
-  MemFree(wcs);
-  return s;
+   s.appendUtf8String(ldap_err2string(ldap_error));
 #endif
+
+   if ((m_ldapConn != nullptr) && (ldap_error != LDAP_SUCCESS))
+   {
+#if defined(_WIN32)
+      TCHAR *diagnosticMessage = nullptr;
+      ldap_get_option(m_ldapConn, LDAP_OPT_SERVER_ERROR, &diagnosticMessage);
+#elif defined(LDAP_OPT_DIAGNOSTIC_MESSAGE)
+      char *diagnosticMessage = nullptr;
+      ldap_get_option(m_ldapConn, LDAP_OPT_DIAGNOSTIC_MESSAGE, &diagnosticMessage);
+#else
+      char *diagnosticMessage = nullptr;
+      ldap_get_option(m_ldapConn, LDAP_OPT_ERROR_STRING, &diagnosticMessage);
+#endif
+      if (diagnosticMessage != nullptr)
+      {
+         if (*diagnosticMessage != 0)
+         {
+            s.append(_T(": "));
+#ifdef _WIN32
+            s.append(diagnosticMessage);
+#else
+            s.appendUtf8String(diagnosticMessage);
+#endif
+         }
+         ldap_memfree(diagnosticMessage);
+      }
+   }
+   return s;
 }
 
 #else	/* WITH_LDAP */
