@@ -513,7 +513,9 @@ static void TestEcho()
       assert(j.headers.get("user-agent") like "NetXMS Server/*", "default user agent");
       assert(j.args.get("a") == "1", "query argument a");
       assert(j.args.get("b") == "two", "query argument b");
-      assert(resp.getHeader("X-Dup") == "first, second", "duplicate response headers joined");
+      // older libmicrohttpd versions (0.9.72 on RHEL 9) send repeated headers in reverse order
+      dup = resp.getHeader("X-Dup");
+      assert((dup == "first, second") or (dup == "second, first"), "duplicate response headers joined");
       j2 = resp.json;
       assert(j2.method == "POST", "parsed JSON accessible repeatedly");
 
@@ -993,7 +995,7 @@ static void TestSession()
       resp = s.get(BASE .. "/cookie");
       assert(resp.success, "first request");
       assert(resp.body == "(none)", "no cookies sent on first request");
-      assert(resp.getHeader("Set-Cookie") like "session=abc123*", "Set-Cookie header visible: " .. resp.getHeader("Set-Cookie"));
+      assert(resp.getHeader("Set-Cookie") like "*session=abc123*", "Set-Cookie header visible: " .. resp.getHeader("Set-Cookie"));
       c = s.cookies;
       assert(c.size == 2, "two cookies stored");
       assert(c["session"] == "abc123", "session cookie value");

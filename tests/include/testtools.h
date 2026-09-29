@@ -27,7 +27,8 @@ static inline void CallTestFailureHook()
 }
 
 /**
- * Exit test process
+ * Exit test process. Uses _exit() because other threads (for example, those of a live server)
+ * may still be blocked on static objects that exit() would destroy.
  */
 #if HAVE_SYS_PTRACE_H && !defined(WITH_ADDRESS_SANITIZER)
 
@@ -36,6 +37,7 @@ static inline void CallTestFailureHook()
 static inline void ExitTestProcess()
 {
    CallTestFailureHook();
+   fflush(stdout);
 #ifdef _AIX
 #ifdef __64BIT__
    int rc = ptrace64(PT_TRACE_ME, 0, 0, 0, nullptr);
@@ -47,8 +49,7 @@ static inline void ExitTestProcess()
 #endif
    if (rc == -1)
       abort();
-   else
-      exit(1);
+   _exit(1);
 }
 
 #else
@@ -56,7 +57,8 @@ static inline void ExitTestProcess()
 static inline void ExitTestProcess()
 {
    CallTestFailureHook();
-   exit(1);
+   fflush(stdout);
+   _exit(1);
 }
 
 #endif
