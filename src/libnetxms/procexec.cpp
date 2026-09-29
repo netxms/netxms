@@ -1277,7 +1277,13 @@ bool ProcessExecutor::waitForCompletion(uint32_t timeout)
 #ifdef _WIN32
    if (m_sendOutput)
       return m_completed.wait(timeout);
-   return (m_phandle != INVALID_HANDLE_VALUE) ? (WaitForSingleObject(m_phandle, timeout) == WAIT_OBJECT_0) : true;
+   if (m_phandle == INVALID_HANDLE_VALUE)
+      return true;
+   if (WaitForSingleObject(m_phandle, timeout) != WAIT_OBJECT_0)
+      return false;
+   DWORD exitCode;
+   m_exitCode = GetExitCodeProcess(m_phandle, &exitCode) ? exitCode : -1;
+   return true;
 #else
    return m_completed.wait(timeout);
 #endif
