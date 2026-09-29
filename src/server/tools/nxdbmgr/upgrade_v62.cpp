@@ -23,13 +23,123 @@
 #include "nxdbmgr.h"
 #include <nxevent.h>
 #include <nxtools.h>
+#include <nxcrypto.h>
+#include <openssl/x509.h>
 
 /**
- * Upgrade from 62.43 to 70.0
+ * Upgrade from 62.44 to 70.0
+ */
+static bool H_UpgradeFromV44()
+{
+   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   return true;
+}
+
+/**
+ * Convert hex encoded PKCS#1 RSA public key (format of public key certificate mapping data before 62.44) to public
+ * key fingerprint - SHA-256 hash of DER encoded SubjectPublicKeyInfo. Returns false if data is not PKCS#1 RSA public
+ * key (keys of other types were stored without key parameters and cannot be converted).
+ */
+static bool RSAPublicKeyToFingerprint(const wchar_t *hex, wchar_t *fingerprint)
+{
+   size_t size = wcslen(hex) / 2;
+   if (size == 0)
+      return false;
+
+   BYTE *der = MemAllocArrayNoInit<BYTE>(size);
+   StrToBin(hex, der, size);
+   const BYTE *p = der;
+   EVP_PKEY *key = d2i_PublicKey(EVP_PKEY_RSA, nullptr, &p, static_cast<long>(size));
+   MemFree(der);
+   if (key == nullptr)
+      return false;
+
+   bool success = false;
+   int len = i2d_PUBKEY(key, nullptr);
+   if (len > 0)
+   {
+      BYTE *spki = MemAllocArrayNoInit<BYTE>(len);
+      BYTE *out = spki;
+      i2d_PUBKEY(key, &out);
+
+      BYTE hash[SHA256_DIGEST_SIZE];
+      CalculateSHA256Hash(spki, len, hash);
+      MemFree(spki);
+
+      BinToStr(hash, SHA256_DIGEST_SIZE, fingerprint);
+      success = true;
+   }
+   EVP_PKEY_free(key);
+   return success;
+}
+
+/**
+ * Convert public key certificate mappings to public key fingerprints. Mappings that cannot be converted are removed.
+ */
+static bool ConvertPublicKeyCertificateMappings(const wchar_t *selectQuery, const wchar_t *updateQuery, int sqlType, const wchar_t *objectType)
+{
+   DB_RESULT hResult = SQLSelect(selectQuery);
+   if (hResult == nullptr)
+      return false;
+
+   bool success = true;
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, updateQuery);
+   if (hStmt != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; (i < count) && success; i++)
+      {
+         wchar_t *data = DBGetField(hResult, i, 1, nullptr, 0);
+         if (data != nullptr)
+            Trim(data);
+         if ((data != nullptr) && (*data != 0))
+         {
+            uint32_t id = DBGetFieldULong(hResult, i, 0);
+            wchar_t fingerprint[SHA256_DIGEST_SIZE * 2 + 1];
+            if (RSAPublicKeyToFingerprint(data, fingerprint))
+            {
+               DBBind(hStmt, 1, sqlType, fingerprint, DB_BIND_STATIC);
+            }
+            else
+            {
+               WriteToTerminalEx(L"WARNING: public key certificate mapping for %s [%u] cannot be converted to public key fingerprint and was removed\n", objectType, id);
+               DBBind(hStmt, 1, sqlType, static_cast<const wchar_t*>(nullptr), DB_BIND_STATIC);
+            }
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, id);
+            if (!SQLExecute(hStmt) && !g_ignoreErrors)
+               success = false;
+         }
+         MemFree(data);
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      success = false;
+   }
+
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Convert node and user public key certificate mappings to public key fingerprints
+ */
+static bool ConvertPublicKeyCertificateMappings()
+{
+   return ConvertPublicKeyCertificateMappings(L"SELECT id,agent_cert_mapping_data FROM nodes WHERE agent_cert_mapping_method='1'",
+            L"UPDATE nodes SET agent_cert_mapping_data=? WHERE id=?", DB_SQLTYPE_VARCHAR, L"node") &&
+          ConvertPublicKeyCertificateMappings(L"SELECT id,cert_mapping_data FROM users WHERE cert_mapping_method=1",
+            L"UPDATE users SET cert_mapping_data=? WHERE id=?", DB_SQLTYPE_TEXT, L"user");
+}
+
+/**
+ * Upgrade from 62.43 to 62.44
  */
 static bool H_UpgradeFromV43()
 {
-   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   CHK_EXEC(ConvertPublicKeyCertificateMappings());
+   CHK_EXEC(SetMinorSchemaVersion(44));
    return true;
 }
 
@@ -1382,7 +1492,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 43, 70,  0, H_UpgradeFromV43 },
+   { 44, 70,  0, H_UpgradeFromV44 },
+   { 43, 62, 44, H_UpgradeFromV43 },
    { 42, 62, 43, H_UpgradeFromV42 },
    { 41, 62, 42, H_UpgradeFromV41 },
    { 40, 62, 41, H_UpgradeFromV40 },

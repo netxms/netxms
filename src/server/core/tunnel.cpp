@@ -972,18 +972,9 @@ retry:
 #endif
             if (pkey != nullptr)
             {
-               int pkeyLen = i2d_PublicKey(pkey, nullptr);
-               auto buffer = MemAllocArray<unsigned char>(pkeyLen + 1);
-               auto in = buffer;
-               i2d_PublicKey(pkey, &in);
-
-               TCHAR *pkeyText = MemAllocString(pkeyLen * 2 + 1);
-               BinToStr(buffer, pkeyLen, pkeyText);
-
-               node = s_certificateMappings.getShared(pkeyText);
-
-               MemFree(pkeyText);
-               MemFree(buffer);
+               wchar_t fingerprint[SHA256_DIGEST_SIZE * 2 + 1];
+               if (GetPublicKeyFingerprint(pkey, fingerprint))
+                  node = s_certificateMappings.getShared(fingerprint);
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
                EVP_PKEY_free(pkey);
 #endif

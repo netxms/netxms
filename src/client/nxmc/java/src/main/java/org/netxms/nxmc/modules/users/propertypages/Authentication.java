@@ -210,6 +210,7 @@ public class Authentication extends PropertyPage
 		gd.widthHint = 300;
       textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Certificate mapping data"),
                                                        user.getCertMappingData(), gd);
+      textMappingData.setToolTipText(i18n.tr("For public key mapping, enter SHA-256 fingerprint of the public key, hex encoded DER public key, or PEM encoded public key or certificate"));
 
       Group twoFactorAuth = new Group(dialogArea, SWT.NONE);
       twoFactorAuth.setText(i18n.tr("Two-factor authentication methods"));

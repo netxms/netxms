@@ -981,12 +981,19 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
 
       if (rcc != RCC_INVALID_OBJECT_NAME)
       {
-         *oldData = object->toJson();
-         object->modifyFromMessage(msg);
-         *newData = object->toJson();
-         SendUserDBUpdate(USER_DB_MODIFY, id, object);
-         rcc = RCC_SUCCESS;
-         updateAccessRights = ((msg.getFieldAsUInt32(VID_FIELDS) & (USER_MODIFY_ACCESS_RIGHTS | USER_MODIFY_GROUP_MEMBERSHIP | USER_MODIFY_MEMBERS)) != 0);
+         json_t *prevData = object->toJson();
+         rcc = object->modifyFromMessage(msg);
+         if (rcc == RCC_SUCCESS)
+         {
+            *oldData = prevData;
+            *newData = object->toJson();
+            SendUserDBUpdate(USER_DB_MODIFY, id, object);
+            updateAccessRights = ((msg.getFieldAsUInt32(VID_FIELDS) & (USER_MODIFY_ACCESS_RIGHTS | USER_MODIFY_GROUP_MEMBERSHIP | USER_MODIFY_MEMBERS)) != 0);
+         }
+         else
+         {
+            json_decref(prevData);
+         }
       }
 
       if ((rcc == RCC_SUCCESS) && (fields & USER_MODIFY_LOGIN_NAME))
@@ -1053,14 +1060,21 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObjectFromJson(uint32_t id, const j
 
       if (rcc != RCC_INVALID_OBJECT_NAME)
       {
-         *oldData = object->toJson();
-         object->modifyFromJson(json);
-         *newData = object->toJson();
-         SendUserDBUpdate(USER_DB_MODIFY, id, object);
-         rcc = RCC_SUCCESS;
-         updateAccessRights = (json_object_get(const_cast<json_t*>(json), "systemRights") != nullptr) ||
-                              (json_object_get(const_cast<json_t*>(json), "groupMembership") != nullptr) ||
-                              (json_object_get(const_cast<json_t*>(json), "members") != nullptr);
+         json_t *prevData = object->toJson();
+         rcc = object->modifyFromJson(json);
+         if (rcc == RCC_SUCCESS)
+         {
+            *oldData = prevData;
+            *newData = object->toJson();
+            SendUserDBUpdate(USER_DB_MODIFY, id, object);
+            updateAccessRights = (json_object_get(const_cast<json_t*>(json), "systemRights") != nullptr) ||
+                                 (json_object_get(const_cast<json_t*>(json), "groupMembership") != nullptr) ||
+                                 (json_object_get(const_cast<json_t*>(json), "members") != nullptr);
+         }
+         else
+         {
+            json_decref(prevData);
+         }
       }
 
       if ((rcc == RCC_SUCCESS) && nameChanged)

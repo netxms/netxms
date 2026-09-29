@@ -256,8 +256,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
    virtual void fillMessage(NXCPMessage *msg);
-   virtual void modifyFromMessage(const NXCPMessage& msg);
-   virtual void modifyFromJson(const json_t *json);
+   virtual uint32_t modifyFromMessage(const NXCPMessage& msg);
+   virtual uint32_t modifyFromJson(const json_t *json);
 
    virtual json_t *toJson() const;
 
@@ -390,8 +390,8 @@ public:
 	virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
 
 	virtual void fillMessage(NXCPMessage *msg) override;
-	virtual void modifyFromMessage(const NXCPMessage& msg) override;
-	virtual void modifyFromJson(const json_t *json) override;
+	virtual uint32_t modifyFromMessage(const NXCPMessage& msg) override;
+	virtual uint32_t modifyFromJson(const json_t *json) override;
 
    virtual json_t *toJson() const override;
 
@@ -522,8 +522,8 @@ public:
    virtual ~Group();
 
    virtual void fillMessage(NXCPMessage *msg) override;
-   virtual void modifyFromMessage(const NXCPMessage& msg) override;
-   virtual void modifyFromJson(const json_t *json) override;
+   virtual uint32_t modifyFromMessage(const NXCPMessage& msg) override;
+   virtual uint32_t modifyFromJson(const json_t *json) override;
 
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
