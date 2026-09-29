@@ -234,8 +234,14 @@ builds any missing test binaries and runs `tests\suite\netxms-test-suite.cmd`,
 which executes each test in turn and stops at the first failure. Test
 executables land in `out\<arch>\<type>\bin` next to the in-tree DLLs; the
 `test` target passes the SDK directories holding the third-party DLLs (OpenSSL,
-PCRE, zlib, expat, cURL, libmodbus) to the runner through
+PCRE, zlib, expat, cURL, libmodbus, libmicrohttpd) to the runner through
 `NETXMS_TEST_DLL_PATH`, built from the SDK roots in `config.mingw`.
+
+The runner sets `NETXMS_HOME` to `out\<arch>\<type>`, so tests resolve NetXMS
+directories in the build output rather than in a NetXMS installation registered
+on the machine. `test-server` initializes its database with `nxdbmgr` from
+`out\<arch>\<type>\bin` and the SQL scripts that the server build stages into
+`out\<arch>\<type>\share\sql`.
 
 To run the suite without make, put those SDK `bin\<arch>` directories on `PATH`
 (or set `NETXMS_TEST_DLL_PATH` yourself) and call the runner from the top of the

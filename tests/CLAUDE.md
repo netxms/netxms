@@ -55,6 +55,9 @@ The Windows (MinGW) build has its own wiring, parallel to the autotools one:
 - `mingw32-make -f Makefile.w32 test` builds and runs `suite/netxms-test-suite.cmd`,
   the Windows counterpart of `netxms-test-suite.in`. See
   [BUILD_WINDOWS.md](../BUILD_WINDOWS.md) for details.
+- There is no install step on Windows: the runner sets `NETXMS_HOME` to
+  `out\<arch>\<type>`, and the server build stages the SQL scripts that
+  `test-server` needs for `nxdbmgr init` into `out\<arch>\<type>\share\sql`.
 
 Test binaries that resolve or parse IP addresses must call `WSAStartup()` after
 `InitNetXMSProcess()` under `#ifdef _WIN32` — `InetAddress::parse()` uses

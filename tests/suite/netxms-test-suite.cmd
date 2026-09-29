@@ -32,6 +32,10 @@ if not exist "%BinDir%" (
 	exit /b 1
 )
 
+rem Point NetXMS directory lookup at the build output; otherwise it resolves to
+rem an installed NetXMS registered on the machine (e.g. C:\NetXMS)
+set NETXMS_HOME=%CD%\out\%Arch%\%BuildType%
+
 echo *** Running NetXMS test suite from %BinDir% ***
 
 call :RunTest test-libnetxms || goto failure

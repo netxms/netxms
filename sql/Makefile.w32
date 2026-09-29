@@ -1,8 +1,15 @@
 #
-# Makefile for SQL scripts (Win32)
+# Makefile.w32 - database initialization and schema scripts for Windows/MinGW
+# Part of NetXMS project
 #
-
-CPP = cpp
+# Scripts are generated into the source directory, where the server installer
+# picks them up, and staged into $(BUILD_DIR)/share/sql so that nxdbmgr run
+# from the build tree (e.g. by the test-server launcher) finds them.
+#
+# Also run standalone by build/prepare_release_build.cmd, without the toolchain
+# and output directory variables exported by the top-level Makefile.w32; then
+# the host cpp is used and nothing is staged.
+#
 
 sql_SCRIPTS = dbinit_mysql.sql \
               dbinit_pgsql.sql \
@@ -20,54 +27,91 @@ sql_SCRIPTS = dbinit_mysql.sql \
               dbschema_tsdb.sql
 
 ROOT_FILE = dbinit.in
-SOURCE = $(ROOT_FILE) database.in functions.in schema.in metadata.in setup.in events.in policy.in scripts.in
-HEADERS = ../include/netxmsdb.h ../include/nxevent.h
-COMMAND = $(CPP) -P -Wundef -D_NETXMS_DB_SCHEMA_ -I../include -I../src/server/include
-SQUEEZE = perl -e "while (<>) { if (! /^[\s\t\n]*$$/) { print; } }"
+SOURCE = $(ROOT_FILE) database.in functions.in schema.in metadata.in setup.in events.in policy.in scripts.in traps.in country_codes.in currency_codes.in devdb.in
+HEADER_FILES = ../include/netxmsdb.h ../include/nxevent.h
+ifeq ($(origin CC),default)
+PREPROCESSOR = cpp
+else
+PREPROCESSOR = $(CC) -E
+endif
+COMMAND = $(PREPROCESSOR) -x c -Wundef -Wno-invalid-pp-token -D_NETXMS_DB_SCHEMA_ -I../include -I../src/server/include
+SQUEEZE = perl -n strip.pl
 
-all: $(sql_SCRIPTS)
+ifneq ($(BUILD_DIR),)
+SHARE_DIR = $(BUILD_DIR)/share/sql
+STAGED_SCRIPTS = $(addprefix $(SHARE_DIR)/,$(sql_SCRIPTS))
+endif
 
-dbinit_mysql.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_MYSQL $(ROOT_FILE) | $(SQUEEZE) > $@
+.PHONY: all clean install
 
-dbinit_pgsql.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_POSTGRESQL $(ROOT_FILE) | $(SQUEEZE) > $@
+all: $(sql_SCRIPTS) $(STAGED_SCRIPTS)
 
-dbinit_mssql.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_MSSQL $(ROOT_FILE) | $(SQUEEZE) > $@
+ifneq ($(BUILD_DIR),)
+$(SHARE_DIR)/%.sql: %.sql
+	@mkdir -p $(SHARE_DIR)
+	$(Q)cp $< $@
+endif
 
-dbinit_oracle.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_ORACLE $(ROOT_FILE) | $(SQUEEZE) > $@
+dbinit_mysql.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_MYSQL $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbinit_sqlite.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_SQLITE $(ROOT_FILE) | $(SQUEEZE) > $@
+dbinit_pgsql.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_POSTGRESQL $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbinit_db2.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_DB2 $(ROOT_FILE) | $(SQUEEZE) > $@
+dbinit_mssql.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_MSSQL $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbinit_tsdb.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_TSDB $(ROOT_FILE) | $(SQUEEZE) > $@
+dbinit_oracle.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_ORACLE $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbschema_mysql.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_MYSQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+dbinit_sqlite.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_SQLITE $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbschema_pgsql.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_POSTGRESQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+dbinit_db2.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_DB2 $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbschema_mssql.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_MSSQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+dbinit_tsdb.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_TSDB $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbschema_oracle.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_ORACLE -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+dbschema_mysql.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_MYSQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbschema_sqlite.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_SQLITE -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+dbschema_pgsql.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_POSTGRESQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbschema_db2.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_DB2 -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+dbschema_mssql.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_MSSQL -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
-dbschema_tsdb.sql: $(SOURCE) $(HEADERS)
-	$(COMMAND) -DDB_TSDB -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+dbschema_oracle.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_ORACLE -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_sqlite.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_SQLITE -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_db2.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_DB2 -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
+
+dbschema_tsdb.sql: $(SOURCE) $(HEADER_FILES)
+	@echo "  SQL     $@"
+	$(Q)$(COMMAND) -DDB_TSDB -DSCHEMA_ONLY $(ROOT_FILE) | $(SQUEEZE) > $@
 
 clean:
-	cmd /c del dbinit_*.sql
+	rm -f $(sql_SCRIPTS) $(STAGED_SCRIPTS)
+
+install: $(sql_SCRIPTS)
+	@echo "  INSTALL SQL scripts"
+	mkdir -p "$(PREFIX)/share/sql"
+	cp $(sql_SCRIPTS) "$(PREFIX)/share/sql/"
