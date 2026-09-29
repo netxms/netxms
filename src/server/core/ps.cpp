@@ -41,26 +41,36 @@ static StringMap *s_valueSetList;
 NXSL_PersistentStorage g_nxslPstorage;
 
 /**
- * Load storage
+ * Load storage content from database, replacing cached content (called at
+ * startup and again at cluster node activation)
+ */
+void LoadPersistentStorage()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT result = DBSelect(hdb, _T("SELECT entry_key,value FROM persistent_storage"));
+   if (result != nullptr)
+   {
+      s_lockPStorage.lock();
+      s_persistentStorage.clear();
+      int count = DBGetNumRows(result);
+      for(int i = 0; i < count; i++)
+      {
+         s_persistentStorage.setPreallocated(DBGetField(result, i, 0, nullptr, 0), DBGetField(result, i, 1, nullptr, 0));
+      }
+      s_lockPStorage.unlock();
+      DBFreeResult(result);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Initialize storage
  */
 void PersistentStorageInit()
 {
    s_valueDeleteList = new StringMap();
    s_valueSetList = new StringMap();
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT result = DBSelect(hdb, _T("SELECT entry_key,value FROM persistent_storage"));
-   if (result != NULL)
-   {
-      int count = DBGetNumRows(result);
-      for(int i = 0; i < count; i++)
-      {
-         s_persistentStorage.setPreallocated(DBGetField(result, i, 0, NULL, 0), DBGetField(result, i, 1, NULL, 0));
-      }
-      DBFreeResult(result);
-   }
-
-   DBConnectionPoolReleaseConnection(hdb);
+   LoadPersistentStorage();
 }
 
 /**

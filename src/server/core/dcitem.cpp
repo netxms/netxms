@@ -3661,6 +3661,26 @@ Threshold *DCItem::getThresholdById(uint32_t id) const
 }
 
 /**
+ * Reload runtime state of thresholds from given query result (see
+ * ReloadThresholdStates). Thresholds without a database record keep their state.
+ */
+void DCItem::reloadThresholdState(DB_RESULT hResult, const std::map<uint32_t, int>& rows)
+{
+   lock();
+   if (m_thresholds != nullptr)
+   {
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         Threshold *t = m_thresholds->get(i);
+         auto it = rows.find(t->getId());
+         if (it != rows.end())
+            t->loadRuntimeState(hResult, it->second);
+      }
+   }
+   unlock();
+}
+
+/**
  * Create descriptor for this object
  */
 shared_ptr<DCObjectInfo> DCItem::createDescriptorInternal() const

@@ -630,10 +630,21 @@ static void HandleHACommand(ServerConsole *console, const wchar_t *args)
    }
    else if (IsCommand(L"SWITCHOVER", subcommand, 2))
    {
-      if (HAInitiateSwitchover())
-         ConsoleWrite(console, L"Graceful switchover initiated; this node will restart into standby\n\n");
-      else
-         ConsoleWrite(console, L"ERROR: this node is not active\n\n");
+      switch(HAInitiateSwitchover())
+      {
+         case HASwitchoverResult::STARTED:
+            ConsoleWrite(console, L"Graceful switchover initiated; this node will restart into standby\n\n");
+            break;
+         case HASwitchoverResult::NOT_ACTIVE:
+            ConsoleWrite(console, L"ERROR: this node is not active\n\n");
+            break;
+         case HASwitchoverResult::NO_PEER:
+            ConsoleWrite(console, L"ERROR: switchover refused - no standby node is connected (stop the server to release the lease anyway)\n\n");
+            break;
+         case HASwitchoverResult::PEER_NOT_READY:
+            ConsoleWrite(console, L"ERROR: switchover refused - standby node has not reported consistent warm state (stop the server to release the lease anyway)\n\n");
+            break;
+      }
    }
    else
    {

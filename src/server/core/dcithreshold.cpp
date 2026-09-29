@@ -341,8 +341,93 @@ static void SaveThresholdStateChange(uint32_t thresholdId, bool isReached)
    TCHAR query[256];
    _sntprintf(query, 256, _T("UPDATE thresholds SET current_state=%d WHERE threshold_id=%u"), isReached ? 1 : 0, thresholdId);
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DBQuery(hdb, query);
+   if (!DBQuery(hdb, query))
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DC_THRESHOLDS, L"Cannot save state of threshold [%u] (event will be generated anyway)", thresholdId);
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Load threshold runtime state from database. Expected column order:
+ * threshold_id,current_state,current_severity,last_event_timestamp,match_count,
+ * state_before_maint,last_checked_value,last_event_message,clear_match_count
+ */
+void Threshold::loadRuntimeState(DB_RESULT hResult, int row)
+{
+   wchar_t textBuffer[MAX_EVENT_MSG_LENGTH];
+   m_isReached = DBGetFieldLong(hResult, row, 1) ? true : false;
+   m_currentSeverity = static_cast<uint8_t>(DBGetFieldLong(hResult, row, 2));
+   m_lastEventTimestamp = static_cast<time_t>(DBGetFieldULong(hResult, row, 3));
+   m_numMatches = DBGetFieldLong(hResult, row, 4);
+   m_wasReachedBeforeMaint = DBGetFieldLong(hResult, row, 5) ? true : false;
+   DBGetField(hResult, row, 6, textBuffer, MAX_DB_STRING);
+   m_lastCheckValue = textBuffer;
+   DBGetField(hResult, row, 7, textBuffer, MAX_EVENT_MSG_LENGTH);
+   MemFree(m_lastEventMessage);
+   m_lastEventMessage = (textBuffer[0] != 0) ? MemCopyString(textBuffer) : nullptr;
+   m_numClearMatches = DBGetFieldLong(hResult, row, 8);
+}
+
+/**
+ * Reload runtime state of all DCI and table DCI thresholds from database. Used
+ * at cluster node activation: threshold state transitions are written to the
+ * database directly and are not covered by the change journal, so a standby
+ * holds threshold state as of its last object load.
+ */
+bool ReloadThresholdStates()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT itemStates = DBSelect(hdb, L"SELECT threshold_id,current_state,current_severity,last_event_timestamp,match_count,state_before_maint,last_checked_value,last_event_message,clear_match_count FROM thresholds");
+   DB_RESULT tableStates = DBSelect(hdb, L"SELECT threshold_id,instance,match_count,is_active,tt_row_number,clear_match_count,maint_copy FROM dct_threshold_instances ORDER BY threshold_id");
+   DBConnectionPoolReleaseConnection(hdb);
+   if ((itemStates == nullptr) || (tableStates == nullptr))
+   {
+      if (itemStates != nullptr)
+         DBFreeResult(itemStates);
+      if (tableStates != nullptr)
+         DBFreeResult(tableStates);
+      return false;
+   }
+
+   std::map<uint32_t, int> itemRows;
+   int count = DBGetNumRows(itemStates);
+   for(int i = 0; i < count; i++)
+      itemRows[DBGetFieldULong(itemStates, i, 0)] = i;
+
+   // Row range [first, last) for each table threshold (rows are ordered by threshold ID)
+   std::map<uint32_t, std::pair<int, int>> tableRanges;
+   count = DBGetNumRows(tableStates);
+   for(int i = 0; i < count; )
+   {
+      uint32_t id = DBGetFieldULong(tableStates, i, 0);
+      int first = i;
+      while((i < count) && (DBGetFieldULong(tableStates, i, 0) == id))
+         i++;
+      tableRanges[id] = std::pair<int, int>(first, i);
+   }
+
+   unique_ptr<SharedObjectArray<NetObj>> targets = g_idxObjectById.getObjects(
+      [] (NetObj *object) -> bool
+      {
+         return object->isDataCollectionTarget();
+      });
+   for(int i = 0; i < targets->size(); i++)
+   {
+      unique_ptr<SharedObjectArray<DCObject>> dcObjects = static_cast<DataCollectionTarget*>(targets->get(i))->getAllDCObjects();
+      for(int j = 0; j < dcObjects->size(); j++)
+      {
+         DCObject *dco = dcObjects->get(j);
+         if (dco->getType() == DCO_TYPE_ITEM)
+            static_cast<DCItem*>(dco)->reloadThresholdState(itemStates, itemRows);
+         else if (dco->getType() == DCO_TYPE_TABLE)
+            static_cast<DCTable*>(dco)->reloadThresholdState(tableStates, tableRanges);
+      }
+   }
+
+   DBFreeResult(itemStates);
+   DBFreeResult(tableStates);
+   nxlog_debug_tag(DEBUG_TAG_DC_THRESHOLDS, 2, L"Threshold runtime state reloaded from database (%d DCI thresholds, %d table DCI thresholds with instances)",
+         static_cast<int>(itemRows.size()), static_cast<int>(tableRanges.size()));
+   return true;
 }
 
 /**

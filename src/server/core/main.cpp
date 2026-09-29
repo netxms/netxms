@@ -114,7 +114,6 @@ void StopSnmpTrapReceiver();
 void InitializeDeviceBackupInterface();
 void InitializeCloudConnectors();
 void InitializeTrafficConnectors();
-void LoadWellKnownPortList();
 bool InitAIAssistant();
 void ShutdownAIMessageManager();
 void WakeupSyncerThread();
@@ -1541,7 +1540,9 @@ retry_db_lock:
       // types the change journal covers, so the journal applier keeps them
       // current while this node stands by and activation skips the load cost.
       // Everything else (users, categories, geo areas, SSH keys, ...) loads
-      // at activation and is therefore always fresh. The journal head is
+      // at activation and is therefore always fresh; what was already loaded
+      // above (configuration, scripts, persistent storage, ...) is reloaded
+      // at activation (see ActivationThread in ha.cpp). The journal head is
       // captured before the load starts: changes committed during the load
       // are (re-)applied by the applier, which is idempotent.
       int64_t journalHead = HAJournalQueryHead();

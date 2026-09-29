@@ -23,6 +23,8 @@
 #ifndef _nms_dcoll_h_
 #define _nms_dcoll_h_
 
+#include <map>
+
 class ImportContext;
 
 /**
@@ -244,6 +246,7 @@ public:
    void incrementActivationSequence() { m_activationSequence++; }
 
    bool saveToDB(DB_HANDLE hdb, uint32_t index);
+   void loadRuntimeState(DB_RESULT hResult, int row);
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, shared_ptr<NetObj> target, DCItem *dci);
    ThresholdCheckResult checkError(uint32_t errorCount);
 
@@ -744,6 +747,7 @@ public:
    virtual void createMessage(NXCPMessage *msg) override;
    void updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId);
    void fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly);
+   void reloadThresholdState(DB_RESULT hResult, const std::map<uint32_t, int>& rows);
 
    virtual void changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion) override;
 
@@ -920,6 +924,7 @@ private:
 
    void loadConditions(DB_HANDLE hdb);
    void loadInstances(DB_HANDLE hdb);
+   bool saveInstances(DB_HANDLE hdb) const;
 
    DCTableThresholdInstance *findInstance(const TCHAR *instance, bool originalList)
    {
@@ -944,6 +949,8 @@ public:
    void generateEventsAfterMaintenance(DCTable *table);
 
    bool saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) const;
+   bool saveInstanceState() const;
+   void loadInstances(DB_RESULT hResult, int first, int last);
    uint32_t fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
    json_t *createExportRecord() const;
@@ -1036,6 +1043,7 @@ public:
    const ObjectArray<DCTableColumn>& getColumns() const { return *m_columns; }
    shared_ptr<Table> getLastValue(Timestamp *timestamp = nullptr);
    void getThresholdIdList(IntegerArray<uint32_t> *idList) const;
+   void reloadThresholdState(DB_RESULT hResult, const std::map<uint32_t, std::pair<int, int>>& ranges);
    int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
    DCTableThreshold *getThreshold(int index) const { return (m_thresholds != nullptr && index >= 0 && index < m_thresholds->size()) ? m_thresholds->get(index) : nullptr; }
 
@@ -1233,6 +1241,11 @@ bool IsV5DataMigrationPaused();
 bool IsV5DataMigrationPausedByOperator();
 bool IsV5DataMigrationActive();
 void GetV5DataMigrationStatus(V5DataMigrationStatus *status);
+
+/**
+ * Threshold runtime state
+ */
+bool ReloadThresholdStates();
 
 /**
  * DCI data aggregation

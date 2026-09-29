@@ -27,7 +27,11 @@
 **
 ** Authentication: mutual HMAC-SHA256 challenge-response over TLS, keyed with
 ** a cluster secret stored in the shared database (metadata entry) - access
-** to the database is the cluster's actual trust anchor.
+** to the database is the cluster's actual trust anchor. Each signature covers
+** the signer's TLS role, the TLS session's exported keying material and both
+** challenges, so a signature can neither be reflected back to its producer
+** nor relayed into a different TLS session (the channel does not verify
+** certificates; the binding makes a man-in-the-middle useless instead).
 **
 **/
 
@@ -40,11 +44,29 @@
 #define MAX_CHANNEL_MSG_SIZE  4194304
 
 /**
+ * Channel protocol version (HELLO VID_PROTOCOL_VERSION; peers without the
+ * field are version 1). Both nodes must run the same build, a mismatch is
+ * rejected at HELLO.
+ */
+#define HA_CHANNEL_PROTOCOL_VERSION 2
+
+/**
+ * Time allowed for a new session to complete authentication
+ */
+#define AUTH_TIMEOUT  10
+
+/**
+ * TLS keying material exporter label for signature channel binding (RFC 5705)
+ */
+#define TLS_EXPORTER_LABEL    "EXPORTER-netxms-ha-channel"
+#define TLS_EXPORTER_LENGTH   32
+
+/**
  * Channel message codes (private namespace - these never leave the cluster
  * interconnect and are not part of the client-facing NXCP command space)
  */
-#define HA_CMD_HELLO          0x1001   // VID_GUID, VID_SERVER_ID, VID_CHALLENGE
-#define HA_CMD_AUTH           0x1002   // VID_SIGNATURE = HMAC(secret, peer challenge)
+#define HA_CMD_HELLO          0x1001   // VID_PROTOCOL_VERSION, VID_GUID, VID_SERVER_ID, VID_CHALLENGE, VID_HOSTNAME, VID_PRIMARY_NAME
+#define HA_CMD_AUTH           0x1002   // VID_SIGNATURE = HMAC(secret, signer TLS role | TLS exporter | peer challenge | own challenge)
 #define HA_CMD_KEEPALIVE      0x1003
 #define HA_CMD_CHANGE_NOTIFY  0x1004   // VID_SEQUENCE_NUMBER = journal head hint
 #define HA_CMD_WATERMARK      0x1005   // VID_SEQUENCE_NUMBER = peer applied watermark
@@ -132,6 +154,25 @@ static std::atomic<int64_t> s_headHint(0);
 static std::atomic<int64_t> s_peerWatermark(0);
 
 /**
+ * Node state flags carried by KEEPALIVE and WATERMARK (VID_FLAGS)
+ */
+#define PEER_STATE_WARM_STATE_INCONSISTENT   0x0001
+
+/**
+ * Peer is known to hold consistent warm state (active side; used by graceful
+ * switchover). Not ready until the first state report after authentication.
+ */
+static std::atomic<bool> s_peerReady(false);
+
+/**
+ * Get this node's state flags for KEEPALIVE and WATERMARK messages
+ */
+static uint32_t GetLocalStateFlags()
+{
+   return HASyncIsDirty() ? PEER_STATE_WARM_STATE_INCONSISTENT : 0;
+}
+
+/**
  * Applier wakeup
  */
 static Condition s_applierWakeup(false);
@@ -163,14 +204,14 @@ static std::atomic<uint64_t> s_dataFeedValuesDiscarded(0);
 static bool LoadClusterSecret()
 {
    wchar_t buffer[CLUSTER_SECRET_LENGTH * 2 + 1];
-   if (!MetaDataReadStr(CLUSTER_SECRET_METADATA_ENTRY, buffer, CLUSTER_SECRET_LENGTH * 2 + 1, L"") || (buffer[0] == 0))
+   if (!MetaDataReadStrFromDatabase(CLUSTER_SECRET_METADATA_ENTRY, buffer, CLUSTER_SECRET_LENGTH * 2 + 1, L"") || (buffer[0] == 0))
    {
       BYTE secret[CLUSTER_SECRET_LENGTH];
       GenerateRandomBytes(secret, CLUSTER_SECRET_LENGTH);
       wchar_t text[CLUSTER_SECRET_LENGTH * 2 + 1];
       BinToStr(secret, CLUSTER_SECRET_LENGTH, text);
       MetaDataWriteStr(CLUSTER_SECRET_METADATA_ENTRY, text);
-      if (!MetaDataReadStr(CLUSTER_SECRET_METADATA_ENTRY, buffer, CLUSTER_SECRET_LENGTH * 2 + 1, L"") || (buffer[0] == 0))
+      if (!MetaDataReadStrFromDatabase(CLUSTER_SECRET_METADATA_ENTRY, buffer, CLUSTER_SECRET_LENGTH * 2 + 1, L"") || (buffer[0] == 0))
          return false;
       nxlog_debug_tag(DEBUG_TAG, 2, L"Cluster secret created");
    }
@@ -227,11 +268,19 @@ private:
    std::atomic<bool> m_authenticated;
    std::atomic<int32_t> m_stopped;  // word-sized: byte atomic RMW (exchange) not available on all POWER targets
    BYTE m_challenge[CLUSTER_SECRET_LENGTH];
+   BYTE m_peerChallenge[CLUSTER_SECRET_LENGTH];
+   bool m_helloReceived;
+   wchar_t m_peerNodeName[64];      // peer identity from HELLO, published only after authentication
+   wchar_t m_peerNodeAddress[256];
+   time_t m_startTime;
    time_t m_lastMessageTime;
    THREAD m_thread;
 
    void readLoop();
    void processMessage(NXCPMessage *msg);
+   void processHello(NXCPMessage *msg);
+   void processAuth(NXCPMessage *msg);
+   bool calculateSignature(bool signerIsClient, const BYTE *verifierChallenge, const BYTE *signerChallenge, BYTE *signature);
 
 public:
    HAChannelSession(SOCKET socket, SSL_CTX *context, SSL *ssl, bool outbound);
@@ -242,6 +291,7 @@ public:
 
    bool sendMessage(const NXCPMessage& msg);
    bool isAuthenticated() const { return m_authenticated.load(); }
+   bool isAuthTimeoutExpired() const { return !m_authenticated.load() && (time(nullptr) - m_startTime > AUTH_TIMEOUT); }
    bool isStopped() const { return m_stopped.load() != 0; }
 };
 
@@ -263,7 +313,12 @@ HAChannelSession::HAChannelSession(SOCKET socket, SSL_CTX *context, SSL *ssl, bo
    m_outbound = outbound;
    m_authenticated = false;
    m_stopped = 0;
-   m_lastMessageTime = time(nullptr);
+   memset(m_peerChallenge, 0, CLUSTER_SECRET_LENGTH);
+   m_helloReceived = false;
+   m_peerNodeName[0] = 0;
+   m_peerNodeAddress[0] = 0;
+   m_startTime = time(nullptr);
+   m_lastMessageTime = m_startTime;
    m_thread = INVALID_THREAD_HANDLE;
    GenerateRandomBytes(m_challenge, CLUSTER_SECRET_LENGTH);
 }
@@ -285,13 +340,14 @@ HAChannelSession::~HAChannelSession()
 }
 
 /**
- * Start session read thread and send HELLO
+ * Send HELLO and start session read thread. HELLO goes out first: the peer
+ * needs this node's challenge to verify its AUTH, which the read thread sends
+ * in response to the peer's HELLO.
  */
 void HAChannelSession::start()
 {
-   m_thread = ThreadCreateEx(this, &HAChannelSession::readLoop);
-
-   NXCPMessage hello(HA_CMD_HELLO, 0, 5);   // protocol version 5
+   NXCPMessage hello(HA_CMD_HELLO, 0, 5);   // NXCP version 5
+   hello.setField(VID_PROTOCOL_VERSION, static_cast<uint16_t>(HA_CHANNEL_PROTOCOL_VERSION));
    HALeaseManager *manager = HAGetLeaseManager();
    if (manager != nullptr)
       hello.setField(VID_GUID, manager->getNodeGuid());
@@ -300,6 +356,8 @@ void HAChannelSession::start()
    hello.setField(VID_HOSTNAME, HAGetLocalNodeName());
    hello.setField(VID_PRIMARY_NAME, HAGetLocalNodeAddress());
    sendMessage(hello);
+
+   m_thread = ThreadCreateEx(this, &HAChannelSession::readLoop);
 }
 
 /**
@@ -363,6 +421,12 @@ void HAChannelSession::readLoop()
    TlsMessageReceiver receiver(m_socket, m_ssl, &m_sslLock, 8192, MAX_CHANNEL_MSG_SIZE);
    while((m_stopped.load() == 0) && !s_shutdown.load())
    {
+      if (isAuthTimeoutExpired())
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel closed: authentication not completed within %d seconds (%s)", AUTH_TIMEOUT, m_outbound ? L"outbound" : L"inbound");
+         break;
+      }
+
       MessageReceiverResult result;
       NXCPMessage *msg = receiver.readMessage(5000, &result);
       if (msg != nullptr)
@@ -386,71 +450,147 @@ void HAChannelSession::readLoop()
          break;
       }
    }
-   m_authenticated = false;
-   m_stopped = 1;
+   stop();
 }
 
 /**
- * Process message from peer
+ * Calculate authentication signature: HMAC(secret, signer TLS role | TLS
+ * exported keying material | verifier challenge | signer challenge). The role
+ * prevents reflecting a node's own signature back to it, the exporter value
+ * (identical on both ends of one TLS session only) prevents relaying a
+ * signature into another session.
+ */
+bool HAChannelSession::calculateSignature(bool signerIsClient, const BYTE *verifierChallenge, const BYTE *signerChallenge, BYTE *signature)
+{
+   BYTE data[1 + TLS_EXPORTER_LENGTH + CLUSTER_SECRET_LENGTH * 2];
+   data[0] = signerIsClient ? 'C' : 'S';
+   m_sslLock.lock();
+   int rc = SSL_export_keying_material(m_ssl, &data[1], TLS_EXPORTER_LENGTH, TLS_EXPORTER_LABEL, sizeof(TLS_EXPORTER_LABEL) - 1, nullptr, 0, 0);
+   m_sslLock.unlock();
+   if (rc != 1)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Cannot export TLS keying material for peer channel authentication");
+      return false;
+   }
+   memcpy(&data[1 + TLS_EXPORTER_LENGTH], verifierChallenge, CLUSTER_SECRET_LENGTH);
+   memcpy(&data[1 + TLS_EXPORTER_LENGTH + CLUSTER_SECRET_LENGTH], signerChallenge, CLUSTER_SECRET_LENGTH);
+   SignMessage(data, sizeof(data), s_secret, CLUSTER_SECRET_LENGTH, signature);
+   return true;
+}
+
+/**
+ * Process HELLO: validate peer, remember its challenge and identity, answer
+ * with this node's AUTH
+ */
+void HAChannelSession::processHello(NXCPMessage *msg)
+{
+   if (m_helloReceived)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel closed: duplicate HELLO (%s)", m_outbound ? L"outbound" : L"inbound");
+      stop();
+      return;
+   }
+   m_helloReceived = true;
+
+   uint16_t peerVersion = msg->isFieldExist(VID_PROTOCOL_VERSION) ? msg->getFieldAsUInt16(VID_PROTOCOL_VERSION) : 1;
+   if (peerVersion != HA_CHANNEL_PROTOCOL_VERSION)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel rejected: channel protocol version mismatch (local %d, peer %d); both cluster nodes must run the same server version",
+            HA_CHANNEL_PROTOCOL_VERSION, peerVersion);
+      stop();
+      return;
+   }
+
+   uint64_t peerServerId = msg->getFieldAsUInt64(VID_SERVER_ID);
+   if (peerServerId != g_serverId)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel rejected: peer belongs to a different cluster (server ID " UINT64X_FMT(L"016") L")", peerServerId);
+      stop();
+      return;
+   }
+   HALeaseManager *manager = HAGetLeaseManager();
+   if ((manager != nullptr) && msg->getFieldAsGUID(VID_GUID).equals(manager->getNodeGuid()))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel rejected: connected to self (check PeerAddress configuration)");
+      stop();
+      return;
+   }
+
+   msg->getFieldAsBinary(VID_CHALLENGE, m_peerChallenge, CLUSTER_SECRET_LENGTH);
+   if (msg->getFieldAsString(VID_HOSTNAME, m_peerNodeName, 64) == nullptr)
+      m_peerNodeName[0] = 0;
+   if (msg->getFieldAsString(VID_PRIMARY_NAME, m_peerNodeAddress, 256) == nullptr)
+      m_peerNodeAddress[0] = 0;
+
+   BYTE signature[SHA256_DIGEST_SIZE];
+   if (!calculateSignature(m_outbound, m_peerChallenge, m_challenge, signature))
+   {
+      stop();
+      return;
+   }
+   NXCPMessage response(HA_CMD_AUTH, 0, 5);
+   response.setField(VID_SIGNATURE, signature, SHA256_DIGEST_SIZE);
+   sendMessage(response);
+}
+
+/**
+ * Process AUTH: verify peer signature, then publish peer identity
+ */
+void HAChannelSession::processAuth(NXCPMessage *msg)
+{
+   if (!m_helloReceived || m_authenticated.load())
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel closed: unexpected AUTH (%s)", m_outbound ? L"outbound" : L"inbound");
+      stop();
+      return;
+   }
+
+   BYTE signature[SHA256_DIGEST_SIZE], expected[SHA256_DIGEST_SIZE];
+   msg->getFieldAsBinary(VID_SIGNATURE, signature, SHA256_DIGEST_SIZE);
+   if (!calculateSignature(!m_outbound, m_challenge, m_peerChallenge, expected) || (CRYPTO_memcmp(signature, expected, SHA256_DIGEST_SIZE) != 0))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel authentication failed; re-reading cluster secret");
+      LoadClusterSecret();   // this node may hold a stale secret from a concurrent bootstrap
+      stop();
+      return;
+   }
+
+   s_peerInfoLock.lock();
+   wcslcpy(s_peerNodeName, m_peerNodeName, 64);
+   wcslcpy(s_peerNodeAddress, m_peerNodeAddress, 256);
+   s_peerInfoLock.unlock();
+
+   s_peerReady = false;   // until the peer reports its state
+   m_authenticated = true;
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Peer channel established (%s)", m_outbound ? L"outbound" : L"inbound");
+
+   // Register the peer's host in the server cluster object without
+   // waiting for the poll manager's periodic check (the poll manager runs
+   // only on the active node, so the request waits for activation otherwise)
+   HARequestServerClusterObjectUpdate();
+}
+
+/**
+ * Process message from peer. Before authentication completes only HELLO and
+ * AUTH are accepted; anything else closes the session.
  */
 void HAChannelSession::processMessage(NXCPMessage *msg)
 {
+   if (!m_authenticated.load() && (msg->getCode() != HA_CMD_HELLO) && (msg->getCode() != HA_CMD_AUTH))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel closed: message 0x%04X received before authentication (%s)", msg->getCode(), m_outbound ? L"outbound" : L"inbound");
+      stop();
+      return;
+   }
+
    switch(msg->getCode())
    {
       case HA_CMD_HELLO:
-      {
-         uint64_t peerServerId = msg->getFieldAsUInt64(VID_SERVER_ID);
-         if (peerServerId != g_serverId)
-         {
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel rejected: peer belongs to a different cluster (server ID " UINT64X_FMT(L"016") L")", peerServerId);
-            stop();
-            break;
-         }
-         HALeaseManager *manager = HAGetLeaseManager();
-         if ((manager != nullptr) && msg->getFieldAsGUID(VID_GUID).equals(manager->getNodeGuid()))
-         {
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel rejected: connected to self (check PeerAddress configuration)");
-            stop();
-            break;
-         }
-         s_peerInfoLock.lock();
-         if (msg->getFieldAsString(VID_HOSTNAME, s_peerNodeName, 64) == nullptr)
-            s_peerNodeName[0] = 0;
-         if (msg->getFieldAsString(VID_PRIMARY_NAME, s_peerNodeAddress, 256) == nullptr)
-            s_peerNodeAddress[0] = 0;
-         s_peerInfoLock.unlock();
-         BYTE peerChallenge[CLUSTER_SECRET_LENGTH];
-         msg->getFieldAsBinary(VID_CHALLENGE, peerChallenge, CLUSTER_SECRET_LENGTH);
-         BYTE signature[SHA256_DIGEST_SIZE];
-         SignMessage(peerChallenge, CLUSTER_SECRET_LENGTH, s_secret, CLUSTER_SECRET_LENGTH, signature);
-         NXCPMessage response(HA_CMD_AUTH, 0, 5);
-         response.setField(VID_SIGNATURE, signature, SHA256_DIGEST_SIZE);
-         sendMessage(response);
-
-         // Register the peer's host in the server cluster object without
-         // waiting for the poll manager's periodic check (only the active
-         // node with a fully started object model may create objects)
-         if (((g_flags & AF_SERVER_INITIALIZED) != 0) && (manager != nullptr) && (manager->getState() == HALeaseState::ACTIVE))
-            ThreadPoolExecute(g_mainThreadPool, HAUpdateServerClusterObject);
+         processHello(msg);
          break;
-      }
       case HA_CMD_AUTH:
-      {
-         BYTE signature[SHA256_DIGEST_SIZE];
-         msg->getFieldAsBinary(VID_SIGNATURE, signature, SHA256_DIGEST_SIZE);
-         if (ValidateMessageSignature(m_challenge, CLUSTER_SECRET_LENGTH, s_secret, CLUSTER_SECRET_LENGTH, signature))
-         {
-            m_authenticated = true;
-            nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Peer channel established (%s)", m_outbound ? L"outbound" : L"inbound");
-         }
-         else
-         {
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Peer channel authentication failed; re-reading cluster secret");
-            LoadClusterSecret();   // this node may hold a stale secret from a concurrent bootstrap
-            stop();
-         }
+         processAuth(msg);
          break;
-      }
       case HA_CMD_CHANGE_NOTIFY:
       {
          int64_t head = msg->getFieldAsInt64(VID_SEQUENCE_NUMBER);
@@ -462,6 +602,7 @@ void HAChannelSession::processMessage(NXCPMessage *msg)
       }
       case HA_CMD_WATERMARK:
          s_peerWatermark = msg->getFieldAsInt64(VID_SEQUENCE_NUMBER);
+         s_peerReady = (msg->getFieldAsUInt32(VID_FLAGS) & PEER_STATE_WARM_STATE_INCONSISTENT) == 0;
          break;
       case HA_CMD_DCI_DATA:
       {
@@ -509,6 +650,7 @@ void HAChannelSession::processMessage(NXCPMessage *msg)
          break;
       }
       case HA_CMD_KEEPALIVE:
+         s_peerReady = (msg->getFieldAsUInt32(VID_FLAGS) & PEER_STATE_WARM_STATE_INCONSISTENT) == 0;
          break;
       default:
          nxlog_debug_tag(DEBUG_TAG, 4, L"Unexpected message 0x%04X on peer channel", msg->getCode());
@@ -564,6 +706,30 @@ static void FlushDataFeed(bool peerConnected)
 }
 
 /**
+ * Create TLS context for peer channel connection (TLS 1.2 or later)
+ */
+static SSL_CTX *CreateChannelTlsContext()
+{
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   SSL_CTX *context = SSL_CTX_new(TLS_method());
+#else
+   SSL_CTX *context = SSL_CTX_new(SSLv23_method());
+#endif
+   if (context == nullptr)
+      return nullptr;
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   SSL_CTX_set_min_proto_version(context, TLS1_2_VERSION);
+#else
+   SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1);
+#endif
+#ifdef SSL_OP_NO_COMPRESSION
+   SSL_CTX_set_options(context, SSL_OP_NO_COMPRESSION);
+#endif
+   return context;
+}
+
+/**
  * Channel listener
  */
 class HAChannelListener : public StreamSocketListener
@@ -583,19 +749,9 @@ ConnectionProcessingResult HAChannelListener::processConnection(SOCKET s, const 
 {
    nxlog_debug_tag(DEBUG_TAG, 4, L"Inbound peer channel connection from %s", peer.toString().cstr());
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   SSL_CTX *context = SSL_CTX_new(TLS_method());
-#else
-   SSL_CTX *context = SSL_CTX_new(SSLv23_method());
-#endif
+   SSL_CTX *context = CreateChannelTlsContext();
    if (context == nullptr)
       return CPR_COMPLETED;
-
-#ifdef SSL_OP_NO_COMPRESSION
-   SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
-#else
-   SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
-#endif
    if (!SetupServerTlsContext(context))
    {
       SSL_CTX_free(context);
@@ -618,8 +774,10 @@ ConnectionProcessingResult HAChannelListener::processConnection(SOCKET s, const 
       return CPR_COMPLETED;
    }
 
+   // An inbound session that failed to authenticate in time does not keep
+   // the slot (the peer may be reconnecting after a stalled handshake)
    LockGuard lockGuard(s_sessionLock);
-   if ((s_inboundSession != nullptr) && !s_inboundSession->isStopped())
+   if ((s_inboundSession != nullptr) && !s_inboundSession->isStopped() && !s_inboundSession->isAuthTimeoutExpired())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, L"Rejecting inbound peer channel connection (session already active)");
       SSL_free(ssl);
@@ -674,18 +832,9 @@ static void DialerThread()
             SOCKET s = ConnectToHost(addr, s_peerPort, 5000);
             if (s != INVALID_SOCKET)
             {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-               SSL_CTX *context = SSL_CTX_new(TLS_method());
-#else
-               SSL_CTX *context = SSL_CTX_new(SSLv23_method());
-#endif
+               SSL_CTX *context = CreateChannelTlsContext();
                if (context != nullptr)
                {
-#ifdef SSL_OP_NO_COMPRESSION
-                  SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_COMPRESSION);
-#else
-                  SSL_CTX_set_options(context, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
-#endif
                   SSL *ssl = SSL_new(context);
                   if (ssl != nullptr)
                   {
@@ -768,6 +917,7 @@ static void SenderThread()
       else if (--keepaliveCountdown <= 0)
       {
          NXCPMessage msg(HA_CMD_KEEPALIVE, 0, 5);
+         msg.setField(VID_FLAGS, GetLocalStateFlags());
          SendToPeer(msg);
          keepaliveCountdown = 5;
       }
@@ -855,6 +1005,7 @@ static void ApplierThread()
 #ifdef _WITH_ENCRYPTION
          NXCPMessage msg(HA_CMD_WATERMARK, 0, 5);
          msg.setField(VID_SEQUENCE_NUMBER, watermark);
+         msg.setField(VID_FLAGS, GetLocalStateFlags());
          SendToPeer(msg);
 #endif
       }
@@ -1045,6 +1196,15 @@ bool NXCORE_EXPORTABLE HAChannelIsPeerConnected()
 #else
    return false;
 #endif
+}
+
+/**
+ * Check if an authenticated peer is connected and reported consistent warm
+ * state (a standby that can take over without rebuilding its state)
+ */
+bool NXCORE_EXPORTABLE HAChannelIsPeerReady()
+{
+   return HAChannelIsPeerConnected() && s_peerReady.load();
 }
 
 /**

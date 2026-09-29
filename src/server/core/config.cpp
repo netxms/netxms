@@ -467,6 +467,43 @@ void MetaDataPreLoad()
 }
 
 /**
+ * Read string value from metadata table bypassing the cache (the cache entry
+ * is updated with the value read). Used for values another cluster node may
+ * have changed since the cache was loaded.
+ */
+bool NXCORE_EXPORTABLE MetaDataReadStrFromDatabase(const wchar_t *name, wchar_t *buffer, int bufSize, const wchar_t *defaultValue)
+{
+   bool success = false;
+
+   wcslcpy(buffer, defaultValue, bufSize);
+   if (wcslen(name) > 127)
+      return false;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM metadata WHERE var_name=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            DBGetField(hResult, 0, 0, buffer, bufSize);
+            s_metadataCacheLock.writeLock();
+            s_metadataCache.setPreallocated(MemCopyStringW(name), DBGetField(hResult, 0, 0, nullptr, 0));
+            s_metadataCacheLock.unlock();
+            success = true;
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return success;
+}
+
+/**
  * Read string value from metadata table
  */
 bool NXCORE_EXPORTABLE MetaDataReadStr(const wchar_t *name, wchar_t *buffer, int bufSize, const wchar_t *defaultValue)
@@ -487,29 +524,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const wchar_t *name, wchar_t *buffer, int
    s_metadataCacheLock.unlock();
 
    if (!success && !s_metadataCacheLoaded)
-   {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM metadata WHERE var_name=?");
-      if (hStmt != nullptr)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
-         DB_RESULT hResult = DBSelectPrepared(hStmt);
-         if (hResult != nullptr)
-         {
-            if (DBGetNumRows(hResult) > 0)
-            {
-               DBGetField(hResult, 0, 0, buffer, bufSize);
-               s_metadataCacheLock.writeLock();
-               s_metadataCache.setPreallocated(MemCopyStringW(name), DBGetField(hResult, 0, 0, nullptr, 0));
-               s_metadataCacheLock.unlock();
-               success = true;
-            }
-            DBFreeResult(hResult);
-         }
-         DBFreeStatement(hStmt);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-   }
+      success = MetaDataReadStrFromDatabase(name, buffer, bufSize, defaultValue);
    return success;
 }
 
@@ -627,6 +642,49 @@ void ConfigPreLoad()
       s_configCacheLoaded = true;
       s_configCacheLock.unlock();
       DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Reload configuration cache from database and collect variables whose value
+ * differs from the cached one. Used when a cluster node activates after
+ * standing by: the cache was loaded at process start and nothing updated it
+ * since. Changes to variables that require server restart are reported, as
+ * the values they control were consumed at process start.
+ */
+void ConfigReload(StringMap *changes)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT var_name,var_value,need_server_restart FROM config");
+   if (hResult != nullptr)
+   {
+      StringBuffer restartRequired;
+      s_configCacheLock.writeLock();
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         wchar_t *name = DBGetField(hResult, i, 0, nullptr, 0);
+         wchar_t *value = DBGetField(hResult, i, 1, nullptr, 0);
+         const wchar_t *oldValue = s_configCache.get(name);
+         if ((oldValue == nullptr) || wcscmp(oldValue, value))
+         {
+            changes->set(name, value);
+            if (DBGetFieldInt32(hResult, i, 2) != 0)
+            {
+               if (!restartRequired.isEmpty())
+                  restartRequired.append(L", ");
+               restartRequired.append(name);
+            }
+         }
+         s_configCache.setPreallocated(name, value);
+      }
+      s_configCacheLock.unlock();
+      DBFreeResult(hResult);
+
+      nxlog_debug_tag(L"config", 2, L"Configuration cache reloaded (%d changed variables)", changes->size());
+      if (!restartRequired.isEmpty())
+         nxlog_write_tag(NXLOG_WARNING, L"config", L"Configuration variables changed after server start require restart of this server process to take effect: %s", restartRequired.cstr());
    }
    DBConnectionPoolReleaseConnection(hdb);
 }
@@ -1012,6 +1070,21 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       OnAIConfigurationChange(name, value);
    }
+}
+
+/**
+ * Apply configuration changes collected by ConfigReload() through the same
+ * handlers as a configuration change on a running server
+ */
+void ConfigApplyChanges(const StringMap& changes)
+{
+   changes.forEach(
+      [] (const wchar_t *name, const void *value) -> EnumerationCallbackResult
+      {
+         nxlog_debug_tag(L"config", 4, L"Applying changed configuration variable %s = \"%s\"", name, static_cast<const wchar_t*>(value));
+         OnConfigVariableChange(false, name, static_cast<const wchar_t*>(value));
+         return _CONTINUE;
+      });
 }
 
 /**

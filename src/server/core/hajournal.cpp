@@ -39,7 +39,8 @@
 #define TRUNCATION_METADATA_ENTRY L"HAJournalTruncatedAt"
 
 /**
- * Journal sequence counter; seeded from max(seq) at activation
+ * Journal sequence counter; seeded from the journal head at activation
+ * (see HAJournalQueryHead)
  */
 static std::atomic<int64_t> s_sequence(0);
 
@@ -49,22 +50,37 @@ static std::atomic<int64_t> s_sequence(0);
 static std::atomic<bool> s_writerActive(false);
 
 /**
- * Read current journal head (max committed sequence number) from the
- * database. Returns -1 on query failure.
+ * Read single int64 value from database (0 if no rows or NULL, -1 on failure)
+ */
+static int64_t QueryInt64(DB_HANDLE hdb, const wchar_t *query)
+{
+   DB_RESULT hResult = DBSelect(hdb, query);
+   if (hResult == nullptr)
+      return -1;
+   int64_t value = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
+   DBFreeResult(hResult);
+   return value;
+}
+
+/**
+ * Read current journal head (highest sequence number ever committed) from the
+ * database. Returns -1 on query failure. Pruning can empty the journal table,
+ * so max(seq) alone would restart the sequence; entries removed by pruning
+ * are at or below a node's applied watermark (pruning to peer watermark) or
+ * the truncation point (pruning by age), so the head is the maximum of all
+ * three. Used both for seeding the writer at activation and as the starting
+ * watermark of a freshly loaded standby, so the next entry the active writes
+ * is exactly head + 1 for the standby.
  */
 int64_t HAJournalQueryHead()
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, L"SELECT max(seq) FROM ha_change_journal");
-   if (hResult == nullptr)
-   {
-      DBConnectionPoolReleaseConnection(hdb);
-      return -1;
-   }
-   int64_t head = (DBGetNumRows(hResult) > 0) ? DBGetFieldInt64(hResult, 0, 0) : 0;
-   DBFreeResult(hResult);
+   int64_t journalHead = QueryInt64(hdb, L"SELECT max(seq) FROM ha_change_journal");
+   int64_t watermarkHead = QueryInt64(hdb, L"SELECT max(applied_seq) FROM ha_sync_state");
    DBConnectionPoolReleaseConnection(hdb);
-   return head;
+   if ((journalHead < 0) || (watermarkHead < 0))
+      return -1;
+   return std::max(std::max(journalHead, watermarkHead), HAJournalGetTruncationPoint());
 }
 
 /**
@@ -209,7 +225,7 @@ int64_t HAJournalReadWatermark()
 int64_t HAJournalGetTruncationPoint()
 {
    wchar_t buffer[64];
-   if (!MetaDataReadStr(TRUNCATION_METADATA_ENTRY, buffer, 64, L"0"))
+   if (!MetaDataReadStrFromDatabase(TRUNCATION_METADATA_ENTRY, buffer, 64, L"0"))
       return 0;
    return wcstoll(buffer, nullptr, 10);
 }

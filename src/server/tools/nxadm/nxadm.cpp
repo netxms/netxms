@@ -80,6 +80,8 @@ static const wchar_t *GetServerErrorText(uint32_t rcc)
          return L"Script execution error";
       case RCC_RESOURCE_NOT_AVAILABLE:
          return L"Server initialization is not completed yet";
+      case RCC_SERVER_IS_STANDBY:
+         return L"Server is a cluster node in standby role";
    }
    return L"Internal error";
 }

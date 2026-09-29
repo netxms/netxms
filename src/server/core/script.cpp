@@ -272,32 +272,51 @@ NXSL_Program NXCORE_EXPORTABLE *CompileServerScript(const TCHAR *source, const T
 }
 
 /**
- * Load scripts from database
+ * Load scripts from database, replacing current library content (called at
+ * startup and again at cluster node activation)
  */
 void LoadScripts()
 {
+   ObjectArray<NXSL_LibraryScript> scripts(64, 64, Ownership::False);
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT script_id,guid,script_name,script_code FROM script_library"));
-   if (hResult != nullptr)
+   if (hResult == nullptr)
    {
-      NXSL_ServerEnv env;
-      int numRows = DBGetNumRows(hResult);
-      for(int i = 0; i < numRows; i++)
-      {
-         TCHAR buffer[MAX_DB_STRING];
-         auto script = new NXSL_LibraryScript(DBGetFieldULong(hResult, i, 0), DBGetFieldGUID(hResult, i, 1),
-                  DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, nullptr, 0), &env);
-         if (!script->isValid())
-         {
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Error compiling library script %s [%u] (%s)"),
-                     script->getName(), script->getId(), script->getError());
-         }
-         s_scriptLibrary.addScript(script);
-         nxlog_debug_tag(DEBUG_TAG_BASE,  2, _T("Script %s added to library"), script->getName());
-      }
-      DBFreeResult(hResult);
+      DBConnectionPoolReleaseConnection(hdb);
+      return;
    }
+
+   NXSL_ServerEnv env;
+   int numRows = DBGetNumRows(hResult);
+   for(int i = 0; i < numRows; i++)
+   {
+      TCHAR buffer[MAX_DB_STRING];
+      auto script = new NXSL_LibraryScript(DBGetFieldULong(hResult, i, 0), DBGetFieldGUID(hResult, i, 1),
+               DBGetField(hResult, i, 2, buffer, MAX_DB_STRING), DBGetField(hResult, i, 3, nullptr, 0), &env);
+      if (!script->isValid())
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Error compiling library script %s [%u] (%s)"),
+                  script->getName(), script->getId(), script->getError());
+      }
+      scripts.add(script);
+      nxlog_debug_tag(DEBUG_TAG_BASE,  2, _T("Script %s added to library"), script->getName());
+   }
+   DBFreeResult(hResult);
    DBConnectionPoolReleaseConnection(hdb);
+
+   s_scriptLibrary.lock();
+   IntegerArray<uint32_t> currentScripts;
+   s_scriptLibrary.forEach(
+      [&currentScripts] (const NXSL_LibraryScript *script) -> void
+      {
+         currentScripts.add(script->getId());
+      });
+   for(int i = 0; i < currentScripts.size(); i++)
+      s_scriptLibrary.deleteScript(currentScripts.get(i));
+   for(int i = 0; i < scripts.size(); i++)
+      s_scriptLibrary.addScript(scripts.get(i));
+   s_scriptLibrary.unlock();
 }
 
 /**

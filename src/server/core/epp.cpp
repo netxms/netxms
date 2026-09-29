@@ -1638,7 +1638,7 @@ void EPRule::reportChainLoop(EPRuleChainCall *call, const wchar_t *callingChainN
    if ((now - last < EPP_CHAIN_LOOP_REPORT_INTERVAL) || !call->lastLoopReport.compare_exchange_strong(last, now))
       return;
 
-   EventBuilder(EVENT_EPP_CHAIN_LOOP, g_dwMgmtNode)
+   EventBuilder(EVENT_EPP_CHAIN_LOOP, GetServerEventSourceId())
       .param(L"callingChainName", callingChainName)
       .param(L"targetChainName", targetChainName)
       .param(L"ruleNumber", m_id + 1)

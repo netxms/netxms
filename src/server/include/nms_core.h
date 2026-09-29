@@ -1407,6 +1407,8 @@ DciTier NXCORE_EXPORTABLE ResolveDciTier(DciTier requested, const DCObject& dci,
  * Functions
  */
 void ConfigPreLoad();
+void ConfigReload(StringMap *changes);
+void ConfigApplyChanges(const StringMap& changes);
 bool NXCORE_EXPORTABLE ConfigReadStr(const wchar_t *variable, wchar_t *buffer, size_t size, const wchar_t *defaultValue);
 wchar_t NXCORE_EXPORTABLE *ConfigReadStr(const wchar_t *variable, const wchar_t *defaultValue);
 bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const wchar_t *variable, wchar_t *buffer, size_t size, const wchar_t *defaultValue);
@@ -1439,6 +1441,7 @@ json_t NXCORE_EXPORTABLE *GetClientConfigurationHintsAsJson(uint32_t userId);
 
 void MetaDataPreLoad();
 bool NXCORE_EXPORTABLE MetaDataReadStr(const wchar_t *variable, wchar_t *buffer, int size, const wchar_t *defaultValue);
+bool NXCORE_EXPORTABLE MetaDataReadStrFromDatabase(const wchar_t *variable, wchar_t *buffer, int size, const wchar_t *defaultValue);
 int32_t NXCORE_EXPORTABLE MetaDataReadInt32(const wchar_t *variable, int32_t defaultValue);
 bool NXCORE_EXPORTABLE MetaDataWriteStr(const wchar_t *variable, const wchar_t *value);
 bool NXCORE_EXPORTABLE MetaDataWriteInt32(const wchar_t *variable, int32_t value);
@@ -1722,6 +1725,7 @@ void FullWellKnownPortListToMessage(const TCHAR *tag, uint32_t userId, NXCPMessa
 void ZoneWellKnownPortListToMessage(const TCHAR *tag, int32_t zoneUIN, NXCPMessage *msg);
 uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, int32_t zoneUIN);
 IntegerArray<uint16_t> GetWellKnownPorts(const TCHAR *tag, int32_t zoneUIN);
+void LoadWellKnownPortList();
 
 void InitializeWindowsEventParser();
 void OnWindowsEventsConfigurationChange(const TCHAR *name, const TCHAR *value);

@@ -630,7 +630,7 @@ void DCTableThreshold::loadConditions(DB_HANDLE hdb)
  */
 void DCTableThreshold::loadInstances(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,tt_row_number,clear_match_count FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='0'"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT threshold_id,instance,match_count,is_active,tt_row_number,clear_match_count,maint_copy FROM dct_threshold_instances WHERE threshold_id=?"));
    if (hStmt == nullptr)
       return;
 
@@ -638,43 +638,34 @@ void DCTableThreshold::loadInstances(DB_HANDLE hdb)
    DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult != nullptr)
    {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         TCHAR name[1024];
-         DBGetField(hResult, i, 0, name, 1024);
-         auto instance = new DCTableThresholdInstance(name, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2) ? true : false, DBGetFieldLong(hResult, i, 3));
-         int clearCount = DBGetFieldLong(hResult, i, 4);
-         for(int c = 0; c < clearCount; c++)
-            instance->incClearMatchCount();
-         m_instances.set(name, instance);
-      }
+      loadInstances(hResult, 0, DBGetNumRows(hResult));
       DBFreeResult(hResult);
    }
    DBFreeStatement(hStmt);
+}
 
-   hStmt = DBPrepare(hdb, _T("SELECT instance,match_count,is_active,tt_row_number,clear_match_count FROM dct_threshold_instances WHERE threshold_id=? AND maint_copy='1'"));
-   if (hStmt == nullptr)
-      return;
-
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-   hResult = DBSelectPrepared(hStmt);
-   if (hResult != nullptr)
+/**
+ * Load instances from rows [first, last) of given query result, replacing
+ * current instances. Expected column order:
+ * threshold_id,instance,match_count,is_active,tt_row_number,clear_match_count,maint_copy
+ */
+void DCTableThreshold::loadInstances(DB_RESULT hResult, int first, int last)
+{
+   m_instances.clear();
+   m_instancesBeforeMaint.clear();
+   for(int i = first; i < last; i++)
    {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         TCHAR name[1024];
-         DBGetField(hResult, i, 0, name, 1024);
-         auto instance = new DCTableThresholdInstance(name, DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2) ? true : false, DBGetFieldLong(hResult, i, 3));
-         int clearCount = DBGetFieldLong(hResult, i, 4);
-         for(int c = 0; c < clearCount; c++)
-            instance->incClearMatchCount();
+      TCHAR name[1024];
+      DBGetField(hResult, i, 1, name, 1024);
+      auto instance = new DCTableThresholdInstance(name, DBGetFieldLong(hResult, i, 2), DBGetFieldLong(hResult, i, 3) ? true : false, DBGetFieldLong(hResult, i, 4));
+      int clearCount = DBGetFieldLong(hResult, i, 5);
+      for(int c = 0; c < clearCount; c++)
+         instance->incClearMatchCount();
+      if (DBGetFieldLong(hResult, i, 6))
          m_instancesBeforeMaint.set(name, instance);
-      }
-      DBFreeResult(hResult);
+      else
+         m_instances.set(name, instance);
    }
-   DBFreeStatement(hStmt);
 }
 
 /**
@@ -745,28 +736,60 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, uint32_t tableId, int seq) 
       DBFreeStatement(hStmt);
    }
 
-   if ((m_instances.size() > 0) || (m_instancesBeforeMaint.size() > 0))
-   {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance_id,instance,match_count,is_active,tt_row_number,clear_match_count,maint_copy) VALUES (?,?,?,?,?,?,?,?)"));
-      if (hStmt == nullptr)
-         return false;
+   return saveInstances(hdb);
+}
 
-      SaveThresholdInstancesCallbackData data;
-      data.hStmt = hStmt;
-      data.instanceId = 1;
+/**
+ * Save instances to database (existing records must be deleted by caller)
+ */
+bool DCTableThreshold::saveInstances(DB_HANDLE hdb) const
+{
+   if ((m_instances.size() == 0) && (m_instancesBeforeMaint.size() == 0))
+      return true;
 
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_instances (threshold_id,instance_id,instance,match_count,is_active,tt_row_number,clear_match_count,maint_copy) VALUES (?,?,?,?,?,?,?,?)"));
+   if (hStmt == nullptr)
+      return false;
 
-      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, _T("0"), DB_BIND_STATIC);
-      m_instances.forEach(SaveThresholdInstancesCallback, &data);
+   SaveThresholdInstancesCallbackData data;
+   data.hStmt = hStmt;
+   data.instanceId = 1;
 
-      DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, _T("1"), DB_BIND_STATIC);
-      m_instancesBeforeMaint.forEach(SaveThresholdInstancesCallback, &data);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 
-      DBFreeStatement(hStmt);
-   }
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, _T("0"), DB_BIND_STATIC);
+   m_instances.forEach(SaveThresholdInstancesCallback, &data);
 
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, _T("1"), DB_BIND_STATIC);
+   m_instancesBeforeMaint.forEach(SaveThresholdInstancesCallback, &data);
+
+   DBFreeStatement(hStmt);
    return true;
+}
+
+/**
+ * Persist instance state synchronously. Called on instance activation and
+ * deactivation before the corresponding event is posted, so that the state is
+ * durable before the event is externally observable (otherwise a server
+ * failing right after posting the event produces a duplicate event after
+ * restart or HA failover).
+ */
+bool DCTableThreshold::saveInstanceState() const
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool success = DBBegin(hdb);
+   if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dct_threshold_instances WHERE threshold_id=?")) && saveInstances(hdb);
+      if (success)
+         success = DBCommit(hdb);
+      else
+         DBRollback(hdb);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   if (!success)
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DC_THRESHOLDS, L"Cannot save instance state of table threshold [%u] (events will be generated anyway)", m_id);
+   return success;
 }
 
 /**

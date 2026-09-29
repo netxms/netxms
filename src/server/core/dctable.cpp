@@ -462,11 +462,31 @@ DataCollectionError DCTable::transform(const shared_ptr<Table>& value)
 }
 
 /**
- * Check thresholds
+ * Threshold event pending until threshold state is saved
+ */
+struct TableThresholdEvent
+{
+   DCTableThreshold *threshold;
+   ThresholdCheckResult result;
+   int row;          // -1 for missing instance
+   String instance;
+
+   TableThresholdEvent(DCTableThreshold *_threshold, ThresholdCheckResult _result, int _row, const TCHAR *_instance) : instance(_instance)
+   {
+      threshold = _threshold;
+      result = _result;
+      row = _row;
+   }
+};
+
+/**
+ * Check thresholds. Events are posted after instance state of every changed
+ * threshold is saved (state must be durable before an event is observable).
  */
 void DCTable::checkThresholds(Table *value)
 {
    lock();
+   std::vector<TableThresholdEvent> events;
    StringList instanceList;
    for(int row = 0; row < value->getNumRows(); row++)
    {
@@ -480,29 +500,12 @@ void DCTable::checkThresholds(Table *value)
          switch(result)
          {
             case ThresholdCheckResult::ACTIVATED:
-               EventBuilder(t->getActivationEvent(), m_ownerId)
-                  .dci(m_id)
-                  .param(_T("dciName"), m_name)
-                  .param(_T("dciDescription"), m_description)
-                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-                  .param(_T("row"), row)
-                  .param(_T("instance"), instance)
-                  .post();
+               events.emplace_back(t, result, row, instance);
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing (for current row)
-               NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), instance, result);
                break;
             case ThresholdCheckResult::DEACTIVATED:
-               EventBuilder(t->getDeactivationEvent(), m_ownerId)
-                  .dci(m_id)
-                  .param(_T("dciName"), m_name)
-                  .param(_T("dciDescription"), m_description)
-                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-                  .param(_T("row"), row)
-                  .param(_T("instance"), instance)
-                  .param(_T("instanceMissing"), false)
-                  .post();
-               NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), instance, result);
+               events.emplace_back(t, result, row, instance);
                break;
             case ThresholdCheckResult::ALREADY_ACTIVE:
                i = m_thresholds->size();  // Threshold condition still true, stop processing
@@ -518,18 +521,52 @@ void DCTable::checkThresholds(Table *value)
       DCTableThreshold *t = m_thresholds->get(i);
       StringList missingInstances = t->removeMissingInstances(instanceList);
       for (int i = 0; i < missingInstances.size(); i++)
+         events.emplace_back(t, ThresholdCheckResult::DEACTIVATED, -1, missingInstances.get(i));
+   }
+
+   // Save each changed threshold once
+   for(size_t i = 0; i < events.size(); i++)
+   {
+      DCTableThreshold *t = events[i].threshold;
+      bool saved = false;
+      for(size_t j = 0; j < i; j++)
       {
-         EventBuilder(t->getDeactivationEvent(), m_ownerId)
-                          .dci(m_id)
-                          .param(_T("dciName"), m_name)
-                          .param(_T("dciDescription"), m_description)
-                          .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-                          .param(_T("row"), -1)
-                          .param(_T("instance"), missingInstances.get(i))
-                          .param(_T("instanceMissing"), true)
-                          .post();
-         NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), missingInstances.get(i), ThresholdCheckResult::DEACTIVATED);
+         if (events[j].threshold == t)
+         {
+            saved = true;
+            break;
+         }
       }
+      if (!saved)
+         t->saveInstanceState();
+   }
+
+   for(const TableThresholdEvent& e : events)
+   {
+      if (e.result == ThresholdCheckResult::ACTIVATED)
+      {
+         EventBuilder(e.threshold->getActivationEvent(), m_ownerId)
+            .dci(m_id)
+            .param(_T("dciName"), m_name)
+            .param(_T("dciDescription"), m_description)
+            .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("row"), e.row)
+            .param(_T("instance"), e.instance)
+            .post();
+      }
+      else
+      {
+         EventBuilder(e.threshold->getDeactivationEvent(), m_ownerId)
+            .dci(m_id)
+            .param(_T("dciName"), m_name)
+            .param(_T("dciDescription"), m_description)
+            .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+            .param(_T("row"), e.row)
+            .param(_T("instance"), e.instance)
+            .param(_T("instanceMissing"), e.row == -1)
+            .post();
+      }
+      NotifyClientsOnThresholdChange(m_ownerId, m_id, e.threshold->getId(), e.instance, e.result);
    }
    unlock();
 }
@@ -1570,6 +1607,28 @@ void DCTable::getThresholdIdList(IntegerArray<uint32_t> *idList) const
       for(int i = 0; i < m_thresholds->size(); i++)
       {
          idList->add(m_thresholds->get(i)->getId());
+      }
+   }
+   unlock();
+}
+
+/**
+ * Reload threshold instance state from given query result (see
+ * ReloadThresholdStates). Thresholds without stored instances have none.
+ */
+void DCTable::reloadThresholdState(DB_RESULT hResult, const std::map<uint32_t, std::pair<int, int>>& ranges)
+{
+   lock();
+   if (m_thresholds != nullptr)
+   {
+      for(int i = 0; i < m_thresholds->size(); i++)
+      {
+         DCTableThreshold *t = m_thresholds->get(i);
+         auto it = ranges.find(t->getId());
+         if (it != ranges.end())
+            t->loadInstances(hResult, it->second.first, it->second.second);
+         else
+            t->loadInstances(hResult, 0, 0);
       }
    }
    unlock();

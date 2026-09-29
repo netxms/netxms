@@ -558,7 +558,8 @@ uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, i
 }
 
 /**
- * Load well known port list into memory on startup
+ * Load well known port list into memory, replacing current content (called at
+ * startup and again at cluster node activation)
  */
 void LoadWellKnownPortList()
 {
@@ -566,6 +567,8 @@ void LoadWellKnownPortList()
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT tag,zone,id,port FROM well_known_ports ORDER BY zone,id"));
    if (hResult != nullptr)
    {
+      LockGuard lockGuard(s_wellKnownPortsLock);
+      s_wellKnownPorts.clear();
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {

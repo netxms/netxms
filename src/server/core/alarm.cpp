@@ -3282,6 +3282,29 @@ void SyncAlarmFromDatabase(uint32_t alarmId)
 }
 
 /**
+ * Re-synchronize all in-memory alarms of given source object from database.
+ * Applied by a cluster standby together with the object's tombstone: the
+ * active node deletes alarms of a deleted object (if configured to) in the
+ * same transaction as the object, without separate journal entries.
+ */
+void SyncObjectAlarmsFromDatabase(uint32_t objectId)
+{
+   IntegerArray<uint32_t> alarms;
+   s_alarmList.lock();
+   s_alarmList.forEach(
+      [objectId, &alarms] (Alarm *alarm) -> EnumerationCallbackResult
+      {
+         if (alarm->getSourceObject() == objectId)
+            alarms.add(alarm->getAlarmId());
+         return _CONTINUE;
+      });
+   s_alarmList.unlock();
+
+   for(int i = 0; i < alarms.size(); i++)
+      SyncAlarmFromDatabase(alarms.get(i));
+}
+
+/**
  * Get alarm DB writer queue size
  */
 int64_t GetAlarmDbWriterQueueSize()

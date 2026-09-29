@@ -450,9 +450,10 @@ void PollManager(Condition *startCondition)
    {
       WatchdogNotify(watchdogId);
 
-      // Check for management node every 10 minutes
+      // Check for management node every 10 minutes, and on request when
+      // the cluster peer's identity becomes known
       counter++;
-      if (counter % 120 == 0)
+      if ((counter % 120 == 0) || HAConsumeServerClusterObjectUpdateRequest())
       {
          counter = 0;
          CheckForMgmtNode();

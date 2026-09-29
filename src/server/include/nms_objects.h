@@ -5576,6 +5576,7 @@ public:
    void removeFromIndex(const Node& node) { m_idxNodeByAddr->remove(node.getIpAddress()); }
    void removeFromNodeIndex(const InetAddress& addr) { m_idxNodeByAddr->remove(addr); }
    void updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& newIp, const shared_ptr<Interface>& iface);
+   void takeAddressIndexes(Zone *source);
    void updateNodeIndex(const InetAddress& oldIp, const InetAddress& newIp, const shared_ptr<Node>& node);
    shared_ptr<Subnet> getSubnetByAddr(const InetAddress& ipAddr) const { return static_pointer_cast<Subnet>(m_idxSubnetByAddr->get(ipAddr)); }
    shared_ptr<Interface> getInterfaceByAddr(const InetAddress& ipAddr) const { return static_pointer_cast<Interface>(m_idxInterfaceByAddr->get(ipAddr)); }

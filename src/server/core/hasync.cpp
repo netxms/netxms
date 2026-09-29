@@ -224,12 +224,15 @@ static shared_ptr<NetObj> GetRootObject(int objectClass)
 
 /**
  * Apply object tombstone: detach the instance from the object graph and drop
- * it from all indexes. Objects the deletion mutated on the active node
- * (former parents, peers, referencing objects) arrive through their own
- * journal entries.
+ * it from all indexes, and re-synchronize the object's alarms (deleted with
+ * the object on the active node without journal entries of their own).
+ * Objects the deletion mutated on the active node (former parents, peers,
+ * referencing objects) arrive through their own journal entries.
  */
 static void ApplyObjectTombstone(uint32_t objectId)
 {
+   SyncObjectAlarmsFromDatabase(objectId);
+
    shared_ptr<NetObj> object = g_idxObjectById.get(objectId);
    if (object == nullptr)
    {
@@ -425,6 +428,13 @@ static void ApplyObjectChanges(std::vector<HAJournalEntry>& entries)
          continue;
       }
       nxlog_debug_tag(DEBUG_TAG, 5, L"Object %s [%u] %s from database", object->getName(), e.entityId, (old != nullptr) ? L"reloaded" : L"loaded");
+
+      // Zone address indexes are filled by member insertion (NetObjInsert of
+      // nodes, interfaces, subnets) - members that are not reloaded would be
+      // missing from the new instance's indexes
+      if ((old != nullptr) && (e.entityClass == OBJECT_ZONE))
+         static_cast<Zone*>(object.get())->takeAddressIndexes(static_cast<Zone*>(old.get()));
+
       NetObjInsert(object, false, false);
       context.object = object;
       swaps.push_back(std::move(context));
@@ -455,6 +465,16 @@ static void ApplyObjectChanges(std::vector<HAJournalEntry>& entries)
       {
          case OBJECT_ZONE:
             NetObj::linkObjects(g_entireNetwork, context.object);
+            {
+               // Proxy availability is runtime state, set from proxy nodes at startup
+               IntegerArray<uint32_t> proxies = static_cast<Zone*>(object)->getAllProxyNodes();
+               for(int i = 0; i < proxies.size(); i++)
+               {
+                  shared_ptr<NetObj> node = FindObjectById(proxies.get(i), OBJECT_NODE);
+                  if (node != nullptr)
+                     static_cast<Zone*>(object)->updateProxyStatus(static_pointer_cast<Node>(node), false);
+               }
+            }
             break;
          case OBJECT_SUBNET:
             if (IsZoningEnabled())

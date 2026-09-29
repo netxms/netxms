@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nxcore_ha.h>
+#include <nxcore_ps.h>
 #include <nxproc.h>
 #include <netxmsdb.h>
 
@@ -226,12 +227,37 @@ static void EnsureClusterMembership(const shared_ptr<Cluster>& cluster, const sh
 }
 
 /**
+ * Pending request for server cluster object update (peer identity changed)
+ */
+static std::atomic<bool> s_clusterObjectUpdateRequested(false);
+
+/**
+ * Request server cluster object update on the poll manager's next cycle
+ * (called when the peer channel authenticates the peer). The poll manager
+ * runs the update instead of a thread pool task: it is stopped early in
+ * shutdown, so the update can never run on a torn down object model or
+ * thread pool.
+ */
+void HARequestServerClusterObjectUpdate()
+{
+   s_clusterObjectUpdateRequested = true;
+}
+
+/**
+ * Check and clear pending server cluster object update request
+ */
+bool HAConsumeServerClusterObjectUpdateRequest()
+{
+   return s_clusterObjectUpdateRequested.exchange(false);
+}
+
+/**
  * Maintain the object model representation of the server cluster: a cluster
  * object (identified by the HAClusterObjectId metadata entry, so the operator
  * can rename it freely) with node objects for both members. Runs on the
  * active node at activation (after CheckForMgmtNode) and from the poll
- * manager's periodic check; the peer's member node can only be registered
- * once the peer channel has delivered its identity.
+ * manager (periodic check, and on request once the peer channel has delivered
+ * the peer's identity - the peer's member node cannot be registered before).
  */
 void HAUpdateServerClusterObject()
 {
@@ -336,23 +362,32 @@ void NXCORE_EXPORTABLE HAGetActiveServerAddress(wchar_t *buffer, size_t size)
 }
 
 /**
- * Run role change hook command (OnPromoteCommand / OnDemoteCommand)
+ * Running promote hook command. Kept so that the demote hook can wait for it:
+ * a demote hook completing before the promote hook would leave the promote
+ * hook's changes (e.g. virtual IP) in place on a node that left the ACTIVE role.
  */
-static bool RunHookCommand(const wchar_t *command, uint32_t waitTime)
-{
-   if (command[0] == 0)
-      return true;
+static std::atomic<ProcessExecutor*> s_promoteHook(nullptr);
 
-   nxlog_debug_tag(DEBUG_TAG, 3, L"Executing role change hook command \"%s\"", command);
-   ProcessExecutor executor(command, true);
-   if (!executor.execute())
+/**
+ * Run promote hook command. Activation is not delayed by a slow script: the
+ * command keeps running after this call returns.
+ */
+static void RunPromoteHook()
+{
+   if (s_onPromoteCommand[0] == 0)
+      return;
+
+   nxlog_debug_tag(DEBUG_TAG, 3, L"Executing promote hook command \"%s\"", s_onPromoteCommand);
+   auto executor = new ProcessExecutor(s_onPromoteCommand, true);
+   if (executor->execute())
    {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Failed to execute role change hook command \"%s\"", command);
-      return false;
+      s_promoteHook = executor;
    }
-   if (waitTime > 0)
-      executor.waitForCompletion(waitTime);
-   return true;
+   else
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Failed to execute promote hook command \"%s\"", s_onPromoteCommand);
+      delete executor;
+   }
 }
 
 /**
@@ -365,8 +400,36 @@ static bool RunHookCommand(const wchar_t *command, uint32_t waitTime)
 static void RunDemoteHook()
 {
    static std::atomic<int32_t> executed(0);  // word-sized: byte atomic RMW not available on all POWER targets
-   if (executed.exchange(1) == 0)
-      RunHookCommand(s_onDemoteCommand, 10000);
+   if ((executed.exchange(1) != 0) || (s_onDemoteCommand[0] == 0))
+      return;
+
+   ProcessExecutor *promoteHook = s_promoteHook.load();
+   if ((promoteHook != nullptr) && !promoteHook->waitForCompletion(10000))
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Promote hook command still running after 10 seconds; running demote hook command anyway");
+
+   nxlog_debug_tag(DEBUG_TAG, 3, L"Executing demote hook command \"%s\"", s_onDemoteCommand);
+   ProcessExecutor executor(s_onDemoteCommand, true);
+   if (!executor.execute())
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Failed to execute demote hook command \"%s\"", s_onDemoteCommand);
+      return;
+   }
+   if (!executor.waitForCompletion(10000))
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Demote hook command \"%s\" did not complete within 10 seconds and will be terminated", s_onDemoteCommand);
+}
+
+/**
+ * Hand the lease over to the peer: announce demotion on the channel and
+ * release the lease, waiting briefly for the release to complete, so the
+ * peer promotes immediately instead of waiting out the validity window
+ */
+static void HandOverLease()
+{
+   HAChannelNotifyDemotion();   // peer polls for acquisition immediately instead of on its next cycle
+   nxlog_debug_tag(DEBUG_TAG, 2, L"Releasing cluster lease");
+   s_leaseManager->requestRelease();
+   for(int i = 0; (i < 50) && (s_leaseManager->getState() == HALeaseState::ACTIVE); i++)
+      ThreadSleepMs(100);
 }
 
 /**
@@ -390,6 +453,18 @@ static void ActivationThread(int64_t term)
       _exit(NETXMSD_EXIT_RESTART_STANDBY);
    }
 
+   // Reload state loaded during passive bring-up that the change journal does
+   // not cover - it is stale by however long this node was standing by.
+   // Configuration changes found here are applied through the regular change
+   // handlers once the server is fully active (the handlers depend on
+   // subsystems started by ActivateServer).
+   StringMap configChanges;
+   MetaDataPreLoad();
+   ConfigReload(&configChanges);
+   LoadScripts();
+   LoadPersistentStorage();
+   LoadWellKnownPortList();
+
    // Rebase in-memory ID allocators seeded during passive bring-up - they are
    // stale by however long this node was standing by (doc/HA_Design.md 7.2).
    // InitIdTable() takes max(current, database maximum) for every group and
@@ -412,6 +487,14 @@ static void ActivationThread(int64_t term)
       _exit(NETXMSD_EXIT_RESTART_STANDBY);
    }
 
+   // Threshold state transitions are written to the database directly, not
+   // through the change journal - reload them over the reconciled object model
+   if (!ReloadThresholdStates())
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Threshold state reload failed at activation; restarting into standby");
+      _exit(NETXMSD_EXIT_RESTART_STANDBY);
+   }
+
    // Seed change journal sequence from the journal head and enable journal
    // writes for this node (it is about to become the writing active)
    if (!HAJournalInit())
@@ -420,13 +503,21 @@ static void ActivationThread(int64_t term)
       _exit(NETXMSD_EXIT_RESTART_STANDBY);
    }
 
-   RunHookCommand(s_onPromoteCommand, 0);
+   RunPromoteHook();
 
    if (!ActivateServer())
    {
+      // Stop role-sensitive work already started by the partial activation,
+      // undo the promote hook (e.g. release the virtual IP) and hand the
+      // lease over instead of leaving the peer to wait out its validity
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Server activation failed; restarting into standby");
+      s_fenced = true;
+      RunDemoteHook();
+      HandOverLease();
+      nxlog_close();
       _exit(NETXMSD_EXIT_RESTART_STANDBY);
    }
+   ConfigApplyChanges(configChanges);
 
    EventBuilder(EVENT_HA_NODE_ACTIVATED, GetServerEventSourceId())
       .param(L"nodeName", s_nodeName)
@@ -592,16 +683,23 @@ bool HAStartController()
  * lease so the peer promotes immediately), then restart into standby via
  * the service manager.
  */
-bool NXCORE_EXPORTABLE HAInitiateSwitchover()
+HASwitchoverResult NXCORE_EXPORTABLE HAInitiateSwitchover()
 {
    if ((s_leaseManager == nullptr) || (s_leaseManager->getState() != HALeaseState::ACTIVE))
-      return false;
+      return HASwitchoverResult::NOT_ACTIVE;
+
+   // Without a standby ready to take over, switchover would turn into an
+   // outage lasting a full restart of this node
+   if (!HAChannelIsPeerConnected())
+      return HASwitchoverResult::NO_PEER;
+   if (!HAChannelIsPeerReady())
+      return HASwitchoverResult::PEER_NOT_READY;
 
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Graceful switchover initiated");
    RunDemoteHook();
    SetServerExitCode(NETXMSD_EXIT_RESTART_STANDBY);
    InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
-   return true;
+   return HASwitchoverResult::STARTED;
 }
 
 /**
@@ -637,15 +735,12 @@ void HAShutdownController()
                   head, HAChannelGetPeerWatermark());
       }
 
-      HAChannelNotifyDemotion();   // peer polls for acquisition immediately instead of on its next cycle
-      nxlog_debug_tag(DEBUG_TAG, 2, L"Releasing cluster lease");
-      s_leaseManager->requestRelease();
-      for(int i = 0; (i < 50) && (s_leaseManager->getState() == HALeaseState::ACTIVE); i++)
-         ThreadSleepMs(100);
+      HandOverLease();
    }
 
    HAChannelShutdown();
    s_leaseManager->stop();
+   delete s_promoteHook.exchange(nullptr);
    delete_and_null(s_leaseManager);
    nxlog_debug_tag(DEBUG_TAG, 2, L"Cluster controller stopped");
 }

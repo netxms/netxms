@@ -300,8 +300,15 @@ CREATE TABLE ha_sync_state
 ### 3.2 Writing (active node)
 
 - `seq` is allocated from a process-wide atomic counter, seeded at
-  activation from `max(seq)` (part of the ID rebase). No DB-native
+  activation from the journal head (part of the ID rebase). No DB-native
   auto-increment: keeps the DDL portable and the value known before commit.
+  The head is the highest sequence number ever committed: the maximum of
+  `max(seq)`, `max(applied_seq)` in `ha_sync_state` and the age-based
+  truncation point (`HAJournalQueryHead`). Pruning routinely empties the
+  table once the standby has caught up, and every pruned entry is at or
+  below one of the other two values, so the sequence never restarts. A
+  freshly loaded standby starts from the same head, so the first entry the
+  active writes after it is exactly head + 1.
 - The journal row is written **in the same transaction** as the object save,
   or immediately after the delete on the deletion path (deletions do not go
   through the save path — `Syncer` deletes are a separate code path, hence
@@ -366,7 +373,11 @@ Implementation (`hasync.cpp`, applied in batches per applier round):
 - **Object tombstone** = detach from the object graph and drop from indexes,
   with none of `deleteObject()`'s side effects — those already happened on
   the active, and every object they mutated arrives through its own journal
-  entry.
+  entry. The exception is the object's alarms, which the active deletes in
+  the same transaction (depending on `Alarms.DeleteAlarmsOfDeletedObject`)
+  without journal entries of their own: the tombstone re-synchronizes every
+  in-memory alarm of the object from the database
+  (`SyncObjectAlarmsFromDatabase`), dropping deleted ones.
 - **Alarm entry** = reload the alarm row (`SyncAlarmFromDatabase`); a missing
   or terminated row removes the alarm from the in-memory list.
 - **Dirty state**: an apply failure, a journal truncation past the node's
@@ -411,9 +422,21 @@ part of the client-facing NXCP command space or its Java mirror).
   cluster's actual trust anchor, so the secret derives from it. A node that
   loses the concurrent-bootstrap race fails one handshake and re-reads.
   HELLO also carries the server ID; a different cluster's node is rejected.
+  Each AUTH signature covers the signer's TLS role (client/server), the TLS
+  session's exported keying material (RFC 5705) and both challenges, so a
+  node's own signature cannot be reflected back to it and a signature cannot
+  be relayed into another TLS session. Certificates are not verified; the
+  session binding is what defeats a man-in-the-middle. Until AUTH verifies,
+  only HELLO and AUTH are accepted (anything else closes the session), the
+  peer's announced name/address is not used, and a session that does not
+  authenticate within 10 s is closed and loses the inbound slot. HELLO
+  carries a channel protocol version; a mismatch is rejected. TLS 1.2 is
+  the minimum protocol version.
 - **Messages**: HELLO / AUTH / KEEPALIVE (5 s) / CHANGE_NOTIFY (coalesced
   journal-head hint, at most 1/s) / WATERMARK (standby ack; the active
-  exposes it for the switchover wait) / DEMOTED (handover).
+  exposes it for the switchover wait) / DEMOTED (handover). KEEPALIVE and
+  WATERMARK carry the sender's state flags (`VID_FLAGS`, 0x0001 = warm
+  state inconsistent), which the switchover readiness check uses.
 - **Handover acceleration**: DEMOTED is sent just before the lease release;
   the standby's lease manager wakes and polls at 250 ms for a short window
   (`HALeaseManager::wakeup()`), giving sub-second release-to-acquire
@@ -502,6 +525,43 @@ The definitive inventory is produced by the step 0.5 audit (section 7.2).
 Known members: all `IDG_*` groups in `id.cpp` (`InitIdTable`), the event ID
 counter (`LoadLastEventId`), and the journal `seq` counter (section 3.2).
 
+### 4.1 Reload of other passive-phase state
+
+The change journal covers objects and alarms only. Everything else loaded
+during passive bring-up is stale by however long the node stood by, so
+activation reloads it from the database before the ID rebase: metadata cache
+(`MetaDataPreLoad`), configuration cache (`ConfigReload`), script library
+(`LoadScripts`), NXSL persistent storage (`LoadPersistentStorage`) and the
+well-known port list (`LoadWellKnownPortList`). Reloading from the database
+also picks up changes made outside the server (`nxdbmgr set`, direct SQL).
+
+Configuration variables whose value differs from the cache are applied
+through the regular change handlers (`ConfigApplyChanges`) after
+`ActivateServer()` completes, since the handlers depend on subsystems
+started there. The result is the same as a server that has been running
+since the standby process started and had its configuration changed live.
+Variables that require server restart are not applied (their values were
+consumed at process start); activation logs a warning listing the changed
+ones. A setting that requires server restart therefore needs both cluster
+nodes restarted.
+
+Threshold runtime state is also written outside the change journal: a DCI
+threshold state transition updates `thresholds.current_state` synchronously
+before its event is posted, and a table DCI threshold rewrites its
+`dct_threshold_instances` rows in one transaction before its events are
+posted. Other runtime fields (match counts, last checked value, last event)
+reach the database with object saves. After the journal replay, activation
+reloads all of it (`ReloadThresholdStates`: one query per table), giving the
+same threshold state as a server restart — no duplicate activation or missed
+deactivation events after takeover. Only the last event severity/time/message
+still goes through the lazy writer, so the repeat interval of an active
+threshold may restart after a failover.
+
+Values read while standing by go to the database directly
+(`MetaDataReadStrFromDatabase`): the journal truncation point and the
+cluster secret. Modules that cache configuration in their own initialization
+code are not covered.
+
 ## 5. Subsystem lifecycle contract
 
 ### 5.1 States and transitions
@@ -544,6 +604,11 @@ current init is treated as activate-time). Inventory of core subsystems and
 their required split: section 7.1.
 
 ### 5.3 Graceful switchover sequence (active side)
+
+`nxadm ha switchover` is refused unless an authenticated peer is connected
+and has reported consistent warm state (otherwise the switchover would turn
+into an outage lasting a full restart). A plain server stop still releases
+the lease without that check.
 
 1. Stop intake: scheduler, pollers, receivers stop accepting/launching work.
 2. Drain: event queue, DB writer queues, journal appends; flush modified
@@ -614,7 +679,11 @@ passive bring-up, each with a per-request role gate (`cluster mode && !(g_flags
   (`ha status`) must be reachable. Trust model matches the existing
   unauthenticated `CMD_SET_DB_PASSWORD` handling on the same interface;
   normal `Server.Security.RestrictLocalConsoleAccess` rules resume once the
-  node activates.
+  node activates. Because nobody is authenticated, the standby accepts only
+  commands that affect its own process: `ha`, `debug`, `down`, `exit` and
+  `help`. Other console commands are rejected and script execution returns
+  `RCC_SERVER_IS_STANDBY` — they can read or change shared state (objects,
+  configuration, database) that only the lease holder may act on.
 - **Agent tunnels**: listener stays activation-only. Agents maintain
   independent tunnels to every configured server and retry failed ones every
   `TunnelKeepaliveInterval` (30 s default); connection-refused on the standby
@@ -637,15 +706,20 @@ Semantics:
 
 - **OnPromoteCommand** runs in the activation thread after the journal is
   initialized, immediately before `ActivateServer()` — the VIP comes up
-  just before the node starts serving as active. Fire-and-forget (activation
-  is not delayed by a slow script).
+  just before the node starts serving as active. Activation is not delayed
+  by a slow script: the command keeps running in the background, and the
+  demote hook waits up to 10 seconds for it to finish, so a quick demotion
+  cannot run the demote hook before the promote hook completes.
 - **OnDemoteCommand** runs on *every* path out of the ACTIVE role, at most
   once per process incarnation (`RunDemoteHook`): on fencing (before the
   process exits), at the start of a graceful switchover (before the drains,
   so new client traffic stops arriving at the demoting node), and from
   `HAShutdownController` on a plain clean shutdown of the active node —
   without this last call a normal service stop would leave the VIP assigned
-  to a stopped server. The hook is given up to 10 seconds to complete.
+  to a stopped server. It also runs when `ActivateServer()` fails after the
+  promote hook ran; that path additionally raises the fence flag and hands
+  the lease over before the process exits. The hook is given up to 10
+  seconds to complete and is terminated after that.
 - Hooks configured on a node that never held the active role never run.
   A standby node's clean shutdown runs no hooks.
 

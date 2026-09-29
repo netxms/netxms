@@ -27,6 +27,7 @@
  * Persistent storage functions
  */
 void PersistentStorageInit();
+void LoadPersistentStorage();
 void PersistentStorageDestroy();
 void SetPersistentStorageValue(const TCHAR *key, const TCHAR *value);
 bool DeletePersistentStorageValue(const TCHAR *key);

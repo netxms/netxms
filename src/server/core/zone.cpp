@@ -73,6 +73,19 @@ Zone::~Zone()
 }
 
 /**
+ * Take over address indexes of another instance of the same zone (used when
+ * a zone object is replaced by an instance reloaded from database - index
+ * entries refer only to member objects, which remain in place). Source
+ * instance gets this instance's indexes.
+ */
+void Zone::takeAddressIndexes(Zone *source)
+{
+   std::swap(m_idxNodeByAddr, source->m_idxNodeByAddr);
+   std::swap(m_idxInterfaceByAddr, source->m_idxInterfaceByAddr);
+   std::swap(m_idxSubnetByAddr, source->m_idxSubnetByAddr);
+}
+
+/**
  * Create object from database data
  */
 bool Zone::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedStatements)

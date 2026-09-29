@@ -124,6 +124,22 @@ static uint32_t ExecuteServerScript(const wchar_t *script, const StringList& arg
 }
 
 /**
+ * Check if console command is available on a cluster node in standby role.
+ * Authentication is not possible there (user database is loaded at
+ * activation), so only commands that affect this process only are allowed:
+ * HA status/switchover, debug levels, shutdown, session exit, and help.
+ * Everything else can read or change shared state (objects, configuration,
+ * database) that only the lease holder may act on.
+ */
+static bool IsStandbyConsoleCommand(const wchar_t *command)
+{
+   wchar_t name[256];
+   ExtractWord(command, name);
+   return IsCommand(L"HA", name, 2) || IsCommand(L"DEBUG", name, 2) || IsCommand(L"DOWN", name, 4) ||
+          IsCommand(L"EXIT", name, 4) || IsCommand(L"HELP", name, 2) || IsCommand(L"?", name, 1);
+}
+
+/**
  * Request processing thread
  */
 static void ProcessingThread(SOCKET sock)
@@ -177,8 +193,10 @@ static void ProcessingThread(SOCKET sock)
             {
                // Cluster node in standby role: authentication is not possible
                // (user database is loaded at activation), and the interface is
-               // loopback-only; console access is needed for HA operations.
-               // Re-evaluated on activation (isInitialized stays false).
+               // loopback-only; console access is needed for HA operations, so
+               // only commands affecting this process are accepted (see
+               // IsStandbyConsoleCommand). Re-evaluated on activation
+               // (isInitialized stays false).
                requireAuthentication = false;
             }
          }
@@ -186,9 +204,14 @@ static void ProcessingThread(SOCKET sock)
          if (request->getCode() == CMD_ADM_REQUEST)
          {
             uint32_t rcc;
+            bool standby = !(g_flags & AF_SERVER_INITIALIZED);
             if (isAuthenticated || !requireAuthentication)
             {
-               if (request->isFieldExist(VID_SCRIPT))
+               if (request->isFieldExist(VID_SCRIPT) && standby)
+               {
+                  rcc = RCC_SERVER_IS_STANDBY;
+               }
+               else if (request->isFieldExist(VID_SCRIPT))
                {
                   TCHAR script[256];
                   request->getFieldAsString(VID_SCRIPT, script, 256);
@@ -203,7 +226,11 @@ static void ProcessingThread(SOCKET sock)
                   TCHAR command[256];
                   request->getFieldAsString(VID_COMMAND, command, 256);
 
-                  int exitCode = ProcessConsoleCommand(command, &console);
+                  int exitCode = CMD_EXIT_CONTINUE;
+                  if (standby && !IsStandbyConsoleCommand(command))
+                     ConsoleWrite(&console, L"ERROR: command is not available while this cluster node is in standby role\n\n");
+                  else
+                     exitCode = ProcessConsoleCommand(command, &console);
                   switch(exitCode)
                   {
                      case CMD_EXIT_SHUTDOWN:

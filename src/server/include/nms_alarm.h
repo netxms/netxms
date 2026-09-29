@@ -235,6 +235,7 @@ bool InitAlarmManager();
 void ActivateAlarmManager();
 void ShutdownAlarmManager();
 void SyncAlarmFromDatabase(uint32_t alarmId);
+void SyncObjectAlarmsFromDatabase(uint32_t objectId);
 
 void SendAlarmsToClient(uint32_t requestId, ClientSession *session);
 

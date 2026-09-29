@@ -52,7 +52,19 @@ void HAShutdownController();
 bool NXCORE_EXPORTABLE HAIsFenced();
 bool NXCORE_EXPORTABLE HACheckFence();
 uint32_t NXCORE_EXPORTABLE HAGetRecordIdGap();
-bool NXCORE_EXPORTABLE HAInitiateSwitchover();
+
+/**
+ * Graceful switchover request result
+ */
+enum class HASwitchoverResult
+{
+   STARTED,
+   NOT_ACTIVE,
+   NO_PEER,
+   PEER_NOT_READY
+};
+
+HASwitchoverResult NXCORE_EXPORTABLE HAInitiateSwitchover();
 HALeaseManager NXCORE_EXPORTABLE *HAGetLeaseManager();
 void NXCORE_EXPORTABLE HAGetActiveServerAddress(wchar_t *buffer, size_t size);
 const wchar_t *HAGetLocalNodeName();
@@ -63,6 +75,8 @@ const wchar_t *HAGetLocalNodeAddress();
  * object with node objects for both members (active side maintenance)
  */
 void HAUpdateServerClusterObject();
+void HARequestServerClusterObjectUpdate();
+bool HAConsumeServerClusterObjectUpdateRequest();
 
 /**
  * Set process exit code used by the shutdown path (switchover sets
@@ -128,6 +142,7 @@ void HAChannelNotifyDemotion();
 void HAChannelSetupSync(std::function<void(const std::vector<HAJournalEntry>&)> handler, int64_t initialWatermark);
 bool HAChannelFinalizeSync();
 bool NXCORE_EXPORTABLE HAChannelIsPeerConnected();
+bool NXCORE_EXPORTABLE HAChannelIsPeerReady();
 int64_t NXCORE_EXPORTABLE HAChannelGetPeerWatermark();
 int64_t HAChannelGetAppliedWatermark();
 bool HAChannelGetPeerNodeInfo(wchar_t *name, size_t nameSize, wchar_t *address, size_t addressSize);
