@@ -386,10 +386,11 @@ static void DumpThreadStack(FILE *fp, HANDLE hProcess, DWORD faultingThreadId, c
  */
 static bool IsDumpFile(const TCHAR *fileName)
 {
+   // CRT _wcsicmp because _tcsicmp maps to libnetxms, which this tool does not link
    size_t len = _tcslen(fileName);
-   if ((len > 5) && !_tcsicmp(&fileName[len - 5], _T(".mdmp")))
+   if ((len > 5) && !_wcsicmp(&fileName[len - 5], L".mdmp"))
       return true;
-   if ((len > 8) && !_tcsicmp(&fileName[len - 8], _T(".mdmp.gz")))
+   if ((len > 8) && !_wcsicmp(&fileName[len - 8], L".mdmp.gz"))
       return true;
    return false;
 }

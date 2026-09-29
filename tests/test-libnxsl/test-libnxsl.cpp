@@ -126,7 +126,10 @@ static void RunTestScript(const TCHAR *name)
    MemFree(source);
    AssertNotNull(vm);
 
-   AssertTrue(vm->run());
+   bool success = vm->run();
+   if (!success)
+      WriteToTerminalEx(_T("\n   Script error: %s\n"), vm->getErrorText());
+   AssertTrue(success);
    AssertNotNull(vm->getResult());
    AssertTrue(vm->getResult()->isInteger());
    AssertEquals(vm->getResult()->getValueAsInt32(), 0);

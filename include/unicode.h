@@ -55,10 +55,24 @@
 
 #ifdef UNICODE
 
+// Replace locale-dependent CRT case conversion mapped by tchar.h
+#undef _tcsicmp
+#undef _tcsnicmp
+#undef _tcsupr
+#undef _tcslwr
+#undef _totupper
+#undef _totlower
+#define _tcsicmp  nx_wcsicmp
+#define _tcsnicmp nx_wcsnicmp
+#define _tcsupr   nx_wcsupr
+#define _tcslwr   nx_wcslwr
+#define _totupper nx_towupper
+#define _totlower nx_towlower
+
 #define _tcstoll  wcstoll
 #define _tcstoull wcstoull
 #define _tcstok_r wcstok_s
-#define _tcsistr  wcsistr
+#define _tcsistr  nx_wcsistr
 #define _tcslcpy  wcslcpy
 #define _tcslcat  wcslcat
 

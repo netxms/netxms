@@ -95,7 +95,7 @@ static void TestStringList()
    AssertTrue(!_tcsncmp(s3->get(4), _T("3.1415"), 6));
    delete s3;
    EndTest();
-   
+
    StartTest(_T("String list - sort"));
    s3 = new StringList();
    s3->add(1);
@@ -106,7 +106,7 @@ static void TestStringList()
    AssertEquals(s3->get(1), _T("2"));
    AssertEquals(s3->get(2), _T("3"));
    delete s3;
-   EndTest();   
+   EndTest();
 
 #if !WITH_ADDRESS_SANITIZER
    StartTest(_T("String list - performance"));
@@ -858,6 +858,23 @@ static void TestUnicodeCase()
 
    EndTest();
 
+#ifdef UNICODE
+   // Platform headers (tchar.h on Windows) map these macros to C library functions unless overridden
+   StartTest(_T("Unicode case conversion via TCHAR macros in C locale"));
+
+   AssertEquals(_totupper(L'\x0441'), L'\x0421');
+   AssertEquals(_totlower(L'\x0421'), L'\x0441');
+   AssertEquals(_tcsicmp(L"\x0421\x0440\x0435\x0434", L"\x0441\x0440\x0435\x0434"), 0);
+   AssertEquals(_tcsnicmp(L"\x0421\x0440\x0435\x0434", L"\x0441\x0440\x0435\x0417", 3), 0);
+   AssertTrue(&cyrillicText[5] == _tcsistr(cyrillicText, L"\x0434\x0432\x0430"));
+
+   wcslcpy(buffer, L"\x0421\x0440\x0435\x0434", 16);
+   AssertEquals(_tcslwr(buffer), L"\x0441\x0440\x0435\x0434");
+   AssertEquals(_tcsupr(buffer), L"\x0421\x0420\x0415\x0414");
+
+   EndTest();
+#endif
+
    setlocale(LC_CTYPE, savedLocale);
    MemFree(savedLocale);
 }
@@ -1593,7 +1610,7 @@ static void TestInetAddress()
    AssertTrue(a.sameSubnet(b));
    AssertFalse(a.sameSubnet(c));
    EndTest();
-   
+
    StartTest(_T("InetAddress - buildHashKey() - IPv4"));
    a = InetAddress::parse("10.3.1.91");
    BYTE key[18];
@@ -1606,7 +1623,7 @@ static void TestInetAddress()
    AssertTrue(memcmp(key, keyIPv4, 18) == 0);
 #endif
    EndTest();
-   
+
    StartTest(_T("InetAddress - buildHashKey() - IPv6"));
    a = InetAddress::parse("fe80:1234::6e88:14ff:fec4:b8f8");
    a.buildHashKey(key);
@@ -1872,7 +1889,7 @@ static void TestHashMap()
          }
          if(i == 2)
          {
-            AssertTrue(it.value()->equals(_T("String 3")));   
+            AssertTrue(it.value()->equals(_T("String 3")));
          }
       }
    }
@@ -2187,13 +2204,13 @@ static void TestHashSet()
    s1->put(66);
    AssertEquals(s1->size(), 6);
    AssertTrue(s1->contains(55));
-   AssertTrue(s1->contains(66));  
+   AssertTrue(s1->contains(66));
    AssertEquals(s1Copy->size(), 5);
    AssertTrue(s1Copy->contains(100));
-   AssertTrue(s1Copy->contains(55)); 
+   AssertTrue(s1Copy->contains(55));
    s1Copy->remove(55);
-   AssertTrue(s1->contains(55)); 
-   AssertFalse(s1Copy->contains(55)); 
+   AssertTrue(s1->contains(55));
+   AssertFalse(s1Copy->contains(55));
    delete s1Copy;
    s1->remove(55);
    s1->remove(66);
@@ -2205,32 +2222,32 @@ static void TestHashSet()
    s1->put(66);
    AssertEquals(s1->size(), 6);
    AssertTrue(s1->contains(55));
-   AssertTrue(s1->contains(66));   
+   AssertTrue(s1->contains(66));
    s1->remove(55);
    s1->remove(66);
-   
+
    AssertEquals(s1MoveConstructor.size(), 5);
    AssertTrue(s1MoveConstructor.contains(55));
    s1MoveConstructor.remove(55);
    EndTest();
-   
+
    StartTest(_T("HashSet - copy operator"));
    s1->put(55);
    HashSet<int32_t> s1CopyOp = *s1;
    s1->put(66);
    AssertEquals(s1->size(), 6);
    AssertTrue(s1->contains(55));
-   AssertTrue(s1->contains(66));   
+   AssertTrue(s1->contains(66));
    s1->remove(55);
    s1->remove(66);
-   
+
    AssertEquals(s1CopyOp.size(), 5);
    AssertTrue(s1CopyOp.contains(55));
    s1CopyOp.remove(55);
    EndTest();
-   
+
    StartTest(_T("HashSet - move operator"));
-   s1->put(55);   
+   s1->put(55);
    HashSet<int32_t> s1MoveOp;
    HashSet<int32_t> x(*s1);
    s1MoveOp.put(77);
@@ -2239,10 +2256,10 @@ static void TestHashSet()
    AssertEquals(x.size(), 0);
    AssertEquals(s1->size(), 6);
    AssertTrue(s1->contains(55));
-   AssertTrue(s1->contains(66));   
+   AssertTrue(s1->contains(66));
    s1->remove(55);
    s1->remove(66);
-   
+
    AssertEquals(s1MoveOp.size(), 5);
    AssertTrue(s1MoveOp.contains(55));
    s1MoveOp.remove(55);
@@ -2331,20 +2348,20 @@ static void TestHashSet()
    AssertTrue(s2->contains(k3));
    AssertFalse(s2->contains(k4));
    EndTest();
-   
+
    StartTest(_T("HashSet (long key) - copy constructor"));
    s2->put(k5);
    HashSet<LONG_HASH_KEY> *s2Copy = new HashSet<LONG_HASH_KEY>(*s2);
    s2->put(k6);
    AssertEquals(s2->size(), 5);
    AssertTrue(s2->contains(k5));
-   AssertTrue(s2->contains(k6));  
+   AssertTrue(s2->contains(k6));
    AssertEquals(s2Copy->size(), 4);
    AssertTrue(s2Copy->contains(k1));
-   AssertTrue(s2Copy->contains(k5)); 
+   AssertTrue(s2Copy->contains(k5));
    s2Copy->remove(k5);
-   AssertTrue(s2->contains(k5)); 
-   AssertFalse(s2Copy->contains(k5)); 
+   AssertTrue(s2->contains(k5));
+   AssertFalse(s2Copy->contains(k5));
    delete s2Copy;
    s2->remove(k5);
    s2->remove(k6);
@@ -2356,32 +2373,32 @@ static void TestHashSet()
    s2->put(k6);
    AssertEquals(s2->size(), 5);
    AssertTrue(s2->contains(k5));
-   AssertTrue(s2->contains(k6));   
+   AssertTrue(s2->contains(k6));
    s2->remove(k5);
    s2->remove(k6);
-   
+
    AssertEquals(s2MoveConstructor.size(), 4);
    AssertTrue(s2MoveConstructor.contains(k5));
    s2MoveConstructor.remove(k5);
    EndTest();
-   
+
    StartTest(_T("HashSet (long key) - copy operator"));
    s2->put(k5);
    HashSet<LONG_HASH_KEY> s2CopyOp = *s2;
    s2->put(k6);
    AssertEquals(s2->size(), 5);
    AssertTrue(s2->contains(k5));
-   AssertTrue(s2->contains(k6));   
+   AssertTrue(s2->contains(k6));
    s2->remove(k5);
    s2->remove(k6);
-   
+
    AssertEquals(s2CopyOp.size(), 4);
    AssertTrue(s2CopyOp.contains(k5));
    s2CopyOp.remove(k5);
    EndTest();
-   
+
    StartTest(_T("HashSet (long key) - move operator"));
-   s2->put(k5);   
+   s2->put(k5);
    HashSet<LONG_HASH_KEY> s2MoveOp;
    HashSet<LONG_HASH_KEY> x2(*s2);
    s2MoveOp.put(k4);
@@ -2390,14 +2407,14 @@ static void TestHashSet()
    AssertEquals(x.size(), 0);
    AssertEquals(s2->size(), 5);
    AssertTrue(s2->contains(k5));
-   AssertTrue(s2->contains(k6));   
+   AssertTrue(s2->contains(k6));
    s2->remove(k5);
    s2->remove(k6);
-   
+
    AssertEquals(s2MoveOp.size(), 4);
    AssertTrue(s2MoveOp.contains(k5));
    s2MoveOp.remove(k5);
-   EndTest();   
+   EndTest();
 
    StartTest(_T("HashSet (long key) - remove"));
    s2->remove(k2);
@@ -2455,13 +2472,13 @@ static void TestCountingHashSet()
    s1->put(66);
    AssertEquals(s1->size(), 6);
    AssertTrue(s1->contains(55));
-   AssertTrue(s1->contains(66));  
+   AssertTrue(s1->contains(66));
    AssertEquals(s1Copy->size(), 5);
    AssertTrue(s1Copy->contains(100));
-   AssertTrue(s1Copy->contains(55)); 
+   AssertTrue(s1Copy->contains(55));
    s1Copy->remove(55);
-   AssertTrue(s1->contains(55)); 
-   AssertFalse(s1Copy->contains(55)); 
+   AssertTrue(s1->contains(55));
+   AssertFalse(s1Copy->contains(55));
    delete s1Copy;
    s1->remove(55);
    s1->remove(66);
@@ -2473,25 +2490,25 @@ static void TestCountingHashSet()
    s1->put(66);
    AssertEquals(s1->size(), 6);
    AssertTrue(s1->contains(55));
-   AssertTrue(s1->contains(66));   
+   AssertTrue(s1->contains(66));
    s1->remove(55);
    s1->remove(66);
-   
+
    AssertEquals(s1MoveConstructor.size(), 5);
    AssertTrue(s1MoveConstructor.contains(55));
    s1MoveConstructor.remove(55);
    EndTest();
-   
+
    StartTest(_T("CountingHashSet - copy operator"));
    s1->put(55);
    CountingHashSet<int32_t> s1CopyOp = *s1;
    s1->put(66);
    AssertEquals(s1->size(), 6);
    AssertTrue(s1->contains(55));
-   AssertTrue(s1->contains(66));   
+   AssertTrue(s1->contains(66));
    s1->remove(55);
    s1->remove(66);
-   
+
    AssertEquals(s1CopyOp.size(), 5);
    AssertTrue(s1CopyOp.contains(55));
    AssertTrue(s1CopyOp.contains(10));
@@ -2502,7 +2519,7 @@ static void TestCountingHashSet()
    AssertFalse(s1CopyOp.contains(10));
    s1CopyOp.remove(55);
    EndTest();
-   
+
    StartTest(_T("CountingHashSet - move operator"));
    s1->put(55);
    CountingHashSet<int32_t> s1MoveOp;
@@ -2513,10 +2530,10 @@ static void TestCountingHashSet()
    AssertEquals(x.size(), 0);
    AssertEquals(s1->size(), 6);
    AssertTrue(s1->contains(55));
-   AssertTrue(s1->contains(66));   
+   AssertTrue(s1->contains(66));
    s1->remove(55);
    s1->remove(66);
-   
+
    AssertEquals(s1MoveOp.size(), 5);
    AssertTrue(s1MoveOp.contains(55));
    AssertFalse(s1MoveOp.contains(77));
@@ -2574,7 +2591,7 @@ static void TestCountingHashSet()
    AssertEquals(s1->size(), 2);
    AssertTrue(s1->contains(10));
    AssertFalse(s1->contains(33));
-   AssertFalse(s1->contains(200));   
+   AssertFalse(s1->contains(200));
    s1->remove(10);
    AssertFalse(s1->contains(10));
    EndTest();
@@ -2610,20 +2627,20 @@ static void TestCountingHashSet()
    AssertTrue(s2->contains(k3));
    AssertFalse(s2->contains(k4));
    EndTest();
-   
+
    StartTest(_T("CountingHashSet (long key) - copy constructor"));
    s2->put(k5);
    CountingHashSet<LONG_HASH_KEY> *s2Copy = new CountingHashSet<LONG_HASH_KEY>(*s2);
    s2->put(k6);
    AssertEquals(s2->size(), 5);
    AssertTrue(s2->contains(k5));
-   AssertTrue(s2->contains(k6));  
+   AssertTrue(s2->contains(k6));
    AssertEquals(s2Copy->size(), 4);
    AssertTrue(s2Copy->contains(k1));
-   AssertTrue(s2Copy->contains(k5)); 
+   AssertTrue(s2Copy->contains(k5));
    s2Copy->remove(k5);
-   AssertTrue(s2->contains(k5)); 
-   AssertFalse(s2Copy->contains(k5)); 
+   AssertTrue(s2->contains(k5));
+   AssertFalse(s2Copy->contains(k5));
    delete s2Copy;
    s2->remove(k5);
    s2->remove(k6);
@@ -2635,30 +2652,30 @@ static void TestCountingHashSet()
    s2->put(k6);
    AssertEquals(s2->size(), 5);
    AssertTrue(s2->contains(k5));
-   AssertTrue(s2->contains(k6));   
+   AssertTrue(s2->contains(k6));
    s2->remove(k5);
    s2->remove(k6);
-   
+
    AssertEquals(s2MoveConstructor.size(), 4);
    AssertTrue(s2MoveConstructor.contains(k5));
    s2MoveConstructor.remove(k5);
    EndTest();
-   
+
    StartTest(_T("CountingHashSet (long key) - copy operator"));
    s2->put(k5);
    CountingHashSet<LONG_HASH_KEY> s2CopyOp = *s2;
    s2->put(k6);
    AssertEquals(s2->size(), 5);
    AssertTrue(s2->contains(k5));
-   AssertTrue(s2->contains(k6));   
+   AssertTrue(s2->contains(k6));
    s2->remove(k5);
    s2->remove(k6);
-   
+
    AssertEquals(s2CopyOp.size(), 4);
    AssertTrue(s2CopyOp.contains(k5));
    s2CopyOp.remove(k5);
    EndTest();
-   
+
    StartTest(_T("CountingHashSet (long key) - move operator"));
    s2->put(k5);
    CountingHashSet<LONG_HASH_KEY> s2MoveOp;
@@ -2669,14 +2686,14 @@ static void TestCountingHashSet()
    AssertEquals(x.size(), 0);
    AssertEquals(s2->size(), 5);
    AssertTrue(s2->contains(k5));
-   AssertTrue(s2->contains(k6));   
+   AssertTrue(s2->contains(k6));
    s2->remove(k5);
    s2->remove(k6);
-   
+
    AssertEquals(s2MoveOp.size(), 4);
    AssertTrue(s2MoveOp.contains(k5));
    s2MoveOp.remove(k5);
-   EndTest();   
+   EndTest();
 
    StartTest(_T("CountingHashSet (long key) - remove"));
    s2->remove(k2);
