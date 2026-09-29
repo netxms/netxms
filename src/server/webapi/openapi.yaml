@@ -9928,7 +9928,7 @@ components:
         certMappingData:
           type: string
           nullable: true
-          description: Certificate mapping data
+          description: Certificate mapping data (for public key mapping - SHA-256 fingerprint of DER encoded SubjectPublicKeyInfo)
         disabledUntil:
           type: integer
           description: Disabled until time (Unix timestamp, 0 if not temporarily disabled)
@@ -10045,7 +10045,9 @@ components:
           description: Certificate mapping method
         certMappingData:
           type: string
-          description: Certificate mapping data
+          description: >-
+            Certificate mapping data. For public key mapping, accepts SHA-256 fingerprint of DER encoded
+            SubjectPublicKeyInfo, hex encoded DER public key, or PEM encoded public key or certificate; always stored as fingerprint.
         email:
           type: string
           description: Email address
@@ -11451,7 +11453,10 @@ components:
         certificateMappingData:
           type: string
           nullable: true
-          description: Certificate mapping data (interpretation depends on certificateMappingMethod).
+          description: >-
+            Certificate mapping data (interpretation depends on certificateMappingMethod). For publicKey method, accepts
+            SHA-256 fingerprint of DER encoded SubjectPublicKeyInfo, hex encoded DER public key, or PEM encoded public key
+            or certificate; always stored and returned as fingerprint (64 hex characters).
     ObjectCreationRequest:
       type: object
       required:

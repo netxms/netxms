@@ -1156,6 +1156,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
             case MAP_CERTIFICATE_BY_PUBKEY:
                agentCertMappingMethod = L"1";
                break;
+            case MAP_CERTIFICATE_BY_TEMPLATE_ID:
+               agentCertMappingMethod = L"3";
+               break;
             default:
                agentCertMappingMethod = L"0";
                break;
@@ -1236,7 +1239,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 71, DB_SQLTYPE_VARCHAR, BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareId), DB_BIND_STATIC);
          DBBind(hStmt, 72, DB_SQLTYPE_INTEGER, m_cipVendorCode);
          DBBind(hStmt, 73, DB_SQLTYPE_VARCHAR, agentCertMappingMethod, DB_BIND_STATIC);
-         DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, m_agentCertMappingData, DB_BIND_STATIC);
+         DBBind(hStmt, 74, DB_SQLTYPE_VARCHAR, m_agentCertMappingData, DB_BIND_STATIC, MAX_CERT_MAPPING_DATA_LENGTH);
          if (m_snmpSecurity != nullptr)
          {
             DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
@@ -10519,17 +10522,18 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
 
    if (msg.isFieldExist(VID_CERT_MAPPING_METHOD))
    {
-      m_agentCertMappingMethod = static_cast<CertificateMappingMethod>(msg.getFieldAsInt16(VID_CERT_MAPPING_METHOD));
-      TCHAR *oldMappingData = m_agentCertMappingData;
-      m_agentCertMappingData = msg.getFieldAsString(VID_CERT_MAPPING_DATA);
-      if (m_agentCertMappingData != nullptr)
-      {
-         Trim(m_agentCertMappingData);
-         if (*m_agentCertMappingData == 0)
-            MemFreeAndNull(m_agentCertMappingData);
-      }
-      UpdateAgentCertificateMappingIndex(self(), oldMappingData, m_agentCertMappingData);
-      MemFree(oldMappingData);
+      auto method = static_cast<CertificateMappingMethod>(msg.getFieldAsInt16(VID_CERT_MAPPING_METHOD));
+      wchar_t *data = msg.getFieldAsString(VID_CERT_MAPPING_DATA);
+      wchar_t *mappingData;
+      bool valid = NormalizeCertificateMappingData(method, data, &mappingData);
+      MemFree(data);
+      if (!valid)
+         return RCC_INVALID_ARGUMENT;
+
+      m_agentCertMappingMethod = method;
+      UpdateAgentCertificateMappingIndex(self(), m_agentCertMappingData, mappingData);
+      MemFree(m_agentCertMappingData);
+      m_agentCertMappingData = mappingData;
    }
 
    if (msg.isFieldExist(VID_SYSLOG_CODEPAGE))
@@ -10882,30 +10886,36 @@ uint32_t Node::modifyJsonAgentConfig(json_t *agent)
       m_agentCompressionMode = mode;
    }
 
-   value = json_object_get(agent, "certificateMappingMethod");
-   if (value != nullptr)
+   // Mapping data is validated against resulting mapping method, so method change alone re-validates existing data
+   json_t *certMappingMethod = json_object_get(agent, "certificateMappingMethod");
+   json_t *certMappingData = json_object_get(agent, "certificateMappingData");
+   if ((certMappingMethod != nullptr) || (certMappingData != nullptr))
    {
-      CertificateMappingMethod method;
-      if (!json_is_string(value) || !CertificateMappingMethodFromName(json_string_value(value), &method))
+      CertificateMappingMethod method = m_agentCertMappingMethod;
+      if ((certMappingMethod != nullptr) && (!json_is_string(certMappingMethod) || !CertificateMappingMethodFromName(json_string_value(certMappingMethod), &method)))
          return RCC_INVALID_ARGUMENT;
-      m_agentCertMappingMethod = method;
-   }
+      if ((certMappingData != nullptr) && !json_is_string(certMappingData) && !json_is_null(certMappingData))
+         return RCC_INVALID_ARGUMENT;
 
-   value = json_object_get(agent, "certificateMappingData");
-   if (value != nullptr)
-   {
-      if (!json_is_string(value) && !json_is_null(value))
-         return RCC_INVALID_ARGUMENT;
-      TCHAR *oldMappingData = m_agentCertMappingData;
-      m_agentCertMappingData = json_is_string(value) ? WideStringFromUTF8String(json_string_value(value)) : nullptr;
-      if (m_agentCertMappingData != nullptr)
+      wchar_t *mappingData;
+      bool valid;
+      if (certMappingData != nullptr)
       {
-         Trim(m_agentCertMappingData);
-         if (*m_agentCertMappingData == 0)
-            MemFreeAndNull(m_agentCertMappingData);
+         wchar_t *data = json_is_string(certMappingData) ? WideStringFromUTF8String(json_string_value(certMappingData)) : nullptr;
+         valid = NormalizeCertificateMappingData(method, data, &mappingData);
+         MemFree(data);
       }
-      UpdateAgentCertificateMappingIndex(self(), oldMappingData, m_agentCertMappingData);
-      MemFree(oldMappingData);
+      else
+      {
+         valid = NormalizeCertificateMappingData(method, m_agentCertMappingData, &mappingData);
+      }
+      if (!valid)
+         return RCC_INVALID_ARGUMENT;
+
+      m_agentCertMappingMethod = method;
+      UpdateAgentCertificateMappingIndex(self(), m_agentCertMappingData, mappingData);
+      MemFree(m_agentCertMappingData);
+      m_agentCertMappingData = mappingData;
    }
 
    uint32_t setFlags = 0, mask = 0;

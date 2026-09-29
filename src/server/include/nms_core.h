@@ -279,6 +279,11 @@ enum AddressListElementType
 #define MAX_ADDRESS_LIST_COMMENTS_LEN  256
 
 /**
+ * Max length of certificate mapping data
+ */
+#define MAX_CERT_MAPPING_DATA_LENGTH   500
+
+/**
  * IP address list element
  */
 class NXCORE_EXPORTABLE InetAddressListElement
@@ -1685,6 +1690,8 @@ void ReportConfigurationError(const wchar_t *subsystem, const wchar_t *tag, cons
 X509 *CertificateFromLoginMessage(const NXCPMessage& msg);
 bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature,
       size_t sigLen, CertificateMappingMethod mappingMethod, const TCHAR *mappingData);
+bool GetPublicKeyFingerprint(EVP_PKEY *key, wchar_t *buffer);
+bool NormalizeCertificateMappingData(CertificateMappingMethod method, const wchar_t *data, wchar_t **normalizedData);
 void ReloadCertificates();
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
 bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);

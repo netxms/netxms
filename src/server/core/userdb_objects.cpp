@@ -258,7 +258,7 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
 /**
  * Modify object from NXCP message
  */
-void UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
+uint32_t UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 {
 	uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
 	nxlog_debug_tag(DEBUG_TAG, 5, _T("UserDatabaseObject::modifyFromMessage(): id=%d fields=%08X"), m_id, fields);
@@ -306,12 +306,13 @@ void UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 	}
 
 	m_flags |= UF_MODIFIED;
+	return RCC_SUCCESS;
 }
 
 /**
  * Modify object from JSON (only updates fields that are present in JSON)
  */
-void UserDatabaseObject::modifyFromJson(const json_t *json)
+uint32_t UserDatabaseObject::modifyFromJson(const json_t *json)
 {
    const char *name = json_object_get_string_utf8(const_cast<json_t*>(json), "name", nullptr);
    if (name != nullptr)
@@ -360,6 +361,7 @@ void UserDatabaseObject::modifyFromJson(const json_t *json)
    }
 
    m_flags |= UF_MODIFIED;
+   return RCC_SUCCESS;
 }
 
 /**
@@ -955,9 +957,23 @@ void User::fillMessage(NXCPMessage *msg)
 /**
  * Modify user object from NXCP message
  */
-void User::modifyFromMessage(const NXCPMessage& msg)
+uint32_t User::modifyFromMessage(const NXCPMessage& msg)
 {
    uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
+
+   // Validate certificate mapping before making any changes
+   CertificateMappingMethod certMappingMethod = m_certMappingMethod;
+   wchar_t *certMappingData = nullptr;
+   if (fields & USER_MODIFY_CERT_MAPPING)
+   {
+      certMappingMethod = static_cast<CertificateMappingMethod>(msg.getFieldAsUInt16(VID_CERT_MAPPING_METHOD));
+      wchar_t *data = msg.getFieldAsString(VID_CERT_MAPPING_DATA);
+      bool valid = NormalizeCertificateMappingData(certMappingMethod, data, &certMappingData);
+      MemFree(data);
+      if (!valid)
+         return RCC_INVALID_ARGUMENT;
+   }
+
    if (fields & USER_MODIFY_FLAGS)
    {
       uint32_t flags = msg.getFieldAsUInt16(VID_USER_FLAGS);
@@ -980,9 +996,9 @@ void User::modifyFromMessage(const NXCPMessage& msg)
 	   m_disabledUntil = (time_t)msg.getFieldAsUInt32(VID_DISABLED_UNTIL);
 	if (fields & USER_MODIFY_CERT_MAPPING)
 	{
-		m_certMappingMethod = static_cast<CertificateMappingMethod>(msg.getFieldAsUInt16(VID_CERT_MAPPING_METHOD));
+		m_certMappingMethod = certMappingMethod;
 		MemFree(m_certMappingData);
-		m_certMappingData = msg.getFieldAsString(VID_CERT_MAPPING_DATA);
+		m_certMappingData = certMappingData;
 	}
    if (fields & USER_MODIFY_EMAIL)
       msg.getFieldAsString(VID_EMAIL, &m_email);
@@ -1040,13 +1056,30 @@ void User::modifyFromMessage(const NXCPMessage& msg)
    // Clear intruder lockout flag if user is not disabled anymore
    if (!(m_flags & UF_DISABLED))
       m_flags &= ~UF_INTRUDER_LOCKOUT;
+
+   return RCC_SUCCESS;
 }
 
 /**
  * Modify user object from JSON (only updates fields that are present in JSON)
  */
-void User::modifyFromJson(const json_t *json)
+uint32_t User::modifyFromJson(const json_t *json)
 {
+   // Validate certificate mapping before making any changes
+   bool updateCertMapping = (json_object_get(const_cast<json_t*>(json), "certMappingMethod") != nullptr);
+   CertificateMappingMethod certMappingMethod = m_certMappingMethod;
+   wchar_t *certMappingData = nullptr;
+   if (updateCertMapping)
+   {
+      certMappingMethod = static_cast<CertificateMappingMethod>(json_object_get_int32(const_cast<json_t*>(json), "certMappingMethod", static_cast<int>(m_certMappingMethod)));
+      const char *dataUtf8 = json_object_get_string_utf8(const_cast<json_t*>(json), "certMappingData", nullptr);
+      wchar_t *data = (dataUtf8 != nullptr) ? WideStringFromUTF8String(dataUtf8) : nullptr;
+      bool valid = NormalizeCertificateMappingData(certMappingMethod, data, &certMappingData);
+      MemFree(data);
+      if (!valid)
+         return RCC_INVALID_ARGUMENT;
+   }
+
    if (json_object_get(const_cast<json_t*>(json), "flags") != nullptr)
    {
       uint32_t flags = json_object_get_uint32(const_cast<json_t*>(json), "flags", m_flags);
@@ -1072,12 +1105,11 @@ void User::modifyFromJson(const json_t *json)
    if (json_object_get(const_cast<json_t*>(json), "disabledUntil") != nullptr)
       m_disabledUntil = static_cast<time_t>(json_object_get_int64(const_cast<json_t*>(json), "disabledUntil", static_cast<int64_t>(m_disabledUntil)));
 
-   if (json_object_get(const_cast<json_t*>(json), "certMappingMethod") != nullptr)
+   if (updateCertMapping)
    {
-      m_certMappingMethod = static_cast<CertificateMappingMethod>(json_object_get_int32(const_cast<json_t*>(json), "certMappingMethod", static_cast<int>(m_certMappingMethod)));
+      m_certMappingMethod = certMappingMethod;
       MemFree(m_certMappingData);
-      const char *certMappingData = json_object_get_string_utf8(const_cast<json_t*>(json), "certMappingData", nullptr);
-      m_certMappingData = (certMappingData != nullptr) ? WideStringFromUTF8String(certMappingData) : nullptr;
+      m_certMappingData = certMappingData;
    }
 
    const char *email = json_object_get_string_utf8(const_cast<json_t*>(json), "email", nullptr);
@@ -1112,6 +1144,8 @@ void User::modifyFromJson(const json_t *json)
    // Clear intruder lockout flag if user is not disabled anymore
    if (!(m_flags & UF_DISABLED))
       m_flags &= ~UF_INTRUDER_LOCKOUT;
+
+   return RCC_SUCCESS;
 }
 
 /**
@@ -1600,9 +1634,11 @@ void Group::fillMessage(NXCPMessage *msg)
 /**
  * Modify group object from NXCP message
  */
-void Group::modifyFromMessage(const NXCPMessage& msg)
+uint32_t Group::modifyFromMessage(const NXCPMessage& msg)
 {
-	UserDatabaseObject::modifyFromMessage(msg);
+	uint32_t rcc = UserDatabaseObject::modifyFromMessage(msg);
+	if (rcc != RCC_SUCCESS)
+	   return rcc;
 
 	uint32_t fields = msg.getFieldAsUInt32(VID_FIELDS);
 	if (fields & USER_MODIFY_MEMBERS)
@@ -1640,14 +1676,17 @@ void Group::modifyFromMessage(const NXCPMessage& msg)
             SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
 		}
 	}
+	return RCC_SUCCESS;
 }
 
 /**
  * Modify group object from JSON (only updates fields that are present in JSON)
  */
-void Group::modifyFromJson(const json_t *json)
+uint32_t Group::modifyFromJson(const json_t *json)
 {
-   UserDatabaseObject::modifyFromJson(json);
+   uint32_t rcc = UserDatabaseObject::modifyFromJson(json);
+   if (rcc != RCC_SUCCESS)
+      return rcc;
 
    json_t *membersJson = json_object_get(const_cast<json_t*>(json), "members");
    if ((membersJson != nullptr) && json_is_array(membersJson))
@@ -1684,6 +1723,7 @@ void Group::modifyFromJson(const json_t *json)
             SendUserDBUpdate(USER_DB_MODIFY, members.get(i));
       }
    }
+   return RCC_SUCCESS;
 }
 
 /**

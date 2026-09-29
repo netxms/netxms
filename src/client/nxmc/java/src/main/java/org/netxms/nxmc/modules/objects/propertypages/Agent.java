@@ -210,6 +210,7 @@ public class Agent extends ObjectPropertyPage
 
       certMappingData = new LabeledText(certificateMappingGroup, SWT.NONE);
       certMappingData.setLabel(i18n.tr("Mapping data"));
+      certMappingData.getTextControl().setToolTipText(i18n.tr("For public key mapping, enter SHA-256 fingerprint of the public key, hex encoded DER public key, or PEM encoded public key or certificate"));
       if (node.getAgentCertificateMappingData() != null)
          certMappingData.setText(node.getAgentCertificateMappingData());
       certMappingData.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));

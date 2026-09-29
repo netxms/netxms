@@ -339,24 +339,203 @@ X509 *CertificateFromLoginMessage(const NXCPMessage& msg)
 }
 
 /**
+ * Get public key fingerprint as hex string - SHA-256 hash of DER encoded SubjectPublicKeyInfo structure. Same value
+ * can be obtained with standard tools:
+ *    openssl x509 -in cert.pem -pubkey -noout | openssl pkey -pubin -outform DER | sha256sum
+ * Buffer must be at least SHA256_DIGEST_SIZE * 2 + 1 characters long.
+ */
+bool GetPublicKeyFingerprint(EVP_PKEY *key, wchar_t *buffer)
+{
+   int len = i2d_PUBKEY(key, nullptr);
+   if (len <= 0)
+      return false;
+
+   BYTE *der = MemAllocArrayNoInit<BYTE>(len);
+   BYTE *p = der;
+   i2d_PUBKEY(key, &p);
+
+   BYTE hash[SHA256_DIGEST_SIZE];
+   CalculateSHA256Hash(der, len, hash);
+   MemFree(der);
+
+   BinToStr(hash, SHA256_DIGEST_SIZE, buffer);
+   return true;
+}
+
+/**
+ * Decode DER encoded public key. Accepts SubjectPublicKeyInfo structure or PKCS#1 RSA public key.
+ */
+static EVP_PKEY *DecodePublicKey(const BYTE *der, size_t size)
+{
+   const BYTE *p = der;
+   EVP_PKEY *key = d2i_PUBKEY(nullptr, &p, static_cast<long>(size));
+   if (key == nullptr)
+   {
+      p = der;
+      key = d2i_PublicKey(EVP_PKEY_RSA, nullptr, &p, static_cast<long>(size));
+   }
+   return key;
+}
+
+/**
+ * Decode PEM encoded public key or certificate. Line breaks and other whitespace within encoded block are ignored,
+ * so block pasted into single line input field is accepted as well.
+ */
+static EVP_PKEY *DecodePEMPublicKey(const char *pem)
+{
+   const char *label = strstr(pem, "-----BEGIN ");
+   if (label == nullptr)
+      return nullptr;
+   label += 11;
+
+   const char *body = strstr(label, "-----");
+   if (body == nullptr)
+      return nullptr;
+   size_t labelLen = body - label;
+   body += 5;
+
+   const char *end = strstr(body, "-----END ");
+   if (end == nullptr)
+      return nullptr;
+
+   char *encoded = MemAllocStringA(end - body + 1);
+   size_t encodedLen = 0;
+   for(const char *s = body; s < end; s++)
+      if (!isspace(static_cast<unsigned char>(*s)))
+         encoded[encodedLen++] = *s;
+
+   EVP_PKEY *key = nullptr;
+   char *der;
+   size_t derLen;
+   if (base64_decode_alloc(encoded, encodedLen, &der, &derLen) && (der != nullptr))
+   {
+      const BYTE *p = reinterpret_cast<BYTE*>(der);
+      if ((labelLen == 11) && !strncmp(label, "CERTIFICATE", 11))
+      {
+         X509 *cert = d2i_X509(nullptr, &p, static_cast<long>(derLen));
+         if (cert != nullptr)
+         {
+            key = X509_get_pubkey(cert);
+            X509_free(cert);
+         }
+      }
+      else if (((labelLen == 10) && !strncmp(label, "PUBLIC KEY", 10)) || ((labelLen == 14) && !strncmp(label, "RSA PUBLIC KEY", 14)))
+      {
+         key = DecodePublicKey(p, derLen);
+      }
+      MemFree(der);
+   }
+   MemFree(encoded);
+   return key;
+}
+
+/**
+ * Convert public key mapping data to public key fingerprint. Accepted formats are public key fingerprint,
+ * hex encoded DER public key, and PEM encoded public key or certificate. Buffer must be at least
+ * SHA256_DIGEST_SIZE * 2 + 1 characters long.
+ */
+static bool PublicKeyMappingDataToFingerprint(const wchar_t *data, wchar_t *fingerprint)
+{
+   EVP_PKEY *key = nullptr;
+   if (wcsstr(data, L"-----BEGIN ") != nullptr)
+   {
+      char *pem = UTF8StringFromWideString(data);
+      key = DecodePEMPublicKey(pem);
+      MemFree(pem);
+   }
+   else
+   {
+      // Hex string, bytes can be separated by whitespace or colons
+      wchar_t *hex = MemAllocStringW(wcslen(data) + 1);
+      size_t hexLen = 0;
+      for(const wchar_t *s = data; *s != 0; s++)
+      {
+         if (((*s >= L'0') && (*s <= L'9')) || ((*s >= L'A') && (*s <= L'F')) || ((*s >= L'a') && (*s <= L'f')))
+         {
+            hex[hexLen++] = towupper(*s);
+         }
+         else if (!iswspace(*s) && (*s != L':'))
+         {
+            hexLen = 0;
+            break;
+         }
+      }
+      hex[hexLen] = 0;
+
+      bool isFingerprint = (hexLen == SHA256_DIGEST_SIZE * 2);
+      if (isFingerprint)
+      {
+         wcscpy(fingerprint, hex);
+      }
+      else if ((hexLen > 0) && (hexLen % 2 == 0))
+      {
+         size_t size = hexLen / 2;
+         BYTE *der = MemAllocArrayNoInit<BYTE>(size);
+         StrToBin(hex, der, size);
+         key = DecodePublicKey(der, size);
+         MemFree(der);
+      }
+      MemFree(hex);
+
+      if (isFingerprint)
+         return true;
+   }
+
+   if (key == nullptr)
+      return false;
+
+   bool success = GetPublicKeyFingerprint(key, fingerprint);
+   EVP_PKEY_free(key);
+   return success;
+}
+
+/**
  * Check public key
  */
-static bool CheckPublicKey(EVP_PKEY *key, const TCHAR *mappingData)
+static bool CheckPublicKey(EVP_PKEY *key, const wchar_t *mappingData)
 {
-	int pkeyLen = i2d_PublicKey(key, nullptr);
-	auto ucBuf = MemAllocArray<unsigned char>(pkeyLen + 1);
-	auto uctempBuf = ucBuf;
-	i2d_PublicKey(key, &uctempBuf);
+   wchar_t fingerprint[SHA256_DIGEST_SIZE * 2 + 1];
+   return GetPublicKeyFingerprint(key, fingerprint) && !wcsicmp(fingerprint, mappingData);
+}
 
-	TCHAR *pkeyText = MemAllocString(pkeyLen * 2 + 1);
-	BinToStr(ucBuf, pkeyLen, pkeyText);
+/**
+ * Validate certificate mapping data and convert it to canonical form. Leading and trailing whitespace is removed
+ * and empty data is converted to nullptr. Data for public key mapping is converted to public key fingerprint
+ * (see GetPublicKeyFingerprint). On success, dynamically allocated canonical form (or nullptr) is returned via
+ * normalizedData and caller is responsible for freeing it. Returns false if data is not valid for given method.
+ */
+bool NormalizeCertificateMappingData(CertificateMappingMethod method, const wchar_t *data, wchar_t **normalizedData)
+{
+   *normalizedData = nullptr;
+   if (data == nullptr)
+      return true;
 
-	bool valid = (_tcscmp(pkeyText, mappingData) == 0);
+   wchar_t *text = Trim(MemCopyStringW(data));
+   if (*text == 0)
+   {
+      MemFree(text);
+      return true;
+   }
 
-	MemFree(ucBuf);
-	MemFree(pkeyText);
+   if (method == MAP_CERTIFICATE_BY_PUBKEY)
+   {
+      wchar_t fingerprint[SHA256_DIGEST_SIZE * 2 + 1];
+      bool success = PublicKeyMappingDataToFingerprint(text, fingerprint);
+      MemFree(text);
+      if (!success)
+         return false;
+      *normalizedData = MemCopyStringW(fingerprint);
+      return true;
+   }
 
-	return valid;
+   if (wcslen(text) > MAX_CERT_MAPPING_DATA_LENGTH)
+   {
+      MemFree(text);
+      return false;
+   }
+
+   *normalizedData = text;
+   return true;
 }
 
 /**
