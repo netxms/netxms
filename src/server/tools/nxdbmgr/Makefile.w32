@@ -12,7 +12,7 @@ TOOL = nxdbmgr
 SOURCES = $(sort $(wildcard *.cpp) tables.cpp)
 
 TOOL_CPPFLAGS = -I$(TOPDIR)/src/server/include -I$(TOPDIR)/src/sqlite
-TOOL_LIBS = -lnxdbmgr -lnxsrv -lnxsl -lnxdb -lnetxms -lnxjansson -lnxsqlite
+TOOL_LIBS = -lnxdbmgr -lnxsrv -lnxsl -lnxdb -lnetxms -lnxjansson -lnxsqlite $(SSL_LIBS)
 
 # tables.cpp is generated from the SQL schema by create_table_list.pl (mirrors
 # the rule in Makefile.am). It is .gitignore'd, so regenerate it here rather
