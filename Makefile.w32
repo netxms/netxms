@@ -279,9 +279,10 @@ $(TESTS_DIRS): $(LIBS)
 tests/test-libnxsrv: src/server/libnxsrv
 
 # test-libnxcore and the test-server launcher link the server core library;
-# test-server also initializes its database from the generated SQL scripts
+# test-server also initializes its database by running nxdbmgr from the build
+# output with the SQLite driver and the generated SQL scripts
 tests/test-libnxcore: src/server/core
-tests/test-server: src/server/core sql
+tests/test-server: src/server/core src/server/tools src/db/dbdrv sql
 
 # ATM subsystem links the agent, server and core import libraries, so it is
 # built after every in-tree tier it depends on.
