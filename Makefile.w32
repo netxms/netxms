@@ -201,7 +201,7 @@ ALL_ARCHS = x64 x86 arm64
 # In-tree DLLs sit next to the test executables in $(BIN_DIR), so only the SDK
 # directories are needed. Derived from the SDK roots in $(CONFIG) rather than
 # hardcoded, and passed to the suite runner through NETXMS_TEST_DLL_PATH.
-TEST_DLL_PATH = $(OPENSSL_ROOT)/bin/$(ARCH);$(PCRE_ROOT)/bin/$(ARCH);$(ZLIB_ROOT)/bin/$(ARCH);$(EXPAT_ROOT)/bin/$(ARCH);$(CURL_ROOT)/bin/$(ARCH);$(MODBUS_ROOT)/bin/$(ARCH)
+TEST_DLL_PATH = $(OPENSSL_ROOT)/bin/$(ARCH);$(PCRE_ROOT)/bin/$(ARCH);$(ZLIB_ROOT)/bin/$(ARCH);$(EXPAT_ROOT)/bin/$(ARCH);$(CURL_ROOT)/bin/$(ARCH);$(MODBUS_ROOT)/bin/$(ARCH);$(MICROHTTPD_ROOT)/bin/$(ARCH)
 
 #####################################################################
 # Targets
