@@ -365,6 +365,11 @@ public class StatusIndicatorElement extends ElementWidget
                   {
                      if (v.getId() == e.getDciId())
                      {
+                        if (e.getLabel().isEmpty())
+                        {
+                           e.setLabel(v.getDescription().isEmpty() ? v.getName() : v.getDescription());
+                           w.redraw();
+                        }
                         Threshold t = v.getActiveThreshold();
                         w.setStatus((t != null) ? ObjectStatus.getByValue(t.getCurrentSeverity().getValue()) : ObjectStatus.NORMAL);
                         found = true;
