@@ -50,6 +50,7 @@ import org.netxms.client.ProgressListener;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.server.ServerFile;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
@@ -81,9 +82,11 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    private NXCSession session = Registry.getSession();
    private SortableTableViewer viewer;
    private String filterString = "";
+   private boolean showHiddenFiles = PreferenceStore.getInstance().getAsBoolean("ServerFileManager.ShowHiddenFiles", false);
    private Action actionUpload;
    private Action actionRename;
    private Action actionDelete;
+   private Action actionShowHiddenFiles;
 
    /**
     * Create server configuration variable view
@@ -109,7 +112,8 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
          @Override
          public boolean select(Viewer viewer, Object parentElement, Object element)
          {
-            return filterString.isEmpty() || ((ServerFile)element).getName().toLowerCase().contains(filterString);
+            ServerFile file = (ServerFile)element;
+            return (showHiddenFiles || !file.isHidden()) && (filterString.isEmpty() || file.getName().toLowerCase().contains(filterString));
          }
       });
       setFilterClient(viewer, new AbstractViewerFilter() {
@@ -218,6 +222,17 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
             deleteFile();
          }
       };
+
+      actionShowHiddenFiles = new Action(i18n.tr("Show &hidden files"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            showHiddenFiles = isChecked();
+            PreferenceStore.getInstance().set("ServerFileManager.ShowHiddenFiles", showHiddenFiles);
+            viewer.refresh();
+         }
+      };
+      actionShowHiddenFiles.setChecked(showHiddenFiles);
    }
 
    /**
@@ -226,6 +241,8 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionShowHiddenFiles);
+      manager.add(new Separator());
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
@@ -278,6 +295,8 @@ public class ServerFileManager extends ConfigurationView implements SessionListe
          mgr.add(new Separator());
       }
       mgr.add(actionUpload);
+      mgr.add(new Separator());
+      mgr.add(actionShowHiddenFiles);
    }
 
    /**

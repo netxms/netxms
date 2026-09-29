@@ -129,4 +129,14 @@ public class ServerFile implements RemoteFile
    {
       return false;
    }
+
+   /**
+    * Check if this file is a service file (like file delivery policy content) that should be hidden from users by default.
+    *
+    * @return true if file is hidden
+    */
+   public boolean isHidden()
+   {
+      return name.startsWith("FileDelivery-");
+   }
 }

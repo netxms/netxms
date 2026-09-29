@@ -25,14 +25,20 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerFile;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -58,6 +64,7 @@ public class SelectServerFileDialog extends Dialog
 	private SortableTableViewer viewer;
 	private ServerFile[] selectedFiles;
 	private boolean multiSelect;
+   private boolean showHiddenFiles = PreferenceStore.getInstance().getAsBoolean("SelectServerFileDialog.ShowHiddenFiles", false);
 	
 	/**
 	 * @param parentShell
@@ -98,6 +105,13 @@ public class SelectServerFileDialog extends Dialog
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ServerFileLabelProvider());
 		viewer.setComparator(new ServerFileComparator());
+      viewer.addFilter(new ViewerFilter() {
+         @Override
+         public boolean select(Viewer viewer, Object parentElement, Object element)
+         {
+            return showHiddenFiles || !((ServerFile)element).isHidden();
+         }
+      });
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -112,7 +126,20 @@ public class SelectServerFileDialog extends Dialog
 				okPressed();
 			}
 		});
-		
+
+      final Button checkShowHiddenFiles = new Button(dialogArea, SWT.CHECK);
+      checkShowHiddenFiles.setText(i18n.tr("Show &hidden files"));
+      checkShowHiddenFiles.setSelection(showHiddenFiles);
+      checkShowHiddenFiles.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            showHiddenFiles = checkShowHiddenFiles.getSelection();
+            PreferenceStore.getInstance().set("SelectServerFileDialog.ShowHiddenFiles", showHiddenFiles);
+            viewer.refresh();
+         }
+      });
+
 		final NXCSession session = Registry.getSession();
 		new Job(i18n.tr("Get server file list"), null) {
 			@Override
