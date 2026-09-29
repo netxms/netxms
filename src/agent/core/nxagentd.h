@@ -999,6 +999,7 @@ void RegisterProblem(int severity, const TCHAR *key, const TCHAR *message);
 void UnregisterProblem(const TCHAR *key);
 
 bool LoadConfig(const TCHAR *configSection, const StringBuffer& cmdLineValues, bool firstStart, bool logErrors);
+void LogDataDirectorySource();
 
 const TCHAR *GetAgentExecutableName();
 
