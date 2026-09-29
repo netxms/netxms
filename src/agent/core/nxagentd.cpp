@@ -1132,6 +1132,7 @@ BOOL Initialize()
    if (g_dataDirRecoveryPath[0] != 0)
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Data directory recovered from %s"), g_dataDirRecoveryPath);
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Data directory: %s"), g_szDataDirectory);
+   LogDataDirectorySource();
    CreateDirectoryTree(g_szDataDirectory);
 
 #ifdef _WIN32

@@ -331,6 +331,52 @@ void RecoverConfigPolicyDirectory()
 }
 
 /**
+ * Data directory selection details, logged by LogDataDirectorySource() once log file is open
+ */
+static bool s_defaultDataDirectory = false;
+#ifdef _WIN32
+static HRESULT s_appDataFolderResult = S_OK;
+#endif
+
+/**
+ * Log how data directory was selected and (on Windows) under which account agent process runs
+ */
+void LogDataDirectorySource()
+{
+#ifdef _WIN32
+   TCHAR userName[256];
+   DWORD size = 256;
+   if (!GetUserName(userName, &size))
+      _tcscpy(userName, _T("(unknown)"));
+   DWORD sessionId = 0;
+   ProcessIdToSessionId(GetCurrentProcessId(), &sessionId);
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Agent process is running as user %s in session %u (USERPROFILE = %s)"),
+         userName, sessionId, GetEnvironmentVariableEx(_T("USERPROFILE")).cstr());
+#endif
+
+   if (!s_defaultDataDirectory)
+   {
+      nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Data directory is set by configuration"));
+      return;
+   }
+
+#ifdef _WIN32
+   if (s_appDataFolderResult == S_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Data directory is not set by configuration, using local application data folder of user %s"), userName);
+   }
+   else
+   {
+      TCHAR errorText[1024];
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Data directory is not set by configuration and local application data folder of user %s is not available (0x%08X: %s), using fallback location"),
+            userName, static_cast<uint32_t>(s_appDataFolderResult), GetSystemErrorText(static_cast<uint32_t>(s_appDataFolderResult), errorText, 1024));
+   }
+#else
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Data directory is not set by configuration, using default location"));
+#endif
+}
+
+/**
  * Debug writer
  */
 static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
@@ -356,8 +402,10 @@ bool LoadConfig(const TCHAR *configSection, const StringBuffer& cmdLineValues, b
    // Set default data directory
    if (!_tcscmp(g_szDataDirectory, _T("{default}")))
    {
+      s_defaultDataDirectory = true;
 #ifdef _WIN32
-      if (SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, g_szDataDirectory) == S_OK)
+      s_appDataFolderResult = SHGetFolderPath(nullptr, CSIDL_LOCAL_APPDATA, nullptr, SHGFP_TYPE_CURRENT, g_szDataDirectory);
+      if (s_appDataFolderResult == S_OK)
       {
          _tcslcat(g_szDataDirectory, _T("\\nxagentd"), MAX_PATH);
          SetNetXMSDataDirectory(g_szDataDirectory);
@@ -391,6 +439,7 @@ bool LoadConfig(const TCHAR *configSection, const StringBuffer& cmdLineValues, b
       {
          _tcslcpy(g_szDataDirectory, dir, MAX_PATH);
          SetNetXMSDataDirectory(g_szDataDirectory);
+         s_defaultDataDirectory = false;
       }
 
       dir = config->getValue(_T("/%agent/ConfigIncludeDir"));
