@@ -1517,7 +1517,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 53, DB_SQLTYPE_INTEGER, m_rackOrientation);
          DBBind(hStmt, 54, DB_SQLTYPE_VARCHAR, m_rackImageRear);
          DBBind(hStmt, 55, DB_SQLTYPE_VARCHAR, m_agentId);
-         DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC);
+         DBBind(hStmt, 56, DB_SQLTYPE_VARCHAR, m_agentCertSubject, DB_BIND_STATIC, MAX_CERT_MAPPING_DATA_LENGTH);
          DBBind(hStmt, 57, DB_SQLTYPE_VARCHAR, m_hypervisorType, DB_BIND_STATIC);
          DBBind(hStmt, 58, DB_SQLTYPE_VARCHAR, m_hypervisorInfo, DB_BIND_STATIC);
          DBBind(hStmt, 59, DB_SQLTYPE_VARCHAR, icmpPollMode, DB_BIND_STATIC);
