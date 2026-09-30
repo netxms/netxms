@@ -4330,6 +4330,14 @@ paths:
                     rejected with `400` if it does not resolve to an existing node, and
                     with `409` if that node is a descendant of the chassis, which would
                     create a loop.
+                width:
+                  type: integer
+                  minimum: 1
+                  description: Rack only. External cabinet width in millimetres.
+                depth:
+                  type: integer
+                  minimum: 1
+                  description: Rack only. External cabinet depth in millimetres.
       responses:
         '200':
           description: Object updated; full updated object returned.

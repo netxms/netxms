@@ -23,6 +23,11 @@
 #include "nxcore.h"
 
 /**
+ * Maximum number of passive elements accepted in a single modify request
+ */
+#define MAX_PASSIVE_ELEMENTS  4096
+
+/**
  * Normalize rotation angle to range 0..359 degrees
  */
 static inline int32_t NormalizeRotation(int32_t degrees)
@@ -370,6 +375,8 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
    if (msg.isFieldExist(VID_NUM_ELEMENTS))
    {
       int count = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
+      if ((count < 0) || (count > MAX_PASSIVE_ELEMENTS))
+         return RCC_INVALID_ARGUMENT;
       ObjectArray<RackPassiveElement> newElements(count);
       uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)

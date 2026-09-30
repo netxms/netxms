@@ -29,6 +29,11 @@
 #define MAX_OUTLINE_VERTICES  1024
 
 /**
+ * Maximum number of passive elements accepted in a single modify request
+ */
+#define MAX_PASSIVE_ELEMENTS  4096
+
+/**
  * Dimensions of default rectangular outline (millimetres)
  */
 #define DEFAULT_ROOM_WIDTH    6000
@@ -555,6 +560,8 @@ uint32_t Room::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
    if (msg.isFieldExist(VID_NUM_ELEMENTS))
    {
       int count = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
+      if ((count < 0) || (count > MAX_PASSIVE_ELEMENTS))
+         return RCC_INVALID_ARGUMENT;
       m_passiveElements.clear();
       uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
