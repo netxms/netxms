@@ -692,6 +692,8 @@ static int ProcessEntry(void *argsp)
    else
    {
       char *argv[256];
+      const int maxArgs = sizeof(argv) / sizeof(argv[0]) - 1;   // last slot holds terminating nullptr
+      bool tooManyArgs = false;
       if (args->cmdline[0] == '[')
       {
          int index = 0;
@@ -703,11 +705,21 @@ static int ProcessEntry(void *argsp)
             {
                if (*p == ']')
                {
+                  if (index == maxArgs)
+                  {
+                     tooManyArgs = true;
+                     break;
+                  }
                   argv[index++] = start;
                   break;
                }
                if (*p == ',')
                {
+                  if (index == maxArgs)
+                  {
+                     tooManyArgs = true;
+                     break;
+                  }
                   argv[index++] = start;
                   start = nullptr;
                }
@@ -765,6 +777,11 @@ static int ProcessEntry(void *argsp)
                p++;
                while(*p == ' ')
                   p++;
+               if (index == maxArgs)
+               {
+                  tooManyArgs = true;
+                  break;
+               }
                argv[index++] = p;
             }
             else if ((*p == '\'') && !dquotes)
@@ -798,7 +815,9 @@ static int ProcessEntry(void *argsp)
          }
          argv[index] = nullptr;
       }
-      if (args->envp != nullptr)
+      if (tooManyArgs)
+         errno = E2BIG;
+      else if (args->envp != nullptr)
          execve(argv[0], argv, args->envp);
       else
          execv(argv[0], argv);

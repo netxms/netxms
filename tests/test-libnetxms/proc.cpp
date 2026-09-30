@@ -75,6 +75,56 @@ void TestProcessExecutor(const char *procname)
    ThreadSleepMs(100);
    AssertFalse(e3.isRunning());
    EndTest();
+
+#ifndef _WIN32
+   // Argument limit is 255 entries including the executable; 256 must fail with E2BIG.
+   // Same executable in positive and negative cases so exit code 127 can only mean E2BIG.
+   StringBuffer arrayCmd(_T("['/bin/sh', '-c', 'exit 0'"));
+   for(int i = 0; i < 252; i++)
+      arrayCmd.append(_T(", 'a'"));
+   StringBuffer arrayCmd255(arrayCmd);
+   arrayCmd255.append(_T("]"));
+   StringBuffer arrayCmd256(arrayCmd);
+   arrayCmd256.append(_T(", 'a']"));
+
+   StartTest(_T("Process executor - [] command line syntax with 255 arguments"));
+   ProcessExecutor e4(arrayCmd255);
+   AssertTrue(e4.execute());
+   AssertTrue(e4.waitForCompletion(5000));
+   AssertEquals(e4.getExitCode(), 0u);
+   EndTest();
+
+   StartTest(_T("Process executor - [] command line syntax with 256 arguments"));
+   ProcessExecutor e5(arrayCmd256);
+   if (e5.execute())   // platforms without vfork cannot report exec failure to the parent
+   {
+      AssertTrue(e5.waitForCompletion(5000));
+      AssertEquals(e5.getExitCode(), 127u);
+   }
+   EndTest();
+
+   StringBuffer plainCmd255(_T("/bin/sh -c 'exit 0'"));
+   for(int i = 0; i < 252; i++)
+      plainCmd255.append(_T(" a"));
+   StringBuffer plainCmd256(plainCmd255);
+   plainCmd256.append(_T(" a"));
+
+   StartTest(_T("Process executor - plain command line with 255 arguments"));
+   ProcessExecutor e6(plainCmd255, false);
+   AssertTrue(e6.execute());
+   AssertTrue(e6.waitForCompletion(5000));
+   AssertEquals(e6.getExitCode(), 0u);
+   EndTest();
+
+   StartTest(_T("Process executor - plain command line with 256 arguments"));
+   ProcessExecutor e7(plainCmd256, false);
+   if (e7.execute())   // platforms without vfork cannot report exec failure to the parent
+   {
+      AssertTrue(e7.waitForCompletion(5000));
+      AssertEquals(e7.getExitCode(), 127u);
+   }
+   EndTest();
+#endif
 }
 
 /**
