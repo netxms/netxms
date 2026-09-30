@@ -36,15 +36,13 @@ int yylex(YYSTYPE *yylval_param, yyscan_t yyscanner);
 /**
  * Constructor
  */
-NXSL_Compiler::NXSL_Compiler()
+NXSL_Compiler::NXSL_Compiler() : m_addrStack(16, 16), m_breakStack(16, 16, Ownership::True)
 {
    m_errorLineNumber = 0;
    m_warnings = nullptr;
    m_lexer = nullptr;
-   m_addrStack = new NXSL_Stack;
-	m_breakStack = new NXSL_Stack;
-	m_idOpCode = 0;
-	m_temporaryStackItems = 0;
+   m_idOpCode = 0;
+   m_temporaryStackItems = 0;
 }
 
 /**
@@ -53,13 +51,6 @@ NXSL_Compiler::NXSL_Compiler()
 NXSL_Compiler::~NXSL_Compiler()
 {
    delete m_lexer;
-   delete m_addrStack;
-
-   Queue *q;
-   while((q = static_cast<Queue*>(m_breakStack->pop())) != nullptr)
-      delete q;
-   delete m_breakStack;
-
 }
 
 /**
@@ -246,21 +237,25 @@ void yyerror(yyscan_t scanner, NXSL_Lexer *lexer, NXSL_Compiler *compiler, NXSL_
 }
 
 /**
- * Pop address
+ * Pop loop start address. Returns INVALID_ADDRESS if not within loop.
  */
 uint32_t NXSL_Compiler::popAddr()
 {
-   void *addr = m_addrStack->pop();
-   return addr ? CAST_FROM_POINTER(addr, uint32_t) : INVALID_ADDRESS;
+   int index = m_addrStack.size() - 1;
+   if (index < 0)
+      return INVALID_ADDRESS;
+   uint32_t addr = m_addrStack.get(index);
+   m_addrStack.remove(index);
+   return addr;
 }
 
 /**
- * Peek address
+ * Peek loop start address. Returns INVALID_ADDRESS if not within loop.
  */
 uint32_t NXSL_Compiler::peekAddr()
 {
-   void *addr = m_addrStack->peek();
-   return (addr != nullptr) ? CAST_FROM_POINTER(addr, uint32_t) : INVALID_ADDRESS;
+   int index = m_addrStack.size() - 1;
+   return (index >= 0) ? m_addrStack.get(index) : INVALID_ADDRESS;
 }
 
 /**
@@ -268,29 +263,26 @@ uint32_t NXSL_Compiler::peekAddr()
  */
 void NXSL_Compiler::addBreakAddr(uint32_t addr)
 {
-	Queue *queue = static_cast<Queue*>(m_breakStack->peek());
-	if (queue != nullptr)
-	{
-		queue->put(CAST_TO_POINTER(addr, void *));
-	}
+   IntegerArray<uint32_t> *breakList = m_breakStack.last();
+   if (breakList != nullptr)
+   {
+      breakList->add(addr);
+   }
 }
 
 /**
- * Resolve all breal statements at current level
+ * Resolve all break statements at current level
  */
 void NXSL_Compiler::closeBreakLevel(NXSL_ProgramBuilder *pScript)
 {
-   Queue *queue = static_cast<Queue*>(m_breakStack->pop());
-	if (queue != nullptr)
-	{
-	   void *addr;
-		while((addr = queue->get()) != nullptr)
-		{
-		   uint32_t nxslAddr = CAST_FROM_POINTER(addr, uint32_t);
-			pScript->createJumpAt(nxslAddr, pScript->getCodeSize());
-		}
-		delete queue;
-	}
+   int index = m_breakStack.size() - 1;
+   if (index < 0)
+      return;
+
+   IntegerArray<uint32_t> *breakList = m_breakStack.get(index);
+   for(int i = 0; i < breakList->size(); i++)
+      pScript->createJumpAt(breakList->get(i), pScript->getCodeSize());
+   m_breakStack.remove(index);
 }
 
 

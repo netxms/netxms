@@ -19,6 +19,7 @@ nxsltest_DATA = \
 	bytestream.nxsl \
 	concat.nxsl \
 	control.nxsl \
+	do-first.nxsl \
 	gethost.nxsl \
 	globals.nxsl \
 	hashmap.nxsl \
@@ -34,6 +35,7 @@ nxsltest_DATA = \
 	time.nxsl \
 	try-catch.nxsl \
 	types.nxsl \
+	while-first.nxsl \
 	with.nxsl
 
 bin_PROGRAMS = test-libnxsl

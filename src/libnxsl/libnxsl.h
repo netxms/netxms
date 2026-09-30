@@ -380,8 +380,8 @@ protected:
    int m_errorLineNumber;
    ObjectArray<NXSL_CompilationWarning> *m_warnings;
    NXSL_Lexer *m_lexer;
-   NXSL_Stack *m_addrStack;
-	NXSL_Stack *m_breakStack;
+   IntegerArray<uint32_t> m_addrStack;
+   ObjectArray<IntegerArray<uint32_t>> m_breakStack;
 	int m_idOpCode;
 	int m_temporaryStackItems;
 
@@ -398,14 +398,14 @@ public:
    const TCHAR *getErrorText() const { return m_errorText.cstr(); }
    int getErrorLineNumber() const { return m_errorLineNumber; }
 
-   void pushAddr(uint32_t addr) { m_addrStack->push(CAST_TO_POINTER(addr, void *)); }
+   void pushAddr(uint32_t addr) { m_addrStack.add(addr); }
    uint32_t popAddr();
    uint32_t peekAddr();
 
-	void addBreakAddr(uint32_t addr);
-	void closeBreakLevel(NXSL_ProgramBuilder *pScript);
-	bool canUseBreak() { return m_breakStack->getPosition() > 0; }
-	void newBreakLevel() { m_breakStack->push(new Queue); }
+   void addBreakAddr(uint32_t addr);
+   void closeBreakLevel(NXSL_ProgramBuilder *pScript);
+   bool canUseBreak() { return m_breakStack.size() > 0; }
+   void newBreakLevel() { m_breakStack.add(new IntegerArray<uint32_t>(16, 16)); }
 
    void incTemporaryStackItems() { m_temporaryStackItems++; }
    void decTemporaryStackItems() { m_temporaryStackItems--; }

@@ -1,0 +1,23 @@
+/*
+ * Loop as the very first statement starts at address 0 (issue #3725).
+ * No statement may precede the loop, so variables are initialized inside it.
+ */
+while(true)
+{
+	if (g_i == null)
+		g_i = 0;
+	if (++g_i < 5)
+		continue;
+	break;
+}
+assert(g_i == 5);
+
+while(g_j == null || g_j < 3)
+{
+	if (g_j == null)
+		g_j = 0;
+	g_j++;
+}
+assert(g_j == 3);
+
+return 0;
