@@ -732,6 +732,14 @@ DataCollectionError GetLocalManagementServerMetric(const wchar_t *name, wchar_t 
    {
       ret_uint(buffer, static_cast<uint32_t>(g_idxClusterById.size()));
    }
+   else if (!wcsicmp(name, L"Server.ObjectCount.CoolingZones"))
+   {
+      ret_uint(buffer, static_cast<uint32_t>(g_idxCoolingZoneById.size()));
+   }
+   else if (!wcsicmp(name, L"Server.ObjectCount.Facilities"))
+   {
+      ret_uint(buffer, static_cast<uint32_t>(g_idxFacilityById.size()));
+   }
    else if (!wcsicmp(name, L"Server.ObjectCount.Interfaces"))
    {
       uint32_t count = 0;
@@ -747,6 +755,10 @@ DataCollectionError GetLocalManagementServerMetric(const wchar_t *name, wchar_t 
    else if (!wcsicmp(name, L"Server.ObjectCount.Nodes"))
    {
       ret_uint(buffer, static_cast<uint32_t>(g_idxNodeById.size()));
+   }
+   else if (!wcsicmp(name, L"Server.ObjectCount.PowerDomains"))
+   {
+      ret_uint(buffer, static_cast<uint32_t>(g_idxPowerDomainById.size()));
    }
    else if (!wcsicmp(name, L"Server.ObjectCount.Sensors"))
    {

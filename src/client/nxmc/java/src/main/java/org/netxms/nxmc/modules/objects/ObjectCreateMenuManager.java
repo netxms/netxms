@@ -64,6 +64,7 @@ import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateCloudDomainDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateClusterDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateCoolingZoneDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateFacilityDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkMapDialog;
@@ -356,7 +357,38 @@ public class ObjectCreateMenuManager extends MenuManager
       actionCreateDashboard = new GenericObjectCreationAction(i18n.tr("&Dashboard..."), AbstractObject.OBJECT_DASHBOARD, i18n.tr("Dashboard"));
       actionCreateDashboardTemplate = new GenericObjectCreationAction(i18n.tr("Dashboard &template..."), AbstractObject.OBJECT_DASHBOARDTEMPLATE, i18n.tr("Dashboard Template"));
       actionCreateDashboardGroup = new GenericObjectCreationAction(i18n.tr("Dashboard &group..."), AbstractObject.OBJECT_DASHBOARDGROUP, i18n.tr("Dashboard Group"));
-      actionCreateFacility = new GenericObjectCreationAction(i18n.tr("&Facility..."), AbstractObject.OBJECT_FACILITY, i18n.tr("Facility"));
+
+      actionCreateFacility = new Action(i18n.tr("&Facility...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateFacilityDialog dlg = new CreateFacilityDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating facility"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_FACILITY, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  cd.setSettlementLag(dlg.getSettlementLag());
+                  cd.setProviderId(dlg.getProviderId());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create facility object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
 
       actionCreatePowerDomain = new Action(i18n.tr("&Power domain...")) {
          @Override

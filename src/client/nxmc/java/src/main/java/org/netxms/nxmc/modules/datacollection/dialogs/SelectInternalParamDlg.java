@@ -216,8 +216,11 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.NotificationChannel.SendStatus(*)", "Notification channel {instance}: status of last send attempt", DataType.INT32));
          list.add(new AgentParameter("Server.ObjectCount.AccessPoints", "Objects: access points", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Clusters", "Objects: clusters", DataType.UINT32));
+         list.add(new AgentParameter("Server.ObjectCount.CoolingZones", "Objects: cooling zones", DataType.UINT32));
+         list.add(new AgentParameter("Server.ObjectCount.Facilities", "Objects: facilities", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Interfaces", "Objects: interfaces", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Nodes", "Objects: nodes", DataType.UINT32));
+         list.add(new AgentParameter("Server.ObjectCount.PowerDomains", "Objects: power domains", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Sensors", "Objects: sensors", DataType.UINT32));
          list.add(new AgentParameter("Server.ObjectCount.Total", "Objects: total", DataType.UINT32));
          list.add(new AgentParameter("Server.PDS.DriverStat(*)", "PDS driver metric", DataType.UINT32));
