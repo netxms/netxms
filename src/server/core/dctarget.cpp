@@ -1991,6 +1991,16 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
       .param(_T("userName"), userName)
       .post();
 
+   // Maintenance mode must be cleared before generating events for DCIs,
+   // otherwise event processor may correlate them to maintenance event
+   lockProperties();
+   m_maintenanceEventId = 0;
+   m_maintenanceStartTime = 0;
+   m_maintenanceInitiator = 0;
+   bool forcePoll = m_state != m_stateBeforeMaintenance;
+   m_state = m_stateBeforeMaintenance;
+   setModified(MODIFY_COMMON_PROPERTIES);
+   unlockProperties();
 
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
@@ -2004,15 +2014,6 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
       dco->generateEventsAfterMaintenance();
    }
    unlockDciAccess();
-
-   lockProperties();
-   m_maintenanceEventId = 0;
-   m_maintenanceStartTime = 0;
-   m_maintenanceInitiator = 0;
-   bool forcePoll = m_state != m_stateBeforeMaintenance;
-   m_state = m_stateBeforeMaintenance;
-   setModified(MODIFY_COMMON_PROPERTIES);
-   unlockProperties();
 
    if (forcePoll)
    {
