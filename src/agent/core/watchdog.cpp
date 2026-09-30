@@ -1,6 +1,6 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2025 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -173,7 +173,7 @@ int WatchdogMain(DWORD pid, const TCHAR *configSection)
          break;
    }
 	syslog(LOG_WARNING, "restarting agent");
-	
+
    TCHAR cmdLine[4096];
    _sntprintf(cmdLine, 4096, _T("\"") PREFIX _T("/bin/nxagentd\" -c \"%s\" %s%s%s%s%s-D %d %s"),
               g_szConfigFile, configSectionOption,
@@ -472,6 +472,36 @@ static void ReconcileExternalSubagentProcesses()
 }
 
 /**
+ * Check if user logged on to given session is in the list of users excluded from running external subagents.
+ * List entries are matched case-insensitively either as bare user name or as DOMAIN\user.
+ */
+static bool IsSessionUserExcluded(const WTS_SESSION_INFO& session, const StringList& excludedUsers)
+{
+   LPTSTR domain = nullptr, user = nullptr;
+   DWORD bytes;
+   if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.SessionId, WTSUserName, &user, &bytes) ||
+       !WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.SessionId, WTSDomainName, &domain, &bytes))
+   {
+      TCHAR errorText[1024];
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot get logged on user for session %u (%s): %s"),
+            session.SessionId, session.pWinStationName, GetSystemErrorText(GetLastError(), errorText, 1024));
+      if (user != nullptr)
+         WTSFreeMemory(user);
+      return false;
+   }
+
+   TCHAR qualifiedUser[512];
+   _sntprintf(qualifiedUser, 512, _T("%s\\%s"), domain, user);
+   bool excluded = (*user != 0) && (excludedUsers.containsIgnoreCase(user) || excludedUsers.containsIgnoreCase(qualifiedUser));
+   if (excluded)
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: logged on user %s is excluded"), session.SessionId, session.pWinStationName, qualifiedUser);
+
+   WTSFreeMemory(user);
+   WTSFreeMemory(domain);
+   return excluded;
+}
+
+/**
  * Watchdog for external subagents
  */
 void ExternalSubagentWatchdog()
@@ -485,6 +515,18 @@ void ExternalSubagentWatchdog()
    if (startupTimeout < 30)
       startupTimeout = 30;
    nxlog_debug_tag(DEBUG_TAG, 3, _T("External subagent startup timeout set to %u seconds"), startupTimeout);
+
+   // Sessions logged on by these users are never used for starting external subagents
+   StringList excludedUsers;
+   ConfigEntry *excludedUsersEntry = g_config->getEntry(_T("/CORE/ExternalSubagentWatchdogExcludedUsers"));
+   if (excludedUsersEntry != nullptr)
+   {
+      for(int i = 0; i < excludedUsersEntry->getValueCount(); i++)
+         excludedUsers.add(excludedUsersEntry->getValue(i));
+   }
+   TCHAR *excludedUsersText = excludedUsers.join(_T(", "));
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("External subagent watchdog excluded users: %s"), excludedUsers.isEmpty() ? _T("none") : excludedUsersText);
+   MemFree(excludedUsersText);
 
    // Instances started by this watchdog, keyed by subagent name
    StringObjectMap<ExternalSubagentInstance> instances(Ownership::True);
@@ -538,34 +580,37 @@ void ExternalSubagentWatchdog()
       bool found = false;
       for (DWORD i = 0; i < sessionCount; i++)
       {
-         if ((sessions[i].State == WTSActive) || (sessions[i].State == WTSConnected))
+         if ((sessions[i].State != WTSActive) && (sessions[i].State != WTSConnected))
+            continue;
+
+         if (!excludedUsers.isEmpty() && IsSessionUserExcluded(sessions[i], excludedUsers))
+            continue;
+
+         for (int j = 0; j < subagentsToStart.size(); j++)
          {
-            for (int j = 0; j < subagentsToStart.size(); j++)
+            const wchar_t *name = subagentsToStart.get(j);
+            StringBuffer command = L"\"";
+            command.append(GetAgentExecutableName());
+            command.append(L"\" -H -G EXT:");
+            command.append(name);
+            HANDLE hProcess = nullptr;
+            DWORD pid = 0;
+            if (ExecuteInSession(&sessions[i], command.getBuffer(), false, &hProcess, &pid))
             {
-               const wchar_t *name = subagentsToStart.get(j);
-               StringBuffer command = L"\"";
-               command.append(GetAgentExecutableName());
-               command.append(L"\" -H -G EXT:");
-               command.append(name);
-               HANDLE hProcess = nullptr;
-               DWORD pid = 0;
-               if (ExecuteInSession(&sessions[i], command.getBuffer(), false, &hProcess, &pid))
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 6, L"Started external subagent %s (PID %u) in session %u", name, pid, sessions[i].SessionId);
-                  ExternalSubagentInstance *instance = new ExternalSubagentInstance();
-                  instance->hProcess = hProcess;
-                  instance->pid = pid;
-                  instance->startTime = time(nullptr);
-                  instances.set(name, instance);   // replacing a tracked instance closes its previous handle
-               }
-               else
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagent %s in session %u", name, sessions[i].SessionId);
-               }
+               nxlog_debug_tag(DEBUG_TAG, 6, L"Started external subagent %s (PID %u) in session %u", name, pid, sessions[i].SessionId);
+               ExternalSubagentInstance *instance = new ExternalSubagentInstance();
+               instance->hProcess = hProcess;
+               instance->pid = pid;
+               instance->startTime = time(nullptr);
+               instances.set(name, instance);   // replacing a tracked instance closes its previous handle
             }
-            found = true;
-            break;
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagent %s in session %u", name, sessions[i].SessionId);
+            }
          }
+         found = true;
+         break;
       }
 
       if (!found)
