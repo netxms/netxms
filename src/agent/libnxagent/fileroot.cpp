@@ -129,77 +129,63 @@ void FileAccessRootList::addFromConfig(const ConfigEntry *entry)
 #ifndef _WIN32
 
 /**
- * Converts path to absolute removing "//", "../", "./" ...
+ * Normalize path by collapsing repeated separators and resolving "." and ".." segments
+ * lexically. ".." never climbs above the root of an absolute path; leading ".." segments
+ * of a relative path are dropped. Returns newly allocated string, or nullptr if the path
+ * is empty, normalizes to nothing, or is not shorter than MAX_PATH.
  */
 static TCHAR *GetRealPath(const TCHAR *path)
 {
    if ((path == nullptr) || (path[0] == 0))
       return nullptr;
-   TCHAR *result = MemAllocString(MAX_PATH);
-   _tcscpy(result, path);
-   TCHAR *current = result;
+   size_t len = _tcslen(path);
+   if (len >= MAX_PATH)
+      return nullptr;
 
-   // just remove all dots before path
-   if (!_tcsncmp(current, _T("../"), 3))
-      memmove(current, current + 3, (_tcslen(current+3) + 1) * sizeof(TCHAR));
+   // Normalized path is never longer than the input
+   TCHAR *result = MemAllocString(len + 1);
+   size_t outLen = 0;
+   if (path[0] == _T('/'))
+      result[outLen++] = _T('/');
+   size_t base = outLen;   // ".." cannot remove anything before this position
 
-   if (!_tcsncmp(current, _T("./"), 2))
-      memmove(current, current + 2, (_tcslen(current+2) + 1) * sizeof(TCHAR));
-
-   while(*current != 0)
+   const TCHAR *curr = path;
+   while(*curr != 0)
    {
-      if (current[0] == '/')
+      while(*curr == _T('/'))
+         curr++;
+      if (*curr == 0)
+         break;
+
+      const TCHAR *segment = curr;
+      while((*curr != 0) && (*curr != _T('/')))
+         curr++;
+      size_t segmentLen = curr - segment;
+
+      if ((segmentLen == 1) && (segment[0] == _T('.')))
+         continue;
+
+      if ((segmentLen == 2) && (segment[0] == _T('.')) && (segment[1] == _T('.')))
       {
-         switch(current[1])
-         {
-            case '/':
-               memmove(current, current + 1, _tcslen(current) * sizeof(TCHAR));
-               break;
-            case '.':
-               if (current[2] != 0)
-               {
-                  if (current[2] == '.' && (current[3] == 0 || current[3] == '/'))
-                  {
-                     if (current == result)
-                     {
-                        memmove(current, current + 3, (_tcslen(current + 3) + 1) * sizeof(TCHAR));
-                     }
-                     else
-                     {
-                        TCHAR *tmp = current;
-                        do
-                        {
-                           tmp--;
-                           if (tmp[0] == '/')
-                           {
-                              break;
-                           }
-                        } while(result != tmp);
-                        memmove(tmp, current + 3, (_tcslen(current+3) + 1) * sizeof(TCHAR));
-                     }
-                  }
-                  else
-                  {
-                     // dot + something, skip both
-                     current += 2;
-                  }
-               }
-               else
-               {
-                  // "/." at the end
-                  *current = 0;
-               }
-               break;
-            default:
-               current++;
-               break;
-         }
+         while((outLen > base) && (result[outLen - 1] != _T('/')))
+            outLen--;
+         if (outLen > base)
+            outLen--;   // separator before removed segment
+         continue;
       }
-      else
-      {
-         current++;
-      }
+
+      if (outLen > base)
+         result[outLen++] = _T('/');
+      memcpy(&result[outLen], segment, segmentLen * sizeof(TCHAR));
+      outLen += segmentLen;
    }
+
+   if (outLen == 0)
+   {
+      MemFree(result);
+      return nullptr;
+   }
+   result[outLen] = 0;
    return result;
 }
 
