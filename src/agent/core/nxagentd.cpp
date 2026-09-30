@@ -1214,7 +1214,7 @@ BOOL Initialize()
       {
          nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Local database unavailable"));
       }
-      else
+      else if (!(g_dwFlags & AF_SUBAGENT_LOADER))
       {
          RemoveOrphanPolicyFiles();
       }
