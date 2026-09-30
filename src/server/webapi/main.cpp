@@ -279,6 +279,7 @@ int H_ScheduledTaskDetails(Context *context);
 int H_ScheduledTaskHandlers(Context *context);
 int H_ScheduledTasks(Context *context);
 int H_ScheduledTaskUpdate(Context *context);
+int H_ScriptExecutionStop(Context *context);
 int H_ScriptLibrary(Context *context);
 int H_ScriptDetails(Context *context);
 int H_ScriptCreate(Context *context);
@@ -383,6 +384,9 @@ void WS_ToolOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
 void WS_ServerConsoleConnect(void *cls, MHD_Connection *connection, void *con_cls,
                              const char *extra_in, size_t extra_in_size, MHD_socket sock,
                              MHD_UpgradeResponseHandle *urh);
+void WS_ScriptOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
+                            const char *extra_in, size_t extra_in_size, MHD_socket sock,
+                            MHD_UpgradeResponseHandle *urh);
 
 /**
  * Initialize module
@@ -1033,6 +1037,14 @@ static bool InitModule(Config *config)
       .GET(H_ScheduledTaskDetails)
       .PUT(H_ScheduledTaskUpdate)
       .DELETE(H_ScheduledTaskDelete)
+      .build();
+   RouteBuilder("v1/script-executions/output/:token")
+      .GET([](Context *context) { context->setErrorResponse("WebSocket connection required"); return 426; })
+      .upgradeProtocol(WS_ScriptOutputConnect)
+      .noauth()  // Token-based auth
+      .build();
+   RouteBuilder("v1/script-executions/:execution-id/stop")
+      .POST(H_ScriptExecutionStop)
       .build();
    RouteBuilder("v1/script-library")
       .GET(H_ScriptLibrary)

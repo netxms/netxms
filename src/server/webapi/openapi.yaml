@@ -6561,6 +6561,14 @@ paths:
         Execute ad-hoc NXSL script provided in the request body within context of given object.
 
         Requires `OBJECT_ACCESS_EXECUTE_SCRIPT` on the object.
+
+        By default the script is executed synchronously and only its return value is provided.
+        When `stream` is true, the script is compiled synchronously (compilation errors are still
+        reported with status 400), then the server returns 202 with a single-use token. The script
+        starts once the client connects to the WebSocket URL from the response; script output
+        (`print`, `println`, `trace`) and the final result are delivered over that connection.
+        See GET /v1/script-executions/output/{token}. A running script can be stopped with
+        POST /v1/script-executions/{execution-id}/stop or by sending `{"type":"stop"}` over the WebSocket.
       parameters:
         - name: object-id
           in: path
@@ -6586,6 +6594,10 @@ paths:
                 script:
                   type: string
                   description: Source code of the script
+                stream:
+                  type: boolean
+                  default: false
+                  description: If true, execute script asynchronously and stream its output via WebSocket
       responses:
         '200':
           description: Script executed successfully
@@ -6596,6 +6608,29 @@ paths:
                 properties:
                   result:
                     description: Script result. When resultAsMap is true (or the script returns a hash map or array) this is a JSON object; otherwise the scalar result serialized as JSON.
+        '202':
+          description: |
+            Script compiled and execution created in streaming mode. Connect to the returned WebSocket URL
+            within `expiresIn` seconds to start the script and receive its output; otherwise execution is cancelled.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  executionId:
+                    type: integer
+                    description: Execution ID, can be used to stop the script
+                  token:
+                    type: string
+                    format: uuid
+                    description: Single-use token for WebSocket connection
+                  expiresIn:
+                    type: integer
+                    description: Token validity period in seconds
+                  wsUrl:
+                    type: string
+                    description: WebSocket URL for receiving script output
+                    example: /v1/script-executions/output/0f0e7a1c-8d2b-4a52-9d0e-3b1f6c9b7a10
         '400':
           description: Invalid arguments or script compilation error
           content:
@@ -9237,6 +9272,78 @@ paths:
         - BearerAuth: []
       tags:
         - Scheduled Tasks
+  /v1/script-executions/output/{token}:
+    get:
+      operationId: connectScriptExecutionOutput
+      summary: Connect to script output stream (WebSocket)
+      description: |
+        WebSocket endpoint for running an ad-hoc script and receiving its output.
+        The token is obtained from POST /v1/objects/{object-id}/execute-script with stream=true.
+        Token is single-use and expires after 30 seconds. Script execution starts when the connection is established.
+
+        Server sends JSON text frames:
+        - `{"type":"output","data":"..."}` - output chunk
+        - `{"type":"result","data":...}` - script return value, formatted the same way as `result` in synchronous mode (honors `resultAsMap`)
+        - `{"type":"completed"}` - execution finished successfully (always follows `result`)
+        - `{"type":"stopped"}` - execution was stopped on request
+        - `{"type":"error","message":"...","diagnostic":{...}}` - execution failed; `diagnostic` holds NXSL error details
+
+        Server closes the connection after `completed`, `stopped` or `error` message.
+
+        Client can send JSON text frames:
+        - `{"type":"stop"}` - stop script execution
+
+        Closing the connection by the client stops the script.
+      tags:
+        - Objects
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Single-use token from the streaming execute-script response
+      responses:
+        '101':
+          description: |
+            Switching protocols to WebSocket. If the token is invalid, expired or already used,
+            the connection is closed right after the upgrade with WebSocket close code 1008
+            (Policy Violation) - no HTTP error status is returned in that case.
+        '426':
+          description: Upgrade required - request did not ask for a protocol upgrade to WebSocket.
+      security: []
+  /v1/script-executions/{execution-id}/stop:
+    post:
+      operationId: stopScriptExecution
+      summary: Stop running script
+      description: |
+        Stop ad-hoc script started with POST /v1/objects/{object-id}/execute-script in streaming mode.
+        Only the user who started the script can stop it. Stop is asynchronous - the WebSocket client
+        receives `{"type":"stopped"}` message when the script is actually stopped. If stop is requested
+        before WebSocket client connects, script will not be started.
+      parameters:
+        - name: execution-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Execution ID from the streaming execute-script response
+      responses:
+        '204':
+          description: Stop requested
+        '400':
+          description: Invalid execution ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Script was started by another user
+        '404':
+          description: Execution with given ID does not exist or already finished
+      security:
+        - BearerAuth: []
+      tags:
+        - Objects
   /v1/script-library:
     get:
       operationId: listScripts

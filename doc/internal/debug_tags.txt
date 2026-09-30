@@ -333,6 +333,7 @@ watchdog	Server watchdog
 weather	Weather subagent (Open-Meteo, MET Norway, Bright Sky)
 webapi.console	WebAPI server console endpoints
 webapi.objtools	WebAPI object tool execution and streaming
+webapi.script	WebAPI ad-hoc script execution and output streaming
 webapi.tls	WebAPI TLS reverse proxy (reproxy)
 websocket	WebSocket client (default tag, callers may override)
 websvc		Web services

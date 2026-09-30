@@ -33,6 +33,7 @@ make -C src/server
 | `info.cpp` | Server info and status endpoints |
 | `objects.cpp` | Object management endpoints |
 | `objtools.cpp` | Object tool endpoints |
+| `script_execution.cpp` | Ad-hoc script execution (synchronous / WebSocket output streaming) |
 | `scripts.cpp` | Script library endpoints |
 | `server_console.cpp` | Server debug console endpoints (execute / WebSocket session) |
 | `tcpproxy.cpp` | TCP proxy / WebSocket endpoints |
