@@ -297,8 +297,13 @@ static bool CreateDatabase_MySQL(const TCHAR *dbName, const TCHAR *dbLogin, cons
 static bool CreateDatabase_Oracle(const TCHAR *dbLogin, const TCHAR *dbPassword)
 {
    TCHAR query[256];
-   _sntprintf(query, 256, _T("CREATE USER %s IDENTIFIED BY %s"), dbLogin, dbPassword);
-   bool success = SQLQuery(query);
+   // Password is an identifier in Oracle syntax and has to be enclosed in double quotes (Oracle passwords cannot contain double quote character)
+   StringBuffer createUserQuery(_T("CREATE USER "));
+   createUserQuery.append(dbLogin);
+   createUserQuery.append(_T(" IDENTIFIED BY \""));
+   createUserQuery.append(dbPassword);
+   createUserQuery.append(_T("\""));
+   bool success = SQLQuery(createUserQuery);
 
    if (success)
    {
@@ -334,40 +339,56 @@ static bool CreateDatabase_PostgreSQL(const TCHAR *dbName, const TCHAR *dbLogin,
 }
 
 /**
- * Create database in Microsoft SQL
+ * Quote identifier for Microsoft SQL
+ */
+static StringBuffer QuoteIdentifier_MSSQL(const TCHAR *name)
+{
+   StringBuffer out(_T("["));
+   for(const TCHAR *p = name; *p != 0; p++)
+   {
+      if (*p == _T(']'))
+         out.append(_T("]]"));
+      else
+         out.append(*p);
+   }
+   out.append(_T(']'));
+   return out;
+}
+
+/**
+ * Create database in Microsoft SQL. New login is set as database owner so it is mapped to dbo user and has full rights within database.
  */
 static bool CreateDatabase_MSSQL(const TCHAR *dbName, const TCHAR *dbLogin, const TCHAR *dbPassword)
 {
-   TCHAR query[512];
+   StringBuffer quotedDbName = QuoteIdentifier_MSSQL(dbName);
 
    bool success = SQLQuery(_T("USE master"));
    if (success)
    {
-      _sntprintf(query, 512, _T("CREATE DATABASE %s"), dbName);
-      success = SQLQuery(query);
-   }
-
-   if (success)
-   {
-      _sntprintf(query, 512, _T("USE %s"), dbName);
+      StringBuffer query(_T("CREATE DATABASE "));
+      query.append(quotedDbName);
       success = SQLQuery(query);
    }
 
    // TODO: implement grant for Windows authentication
    if (success && _tcscmp(dbLogin, _T("*")))
    {
-      _sntprintf(query, 512, _T("sp_addlogin @loginame = '%s', @passwd = '%s', @defdb = '%s'"), dbLogin, dbPassword, dbName);
+      StringBuffer quotedLogin = QuoteIdentifier_MSSQL(dbLogin);
+
+      StringBuffer query(_T("CREATE LOGIN "));
+      query.append(quotedLogin);
+      query.append(_T(" WITH PASSWORD = N"));
+      query.append(DBPrepareString(g_dbHandle, dbPassword));
+      query.append(_T(", DEFAULT_DATABASE = "));
+      query.append(quotedDbName);
       success = SQLQuery(query);
 
       if (success)
       {
-         _sntprintf(query, 512, _T("sp_grantdbaccess @loginame = '%s'"), dbLogin);
-         success = SQLQuery(query);
-      }
-
-      if (success)
-      {
-         _sntprintf(query, 512, _T("GRANT ALL TO %s"), dbLogin);
+         query = _T("ALTER AUTHORIZATION ON DATABASE::");
+         query.append(quotedDbName);
+         query.append(_T(" TO "));
+         query.append(quotedLogin);
          success = SQLQuery(query);
       }
    }
