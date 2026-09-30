@@ -686,6 +686,7 @@ void SyncAgentPolicies(const NXCPMessage& msg)
    if (sameDataDirectory)
       nxlog_debug_tag(DEBUG_TAG, 2, _T("This external subagent loader uses same data directory as master agent, policy file deployment is not needed"));
 
+   bool allPoliciesRegistered = true;
    StringBuffer query(_T("SELECT guid,type FROM agent_policy"));
    uint32_t count = msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
    if (count > 0)
@@ -719,12 +720,15 @@ void SyncAgentPolicies(const NXCPMessage& msg)
             const BYTE *hash = msg.getBinaryFieldPtr(fieldId++, &size);
             if (hash != nullptr)
                RegisterPolicy(type, guid, version, serverId, serverInfo, hash);
+            else
+               allPoliciesRegistered = false;
 
             nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Policy %s of type %s successfully %s"), guid.toString().cstr(), type, sameDataDirectory ? _T("registered") : _T("deployed"));
             fieldId += 93;
          }
          else
          {
+            allPoliciesRegistered = false;
             nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Deployment of policy %s of type %s failed (error %u)"), guid.toString().cstr(), type, rcc);
             fieldId += 97;
          }
@@ -762,4 +766,9 @@ void SyncAgentPolicies(const NXCPMessage& msg)
       }
    }
    DBFreeResult(hResult);
+
+   // Orphan cleanup in shared data directory is done by master agent. In own data directory it is safe only
+   // when local database matches master's policy list, i.e. every policy from this sync was registered.
+   if (!sameDataDirectory && allPoliciesRegistered)
+      RemoveOrphanPolicyFiles();
 }
