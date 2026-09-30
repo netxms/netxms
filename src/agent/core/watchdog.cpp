@@ -472,34 +472,48 @@ static void ReconcileExternalSubagentProcesses()
 }
 
 /**
- * Check if user logged on to given session is in the list of users excluded from running external subagents.
+ * Check if external subagents can be started in given session. Session is not suitable if logged on user
+ * cannot be determined, nobody is logged on to it, or logged on user is in the list of excluded users.
  * List entries are matched case-insensitively either as bare user name or as DOMAIN\user.
- * Session is considered excluded if logged on user cannot be determined.
  */
-static bool IsSessionUserExcluded(const WTS_SESSION_INFO& session, const StringList& excludedUsers)
+static bool IsSessionSuitableForExternalSubagents(const WTS_SESSION_INFO& session, const StringList& excludedUsers)
 {
-   LPTSTR domain = nullptr, user = nullptr;
+   LPTSTR user;
    DWORD bytes;
-   if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.SessionId, WTSUserName, &user, &bytes) ||
-       !WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.SessionId, WTSDomainName, &domain, &bytes))
+   if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.SessionId, WTSUserName, &user, &bytes))
    {
       TCHAR errorText[1024];
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: cannot get logged on user (%s)"),
             session.SessionId, session.pWinStationName, GetSystemErrorText(GetLastError(), errorText, 1024));
-      if (user != nullptr)
-         WTSFreeMemory(user);
-      return true;
+      return false;
+   }
+
+   if (*user == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: no logged on user"), session.SessionId, session.pWinStationName);
+      WTSFreeMemory(user);
+      return false;
+   }
+
+   LPTSTR domain;
+   if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.SessionId, WTSDomainName, &domain, &bytes))
+   {
+      TCHAR errorText[1024];
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: cannot get domain of logged on user %s (%s)"),
+            session.SessionId, session.pWinStationName, user, GetSystemErrorText(GetLastError(), errorText, 1024));
+      WTSFreeMemory(user);
+      return false;
    }
 
    TCHAR qualifiedUser[512];
    _sntprintf(qualifiedUser, 512, _T("%s\\%s"), domain, user);
-   bool excluded = (*user != 0) && (excludedUsers.containsIgnoreCase(user) || excludedUsers.containsIgnoreCase(qualifiedUser));
-   if (excluded)
+   bool suitable = !excludedUsers.containsIgnoreCase(user) && !excludedUsers.containsIgnoreCase(qualifiedUser);
+   if (!suitable)
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: logged on user %s is excluded"), session.SessionId, session.pWinStationName, qualifiedUser);
 
    WTSFreeMemory(user);
    WTSFreeMemory(domain);
-   return excluded;
+   return suitable;
 }
 
 /**
@@ -587,7 +601,7 @@ void ExternalSubagentWatchdog()
          if ((sessions[i].State != WTSActive) && (sessions[i].State != WTSConnected))
             continue;
 
-         if (!excludedUsers.isEmpty() && IsSessionUserExcluded(sessions[i], excludedUsers))
+         if (!IsSessionSuitableForExternalSubagents(sessions[i], excludedUsers))
             continue;
 
          for (int j = 0; j < subagentsToStart.size(); j++)
@@ -607,18 +621,19 @@ void ExternalSubagentWatchdog()
                instance->pid = pid;
                instance->startTime = time(nullptr);
                instances.set(name, instance);   // replacing a tracked instance closes its previous handle
+               found = true;
             }
             else
             {
                nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagent %s in session %u", name, sessions[i].SessionId);
             }
          }
-         found = true;
-         break;
+         if (found)
+            break;
       }
 
       if (!found)
-         nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot find suitable session for starting external subagent");
+         nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagents in any session");
 
       WTSFreeMemory(sessions);
    }
