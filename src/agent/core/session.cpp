@@ -265,7 +265,15 @@ void CommSession::readThread()
             TCHAR buffer[64];
             debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 
-            if (msg->getCode() == CMD_FILE_DATA)
+            if (!m_authenticated)
+            {
+               debugPrintf(6, _T("Authentication required"));
+            }
+            else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_encryptionContext == nullptr))
+            {
+               debugPrintf(6, _T("Encryption required"));
+            }
+            else if (msg->getCode() == CMD_FILE_DATA)
             {
                DownloadFileInfo *dInfo = m_downloadFileMap.get(msg->getId());
                if (dInfo != nullptr)
@@ -350,9 +358,22 @@ void CommSession::readThread()
                case CMD_GET_SYSTEM_TIME:
                   {
                      NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId(), m_protocolVersion);
-                     response.setField(VID_RCC, ERR_SUCCESS);
-                     response.setField(VID_TIME_SYNC_ALLOWED, m_masterServer && (g_dwFlags & AF_SYNC_TIME_WITH_SERVER));
-                     response.setField(VID_TIMESTAMP, GetCurrentTimeMs());
+                     if (!m_authenticated)
+                     {
+                        debugPrintf(6, _T("Authentication required"));
+                        response.setField(VID_RCC, ERR_AUTH_REQUIRED);
+                     }
+                     else if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_encryptionContext == nullptr))
+                     {
+                        debugPrintf(6, _T("Encryption required"));
+                        response.setField(VID_RCC, ERR_ENCRYPTION_REQUIRED);
+                     }
+                     else
+                     {
+                        response.setField(VID_RCC, ERR_SUCCESS);
+                        response.setField(VID_TIME_SYNC_ALLOWED, m_masterServer && (g_dwFlags & AF_SYNC_TIME_WITH_SERVER));
+                        response.setField(VID_TIMESTAMP, GetCurrentTimeMs());
+                     }
                      sendMessage(response);
                      delete msg;
                   }
@@ -374,7 +395,8 @@ void CommSession::readThread()
                   delete msg;
                   break;
                case CMD_SET_SYSTEM_TIME:
-                  if (m_masterServer && (g_dwFlags & AF_SYNC_TIME_WITH_SERVER))
+                  if (m_masterServer && (g_dwFlags & AF_SYNC_TIME_WITH_SERVER) &&
+                      m_authenticated && (!(g_dwFlags & AF_REQUIRE_ENCRYPTION) || (m_encryptionContext != nullptr)))
                   {
                      uint32_t accuracy = msg->getFieldAsUInt32(VID_ACCURACY); // Half of average RTT
                      int64_t serverTime = msg->getFieldAsInt64(VID_TIMESTAMP);
@@ -411,7 +433,8 @@ void CommSession::readThread()
                   delete msg;
                   break;
                case CMD_SNMP_REQUEST:
-                  if (m_masterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY))
+                  if (m_masterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY) &&
+                      m_authenticated && (!(g_dwFlags & AF_REQUIRE_ENCRYPTION) || (m_encryptionContext != nullptr)))
                   {
                      proxySnmpRequest(msg);
                   }
@@ -424,7 +447,7 @@ void CommSession::readThread()
                   }
                   break;
                case CMD_QUERY_WEB_SERVICE:
-                  if (g_dwFlags & AF_ENABLE_WEBSVC_PROXY)
+                  if ((g_dwFlags & AF_ENABLE_WEBSVC_PROXY) && m_authenticated && (!(g_dwFlags & AF_REQUIRE_ENCRYPTION) || (m_encryptionContext != nullptr)))
                   {
                      queryWebService(msg);
                   }
@@ -437,7 +460,7 @@ void CommSession::readThread()
                   }
                   break;
                case CMD_WEB_SERVICE_CUSTOM_REQUEST:
-                  if (g_dwFlags & AF_ENABLE_WEBSVC_PROXY)
+                  if ((g_dwFlags & AF_ENABLE_WEBSVC_PROXY) && m_authenticated && (!(g_dwFlags & AF_REQUIRE_ENCRYPTION) || (m_encryptionContext != nullptr)))
                   {
                      webServiceCustomRequest(msg);
                   }
@@ -1613,8 +1636,11 @@ void CommSession::getHostNameByAddr(NXCPMessage *request, NXCPMessage *response)
  */
 uint32_t CommSession::setupProxyConnection(NXCPMessage *request)
 {
-   if (!m_masterServer || !(g_dwFlags & AF_ENABLE_PROXY))
+   if (!m_masterServer || !(g_dwFlags & AF_ENABLE_PROXY) || !m_authenticated)
       return ERR_ACCESS_DENIED;
+
+   if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && (m_encryptionContext == nullptr))
+      return ERR_ENCRYPTION_REQUIRED;
 
    InetAddress addr = request->isFieldExist(VID_DESTINATION_ADDRESS) ?
             request->getFieldAsInetAddress(VID_DESTINATION_ADDRESS) :
