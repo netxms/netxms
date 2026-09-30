@@ -70,6 +70,22 @@ public:
 };
 
 /**
+ * Get list of agent tunnels (bound and unbound)
+ */
+void NXCORE_EXPORTABLE GetAgentTunnels(NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *GetAgentTunnelsAsJson();
+
+/**
+ * Bind unbound agent tunnel to node
+ */
+uint32_t NXCORE_EXPORTABLE BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
+
+/**
+ * Unbind agent tunnel from node
+ */
+uint32_t NXCORE_EXPORTABLE UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
+
+/**
  * Get tunnel for node
  */
 shared_ptr<AgentTunnel> GetTunnelForNode(uint32_t nodeId);

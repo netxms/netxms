@@ -52,6 +52,8 @@ int H_2FAMethodDelete(Context *context);
 int H_2FAMethodDetails(Context *context);
 int H_2FAMethods(Context *context);
 int H_2FAMethodUpdate(Context *context);
+int H_AgentTunnelBind(Context *context);
+int H_AgentTunnels(Context *context);
 int H_AiChatAnswerQuestion(Context *context);
 int H_AiChatClear(Context *context);
 int H_AiChatCreate(Context *context);
@@ -264,6 +266,7 @@ int H_ObjectTools(Context *context);
 int H_ObjectToolDetails(Context *context);
 int H_ObjectToolsForObject(Context *context);
 int H_ObjectToolUpdate(Context *context);
+int H_ObjectUnbindAgentTunnel(Context *context);
 int H_ObjectWakeUp(Context *context);
 int H_ScheduledTaskCreate(Context *context);
 int H_ScheduledTaskDelete(Context *context);
@@ -392,6 +395,12 @@ static bool InitModule(Config *config)
       .GET(H_2FAMethodDetails)
       .PUT(H_2FAMethodUpdate)
       .DELETE(H_2FAMethodDelete)
+      .build();
+   RouteBuilder("v1/agent-tunnels")
+      .GET(H_AgentTunnels)
+      .build();
+   RouteBuilder("v1/agent-tunnels/:tunnel-id/bind")
+      .POST(H_AgentTunnelBind)
       .build();
    RouteBuilder("v1/ai/chat")
       .POST(H_AiChatCreate)
@@ -947,6 +956,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/set-managed")
       .POST(H_ObjectSetManaged)
+      .build();
+   RouteBuilder("v1/objects/:object-id/unbind-agent-tunnel")
+      .POST(H_ObjectUnbindAgentTunnel)
       .build();
    RouteBuilder("v1/objects/:object-id/wake-up")
       .POST(H_ObjectWakeUp)

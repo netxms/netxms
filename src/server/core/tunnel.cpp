@@ -229,7 +229,7 @@ shared_ptr<AgentTunnel> RegisterOutboundTunnel(const shared_ptr<OutboundAgentTun
 /**
  * Bind agent tunnel
  */
-uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId)
+uint32_t NXCORE_EXPORTABLE BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId)
 {
    shared_ptr<InboundAgentTunnel> tunnel;
    s_tunnelListLock.lock();
@@ -259,7 +259,7 @@ uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId)
 /**
  * Unbind agent tunnel from node
  */
-uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
+uint32_t NXCORE_EXPORTABLE UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
 {
    shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
    if (node == nullptr)
@@ -303,7 +303,7 @@ uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
 /**
  * Get list of agent tunnels into NXCP message
  */
-void GetAgentTunnels(NXCPMessage *msg)
+void NXCORE_EXPORTABLE GetAgentTunnels(NXCPMessage *msg)
 {
    s_tunnelListLock.lock();
 
@@ -323,6 +323,21 @@ void GetAgentTunnels(NXCPMessage *msg)
 
    msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(s_unboundTunnels.size() + s_boundTunnels.size()));
    s_tunnelListLock.unlock();
+}
+
+/**
+ * Get list of agent tunnels as JSON array
+ */
+json_t NXCORE_EXPORTABLE *GetAgentTunnelsAsJson()
+{
+   json_t *tunnels = json_array();
+   s_tunnelListLock.lock();
+   for(const shared_ptr<InboundAgentTunnel>& t : s_unboundTunnels)
+      json_array_append_new(tunnels, t->toJson());
+   for(const shared_ptr<AgentTunnel>& t : s_boundTunnels)
+      json_array_append_new(tunnels, t->toJson());
+   s_tunnelListLock.unlock();
+   return tunnels;
 }
 
 /**

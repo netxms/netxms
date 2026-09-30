@@ -208,6 +208,7 @@ public:
    bool isExtProvCertificate() const { return m_extProvCertificate; }   // Check if certificate is externally provisioned
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   json_t *toJson() const;
 
    void debugPrintf(int level, const TCHAR *format, ...);
 };

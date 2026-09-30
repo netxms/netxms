@@ -34,6 +34,7 @@
 #include <nxcore_discovery.h>
 #include <nms_pkg.h>
 #include <nxcore_2fa.h>
+#include <nxcore_agent_tunnel.h>
 #include <nxtask.h>
 #include <netxms_maps.h>
 #include <asset_management.h>
@@ -112,10 +113,6 @@ void GetClientConfigurationHints(NXCPMessage *msg, uint32_t userId);
 bool RecalculateDCIValues(DataCollectionTarget *object, DCItem *dci, BackgroundTask *task);
 
 bool GetSummaryTableScriptDependencies(uint32_t id, StringSet *dependencies);
-
-void GetAgentTunnels(NXCPMessage *msg);
-uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
-uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
 
 void StartManualActiveDiscovery(ObjectArray<InetAddressListElement> *addressList);
 

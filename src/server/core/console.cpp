@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <entity_mib.h>
 #include <nxcore_discovery.h>
+#include <nxcore_agent_tunnel.h>
 #include <nxtask.h>
 #include <netxms-version.h>
 #include <nms_users.h>
@@ -43,8 +44,6 @@ extern ThreadPool *g_schedulerThreadPool;
 extern ThreadPool *g_dataCollectorThreadPool;
 
 void ShowAgentTunnels(CONSOLE_CTX console);
-uint32_t BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
-uint32_t UnbindAgentTunnel(uint32_t nodeId, uint32_t userId);
 int64_t GetAlarmDbWriterQueueSize();
 int64_t GetEventLogWriterQueueSize();
 int64_t GetEventProcessorQueueSize();

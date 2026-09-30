@@ -571,6 +571,52 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 }
 
 /**
+ * Serialize tunnel data to JSON
+ */
+json_t *AgentTunnel::toJson() const
+{
+   json_t *root = json_object();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "guid", m_guid.toJson());
+   json_object_set_new(root, "nodeId", json_integer(m_nodeId));
+   json_object_set_new(root, "bound", json_boolean(m_nodeId != 0));
+   json_object_set_new(root, "inbound", json_boolean(isInbound()));
+   json_object_set_new(root, "address", m_address.toJson());
+   json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
+   json_object_set_new(root, "systemName", json_string_t(m_systemName));
+   json_object_set_new(root, "systemInformation", json_string_t(m_systemInfo));
+   json_object_set_new(root, "hostname", json_string_t(m_hostname));
+   json_object_set_new(root, "platformName", json_string_t(m_platformName));
+   json_object_set_new(root, "agentVersion", json_string_t(m_agentVersion));
+   json_object_set_new(root, "agentBuildTag", json_string_t(m_agentBuildTag));
+   json_object_set_new(root, "agentId", m_agentId.toJson());
+   if (!m_hardwareId.isNull())
+   {
+      char hardwareId[HARDWARE_ID_LENGTH * 2 + 1];
+      json_object_set_new(root, "hardwareId", json_string(BinToStrA(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareId)));
+   }
+   else
+   {
+      json_object_set_new(root, "hardwareId", json_null());
+   }
+   json_object_set_new(root, "serialNumber", json_string_t(m_serialNumber));
+   m_channelLock.lock();
+   json_object_set_new(root, "activeChannelCount", json_integer(m_channels.size()));
+   m_channelLock.unlock();
+   json_object_set_new(root, "userAgentInstalled", json_boolean(m_userAgentInstalled));
+   json_object_set_new(root, "agentProxy", json_boolean(m_agentProxy));
+   json_object_set_new(root, "snmpProxy", json_boolean(m_snmpProxy));
+   json_object_set_new(root, "snmpTrapProxy", json_boolean(m_snmpTrapProxy));
+   json_object_set_new(root, "syslogProxy", json_boolean(m_syslogProxy));
+   json_object_set_new(root, "certificateIssuer", json_string_t(m_certificateIssuer));
+   json_object_set_new(root, "certificateSubject", json_string_t(m_certificateSubject));
+   json_object_set_new(root, "certificateExpirationTime", json_time_string(m_certificateExpirationTime));
+   json_object_set_new(root, "externallyProvisionedCertificate", json_boolean(m_extProvCertificate));
+   json_object_set_new(root, "connectionTime", json_time_string(m_startTime));
+   return root;
+}
+
+/**
  * Channel constructor
  */
 AgentTunnelCommChannel::AgentTunnelCommChannel(const shared_ptr<AgentTunnel>& tunnel, uint32_t id) : m_tunnel(tunnel), m_buffer(65536, 65536)

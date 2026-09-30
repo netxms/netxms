@@ -91,6 +91,8 @@ tags:
     description: Server-side log discovery and querying
   - name: Background Tasks
     description: Status of long-running server-side tasks started by other endpoints
+  - name: Agent Tunnels
+    description: Agent tunnel management (listing connected tunnels, binding tunnels to nodes)
 paths:
   /:
     get:
@@ -679,6 +681,78 @@ paths:
       security: []
       tags:
         - TCP Proxy
+  /v1/agent-tunnels:
+    get:
+      operationId: listAgentTunnels
+      tags:
+        - Agent Tunnels
+      summary: Get list of agent tunnels
+      description: |
+        Retrieve all currently connected agent tunnels, both bound to nodes and unbound (waiting
+        for bind). Requires MANAGE_AGENT_TUNNELS system access right.
+      responses:
+        '200':
+          description: List of agent tunnels.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentTunnel'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+      security:
+        - BearerAuth: []
+  /v1/agent-tunnels/{tunnel-id}/bind:
+    post:
+      operationId: bindAgentTunnel
+      tags:
+        - Agent Tunnels
+      summary: Bind agent tunnel to node
+      description: |
+        Bind unbound agent tunnel to given node. Server issues certificate for the agent and waits
+        (up to 60 seconds) for the agent to confirm it; after that the agent reconnects the tunnel,
+        which then appears as bound to the node. Requires MANAGE_AGENT_TUNNELS system access right.
+      parameters:
+        - name: tunnel-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Tunnel ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nodeId
+              properties:
+                nodeId:
+                  type: integer
+                  description: ID of the node to bind tunnel to
+      responses:
+        '204':
+          description: Tunnel bound.
+        '400':
+          description: Invalid request body or node ID.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Unbound tunnel with given ID not found.
+        '409':
+          description: Tunnel cannot be bound in its current state (bind already in progress or certificate is externally provisioned).
+        '500':
+          description: Agent failed to complete certificate request.
+        '504':
+          description: Timeout waiting for agent to complete certificate request.
+      security:
+        - BearerAuth: []
   /v1/ai/chat:
     post:
       operationId: createAiChat
@@ -7573,6 +7647,36 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/objects/{object-id}/unbind-agent-tunnel:
+    post:
+      operationId: unbindAgentTunnel
+      summary: Unbind agent tunnel from node
+      description: >-
+        Remove tunnel binding from the node, revoke the agent certificate issued on bind, and shut down
+        the node's active tunnel if there is one. Succeeds also when the node has no bound tunnel.
+        Requires MANAGE_AGENT_TUNNELS system access right.
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node object ID
+      responses:
+        '204':
+          description: Tunnel unbound
+        '400':
+          description: Object is not a node
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+      tags:
+        - Agent Tunnels
   /v1/objects/{object-id}/take-screenshot:
     get:
       operationId: takeScreenshot
@@ -13045,6 +13149,82 @@ paths:
         - Two-Factor Authentication
 components:
   schemas:
+    AgentTunnel:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Tunnel ID (valid only while tunnel is connected)
+        guid:
+          type: string
+          format: uuid
+        nodeId:
+          type: integer
+          description: ID of the node tunnel is bound to, 0 if unbound
+        bound:
+          type: boolean
+        inbound:
+          type: boolean
+          description: True for tunnels initiated by agent, false for outbound tunnels initiated by server
+        address:
+          $ref: '#/components/schemas/InetAddress'
+        zoneUIN:
+          type: integer
+        systemName:
+          type: string
+          nullable: true
+        systemInformation:
+          type: string
+          nullable: true
+        hostname:
+          type: string
+        platformName:
+          type: string
+          nullable: true
+        agentVersion:
+          type: string
+          nullable: true
+        agentBuildTag:
+          type: string
+          nullable: true
+        agentId:
+          type: string
+          format: uuid
+        hardwareId:
+          type: string
+          nullable: true
+          description: Hardware ID as hex string, null if agent did not report one
+        serialNumber:
+          type: string
+          nullable: true
+        activeChannelCount:
+          type: integer
+        userAgentInstalled:
+          type: boolean
+        agentProxy:
+          type: boolean
+        snmpProxy:
+          type: boolean
+        snmpTrapProxy:
+          type: boolean
+        syslogProxy:
+          type: boolean
+        certificateIssuer:
+          type: string
+          nullable: true
+        certificateSubject:
+          type: string
+          nullable: true
+        certificateExpirationTime:
+          type: string
+          format: date-time
+          nullable: true
+        externallyProvisionedCertificate:
+          type: boolean
+        connectionTime:
+          type: string
+          format: date-time
+          nullable: true
     AiObservation:
       type: object
       properties:
