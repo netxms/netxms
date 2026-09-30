@@ -12369,18 +12369,21 @@ void ClientSession::setPstorageValue(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
+   wchar_t key[256];
+   request.getFieldAsString(VID_PSTORAGE_KEY, key, 256);
 	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
-      TCHAR key[256], *value;
-		request.getFieldAsString(VID_PSTORAGE_KEY, key, 256);
-		value = request.getFieldAsString(VID_PSTORAGE_VALUE);
+		wchar_t *value = request.getFieldAsString(VID_PSTORAGE_VALUE);
+		SharedString oldValue = GetPersistentStorageValue(key);
 		SetPersistentStorageValue(key, value);
+		writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue.isNull() ? nullptr : oldValue.cstr(), value, 'T', L"Persistent storage entry \"%s\" set", key);
 		MemFree(value);
       response.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
 		response.setField(VID_RCC, RCC_ACCESS_DENIED);
+		writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on setting persistent storage entry \"%s\"", key);
 	}
 
 	sendMessage(response);
@@ -12393,17 +12396,20 @@ void ClientSession::deletePstorageValue(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
+   wchar_t key[256];
+   request.getFieldAsString(VID_PSTORAGE_KEY, key, 256);
 	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
-      TCHAR key[256];
-      //key[0]=0;
-		request.getFieldAsString(VID_PSTORAGE_KEY, key, 256);
+		SharedString oldValue = GetPersistentStorageValue(key);
 		bool success = DeletePersistentStorageValue(key);
+		if (success)
+		   writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue.cstr(), nullptr, 'T', L"Persistent storage entry \"%s\" deleted", key);
 		response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_PSTORAGE_KEY);
 	}
 	else
 	{
 	   response.setField(VID_RCC, RCC_ACCESS_DENIED);
+	   writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on deleting persistent storage entry \"%s\"", key);
 	}
 
    sendMessage(response);

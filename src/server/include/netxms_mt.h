@@ -69,7 +69,7 @@ public:
 
 	static MappingTable *createFromMessage(const NXCPMessage& msg);
 	static MappingTable *createFromDatabase(DB_HANDLE hdb, uint32_t id);
-	static MappingTable *createFromJson(json_t *json);
+	static MappingTable *createFromJson(json_t *json, uint32_t id = 0);
 
    void updateFromJson(json_t *json);
    void createUniqueId() { m_id = CreateUniqueId(IDG_MAPPING_TABLE); }
@@ -100,13 +100,17 @@ public:
  * Mapping tables API
  */
 void InitMappingTables();
-uint32_t UpdateMappingTable(const NXCPMessage& msg, uint32_t *newId, ClientSession *session);
-uint32_t DeleteMappingTable(uint32_t id, ClientSession *session);
-uint32_t GetMappingTable(uint32_t id, NXCPMessage *msg);
-uint32_t ListMappingTables(NXCPMessage *msg);
-void CreateMappingTableExportRecord(json_t *array, uint32_t id);
-uuid GetMappingTableGuid(uint32_t id);
-uint32_t GetMappingTableId(const uuid& guid);
+uint32_t NXCORE_EXPORTABLE UpdateMappingTable(const NXCPMessage& msg, uint32_t *newId, GenericClientSession *session);
+uint32_t NXCORE_EXPORTABLE CreateMappingTableFromJson(json_t *json, uint32_t *newId, GenericClientSession *session);
+uint32_t NXCORE_EXPORTABLE ModifyMappingTableFromJson(uint32_t id, json_t *json, GenericClientSession *session);
+uint32_t NXCORE_EXPORTABLE DeleteMappingTable(uint32_t id, GenericClientSession *session);
+uint32_t NXCORE_EXPORTABLE GetMappingTable(uint32_t id, NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *GetMappingTableAsJson(uint32_t id);
+uint32_t NXCORE_EXPORTABLE ListMappingTables(NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *ListMappingTablesAsJson();
+void NXCORE_EXPORTABLE CreateMappingTableExportRecord(json_t *array, uint32_t id);
+uuid NXCORE_EXPORTABLE GetMappingTableGuid(uint32_t id);
+uint32_t NXCORE_EXPORTABLE GetMappingTableId(const uuid& guid);
 bool ImportMappingTable(json_t *config, bool overwrite, ImportContext *context);
 
 #endif

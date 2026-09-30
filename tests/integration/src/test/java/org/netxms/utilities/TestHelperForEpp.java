@@ -1,9 +1,12 @@
 package org.netxms.utilities;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -93,6 +96,22 @@ public class TestHelperForEpp
    {
       HashMap<String, String> allPersistentStorageValue = session.getPersistentStorageList();
       return allPersistentStorageValue.get(key);
+   }
+
+   /**
+    * Delete persistent storage value if it exists (for cleanup of values that may or may not have been created)
+    */
+   public static void deletePersistentStorageValueIfExists(NXCSession session, String key) throws IOException, NXCException
+   {
+      try
+      {
+         session.deletePersistentStorageValue(key);
+      }
+      catch(NXCException e)
+      {
+         if (e.getErrorCode() != RCC.RCC_INVALID_PSTORAGE_KEY)
+            throw e;
+      }
    }
 
 }

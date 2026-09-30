@@ -63,6 +63,12 @@ tags:
     description: Event forwarder and driver management
   - name: SNMP MIB
     description: Browse the server's compiled SNMP MIB tree
+  - name: SNMP Trap Mappings
+    description: Configuration of SNMP trap to event mappings
+  - name: Mapping Tables
+    description: Key-value mapping tables used by data collection and scripts
+  - name: Persistent Storage
+    description: Server-wide persistent key-value storage used by NXSL scripts
   - name: SSH Keys
     description: SSH key management
   - name: Two-Factor Authentication
@@ -7009,6 +7015,275 @@ paths:
         - BearerAuth: []
       tags:
         - Log Parsers
+  /v1/mapping-tables:
+    get:
+      operationId: listMappingTables
+      tags:
+        - Mapping Tables
+      summary: Get all mapping tables
+      description: |
+        Retrieve the list of all mapping tables without their elements. Requires MANAGE_MAPPING_TBLS
+        system access right.
+      responses:
+        '200':
+          description: List of mapping tables.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MappingTableSummary'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+      security:
+        - BearerAuth: []
+    post:
+      operationId: createMappingTable
+      tags:
+        - Mapping Tables
+      summary: Create a new mapping table
+      description: |
+        Create a new mapping table. Requires MANAGE_MAPPING_TBLS system access right. If `guid` is
+        provided, it is used as the table GUID; otherwise a new GUID is generated. Table name and GUID
+        must be unique (name comparison is case-insensitive).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/MappingTableCreateUpdate'
+                - type: object
+                  required:
+                    - name
+                  properties:
+                    guid:
+                      type: string
+                      format: uuid
+                      description: Optional table GUID.
+      responses:
+        '201':
+          description: Mapping table created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MappingTable'
+        '400':
+          description: Invalid request (missing or empty name, invalid field type, or value too long).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '409':
+          description: Mapping table with same name or GUID already exists.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+  /v1/mapping-tables/{table-id}:
+    parameters:
+      - name: table-id
+        in: path
+        required: true
+        description: Mapping table ID.
+        schema:
+          type: integer
+    get:
+      operationId: getMappingTable
+      tags:
+        - Mapping Tables
+      summary: Get mapping table
+      description: |
+        Retrieve mapping table with all its elements. Mapping table content is needed for displaying
+        DCI values, so no system access right is required.
+      responses:
+        '200':
+          description: Mapping table details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MappingTable'
+        '400':
+          description: Invalid table ID.
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Mapping table not found.
+      security:
+        - BearerAuth: []
+    put:
+      operationId: updateMappingTable
+      tags:
+        - Mapping Tables
+      summary: Update mapping table
+      description: |
+        Update an existing mapping table. Requires MANAGE_MAPPING_TBLS system access right. Only fields
+        present in the request are changed; if `elements` is present, it replaces all table elements.
+        Table ID and GUID cannot be changed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MappingTableCreateUpdate'
+      responses:
+        '200':
+          description: Mapping table updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MappingTable'
+        '400':
+          description: Invalid request (empty name, invalid field type, or value too long).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Mapping table not found.
+        '409':
+          description: Other mapping table with same name already exists.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+    delete:
+      operationId: deleteMappingTable
+      tags:
+        - Mapping Tables
+      summary: Delete mapping table
+      description: Delete mapping table. Requires MANAGE_MAPPING_TBLS system access right.
+      responses:
+        '204':
+          description: Mapping table deleted successfully.
+        '400':
+          description: Invalid table ID.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Mapping table not found.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+  /v1/persistent-storage:
+    get:
+      operationId: listPersistentStorage
+      tags:
+        - Persistent Storage
+      summary: Get all persistent storage entries
+      description: |
+        Retrieve all entries of the server's persistent storage (the storage accessed from NXSL scripts
+        via `ReadPersistentStorage` / `WritePersistentStorage`) as an object mapping keys to values.
+        Requires PERSISTENT_STORAGE system access right.
+      responses:
+        '200':
+          description: Persistent storage content.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+      security:
+        - BearerAuth: []
+  /v1/persistent-storage/{key}:
+    parameters:
+      - name: key
+        in: path
+        required: true
+        description: |
+          Entry key (URL-encoded), 1-127 characters without control characters. Entries whose key
+          contains a slash cannot be addressed individually and are only visible in the full list.
+        schema:
+          type: string
+    get:
+      operationId: getPersistentStorageEntry
+      tags:
+        - Persistent Storage
+      summary: Get persistent storage entry
+      description: Retrieve single persistent storage entry. Requires PERSISTENT_STORAGE system access right.
+      responses:
+        '200':
+          description: Persistent storage entry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersistentStorageEntry'
+        '400':
+          description: Invalid key.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Entry not found.
+      security:
+        - BearerAuth: []
+    put:
+      operationId: setPersistentStorageEntry
+      tags:
+        - Persistent Storage
+      summary: Create or update persistent storage entry
+      description: |
+        Set value of persistent storage entry, creating it if it does not exist. Requires
+        PERSISTENT_STORAGE system access right. Changes are written to the database asynchronously
+        by the server's periodic synchronization.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  type: string
+                  maxLength: 2000
+                  description: Entry value.
+      responses:
+        '200':
+          description: Entry created or updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersistentStorageEntry'
+        '400':
+          description: Invalid key, missing value, or value too long.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+      security:
+        - BearerAuth: []
+    delete:
+      operationId: deletePersistentStorageEntry
+      tags:
+        - Persistent Storage
+      summary: Delete persistent storage entry
+      description: Delete persistent storage entry. Requires PERSISTENT_STORAGE system access right.
+      responses:
+        '204':
+          description: Entry deleted.
+        '400':
+          description: Invalid key.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Entry not found.
+      security:
+        - BearerAuth: []
   /v1/snmp-mib:
     get:
       operationId: getMibRoot
@@ -7060,6 +7335,149 @@ paths:
         - BearerAuth: []
       tags:
         - SNMP MIB
+  /v1/snmp-trap-mappings:
+    get:
+      operationId: listSnmpTrapMappings
+      tags:
+        - SNMP Trap Mappings
+      summary: Get all SNMP trap mappings
+      description: Retrieve all SNMP trap to event mappings. Requires CONFIGURE_TRAPS system access right.
+      responses:
+        '200':
+          description: List of SNMP trap mappings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SnmpTrapMapping'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+      security:
+        - BearerAuth: []
+    post:
+      operationId: createSnmpTrapMapping
+      tags:
+        - SNMP Trap Mappings
+      summary: Create SNMP trap mapping
+      description: |
+        Create a new SNMP trap mapping. Requires CONFIGURE_TRAPS system access right. If `eventCode`
+        is not provided, trap is mapped to `SNMP_UNMATCHED_TRAP` event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/SnmpTrapMappingCreateUpdate'
+                - type: object
+                  required:
+                    - oid
+      responses:
+        '201':
+          description: SNMP trap mapping created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SnmpTrapMapping'
+        '400':
+          description: Invalid request (missing or invalid OID, invalid parameter mapping, unknown event code, invalid field type, or value too long).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+  /v1/snmp-trap-mappings/{trap-id}:
+    parameters:
+      - name: trap-id
+        in: path
+        required: true
+        description: SNMP trap mapping ID.
+        schema:
+          type: integer
+    get:
+      operationId: getSnmpTrapMapping
+      tags:
+        - SNMP Trap Mappings
+      summary: Get SNMP trap mapping
+      description: Retrieve single SNMP trap mapping. Requires CONFIGURE_TRAPS system access right.
+      responses:
+        '200':
+          description: SNMP trap mapping details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SnmpTrapMapping'
+        '400':
+          description: Invalid trap mapping ID.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: SNMP trap mapping not found.
+      security:
+        - BearerAuth: []
+    put:
+      operationId: updateSnmpTrapMapping
+      tags:
+        - SNMP Trap Mappings
+      summary: Update SNMP trap mapping
+      description: |
+        Update an existing SNMP trap mapping. Requires CONFIGURE_TRAPS system access right. Only fields
+        present in the request are changed; if `parameters` is present, it replaces all parameter
+        mappings. Trap mapping ID and GUID cannot be changed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SnmpTrapMappingCreateUpdate'
+      responses:
+        '200':
+          description: SNMP trap mapping updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SnmpTrapMapping'
+        '400':
+          description: Invalid request (invalid OID, invalid parameter mapping, unknown event code, invalid field type, or value too long).
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: SNMP trap mapping not found.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
+    delete:
+      operationId: deleteSnmpTrapMapping
+      tags:
+        - SNMP Trap Mappings
+      summary: Delete SNMP trap mapping
+      description: Delete SNMP trap mapping. Requires CONFIGURE_TRAPS system access right.
+      responses:
+        '204':
+          description: SNMP trap mapping deleted successfully.
+        '400':
+          description: Invalid trap mapping ID.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: SNMP trap mapping not found.
+        '500':
+          description: Database failure.
+      security:
+        - BearerAuth: []
   /v1/ssh-keys:
     get:
       operationId: listSshKeys
@@ -9321,6 +9739,162 @@ components:
         isProtected:
           type: boolean
           description: Whether the image is a system-protected image that cannot be modified or deleted.
+    MappingTableSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Mapping table ID.
+        guid:
+          type: string
+          format: uuid
+          description: Mapping table GUID.
+        name:
+          type: string
+          description: Mapping table name.
+        description:
+          type: string
+          description: Mapping table description.
+        flags:
+          type: integer
+          description: Mapping table flags (bit 0 - numeric keys).
+    MappingTable:
+      allOf:
+        - $ref: '#/components/schemas/MappingTableSummary'
+        - type: object
+          properties:
+            elements:
+              type: array
+              items:
+                $ref: '#/components/schemas/MappingTableElement'
+    MappingTableElement:
+      type: object
+      required:
+        - key
+      properties:
+        key:
+          type: string
+          maxLength: 63
+          description: |
+            Element key. For tables with numeric keys flag set, key is parsed as integer (decimal,
+            or hexadecimal with `0x` prefix) and stored in decimal form.
+        value:
+          type: string
+          maxLength: 4000
+          description: Mapped value.
+        description:
+          type: string
+          maxLength: 4000
+          description: Element description.
+    MappingTableCreateUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 63
+          description: Mapping table name (cannot be empty).
+        description:
+          type: string
+          maxLength: 4000
+          description: Mapping table description.
+        flags:
+          type: integer
+          description: Mapping table flags (bit 0 - numeric keys).
+        elements:
+          type: array
+          description: Table elements. Replaces all existing elements when provided.
+          items:
+            $ref: '#/components/schemas/MappingTableElement'
+    PersistentStorageEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          description: Entry key.
+        value:
+          type: string
+          description: Entry value.
+    SnmpTrapParameterMapping:
+      type: object
+      description: Mapping of trap varbind to event parameter. Either `oid` or `position` must be set.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: Parameter number (1-based position in the parameter list). Ignored on input.
+        oid:
+          type: string
+          maxLength: 255
+          description: OID of the varbind (for mapping by OID).
+        position:
+          type: integer
+          minimum: 1
+          description: Varbind position (for mapping by position). Takes precedence over `oid` when positive.
+        description:
+          type: string
+          maxLength: 255
+          description: Parameter description.
+        flags:
+          type: integer
+          description: Parameter mapping flags (bit 0 - force text representation of value).
+    SnmpTrapMapping:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: SNMP trap mapping ID.
+        guid:
+          type: string
+          format: uuid
+          description: SNMP trap mapping GUID.
+        oid:
+          type: string
+          description: Trap OID. Traps are matched by exact OID or by longest matching OID prefix.
+        eventCode:
+          type: integer
+          description: Code of the event generated for matching trap.
+        eventTag:
+          type: string
+          nullable: true
+          description: Tag added to generated event.
+        description:
+          type: string
+          description: Trap mapping description.
+        transformationScript:
+          type: string
+          description: NXSL transformation script source.
+        parameters:
+          type: array
+          description: Parameter mappings (omitted if there are none).
+          items:
+            $ref: '#/components/schemas/SnmpTrapParameterMapping'
+    SnmpTrapMappingCreateUpdate:
+      type: object
+      properties:
+        oid:
+          type: string
+          maxLength: 255
+          description: Trap OID in dotted notation.
+        eventCode:
+          type: integer
+          description: Code of the event generated for matching trap (must refer to existing event template).
+        eventTag:
+          type: string
+          nullable: true
+          maxLength: 63
+          description: Tag added to generated event.
+        description:
+          type: string
+          maxLength: 255
+          description: Trap mapping description.
+        transformationScript:
+          type: string
+          description: NXSL transformation script source.
+        parameters:
+          type: array
+          description: Parameter mappings. Replaces all existing parameter mappings when provided.
+          items:
+            $ref: '#/components/schemas/SnmpTrapParameterMapping'
     GeoArea:
       type: object
       properties:

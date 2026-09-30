@@ -1596,12 +1596,16 @@ bool NXCORE_EXPORTABLE SendMagicPacket(const InetAddress& ipAddr, const MacAddre
 StringList NXCORE_EXPORTABLE SplitCommandLine(const wchar_t *command);
 
 void SendTrapMappingsToClient(ClientSession *session, uint32_t requestId);
-void CreateTrapMappingMessage(NXCPMessage *msg);
-uint32_t CreateNewTrapMapping(uint32_t *trapId);
-uint32_t UpdateTrapMappingFromMsg(const NXCPMessage& msg);
-uint32_t DeleteTrapMapping(uint32_t id);
-json_t *CreateTrapMappingExportRecord(uint32_t id);
-uint32_t ResolveTrapMappingGuid(const uuid& guid);
+void NXCORE_EXPORTABLE CreateTrapMappingMessage(NXCPMessage *msg);
+uint32_t NXCORE_EXPORTABLE CreateNewTrapMapping(uint32_t *trapId);
+uint32_t NXCORE_EXPORTABLE CreateTrapMappingFromJson(json_t *json, uint32_t *trapId);
+uint32_t NXCORE_EXPORTABLE UpdateTrapMappingFromMsg(const NXCPMessage& msg);
+uint32_t NXCORE_EXPORTABLE ModifyTrapMappingFromJson(uint32_t id, json_t *json, json_t **oldValue, json_t **newValue);
+uint32_t NXCORE_EXPORTABLE DeleteTrapMapping(uint32_t id);
+json_t NXCORE_EXPORTABLE *GetTrapMappingsAsJson();
+json_t NXCORE_EXPORTABLE *GetTrapMappingAsJson(uint32_t id);
+json_t NXCORE_EXPORTABLE *CreateTrapMappingExportRecord(uint32_t id);
+uint32_t NXCORE_EXPORTABLE ResolveTrapMappingGuid(const uuid& guid);
 void AddTrapMappingToList(const shared_ptr<SNMPTrapMapping>& tm);
 shared_ptr<SNMPTrapMapping> FindBestMatchTrapMapping(const SNMP_ObjectId& oid);
 

@@ -264,6 +264,7 @@ json_t *MappingTable::toJson() const
 {
    json_t *root = json_object();
 
+   json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "guid", json_string_t(m_guid.toString()));
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "description", json_string_t(m_description));
@@ -303,13 +304,13 @@ NXSL_Value *MappingTable::getKeysForNXSL(NXSL_VM *vm) const
 /**
  * Create mapping table object from JSON
  */
-MappingTable *MappingTable::createFromJson(json_t *json)
+MappingTable *MappingTable::createFromJson(json_t *json, uint32_t id)
 {
    uuid guid = json_object_get_uuid(json, "guid");
    if (guid.isNull())
       guid = uuid::generate();
 
-   MappingTable *mt = new MappingTable(0, guid, MemCopyString(_T("")), 0, MemCopyString(_T("")));
+   MappingTable *mt = new MappingTable(id, guid, MemCopyString(_T("")), 0, MemCopyString(_T("")));
    mt->updateFromJson(json);
    return mt;
 }
@@ -391,81 +392,175 @@ static void NotifyClients(ClientSession *session, std::pair<uint32_t, uint32_t> 
 }
 
 /**
+ * Notify client sessions about mapping table change
+ */
+static void NotifyOnMappingTableChange(uint32_t code, uint32_t id)
+{
+   std::pair<uint32_t, uint32_t> context(code, id);
+   EnumerateClientSessions(NotifyClients, &context);
+}
+
+/**
+ * Find index of mapping table with given ID. Caller must hold lock.
+ */
+static int FindMappingTableIndex(uint32_t id)
+{
+   for(int i = 0; i < s_mappingTables.size(); i++)
+   {
+      if (s_mappingTables.get(i)->getId() == id)
+         return i;
+   }
+   return -1;
+}
+
+/**
+ * Check if other mapping table with same name or GUID exists. Caller must hold lock.
+ */
+static bool IsMappingTableConflict(const MappingTable *mt)
+{
+   for(int i = 0; i < s_mappingTables.size(); i++)
+   {
+      const MappingTable *t = s_mappingTables.get(i);
+      if ((t->getId() != mt->getId()) && (!wcsicmp(t->getName(), mt->getName()) || t->getGuid().equals(mt->getGuid())))
+         return true;
+   }
+   return false;
+}
+
+/**
+ * Assign new ID to mapping table, save it to database, and add to the list. Caller must hold write lock.
+ * List takes ownership of table object on success.
+ */
+static uint32_t AddMappingTable(MappingTable *mt, GenericClientSession *session)
+{
+   mt->createUniqueId();
+   if (!mt->saveToDatabase())
+      return RCC_DB_FAILURE;
+
+   s_mappingTables.add(mt);
+
+   json_t *newValue = mt->toJson();
+   session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, nullptr, newValue, L"Mapping table %s [%u] created", mt->getName(), mt->getId());
+   json_decref(newValue);
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Created new mapping table \"%s\" [%u]", mt->getName(), mt->getId());
+   return RCC_SUCCESS;
+}
+
+/**
+ * Save mapping table to database and replace table at given index with it. Caller must hold write lock.
+ * List takes ownership of table object on success.
+ */
+static uint32_t ReplaceMappingTable(int index, MappingTable *mt, GenericClientSession *session)
+{
+   if (!mt->saveToDatabase())
+      return RCC_DB_FAILURE;
+
+   json_t *oldValue = s_mappingTables.get(index)->toJson();
+   json_t *newValue = mt->toJson();
+   session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, L"Mapping table %s [%u] updated", mt->getName(), mt->getId());
+   json_decref(oldValue);
+   json_decref(newValue);
+
+   s_mappingTables.set(index, mt);
+
+   nxlog_debug_tag(DEBUG_TAG, 4, L"Mapping table \"%s\" [%u] updated", mt->getName(), mt->getId());
+   return RCC_SUCCESS;
+}
+
+/**
  * Create/update mapping table. If table ID is 0, new table will be created,
  * otherwise existing table with same ID updated.
  *
  * @param msg NXCP message with table's data
  * @return RCC
  */
-uint32_t UpdateMappingTable(const NXCPMessage& msg, uint32_t *newId, ClientSession *session)
+uint32_t UpdateMappingTable(const NXCPMessage& msg, uint32_t *newId, GenericClientSession *session)
 {
-	uint32_t rcc;
-	MappingTable *mt = MappingTable::createFromMessage(msg);
-	s_mappingTablesLock.writeLock();
-	if (mt->getId() != 0)
-	{
-		rcc = RCC_INVALID_MAPPING_TABLE_ID;
-		for(int i = 0; i < s_mappingTables.size(); i++)
-		{
-			if (s_mappingTables.get(i)->getId() == mt->getId())
-			{
-				if (mt->saveToDatabase())
-				{
-				   json_t *oldValue = s_mappingTables.get(i)->toJson();
-				   json_t *newValue = mt->toJson();
-               session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, _T("Mapping table %s [%u] updated"), mt->getName(), mt->getId());
-               json_decref(oldValue);
-               json_decref(newValue);
+   uint32_t rcc;
+   MappingTable *mt = MappingTable::createFromMessage(msg);
+   s_mappingTablesLock.writeLock();
+   if (mt->getId() != 0)
+   {
+      int index = FindMappingTableIndex(mt->getId());
+      rcc = (index != -1) ? ReplaceMappingTable(index, mt, session) : RCC_INVALID_MAPPING_TABLE_ID;
+   }
+   else
+   {
+      rcc = AddMappingTable(mt, session);
+   }
+   uint32_t id = mt->getId();
+   s_mappingTablesLock.unlock();
 
-					s_mappingTables.set(i, mt);
-					*newId = mt->getId();
-					rcc = RCC_SUCCESS;
+   if (rcc == RCC_SUCCESS)
+   {
+      *newId = id;
+      NotifyOnMappingTableChange(NX_NOTIFY_MAPTBL_CHANGED, id);
+   }
+   else
+   {
+      delete mt;
+   }
 
-					nxlog_debug_tag(DEBUG_TAG, 4, _T("Mapping table \"%s\" [%d] updated"), mt->getName(), mt->getId());
-				}
-				else
-				{
-					rcc = RCC_DB_FAILURE;
-				}
-				break;
-			}
-		}
-	}
-	else
-	{
-		mt->createUniqueId();
-		if (mt->saveToDatabase())
-		{
-			s_mappingTables.add(mt);
-			*newId = mt->getId();
-			rcc = RCC_SUCCESS;
+   return rcc;
+}
 
-         json_t *newValue = mt->toJson();
-         session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, nullptr, newValue, _T("Mapping table %s [%u] created"), mt->getName(), mt->getId());
-         json_decref(newValue);
+/**
+ * Create new mapping table from JSON document. Table GUID is taken from document if present.
+ *
+ * @return RCC (RCC_OBJECT_ALREADY_EXISTS if table with same name or GUID already exists)
+ */
+uint32_t CreateMappingTableFromJson(json_t *json, uint32_t *newId, GenericClientSession *session)
+{
+   MappingTable *mt = MappingTable::createFromJson(json);
+   s_mappingTablesLock.writeLock();
+   uint32_t rcc = IsMappingTableConflict(mt) ? RCC_OBJECT_ALREADY_EXISTS : AddMappingTable(mt, session);
+   uint32_t id = mt->getId();
+   s_mappingTablesLock.unlock();
 
-			nxlog_debug_tag(DEBUG_TAG, 4, _T("Created new mapping table \"%s\" [%d]"), mt->getName(), mt->getId());
-		}
-		else
-		{
-			rcc = RCC_DB_FAILURE;
-		}
-	}
+   if (rcc == RCC_SUCCESS)
+   {
+      *newId = id;
+      NotifyOnMappingTableChange(NX_NOTIFY_MAPTBL_CHANGED, id);
+   }
+   else
+   {
+      delete mt;
+   }
+   return rcc;
+}
 
-	std::pair<uint32_t, uint32_t> context(NX_NOTIFY_MAPTBL_CHANGED, mt->getId());
+/**
+ * Modify existing mapping table from JSON document. Only fields present in the document are changed;
+ * if "elements" is present, it replaces all table elements. Table ID and GUID cannot be changed.
+ *
+ * @return RCC (RCC_OBJECT_ALREADY_EXISTS if other table with same name already exists)
+ */
+uint32_t ModifyMappingTableFromJson(uint32_t id, json_t *json, GenericClientSession *session)
+{
+   s_mappingTablesLock.writeLock();
 
-	s_mappingTablesLock.unlock();
+   int index = FindMappingTableIndex(id);
+   if (index == -1)
+   {
+      s_mappingTablesLock.unlock();
+      return RCC_INVALID_MAPPING_TABLE_ID;
+   }
 
-	if (rcc == RCC_SUCCESS)
-	{
-		EnumerateClientSessions(NotifyClients, &context);
-	}
-	else
-	{
-		delete mt;
-	}
+   json_t *merged = s_mappingTables.get(index)->toJson();
+   json_object_update(merged, json);
+   json_object_set_new(merged, "guid", s_mappingTables.get(index)->getGuid().toJson());
+   MappingTable *mt = MappingTable::createFromJson(merged, id);
+   json_decref(merged);
 
-	return rcc;
+   uint32_t rcc = IsMappingTableConflict(mt) ? RCC_OBJECT_ALREADY_EXISTS : ReplaceMappingTable(index, mt, session);
+   s_mappingTablesLock.unlock();
+
+   if (rcc == RCC_SUCCESS)
+      NotifyOnMappingTableChange(NX_NOTIFY_MAPTBL_CHANGED, id);
+   else
+      delete mt;
+   return rcc;
 }
 
 /**
@@ -474,7 +569,7 @@ uint32_t UpdateMappingTable(const NXCPMessage& msg, uint32_t *newId, ClientSessi
  * @param id mapping table ID
  * @return RCC
  */
-uint32_t DeleteMappingTable(uint32_t id, ClientSession *session)
+uint32_t DeleteMappingTable(uint32_t id, GenericClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_MAPPING_TABLE_ID;
 	s_mappingTablesLock.writeLock();
@@ -504,10 +599,7 @@ uint32_t DeleteMappingTable(uint32_t id, ClientSession *session)
 	}
 	s_mappingTablesLock.unlock();
 	if (rcc == RCC_SUCCESS)
-	{
-	   std::pair<uint32_t, uint32_t> context(NX_NOTIFY_MAPTBL_DELETED, id);
-		EnumerateClientSessions(NotifyClients, &context);
-	}
+	   NotifyOnMappingTableChange(NX_NOTIFY_MAPTBL_DELETED, id);
 	return rcc;
 }
 
@@ -536,6 +628,21 @@ uint32_t GetMappingTable(uint32_t id, NXCPMessage *msg)
 }
 
 /**
+ * Get single mapping table as JSON document
+ *
+ * @param id mapping table ID
+ * @return JSON document or nullptr if table not found
+ */
+json_t *GetMappingTableAsJson(uint32_t id)
+{
+   s_mappingTablesLock.readLock();
+   int index = FindMappingTableIndex(id);
+   json_t *json = (index != -1) ? s_mappingTables.get(index)->toJson() : nullptr;
+   s_mappingTablesLock.unlock();
+   return json;
+}
+
+/**
  * List all mapping tables
  *
  * @param msg NXCP mesage to fill
@@ -558,6 +665,28 @@ uint32_t ListMappingTables(NXCPMessage *msg)
 	}
 	s_mappingTablesLock.unlock();
 	return RCC_SUCCESS;
+}
+
+/**
+ * List all mapping tables (without elements) as JSON array
+ */
+json_t *ListMappingTablesAsJson()
+{
+   json_t *output = json_array();
+   s_mappingTablesLock.readLock();
+   for(int i = 0; i < s_mappingTables.size(); i++)
+   {
+      MappingTable *mt = s_mappingTables.get(i);
+      json_t *json = json_object();
+      json_object_set_new(json, "id", json_integer(mt->getId()));
+      json_object_set_new(json, "guid", mt->getGuid().toJson());
+      json_object_set_new(json, "name", json_string_t(mt->getName()));
+      json_object_set_new(json, "description", json_string_t(mt->getDescription()));
+      json_object_set_new(json, "flags", json_integer(mt->getFlags()));
+      json_array_append_new(output, json);
+   }
+   s_mappingTablesLock.unlock();
+   return output;
 }
 
 /**

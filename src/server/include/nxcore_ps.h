@@ -28,10 +28,11 @@
  */
 void PersistentStorageInit();
 void PersistentStorageDestroy();
-void SetPersistentStorageValue(const TCHAR *key, const TCHAR *value);
-bool DeletePersistentStorageValue(const TCHAR *key);
-SharedString GetPersistentStorageValue(const TCHAR *key);
-void GetPersistentStorageList(NXCPMessage *msg);
+void NXCORE_EXPORTABLE SetPersistentStorageValue(const TCHAR *key, const TCHAR *value);
+bool NXCORE_EXPORTABLE DeletePersistentStorageValue(const TCHAR *key);
+SharedString NXCORE_EXPORTABLE GetPersistentStorageValue(const TCHAR *key);
+void NXCORE_EXPORTABLE GetPersistentStorageList(NXCPMessage *msg);
+json_t NXCORE_EXPORTABLE *GetPersistentStorageListAsJson();
 void UpdatePStorageDatabase(DB_HANDLE hdb, uint32_t watchdogId);
 
 /**

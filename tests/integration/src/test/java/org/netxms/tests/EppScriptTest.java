@@ -101,7 +101,7 @@ public class EppScriptTest extends AbstractSessionTest
       {
          testRule.setActionScript("");
          session.saveEventProcessingPolicy(policy);
-         session.deletePersistentStorageValue(key);
+         TestHelperForEpp.deletePersistentStorageValueIfExists(session, key);
       }
    }
 }

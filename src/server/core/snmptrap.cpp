@@ -391,7 +391,7 @@ json_t *SNMPTrapMapping::createExportRecord() const
 }
 
 /**
- * Serialize object to JSON (for audit purposes)
+ * Serialize object to JSON (used by REST API and for audit purposes)
  */
 json_t *SNMPTrapMapping::toJson() const
 {
@@ -403,7 +403,7 @@ json_t *SNMPTrapMapping::toJson() const
    json_object_set_new(trap, "oid", json_string_t(m_objectId.toString()));
    json_object_set_new(trap, "description", json_string_t(m_description));
    json_object_set_new(trap, "eventTag", json_string_t(m_eventTag));
-   json_object_set_new(trap, "event", json_integer(m_eventCode));   
+   json_object_set_new(trap, "eventCode", json_integer(m_eventCode));
    json_object_set_new(trap, "transformationScript", json_string_t(m_scriptSource));
    
    if (m_mappings.size() > 0)
@@ -905,4 +905,166 @@ shared_ptr<SNMPTrapMapping> FindBestMatchTrapMapping(const SNMP_ObjectId& oid)
    }
 
    return (matchLen > 0) ? s_trapMappings.getShared(matchIndex) : shared_ptr<SNMPTrapMapping>();
+}
+
+/**
+ * Get all trap mappings as JSON array
+ */
+json_t *GetTrapMappingsAsJson()
+{
+   json_t *output = json_array();
+   LockGuard lockGuard(s_trapMappingLock);
+   for(int i = 0; i < s_trapMappings.size(); i++)
+      json_array_append_new(output, s_trapMappings.get(i)->toJson());
+   return output;
+}
+
+/**
+ * Find index of trap mapping with given ID. Caller must hold lock.
+ */
+static int FindTrapMappingIndex(uint32_t id)
+{
+   for(int i = 0; i < s_trapMappings.size(); i++)
+   {
+      if (s_trapMappings.get(i)->getId() == id)
+         return i;
+   }
+   return -1;
+}
+
+/**
+ * Get single trap mapping as JSON document. Returns nullptr if trap mapping with given ID does not exist.
+ */
+json_t *GetTrapMappingAsJson(uint32_t id)
+{
+   LockGuard lockGuard(s_trapMappingLock);
+   int index = FindTrapMappingIndex(id);
+   return (index != -1) ? s_trapMappings.get(index)->toJson() : nullptr;
+}
+
+/**
+ * Validate trap mapping OID and parameter mappings
+ */
+static bool ValidateTrapMapping(const SNMPTrapMapping& tm)
+{
+   if (!tm.getOid().isValid())
+      return false;
+   for(int i = 0; i < tm.getParameterMappingCount(); i++)
+   {
+      const SNMPTrapParameterMapping *pm = tm.getParameterMapping(i);
+      if (!pm->isPositional() && !pm->getOid()->isValid())
+         return false;
+   }
+   return true;
+}
+
+/**
+ * Save trap mapping to database (insert new record or update existing one)
+ */
+static uint32_t SaveTrapMappingToDatabase(SNMPTrapMapping *tm, bool newRecord)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = newRecord ?
+      DBPrepare(hdb, L"INSERT INTO snmp_trap_cfg (snmp_oid,event_code,description,user_tag,transformation_script,trap_id,guid) VALUES (?,?,?,?,?,?,?)") :
+      DBPrepare(hdb, L"UPDATE snmp_trap_cfg SET snmp_oid=?,event_code=?,description=?,user_tag=?,transformation_script=? WHERE trap_id=?");
+   if (hStmt == nullptr)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return RCC_DB_FAILURE;
+   }
+
+   wchar_t oid[1024];
+   tm->getOid().toString(oid, 1024);
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, oid, DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, tm->getEventCode());
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, tm->getDescription(), DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, tm->getEventTag(), DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_TEXT, tm->getScriptSource(), DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, tm->getId());
+   if (newRecord)
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, tm->getGuid());
+
+   uint32_t rcc = RCC_DB_FAILURE;
+   if (DBBegin(hdb))
+   {
+      if (DBExecute(hStmt) && tm->saveParameterMapping(hdb))
+      {
+         DBCommit(hdb);
+         rcc = RCC_SUCCESS;
+      }
+      else
+      {
+         DBRollback(hdb);
+      }
+   }
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Create new trap mapping from JSON document. Event code defaults to SNMP_UNMATCHED_TRAP if not provided.
+ *
+ * @return RCC (RCC_INVALID_EVENT_CODE if event code is unknown, RCC_INVALID_ARGUMENT if trap OID or parameter OID is invalid)
+ */
+uint32_t CreateTrapMappingFromJson(json_t *json, uint32_t *trapId)
+{
+   uint32_t eventCode = json_object_get_uint32(json, "eventCode", EVENT_SNMP_UNMATCHED_TRAP);
+   if (FindEventTemplateByCode(eventCode) == nullptr)
+      return RCC_INVALID_EVENT_CODE;
+
+   auto tm = make_shared<SNMPTrapMapping>(json, uuid::generate(), 0, eventCode, true);
+   if (!ValidateTrapMapping(*tm))
+      return RCC_INVALID_ARGUMENT;
+
+   uint32_t rcc = SaveTrapMappingToDatabase(tm.get(), true);
+   if (rcc == RCC_SUCCESS)
+   {
+      AddTrapMappingToList(tm);
+      tm->notifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_CREATED);
+      *trapId = tm->getId();
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Created new trap mapping [%u]", tm->getId());
+   }
+   return rcc;
+}
+
+/**
+ * Modify existing trap mapping from JSON document. Only fields present in the document are changed;
+ * if "parameters" is present, it replaces all parameter mappings. Trap mapping ID and GUID cannot be changed.
+ * On success, old and new trap mapping representations are returned via oldValue and newValue (caller must free them).
+ *
+ * @return RCC (RCC_INVALID_TRAP_ID if trap mapping does not exist, RCC_INVALID_EVENT_CODE if event code is unknown,
+ *         RCC_INVALID_ARGUMENT if trap OID or parameter OID is invalid)
+ */
+uint32_t ModifyTrapMappingFromJson(uint32_t id, json_t *json, json_t **oldValue, json_t **newValue)
+{
+   json_t *eventCodeField = json_object_get(json, "eventCode");
+   if ((eventCodeField != nullptr) && (FindEventTemplateByCode(json_object_get_uint32(json, "eventCode")) == nullptr))
+      return RCC_INVALID_EVENT_CODE;
+
+   LockGuard lockGuard(s_trapMappingLock);
+
+   int index = FindTrapMappingIndex(id);
+   if (index == -1)
+      return RCC_INVALID_TRAP_ID;
+
+   SNMPTrapMapping *curr = s_trapMappings.get(index);
+   json_t *merged = curr->toJson();
+   json_object_update(merged, json);
+   auto tm = make_shared<SNMPTrapMapping>(merged, curr->getGuid(), id, json_object_get_uint32(merged, "eventCode"), true);
+   json_decref(merged);
+
+   if (!ValidateTrapMapping(*tm))
+      return RCC_INVALID_ARGUMENT;
+
+   uint32_t rcc = SaveTrapMappingToDatabase(tm.get(), false);
+   if (rcc == RCC_SUCCESS)
+   {
+      *oldValue = curr->toJson();
+      *newValue = tm->toJson();
+      s_trapMappings.replace(index, tm);
+      tm->notifyOnTrapCfgChange(NX_NOTIFY_TRAPCFG_MODIFIED);
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Trap mapping [%u] updated", id);
+   }
+   return rcc;
 }
