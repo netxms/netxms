@@ -110,6 +110,11 @@ int H_AssetAttributeUpdate(Context *context);
 int H_AssetAttributeDelete(Context *context);
 int H_BackgroundTaskDetails(Context *context);
 int H_BusinessServiceAvailability(Context *context);
+int H_BusinessServiceCheckCreate(Context *context);
+int H_BusinessServiceCheckDelete(Context *context);
+int H_BusinessServiceCheckDetails(Context *context);
+int H_BusinessServiceChecks(Context *context);
+int H_BusinessServiceCheckUpdate(Context *context);
 int H_CloudConnectors(Context *context);
 int H_TrafficConnectors(Context *context);
 int H_GetConnectionHistory(Context *context);
@@ -780,6 +785,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/objects/:object-id/availability")
       .GET(H_BusinessServiceAvailability)
+      .build();
+   RouteBuilder("v1/objects/:object-id/business-service-checks")
+      .GET(H_BusinessServiceChecks)
+      .POST(H_BusinessServiceCheckCreate)
+      .build();
+   RouteBuilder("v1/objects/:object-id/business-service-checks/:check-id")
+      .GET(H_BusinessServiceCheckDetails)
+      .PATCH(H_BusinessServiceCheckUpdate)
+      .DELETE(H_BusinessServiceCheckDelete)
       .build();
    RouteBuilder("v1/objects/:object-id/floor-plan")
       .GET(H_RoomFloorPlan)

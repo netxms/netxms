@@ -6658,7 +6658,9 @@ public:
    int execute(const shared_ptr<BusinessServiceTicketData>& ticket);
 
    void modifyFromMessage(const NXCPMessage& request);
+   uint32_t modifyFromJSON(json_t *data, MutableString *errorText);
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   json_t *toJson() const;
    bool saveToDatabase(DB_HANDLE hdb) const;
 
    void updateFromPrototype(const BusinessServiceCheck& prototype);
@@ -6723,10 +6725,13 @@ public:
    virtual json_t *toJson(uint32_t flags = 0) override;
 
    unique_ptr<SharedObjectArray<BusinessServiceCheck>> getChecks() const;
+   shared_ptr<BusinessServiceCheck> getCheck(uint32_t checkId) const;
    uint32_t getObjectStatusThreshhold() const { return m_objectStatusThreshhold; }
    uint32_t getDciStatusThreshhold() const { return m_dciStatusThreshhold; }
 
    uint32_t modifyCheckFromMessage(const NXCPMessage& request);
+   uint32_t createCheckFromJSON(json_t *data, shared_ptr<BusinessServiceCheck> *check, MutableString *errorText);
+   uint32_t modifyCheckFromJSON(uint32_t checkId, json_t *data, MutableString *errorText);
    uint32_t deleteCheck(uint32_t checkId);
 };
 

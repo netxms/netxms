@@ -105,3 +105,214 @@ int H_BusinessServiceAvailability(Context *context)
    json_decref(output);
    return 200;
 }
+
+/**
+ * Find business service or business service prototype addressed by request and check user's access to it.
+ * Returns nullptr and sets HTTP status code on failure.
+ */
+static shared_ptr<BaseBusinessService> LoadBusinessService(Context *context, uint32_t requiredAccess, int *httpCode)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   if (objectId == 0)
+   {
+      *httpCode = 400;
+      return shared_ptr<BaseBusinessService>();
+   }
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+   {
+      *httpCode = 404;
+      return shared_ptr<BaseBusinessService>();
+   }
+
+   if ((object->getObjectClass() != OBJECT_BUSINESSSERVICE) && (object->getObjectClass() != OBJECT_BUSINESSSERVICEPROTO))
+   {
+      context->setErrorResponse("Object is not a business service or business service prototype");
+      *httpCode = 400;
+      return shared_ptr<BaseBusinessService>();
+   }
+
+   if (!object->checkAccessRights(context->getUserId(), requiredAccess))
+   {
+      context->writeAuditLog(AUDIT_OBJECTS, false, objectId, (requiredAccess == OBJECT_ACCESS_READ) ?
+            L"Access denied on reading business service checks of %s" : L"Access denied on modifying business service checks of %s", object->getName());
+      *httpCode = 403;
+      return shared_ptr<BaseBusinessService>();
+   }
+
+   return static_pointer_cast<BaseBusinessService>(object);
+}
+
+/**
+ * Map RCC from business service check management methods to HTTP status code
+ */
+static int MapCheckRCC(Context *context, uint32_t rcc, const MutableString& errorText)
+{
+   switch(rcc)
+   {
+      case RCC_INVALID_BUSINESS_CHECK_ID:
+         context->setErrorResponse("Business service check not found");
+         return 404;
+      case RCC_AUTO_CREATED_CHECK:
+         context->setErrorResponse("Check was created automatically (from prototype or by auto-binding) and cannot be modified");
+         return 409;
+      case RCC_INVALID_ARGUMENT:
+         context->setErrorResponse(errorText.cstr());
+         return 400;
+      case RCC_NXSL_COMPILATION_ERROR:
+         context->setErrorResponse(StringBuffer(L"Script compilation error: ").append(errorText).cstr());
+         return 400;
+      default:
+         context->setErrorResponse("Internal server error");
+         return 500;
+   }
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/business-service-checks
+ */
+int H_BusinessServiceChecks(Context *context)
+{
+   int httpCode;
+   shared_ptr<BaseBusinessService> service = LoadBusinessService(context, OBJECT_ACCESS_READ, &httpCode);
+   if (service == nullptr)
+      return httpCode;
+
+   json_t *output = json_array();
+   unique_ptr<SharedObjectArray<BusinessServiceCheck>> checks = service->getChecks();
+   for (const shared_ptr<BusinessServiceCheck>& check : *checks)
+      json_array_append_new(output, check->toJson());
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for POST /v1/objects/:object-id/business-service-checks
+ */
+int H_BusinessServiceCheckCreate(Context *context)
+{
+   int httpCode;
+   shared_ptr<BaseBusinessService> service = LoadBusinessService(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (service == nullptr)
+      return httpCode;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Missing or invalid JSON body");
+      return 400;
+   }
+
+   shared_ptr<BusinessServiceCheck> check;
+   MutableString errorText;
+   uint32_t rcc = service->createCheckFromJSON(request, &check, &errorText);
+   if (rcc != RCC_SUCCESS)
+      return MapCheckRCC(context, rcc, errorText);
+
+   json_t *output = check->toJson();
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, service->getId(), nullptr, output,
+         L"Business service check [%u] created in %s", check->getId(), service->getName());
+   context->setResponseData(output);
+   json_decref(output);
+   return 201;
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/business-service-checks/:check-id
+ */
+int H_BusinessServiceCheckDetails(Context *context)
+{
+   int httpCode;
+   shared_ptr<BaseBusinessService> service = LoadBusinessService(context, OBJECT_ACCESS_READ, &httpCode);
+   if (service == nullptr)
+      return httpCode;
+
+   shared_ptr<BusinessServiceCheck> check = service->getCheck(context->getPlaceholderValueAsUInt32(L"check-id"));
+   if (check == nullptr)
+   {
+      context->setErrorResponse("Business service check not found");
+      return 404;
+   }
+
+   json_t *output = check->toJson();
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for PATCH /v1/objects/:object-id/business-service-checks/:check-id
+ */
+int H_BusinessServiceCheckUpdate(Context *context)
+{
+   int httpCode;
+   shared_ptr<BaseBusinessService> service = LoadBusinessService(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (service == nullptr)
+      return httpCode;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Missing or invalid JSON body");
+      return 400;
+   }
+
+   uint32_t checkId = context->getPlaceholderValueAsUInt32(L"check-id");
+   shared_ptr<BusinessServiceCheck> check = service->getCheck(checkId);
+   if (check == nullptr)
+   {
+      context->setErrorResponse("Business service check not found");
+      return 404;
+   }
+
+   json_t *oldValue = check->toJson();
+   MutableString errorText;
+   uint32_t rcc = service->modifyCheckFromJSON(checkId, request, &errorText);
+   if (rcc != RCC_SUCCESS)
+   {
+      json_decref(oldValue);
+      return MapCheckRCC(context, rcc, errorText);
+   }
+
+   json_t *output = check->toJson();
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, service->getId(), oldValue, output,
+         L"Business service check [%u] modified in %s", checkId, service->getName());
+   json_decref(oldValue);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for DELETE /v1/objects/:object-id/business-service-checks/:check-id
+ */
+int H_BusinessServiceCheckDelete(Context *context)
+{
+   int httpCode;
+   shared_ptr<BaseBusinessService> service = LoadBusinessService(context, OBJECT_ACCESS_MODIFY, &httpCode);
+   if (service == nullptr)
+      return httpCode;
+
+   uint32_t checkId = context->getPlaceholderValueAsUInt32(L"check-id");
+   shared_ptr<BusinessServiceCheck> check = service->getCheck(checkId);
+   if (check == nullptr)
+   {
+      context->setErrorResponse("Business service check not found");
+      return 404;
+   }
+
+   json_t *oldValue = check->toJson();
+   uint32_t rcc = service->deleteCheck(checkId);
+   if (rcc != RCC_SUCCESS)
+   {
+      json_decref(oldValue);
+      return MapCheckRCC(context, rcc, MutableString());
+   }
+
+   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, service->getId(), oldValue, nullptr,
+         L"Business service check [%u] deleted from %s", checkId, service->getName());
+   json_decref(oldValue);
+   return 204;
+}

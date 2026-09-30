@@ -76,6 +76,25 @@ unique_ptr<SharedObjectArray<BusinessServiceCheck>> BaseBusinessService::getChec
 }
 
 /**
+ * Get check by ID
+ */
+shared_ptr<BusinessServiceCheck> BaseBusinessService::getCheck(uint32_t checkId) const
+{
+   shared_ptr<BusinessServiceCheck> check;
+   checksLock();
+   for (const shared_ptr<BusinessServiceCheck>& c : m_checks)
+   {
+      if (c->getId() == checkId)
+      {
+         check = c;
+         break;
+      }
+   }
+   checksUnlock();
+   return check;
+}
+
+/**
  * Load business service checks from database
  */
 bool BaseBusinessService::loadChecksFromDatabase(DB_HANDLE hdb)
@@ -182,6 +201,53 @@ uint32_t BaseBusinessService::modifyCheckFromMessage(const NXCPMessage& request)
    }
 
    return rcc;
+}
+
+/**
+ * Create business service check from JSON document. Returns client RCC.
+ */
+uint32_t BaseBusinessService::createCheckFromJSON(json_t *data, shared_ptr<BusinessServiceCheck> *check, MutableString *errorText)
+{
+   auto newCheck = make_shared<BusinessServiceCheck>(m_id);
+   uint32_t rcc = newCheck->modifyFromJSON(data, errorText);
+   if (rcc != RCC_SUCCESS)
+      return rcc;
+
+   checksLock();
+   m_checks.add(newCheck);
+   setModified(MODIFY_BIZSVC_CHECKS, false);
+   checksUnlock();
+
+   NotifyClientsOnBusinessServiceCheckUpdate(*this, newCheck);
+   onCheckModify(newCheck);
+
+   *check = newCheck;
+   return RCC_SUCCESS;
+}
+
+/**
+ * Modify business service check from JSON document. Checks created automatically (from prototype
+ * or by auto-binding) cannot be modified. Returns client RCC.
+ */
+uint32_t BaseBusinessService::modifyCheckFromJSON(uint32_t checkId, json_t *data, MutableString *errorText)
+{
+   shared_ptr<BusinessServiceCheck> check = getCheck(checkId);
+   if (check == nullptr)
+      return RCC_INVALID_BUSINESS_CHECK_ID;
+   if (check->getPrototypeServiceId() != 0)
+      return RCC_AUTO_CREATED_CHECK;
+
+   uint32_t rcc = check->modifyFromJSON(data, errorText);
+   if (rcc != RCC_SUCCESS)
+      return rcc;
+
+   checksLock();
+   setModified(MODIFY_BIZSVC_CHECKS, false);
+   checksUnlock();
+
+   NotifyClientsOnBusinessServiceCheckUpdate(*this, check);
+   onCheckModify(check);
+   return RCC_SUCCESS;
 }
 
 /**

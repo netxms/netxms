@@ -138,9 +138,11 @@ void BusinessServiceCheck::updateFromPrototype(const BusinessServiceCheck& proto
 void BusinessServiceCheck::modifyFromMessage(const NXCPMessage& request)
 {
 	lock();
+	bool recompile = false;
 	if (request.isFieldExist(VID_BIZSVC_CHECK_TYPE))
    {
       m_type = BusinessServiceCheckTypeFromInt(request.getFieldAsInt16(VID_BIZSVC_CHECK_TYPE));
+      recompile = true;
    }
 	if (request.isFieldExist(VID_RELATED_OBJECT))
    {
@@ -154,7 +156,7 @@ void BusinessServiceCheck::modifyFromMessage(const NXCPMessage& request)
    {
 		MemFree(m_script);
       m_script = request.getFieldAsString(VID_SCRIPT);
-		compileScript();
+      recompile = true;
    }
 	if (request.isFieldExist(VID_DESCRIPTION))
    {
@@ -164,18 +166,155 @@ void BusinessServiceCheck::modifyFromMessage(const NXCPMessage& request)
    {
       m_statusThreshold = request.getFieldAsInt32(VID_THRESHOLD);
    }
+   if (recompile)
+      compileScript();
 	unlock();
 }
 
 /**
- * Compile script if there is one
+ * Check type names used in JSON representation (indexed by BusinessServiceCheckType)
+ */
+static const char *s_checkTypeNames[] = { "none", "script", "dci", "object" };
+
+/**
+ * Read object or DCI ID from JSON document. Returns false if property is present but is not a valid ID.
+ */
+static bool ReadIdFromJSON(json_t *data, const char *tag, uint32_t *id)
+{
+   int64_t value = *id;
+   if (!json_object_update_integer(data, tag, &value) || (value < 0) || (value > 0xFFFFFFFF))
+      return false;
+   *id = static_cast<uint32_t>(value);
+   return true;
+}
+
+/**
+ * Modify check from JSON document. Document is validated completely before any change is applied,
+ * so check remains unchanged on error. Returns client RCC.
+ */
+uint32_t BusinessServiceCheck::modifyFromJSON(json_t *data, MutableString *errorText)
+{
+   LockGuard lockGuard(m_mutex);
+
+   BusinessServiceCheckType type = m_type;
+   json_t *jtype = json_object_get(data, "type");
+   if (jtype != nullptr)
+   {
+      const char *name = json_is_string(jtype) ? json_string_value(jtype) : "";
+      if (!stricmp(name, "script"))
+         type = BusinessServiceCheckType::SCRIPT;
+      else if (!stricmp(name, "dci"))
+         type = BusinessServiceCheckType::DCI;
+      else if (!stricmp(name, "object"))
+         type = BusinessServiceCheckType::OBJECT;
+      else
+      {
+         *errorText = L"type must be one of \"object\", \"dci\", or \"script\"";
+         return RCC_INVALID_ARGUMENT;
+      }
+   }
+
+   uint32_t relatedObject = m_relatedObject;
+   uint32_t relatedDCI = m_relatedDCI;
+   if (!ReadIdFromJSON(data, "relatedObjectId", &relatedObject) || !ReadIdFromJSON(data, "relatedDciId", &relatedDCI))
+   {
+      *errorText = L"relatedObjectId and relatedDciId must be non-negative 32 bit integers";
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   int64_t threshold = m_statusThreshold;
+   if (!json_object_update_integer(data, "statusThreshold", &threshold) || (threshold < 0) || (threshold > STATUS_CRITICAL))
+   {
+      *errorText = L"statusThreshold must be an integer between 0 (use default) and 4 (critical)";
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   json_t *jdescription = json_object_get(data, "description");
+   if ((jdescription != nullptr) && !json_is_string(jdescription))
+   {
+      *errorText = L"description must be a string";
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   json_t *jscript = json_object_get(data, "script");
+   if ((jscript != nullptr) && !json_is_string(jscript) && !json_is_null(jscript))
+   {
+      *errorText = L"script must be a string or null";
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   bool scriptChanged = (jscript != nullptr);
+   wchar_t *script = scriptChanged ? (json_is_string(jscript) ? WideStringFromUTF8String(json_string_value(jscript)) : nullptr) : m_script;
+   NXSL_Program *compiledScript = nullptr;
+   bool recompile = scriptChanged || (type != m_type);
+   if (recompile && (type == BusinessServiceCheckType::SCRIPT) && (script != nullptr))
+   {
+      NXSL_CompilationDiagnostic diag;
+      NXSL_ServerEnv env;
+      compiledScript = NXSLCompile(script, &env, &diag);
+      if (compiledScript == nullptr)
+      {
+         *errorText = diag.errorText;
+         if (scriptChanged)
+            MemFree(script);
+         return RCC_NXSL_COMPILATION_ERROR;
+      }
+   }
+
+   m_type = type;
+   m_relatedObject = relatedObject;
+   m_relatedDCI = relatedDCI;
+   m_statusThreshold = static_cast<int>(threshold);
+   if (jdescription != nullptr)
+      m_description = SharedString(json_string_value(jdescription), "utf8");
+   if (scriptChanged)
+   {
+      MemFree(m_script);
+      m_script = script;
+   }
+   if (recompile)
+   {
+      delete m_compiledScript;
+      m_compiledScript = compiledScript;
+   }
+   return RCC_SUCCESS;
+}
+
+/**
+ * Serialize check to JSON
+ */
+json_t *BusinessServiceCheck::toJson() const
+{
+   json_t *root = json_object();
+   lock();
+   json_object_set_new(root, "id", json_integer(m_id));
+   json_object_set_new(root, "serviceId", json_integer(m_serviceId));
+   json_object_set_new(root, "type", json_string(s_checkTypeNames[static_cast<int>(m_type)]));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "relatedObjectId", json_integer(m_relatedObject));
+   json_object_set_new(root, "relatedDciId", json_integer(m_relatedDCI));
+   json_object_set_new(root, "statusThreshold", json_integer(m_statusThreshold));
+   json_object_set_new(root, "script", json_string_t(m_script));
+   json_object_set_new(root, "status", json_integer(m_status));
+   json_object_set_new(root, "failureReason", json_string_t(m_reason));
+   json_object_set_new(root, "prototypeServiceId", json_integer(m_prototypeServiceId));
+   json_object_set_new(root, "prototypeCheckId", json_integer(m_prototypeCheckId));
+   json_object_set_new(root, "autoCreated", json_boolean(m_prototypeServiceId != 0));
+   unlock();
+   return root;
+}
+
+/**
+ * Compile script if check is a script check and has a script. Previously compiled script is always
+ * discarded, so a check that is no longer a script check (or has no script) is left without one.
  */
 void BusinessServiceCheck::compileScript()
 {
+	delete m_compiledScript;
+	m_compiledScript = nullptr;
 	if ((m_type != BusinessServiceCheckType::SCRIPT) || (m_script == nullptr))
 	   return;
 
-	delete m_compiledScript;
    NXSL_CompilationDiagnostic diag;
    NXSL_ServerEnv env;
 	m_compiledScript = NXSLCompile(m_script, &env, &diag);

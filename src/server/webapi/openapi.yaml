@@ -7954,6 +7954,168 @@ paths:
           description: Unable to read business service history from database
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/business-service-checks:
+    parameters:
+      - name: object-id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Business service or business service prototype ID
+    get:
+      operationId: listBusinessServiceChecks
+      tags:
+        - Objects
+      summary: Get business service checks
+      description: |
+        Retrieve all checks of given business service or business service prototype. Requires read
+        access to the object.
+      responses:
+        '200':
+          description: List of checks.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessServiceCheck'
+        '400':
+          description: Object is not a business service or business service prototype.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Object or check not found.
+      security:
+        - BearerAuth: []
+    post:
+      operationId: createBusinessServiceCheck
+      tags:
+        - Objects
+      summary: Create business service check
+      description: |
+        Create new check in given business service or business service prototype. Checks created in a
+        prototype are propagated to all business services created from it. Omitted fields get default
+        values (type "object", description "Unnamed", no related object, default threshold). Requires
+        modify access to the object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessServiceCheckUpdate'
+      responses:
+        '201':
+          description: Check created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessServiceCheck'
+        '400':
+          description: Object is not a business service, invalid request body, or script compilation error.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Object or check not found.
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/business-service-checks/{check-id}:
+    parameters:
+      - name: object-id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Business service or business service prototype ID
+      - name: check-id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Check ID
+    get:
+      operationId: getBusinessServiceCheck
+      tags:
+        - Objects
+      summary: Get business service check
+      description: Retrieve single business service check. Requires read access to the object.
+      responses:
+        '200':
+          description: Check details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessServiceCheck'
+        '400':
+          description: Object is not a business service or business service prototype.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Object or check not found.
+      security:
+        - BearerAuth: []
+    patch:
+      operationId: updateBusinessServiceCheck
+      tags:
+        - Objects
+      summary: Modify business service check
+      description: |
+        Partially update business service check; only fields present in the request are changed. The
+        request is validated as a whole, so the check is left unchanged on error. Checks created
+        automatically (from prototype or by auto-binding) cannot be modified. Changes to a prototype
+        check are propagated to all business services created from the prototype. Requires modify
+        access to the object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessServiceCheckUpdate'
+      responses:
+        '200':
+          description: Check modified.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessServiceCheck'
+        '400':
+          description: Object is not a business service, invalid request body, or script compilation error.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Object or check not found.
+        '409':
+          description: Check was created automatically and cannot be modified.
+      security:
+        - BearerAuth: []
+    delete:
+      operationId: deleteBusinessServiceCheck
+      tags:
+        - Objects
+      summary: Delete business service check
+      description: |
+        Delete check from business service or business service prototype. Deleting a prototype check
+        also deletes checks created from it. Requires modify access to the object.
+      responses:
+        '204':
+          description: Check deleted.
+        '400':
+          description: Object is not a business service or business service prototype.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access denied.
+        '404':
+          description: Object or check not found.
+      security:
+        - BearerAuth: []
   /v1/objects/{object-id}/arp-cache:
     get:
       operationId: getArpCache
@@ -17935,6 +18097,69 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ArpCacheEntry'
+    BusinessServiceCheck:
+      type: object
+      properties:
+        id:
+          type: integer
+        serviceId:
+          type: integer
+          description: ID of business service or prototype owning this check
+        type:
+          type: string
+          enum: [object, dci, script, none]
+        description:
+          type: string
+        relatedObjectId:
+          type: integer
+          description: Object whose status is checked (object and DCI checks); for script checks, object passed to the script as $object (0 if none)
+        relatedDciId:
+          type: integer
+          description: DCI whose threshold state is checked (DCI checks)
+        statusThreshold:
+          type: integer
+          minimum: 0
+          maximum: 4
+          description: Object or DCI status at which check fails; 0 means use server default
+        script:
+          type: string
+          nullable: true
+          description: NXSL script source (script checks)
+        status:
+          type: integer
+          description: Current check status (0 = normal, 2 = minor, 4 = critical)
+        failureReason:
+          type: string
+          description: Reason of last failure
+        prototypeServiceId:
+          type: integer
+          description: ID of prototype this check was created from (equals serviceId for auto-bound checks), 0 for manually created checks
+        prototypeCheckId:
+          type: integer
+          description: ID of prototype check this check was created from, 0 if none
+        autoCreated:
+          type: boolean
+          description: True if check was created automatically (from prototype or by auto-binding) and cannot be modified
+    BusinessServiceCheckUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [object, dci, script]
+        description:
+          type: string
+        relatedObjectId:
+          type: integer
+        relatedDciId:
+          type: integer
+        statusThreshold:
+          type: integer
+          minimum: 0
+          maximum: 4
+        script:
+          type: string
+          nullable: true
+          description: NXSL script source; compiled on save when check type is script, compilation errors are reported as 400
     BusinessServiceTicket:
       type: object
       description: >-
