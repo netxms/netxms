@@ -25,6 +25,7 @@
 #ifdef _WIN32
 #include <winternl.h>
 #include <WtsApi32.h>
+#include <userenv.h>
 #define WTS_DEBUG_TAG   _T("wts")
 #endif
 
@@ -288,12 +289,22 @@ bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSession
       HANDLE primaryToken;
       if (DuplicateTokenEx(sessionToken, TOKEN_ALL_ACCESS, NULL, SecurityDelegation, TokenPrimary, &primaryToken))
       {
+         // Without explicit environment block new process inherits environment of the agent service (USERPROFILE,
+         // APPDATA, etc. of the service account), and per-user folder lookup in it then resolves to service profile
+         // or fails, depending on token elevation
+         void *environment = nullptr;
+         if (!CreateEnvironmentBlock(&environment, primaryToken, FALSE))
+         {
+            ExecuteInAllSessionsLogError(function, _T("call to CreateEnvironmentBlock failed"));
+            environment = nullptr;
+         }
+
          STARTUPINFO si;
          memset(&si, 0, sizeof(si));
          si.cb = sizeof(si);
          si.lpDesktop = _T("winsta0\\default");
          PROCESS_INFORMATION pi;
-         if (CreateProcessAsUser(primaryToken, NULL, command, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, _T("C:\\"), &si, &pi))
+         if (CreateProcessAsUser(primaryToken, NULL, command, NULL, NULL, FALSE, CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT, environment, _T("C:\\"), &si, &pi))
          {
             nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: process created in session #%u (%s), PID %u"),
                   function, session->SessionId, session->pWinStationName, pi.dwProcessId);
@@ -310,6 +321,8 @@ bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSession
          {
             ExecuteInAllSessionsLogError(function, _T("call to CreateProcessAsUser failed"));
          }
+         if (environment != nullptr)
+            DestroyEnvironmentBlock(environment);
          CloseHandle(primaryToken);
       }
       else
