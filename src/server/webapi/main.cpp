@@ -215,6 +215,7 @@ int H_ServerInfo(Context *context);
 int H_Status(Context *context);
 int H_GetMibNode(Context *context);
 int H_EventProcessingPolicy(Context *context);
+int H_EventPost(Context *context);
 int H_EventProcessingPolicyRule(Context *context);
 int H_EventProcessingPolicyUpdate(Context *context);
 int H_EventTemplates(Context *context);
@@ -369,6 +370,9 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/event-processing-policy/rules/:rule-guid")
       .GET(H_EventProcessingPolicyRule)
+      .build();
+   RouteBuilder("v1/events")
+      .POST(H_EventPost)
       .build();
    RouteBuilder("v1/event-templates")
       .GET(H_EventTemplates)
