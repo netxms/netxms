@@ -222,6 +222,7 @@ Source: "..\..\server\aitools\skills\*.md"; DestDir: "{app}\share\skills"; Flags
 ; Misc files
 Source: "..\..\..\contrib\mibs\*.mib"; DestDir: "{app}\share\mibs"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\oui\*.csv"; DestDir: "{app}\share\oui"; Flags: ignoreversion; Components: server
+Source: "..\..\..\contrib\templates\*.json"; DestDir: "{app}\share\templates"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\templates\*.xml"; DestDir: "{app}\share\templates"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
