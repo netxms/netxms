@@ -346,6 +346,7 @@
     <ClCompile Include="info.cpp" />
     <ClCompile Include="log_parsers.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mapping_tables.cpp" />
     <ClCompile Include="notifications.cpp" />
     <ClCompile Include="objects.cpp" />
     <ClCompile Include="object_categories.cpp" />
@@ -355,10 +356,12 @@
     <ClCompile Include="object_node_config.cpp" />
     <ClCompile Include="object_properties.cpp" />
     <ClCompile Include="objtools.cpp" />
+    <ClCompile Include="persistent_storage.cpp" />
     <ClCompile Include="racks.cpp" />
     <ClCompile Include="schedules.cpp" />
     <ClCompile Include="scripts.cpp" />
     <ClCompile Include="snmp_mib.cpp" />
+    <ClCompile Include="snmp_traps.cpp" />
     <ClCompile Include="sshkeys.cpp" />
     <ClCompile Include="tcpproxy.cpp" />
     <ClCompile Include="topology.cpp" />

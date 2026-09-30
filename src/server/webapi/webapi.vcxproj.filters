@@ -87,6 +87,15 @@
     <ClCompile Include="snmp_mib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="snmp_traps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mapping_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="persistent_storage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="sshkeys.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
