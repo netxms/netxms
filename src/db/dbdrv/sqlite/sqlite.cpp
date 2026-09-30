@@ -1,4 +1,4 @@
-/* 
+/*
 ** SQLite Database Driver
 ** Copyright (C) 2005-2025 Victor Kirhenshtein
 **
@@ -163,7 +163,7 @@ static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *b
 	{
 		case DB_CTYPE_STRING:
 #if UNICODE_UCS2
-			sqlite3_bind_text16(stmt, pos, buffer, (int)wcslen((WCHAR *)buffer) * sizeof(WCHAR), 
+			sqlite3_bind_text16(stmt, pos, buffer, (int)wcslen((WCHAR *)buffer) * sizeof(WCHAR),
 				(allocType == DB_BIND_STATIC) ? SQLITE_STATIC : ((allocType == DB_BIND_DYNAMIC) ? free : SQLITE_TRANSIENT));
 #else
 			{
@@ -562,6 +562,7 @@ retry:
  */
 static DBDRV_UNBUFFERED_RESULT SelectPreparedUnbuffered(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, uint32_t *errorCode, WCHAR *errorText)
 {
+   static_cast<SQLITE_CONN*>(connection)->mutexQueryLock.lock();
    SQLITE_UNBUFFERED_RESULT *result = MemAllocStruct<SQLITE_UNBUFFERED_RESULT>();
    result->connection = static_cast<SQLITE_CONN*>(connection);
    result->stmt = static_cast<sqlite3_stmt*>(hStmt);
