@@ -676,13 +676,9 @@ void StartPolicyHousekeeper()
  */
 void SyncAgentPolicies(const NXCPMessage& msg)
 {
-   TCHAR masterDataDirictory[MAX_PATH];
-   msg.getFieldAsString(VID_DATA_DIRECTORY, masterDataDirictory, MAX_PATH);
-#ifdef _WIN32
-   bool sameDataDirectory = (_tcsicmp(g_szDataDirectory, masterDataDirictory) == 0);
-#else
-   bool sameDataDirectory = (_tcscmp(g_szDataDirectory, masterDataDirictory) == 0);
-#endif
+   TCHAR masterDataDirectory[MAX_PATH];
+   msg.getFieldAsString(VID_DATA_DIRECTORY, masterDataDirectory, MAX_PATH);
+   bool sameDataDirectory = IsSameDirectory(g_szDataDirectory, masterDataDirectory);
    if (sameDataDirectory)
       nxlog_debug_tag(DEBUG_TAG, 2, _T("This external subagent loader uses same data directory as master agent, policy file deployment is not needed"));
 

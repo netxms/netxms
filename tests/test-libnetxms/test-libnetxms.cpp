@@ -36,6 +36,42 @@ void TestMD4();
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
 /**
+ * Test IsSameDirectory
+ */
+static void TestIsSameDirectory()
+{
+   StartTest(_T("IsSameDirectory"));
+
+   TCHAR dir[MAX_PATH];
+#ifdef _WIN32
+   GetTempPath(MAX_PATH, dir);
+   _sntprintf(&dir[_tcslen(dir)], MAX_PATH - _tcslen(dir), _T("nxtest-samedir-%u"), static_cast<unsigned int>(GetCurrentProcessId()));
+#else
+   _sntprintf(dir, MAX_PATH, _T("/tmp/nxtest-samedir-%u"), static_cast<unsigned int>(getpid()));
+#endif
+   TCHAR subdir[MAX_PATH];
+   _sntprintf(subdir, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("sub"), dir);
+   AssertTrue(CreateDirectoryTree(subdir));
+
+   TCHAR dirWithSeparator[MAX_PATH];
+   _sntprintf(dirWithSeparator, MAX_PATH, _T("%s") FS_PATH_SEPARATOR, dir);
+   TCHAR dirViaParent[MAX_PATH];
+   _sntprintf(dirViaParent, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T(".."), subdir);
+   TCHAR missing[MAX_PATH];
+   _sntprintf(missing, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("missing"), dir);
+
+   AssertTrue(IsSameDirectory(dir, dir));
+   AssertTrue(IsSameDirectory(dir, dirWithSeparator));
+   AssertTrue(IsSameDirectory(dir, dirViaParent));
+   AssertFalse(IsSameDirectory(dir, subdir));
+   AssertFalse(IsSameDirectory(dir, missing));
+   AssertFalse(IsSameDirectory(missing, dir));
+
+   AssertTrue(DeleteDirectoryTree(dir));
+   EndTest();
+}
+
+/**
  * Test string list
  */
 static void TestStringList()
@@ -3300,6 +3336,7 @@ int main(int argc, char *argv[])
    TestString();
    TestStringConversion();
    TestStringList();
+   TestIsSameDirectory();
    TestStringMap();
    TestStringSet();
    TestCountingStringSet();

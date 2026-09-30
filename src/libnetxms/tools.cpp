@@ -4590,6 +4590,38 @@ bool LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR 
 }
 
 /**
+ * Check if two paths refer to the same directory on the file system (by identity, not by spelling)
+ */
+bool LIBNETXMS_EXPORTABLE IsSameDirectory(const TCHAR *path1, const TCHAR *path2)
+{
+#ifdef _WIN32
+   HANDLE h1 = CreateFile(path1, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+   if (h1 == INVALID_HANDLE_VALUE)
+      return false;
+
+   HANDLE h2 = CreateFile(path2, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+   if (h2 == INVALID_HANDLE_VALUE)
+   {
+      CloseHandle(h1);
+      return false;
+   }
+
+   BY_HANDLE_FILE_INFORMATION fi1, fi2;
+   bool same = GetFileInformationByHandle(h1, &fi1) && GetFileInformationByHandle(h2, &fi2) &&
+         (fi1.dwVolumeSerialNumber == fi2.dwVolumeSerialNumber) &&
+         (fi1.nFileIndexHigh == fi2.nFileIndexHigh) && (fi1.nFileIndexLow == fi2.nFileIndexLow);
+   CloseHandle(h2);
+   CloseHandle(h1);
+   return same;
+#else
+   NX_STAT_STRUCT st1, st2;
+   if ((CALL_STAT_FOLLOW_SYMLINK(path1, &st1) != 0) || (CALL_STAT_FOLLOW_SYMLINK(path2, &st2) != 0))
+      return false;
+   return (st1.st_dev == st2.st_dev) && (st1.st_ino == st2.st_ino);
+#endif
+}
+
+/**
  * Move file/folder
  */
 bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
