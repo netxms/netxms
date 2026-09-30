@@ -11797,7 +11797,7 @@ NXSL_METHOD_DEFINITION(NETCONFSession, editConfig)
    }
 
    NETCONF_Response *response = ExecuteNetconfOperation(session, request);
-   vm->writeAuditLogWithValues(AUDIT_OBJECTS, response != nullptr, session->node->getId(), nullptr, argv[0]->getValueAsCString(), 'T',
+   vm->writeAuditLog(AUDIT_OBJECTS, response != nullptr, session->node->getId(),
       L"NETCONF edit-config on datastore %hs of node %s executed by script", target, session->node->getName());
    *result = vm->createValue(response != nullptr);
    delete response;
@@ -11873,9 +11873,14 @@ NXSL_METHOD_DEFINITION(NETCONFSession, rpc)
       return 0;
    }
 
+   const char *operation = nullptr;
    for(pugi::xml_node op = validator.first_child(); op; op = op.next_sibling())
    {
-      if ((op.type() == pugi::node_element) && IsSessionScopedOperation(op))
+      if (op.type() != pugi::node_element)
+         continue;
+      if (operation == nullptr)
+         operation = op.name();
+      if (IsSessionScopedOperation(op))
       {
          MemFree(content);
          session->lastError = L"Session-scoped operations (lock, unlock, kill-session, close-session, non-persistent confirmed commit) are not supported";
@@ -11886,8 +11891,8 @@ NXSL_METHOD_DEFINITION(NETCONFSession, rpc)
 
    uint32_t agentRcc;
    char *reply = ExecuteNetconfRpc(*session->node, content, 0, &agentRcc);
-   vm->writeAuditLogWithValues(AUDIT_OBJECTS, reply != nullptr, session->node->getId(), nullptr, argv[0]->getValueAsCString(), 'T',
-      L"NETCONF RPC on node %s executed by script", session->node->getName());
+   vm->writeAuditLog(AUDIT_OBJECTS, reply != nullptr, session->node->getId(), L"NETCONF RPC %hs on node %s executed by script",
+      (operation != nullptr) ? operation : "", session->node->getName());
    MemFree(content);
    if (reply == nullptr)
    {
