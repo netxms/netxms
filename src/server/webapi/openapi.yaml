@@ -49,6 +49,8 @@ tags:
     description: Image library management
   - name: DCI Summary Tables
     description: DCI summary table operations
+  - name: Events
+    description: Event posting
   - name: Event Templates
     description: Event template management
   - name: Event Processing Policy
@@ -11285,6 +11287,55 @@ paths:
         - BearerAuth: []
       tags:
         - Event Processing Policy
+  /v1/events:
+    post:
+      operationId: postEvent
+      summary: Post event
+      description: |
+        Post event to the server's event processing pipeline, equivalent to sending an event from the
+        management console. Event is identified either by eventCode or by eventName. If objectId is not
+        provided, the node with the client's IP address is used as the event source (or the server's own
+        node for loopback connections). User must have SEND_EVENTS access right on the source object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventPostInput'
+            example:
+              eventName: MY_CUSTOM_EVENT
+              objectId: 1234
+              tags:
+                - external
+              parameters:
+                - name: reason
+                  value: "Backup failed"
+                - name: code
+                  value: 17
+      responses:
+        '201':
+          description: Event posted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  eventId:
+                    type: integer
+                    format: int64
+                    description: ID assigned to the posted event
+        '400':
+          description: Invalid request (unknown event, invalid parameters or timestamp, or source object cannot be determined from client address)
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SEND_EVENTS access right on the source object
+        '404':
+          description: Source object not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Events
   /v1/event-templates:
     get:
       operationId: listEventTemplates
@@ -14856,6 +14907,45 @@ components:
           items:
             type: string
           description: List of event tags
+    EventPostInput:
+      type: object
+      description: Event post request body. Either eventCode or eventName must be provided.
+      properties:
+        eventCode:
+          type: integer
+          description: Event code
+        eventName:
+          type: string
+          description: Event name (used when eventCode is not provided)
+        objectId:
+          type: integer
+          description: Source object ID. If omitted, source is determined from the client's IP address.
+        originTimestamp:
+          oneOf:
+            - type: integer
+            - type: string
+          description: Origin timestamp as UNIX time, ISO 8601 string, relative offset ([+|-]<number>[s|m|h|d]) or "now". Server time is used if omitted.
+        tags:
+          type: array
+          items:
+            type: string
+          description: Additional event tags
+        parameters:
+          type: array
+          description: Event parameters, available in message template as %1..%n and by name
+          items:
+            type: object
+            required:
+              - value
+            properties:
+              name:
+                type: string
+                description: Parameter name (defaults to parameterN, where N is 1-based position)
+              value:
+                oneOf:
+                  - type: string
+                  - type: number
+                description: Parameter value
     EventTemplateInput:
       type: object
       description: Event template create/update request body
