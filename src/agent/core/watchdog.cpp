@@ -474,6 +474,7 @@ static void ReconcileExternalSubagentProcesses()
 /**
  * Check if user logged on to given session is in the list of users excluded from running external subagents.
  * List entries are matched case-insensitively either as bare user name or as DOMAIN\user.
+ * Session is considered excluded if logged on user cannot be determined.
  */
 static bool IsSessionUserExcluded(const WTS_SESSION_INFO& session, const StringList& excludedUsers)
 {
@@ -483,11 +484,11 @@ static bool IsSessionUserExcluded(const WTS_SESSION_INFO& session, const StringL
        !WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.SessionId, WTSDomainName, &domain, &bytes))
    {
       TCHAR errorText[1024];
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot get logged on user for session %u (%s): %s"),
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: cannot get logged on user (%s)"),
             session.SessionId, session.pWinStationName, GetSystemErrorText(GetLastError(), errorText, 1024));
       if (user != nullptr)
          WTSFreeMemory(user);
-      return false;
+      return true;
    }
 
    TCHAR qualifiedUser[512];
@@ -518,11 +519,14 @@ void ExternalSubagentWatchdog()
 
    // Sessions logged on by these users are never used for starting external subagents
    StringList excludedUsers;
-   ConfigEntry *excludedUsersEntry = g_config->getEntry(_T("/CORE/ExternalSubagentWatchdogExcludedUsers"));
-   if (excludedUsersEntry != nullptr)
    {
-      for(int i = 0; i < excludedUsersEntry->getValueCount(); i++)
-         excludedUsers.add(excludedUsersEntry->getValue(i));
+      shared_ptr<Config> config = g_config;
+      ConfigEntry *excludedUsersEntry = config->getEntry(_T("/CORE/ExternalSubagentWatchdogExcludedUsers"));
+      if (excludedUsersEntry != nullptr)
+      {
+         for(int i = 0; i < excludedUsersEntry->getValueCount(); i++)
+            excludedUsers.add(excludedUsersEntry->getValue(i));
+      }
    }
    TCHAR *excludedUsersText = excludedUsers.join(_T(", "));
    nxlog_debug_tag(DEBUG_TAG, 3, _T("External subagent watchdog excluded users: %s"), excludedUsers.isEmpty() ? _T("none") : excludedUsersText);
