@@ -22,7 +22,6 @@
 
 #include "nxagentd.h"
 #ifdef _WIN32
-#include <WtsApi32.h>
 #include <tlhelp32.h>
 #include <winternl.h>
 #else
@@ -201,8 +200,6 @@ int WatchdogMain(DWORD pid, const TCHAR *configSection)
 
 #ifdef _WIN32
 
-bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions, HANDLE *processHandle, DWORD *pid);
-
 /**
  * Verify executable
  */
@@ -227,39 +224,47 @@ void UserAgentWatchdog(TCHAR *executableName)
 
    while (!AgentSleepAndCheckForShutdown(60000))
    {
-      WTS_SESSION_INFO *sessions;
-      DWORD sessionCount;
-      if (!WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &sessionCount))
+      StructArray<UserSession> sessions = EnumerateUserSessions();
+      if (sessions.isEmpty())
          continue;
 
-      WTS_PROCESS_INFO *processes;
-      DWORD processCount;
-      if (!WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &processes, &processCount))
+      HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+      if (snapshot == INVALID_HANDLE_VALUE)
       {
-         WTSFreeMemory(sessions);
+         TCHAR errorText[1024];
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("UserAgentWatchdog: call to CreateToolhelp32Snapshot failed (%s)"),
+               GetSystemErrorText(GetLastError(), errorText, 1024));
          continue;
       }
 
-      for (DWORD i = 0; i < sessionCount; i++)
+      HashSet<DWORD> sessionsWithUserAgent;
+      PROCESSENTRY32 pe;
+      pe.dwSize = sizeof(PROCESSENTRY32);
+      if (Process32First(snapshot, &pe))
       {
-         if ((sessions[i].State != WTSActive) && (sessions[i].State != WTSConnected))
+         do
+         {
+            if (!_tcsicmp(pe.szExeFile, executableName))
+            {
+               DWORD sessionId;
+               if (ProcessIdToSessionId(pe.th32ProcessID, &sessionId))
+                  sessionsWithUserAgent.put(sessionId);
+            }
+         } while (Process32Next(snapshot, &pe));
+      }
+      CloseHandle(snapshot);
+
+      for (int i = 0; i < sessions.size(); i++)
+      {
+         const UserSession *session = sessions.get(i);
+         if ((session->state != WTSActive) && (session->state != WTSConnected))
             continue;
 
-         DWORD sessionId = sessions[i].SessionId;
-         bool found = false;
-         for (DWORD j = 0; j < processCount; j++)
-         {
-            if ((processes[j].SessionId == sessionId) && !_tcscmp(processes[j].pProcessName, executableName))
-            {
-               found = true;
-               break;
-            }
-         }
-
-         if (!found)
+         DWORD sessionId = session->id;
+         if (!sessionsWithUserAgent.contains(sessionId))
          {
             nxlog_debug_tag(DEBUG_TAG, 3, _T("User agent process not found in session #%u (%s)"),
-                  sessionId, sessions[i].pWinStationName);
+                  sessionId, session->name);
             TCHAR binDir[MAX_PATH];
             GetNetXMSDirectory(nxDirBin, binDir);
 
@@ -270,7 +275,7 @@ void UserAgentWatchdog(TCHAR *executableName)
             if (VerifyExecutable(command.cstr() + 1)) // skip leading "
             {
                command.append(_T("\""));
-               ExecuteInSession(&sessions[i], command.getBuffer(), false, nullptr, nullptr);
+               ExecuteInSession(*session, command.getBuffer(), false, nullptr, nullptr);
             }
             else
             {
@@ -278,9 +283,6 @@ void UserAgentWatchdog(TCHAR *executableName)
             }
          }
       }
-
-      WTSFreeMemory(sessions);
-      WTSFreeMemory(processes);
    }
 
    MemFree(executableName);
@@ -471,48 +473,85 @@ static void ReconcileExternalSubagentProcesses()
    CloseHandle(snapshot);
 }
 
+static bool GetTokenUserName(HANDLE token, TCHAR *user, size_t userSize, TCHAR *domain, size_t domainSize)
+{
+   union
+   {
+      TOKEN_USER tokenUser;
+      BYTE buffer[sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE];
+   } tokenInfo;
+   DWORD size;
+   if (!GetTokenInformation(token, TokenUser, &tokenInfo, sizeof(tokenInfo), &size))
+      return false;
+
+   DWORD accountNameSize = static_cast<DWORD>(userSize);
+   DWORD domainNameSize = static_cast<DWORD>(domainSize);
+   SID_NAME_USE use;
+   return LookupAccountSid(nullptr, tokenInfo.tokenUser.User.Sid, user, &accountNameSize, domain, &domainNameSize, &use) != 0;
+}
+
 /**
  * Check if external subagents can be started in given session. Session is not suitable if logged on user
  * cannot be determined, nobody is logged on to it, or logged on user is in the list of excluded users.
  * List entries are matched case-insensitively either as bare user name or as DOMAIN\user.
  */
-static bool IsSessionSuitableForExternalSubagents(const WTS_SESSION_INFO& session, const StringList& excludedUsers)
+static bool IsSessionSuitableForExternalSubagents(const UserSession& session, const StringList& excludedUsers)
 {
-   LPTSTR user;
+   MutableString user, domain;
+   LPTSTR wtsUser;
    DWORD bytes;
-   if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.SessionId, WTSUserName, &user, &bytes))
+   if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.id, WTSUserName, &wtsUser, &bytes))
    {
-      TCHAR errorText[1024];
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: cannot get logged on user (%s)"),
-            session.SessionId, session.pWinStationName, GetSystemErrorText(GetLastError(), errorText, 1024));
-      return false;
+      user = wtsUser;
+      WTSFreeMemory(wtsUser);
+      if (user.isEmpty())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: no logged on user"), session.id, session.name);
+         return false;
+      }
+
+      LPTSTR wtsDomain;
+      if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.id, WTSDomainName, &wtsDomain, &bytes))
+      {
+         TCHAR errorText[1024];
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: cannot get domain of logged on user %s (%s)"),
+               session.id, session.name, user.cstr(), GetSystemErrorText(GetLastError(), errorText, 1024));
+         return false;
+      }
+      domain = wtsDomain;
+      WTSFreeMemory(wtsDomain);
+   }
+   else
+   {
+      HANDLE token = FindInteractiveUserToken(session.id);
+      if (token == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: no logged on user"), session.id, session.name);
+         return false;
+      }
+
+      TCHAR userName[256], domainName[256];
+      bool success = GetTokenUserName(token, userName, 256, domainName, 256);
+      DWORD error = success ? ERROR_SUCCESS : GetLastError();
+      CloseHandle(token);
+      if (!success)
+      {
+         TCHAR errorText[1024];
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: cannot get logged on user (%s)"),
+               session.id, session.name, GetSystemErrorText(error, errorText, 1024));
+         return false;
+      }
+      user = userName;
+      domain = domainName;
    }
 
-   if (*user == 0)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: no logged on user"), session.SessionId, session.pWinStationName);
-      WTSFreeMemory(user);
-      return false;
-   }
-
-   LPTSTR domain;
-   if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session.SessionId, WTSDomainName, &domain, &bytes))
-   {
-      TCHAR errorText[1024];
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: cannot get domain of logged on user %s (%s)"),
-            session.SessionId, session.pWinStationName, user, GetSystemErrorText(GetLastError(), errorText, 1024));
-      WTSFreeMemory(user);
-      return false;
-   }
-
-   TCHAR qualifiedUser[512];
-   _sntprintf(qualifiedUser, 512, _T("%s\\%s"), domain, user);
-   bool suitable = !excludedUsers.containsIgnoreCase(user) && !excludedUsers.containsIgnoreCase(qualifiedUser);
+   StringBuffer qualifiedUser(domain);
+   qualifiedUser.append(_T("\\"));
+   qualifiedUser.append(user);
+   bool suitable = !excludedUsers.containsIgnoreCase(user.cstr()) && !excludedUsers.containsIgnoreCase(qualifiedUser.cstr());
    if (!suitable)
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: logged on user %s is excluded"), session.SessionId, session.pWinStationName, qualifiedUser);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: logged on user %s is excluded"), session.id, session.name, qualifiedUser.cstr());
 
-   WTSFreeMemory(user);
-   WTSFreeMemory(domain);
    return suitable;
 }
 
@@ -590,22 +629,15 @@ void ExternalSubagentWatchdog()
          continue;
 
       // Find session to run
-      WTS_SESSION_INFO *sessions;
-      DWORD sessionCount;
-      if (!WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &sessionCount))
-      {
-         TCHAR errorText[1024];
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot enumerate sessions (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
-         continue;
-      }
-
+      StructArray<UserSession> sessions = EnumerateUserSessions();
       bool found = false;
-      for (DWORD i = 0; i < sessionCount; i++)
+      for (int i = 0; i < sessions.size(); i++)
       {
-         if ((sessions[i].State != WTSActive) && (sessions[i].State != WTSConnected))
+         const UserSession *session = sessions.get(i);
+         if ((session->state != WTSActive) && (session->state != WTSConnected))
             continue;
 
-         if (!IsSessionSuitableForExternalSubagents(sessions[i], excludedUsers))
+         if (!IsSessionSuitableForExternalSubagents(*session, excludedUsers))
             continue;
 
          for (int j = 0; j < subagentsToStart.size(); j++)
@@ -617,9 +649,9 @@ void ExternalSubagentWatchdog()
             command.append(name);
             HANDLE hProcess = nullptr;
             DWORD pid = 0;
-            if (ExecuteInSession(&sessions[i], command.getBuffer(), false, &hProcess, &pid))
+            if (ExecuteInSession(*session, command.getBuffer(), false, &hProcess, &pid))
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, L"Started external subagent %s (PID %u) in session %u", name, pid, sessions[i].SessionId);
+               nxlog_debug_tag(DEBUG_TAG, 6, L"Started external subagent %s (PID %u) in session %u", name, pid, session->id);
                ExternalSubagentInstance *instance = new ExternalSubagentInstance();
                instance->hProcess = hProcess;
                instance->pid = pid;
@@ -629,7 +661,7 @@ void ExternalSubagentWatchdog()
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagent %s in session %u", name, sessions[i].SessionId);
+               nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagent %s in session %u", name, session->id);
             }
          }
          if (found)
@@ -638,8 +670,6 @@ void ExternalSubagentWatchdog()
 
       if (!found)
          nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot start external subagents in any session");
-
-      WTSFreeMemory(sessions);
    }
 
    nxlog_debug_tag(DEBUG_TAG, 1, L"External subagent watchdog stopped");

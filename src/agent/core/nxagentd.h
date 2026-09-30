@@ -37,6 +37,7 @@
 
 #ifdef _WIN32
 #include <aclapi.h>
+#include <WtsApi32.h>
 #endif
 
 /**
@@ -1018,6 +1019,20 @@ bool WaitForService(DWORD dwDesiredState);
 void InstallEventSource(const TCHAR *path);
 void RemoveEventSource();
 
+/**
+ * User session (from WTS enumeration or console fallback)
+ */
+struct UserSession
+{
+   DWORD id;
+   WTS_CONNECTSTATE_CLASS state;
+   TCHAR name[64];
+   bool console;
+};
+
+StructArray<UserSession> EnumerateUserSessions();
+HANDLE FindInteractiveUserToken(DWORD sessionId);
+bool ExecuteInSession(const UserSession& session, TCHAR *command, bool allSessions, HANDLE *processHandle, DWORD *pid);
 bool ExecuteInAllSessions(const TCHAR *command);
 
 BOOL GetPeCertificateInfo(LPCWSTR filePath, PE_CERT_INFO *certInfo);
