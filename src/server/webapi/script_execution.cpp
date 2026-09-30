@@ -391,47 +391,20 @@ void ScriptExecution::readFrames()
 }
 
 /**
- * Handler for /v1/objects/:object-id/execute-script
+ * Execute ad-hoc script from request. Object is optional and used as script context if provided.
+ * Caller is responsible for access rights check.
  */
-int H_ObjectExecuteScript(Context *context)
+static int ExecuteScript(Context *context, json_t *request, const wchar_t *script, const shared_ptr<NetObj>& object)
 {
-   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
-   if (objectId == 0)
-      return 400;
-
-   shared_ptr<NetObj> object = FindObjectById(objectId);
-   if (object == nullptr)
-      return 404;
-
-   json_t *request = context->getRequestDocument();
-   if (request == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, L"H_ObjectExecuteScript: empty request");
-      return 400;
-   }
-
-   unique_cstring_ptr script(json_object_get_string_t(request, "script", nullptr));
-   if (script == nullptr)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, L"H_ObjectExecuteScript: missing script source code");
-      return 400;
-   }
-
-   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_EXECUTE_SCRIPT))
-   {
-      context->writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script.get(), 'T', L"Access denied on ad-hoc script execution for object %s [%u]", object->getName(), object->getId());
-      return 403;
-   }
-
    bool resultAsMap = json_object_get_boolean(request, "resultAsMap", false);
    shared_ptr<ScriptExecution> execution = json_object_get_boolean(request, "stream", false) ?
             make_shared<ScriptExecution>(context->getUserId(), resultAsMap) : shared_ptr<ScriptExecution>();
 
    NXSL_CompilationDiagnostic diag;
-   NXSL_VM *vm = NXSLCompileAndCreateVM(script.get(), (execution != nullptr) ? new NXSL_ScriptExecutionEnv(execution.get()) : new NXSL_ServerEnv(), &diag);
+   NXSL_VM *vm = NXSLCompileAndCreateVM(script, (execution != nullptr) ? new NXSL_ScriptExecutionEnv(execution.get()) : new NXSL_ServerEnv(), &diag);
    if (vm == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, L"H_ObjectExecuteScript: script compilation error (%s)", diag.errorText.cstr());
+      nxlog_debug_tag(DEBUG_TAG, 6, L"ExecuteScript: script compilation error (%s)", diag.errorText.cstr());
       json_t *response = json_object();
       json_object_set_new(response, "reason", json_string("Script compilation failed"));
       json_object_set_new(response, "diagnostic", diag.toJson());
@@ -443,7 +416,10 @@ int H_ObjectExecuteScript(Context *context)
    SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
    // Streaming execution outlives request context
    vm->setSecurityContext((execution != nullptr) ? new NXSL_UserSecurityContext(context->getUserId()) : new NXSL_UserSecurityContext(context));
-   context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script.get(), 'T', L"Executed ad-hoc script for object %s [%u]", object->getName(), object->getId());
+   if (object != nullptr)
+      context->writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), nullptr, script, 'T', L"Executed ad-hoc script for object %s [%u]", object->getName(), object->getId());
+   else
+      context->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, nullptr, script, 'T', L"Executed ad-hoc script without object context");
 
    ObjectRefArray<NXSL_Value> sargs(0, 8);
    json_t *parameters = json_object_get(request, "parameters");
@@ -468,7 +444,7 @@ int H_ObjectExecuteScript(Context *context)
    {
       uuid token = execution->start(vm, sargs);
       nxlog_debug_tag(DEBUG_TAG, 4, L"Script execution %u for object %s [%u] created by user %s [%u] (WebSocket pending)",
-            execution->getId(), object->getName(), object->getId(), context->getLoginName(), context->getUserId());
+            execution->getId(), (object != nullptr) ? object->getName() : L"(none)", (object != nullptr) ? object->getId() : 0, context->getLoginName(), context->getUserId());
 
       json_t *response = json_object();
       json_object_set_new(response, "executionId", json_integer(execution->getId()));
@@ -505,6 +481,72 @@ int H_ObjectExecuteScript(Context *context)
 
    delete vm;
    return responseCode;
+}
+
+
+/**
+ * Handler for /v1/objects/:object-id/execute-script
+ */
+int H_ObjectExecuteScript(Context *context)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(L"object-id");
+   if (objectId == 0)
+      return 400;
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+      return 404;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"H_ObjectExecuteScript: empty request");
+      return 400;
+   }
+
+   unique_cstring_ptr script(json_object_get_string_t(request, "script", nullptr));
+   if (script == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"H_ObjectExecuteScript: missing script source code");
+      return 400;
+   }
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_EXECUTE_SCRIPT))
+   {
+      context->writeAuditLogWithValues(AUDIT_OBJECTS, false, object->getId(), nullptr, script.get(), 'T', L"Access denied on ad-hoc script execution for object %s [%u]", object->getName(), object->getId());
+      return 403;
+   }
+
+   return ExecuteScript(context, request, script.get(), object);
+}
+
+/**
+ * Handler for /v1/execute-script. Script is executed without object context. Requires script management
+ * rights - users with those rights can already run arbitrary code with system privileges via hook scripts.
+ */
+int H_ExecuteScript(Context *context)
+{
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"H_ExecuteScript: empty request");
+      return 400;
+   }
+
+   unique_cstring_ptr script(json_object_get_string_t(request, "script", nullptr));
+   if (script == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, L"H_ExecuteScript: missing script source code");
+      return 400;
+   }
+
+   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SCRIPTS))
+   {
+      context->writeAuditLogWithValues(AUDIT_SYSCFG, false, 0, nullptr, script.get(), 'T', L"Access denied on ad-hoc script execution without object context");
+      return 403;
+   }
+
+   return ExecuteScript(context, request, script.get(), shared_ptr<NetObj>());
 }
 
 /**

@@ -274,6 +274,7 @@ int H_ScheduledTaskDetails(Context *context);
 int H_ScheduledTaskHandlers(Context *context);
 int H_ScheduledTasks(Context *context);
 int H_ScheduledTaskUpdate(Context *context);
+int H_ExecuteScript(Context *context);
 int H_ScriptExecutionStop(Context *context);
 int H_ScriptLibrary(Context *context);
 int H_ScriptDetails(Context *context);
@@ -583,6 +584,9 @@ static bool InitModule(Config *config)
       .GET(H_EventTemplateDetails)
       .PUT(H_EventTemplateUpdate)
       .DELETE(H_EventTemplateDelete)
+      .build();
+   RouteBuilder("v1/execute-script")
+      .POST(H_ExecuteScript)
       .build();
    RouteBuilder("v1/dci-summary-tables")
       .GET(H_SummaryTables)
