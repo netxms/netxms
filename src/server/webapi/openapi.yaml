@@ -31,6 +31,8 @@ tags:
     description: Server action management
   - name: Server
     description: Server information and status
+  - name: Server Console
+    description: Server debug console
   - name: AI Chat
     description: AI assistant chat sessions
   - name: AI Management
@@ -351,6 +353,139 @@ paths:
         - BearerAuth: []
       tags:
         - Server
+  /v1/server-console/execute:
+    post:
+      operationId: executeServerConsoleCommand
+      summary: Execute server console command
+      description: |
+        Execute a single server debug console command and return its complete output. Intended for
+        integrations; interactive terminals should use `POST /v1/server-console/session` to receive
+        output as it is produced.
+
+        Output is returned as plain text with terminal color sequences removed. Unknown or failed
+        commands are reported in the output text, not by HTTP status. The `down` command initiates
+        server shutdown after the response is sent. The `exit` command has no effect.
+
+        Requires SERVER_CONSOLE access right.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - command
+              properties:
+                command:
+                  type: string
+                  maxLength: 255
+                  description: Console command line
+            example:
+              command: show pollers
+      responses:
+        '200':
+          description: Command executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  output:
+                    type: string
+                    description: Command output
+                  shutdownInitiated:
+                    type: boolean
+                    description: True if the command initiated server shutdown
+        '400':
+          description: Missing or invalid JSON body, empty command, or command longer than 255 characters
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SERVER_CONSOLE access right
+      security:
+        - BearerAuth: []
+      tags:
+        - Server Console
+  /v1/server-console/session:
+    post:
+      operationId: createServerConsoleSession
+      summary: Create interactive server console session
+      description: |
+        Create an interactive server console session and return a short-lived token for WebSocket
+        connection to `/v1/server-console/session/{token}`. This flow is designed to work with browser
+        WebSocket API which cannot send custom Authorization headers.
+
+        Session opening is recorded in the audit log. Requires SERVER_CONSOLE access right.
+      responses:
+        '201':
+          description: Console session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    format: uuid
+                    description: Single-use session token for WebSocket connection
+                  expiresIn:
+                    type: integer
+                    description: Token validity period in seconds
+                  wsUrl:
+                    type: string
+                    description: WebSocket URL path to connect to
+              example:
+                token: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                expiresIn: 30
+                wsUrl: "/v1/server-console/session/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have SERVER_CONSOLE access right
+      security:
+        - BearerAuth: []
+      tags:
+        - Server Console
+  /v1/server-console/session/{token}:
+    get:
+      operationId: connectServerConsoleSession
+      summary: Connect to interactive server console session (WebSocket)
+      description: |
+        WebSocket endpoint for interactive server console session. The token is obtained from
+        `POST /v1/server-console/session`. Token is single-use and expires after 30 seconds.
+
+        All messages are JSON text frames. Client sends:
+        - `{"type":"command","command":"..."}` - execute console command line (up to 255 characters)
+
+        Server sends:
+        - `{"type":"ready"}` - server is ready to accept next command; sent after connection and after each command
+        - `{"type":"output","data":"..."}` - command output chunk; may contain ANSI terminal color sequences
+        - `{"type":"error","message":"..."}` - invalid message or command; followed by `ready`, except when
+          the user no longer has SERVER_CONSOLE access right, in which case the session is closed
+        - `{"type":"closed","reason":"exit|shutdown"}` - session is being closed by `exit` command or
+          because `down` command initiated server shutdown
+
+        Commands are executed sequentially. Access rights of the session owner are checked before each
+        command, so disabling the user or revoking SERVER_CONSOLE access right terminates the session.
+      tags:
+        - Server Console
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Single-use token from the session create response
+      responses:
+        '101':
+          description: |
+            Switching protocols to WebSocket. If the token is invalid, expired or already used,
+            the connection is closed right after the upgrade with WebSocket close code 1008
+            (Policy Violation) - no HTTP error status is returned in that case.
+        '426':
+          description: Upgrade required - request did not ask for a protocol upgrade to WebSocket.
+      security: []
   /v1/status:
     get:
       operationId: getSessionStatus

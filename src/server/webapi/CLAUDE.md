@@ -34,6 +34,7 @@ make -C src/server
 | `objects.cpp` | Object management endpoints |
 | `objtools.cpp` | Object tool endpoints |
 | `scripts.cpp` | Script library endpoints |
+| `server_console.cpp` | Server debug console endpoints (execute / WebSocket session) |
 | `tcpproxy.cpp` | TCP proxy / WebSocket endpoints |
 | `ai.cpp` | AI chat endpoints |
 

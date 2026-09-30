@@ -39,6 +39,11 @@ void CleanupExpiredTcpProxySessions();
 void CleanupExpiredToolOutputSessions();
 
 /**
+ * Cleanup expired server console sessions
+ */
+void CleanupExpiredServerConsoleSessions();
+
+/**
  * Handlers
  */
 int H_2FADrivers(Context *context);
@@ -290,6 +295,8 @@ int H_ServerConfigVariableDetails(Context *context);
 int H_ServerConfigVariableUpdate(Context *context);
 int H_ServerConfigVariableDelete(Context *context);
 int H_ServerConfigVariableReset(Context *context);
+int H_ServerConsoleExecute(Context *context);
+int H_ServerConsoleSessionCreate(Context *context);
 int H_ServerInfo(Context *context);
 int H_Status(Context *context);
 int H_GetMibNode(Context *context);
@@ -365,6 +372,9 @@ void WS_TcpProxyConnect(void *cls, MHD_Connection *connection, void *con_cls,
 void WS_ToolOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
                           const char *extra_in, size_t extra_in_size, MHD_socket sock,
                           MHD_UpgradeResponseHandle *urh);
+void WS_ServerConsoleConnect(void *cls, MHD_Connection *connection, void *con_cls,
+                             const char *extra_in, size_t extra_in_size, MHD_socket sock,
+                             MHD_UpgradeResponseHandle *urh);
 
 /**
  * Initialize module
@@ -1054,6 +1064,17 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/server-config/:name/reset")
       .POST(H_ServerConfigVariableReset)
       .build();
+   RouteBuilder("v1/server-console/execute")
+      .POST(H_ServerConsoleExecute)
+      .build();
+   RouteBuilder("v1/server-console/session")
+      .POST(H_ServerConsoleSessionCreate)  // Create session, get token
+      .build();
+   RouteBuilder("v1/server-console/session/:token")
+      .GET([](Context *context) { context->setErrorResponse("WebSocket connection required"); return 426; })
+      .upgradeProtocol(WS_ServerConsoleConnect)
+      .noauth()  // Token-based auth
+      .build();
    RouteBuilder("v1/server-info")
       .GET(H_ServerInfo)
       .build();
@@ -1116,6 +1137,7 @@ static bool InitModule(Config *config)
 
    ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredTcpProxySessions);  // In 5 minutes
    ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredToolOutputSessions);  // In 5 minutes
+   ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredServerConsoleSessions);  // In 5 minutes
    return true;
 }
 
