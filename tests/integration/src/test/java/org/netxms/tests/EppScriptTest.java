@@ -96,6 +96,6 @@ public class EppScriptTest extends AbstractSessionTest
    {
       NXCSession session = connectAndLogin();
       TestHelperForEpp.deleteRules(session, "Rule for testing script");
-      session.deletePersistentStorageValue(key);
+      TestHelperForEpp.deletePersistentStorageValueIfExists(session, key);
    }
 }

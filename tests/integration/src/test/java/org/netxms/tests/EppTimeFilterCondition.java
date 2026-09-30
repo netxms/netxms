@@ -603,6 +603,6 @@ public class EppTimeFilterCondition extends AbstractSessionTest
    {
       NXCSession session = connectAndLogin();
       TestHelperForEpp.deleteRules(session, COMMENT_FOR_SEARCHING_RULE);
-      session.deletePersistentStorageValue(PS_KEY);
+      TestHelperForEpp.deletePersistentStorageValueIfExists(session, PS_KEY);
    }
 }

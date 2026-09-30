@@ -282,7 +282,7 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));//make sure that the script has not been executed, and the entry in not in PS
 
       //to run next tests
-      session.deletePersistentStorageValue("Key to set A");
+      TestHelperForEpp.deletePersistentStorageValueIfExists(session, "Key to set A");
       assertNull(TestHelperForEpp.findPsValueByKey(session, "Key to set A"));
 
    }
@@ -847,8 +847,8 @@ public class EppServerActionTestSingleRule extends AbstractSessionTest
    void cleanupBeforeTest() throws Exception
    {
       final NXCSession session = connectAndLogin();
-      session.deletePersistentStorageValue("Key to set A");
-      session.deletePersistentStorageValue("Key to set A2");
+      TestHelperForEpp.deletePersistentStorageValueIfExists(session, "Key to set A");
+      TestHelperForEpp.deletePersistentStorageValueIfExists(session, "Key to set A2");
    }
 
    /**

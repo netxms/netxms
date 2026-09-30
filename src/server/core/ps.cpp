@@ -164,6 +164,17 @@ void GetPersistentStorageList(NXCPMessage *msg)
 }
 
 /**
+ * Get all persistent storage entries as JSON object (key -> value)
+ */
+json_t *GetPersistentStorageListAsJson()
+{
+   s_lockPStorage.lock();
+   json_t *json = s_persistentStorage.toJson();
+   s_lockPStorage.unlock();
+   return json;
+}
+
+/**
  * Callback for persistent storage value delete form database
  */
 static EnumerationCallbackResult DeletePSValueCB(const TCHAR *key, const TCHAR *value, std::pair<DB_STATEMENT, uint32_t> *context)

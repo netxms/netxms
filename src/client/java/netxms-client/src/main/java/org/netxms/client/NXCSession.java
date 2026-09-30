@@ -12949,6 +12949,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_PSTORAGE_KEY, key);
       msg.setField(NXCPCodes.VID_PSTORAGE_VALUE, value);
       sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 
    /**
@@ -12963,6 +12964,7 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_PSTORAGE_VALUE);
       msg.setField(NXCPCodes.VID_PSTORAGE_KEY, key);
       sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 
    /**

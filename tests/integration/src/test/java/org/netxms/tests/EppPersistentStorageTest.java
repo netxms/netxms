@@ -116,6 +116,6 @@ public class EppPersistentStorageTest extends AbstractSessionTest
    {
       NXCSession session = connectAndLogin();
       TestHelperForEpp.deleteRules(session, "Rule for testing persistant storage");
-      session.deletePersistentStorageValue(pStoragekey);
+      TestHelperForEpp.deletePersistentStorageValueIfExists(session, pStoragekey);
    }
 }

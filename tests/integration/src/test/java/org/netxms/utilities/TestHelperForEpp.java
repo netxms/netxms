@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyChain;
@@ -128,6 +130,22 @@ public class TestHelperForEpp
       for(EventProcessingPolicyChain chain : policy.getChains())
          if (!chain.isMain() && chain.getName().startsWith(namePrefix))
             session.deleteEppChain(chain.getId());
+   }
+
+   /**
+    * Delete persistent storage value if it exists (for cleanup of values that may or may not have been created)
+    */
+   public static void deletePersistentStorageValueIfExists(NXCSession session, String key) throws Exception
+   {
+      try
+      {
+         session.deletePersistentStorageValue(key);
+      }
+      catch(NXCException e)
+      {
+         if (e.getErrorCode() != RCC.RCC_INVALID_PSTORAGE_KEY)
+            throw e;
+      }
    }
 
    /**

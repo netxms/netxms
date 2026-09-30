@@ -156,6 +156,20 @@ int H_IncidentLinkAlarm(Context *context);
 int H_IncidentUnlinkAlarm(Context *context);
 int H_IncidentActivity(Context *context);
 int H_Logs(Context *context);
+int H_MappingTables(Context *context);
+int H_MappingTableCreate(Context *context);
+int H_MappingTableDelete(Context *context);
+int H_MappingTableDetails(Context *context);
+int H_MappingTableUpdate(Context *context);
+int H_PersistentStorage(Context *context);
+int H_PersistentStorageEntry(Context *context);
+int H_PersistentStorageEntryDelete(Context *context);
+int H_PersistentStorageEntryUpdate(Context *context);
+int H_SnmpTrapMappings(Context *context);
+int H_SnmpTrapMappingCreate(Context *context);
+int H_SnmpTrapMappingDelete(Context *context);
+int H_SnmpTrapMappingDetails(Context *context);
+int H_SnmpTrapMappingUpdate(Context *context);
 int H_LogDetails(Context *context);
 int H_LogQuery(Context *context);
 int H_LogQuerySql(Context *context);
@@ -672,6 +686,23 @@ static bool InitModule(Config *config)
    RouteBuilder("v1/logs/:log-name/records/:record-id")
       .GET(H_LogRecord)
       .build();
+   RouteBuilder("v1/mapping-tables")
+      .GET(H_MappingTables)
+      .POST(H_MappingTableCreate)
+      .build();
+   RouteBuilder("v1/mapping-tables/:table-id")
+      .GET(H_MappingTableDetails)
+      .PUT(H_MappingTableUpdate)
+      .DELETE(H_MappingTableDelete)
+      .build();
+   RouteBuilder("v1/persistent-storage")
+      .GET(H_PersistentStorage)
+      .build();
+   RouteBuilder("v1/persistent-storage/:key")
+      .GET(H_PersistentStorageEntry)
+      .PUT(H_PersistentStorageEntryUpdate)
+      .DELETE(H_PersistentStorageEntryDelete)
+      .build();
    RouteBuilder("v1/grafana/infinity/alarms")
       .POST(H_GrafanaGetAlarms)
       .build();
@@ -984,6 +1015,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/snmp-mib/:oid")
       .GET(H_GetMibNode)
+      .build();
+   RouteBuilder("v1/snmp-trap-mappings")
+      .GET(H_SnmpTrapMappings)
+      .POST(H_SnmpTrapMappingCreate)
+      .build();
+   RouteBuilder("v1/snmp-trap-mappings/:trap-id")
+      .GET(H_SnmpTrapMappingDetails)
+      .PUT(H_SnmpTrapMappingUpdate)
+      .DELETE(H_SnmpTrapMappingDelete)
       .build();
    RouteBuilder("v1/ssh-keys")
       .GET(H_SshKeys)

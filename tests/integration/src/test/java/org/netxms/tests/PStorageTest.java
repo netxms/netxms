@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCSession;
+import org.netxms.utilities.TestHelperForEpp;
 
 /**
  * Persistent storage test
@@ -44,7 +45,7 @@ public class PStorageTest extends AbstractSessionTest
 		}
 		finally
 		{
-         session.deletePersistentStorageValue(key);
+         TestHelperForEpp.deletePersistentStorageValueIfExists(session, key);
 		}
 	}
 }
