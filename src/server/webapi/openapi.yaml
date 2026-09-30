@@ -11877,13 +11877,16 @@ paths:
       description: |
         WebSocket endpoint for receiving streaming output from an object tool execution.
         The token is obtained from POST /v1/object-tools/{tool-id}/execute with stream=true.
-        Token is single-use and expires after 30 seconds.
+        Token is single-use and expires after 30 seconds. Tool execution starts when the connection
+        is established; if client does not connect within token validity period, tool execution is cancelled.
 
         Server sends JSON text frames:
         - `{"type":"output","data":"..."}` - output chunk
         - `{"type":"result","data":"..."}` - script return value (server-script tools only)
         - `{"type":"completed"}` - execution finished successfully
         - `{"type":"error","message":"..."}` - execution failed
+
+        Server closes the connection after `completed` or `error` message.
       tags:
         - Object Tools
       parameters:

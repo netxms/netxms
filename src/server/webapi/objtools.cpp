@@ -31,282 +31,222 @@
 static const int TOOL_OUTPUT_TOKEN_VALIDITY = 30;
 
 /**
- * Tool output WebSocket session
+ * Tool output WebSocket session. Shared between tool execution thread and WebSocket reader thread.
+ * Tool is executed only after client connects, so output is never buffered.
  */
 class ToolOutputWebSocketSession
 {
 private:
+   uuid m_token;
    MHD_UpgradeResponseHandle *m_responseHandle;
    SOCKET m_socket;
+   bool m_closeFrameSent;
+   bool m_disconnected;
    Mutex m_socketMutex;
-   bool m_started;
-   bool m_closed;
-   Mutex m_closeMutex;
-   time_t m_creationTime;
-   StringBuffer m_pendingOutput;
-   bool m_executionComplete;
-   Condition m_websocketReady;
+   Condition m_connected;
 
-   void sendTextFrame(const char *text)
-   {
-      m_socketMutex.lock();
-      if (m_started && !m_closed)
-         SendWebsocketFrame(m_socket, text, strlen(text));
-      m_socketMutex.unlock();
-   }
+   void sendMessage(json_t *msg);
+   void finish(json_t *msg);
 
 public:
-   ToolOutputWebSocketSession() : m_socketMutex(MutexType::FAST), m_closeMutex(MutexType::FAST), m_websocketReady(true)
-   {
-      m_responseHandle = nullptr;
-      m_socket = INVALID_SOCKET;
-      m_started = false;
-      m_closed = false;
-      m_executionComplete = false;
-      m_creationTime = time(nullptr);
-   }
+   ToolOutputWebSocketSession(const uuid& token);
 
-   time_t getCreationTime() const { return m_creationTime; }
-   bool isClosed() const { return m_closed; }
+   bool waitForConnection();
+   void connect(MHD_UpgradeResponseHandle *responseHandle, SOCKET s);
+   void readFrames();
 
-   /**
-    * Wait for WebSocket connection to be established (called from execution thread)
-    */
-   bool waitForWebSocket(uint32_t timeout)
-   {
-      return m_websocketReady.wait(timeout);
-   }
-
-   /**
-    * Start WebSocket session after upgrade
-    */
-   void start(MHD_UpgradeResponseHandle *responseHandle, SOCKET s)
-   {
-      m_socketMutex.lock();
-      m_responseHandle = responseHandle;
-      m_socket = s;
-      m_started = true;
-
-      // Flush any output that arrived before WebSocket was connected
-      if (!m_pendingOutput.isEmpty())
-      {
-         json_t *msg = json_object();
-         json_object_set_new(msg, "type", json_string("output"));
-         json_object_set_new(msg, "data", json_string_t(m_pendingOutput.cstr()));
-         char *encoded = json_dumps(msg, 0);
-         SendWebsocketFrame(m_socket, encoded, strlen(encoded));
-         MemFree(encoded);
-         json_decref(msg);
-         m_pendingOutput.clear();
-      }
-
-      m_socketMutex.unlock();
-      m_websocketReady.set();
-      nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket session started");
-   }
-
-   /**
-    * Send output chunk to WebSocket client
-    */
-   void sendOutput(const TCHAR *text)
-   {
-      if (m_closed)
-         return;
-
-      m_socketMutex.lock();
-      if (m_started)
-      {
-         json_t *msg = json_object();
-         json_object_set_new(msg, "type", json_string("output"));
-         json_object_set_new(msg, "data", json_string_t(text));
-         char *encoded = json_dumps(msg, 0);
-         SendWebsocketFrame(m_socket, encoded, strlen(encoded));
-         MemFree(encoded);
-         json_decref(msg);
-      }
-      else
-      {
-         m_pendingOutput.append(text);
-      }
-      m_socketMutex.unlock();
-   }
-
-   /**
-    * Send output chunk from UTF-8 source
-    */
-   void sendOutputUtf8(const char *text, size_t length)
-   {
-      if (m_closed)
-         return;
-
-      m_socketMutex.lock();
-      if (m_started)
-      {
-         // Build JSON with raw UTF-8 text
-         json_t *msg = json_object();
-         json_object_set_new(msg, "type", json_string("output"));
-         json_object_set_new(msg, "data", json_stringn(text, length));
-         char *encoded = json_dumps(msg, 0);
-         SendWebsocketFrame(m_socket, encoded, strlen(encoded));
-         MemFree(encoded);
-         json_decref(msg);
-      }
-      else
-      {
-#ifdef UNICODE
-         m_pendingOutput.appendUtf8String(text, length);
-#else
-         m_pendingOutput.append(text, length);
-#endif
-      }
-      m_socketMutex.unlock();
-   }
-
-   /**
-    * Send completion message
-    */
-   void sendCompleted()
-   {
-      sendTextFrame("{\"type\":\"completed\"}");
-      close();
-   }
-
-   /**
-    * Send error message
-    */
-   void sendError(const char *message)
-   {
-      json_t *msg = json_object();
-      json_object_set_new(msg, "type", json_string("error"));
-      json_object_set_new(msg, "message", json_string(message));
-      char *encoded = json_dumps(msg, 0);
-      sendTextFrame(encoded);
-      MemFree(encoded);
-      json_decref(msg);
-      close();
-   }
-
-   /**
-    * Send script result
-    */
-   void sendResult(const TCHAR *result)
-   {
-      if (m_closed)
-         return;
-
-      m_socketMutex.lock();
-      if (m_started)
-      {
-         json_t *msg = json_object();
-         json_object_set_new(msg, "type", json_string("result"));
-         json_object_set_new(msg, "data", json_string_t(result));
-         char *encoded = json_dumps(msg, 0);
-         SendWebsocketFrame(m_socket, encoded, strlen(encoded));
-         MemFree(encoded);
-         json_decref(msg);
-      }
-      m_socketMutex.unlock();
-   }
-
-   /**
-    * Main loop - read incoming WebSocket frames
-    */
-   void run()
-   {
-      while (!m_closed && !IsShutdownInProgress())
-      {
-         ByteStream buffer;
-         BYTE frameType;
-
-         if (!ReadWebsocketFrame(static_cast<int>(m_socket), &buffer, &frameType))
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket: read error");
-            break;
-         }
-
-         if (frameType == 0x08)  // Close frame
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket: received close frame");
-            break;
-         }
-         else if (frameType == 0x09)  // Ping frame
-         {
-            m_socketMutex.lock();
-            BYTE pong[2] = { 0x8A, 0x00 };
-            SendEx(m_socket, pong, 2, 0, nullptr);
-            m_socketMutex.unlock();
-         }
-         // Ignore other frame types for now (cancel support can be added later)
-      }
-      close();
-   }
-
-   /**
-    * Close the session
-    */
-   void close()
-   {
-      m_closeMutex.lock();
-      if (m_closed)
-      {
-         m_closeMutex.unlock();
-         return;
-      }
-      m_closed = true;
-      m_closeMutex.unlock();
-
-      m_socketMutex.lock();
-      if (m_socket != INVALID_SOCKET)
-         SendWebsocketCloseFrame(m_socket, WS_CLOSE_NORMAL);
-      m_socketMutex.unlock();
-
-      if (m_responseHandle != nullptr)
-         MHD_upgrade_action(m_responseHandle, MHD_UPGRADE_ACTION_CLOSE);
-
-      nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket session closed");
-   }
-
-   /**
-    * Mark execution as complete (used by cleanup to know if session can be removed)
-    */
-   void setExecutionComplete() { m_executionComplete = true; }
-   bool isExecutionComplete() const { return m_executionComplete; }
+   void sendOutput(const wchar_t *text);
+   void sendOutputUtf8(const char *text, size_t length);
+   void sendResult(const wchar_t *result);
+   void sendCompleted();
+   void sendError(const char *message);
 };
 
 /**
- * Pending tool output sessions
+ * Tool output sessions waiting for WebSocket connection, indexed by connection token
  */
-static HashMap<uuid, ToolOutputWebSocketSession> s_pendingToolOutputSessions(Ownership::True);
-static Mutex s_pendingToolOutputSessionsLock;
+static SharedHashMap<uuid, ToolOutputWebSocketSession> s_pendingToolOutputSessions;
+static Mutex s_pendingToolOutputSessionsLock(MutexType::FAST);
 
 /**
- * Cleanup expired tool output sessions
+ * Session constructor
  */
-void CleanupExpiredToolOutputSessions()
+ToolOutputWebSocketSession::ToolOutputWebSocketSession(const uuid& token) : m_token(token), m_socketMutex(MutexType::FAST), m_connected(true)
 {
-   time_t now = time(nullptr);
+   m_responseHandle = nullptr;
+   m_socket = INVALID_SOCKET;
+   m_closeFrameSent = false;
+   m_disconnected = false;
+}
 
+/**
+ * Wait for WebSocket client connection (called from execution thread). Returns false if client
+ * did not connect within token validity period - in that case token is invalidated and tool should not be executed.
+ */
+bool ToolOutputWebSocketSession::waitForConnection()
+{
+   if (m_connected.wait(TOOL_OUTPUT_TOKEN_VALIDITY * 1000))
+      return true;
+
+   // Token may be consumed by connection handler right at timeout, in that case connection will be established shortly
    s_pendingToolOutputSessionsLock.lock();
-
-   StructArray<uuid> expired;
-   s_pendingToolOutputSessions.forEach(
-      [now, &expired](const uuid& token, ToolOutputWebSocketSession *session) -> EnumerationCallbackResult
-      {
-         if (now - session->getCreationTime() > TOOL_OUTPUT_TOKEN_VALIDITY * 2)
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, L"Cleaning up expired tool output session token");
-            session->close();
-            expired.add(token);
-         }
-         return _CONTINUE;
-      });
-
-   for (int i = 0; i < expired.size(); i++)
-      s_pendingToolOutputSessions.remove(*expired.get(i));
-
+   bool expired = s_pendingToolOutputSessions.contains(m_token);
+   if (expired)
+      s_pendingToolOutputSessions.remove(m_token);
    s_pendingToolOutputSessionsLock.unlock();
 
-   ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredToolOutputSessions);
+   if (expired)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Tool execution cancelled: client did not connect within %d seconds", TOOL_OUTPUT_TOKEN_VALIDITY);
+      return false;
+   }
+
+   m_connected.wait(INFINITE);
+   return true;
+}
+
+/**
+ * Attach WebSocket connection to session
+ */
+void ToolOutputWebSocketSession::connect(MHD_UpgradeResponseHandle *responseHandle, SOCKET s)
+{
+   m_socketMutex.lock();
+   m_responseHandle = responseHandle;
+   m_socket = s;
+   m_socketMutex.unlock();
+   m_connected.set();
+   nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket session started");
+}
+
+/**
+ * Send JSON message to WebSocket client
+ */
+void ToolOutputWebSocketSession::sendMessage(json_t *msg)
+{
+   char *encoded = json_dumps(msg, 0);
+   m_socketMutex.lock();
+   if ((m_socket != INVALID_SOCKET) && !m_closeFrameSent && !m_disconnected)
+      SendWebsocketFrame(m_socket, encoded, strlen(encoded));
+   m_socketMutex.unlock();
+   MemFree(encoded);
+}
+
+/**
+ * Send final message and close frame, then shut down socket so that reader thread will finish
+ */
+void ToolOutputWebSocketSession::finish(json_t *msg)
+{
+   sendMessage(msg);
+   m_socketMutex.lock();
+   if ((m_socket != INVALID_SOCKET) && !m_closeFrameSent && !m_disconnected)
+   {
+      SendWebsocketCloseFrame(m_socket, WS_CLOSE_NORMAL);
+      shutdown(m_socket, SHUT_RDWR);
+   }
+   m_closeFrameSent = true;
+   m_socketMutex.unlock();
+}
+
+/**
+ * Send output chunk to WebSocket client
+ */
+void ToolOutputWebSocketSession::sendOutput(const wchar_t *text)
+{
+   json_t *msg = json_object();
+   json_object_set_new(msg, "type", json_string("output"));
+   json_object_set_new(msg, "data", json_string_w(text));
+   sendMessage(msg);
+   json_decref(msg);
+}
+
+/**
+ * Send output chunk from UTF-8 source
+ */
+void ToolOutputWebSocketSession::sendOutputUtf8(const char *text, size_t length)
+{
+   json_t *msg = json_object();
+   json_object_set_new(msg, "type", json_string("output"));
+   json_object_set_new(msg, "data", json_stringn(text, length));
+   sendMessage(msg);
+   json_decref(msg);
+}
+
+/**
+ * Send script result
+ */
+void ToolOutputWebSocketSession::sendResult(const wchar_t *result)
+{
+   json_t *msg = json_object();
+   json_object_set_new(msg, "type", json_string("result"));
+   json_object_set_new(msg, "data", json_string_w(result));
+   sendMessage(msg);
+   json_decref(msg);
+}
+
+/**
+ * Send completion message and close connection
+ */
+void ToolOutputWebSocketSession::sendCompleted()
+{
+   json_t *msg = json_object();
+   json_object_set_new(msg, "type", json_string("completed"));
+   finish(msg);
+   json_decref(msg);
+}
+
+/**
+ * Send error message and close connection
+ */
+void ToolOutputWebSocketSession::sendError(const char *message)
+{
+   json_t *msg = json_object();
+   json_object_set_new(msg, "type", json_string("error"));
+   json_object_set_new(msg, "message", json_string(message));
+   finish(msg);
+   json_decref(msg);
+}
+
+/**
+ * Read frames from WebSocket client until connection is closed by either side
+ */
+void ToolOutputWebSocketSession::readFrames()
+{
+   while(true)
+   {
+      ByteStream buffer;
+      BYTE frameType;
+      if (!ReadWebsocketFrame(m_socket, &buffer, &frameType))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket: read error or connection closed");
+         break;
+      }
+
+      if (frameType == 0x08)  // Close frame
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket: received close frame");
+         break;
+      }
+      else if (frameType == 0x09)  // Ping frame
+      {
+         m_socketMutex.lock();
+         if (!m_closeFrameSent)
+         {
+            BYTE pong[2] = { 0x8A, 0x00 };  // FIN + pong opcode, no payload
+            SendEx(m_socket, pong, 2, 0, nullptr);
+         }
+         m_socketMutex.unlock();
+      }
+      // Ignore other frame types
+   }
+
+   m_socketMutex.lock();
+   if (!m_closeFrameSent)
+      SendWebsocketCloseFrame(m_socket, WS_CLOSE_NORMAL);
+   m_disconnected = true;
+   m_socketMutex.unlock();
+
+   MHD_upgrade_action(m_responseHandle, MHD_UPGRADE_ACTION_CLOSE);
+   nxlog_debug_tag(DEBUG_TAG, 5, L"Tool output WebSocket session closed");
 }
 
 /**
@@ -344,7 +284,7 @@ static void StreamingActionOutputCallback(ActionCallbackEvent e, const void *tex
 class WebAPIStreamingProcessExecutor : public ProcessExecutor
 {
 private:
-   ToolOutputWebSocketSession *m_session;
+   shared_ptr<ToolOutputWebSocketSession> m_session;
 
 protected:
    virtual void onOutput(const char *text, size_t length) override
@@ -358,7 +298,7 @@ protected:
    }
 
 public:
-   WebAPIStreamingProcessExecutor(const TCHAR *command, ToolOutputWebSocketSession *session)
+   WebAPIStreamingProcessExecutor(const TCHAR *command, const shared_ptr<ToolOutputWebSocketSession>& session)
       : ProcessExecutor(command, true), m_session(session)
    {
       m_sendOutput = true;
@@ -386,10 +326,10 @@ public:
 class NXSL_WebAPIStreamingEnv : public NXSL_ServerEnv
 {
 private:
-   ToolOutputWebSocketSession *m_session;
+   shared_ptr<ToolOutputWebSocketSession> m_session;
 
 public:
-   NXSL_WebAPIStreamingEnv(ToolOutputWebSocketSession *session) : NXSL_ServerEnv(), m_session(session) {}
+   NXSL_WebAPIStreamingEnv(const shared_ptr<ToolOutputWebSocketSession>& session) : NXSL_ServerEnv(), m_session(session) {}
    virtual void print(const TCHAR *text) override { m_session->sendOutput(text); }
 };
 
@@ -901,31 +841,41 @@ static int ExecuteSSHCommand(Context *context, const shared_ptr<NetObj>& object,
 }
 
 /**
- * Data for streaming agent action execution on thread pool
+ * Data for streaming tool execution on thread pool
  */
-struct StreamingAgentActionData
+struct StreamingToolData
 {
    shared_ptr<NetObj> object;
    TCHAR *toolData;
    Alarm *alarm;
    StringMap inputFields;
-   StringList maskedFields;
-   ToolOutputWebSocketSession *session;
+   shared_ptr<ToolOutputWebSocketSession> session;
    uint32_t userId;
    wchar_t loginName[MAX_USER_NAME];
+
+   StreamingToolData(const shared_ptr<NetObj>& _object, TCHAR *_toolData, Alarm *_alarm, const StringMap& _inputFields,
+            const shared_ptr<ToolOutputWebSocketSession>& _session, const Context *context) : object(_object), inputFields(_inputFields), session(_session)
+   {
+      toolData = _toolData;
+      alarm = _alarm;
+      userId = context->getUserId();
+      wcslcpy(loginName, context->getLoginName(), MAX_USER_NAME);
+   }
+
+   ~StreamingToolData()
+   {
+      delete alarm;
+      MemFree(toolData);
+   }
 };
 
 /**
  * Execute agent action in streaming mode (thread pool callback)
  */
-static void StreamingAgentActionThread(StreamingAgentActionData *data)
+static void StreamingAgentActionThread(StreamingToolData *data)
 {
-   data->session->waitForWebSocket(TOOL_OUTPUT_TOKEN_VALIDITY * 1000);
-
-   if (data->session->isClosed())
+   if (!data->session->waitForConnection())
    {
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -933,8 +883,6 @@ static void StreamingAgentActionThread(StreamingAgentActionData *data)
    if (data->object->getObjectClass() != OBJECT_NODE)
    {
       data->session->sendError("Object is not a node");
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -943,8 +891,6 @@ static void StreamingAgentActionThread(StreamingAgentActionData *data)
    if (conn == nullptr)
    {
       data->session->sendError("Cannot connect to agent");
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -954,7 +900,7 @@ static void StreamingAgentActionThread(StreamingAgentActionData *data)
    wcslcpy(actionName, args.get(0), MAX_PARAM_NAME);
    args.remove(0);
 
-   uint32_t rcc = conn->executeCommand(actionName, args, true, StreamingActionOutputCallback, data->session, true);
+   uint32_t rcc = conn->executeCommand(actionName, args, true, StreamingActionOutputCallback, data->session.get(), true);
    if (rcc != ERR_SUCCESS)
    {
       char errorMsg[256];
@@ -966,36 +912,16 @@ static void StreamingAgentActionThread(StreamingAgentActionData *data)
       data->session->sendCompleted();
    }
 
-   delete data->alarm;
-   MemFree(data->toolData);
    delete data;
 }
 
 /**
- * Data for streaming server command execution on thread pool
- */
-struct StreamingServerCommandData
-{
-   shared_ptr<NetObj> object;
-   TCHAR *toolData;
-   Alarm *alarm;
-   StringMap inputFields;
-   StringList maskedFields;
-   ToolOutputWebSocketSession *session;
-   wchar_t loginName[MAX_USER_NAME];
-};
-
-/**
  * Execute server command in streaming mode (thread pool callback)
  */
-static void StreamingServerCommandThread(StreamingServerCommandData *data)
+static void StreamingServerCommandThread(StreamingToolData *data)
 {
-   data->session->waitForWebSocket(TOOL_OUTPUT_TOKEN_VALIDITY * 1000);
-
-   if (data->session->isClosed())
+   if (!data->session->waitForConnection())
    {
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -1003,49 +929,26 @@ static void StreamingServerCommandThread(StreamingServerCommandData *data)
    StringBuffer expandedCommand = data->object->expandText(data->toolData, data->alarm, nullptr, shared_ptr<DCObjectInfo>(), data->loginName, nullptr, nullptr, &data->inputFields, nullptr);
 
    WebAPIStreamingProcessExecutor executor(expandedCommand, data->session);
-   if (!executor.execute())
+   if (executor.execute())
+   {
+      // Wait for process to complete (endOfOutput will send completed message)
+      executor.waitForCompletion(INFINITE);
+   }
+   else
    {
       data->session->sendError("Failed to execute server command");
-      delete data->alarm;
-      MemFree(data->toolData);
-      delete data;
-      return;
    }
 
-   // Wait for process to complete (endOfOutput will send completed/error)
-   executor.waitForCompletion(INFINITE);
-
-   delete data->alarm;
-   MemFree(data->toolData);
    delete data;
 }
 
 /**
- * Data for streaming server script execution on thread pool
- */
-struct StreamingServerScriptData
-{
-   shared_ptr<NetObj> object;
-   TCHAR *toolData;
-   Alarm *alarm;
-   StringMap inputFields;
-   StringList maskedFields;
-   ToolOutputWebSocketSession *session;
-   uint32_t userId;
-   wchar_t loginName[MAX_USER_NAME];
-};
-
-/**
  * Execute server script in streaming mode (thread pool callback)
  */
-static void StreamingServerScriptThread(StreamingServerScriptData *data)
+static void StreamingServerScriptThread(StreamingToolData *data)
 {
-   data->session->waitForWebSocket(TOOL_OUTPUT_TOKEN_VALIDITY * 1000);
-
-   if (data->session->isClosed())
+   if (!data->session->waitForConnection())
    {
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -1057,8 +960,6 @@ static void StreamingServerScriptThread(StreamingServerScriptData *data)
    {
       delete scriptArgs;
       data->session->sendError("Empty script name");
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -1069,8 +970,6 @@ static void StreamingServerScriptThread(StreamingServerScriptData *data)
    {
       delete scriptArgs;
       data->session->sendError("Script not found in library");
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -1085,9 +984,7 @@ static void StreamingServerScriptThread(StreamingServerScriptData *data)
 
    if (!vm->run(sargs))
    {
-      char errorMsg[1024];
-      snprintf(errorMsg, sizeof(errorMsg), "Script execution failed");
-      data->session->sendError(errorMsg);
+      data->session->sendError("Script execution failed");
    }
    else
    {
@@ -1099,38 +996,18 @@ static void StreamingServerScriptThread(StreamingServerScriptData *data)
 
    delete vm;
    delete scriptArgs;
-   delete data->alarm;
-   MemFree(data->toolData);
    delete data;
 }
-
-/**
- * Data for streaming SSH command execution on thread pool
- */
-struct StreamingSSHCommandData
-{
-   shared_ptr<NetObj> object;
-   TCHAR *toolData;
-   Alarm *alarm;
-   StringMap inputFields;
-   StringList maskedFields;
-   ToolOutputWebSocketSession *session;
-   wchar_t loginName[MAX_USER_NAME];
-};
 
 /**
  * Execute SSH command in streaming mode (thread pool callback). The SSH session is opened
  * against the owning node of the target object; `data->object` is used for macro expansion
  * context.
  */
-static void StreamingSSHCommandThread(StreamingSSHCommandData *data)
+static void StreamingSSHCommandThread(StreamingToolData *data)
 {
-   data->session->waitForWebSocket(TOOL_OUTPUT_TOKEN_VALIDITY * 1000);
-
-   if (data->session->isClosed())
+   if (!data->session->waitForConnection())
    {
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -1139,8 +1016,6 @@ static void StreamingSSHCommandThread(StreamingSSHCommandData *data)
    if (targetNode == nullptr)
    {
       data->session->sendError("SSH command not supported for this object");
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -1153,8 +1028,6 @@ static void StreamingSSHCommandThread(StreamingSSHCommandData *data)
    if (proxy == nullptr)
    {
       data->session->sendError("SSH proxy not available");
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -1163,8 +1036,6 @@ static void StreamingSSHCommandThread(StreamingSSHCommandData *data)
    if (conn == nullptr)
    {
       data->session->sendError("Cannot connect to SSH proxy agent");
-      delete data->alarm;
-      MemFree(data->toolData);
       delete data;
       return;
    }
@@ -1178,7 +1049,7 @@ static void StreamingSSHCommandThread(StreamingSSHCommandData *data)
    sshArgs.add(command);
    sshArgs.add(node.getSshKeyId());
 
-   uint32_t rcc = conn->executeCommand(_T("SSH.Command"), sshArgs, true, StreamingActionOutputCallback, data->session, true);
+   uint32_t rcc = conn->executeCommand(_T("SSH.Command"), sshArgs, true, StreamingActionOutputCallback, data->session.get(), true);
    if (rcc != ERR_SUCCESS)
    {
       char errorMsg[256];
@@ -1190,8 +1061,6 @@ static void StreamingSSHCommandThread(StreamingSSHCommandData *data)
       data->session->sendCompleted();
    }
 
-   delete data->alarm;
-   MemFree(data->toolData);
    delete data;
 }
 
@@ -1350,71 +1219,27 @@ int H_ObjectToolExecute(Context *context)
    if (streamRequested && IsStreamableToolType(toolType) && (toolFlags & TF_GENERATES_OUTPUT))
    {
       // Streaming mode - start async execution, return token for WebSocket connection
-      auto *session = new ToolOutputWebSocketSession();
-
       uuid token = uuid::generate();
+      auto session = make_shared<ToolOutputWebSocketSession>(token);
       s_pendingToolOutputSessionsLock.lock();
       s_pendingToolOutputSessions.set(token, session);
       s_pendingToolOutputSessionsLock.unlock();
 
       // Start tool execution on thread pool
+      auto data = new StreamingToolData(object, toolData, alarm, inputFields, session, context);
       switch(toolType)
       {
          case TOOL_TYPE_ACTION:
-         {
-            auto *data = new StreamingAgentActionData();
-            data->object = object;
-            data->toolData = toolData;
-            data->alarm = alarm;
-            data->inputFields = inputFields;
-            data->maskedFields = maskedFields;
-            data->session = session;
-            data->userId = context->getUserId();
-            wcslcpy(data->loginName, context->getLoginName(), MAX_USER_NAME);
             ThreadPoolExecute(g_mainThreadPool, StreamingAgentActionThread, data);
             break;
-         }
          case TOOL_TYPE_SERVER_COMMAND:
-         {
-            auto *data = new StreamingServerCommandData();
-            data->object = object;
-            data->toolData = toolData;
-            data->alarm = alarm;
-            data->inputFields = inputFields;
-            data->maskedFields = maskedFields;
-            data->session = session;
-            wcslcpy(data->loginName, context->getLoginName(), MAX_USER_NAME);
             ThreadPoolExecute(g_mainThreadPool, StreamingServerCommandThread, data);
             break;
-         }
          case TOOL_TYPE_SERVER_SCRIPT:
-         {
-            auto *data = new StreamingServerScriptData();
-            data->object = object;
-            data->toolData = toolData;
-            data->alarm = alarm;
-            data->inputFields = inputFields;
-            data->maskedFields = maskedFields;
-            data->session = session;
-            data->userId = context->getUserId();
-            wcslcpy(data->loginName, context->getLoginName(), MAX_USER_NAME);
             ThreadPoolExecute(g_mainThreadPool, StreamingServerScriptThread, data);
             break;
-         }
          case TOOL_TYPE_SSH_COMMAND:
-         {
-            auto *data = new StreamingSSHCommandData();
-            data->object = object;
-            data->toolData = toolData;
-            data->alarm = alarm;
-            data->inputFields = inputFields;
-            data->maskedFields = maskedFields;
-            data->session = session;
-            wcslcpy(data->loginName, context->getLoginName(), MAX_USER_NAME);
             ThreadPoolExecute(g_mainThreadPool, StreamingSSHCommandThread, data);
-            break;
-         }
-         default:
             break;
       }
 
@@ -1506,13 +1331,11 @@ void WS_ToolOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
       return;
    }
 
-   // Look up and remove pending session (token is single-use)
+   // Token is single-use; it is removed by execution thread when not used within validity period
    s_pendingToolOutputSessionsLock.lock();
-   ToolOutputWebSocketSession *session = s_pendingToolOutputSessions.get(token);
+   shared_ptr<ToolOutputWebSocketSession> session = s_pendingToolOutputSessions.getShared(token);
    if (session != nullptr)
-   {
-      s_pendingToolOutputSessions.unlink(token);
-   }
+      s_pendingToolOutputSessions.remove(token);
    s_pendingToolOutputSessionsLock.unlock();
 
    if (session == nullptr)
@@ -1523,24 +1346,8 @@ void WS_ToolOutputConnect(void *cls, MHD_Connection *connection, void *con_cls,
       return;
    }
 
-   // Check expiration
-   if (time(nullptr) - session->getCreationTime() > TOOL_OUTPUT_TOKEN_VALIDITY)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 4, L"Tool output WebSocket connection rejected: token expired");
-      session->close();
-      delete session;
-      SendWebsocketCloseFrame(static_cast<SOCKET>(sock), WS_CLOSE_POLICY_VIOLATION);
-      MHD_upgrade_action(responseHandle, MHD_UPGRADE_ACTION_CLOSE);
-      return;
-   }
-
-   session->start(responseHandle, static_cast<SOCKET>(sock));
+   session->connect(responseHandle, static_cast<SOCKET>(sock));
    nxlog_debug_tag(DEBUG_TAG, 4, L"Tool output WebSocket connection established");
 
-   ThreadCreate(
-      [session]() -> void
-      {
-         session->run();
-         delete session;
-      });
+   ThreadCreate([session]() -> void { session->readFrames(); });
 }

@@ -34,11 +34,6 @@ DEFINE_MODULE_METADATA("WEBAPI", "Raden Solutions", NETXMS_VERSION_STRING_A, NET
 void CleanupExpiredTcpProxySessions();
 
 /**
- * Cleanup expired tool output sessions
- */
-void CleanupExpiredToolOutputSessions();
-
-/**
  * Cleanup expired server console sessions
  */
 void CleanupExpiredServerConsoleSessions();
@@ -1174,7 +1169,6 @@ static bool InitModule(Config *config)
 
 
    ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredTcpProxySessions);  // In 5 minutes
-   ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredToolOutputSessions);  // In 5 minutes
    ThreadPoolScheduleRelative(g_mainThreadPool, 300000, CleanupExpiredServerConsoleSessions);  // In 5 minutes
    return true;
 }
