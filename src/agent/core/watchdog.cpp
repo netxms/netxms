@@ -593,7 +593,11 @@ void ExternalSubagentWatchdog()
       WTS_SESSION_INFO *sessions;
       DWORD sessionCount;
       if (!WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &sessionCount))
+      {
+         TCHAR errorText[1024];
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Cannot enumerate sessions (%s)"), GetSystemErrorText(GetLastError(), errorText, 1024));
          continue;
+      }
 
       bool found = false;
       for (DWORD i = 0; i < sessionCount; i++)
