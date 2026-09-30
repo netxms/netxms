@@ -181,6 +181,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("bytestream.nxsl"));
    RunTestScript(_T("concat.nxsl"));
    RunTestScript(_T("control.nxsl"));
+   RunTestScript(_T("do-first.nxsl"));
    RunTestScript(_T("gethost.nxsl"));
    RunTestScript(_T("globals.nxsl"));
    RunTestScript(_T("hashmap.nxsl"));
@@ -196,6 +197,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("time.nxsl"));
    RunTestScript(_T("try-catch.nxsl"));
    RunTestScript(_T("types.nxsl"));
+   RunTestScript(_T("while-first.nxsl"));
    RunTestScript(_T("with.nxsl"));
 
 #ifdef UNICODE

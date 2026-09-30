@@ -1,0 +1,22 @@
+/*
+ * do-while loop as the very first statement starts at address 0 (issue #3725).
+ * No statement may precede the loop, so variables are initialized inside it.
+ */
+do
+{
+	if (g_i == null)
+		g_i = 0;
+	g_i++;
+} while(g_i < 3);
+assert(g_i == 3);
+
+do
+{
+	if (g_j == null)
+		g_j = 0;
+	if (++g_j == 4)
+		break;
+} while(true);
+assert(g_j == 4);
+
+return 0;
