@@ -155,27 +155,27 @@ public class ObjectBrowser extends NavigationView
       createActions();
       final MenuManager menuManager = new ObjectContextMenuManager(this, objectTree.getSelectionProvider(), objectTree.getTreeViewer()) {
          @Override
-         protected void addObjectMoveActions(IStructuredSelection selection)
+         protected void addObjectMoveActions(IMenuManager manager, IStructuredSelection selection)
          {
             switch(subtreeType)
             {
                case INFRASTRUCTURE:
-                  addInfrastructureTreeMoveAction(this, selection);
+                  addInfrastructureTreeMoveAction(manager, selection);
                   break;
                case TEMPLATES:
-                  add(actionMoveTemplate);
+                  manager.add(actionMoveTemplate);
                   break;
                case BUSINESS_SERVICES:
-                  add(actionMoveBusinessService);
+                  manager.add(actionMoveBusinessService);
                   break;
                case DASHBOARDS:
-                  add(actionMoveDashboard);
+                  manager.add(actionMoveDashboard);
                   break;
                case MAPS:
-                  add(actionMoveMap);
+                  manager.add(actionMoveMap);
                   break;
                case ASSETS:
-                  add(actionMoveAsset);
+                  manager.add(actionMoveAsset);
                   break;
                default:
                   break;
@@ -317,7 +317,7 @@ public class ObjectBrowser extends NavigationView
     * @param manager menu manager
     * @param selection current selection
     */
-   private void addInfrastructureTreeMoveAction(ObjectContextMenuManager manager, IStructuredSelection selection)
+   private void addInfrastructureTreeMoveAction(IMenuManager manager, IStructuredSelection selection)
    {
       boolean moveInterface = false;
       for(Object o : selection.toList())

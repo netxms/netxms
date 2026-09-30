@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.ContributionItem;
+import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -223,67 +226,114 @@ public final class ObjectMenuFactory
    public static Menu createToolsMenu(IStructuredSelection selection, long contextId, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
    {
       final Set<ObjectContext> objects = buildObjectSet(selection, contextId);
+      final List<ObjectTool> tools = getApplicableTools(objects);
+      if (tools.isEmpty())
+         return null;
+
       final Menu toolsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
+      addObjectToolItems(toolsMenu, tools, objects, viewPlacement);
+      return toolsMenu;
+   }
 
-      final ImageCache imageCache = new ImageCache();
-      toolsMenu.addDisposeListener((e) -> imageCache.dispose());
-
-      ObjectTool[] tools = ObjectToolsCache.getInstance().getTools();
-      Arrays.sort(tools, new Comparator<ObjectTool>() {
+   /**
+    * Create contribution item that adds object tools applicable to given selection to the menu it is placed in. Item is not
+    * visible if there are no applicable tools.
+    *
+    * @param selection selection of objects
+    * @param contextId context object ID
+    * @param viewPlacement view placement information (can be used for displaying messages and creating new views)
+    * @return new contribution item
+    */
+   public static IContributionItem createToolsContributionItem(IStructuredSelection selection, long contextId, final ViewPlacement viewPlacement)
+   {
+      final Set<ObjectContext> objects = buildObjectSet(selection, contextId);
+      final List<ObjectTool> tools = getApplicableTools(objects);
+      return new ContributionItem() {
          @Override
-         public int compare(ObjectTool tool1, ObjectTool tool2)
+         public boolean isVisible()
          {
-            return tool1.getName().replace("&", "").compareToIgnoreCase(tool2.getName().replace("&", ""));
+            return !tools.isEmpty();
          }
-      });
+
+         @Override
+         public boolean isDynamic()
+         {
+            return true;
+         }
+
+         @Override
+         public void fill(Menu menu, int index)
+         {
+            addObjectToolItems(menu, tools, objects, viewPlacement);
+         }
+      };
+   }
+
+   /**
+    * Get enabled object tools applicable to given set of objects, sorted by name.
+    *
+    * @param objects set of objects
+    * @return list of applicable tools
+    */
+   private static List<ObjectTool> getApplicableTools(Set<ObjectContext> objects)
+   {
+      List<ObjectTool> tools = new ArrayList<ObjectTool>();
+      for(ObjectTool tool : ObjectToolsCache.getInstance().getTools())
+      {
+         if (((tool.getFlags() & ObjectTool.DISABLED) == 0) && ObjectToolExecutor.isToolApplicable(tool, objects))
+            tools.add(tool);
+      }
+      tools.sort((tool1, tool2) -> tool1.getName().replace("&", "").compareToIgnoreCase(tool2.getName().replace("&", "")));
+      return tools;
+   }
+
+   /**
+    * Add menu items for given object tools to the end of the menu. Tool names containing "->" are placed into cascade submenus.
+    *
+    * @param menu menu to add items to
+    * @param tools object tools to add
+    * @param objects set of objects tools will be executed on
+    * @param viewPlacement view placement information (can be used for displaying messages and creating new views)
+    */
+   private static void addObjectToolItems(Menu menu, List<ObjectTool> tools, final Set<ObjectContext> objects, final ViewPlacement viewPlacement)
+   {
+      final ImageCache imageCache = new ImageCache();
+      menu.addDisposeListener((e) -> imageCache.dispose());
 
       Map<String, Menu> menus = new HashMap<String, Menu>();
-      for(int i = 0; i < tools.length; i++)
+      for(final ObjectTool tool : tools)
       {
-         boolean enabled = (tools[i].getFlags() & ObjectTool.DISABLED) == 0;
-         if (enabled && ObjectToolExecutor.isToolApplicable(tools[i], objects))
+         String[] path = tool.getName().split("\\-\\>");
+
+         Menu rootMenu = menu;
+         for(int j = 0; j < path.length - 1; j++)
          {
-            String[] path = tools[i].getName().split("\\-\\>");
-
-            Menu rootMenu = toolsMenu;
-            for(int j = 0; j < path.length - 1; j++)
+            final String key = rootMenu.hashCode() + "@" + path[j].replace("&", "");
+            Menu currMenu = menus.get(key);
+            if (currMenu == null)
             {
-               final String key = rootMenu.hashCode() + "@" + path[j].replace("&", "");
-               Menu currMenu = menus.get(key);
-               if (currMenu == null)
-               {
-                  currMenu = new Menu(rootMenu);
-                  MenuItem item = new MenuItem(rootMenu, SWT.CASCADE);
-                  item.setText(path[j]);
-                  item.setMenu(currMenu);
-                  menus.put(key, currMenu);
-               }
-               rootMenu = currMenu;
+               currMenu = new Menu(rootMenu);
+               MenuItem item = new MenuItem(rootMenu, SWT.CASCADE);
+               item.setText(path[j]);
+               item.setMenu(currMenu);
+               menus.put(key, currMenu);
             }
-
-            final MenuItem item = new MenuItem(rootMenu, SWT.PUSH);
-            item.setText(path[path.length - 1]);
-            ImageDescriptor icon = ObjectToolsCache.getInstance().findIcon(tools[i].getId());
-            if (icon != null)
-               item.setImage(imageCache.create(icon));
-            item.setData(tools[i]);
-            item.addSelectionListener(new SelectionAdapter() {
-               @Override
-               public void widgetSelected(SelectionEvent e)
-               {
-                  ObjectToolExecutor.execute(objects, objects, (ObjectTool)item.getData(), viewPlacement);
-               }
-            });
+            rootMenu = currMenu;
          }
-      }
 
-      if (toolsMenu.getItemCount() == 0)
-      {
-         toolsMenu.dispose();
-         return null;
+         final MenuItem item = new MenuItem(rootMenu, SWT.PUSH);
+         item.setText(path[path.length - 1]);
+         ImageDescriptor icon = ObjectToolsCache.getInstance().findIcon(tool.getId());
+         if (icon != null)
+            item.setImage(imageCache.create(icon));
+         item.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               ObjectToolExecutor.execute(objects, objects, tool, viewPlacement);
+            }
+         });
       }
-
-      return toolsMenu;
    }
 
    /**

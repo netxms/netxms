@@ -25,6 +25,8 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IContributionItem;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ColumnViewer;
@@ -608,7 +610,9 @@ public class ObjectContextMenuManager extends MenuManager
    }
 
    /**
-    * Fill object context menu
+    * Fill object context menu. Top level menu has fixed structure: Open, Create, object specific actions, Poll and Tools, state
+    * management (including Organize and Templates submenus), editing, and Properties. New items should be placed into one of
+    * the existing submenus rather than at top level, to keep menu short enough to fit on screen.
     */
    protected void fillContextMenu()
    {
@@ -617,131 +621,46 @@ public class ObjectContextMenuManager extends MenuManager
          return;
 
       boolean singleObject = (selection.size() == 1);
+      AbstractObject object = singleObject ? getObjectFromSelection() : null;
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+
+      MenuManager openMenu = new MenuManager(i18n.tr("Open"));
+      fillOpenMenu(openMenu, selection, object, contextId);
+      addSubmenu(openMenu);
 
       if (singleObject)
       {
-         AbstractObject object = getObjectFromSelection();
          MenuManager createMenu = new ObjectCreateMenuManager(getShell(), view, object);
          if (!createMenu.isEmpty())
          {
-            add(createMenu);
             if ((object instanceof DashboardGroup) || (object instanceof DashboardRoot))
-               add(actionImportDashboard);
-            add(new Separator());
-         }
-         if (object instanceof Asset)
-         {
-            add(actionLinkAssetToObject);
-            add(actionUnlinkAssetFromObject);
-            add(new Separator());
-         }
-         if ((object instanceof Circuit) || (object instanceof DataCollectionContainer) || (object instanceof Container) || (object instanceof ServiceRoot))
-         {
-            add(actionBind);
-            add(actionUnbind);
-            //separator will be added with move callback
-         }
-         if (object instanceof Template)
-         {
-            add(actionApplyTemplate);
-            add(actionRemoveTemplate);
-            add(actionForcePolicyInstall);
-            add(new Separator());
-         }
-         if (object instanceof Cluster)
-         {
-            add(actionAddClusterNode);
-            add(actionRemoveClusterNode);
-            add(new Separator());
-         }
-         if ((object instanceof Subnet) && ((Registry.getSession().getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_SCAN_NETWORK) != 0))
-         {
-            add(actionScanSubnet);
-            add(new Separator());
-         }
-         if (actionLinkObjectToAsset.isValidForSelection(selection))
-         {
-            add(actionCreateAssetFromObject);
-            add(actionLinkObjectToAsset);
-            if (object.getAssetId() != 0)
-               add(actionUnlinkObjectFromAsset);
-            add(new Separator());
-         }
-         if (object instanceof DashboardBase)
-         {
-            add(actionCloneAsDashboard);
-            add(actionCloneAsDashboardTemplate);
-            add(actionExportDashboard);
-            if (actionPublicAccess.isValidForSelection(selection))
-               add(actionPublicAccess);
-            add(new Separator());
-         }
-         if (object instanceof WirelessDomain)
-         {
-            add(actionAddWirelessController);
-            add(actionRemoveWirelessController);
-            add(new Separator());
+            {
+               createMenu.add(new Separator());
+               createMenu.add(actionImportDashboard);
+            }
+            add(createMenu);
          }
       }
-      else
-      {
-         if (actionUnlinkAssetFromObject.isValidForSelection(selection))
-         {
-            add(actionUnlinkAssetFromObject);
-            add(new Separator());
-         }
-         else if (actionUnlinkObjectFromAsset.isValidForSelection(selection))
-         {
-            add(actionUnlinkObjectFromAsset);
-            add(new Separator());
-         }
+      add(new Separator());
 
-         if (actionForcePolicyInstall.isValidForSelection(selection))
-         {
-            add(actionForcePolicyInstall);
-            add(new Separator());
-         }
+      fillObjectSpecificActions(selection, object);
+      add(new Separator());
+
+      final Menu pollsMenu = ObjectMenuFactory.createPollMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
+      if (pollsMenu != null)
+      {
+         add(new MenuContributionItem(i18n.tr("P&oll"), pollsMenu));
       }
 
-      if (isBindToMenuAllowed(selection))
-      {
-         add(actionBindTo);
-         if (singleObject)
-            add(actionUnbindFrom);
-         addObjectMoveActions(selection);
-         add(new Separator());
-      }
-      else if (isAddToCircuitMenuAllowed(selection))
-      {
-         add(actionAddToCircuit);
-         if (singleObject)
-            add(actionRemoveFromCircuit);
-         addObjectMoveActions(selection);
-         add(new Separator());
-      }
-      else if (isDashboardOnlySelection(selection))
-      {
-         add(actionAssignDashboard);
-         addObjectMoveActions(selection);
-         add(new Separator());
-      }
-      else if (!containsRootObject(selection))
-      {
-         addObjectMoveActions(selection);
-         add(new Separator());
-      }
+      MenuManager toolsMenu = new MenuManager(i18n.tr("&Tools"));
+      fillToolsMenu(toolsMenu, selection, object, contextId);
+      addSubmenu(toolsMenu);
+      add(new Separator());
 
-      if ((actionExpandAllChildren != null) && selectionHasChildren(selection))
+      if (isManagedMenuAllowed(selection))
       {
-         add(actionExpandAllChildren);
-         add(new Separator());
-      }
-
-      if (isTemplateManagementAllowed(selection))
-      {
-         add(actionApplyNodeTemplate);
-         add(actionRemoveObjectsTemplate);
-         add(new Separator());
+         add(actionManage);
+         add(actionUnmanage);
       }
       if (isMaintenanceMenuAllowed(selection))
       {
@@ -751,11 +670,16 @@ public class ObjectContextMenuManager extends MenuManager
             add(maintenanceMenu);
          }
       }
-      if (isManagedMenuAllowed(selection))
-      {
-         add(actionManage);
-         add(actionUnmanage);
-      }
+
+      MenuManager organizeMenu = new MenuManager(i18n.tr("Organize"));
+      fillOrganizeMenu(organizeMenu, selection, object);
+      addSubmenu(organizeMenu);
+
+      MenuManager templatesMenu = new MenuManager(i18n.tr("Templates"));
+      fillTemplatesMenu(templatesMenu, selection, object);
+      addSubmenu(templatesMenu);
+      add(new Separator());
+
       if (singleObject && (objectViewer != null))
       {
          add(actionRename);
@@ -764,224 +688,375 @@ public class ObjectContextMenuManager extends MenuManager
       {
          add(actionDelete);
       }
-      if (singleObject && (getObjectFromSelection() instanceof Node))
+      if (object instanceof Node)
       {
          add(actionDecommission);
       }
-      if (singleObject && isChangeZoneMenuAllowed(selection))
-      {
-         add(actionChangeZone);
-      }
-      add(new Separator());
 
-      if (isSendUANotificationMenuAllowed(selection))
-      {
-         add(actionSendUserAgentNotification);
-      }
-
-      // Agent management
       if (singleObject)
       {
-         AbstractObject object = getObjectFromSelection();
-         if ((object instanceof Node) && ((Node)object).hasAgent())
+         add(new Separator());
+         add(actionProperties);
+      }
+   }
+
+   /**
+    * Add given submenu to this menu if it contains at least one item other than separator.
+    *
+    * @param submenu submenu to add
+    */
+   private void addSubmenu(MenuManager submenu)
+   {
+      for(IContributionItem item : submenu.getItems())
+      {
+         if (!item.isSeparator())
          {
-            add(actionEditAgentConfig);
+            add(submenu);
+            return;
+         }
+      }
+   }
+
+   /**
+    * Fill "Open" submenu - views and informational dialogs for selected object.
+    *
+    * @param menu submenu to fill
+    * @param selection current selection
+    * @param object selected object (null if selection contains multiple objects)
+    * @param contextId context object ID
+    */
+   private void fillOpenMenu(MenuManager menu, IStructuredSelection selection, AbstractObject object, long contextId)
+   {
+      if (object != null)
+      {
+         MenuManager logMenu = new ObjectLogMenuManager(object, contextId, new ViewPlacement(view));
+         if (!logMenu.isEmpty())
+         {
+            menu.add(logMenu);
          }
       }
 
-      // Package management
-      boolean nodesWithAgent = false;
+      if (object instanceof Node)
+      {
+         Node node = (Node)object;
+         if (node.getPrimaryIP().isValidUnicastAddress() || node.isManagementServer())
+         {
+            MenuManager tracePathMenu = new MenuManager(i18n.tr("Trace path"));
+            if (!node.isManagementServer())
+               tracePathMenu.add(actionRouteFromMgmtNode);
+            tracePathMenu.add(actionRouteFrom);
+            tracePathMenu.add(actionRouteTo);
+            if (!node.isManagementServer())
+               tracePathMenu.add(actionL2RouteFromMgmtNode);
+            tracePathMenu.add(actionL2RouteFrom);
+            tracePathMenu.add(actionL2RouteTo);
+            menu.add(tracePathMenu);
+            MenuManager topologyMapMenu = new MenuManager(i18n.tr("Topology maps"));
+            topologyMapMenu.add(actionLayer2Topology);
+            topologyMapMenu.add(actionIPTopology);
+            topologyMapMenu.add(actionInternalTopology);
+            menu.add(topologyMapMenu);
+         }
+
+         menu.add(new Separator());
+         if (node.hasSnmpAgent())
+         {
+            menu.add(actionOpenMibExprorer);
+         }
+         if (node.hasAgent())
+         {
+            menu.add(actionOpenAgentExplorer);
+            menu.add(actionOpenWebServiceQuery);
+         }
+      }
+
+      menu.add(new Separator());
+      final Menu summaryTableMenu = ObjectMenuFactory.createSummaryTableMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
+      if (summaryTableMenu != null)
+      {
+         menu.add(new MenuContributionItem(i18n.tr("S&ummary tables"), summaryTableMenu));
+      }
+
+      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
+      if (graphTemplatesMenu != null)
+      {
+         menu.add(new MenuContributionItem(i18n.tr("&Graphs"), graphTemplatesMenu));
+      }
+
+      final Menu dashboardsMenu = ObjectMenuFactory.createDashboardsMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
+      if (dashboardsMenu != null)
+      {
+         menu.add(new MenuContributionItem(i18n.tr("&Dashboards"), dashboardsMenu));
+      }
+
+      final Menu mapsMenu = ObjectMenuFactory.createMapsMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
+      if (mapsMenu != null)
+      {
+         menu.add(new MenuContributionItem(i18n.tr("Network &maps"), mapsMenu));
+      }
+
+      if (object != null)
+      {
+         menu.add(new Separator());
+         menu.add(actionExplainStatus);
+         menu.add(actionShowEffectiveRights);
+      }
+   }
+
+   /**
+    * Add actions specific to selected object class (dashboards, network maps, interfaces, subnets, etc.) and actions contributed
+    * by other modules.
+    *
+    * @param selection current selection
+    * @param object selected object (null if selection contains multiple objects)
+    */
+   private void fillObjectSpecificActions(IStructuredSelection selection, AbstractObject object)
+   {
+      if ((actionExpandAllChildren != null) && selectionHasChildren(selection))
+      {
+         add(actionExpandAllChildren);
+      }
+
+      if ((object instanceof Subnet) && ((Registry.getSession().getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_SCAN_NETWORK) != 0))
+      {
+         add(actionScanSubnet);
+      }
+
+      if (object instanceof DashboardBase)
+      {
+         add(actionCloneAsDashboard);
+         add(actionCloneAsDashboardTemplate);
+         add(actionExportDashboard);
+      }
+      if (actionCloneNetworkMap.isValidForSelection(selection))
+      {
+         add(actionCloneNetworkMap);
+      }
+      if (actionPublicAccess.isValidForSelection(selection))
+      {
+         add(actionPublicAccess);
+      }
+
+      if (actionChangeInterfaceExpectedState.isValidForSelection(selection))
+      {
+         add(actionChangeInterfaceExpectedState);
+      }
+      if (actionSetInterfacePeer.isValidForSelection(selection))
+      {
+         add(actionSetInterfacePeer);
+      }
+      if (actionClearInterfacePeer.isValidForSelection(selection))
+      {
+         add(actionClearInterfacePeer);
+      }
+      if (actionChangeMacAddress.isValidForSelection(selection))
+      {
+         add(actionChangeMacAddress);
+      }
+      if (actionCreateInterfaceDCI.isValidForSelection(selection))
+      {
+         add(actionCreateInterfaceDCI);
+      }
+
+      add(new Separator());
+      for(ObjectAction<?> a : actionContributions)
+      {
+         if (a.isValidForSelection(selection))
+            add(a);
+      }
+   }
+
+   /**
+    * Fill "Tools" submenu - built-in operations executed on selected objects followed by applicable object tools.
+    *
+    * @param menu submenu to fill
+    * @param selection current selection
+    * @param object selected object (null if selection contains multiple objects)
+    * @param contextId context object ID
+    */
+   private void fillToolsMenu(MenuManager menu, IStructuredSelection selection, AbstractObject object, long contextId)
+   {
+      if ((object != null) && ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT) != 0))
+      {
+         menu.add(actionExecuteScript);
+      }
+
+      if ((object instanceof Node) && ((Node)object).hasAgent())
+      {
+         menu.add(actionEditAgentConfig);
+      }
+      if (containsNodesWithAgent(selection))
+      {
+         menu.add(actionDeployPackage);
+      }
+      if (actionUploadFileToAgent.isValidForSelection(selection))
+      {
+         menu.add(actionUploadFileToAgent);
+      }
+      if (isSendUANotificationMenuAllowed(selection))
+      {
+         menu.add(actionSendUserAgentNotification);
+      }
+
+      if (object instanceof Node)
+      {
+         Node node = (Node)object;
+         if (node.hasVNC())
+         {
+            menu.add(actionOpenRemoteControlView);
+         }
+         if (node.hasAgent() && node.getPlatformName().startsWith("windows-"))
+         {
+            menu.add(actionTakeScreenshot);
+         }
+      }
+
+      IContributionItem objectTools = ObjectMenuFactory.createToolsContributionItem(selection, contextId, new ViewPlacement(view));
+      if (objectTools.isVisible())
+      {
+         menu.add(new Separator());
+         menu.add(objectTools);
+      }
+   }
+
+   /**
+    * Fill "Organize" submenu - placement of selected objects in object hierarchy, asset links, and zone.
+    *
+    * @param menu submenu to fill
+    * @param selection current selection
+    * @param object selected object (null if selection contains multiple objects)
+    */
+   private void fillOrganizeMenu(MenuManager menu, IStructuredSelection selection, AbstractObject object)
+   {
+      if (object != null)
+      {
+         if ((object instanceof Circuit) || (object instanceof DataCollectionContainer) || (object instanceof Container) || (object instanceof ServiceRoot))
+         {
+            menu.add(actionBind);
+            menu.add(actionUnbind);
+         }
+         if (object instanceof Cluster)
+         {
+            menu.add(actionAddClusterNode);
+            menu.add(actionRemoveClusterNode);
+         }
+         if (object instanceof WirelessDomain)
+         {
+            menu.add(actionAddWirelessController);
+            menu.add(actionRemoveWirelessController);
+         }
+      }
+      menu.add(new Separator());
+
+      if (isBindToMenuAllowed(selection))
+      {
+         menu.add(actionBindTo);
+         if (object != null)
+            menu.add(actionUnbindFrom);
+         addObjectMoveActions(menu, selection);
+      }
+      else if (isAddToCircuitMenuAllowed(selection))
+      {
+         menu.add(actionAddToCircuit);
+         if (object != null)
+            menu.add(actionRemoveFromCircuit);
+         addObjectMoveActions(menu, selection);
+      }
+      else if (isDashboardOnlySelection(selection))
+      {
+         menu.add(actionAssignDashboard);
+         addObjectMoveActions(menu, selection);
+      }
+      else if (!containsRootObject(selection))
+      {
+         addObjectMoveActions(menu, selection);
+      }
+      menu.add(new Separator());
+
+      if (object instanceof Asset)
+      {
+         menu.add(actionLinkAssetToObject);
+         menu.add(actionUnlinkAssetFromObject);
+      }
+      else if (object != null)
+      {
+         if (actionLinkObjectToAsset.isValidForSelection(selection))
+         {
+            menu.add(actionCreateAssetFromObject);
+            menu.add(actionLinkObjectToAsset);
+            if (object.getAssetId() != 0)
+               menu.add(actionUnlinkObjectFromAsset);
+         }
+      }
+      else if (actionUnlinkAssetFromObject.isValidForSelection(selection))
+      {
+         menu.add(actionUnlinkAssetFromObject);
+      }
+      else if (actionUnlinkObjectFromAsset.isValidForSelection(selection))
+      {
+         menu.add(actionUnlinkObjectFromAsset);
+      }
+
+      if ((object != null) && isChangeZoneMenuAllowed(selection))
+      {
+         menu.add(new Separator());
+         menu.add(actionChangeZone);
+      }
+   }
+
+   /**
+    * Fill "Templates" submenu - template application for selected objects, or target management for selected template.
+    *
+    * @param menu submenu to fill
+    * @param selection current selection
+    * @param object selected object (null if selection contains multiple objects)
+    */
+   private void fillTemplatesMenu(MenuManager menu, IStructuredSelection selection, AbstractObject object)
+   {
+      if (object instanceof Template)
+      {
+         menu.add(actionApplyTemplate);
+         menu.add(actionRemoveTemplate);
+         menu.add(actionForcePolicyInstall);
+      }
+      else if ((object == null) && actionForcePolicyInstall.isValidForSelection(selection))
+      {
+         menu.add(actionForcePolicyInstall);
+      }
+
+      if (isTemplateManagementAllowed(selection))
+      {
+         menu.add(new Separator());
+         menu.add(actionApplyNodeTemplate);
+         menu.add(actionRemoveObjectsTemplate);
+      }
+   }
+
+   /**
+    * Check if selection contains nodes with agent, either directly or as children of selected objects.
+    *
+    * @param selection current selection
+    * @return true if selection contains at least one node with agent
+    */
+   private static boolean containsNodesWithAgent(IStructuredSelection selection)
+   {
       for(Object o : selection.toList())
       {
          if (o instanceof Node)
          {
             if (((Node)o).hasAgent())
-            {
-               nodesWithAgent = true;
-               break;
-            }
+               return true;
          }
          else
          {
             for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
             {
                if (((Node)n).hasAgent())
-               {
-                  nodesWithAgent = true;
-                  break;
-               }
-            }
-            if (nodesWithAgent)
-               break;
-         }
-      }
-      if (nodesWithAgent)
-         add(actionDeployPackage);
-
-      if (actionUploadFileToAgent.isValidForSelection(selection))
-      {
-         add(actionUploadFileToAgent);
-      }
-
-      // Screenshots, etc. for single node
-      if (singleObject)
-      {
-         add(new Separator());
-         AbstractObject object = getObjectFromSelection();
-         if (object instanceof Node)
-         {
-            if (((Node)object).hasVNC())
-            {
-               add(actionOpenRemoteControlView);
-            }
-            if (((Node)object).hasAgent() && ((Node)object).getPlatformName().startsWith("windows-"))
-            {
-               add(actionTakeScreenshot);
-            }
-            add(new Separator());
-            if (((Node)object).hasSnmpAgent())
-            {
-               add(actionOpenMibExprorer);
-            }
-            if (((Node)object).hasAgent())
-            {
-               add(actionOpenAgentExplorer);
-               add(actionOpenWebServiceQuery);
-            }
-            if (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer())
-            {
-               add(new Separator());
-               MenuManager tracePathMenu = new MenuManager(i18n.tr("Trace path"));
-               if (!((Node)object).isManagementServer())
-                  tracePathMenu.add(actionRouteFromMgmtNode);
-               tracePathMenu.add(actionRouteFrom);
-               tracePathMenu.add(actionRouteTo);
-               if (!((Node)object).isManagementServer())
-                  tracePathMenu.add(actionL2RouteFromMgmtNode);
-               tracePathMenu.add(actionL2RouteFrom);
-               tracePathMenu.add(actionL2RouteTo);
-               add(tracePathMenu);
-               MenuManager topologyMapMenu = new MenuManager(i18n.tr("Topology maps"));
-               topologyMapMenu.add(actionLayer2Topology);
-               topologyMapMenu.add(actionIPTopology);
-               topologyMapMenu.add(actionInternalTopology);
-               add(topologyMapMenu);
-            }
-            add(new Separator());
-         }
-         if ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_EXECUTE_SCRIPT) != 0)
-            add(actionExecuteScript);
-      }
-
-      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
-      if (singleObject)
-      {
-         AbstractObject object = getObjectFromSelection();
-         MenuManager logMenu = new ObjectLogMenuManager(object, contextId, new ViewPlacement(view));
-         if (!logMenu.isEmpty())
-         {
-            add(new Separator());
-            add(logMenu);
-         }
-      }
-
-      final Menu toolsMenu = ObjectMenuFactory.createToolsMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
-      if (toolsMenu != null)
-      {
-         add(new Separator());
-         add(new MenuContributionItem(i18n.tr("&Tools"), toolsMenu));
-      }
-
-      final Menu pollsMenu = ObjectMenuFactory.createPollMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
-      if (pollsMenu != null)
-      {
-         add(new Separator());
-         add(new MenuContributionItem(i18n.tr("P&oll"), pollsMenu));
-      }
-
-      add(new Separator());
-      final Menu summaryTableMenu = ObjectMenuFactory.createSummaryTableMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
-      if (summaryTableMenu != null)
-      {
-         add(new MenuContributionItem(i18n.tr("S&ummary tables"), summaryTableMenu));
-      }
-
-      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
-      if (graphTemplatesMenu != null)
-      {
-         add(new MenuContributionItem(i18n.tr("&Graphs"), graphTemplatesMenu));
-      }
-
-      final Menu dashboardsMenu = ObjectMenuFactory.createDashboardsMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
-      if (dashboardsMenu != null)
-      {
-         add(new MenuContributionItem(i18n.tr("&Dashboards"), dashboardsMenu));
-      }
-
-      final Menu mapsMenu = ObjectMenuFactory.createMapsMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
-      if (mapsMenu != null)
-      {
-         add(new MenuContributionItem(i18n.tr("Network &maps"), mapsMenu));
-      }
-
-      if (actionCloneNetworkMap.isValidForSelection(selection))
-      {
-         add(new Separator());
-         add(actionCloneNetworkMap);
-         if (actionPublicAccess.isValidForSelection(selection))
-            add(actionPublicAccess);
-      }
-
-      if (actionChangeInterfaceExpectedState.isValidForSelection(selection))
-      {
-         add(new Separator());
-         add(actionChangeInterfaceExpectedState);
-      }
-
-      if (actionSetInterfacePeer.isValidForSelection(selection))
-      {
-         add(actionSetInterfacePeer);
-      }
-
-      if (actionClearInterfacePeer.isValidForSelection(selection))
-      {
-         add(actionClearInterfacePeer);
-      }
-
-      if (actionChangeMacAddress.isValidForSelection(selection))
-      {
-         add(actionChangeMacAddress);
-      }
-
-      if (actionCreateInterfaceDCI.isValidForSelection(selection))
-      {
-         add(actionCreateInterfaceDCI);
-      }
-
-      if (!actionContributions.isEmpty())
-      {
-         boolean first = true;
-         for(ObjectAction<?> a : actionContributions)
-         {
-            if (a.isValidForSelection(selection))
-            {
-               if (first)
-               {
-                  add(new Separator());
-                  first = false;
-               }
-               add(a);
+                  return true;
             }
          }
       }
-
-      if (singleObject)
-      {
-         add(new Separator());
-         add(actionExplainStatus);
-         add(actionShowEffectiveRights);
-         add(actionProperties);
-      }
+      return false;
    }
 
    /**
@@ -2164,9 +2239,10 @@ public class ObjectContextMenuManager extends MenuManager
    /**
     * Add menu items for moving objects. Default implementation does nothing.
     *
+    * @param manager menu manager to add items to
     * @param selection current selection
     */
-   protected void addObjectMoveActions(IStructuredSelection selection)
+   protected void addObjectMoveActions(IMenuManager manager, IStructuredSelection selection)
    {
    }
 }
