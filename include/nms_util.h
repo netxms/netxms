@@ -5579,6 +5579,7 @@ bool LIBNETXMS_EXPORTABLE DeleteDirectoryTree(const TCHAR *path);
 bool LIBNETXMS_EXPORTABLE SetLastModificationTime(TCHAR *fileName, time_t lastModDate);
 bool LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
 bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR *newName);
+bool LIBNETXMS_EXPORTABLE IsSameDirectory(const TCHAR *path1, const TCHAR *path2);
 bool LIBNETXMS_EXPORTABLE MergeFiles(const TCHAR *source, const TCHAR *destination);
 
 bool LIBNETXMS_EXPORTABLE VerifyFileSignature(const TCHAR *file);
