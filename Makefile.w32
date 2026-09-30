@@ -92,11 +92,11 @@ CLIENT_DIRS =
 ifeq ($(BUILD_CLIENT),1)
 CLIENT_DIRS = \
     src/client/libnxclient \
-    src/client/nxai \
     src/client/nxalarm \
     src/client/nxevent \
     src/client/nxnotify \
     src/client/nxpush \
+    src/client/nxshell \
     src/client/nxweblauncher \
     src/client/nxmc
 endif
@@ -170,6 +170,7 @@ TESTS_DIRS = \
     tests/test-libnxsnmp \
     tests/test-libnxsl \
     tests/test-ncd-webhook \
+    tests/test-nxshell \
     tests/agent/unit/entsoe \
     tests/agent/unit/extcheck \
     tests/agent/unit/weather

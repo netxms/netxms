@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Command line AI assistant client
+** NetXMS shell
 ** Copyright (C) 2025-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 **
 **/
 
-#include "nxai.h"
+#include "nxshell.h"
 #include <nxlibcurl.h>
 
 /**
@@ -89,7 +89,10 @@ WebApiClient::WebApiClient(const char *server, bool verifyPeer)
    while(!m_baseUrl.empty() && (m_baseUrl.back() == '/'))
       m_baseUrl.pop_back();
 
+   m_errorDocument = nullptr;
    m_httpStatus = 0;
+   m_connectionFailed = false;
+   m_authenticating = false;
    m_timeout = DEFAULT_TIMEOUT;
    m_responseTimeout = DEFAULT_RESPONSE_TIMEOUT;
    m_verifyPeer = verifyPeer;
@@ -103,6 +106,7 @@ WebApiClient::~WebApiClient()
 {
    if (m_curl != nullptr)
       curl_easy_cleanup(m_curl);
+   json_decref(m_errorDocument);
 }
 
 /**
@@ -134,15 +138,42 @@ void WebApiClient::setErrorFromResponse(json_t *response, const char *rawRespons
 
 /**
  * Execute API call. If response document is requested, it will be returned in *response and caller
- * is responsible for releasing it with json_decref().
+ * is responsible for releasing it with json_decref(). If server rejects access token, new token is
+ * obtained using authenticator (if set) and call is repeated.
  */
 bool WebApiClient::call(const char *method, const char *path, json_t *request, json_t **response)
+{
+   if (execute(method, path, request, response))
+      return true;
+
+   if ((m_httpStatus != 401) || m_authenticating)
+      return false;
+
+   if (m_authenticator)
+   {
+      m_authenticating = true;
+      bool success = m_authenticator();
+      m_authenticating = false;
+      if (success)
+         return execute(method, path, request, response);
+   }
+
+   m_connectionFailed = true;
+   return false;
+}
+
+/**
+ * Execute single HTTP request to the server
+ */
+bool WebApiClient::execute(const char *method, const char *path, json_t *request, json_t **response)
 {
    if (response != nullptr)
       *response = nullptr;
 
    m_errorText.clear();
    m_httpStatus = 0;
+   json_decref(m_errorDocument);
+   m_errorDocument = nullptr;
 
    if (m_curl == nullptr)
    {
@@ -164,7 +195,7 @@ bool WebApiClient::call(const char *method, const char *path, json_t *request, j
    curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
    curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &responseData);
    curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
-   curl_easy_setopt(m_curl, CURLOPT_USERAGENT, "NetXMS AI Assistant/" NETXMS_VERSION_STRING_A);
+   curl_easy_setopt(m_curl, CURLOPT_USERAGENT, "NetXMS Shell/" NETXMS_VERSION_STRING_A);
    EnableLibCURLUnexpectedEOFWorkaround(m_curl);
 
    if (!m_verifyPeer)
@@ -199,6 +230,7 @@ bool WebApiClient::call(const char *method, const char *path, json_t *request, j
    if (rc != CURLE_OK)
    {
       m_errorText = curl_easy_strerror(rc);
+      m_connectionFailed = true;
       return false;
    }
 
@@ -219,7 +251,7 @@ bool WebApiClient::call(const char *method, const char *path, json_t *request, j
    if ((m_httpStatus < 200) || (m_httpStatus > 299))
    {
       setErrorFromResponse(document, rawResponse);
-      json_decref(document);
+      m_errorDocument = document;
       return false;
    }
 
@@ -249,11 +281,14 @@ bool WebApiClient::login(const char *username, const char *password)
    json_object_set_new(request, "password", json_string(password));
 
    json_t *response;
-   bool success = call("POST", "/v1/login", request, &response);
+   bool success = execute("POST", "/v1/login", request, &response);
    json_decref(request);
 
    if (!success)
+   {
+      m_connectionFailed = true;
       return false;
+   }
 
    const char *token = json_object_get_string_utf8(response, "token", nullptr);
    if (token != nullptr)
@@ -263,6 +298,31 @@ bool WebApiClient::login(const char *username, const char *password)
    json_decref(response);
 
    return token != nullptr;
+}
+
+/**
+ * Check that current access token is accepted by server
+ */
+bool WebApiClient::checkSession()
+{
+   return call("GET", "/v1/status", nullptr, nullptr);
+}
+
+/**
+ * Establish WebSocket connection to given path on server
+ */
+bool WebApiClient::connectWebSocket(const char *path, WebSocketClient *socket)
+{
+   std::string url = m_baseUrl;
+   url.append(path);
+   if (m_verifyPeer)
+      socket->enablePeerVerification();
+   if (socket->connect(url.c_str(), m_timeout))
+      return true;
+
+   m_errorText = "Cannot establish WebSocket connection";
+   m_connectionFailed = true;
+   return false;
 }
 
 /**
@@ -477,10 +537,90 @@ bool WebApiClient::answerQuestion(uint32_t chatId, uint64_t questionId, bool pos
 }
 
 /**
- * Find object by name. Returns false if request failed. On success object ID is set to 0
- * if no matching object was found.
+ * Load object information from JSON document
  */
-bool WebApiClient::findObject(const char *name, ObjectInfo *object)
+void ObjectInfo::loadFromJson(json_t *json)
+{
+   id = json_object_get_uint32(json, "id", 0);
+   status = json_object_get_int32(json, "status", 0);
+   name = json_object_get_string_utf8(json, "name", "");
+   className = json_object_get_string_utf8(json, "class", "");
+
+   parents.clear();
+   json_t *parentList = json_object_get(json, "parents");
+   if (json_is_array(parentList))
+   {
+      size_t i;
+      json_t *parent;
+      json_array_foreach(parentList, i, parent)
+      {
+         if (json_is_integer(parent))
+            parents.push_back(static_cast<uint32_t>(json_integer_value(parent)));
+      }
+   }
+}
+
+/**
+ * Load list of objects from JSON array
+ */
+static void LoadObjectList(json_t *document, std::vector<ObjectInfo> *objects)
+{
+   objects->clear();
+   if (!json_is_array(document))
+      return;
+
+   size_t i;
+   json_t *element;
+   json_array_foreach(document, i, element)
+   {
+      ObjectInfo object;
+      object.loadFromJson(element);
+      if (object.id != 0)
+         objects->push_back(object);
+   }
+}
+
+/**
+ * Get object with given ID, including list of its parents
+ */
+bool WebApiClient::getObject(uint32_t id, ObjectInfo *object)
+{
+   char path[64];
+   snprintf(path, sizeof(path), "/v1/objects/%u", id);
+
+   json_t *document;
+   if (!call("GET", path, nullptr, &document))
+      return false;
+
+   object->loadFromJson(document);
+   json_decref(document);
+   return true;
+}
+
+/**
+ * Get direct children of given object. If parent ID is 0, objects without accessible parents are returned.
+ */
+bool WebApiClient::getChildObjects(uint32_t parentId, std::vector<ObjectInfo> *objects)
+{
+   char path[64];
+   if (parentId != 0)
+      snprintf(path, sizeof(path), "/v1/objects?parent=%u", parentId);
+   else
+      strcpy(path, "/v1/objects");
+
+   json_t *document;
+   if (!call("GET", path, nullptr, &document))
+      return false;
+
+   LoadObjectList(document, objects);
+   json_decref(document);
+   return true;
+}
+
+/**
+ * Find objects with name or alias containing given text. Empty list is returned if there are no matching objects.
+ */
+bool WebApiClient::findObjects(const char *name, std::vector<ObjectInfo> *objects)
 {
    json_t *request = json_object();
    json_object_set_new(request, "name", json_string(name));
@@ -491,27 +631,11 @@ bool WebApiClient::findObject(const char *name, ObjectInfo *object)
 
    if (!success)
    {
-      // Older server versions may return 404 instead of empty result set
-      if (m_httpStatus == 404)
-      {
-         *object = ObjectInfo();
-         return true;
-      }
-      return false;
+      objects->clear();
+      return m_httpStatus == 404;   // Older server versions may return 404 instead of empty result set
    }
 
-   json_t *element = json_is_array(document) ? json_array_get(document, 0) : nullptr;
-   if (element != nullptr)
-   {
-      object->id = json_object_get_uint32(element, "id", 0);
-      object->name = json_object_get_string_utf8(element, "name", "");
-      object->className = json_object_get_string_utf8(element, "class", "");
-   }
-   else
-   {
-      *object = ObjectInfo();
-   }
-
+   LoadObjectList(document, objects);
    json_decref(document);
    return true;
 }

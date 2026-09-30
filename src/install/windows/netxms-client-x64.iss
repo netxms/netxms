@@ -60,11 +60,13 @@ Source: "..\..\client\nxmc\java\target\nxmc-{#VersionString}.jar"; DestDir: "{ap
 Source: "..\..\client\nxmc\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc
 ; Command line tools
 Source: "..\..\..\out\x64\Release\bin\libnxclient.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
-Source: "..\..\..\out\x64\Release\bin\nxai.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
 Source: "..\..\..\out\x64\Release\bin\nxalarm.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
 Source: "..\..\..\out\x64\Release\bin\nxevent.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
 Source: "..\..\..\out\x64\Release\bin\nxnotify.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
 Source: "..\..\..\out\x64\Release\bin\nxpush.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
+Source: "..\..\..\out\x64\Release\bin\nxshell.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
+; nxai is nxshell started under different name
+Source: "..\..\..\out\x64\Release\bin\nxshell.exe"; DestDir: "{app}"; DestName: "nxai.exe"; Flags: ignoreversion signonce; Components: cmdline
 ; Java Runtime
 Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
 ; Install-time files

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Command line AI assistant client
+** NetXMS shell
 ** Copyright (C) 2025-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 **
 **/
 
-#include "nxai.h"
+#include "nxshell.h"
 #include <signal.h>
 
 #if HAVE_LIBEDIT
@@ -197,231 +197,6 @@ static void SetInterruptHandler(WebApiClient *client)
 }
 
 /**
- * Slash command definition
- */
-struct SlashCommand
-{
-   const char *name;
-   const char *arguments;
-   const char *description;
-};
-
-/**
- * Supported slash commands
- */
-static const SlashCommand s_slashCommands[] =
-{
-   { "clear", nullptr, "Clear chat history" },
-   { "exit", nullptr, "Exit the chat" },
-   { "help", nullptr, "Show this help message" },
-   { "incident", "<id>", "Set incident context (clears context if used without argument)" },
-   { "object", "<name>", "Set object context (clears context if used without argument)" },
-   { "quit", nullptr, "Exit the chat" },
-   { "status", nullptr, "Show current session information" }
-};
-
-#define SLASH_COMMAND_COUNT   (sizeof(s_slashCommands) / sizeof(SlashCommand))
-
-/**
- * Convert ASCII characters in given string to lower case
- */
-static void ToLowerCase(std::string *text)
-{
-   for(size_t i = 0; i < text->length(); i++)
-   {
-      char ch = (*text)[i];
-      if ((ch >= 'A') && (ch <= 'Z'))
-         (*text)[i] = ch + ('a' - 'A');
-   }
-}
-
-/**
- * Append text with given SGR attributes. Attributes are ignored in plain output mode.
- */
-static void AppendHighlightedText(std::string *output, const char *attributes, const char *text)
-{
-   if (!g_plainOutput)
-      output->append("\x1b[").append(attributes).append("m");
-   output->append(text);
-   if (!g_plainOutput)
-      output->append("\x1b[0m");
-}
-
-/**
- * Show list of available commands
- */
-static void ShowCommandHelp()
-{
-   std::string text("\n");
-   AppendHighlightedText(&text, "1", "Available commands:");
-   text.append("\n\n");
-
-   for(size_t i = 0; i < SLASH_COMMAND_COUNT; i++)
-   {
-      char command[64];
-      snprintf(command, sizeof(command), "/%s%s%s", s_slashCommands[i].name,
-            (s_slashCommands[i].arguments != nullptr) ? " " : "",
-            (s_slashCommands[i].arguments != nullptr) ? s_slashCommands[i].arguments : "");
-
-      char padding[32];
-      size_t length = strlen(command);
-      size_t paddingLength = (length < 20) ? 20 - length : 1;
-      memset(padding, ' ', paddingLength);
-      padding[paddingLength] = 0;
-
-      text.append("  ");
-      AppendHighlightedText(&text, "36", command);
-      text.append(padding).append(s_slashCommands[i].description).append("\n");
-   }
-
-   text.append("\n");
-   AppendHighlightedText(&text, "1", "Keyboard shortcuts:");
-   text.append("\n\n");
-   text.append("  ");
-   AppendHighlightedText(&text, "36", "Ctrl+C");
-   text.append("              Cancel current request or input\n");
-   text.append("  ");
-   AppendHighlightedText(&text, "36", "Ctrl+D");
-   text.append("              Exit the chat\n\n");
-
-   WriteToTerminalUtf8(text.c_str());
-}
-
-/**
- * Show current session information
- */
-static void ShowSessionStatus(const ChatSession *session)
-{
-   std::string text("\n");
-   AppendHighlightedText(&text, "1", "Session status:");
-   text.append("\n\n");
-
-   char line[1024];
-   snprintf(line, sizeof(line), "  Server:  %s\n  Chat ID: %u\n", session->server.c_str(), session->chatId);
-   text.append(line);
-
-   if (session->objectId != 0)
-      snprintf(line, sizeof(line), "  Context: object [%u]\n", session->objectId);
-   else if (session->incidentId != 0)
-      snprintf(line, sizeof(line), "  Context: incident [%u]\n", session->incidentId);
-   else
-      strcpy(line, "  Context: none\n");
-   text.append(line).append("\n");
-
-   WriteToTerminalUtf8(text.c_str());
-}
-
-/**
- * Set object given by name as conversation context
- */
-static void SetObjectContext(ChatSession *session, const char *name)
-{
-   ObjectInfo object;
-   if (!session->client->findObject(name, &object))
-   {
-      PrintError("%s", session->client->getErrorText());
-      return;
-   }
-
-   if (object.id == 0)
-   {
-      PrintError("object \"%s\" not found", name);
-      return;
-   }
-
-   session->objectId = object.id;
-   session->incidentId = 0;
-   PrintSuccess("Conversation context set to %s [%u]", object.name.c_str(), object.id);
-}
-
-/**
- * Set incident given by ID as conversation context
- */
-static void SetIncidentContext(ChatSession *session, const char *id)
-{
-   char *eptr;
-   uint32_t incidentId = strtoul(id, &eptr, 0);
-   if ((*eptr != 0) || (incidentId == 0))
-   {
-      PrintError("invalid incident ID \"%s\"", id);
-      return;
-   }
-
-   session->incidentId = incidentId;
-   session->objectId = 0;
-   PrintSuccess("Conversation context set to incident [%u]", incidentId);
-}
-
-/**
- * Execute slash command. Returns false if session should be terminated.
- */
-static bool ExecuteSlashCommand(ChatSession *session, const std::string& input)
-{
-   std::string command, arguments;
-   size_t separator = input.find_first_of(" \t");
-   if (separator != std::string::npos)
-   {
-      command = input.substr(1, separator - 1);
-      arguments = input.substr(separator + 1);
-      TrimString(&arguments);
-   }
-   else
-   {
-      command = input.substr(1);
-   }
-   ToLowerCase(&command);
-
-   if ((command == "quit") || (command == "exit") || (command == "q"))
-      return false;
-
-   if (command == "help")
-   {
-      ShowCommandHelp();
-   }
-   else if (command == "clear")
-   {
-      if (session->client->clearChat(session->chatId))
-         PrintSuccess("Chat history cleared");
-      else
-         PrintError("%s", session->client->getErrorText());
-   }
-   else if (command == "object")
-   {
-      if (!arguments.empty())
-         SetObjectContext(session, arguments.c_str());
-      else if (session->objectId != 0)
-      {
-         session->objectId = 0;
-         PrintStatus("Object context cleared");
-      }
-      else
-         PrintError("usage: /object <name>");
-   }
-   else if (command == "incident")
-   {
-      if (!arguments.empty())
-         SetIncidentContext(session, arguments.c_str());
-      else if (session->incidentId != 0)
-      {
-         session->incidentId = 0;
-         PrintStatus("Incident context cleared");
-      }
-      else
-         PrintError("usage: /incident <id>");
-   }
-   else if (command == "status")
-   {
-      ShowSessionStatus(session);
-   }
-   else
-   {
-      PrintError("unknown command /%s (use /help for list of available commands)", command.c_str());
-   }
-
-   return true;
-}
-
-/**
  * Get labels for positive and negative answers on confirmation question
  */
 static void GetConfirmationLabels(ConfirmationType type, const char **positive, const char **negative)
@@ -584,6 +359,61 @@ bool PromptForAnswer(const Question& question, bool *positive, int *selectedOpti
    return true;
 }
 
+/**
+ * Ask user to confirm an action. Returns false if user declined or cancelled input.
+ */
+bool AskConfirmation(const char *question)
+{
+   std::string prompt(question);
+   prompt.append(" [yes/no]: ");
+
+   std::string answer;
+   if (!ReadInputLine(prompt.c_str(), &answer))
+   {
+      WriteToTerminalUtf8("\n");
+      return false;
+   }
+   TrimString(&answer);
+   ToLowerCase(&answer);
+   return (answer == "yes") || (answer == "y");
+}
+
+/**
+ * Shell that owns interactive session
+ */
+static Shell *s_shell = nullptr;
+
+/**
+ * Set when next line is a continuation of incomplete input
+ */
+static bool s_continuation = false;
+
+/**
+ * Build input prompt. If escape character is not 0, terminal control sequences are enclosed in
+ * pair of those characters as required by line editor to calculate prompt width.
+ */
+static std::string BuildPrompt(char escape)
+{
+   std::string text = s_continuation ? std::string("...") : s_shell->getPrompt();
+   if (g_plainOutput)
+      return text + "> ";
+
+   std::string prompt;
+   if (escape != 0)
+      prompt.push_back(escape);
+   prompt.append("\x1b[36;1m");
+   if (escape != 0)
+      prompt.push_back(escape);
+   prompt.append(text).append(">");
+   if (escape != 0)
+      prompt.push_back(escape);
+   prompt.append("\x1b[0m");
+   if (escape != 0)
+      prompt.push_back(escape);
+   prompt.append(" ");
+   return prompt;
+}
+
 #if HAVE_LIBEDIT
 
 /**
@@ -606,59 +436,40 @@ static char s_historyFile[MAX_PATH] = "";
  */
 static char *EditLinePrompt(EditLine *el)
 {
+   static std::string prompt;
 #ifdef EL_PROMPT_ESC
-   static char prompt[] = "\1\x1b[36;1m\1You>\1\x1b[0m\1 ";
+   prompt = BuildPrompt('\1');
 #else
-   static char prompt[] = "You> ";
+   prompt = s_continuation ? std::string("...> ") : s_shell->getPrompt() + "> ";
 #endif
-   static char plainPrompt[] = "You> ";
-   return g_plainOutput ? plainPrompt : prompt;
+   return const_cast<char*>(prompt.c_str());
 }
 
 /**
- * Complete slash command at cursor position
+ * Complete command or object path at cursor position
  */
-static unsigned char CompleteSlashCommand(EditLine *el, int ch)
+static unsigned char CompleteInput(EditLine *el, int ch)
 {
-   const LineInfo *lineInfo = el_line(el);
-   size_t length = lineInfo->cursor - lineInfo->buffer;
-   if ((length == 0) || (lineInfo->buffer[0] != '/'))
+   if (s_continuation)
       return CC_NORM;
 
-   std::string prefix(lineInfo->buffer + 1, length - 1);
-   if (prefix.find_first_of(" \t") != std::string::npos)
-      return CC_NORM;   // Command is already entered, arguments cannot be completed
+   const LineInfo *lineInfo = el_line(el);
+   std::string input(lineInfo->buffer, lineInfo->cursor - lineInfo->buffer);
 
-   const SlashCommand *match = nullptr;
-   size_t matchCount = 0;
-   for(size_t i = 0; i < SLASH_COMMAND_COUNT; i++)
-   {
-      if (!strncmp(s_slashCommands[i].name, prefix.c_str(), prefix.length()))
-      {
-         match = &s_slashCommands[i];
-         matchCount++;
-      }
-   }
+   std::string completion;
+   std::vector<std::string> candidates;
+   s_shell->complete(input, &completion, &candidates);
 
-   if (matchCount == 0)
+   if (!completion.empty())
+      return (el_insertstr(el, completion.c_str()) == -1) ? CC_ERROR : CC_REFRESH;
+
+   if (candidates.empty())
       return CC_ERROR;
 
-   if (matchCount == 1)
-   {
-      std::string completion(match->name + prefix.length());
-      if (match->arguments != nullptr)
-         completion.append(" ");
-      return (el_insertstr(el, completion.c_str()) == -1) ? CC_ERROR : CC_REFRESH;
-   }
-
-   // Show all matching commands
+   // Show all candidates
    std::string text("\n");
-   for(size_t i = 0; i < SLASH_COMMAND_COUNT; i++)
-   {
-      if (!strncmp(s_slashCommands[i].name, prefix.c_str(), prefix.length()))
-         text.append("  /").append(s_slashCommands[i].name);
-   }
-   text.append("\n");
+   for(size_t i = 0; i < candidates.size(); i++)
+      text.append("  ").append(candidates[i]).append("\n");
    WriteToTerminalUtf8(text.c_str());
    fflush(stdout);
    return CC_REDISPLAY;
@@ -687,7 +498,7 @@ static void InitializeLineEditor()
       }
    }
 
-   s_editLine = el_init("nxai", stdin, stdout, stderr);
+   s_editLine = el_init("nxshell", stdin, stdout, stderr);
 #ifdef EL_PROMPT_ESC
    el_set(s_editLine, EL_PROMPT_ESC, EditLinePrompt, '\1');
 #else
@@ -700,8 +511,8 @@ static void InitializeLineEditor()
    el_source(s_editLine, nullptr);
 
    // Completion is bound after reading user's configuration file, so that it cannot be overridden
-   el_set(s_editLine, EL_ADDFN, "nxai-complete", "Complete slash command", CompleteSlashCommand);
-   el_set(s_editLine, EL_BIND, "^I", "nxai-complete", nullptr);
+   el_set(s_editLine, EL_ADDFN, "nxshell-complete", "Complete command or object path", CompleteInput);
+   el_set(s_editLine, EL_BIND, "^I", "nxshell-complete", nullptr);
 #endif
 }
 
@@ -755,70 +566,92 @@ static bool ReadCommandLine(std::string *line)
    if ((text == nullptr) || (count <= 0))
       return false;
    line->assign(text, count);
+   while(!line->empty() && ((line->back() == '\n') || (line->back() == '\r')))
+      line->pop_back();
    return true;
 #else
-   return ReadInputLine(g_plainOutput ? "You> " : "\x1b[36;1mYou>\x1b[0m ", line);
+   return ReadInputLine(BuildPrompt(0).c_str(), line);
 #endif
 }
 
 /**
  * Show welcome message
  */
-static void ShowWelcome(const ChatSession *session)
+static void ShowWelcome(const Shell *shell)
 {
+   bool assistantMode = (shell->getMode() == ShellMode::AI);
    std::string text("\n");
-   AppendHighlightedText(&text, "34;1", "NetXMS AI Assistant");
+   AppendHighlightedText(&text, "34;1", assistantMode ? "NetXMS AI Assistant" : "NetXMS Shell");
    text.append("\n");
    AppendHighlightedText(&text, "90", "Connected to ");
-   AppendHighlightedText(&text, "90", session->server.c_str());
+   AppendHighlightedText(&text, "90", shell->getClient()->getServerUrl());
    text.append("\n");
-   AppendHighlightedText(&text, "90", "Type your questions or commands. Use /help for list of available commands.");
+   AppendHighlightedText(&text, "90", assistantMode ?
+      "Type your questions or commands. Use /help for list of available commands." :
+      "Use help for list of available commands.");
    text.append("\n\n");
    WriteToTerminalUtf8(text.c_str());
 }
 
 /**
- * Run interactive chat session
+ * Run interactive session
  */
-int RunChatSession(ChatSession *session)
+int RunInteractiveSession(Shell *shell)
 {
-   SetInterruptHandler(session->client);
+   s_shell = shell;
+   SetInterruptHandler(shell->getClient());
    InitializeLineEditor();
-   ShowWelcome(session);
+   ShowWelcome(shell);
 
-   while(true)
+   std::string input;
+   while(!shell->isExitRequested())
    {
       InterlockedAnd(&s_interrupted, 0);
-      session->client->resetCancellation();
+      shell->getClient()->resetCancellation();
+      s_continuation = !input.empty();
 
-      std::string input;
-      if (!ReadCommandLine(&input))
+      std::string line;
+      if (!ReadCommandLine(&line))
       {
          WriteToTerminalUtf8("\n");
          if (s_interrupted > 0)
-            continue;   // Input was interrupted by Ctrl+C, start new line
-         break;   // End of input (Ctrl+D)
+         {
+            input.clear();   // Input was interrupted by Ctrl+C, start new line
+            continue;
+         }
+         if (!input.empty())
+         {
+            input.clear();   // End of input (Ctrl+D) cancels incomplete input
+            continue;
+         }
+         shell->leaveMode();
+         continue;
       }
 
-      TrimString(&input);
       if (input.empty())
+      {
+         TrimString(&line);
+         if (line.empty())
+            continue;
+         input = line;
+      }
+      else
+      {
+         input.append("\n").append(line);
+      }
+
+      if (!shell->isInputComplete(input))
          continue;
 
       AddToHistory(input.c_str());
-
-      if (input[0] == '/')
-      {
-         if (!ExecuteSlashCommand(session, input))
-            break;
-         continue;
-      }
-
-      session->sendMessage(input.c_str());
+      shell->execute(input);
+      input.clear();
    }
 
    ProgressIndicatorStop();
    ShutdownLineEditor();
    s_activeClient = nullptr;
+   s_shell = nullptr;
    PrintStatus("Goodbye!");
    return 0;
 }

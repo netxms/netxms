@@ -62,6 +62,12 @@ if [ -x $BINDIR/test-ncd-webhook ]; then
 	$BINDIR/test-ncd-webhook || exit 1
 fi
 
+if [ -x $BINDIR/test-nxshell ]; then
+	echo ""
+	echo "********** test-nxshell **********"
+	$BINDIR/test-nxshell || exit 1
+fi
+
 if [ -x $BINDIR/test-unit-entsoe ]; then
 	echo ""
 	echo "********** test-unit-entsoe **********"

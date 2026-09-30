@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Command line AI assistant client
+** NetXMS shell
 ** Copyright (C) 2025-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -17,11 +17,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: nxai.cpp
+** File: nxshell.cpp
 **
 **/
 
-#include "nxai.h"
+#include "nxshell.h"
 #include <netxms_getopt.h>
 #include <nxlibcurl.h>
 #include <nxmarkdown.h>
@@ -30,7 +30,7 @@
 #include <termios.h>
 #endif
 
-NETXMS_EXECUTABLE_HEADER(nxai)
+NETXMS_EXECUTABLE_HEADER(nxshell)
 
 /**
  * Plain output mode - no colors and no markdown formatting. Set if requested explicitly or if
@@ -39,22 +39,27 @@ NETXMS_EXECUTABLE_HEADER(nxai)
 bool g_plainOutput = false;
 
 /**
- * Print message with given SGR attributes
+ * Print message with given SGR attributes. In plain output mode message is written to standard error
+ * stream, so that it is not mixed with tool output when output is redirected.
  */
 static void PrintMessage(const char *attributes, const char *prefix, const char *format, va_list args)
 {
    char message[4096];
    vsnprintf(message, sizeof(message), format, args);
 
-   std::string text;
-   if (!g_plainOutput)
-      text.append("\x1b[").append(attributes).append("m");
+   if (g_plainOutput)
+   {
+      fflush(stdout);
+      fprintf(stderr, "%s%s\n", (prefix != nullptr) ? prefix : "", message);
+      return;
+   }
+
+   std::string text("\x1b[");
+   text.append(attributes).append("m");
    if (prefix != nullptr)
       text.append(prefix);
    text.append(message);
-   if (!g_plainOutput)
-      text.append("\x1b[0m");
-   text.append("\n");
+   text.append("\x1b[0m\n");
    WriteToTerminalUtf8(text.c_str());
 }
 
@@ -92,23 +97,13 @@ void PrintWarning(const char *format, ...)
 }
 
 /**
- * Print error message. In plain output mode message is written to standard error stream, so that
- * it is not mixed with tool output when output is redirected.
+ * Print error message
  */
 void PrintError(const char *format, ...)
 {
    va_list args;
    va_start(args, format);
-   if (g_plainOutput)
-   {
-      char message[4096];
-      vsnprintf(message, sizeof(message), format, args);
-      fprintf(stderr, "Error: %s\n", message);
-   }
-   else
-   {
-      PrintMessage("31;1", "Error: ", format, args);
-   }
+   PrintMessage("31;1", "Error: ", format, args);
    va_end(args);
 }
 
@@ -128,63 +123,27 @@ void RenderResponse(const char *text)
 }
 
 /**
- * Create context document for outgoing message. Returns nullptr if session has no context set.
+ * Write text received from server to standard output. Terminal control sequences are removed in plain output mode.
  */
-json_t *ChatSession::createContextDocument() const
+void WriteOutput(const char *text)
 {
-   if ((objectId == 0) && (incidentId == 0))
-      return nullptr;
-
-   json_t *context = json_object();
-   if (objectId != 0)
-      json_object_set_new(context, "objectId", json_integer(objectId));
-   if (incidentId != 0)
-      json_object_set_new(context, "incidentId", json_integer(incidentId));
-   return context;
+   if (g_plainOutput)
+      WriteToTerminalUtf8(StripTerminalSequences(text).c_str());
+   else
+      WriteToTerminalUtf8(text);
+   fflush(stdout);
 }
 
 /**
- * Send message to assistant, answer questions asked during processing, and render response
+ * Append text with given SGR attributes. Attributes are ignored in plain output mode.
  */
-bool ChatSession::sendMessage(const char *message)
+void AppendHighlightedText(std::string *output, const char *attributes, const char *text)
 {
-   json_t *context = createContextDocument();
-   ChatResponse response;
-   bool success = client->sendMessage(chatId, message, context, &response, progressCallback);
-   json_decref(context);
-
-   while(success && (response.question.id != 0))
-   {
-      ProgressIndicatorStop();
-
-      bool positive = false;
-      int selectedOption = -1;
-      if (interactive)
-      {
-         // Question is declined if user cancels input
-         PromptForAnswer(response.question, &positive, &selectedOption);
-      }
-      else
-      {
-         PrintWarning("assistant asked a question that requires interactive session, declining");
-         PrintStatus("%s", response.question.text.c_str());
-      }
-
-      success = client->answerQuestion(chatId, response.question.id, positive, selectedOption) &&
-                client->waitForResponse(chatId, &response, progressCallback);
-   }
-
-   ProgressIndicatorStop();
-
-   if (!success)
-   {
-      PrintError("%s", client->getErrorText());
-      return false;
-   }
-
-   if (!response.text.empty())
-      RenderResponse(response.text.c_str());
-   return true;
+   if (!g_plainOutput)
+      output->append("\x1b[").append(attributes).append("m");
+   output->append(text);
+   if (!g_plainOutput)
+      output->append("\x1b[0m");
 }
 
 /**
@@ -193,6 +152,7 @@ bool ChatSession::sendMessage(const char *message)
 static struct option s_longOptions[] =
 {
    { (char *)"clear-session",   no_argument,       nullptr, 'C' },
+   { (char *)"command",         required_argument, nullptr, 'c' },
    { (char *)"help",            no_argument,       nullptr, 'h' },
    { (char *)"incident",        required_argument, nullptr, 'i' },
    { (char *)"no-save-session", no_argument,       nullptr, 'S' },
@@ -207,35 +167,50 @@ static struct option s_longOptions[] =
    { nullptr, 0, nullptr, 0 }
 };
 
-#define SHORT_OPTIONS "hi:n:o:p:s:u:V"
+#define SHORT_OPTIONS "c:hi:n:o:p:s:u:V"
 
 /**
  * Show version information
  */
-static void ShowVersion()
+static void ShowVersion(bool assistantMode)
 {
    _tprintf(
-      _T("NetXMS AI Assistant  Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n")
-      _T("Copyright (c) 2025-2026 Raden Solutions\n\n"));
+      _T("NetXMS %s  Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG _T("\n")
+      _T("Copyright (c) 2025-2026 Raden Solutions\n\n"), assistantMode ? _T("AI Assistant") : _T("Shell"));
 }
 
 /**
  * Show usage info
  */
-static void ShowUsage()
+static void ShowUsage(bool assistantMode)
 {
-   ShowVersion();
+   ShowVersion(assistantMode);
+   if (assistantMode)
+   {
+      _tprintf(
+         _T("Usage: nxai [OPTIONS] [message]\n")
+         _T("\n")
+         _T("If message is given on command line or provided on standard input, it is sent to assistant\n")
+         _T("and tool exits after printing response. Otherwise interactive session is started.\n")
+         _T("\n")
+         _T("Options:\n"));
+   }
+   else
+   {
+      _tprintf(
+         _T("Usage: nxshell [OPTIONS] [file]\n")
+         _T("\n")
+         _T("Commands are read from given file, or from standard input if it is not a terminal, and\n")
+         _T("executed until first failure. Otherwise interactive session is started.\n")
+         _T("\n")
+         _T("Options:\n")
+         _T("  -c, --command <line>      Execute given line and exit (can be used multiple times).\n"));
+   }
    _tprintf(
-      _T("Usage: nxai [OPTIONS] [message]\n")
-      _T("\n")
-      _T("If message is given on command line or provided on standard input, it is sent to assistant\n")
-      _T("and tool exits after printing response. Otherwise interactive session is started.\n")
-      _T("\n")
-      _T("Options:\n")
       _T("  -h, --help                Display this help message.\n")
-      _T("  -i, --incident <id>       Set incident with given ID as conversation context.\n")
-      _T("  -n, --node <name>         Set node with given name as conversation context.\n")
-      _T("  -o, --object <id>         Set object with given ID as conversation context.\n")
+      _T("  -i, --incident <id>       Set incident with given ID as AI assistant conversation context.\n")
+      _T("  -n, --node <name>         Set object with given name as current object.\n")
+      _T("  -o, --object <id>         Set object with given ID as current object.\n")
       _T("  -p, --password <password> Password for authentication.\n")
       _T("  -s, --server <server>     Server host name or URL (for example netxms.local or\n")
       _T("                            https://netxms.local:8443).\n")
@@ -248,20 +223,6 @@ static void ShowUsage()
       _T("\n")
       _T("Environment variables NETXMS_SERVER, NETXMS_USER, and NETXMS_PASSWORD are used as\n")
       _T("defaults for options -s, -u, and -p.\n\n"));
-}
-
-/**
- * Remove leading and trailing whitespace characters
- */
-void TrimString(std::string *text)
-{
-   size_t start = text->find_first_not_of(" \t\r\n");
-   if (start == std::string::npos)
-   {
-      text->clear();
-      return;
-   }
-   *text = text->substr(start, text->find_last_not_of(" \t\r\n") - start + 1);
 }
 
 /**
@@ -412,11 +373,28 @@ static bool Authenticate(WebApiClient *client, const char *user, const char *pas
 }
 
 /**
+ * Check if tool was started under AI assistant client name
+ */
+static bool IsAssistantCommandName(const char *path)
+{
+   const char *name = path;
+   for(const char *p = path; *p != 0; p++)
+   {
+      if ((*p == '/') || (*p == '\\'))
+         name = p + 1;
+   }
+   return !strnicmp(name, "nxai", 4) && ((name[4] == 0) || (name[4] == '.'));
+}
+
+/**
  * Entry point
  */
 int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true, true);
+
+   // Tool started as "nxai" works as AI assistant client
+   bool assistantMode = IsAssistantCommandName(argv[0]);
 
    const char *optServer = "";
    const char *optUser = "";
@@ -428,6 +406,7 @@ int main(int argc, char *argv[])
    bool optVerifySsl = true;
    bool optSaveSession = true;
    bool optClearSession = false;
+   std::vector<std::string> commands;
 
    opterr = 0;
    int c;
@@ -438,8 +417,16 @@ int main(int argc, char *argv[])
          case 'C':   // clear session
             optClearSession = true;
             break;
+         case 'c':   // command
+            if (assistantMode)
+            {
+               ShowUsage(assistantMode);
+               return 1;
+            }
+            commands.push_back(optarg);
+            break;
          case 'h':   // help
-            ShowUsage();
+            ShowUsage(assistantMode);
             return 0;
          case 'i':   // incident context
             optIncidentId = strtoul(optarg, nullptr, 0);
@@ -455,10 +442,10 @@ int main(int argc, char *argv[])
          case 'l':   // plain output
             optPlain = true;
             break;
-         case 'n':   // node context
+         case 'n':   // current object by name
             optNode = optarg;
             break;
-         case 'o':   // object context
+         case 'o':   // current object by ID
             optObjectId = strtoul(optarg, nullptr, 0);
             if (optObjectId == 0)
             {
@@ -479,24 +466,29 @@ int main(int argc, char *argv[])
             optUser = optarg;
             break;
          case 'V':   // version
-            ShowVersion();
+            ShowVersion(assistantMode);
             return 0;
          case '?':
-            ShowUsage();
+            ShowUsage(assistantMode);
             return 1;
       }
    }
 
    g_plainOutput = optPlain || (_isatty(_fileno(stdout)) == 0);
 
-   if ((optNode[0] != 0) && ((optObjectId != 0) || (optIncidentId != 0)))
+   if ((optNode[0] != 0) && (optObjectId != 0))
+   {
+      PrintError("options -n and -o cannot be used together");
+      return 1;
+   }
+   if (assistantMode && (optIncidentId != 0) && ((optNode[0] != 0) || (optObjectId != 0)))
    {
       PrintError("only one context source can be used");
       return 1;
    }
-   if ((optObjectId != 0) && (optIncidentId != 0))
+   if (!assistantMode && ((argc - optind > 1) || ((argc > optind) && !commands.empty())))
    {
-      PrintError("only one context source can be used");
+      PrintError("only one source of commands can be used");
       return 1;
    }
 
@@ -531,124 +523,128 @@ int main(int argc, char *argv[])
       return 0;
    }
 
-   // Reuse saved session if possible, otherwise authenticate
-   bool savedSession = false;
-   if (optSaveSession)
-   {
-      std::string token;
-      if (LoadSessionToken(client.getServerUrl(), &token))
+   // Access token rejected by server is replaced by authenticating again
+   client.setAuthenticator(
+      [&client, optUser, optPassword, optSaveSession] () -> bool
       {
-         client.setToken(token.c_str());
-         savedSession = true;
-         PrintStatus("Using saved session for %s", client.getServerUrl());
-      }
-   }
-
-   if (!savedSession)
-   {
-      if (!Authenticate(&client, optUser, optPassword))
-         return 2;
-      if (optSaveSession)
-         SaveSessionToken(client.getServerUrl(), client.getToken());
-   }
-
-   ChatSession session(&client, client.getServerUrl());
-   session.objectId = optObjectId;
-   session.incidentId = optIncidentId;
-
-   if (*optNode != 0)
-   {
-      ObjectInfo object;
-      if (!client.findObject(optNode, &object))
-      {
-         // Saved session may be rejected by server, in that case authenticate and try again
-         if (!savedSession || !client.isAuthenticationError())
-         {
-            PrintError("%s", client.getErrorText());
-            return 3;
-         }
-
+         ProgressIndicatorStop();
          ClearSessionToken(client.getServerUrl());
          client.setToken(nullptr);
-         savedSession = false;
+         PrintStatus("Session is not valid, authentication required");
          if (!Authenticate(&client, optUser, optPassword))
-            return 2;
+            return false;
          if (optSaveSession)
             SaveSessionToken(client.getServerUrl(), client.getToken());
+         return true;
+      });
 
-         if (!client.findObject(optNode, &object))
-         {
+   // Reuse saved session if possible, otherwise authenticate
+   std::string token;
+   if (optSaveSession && LoadSessionToken(client.getServerUrl(), &token))
+   {
+      client.setToken(token.c_str());
+      PrintStatus("Using saved session for %s", client.getServerUrl());
+      if (!client.checkSession())
+      {
+         if (client.getHttpStatus() != 401)
             PrintError("%s", client.getErrorText());
-            return 3;
-         }
-      }
-
-      if (object.id == 0)
-      {
-         PrintError("object \"%s\" not found", optNode);
-         return 3;
-      }
-      session.objectId = object.id;
-      PrintStatus("Conversation context set to %s [%u]", object.name.c_str(), object.id);
-   }
-
-   if (!client.createChat(session.incidentId, session.objectId, &session.chatId))
-   {
-      // Saved session may be rejected by server, in that case authenticate and try again
-      if (!savedSession || !client.isAuthenticationError())
-      {
-         PrintError("%s", client.getErrorText());
-         return 3;
-      }
-
-      ClearSessionToken(client.getServerUrl());
-      client.setToken(nullptr);
-      if (!Authenticate(&client, optUser, optPassword))
          return 2;
-      if (optSaveSession)
-         SaveSessionToken(client.getServerUrl(), client.getToken());
-
-      if (!client.createChat(session.incidentId, session.objectId, &session.chatId))
-      {
-         PrintError("%s", client.getErrorText());
-         return 3;
       }
-   }
-
-   // Message given on command line or provided on standard input is processed in non-interactive mode
-   std::string message;
-   for(int i = optind; i < argc; i++)
-   {
-      if (!message.empty())
-         message.append(" ");
-      message.append(argv[i]);
-   }
-   if (message.empty() && (_isatty(_fileno(stdin)) == 0))
-      message = ReadStandardInput();
-   TrimString(&message);
-
-   // Assistant questions can be answered only if input is read from terminal
-   session.interactive = (_isatty(_fileno(stdin)) != 0);
-
-   // Progress indicator can be shown only if output is not redirected
-   if (!g_plainOutput)
-      session.progressCallback = ProgressIndicatorUpdate;
-
-   int rc;
-   if (!message.empty())
-   {
-      rc = session.sendMessage(message.c_str()) ? 0 : 4;
-   }
-   else if (session.interactive)
-   {
-      rc = RunChatSession(&session);
    }
    else
    {
-      PrintError("message is empty");
-      rc = 1;
+      if (!Authenticate(&client, optUser, optPassword))
+         return 2;
+      if (optSaveSession)
+         SaveSessionToken(client.getServerUrl(), client.getToken());
    }
 
-   client.deleteChat(session.chatId);
+   // Input source: message for assistant or commands given on command line, file, or standard input
+   bool terminalInput = (_isatty(_fileno(stdin)) != 0);
+   std::string message;
+   if (assistantMode)
+   {
+      for(int i = optind; i < argc; i++)
+      {
+         if (!message.empty())
+            message.append(" ");
+         message.append(argv[i]);
+      }
+      if (message.empty() && !terminalInput)
+         message = ReadStandardInput();
+      TrimString(&message);
+      if (message.empty() && !terminalInput)
+      {
+         PrintError("message is empty");
+         return 1;
+      }
+   }
+   const char *commandFile = (!assistantMode && (argc > optind)) ? argv[optind] : nullptr;
+   bool interactive = terminalInput && message.empty() && commands.empty() && (commandFile == nullptr);
+
+   int rc;
+   {
+      Shell shell(&client, assistantMode ? ShellMode::AI : ShellMode::SHELL, terminalInput, interactive);
+      shell.setIncidentId(optIncidentId);
+
+      // Progress indicator can be shown only if output is not redirected
+      if (!g_plainOutput)
+         shell.setProgressCallback(ProgressIndicatorUpdate);
+
+      bool success = true;
+      if (optObjectId != 0)
+         success = shell.setLocationByObjectId(optObjectId);
+      else if (*optNode != 0)
+         success = shell.setLocationByObjectName(optNode);
+
+      if (success)
+      {
+         shell.executeStartupFile();
+
+         if (!message.empty())
+         {
+            success = shell.sendChatMessage(message.c_str());
+         }
+         else if (!commands.empty())
+         {
+            for(size_t i = 0; (i < commands.size()) && success && !shell.isExitRequested(); i++)
+            {
+               if (shell.isInputComplete(commands[i]))
+               {
+                  success = shell.execute(commands[i]);
+               }
+               else
+               {
+                  PrintError("incomplete command \"%s\"", commands[i].c_str());
+                  success = false;
+               }
+            }
+         }
+         else if (commandFile != nullptr)
+         {
+            FILE *stream = fopen(commandFile, "r");
+            if (stream != nullptr)
+            {
+               success = shell.executeStream(stream, commandFile, true);
+               fclose(stream);
+            }
+            else
+            {
+               PrintError("cannot open file \"%s\" (%s)", commandFile, strerror(errno));
+               success = false;
+            }
+         }
+         else if (!terminalInput)
+         {
+            success = shell.executeStream(stdin, "standard input", true);
+         }
+         else
+         {
+            RunInteractiveSession(&shell);
+         }
+      }
+
+      rc = success ? 0 : (client.isConnectionFailed() ? 2 : 1);
+   }
    return rc;
 }

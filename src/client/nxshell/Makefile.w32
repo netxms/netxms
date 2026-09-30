@@ -1,0 +1,10 @@
+#
+# Makefile.w32 - nxshell (NetXMS shell) for Windows/MinGW
+# Part of NetXMS project
+#
+
+TOOL = nxshell
+SOURCES = client.cpp console.cpp navigation.cpp nxshell.cpp parser.cpp repl.cpp script.cpp session.cpp shell.cpp
+TOOL_LIBS = -lnetxms -lnxjansson $(CURL_LIBS)
+
+include $(TOPDIR)/build/tool-common.mk

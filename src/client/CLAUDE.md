@@ -24,6 +24,7 @@ src/client/
 ├── nxevent/              # Event sending tool
 ├── nxnotify/             # Notification tool
 ├── nxpush/               # Push data tool
+├── nxshell/              # NetXMS shell (also installed as nxai, AI assistant client)
 └── nxtcpproxy/           # TCP proxy
 ```
 
@@ -175,6 +176,12 @@ Pushes metric values to the server.
 ```bash
 nxpush -s server -n node_id "Metric.Name" value
 ```
+
+### nxshell
+Interactive shell working via web API: object navigation, server debug console, AI assistant,
+and ad-hoc NXSL execution. Started as `nxai`, it works as AI assistant client. Input parsing
+lives in `parser.cpp`, which has no network or terminal dependencies and is covered by
+`tests/test-nxshell`. See [nxshell/README.md](nxshell/README.md).
 
 ## Debugging
 

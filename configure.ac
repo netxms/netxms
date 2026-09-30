@@ -195,7 +195,7 @@ SERVER_LIBS=""
 SERVER_TOOLS=""
 SERVER_INCLUDE=""
 NXADM_LIBS=""
-NXAI_LIBS=""
+NXSHELL_LIBS=""
 NCDRV_MODULES=""
 NCDRV_LTLIBRARIES=""
 PDSDRV_DIRS=""
@@ -1077,7 +1077,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS="mysql mariadb pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libargon2 java-common libnetxms libnxjava install sqlite snmp ethernetip libnxsl libnxmb libnxlp libnxnetconf db client server agent nxscript nxcproxy mobile-agent"
-	TEST_MODULES="agent ha test-libethernetip test-libnxcore test-libnxsl test-libnxnetconf test-libnxsnmp test-libnxsrv test-ncd-webhook test-server"
+	TEST_MODULES="agent ha test-libethernetip test-libnxcore test-libnxsl test-libnxnetconf test-libnxsnmp test-libnxsrv test-ncd-webhook test-nxshell test-server"
 	AGENT_UNIT_TESTS="entsoe extcheck weather linux-cpu-usage-collector"
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 fbdev freebsd openbsd mqtt mysql pgsql netbsd sunos aix informix oracle prometheus lmsensors darwin rpi java jmx opcua ubntlw db2 tuxedo mongodb netconf ssh vmgr xen asterisk redis lldpd"
@@ -1087,7 +1087,7 @@ AC_ARG_WITH(dist,
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
-	CLIENT_COMPONENTS="java nxai nxalarm nxevent nxmc nxnotify nxpush"
+	CLIENT_COMPONENTS="java nxalarm nxevent nxmc nxnotify nxpush nxshell"
 	SERVER_COMPONENTS="nxreportd otlp webapi"
 	DIST_BUILD="yes"
 )
@@ -1302,7 +1302,8 @@ check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
 	MODULES="$MODULES client"
-	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxai nxalarm nxevent nxpush nxnotify"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxnotify nxshell"
+	TEST_MODULES="$TEST_MODULES test-nxshell"
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
 		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java"
@@ -2195,7 +2196,7 @@ if test "x$BUILD_SERVER" = "xyes" -o "x$BUILD_CLIENT" = "xyes" ; then
 		AC_CHECK_LIB(edit, history_winit, [
 			SERVER_LIBS="$SERVER_LIBS -ledit"
 			NXADM_LIBS="$NXADM_LIBS -ledit"
-			NXAI_LIBS="$NXAI_LIBS -ledit"
+			NXSHELL_LIBS="$NXSHELL_LIBS -ledit"
 	   		AC_DEFINE(HAVE_LIBEDIT, 1, Define to 1 if libedit is available)
 		], [ HAVE_LIBEDIT=no ])
 	fi
@@ -4531,7 +4532,7 @@ AC_SUBST(NETXMS_PREFIX)
 AC_SUBST(NETXMS_STATEDIR)
 AC_SUBST(NETXMS_SYSCONFDIR)
 AC_SUBST(NXADM_LIBS)
-AC_SUBST(NXAI_LIBS)
+AC_SUBST(NXSHELL_LIBS)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(ODBC_CPPFLAGS)
 AC_SUBST(ODBC_LDFLAGS)
@@ -4684,7 +4685,6 @@ AC_CONFIG_FILES([
 	src/client/java/Makefile
 	src/client/java/netxms-client/Makefile
 	src/client/libnxclient/Makefile
-	src/client/nxai/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxapisrv/Makefile
 	src/client/nxapisrv/java/Makefile
@@ -4693,6 +4693,7 @@ AC_CONFIG_FILES([
 	src/client/nxmc/java/Makefile
 	src/client/nxnotify/Makefile
 	src/client/nxpush/Makefile
+	src/client/nxshell/Makefile
 	src/db/Makefile
 	src/db/dbdrv/Makefile
 	src/db/dbdrv/db2/Makefile
@@ -4868,6 +4869,7 @@ AC_CONFIG_FILES([
 	tests/test-libnxsnmp/Makefile
 	tests/test-libnxsrv/Makefile
 	tests/test-ncd-webhook/Makefile
+	tests/test-nxshell/Makefile
 	tests/test-server/Makefile
 	tools/Makefile
 ])

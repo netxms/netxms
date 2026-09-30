@@ -46,6 +46,7 @@ call :RunTest test-libnxsl .\tests\test-libnxsl || goto failure
 call :RunTest test-libnxsrv || goto failure
 call :RunTest test-libnxcore || goto failure
 call :RunTest test-ncd-webhook || goto failure
+call :RunTest test-nxshell || goto failure
 call :RunTest test-unit-entsoe || goto failure
 call :RunTest test-unit-extcheck || goto failure
 call :RunTest test-unit-weather || goto failure

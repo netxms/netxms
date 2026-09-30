@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Command line AI assistant client
+** NetXMS shell
 ** Copyright (C) 2025-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 **
 **/
 
-#include "nxai.h"
+#include "nxshell.h"
 #include <fcntl.h>
 #include <nxstat.h>
 
@@ -48,19 +48,19 @@ bool GetConfigFilePath(const TCHAR *name, TCHAR *path, size_t size)
    String base = GetEnvironmentVariableEx(_T("APPDATA"));
    if (base.isEmpty())
       return false;
-   _sntprintf(directory, MAX_PATH, _T("%s\\nxai"), base.cstr());
+   _sntprintf(directory, MAX_PATH, _T("%s\\nxshell"), base.cstr());
 #else
    String configHome = GetEnvironmentVariableEx(_T("XDG_CONFIG_HOME"));
    if (!configHome.isEmpty())
    {
-      _sntprintf(directory, MAX_PATH, _T("%s/nxai"), configHome.cstr());
+      _sntprintf(directory, MAX_PATH, _T("%s/nxshell"), configHome.cstr());
    }
    else
    {
       String home = GetEnvironmentVariableEx(_T("HOME"));
       if (home.isEmpty())
          return false;
-      _sntprintf(directory, MAX_PATH, _T("%s/.config/nxai"), home.cstr());
+      _sntprintf(directory, MAX_PATH, _T("%s/.config/nxshell"), home.cstr());
    }
 #endif
 
