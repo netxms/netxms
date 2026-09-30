@@ -24,7 +24,6 @@ src/client/
 ├── nxevent/              # Event sending tool
 ├── nxnotify/             # Notification tool
 ├── nxpush/               # Push data tool
-├── nxshell/              # NXSL shell
 └── nxtcpproxy/           # TCP proxy
 ```
 
@@ -175,13 +174,6 @@ Pushes metric values to the server.
 
 ```bash
 nxpush -s server -n node_id "Metric.Name" value
-```
-
-### nxshell
-Interactive NXSL scripting shell.
-
-```bash
-nxshell -s server
 ```
 
 ## Debugging

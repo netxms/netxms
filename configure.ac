@@ -1087,7 +1087,7 @@ AC_ARG_WITH(dist,
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
-	CLIENT_COMPONENTS="java nxai nxalarm nxevent nxmc nxnotify nxpush nxshell"
+	CLIENT_COMPONENTS="java nxai nxalarm nxevent nxmc nxnotify nxpush"
 	SERVER_COMPONENTS="nxreportd otlp webapi"
 	DIST_BUILD="yes"
 )
@@ -1305,7 +1305,7 @@ if test $? = 0; then
 	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxai nxalarm nxevent nxpush nxnotify"
 	check_substr "$COMPONENTS" "java"
 	if test $? = 0; then
-		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java nxshell"
+		CLIENT_COMPONENTS="$CLIENT_COMPONENTS java"
 		if test \( "x$PLATFORM" = "xLinux" -o "x$PLATFORM" = "xDarwin" \) -a "x$BUILD_GUI_CLIENT" = "xyes"; then
 			CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxmc"
 		fi
@@ -4693,8 +4693,6 @@ AC_CONFIG_FILES([
 	src/client/nxmc/java/Makefile
 	src/client/nxnotify/Makefile
 	src/client/nxpush/Makefile
-	src/client/nxshell/Makefile
-	src/client/nxshell/java/Makefile
 	src/db/Makefile
 	src/db/dbdrv/Makefile
 	src/db/dbdrv/db2/Makefile

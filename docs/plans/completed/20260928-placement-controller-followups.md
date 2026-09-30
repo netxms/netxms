@@ -7,7 +7,7 @@ controller code:
 
 - `docs/backlog/chassis-nxcp-controller-id-does-not-rebind.md` — `Chassis::modifyFromMessageInternal`
   stores `VID_CONTROLLER_ID` without scheduling `updateControllerBinding()`. The console masks it by
-  always sending the flag mask with the id; nxshell / raw Java API calls leave the chassis linked
+  always sending the flag mask with the id; raw Java API calls leave the chassis linked
   under the old controller (and its inherited access rights) until restart.
 - `docs/backlog/placement-patch-commits-stale-snapshot.md` — the WebAPI `modifyFromJSONInternal`
   paths for Node and Chassis stage all six placement fields (plus `m_controllerId` on Chassis), drop
@@ -92,7 +92,7 @@ No GitHub issue: commit messages reference PR #3633 as a follow-up.
       against the local server
 - [x] `git rm docs/backlog/placement-patch-commits-stale-snapshot.md`
 - ➕ Added `CommitPhysicalPlacement` (physical_placement.cpp, declared next to `ModifyPhysicalPlacementFromJson`) so both call sites share the per-key commit instead of repeating six conditions each
-- ⚠️ Sanity check ran over WebAPI with a bearer token minted via nxshell: `/v1/login` returns 403 "Required license not installed" on this server. The check cannot exercise the race window itself; it confirms partial PATCHes leave unmentioned fields and `controllerId` alone
+- ⚠️ Sanity check ran over WebAPI with a bearer token minted via the Java client API: `/v1/login` returns 403 "Required license not installed" on this server. The check cannot exercise the race window itself; it confirms partial PATCHes leave unmentioned fields and `controllerId` alone
 
 Known residual, accepted: validation ran against the staged snapshot, so a PATCH carrying only
 `position` is checked against the staged `height`; a concurrent NXCP height change in the window can

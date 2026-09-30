@@ -133,7 +133,7 @@ Installers for other platforms (Windows, Aix, Solaris...) are available on netxm
 * Change log: https://github.com/netxms/changelog/blob/master/ChangeLog
 * NetXMS Scripting Language: https://www.netxms.org/documentation/nxsl-latest/
 * Data dictionary : https://www.netxms.org/documentation/datadictionary-latest/
-* Javadoc (NxShell and Java API): https://www.netxms.org/documentation/javadoc/latest/
+* Javadoc (Java API): https://www.netxms.org/documentation/javadoc/latest/
 
 
 ## Support

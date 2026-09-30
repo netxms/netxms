@@ -178,7 +178,7 @@ Alternatively, build into an empty target directory (`./configure --prefix=/path
 * **[Change Log](https://github.com/netxms/changelog/blob/master/ChangeLog.md)** - Latest changes and updates
 * **[NetXMS Scripting Language (NXSL)](https://www.netxms.org/documentation/nxsl-latest/)** - Scripting reference
 * **[Data Dictionary](https://www.netxms.org/documentation/datadictionary-latest/)** - Complete data reference
-* **[Java API Documentation](https://www.netxms.org/documentation/javadoc/latest/)** - NxShell and Java API reference
+* **[Java API Documentation](https://www.netxms.org/documentation/javadoc/latest/)** - Java API reference
 * **[YouTube Channel](https://www.youtube.com/@netxms)** - Video tutorials and webinars
 
 

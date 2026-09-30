@@ -660,7 +660,7 @@ passive bring-up, each with a per-request role gate (`cluster mode && !(g_flags
   address (same port), re-runs protocol negotiation and encryption setup, and
   retries the login — capped at two hops with a self-address guard, so a
   vacant lease or a stale holder address fails cleanly instead of looping.
-  Every `NXCSession` consumer (management console, nxshell, web service
+  Every `NXCSession` consumer (management console, web service
   proxy, MCP server, reporting server) inherits the behavior; the console's
   connection-loss reconnect path re-logins through the same code, so a
   session broken by failover also follows the new active node (subject to

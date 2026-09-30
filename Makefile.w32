@@ -97,7 +97,6 @@ CLIENT_DIRS = \
     src/client/nxevent \
     src/client/nxnotify \
     src/client/nxpush \
-    src/client/nxshell \
     src/client/nxweblauncher \
     src/client/nxmc
 endif

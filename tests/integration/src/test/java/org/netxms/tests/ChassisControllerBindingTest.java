@@ -80,7 +80,7 @@ public class ChassisControllerBindingTest extends AbstractSessionTest
    }
 
    /**
-    * Changing only the controller id (no flag mask in the same request, as nxshell or a plain API client would send it)
+    * Changing only the controller id (no flag mask in the same request, as a plain API client would send it)
     * must move a chassis bound under its controller to the new controller.
     */
    @Test

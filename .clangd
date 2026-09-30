@@ -102,8 +102,7 @@ If:
     # Language bridge libraries
     - src/libnxjava/.*
     - src/libnxpython/.*
-    # JDK-gated C++ launchers for the Java client tools (need --with-jdk)
+    # JDK-gated C++ launcher for the Java management console (needs --with-jdk)
     - src/client/nxmc/nxmc\.cpp
-    - src/client/nxshell/nxshell\.cpp
 Diagnostics:
   Suppress: '*'

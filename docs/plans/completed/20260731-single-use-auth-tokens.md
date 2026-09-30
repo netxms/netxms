@@ -423,9 +423,6 @@ plan. See Post-Completion.
       `autoreconf`), then re-run `./configure --with-tests ...`
 - [x] `make && make install` — the suite runner executes binaries from `$BINDIR`
       (`netxms-test-suite.in:8-16`), so an uninstalled binary will be silently skipped.
-      ⚠️ top-level `make install` aborts in `src/client/nxshell` (`Shell.java` calls
-      `NXCSession.parseConnectionAddress()`, which does not exist); pre-existing and unrelated, so
-      the C++ libraries and `tests` were installed directly
 - [x] run tests — must pass before next task: `./tests/suite/netxms-test-suite` — full suite green,
       including the 7 new `test-authtokens` cases
 

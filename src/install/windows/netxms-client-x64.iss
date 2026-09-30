@@ -31,7 +31,6 @@ UninstallDisplayIcon={app}\nxmc.ico
 
 [Components]
 Name: "nxmc"; Description: "NetXMS GUI Client"; Types: full compact custom
-Name: "nxshell"; Description: "NetXMS Python Scripting (nxshell)"; Types: full custom
 Name: "cmdline"; Description: "Command Line Tools"; Types: full
 Name: "jre"; Description: "Java Runtime Environment"; Types: full
 
@@ -53,16 +52,12 @@ Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}"; Fla
 Source: "..\files\windows\x64\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\..\client\nxmc\nxmc.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; Common files for Java based components
-Source: "..\..\..\out\x64\Release\bin\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc or nxshell
-Source: "..\..\libnxjava\java\target\netxms-java-bridge-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc or nxshell
+Source: "..\..\..\out\x64\Release\bin\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc
+Source: "..\..\libnxjava\java\target\netxms-java-bridge-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc
 ; nxmc
 Source: "..\..\..\out\x64\Release\bin\nxmc.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc
 Source: "..\..\client\nxmc\java\target\nxmc-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc
 Source: "..\..\client\nxmc\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxmc
-; nxshell
-Source: "..\..\..\out\x64\Release\bin\nxshell.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxshell
-Source: "..\..\client\nxshell\java\target\nxshell-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxshell
-Source: "..\..\client\nxshell\java\target\lib\*.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion; Components: nxshell
 ; Command line tools
 Source: "..\..\..\out\x64\Release\bin\libnxclient.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
 Source: "..\..\..\out\x64\Release\bin\nxai.exe"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: cmdline
@@ -88,4 +83,4 @@ Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm
 Name: quicklaunchicon; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Run]
-Filename: "{app}\vcredist.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{app}"; StatusMsg: "Installing Visual C++ runtime..."; Flags: waituntilterminated; Components: nxshell
+Filename: "{app}\vcredist.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{app}"; StatusMsg: "Installing Visual C++ runtime..."; Flags: waituntilterminated; Components: nxmc or cmdline

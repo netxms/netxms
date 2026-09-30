@@ -47,6 +47,5 @@ sql/dbschema_*.sql
 .ralphex/
 .serena/
 
-# Vendored JS and samples
+# Vendored JS
 src/client/nxmc/java/src/rwt/resources/vncviewer/
-src/client/nxshell/samples/

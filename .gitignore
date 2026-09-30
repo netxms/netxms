@@ -186,10 +186,6 @@ compile_commands.json
 /src/client/nxmc/java/.project
 /src/client/nxmc/java/.settings
 /src/client/nxpush/nxpush
-/src/client/nxshell/nxshell
-/src/client/nxshell/java/.classpath
-/src/client/nxshell/java/.project
-/src/client/nxshell/java/.settings
 /src/client/nxtcpproxy/.classpath
 /src/client/nxtcpproxy/.project
 /src/client/nxtcpproxy/.settings

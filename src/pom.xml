@@ -10,7 +10,6 @@
       <module>libnxjava/java</module>
       <module>client/java/netxms-client</module>
       <module>client/nxapisrv/java</module>
-      <module>client/nxshell/java</module>
       <module>agent/subagents/java/java</module>
       <module>agent/subagents/jmx</module>
       <module>agent/subagents/opcua</module>

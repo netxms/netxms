@@ -58,8 +58,6 @@ if [ "$BUILD_NXMC" = "yes" ]; then
          cp $WORKIND_DIR/target/nxmc-${VERSION}*-standalone.jar $WORKIND_DIR/
          mvn -f $WORKIND_DIR -Dmaven.test.skip=true -Dnetxms.build.disablePlatformProfile=true -Pweb clean package
          cp $WORKIND_DIR/target/nxmc-${VERSION}*.war $WORKIND_DIR/
-         #build nxshell
-         mvn -f src/client/nxshell/java -Dmaven.test.skip=true -Pstandalone clean package
       else
          mvn -f src/client/nxmc/java/pom.xml clean install -Pdesktop
       fi

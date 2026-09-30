@@ -32,7 +32,7 @@
 - [x] Add build/autoconf artifacts: `target/`, `configure`, `config.h.in`, `aclocal.m4`, `m4/`, `autom4te.cache/`, `build/netxms-build-tag.*`
 - [x] Add non-code directories: `doc/`, `docs/`, `manpages/`, `packages/`, `images/`, `share/`, `contrib/mibs/`, `sql/dbinit_*.sql`, `sql/dbschema_*.sql`
 - [x] Add IDE/tool configs: `.idea/`, `.vscode/`, `.vs/`, `.claude/`, `.ralphex/`, `.serena/`
-- [x] Add vendored JS and samples: `src/client/nxmc/java/src/rwt/resources/vncviewer/`, `src/client/nxshell/samples/`
+- [x] Add vendored JS: `src/client/nxmc/java/src/rwt/resources/vncviewer/`
 - [x] Add generated OTLP: `src/server/otlp/generated/`
 
 ### Task 2: Create `.semgrep.yml`
