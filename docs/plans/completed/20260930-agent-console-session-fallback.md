@@ -111,17 +111,18 @@ static bool GetTokenUserName(HANDLE token, TCHAR *user, size_t userSize, TCHAR *
 - Modify: `src/agent/core/watchdog.cpp`
 - Modify: `doc/internal/debug_tags.txt`
 
-- [ ] `nxagentd.h`: add `#include <WtsApi32.h>` to the include block at 38-40 (next to `<aclapi.h>`); remove the now redundant includes at `exec.cpp:27` and `watchdog.cpp:25`
-- [ ] `nxagentd.h`: add `struct UserSession` and declare `EnumerateUserSessions()` and `ExecuteInSession(const UserSession&, ...)` in the declaration block at ~1010
-- [ ] `exec.cpp`: implement `EnumerateUserSessions()` with the WTS path, the synthetic console fallback and the `0xFFFFFFFF` case
-- [ ] `exec.cpp`: change `ExecuteInSession` to take `const UserSession&` (use `session.id`, `session.name` in logs); token logic unchanged in this task
-- [ ] `exec.cpp`: `ExecuteInAllSessions` iterates `EnumerateUserSessions()`, skips only `id == 0 && !console`, no `WTSFreeMemory`, returns false on an empty session list
-- [ ] `watchdog.cpp`: delete the forward declaration at 204
-- [ ] `watchdog.cpp`: `UserAgentWatchdog` uses `EnumerateUserSessions()` for sessions: `DWORD` loops become `int i < sessions.size()`, `pWinStationName` at 262 becomes `name`, drop `WTSFreeMemory(sessions)` at 282 (process check stays on `WTSEnumerateProcesses` until Task 4)
-- [ ] `watchdog.cpp`: `IsSessionSuitableForExternalSubagents` takes `const UserSession&`; `ExternalSubagentWatchdog` uses `EnumerateUserSessions()` (`SessionId` at 622/632 becomes `id`, drop `WTSFreeMemory` at 642) and drops the enumeration-failure log added in 0e2f99d263
-- [ ] `debug_tags.txt`: register `wts` (agent: WTS session enumeration and process start in user sessions), alphabetical position
-- [ ] grep `src/agent/core` for `WTS_SESSION_INFO` / `WTSEnumerateSessions` - only `EnumerateUserSessions` may remain
-- [ ] syntax check all `src/agent/core/*.cpp` on both targets (`nxagentd.h` changed) - clean
+- [x] `nxagentd.h`: add `#include <WtsApi32.h>` to the include block at 38-40 (next to `<aclapi.h>`); remove the now redundant includes at `exec.cpp:27` and `watchdog.cpp:25`
+- [x] `nxagentd.h`: add `struct UserSession` and declare `EnumerateUserSessions()` and `ExecuteInSession(const UserSession&, ...)` in the declaration block at ~1010
+- [x] `exec.cpp`: implement `EnumerateUserSessions()` with the WTS path, the synthetic console fallback and the `0xFFFFFFFF` case
+- [x] `exec.cpp`: change `ExecuteInSession` to take `const UserSession&` (use `session.id`, `session.name` in logs); token logic unchanged in this task
+- [x] `exec.cpp`: `ExecuteInAllSessions` iterates `EnumerateUserSessions()`, skips only `id == 0 && !console`, no `WTSFreeMemory`, returns false on an empty session list
+- [x] `watchdog.cpp`: delete the forward declaration at 204
+- [x] `watchdog.cpp`: `UserAgentWatchdog` uses `EnumerateUserSessions()` for sessions: `DWORD` loops become `int i < sessions.size()`, `pWinStationName` at 262 becomes `name`, drop `WTSFreeMemory(sessions)` at 282 (process check stays on `WTSEnumerateProcesses` until Task 4)
+- [x] `watchdog.cpp`: `IsSessionSuitableForExternalSubagents` takes `const UserSession&`; `ExternalSubagentWatchdog` uses `EnumerateUserSessions()` (`SessionId` at 622/632 becomes `id`, drop `WTSFreeMemory` at 642) and drops the enumeration-failure log added in 0e2f99d263
+- [x] `debug_tags.txt`: register `wts` (agent: WTS session enumeration and process start in user sessions), alphabetical position
+- [x] grep `src/agent/core` for `WTS_SESSION_INFO` / `WTSEnumerateSessions` - only `EnumerateUserSessions` may remain
+- [x] syntax check all `src/agent/core/*.cpp` on both targets (`nxagentd.h` changed) - clean
+- ⚠️ the full `src/agent/core/*.cpp` run is not clean at baseline: `cng_engine.cpp`, `tunnel.cpp`, `modbus.cpp`, `service.cpp`, `nxsde.h` report pre-existing diagnostics (OpenSSL 4 const/deprecation, among others); gate is "diagnostics identical to HEAD", touched files have none
 
 ### Task 2: Token fallback in ExecuteInSession
 
@@ -129,36 +130,36 @@ static bool GetTokenUserName(HANDLE token, TCHAR *user, size_t userSize, TCHAR *
 - Modify: `src/agent/core/nxagentd.h`
 - Modify: `src/agent/core/exec.cpp`
 
-- [ ] declare `FindInteractiveUserToken(DWORD sessionId)` in `nxagentd.h`; add `#include <tlhelp32.h>` to the `_WIN32` includes in `exec.cpp`
-- [ ] implement the Toolhelp scan with session filter, `OpenProcess` / `OpenProcessToken` access as in Technical Details
-- [ ] implement the qualification check with `IsWellKnownSid` and the guarded S-1-5-90 / S-1-5-96 prefix test
-- [ ] keep the earliest-created qualifier via `GetProcessTimes` + `CompareFileTime` (skip on `GetProcessTimes` failure), close all other token and process handles
-- [ ] in `ExecuteInSession`, demote the `WTSQueryUserToken` failure log to level 6 and fall back to `FindInteractiveUserToken`; no token → log level 6 and return false; logs after token acquisition unchanged
-- [ ] check every early-return path closes the snapshot, process and token handles
-- [ ] syntax check both targets - clean
+- [x] declare `FindInteractiveUserToken(DWORD sessionId)` in `nxagentd.h`; add `#include <tlhelp32.h>` to the `_WIN32` includes in `exec.cpp`
+- [x] implement the Toolhelp scan with session filter, `OpenProcess` / `OpenProcessToken` access as in Technical Details
+- [x] implement the qualification check with `IsWellKnownSid` and the guarded S-1-5-90 / S-1-5-96 prefix test
+- [x] keep the earliest-created qualifier via `GetProcessTimes` + `CompareFileTime` (skip on `GetProcessTimes` failure), close all other token and process handles
+- [x] in `ExecuteInSession`, demote the `WTSQueryUserToken` failure log to level 6 and fall back to `FindInteractiveUserToken`; no token → log level 6 and return false; logs after token acquisition unchanged
+- [x] check every early-return path closes the snapshot, process and token handles
+- [x] syntax check both targets - clean
 
 ### Task 3: Excluded-users check without WTS
 
 **Files:**
 - Modify: `src/agent/core/watchdog.cpp`
 
-- [ ] implement `static GetTokenUserName(HANDLE, TCHAR *user, size_t userSize, TCHAR *domain, size_t domainSize)` next to `IsSessionSuitableForExternalSubagents`
-- [ ] `IsSessionSuitableForExternalSubagents`: when `WTSQuerySessionInformation(WTSUserName)` fails, get user/domain via `FindInteractiveUserToken(session.id)` + `GetTokenUserName`, then `CloseHandle`
-- [ ] no token → skip session with the existing "no logged on user" log; name lookup failure → skip with the existing "cannot get logged on user" log
-- [ ] excluded-users matching (bare name or `DOMAIN\user`, case-insensitive) shared by both paths, not duplicated
-- [ ] syntax check both targets - clean
+- [x] implement `static GetTokenUserName(HANDLE, TCHAR *user, size_t userSize, TCHAR *domain, size_t domainSize)` next to `IsSessionSuitableForExternalSubagents`
+- [x] `IsSessionSuitableForExternalSubagents`: when `WTSQuerySessionInformation(WTSUserName)` fails, get user/domain via `FindInteractiveUserToken(session.id)` + `GetTokenUserName`, then `CloseHandle`
+- [x] no token → skip session with the existing "no logged on user" log; name lookup failure → skip with the existing "cannot get logged on user" log
+- [x] excluded-users matching (bare name or `DOMAIN\user`, case-insensitive) shared by both paths, not duplicated
+- [x] syntax check both targets - clean
 
 ### Task 4: UserAgentWatchdog process check via Toolhelp
 
 **Files:**
 - Modify: `src/agent/core/watchdog.cpp`
 
-- [ ] replace `WTSEnumerateProcesses` with one `CreateToolhelp32Snapshot` per cycle, collecting session IDs (`ProcessIdToSessionId`) of processes whose `szExeFile` matches `executableName` with `_tcsicmp`
-- [ ] snapshot failure: log level 6 (new - today's `WTSEnumerateProcesses` failure is silent) and skip the cycle
-- [ ] per session: start the user agent only if its ID is not in the collected set; rest of the start logic unchanged
-- [ ] remove the remaining `WTSFreeMemory(processes)` path
-- [ ] grep `src/agent/core` for `WTSEnumerateProcesses` - none left
-- [ ] syntax check both targets - clean
+- [x] replace `WTSEnumerateProcesses` with one `CreateToolhelp32Snapshot` per cycle, collecting session IDs (`ProcessIdToSessionId`) of processes whose `szExeFile` matches `executableName` with `_tcsicmp`
+- [x] snapshot failure: log level 6 (new - today's `WTSEnumerateProcesses` failure is silent) and skip the cycle
+- [x] per session: start the user agent only if its ID is not in the collected set; rest of the start logic unchanged
+- [x] remove the remaining `WTSFreeMemory(processes)` path
+- [x] grep `src/agent/core` for `WTSEnumerateProcesses` - none left
+- [x] syntax check both targets - clean
 
 ## Post-Completion
 *Manual verification - no checkboxes*

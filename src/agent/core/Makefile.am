@@ -47,4 +47,5 @@ EXTRA_DIST = \
     pe_cert.cpp \
     resource.h \
     service.cpp \
+    session_fallback.cpp \
     wincert.cpp

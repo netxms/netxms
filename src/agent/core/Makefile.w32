@@ -50,6 +50,7 @@ SOURCES = \
 	sa.cpp \
 	service.cpp \
 	session.cpp \
+	session_fallback.cpp \
 	snmpproxy.cpp \
 	snmptrapproxy.cpp \
 	subagent.cpp \
