@@ -56,6 +56,9 @@ static void TestRackCoolingZoneRule()
    AssertEquals(ValidateObjectBinding(*rack, *zone1), RCC_SUCCESS);   // Same zone again is not a violation
    AssertEquals(ValidateObjectBinding(*rack, *zone2), RCC_OBJECT_HIERARCHY_VIOLATION);
 
+   zone1->deleteObject();
+   zone2->deleteObject();
+
    EndTest();
 }
 
@@ -84,6 +87,9 @@ static void TestPowerDomainFacilityRule()
    AssertEquals(ValidateObjectBinding(*domain2, *facility2), RCC_SUCCESS);
    AssertEquals(ValidateObjectBinding(*domain2, *facility1), RCC_OBJECT_HIERARCHY_VIOLATION);
 
+   facility1->deleteObject();
+   facility2->deleteObject();
+
    EndTest();
 }
 
@@ -107,6 +113,9 @@ static void TestPowerDomainTwoFacilitiesAllowed()
    NetObj::linkObjects(facility2, parent);
    NetObj::linkObjects(facility2, domain);
    AssertEquals(ValidateObjectBinding(*domain, *parent), RCC_SUCCESS);
+
+   facility1->deleteObject();
+   facility2->deleteObject();
 
    EndTest();
 }
@@ -149,6 +158,10 @@ static void TestPowerDomainChainAndDescendants()
    AssertEquals(ValidateObjectBinding(*leaf, *facility1), RCC_SUCCESS);
    AssertEquals(ValidateObjectBinding(*leaf, *facility2), RCC_SUCCESS);   // Direct second facility is only a warning
 
+   facility1->deleteObject();
+   facility2->deleteObject();
+   neutral->deleteObject();
+
    EndTest();
 }
 
@@ -181,6 +194,13 @@ static void TestRoomContainmentRules()
    AssertEquals(ValidateObjectBinding(*rack, *room1), RCC_SUCCESS);   // Same room again is not a violation
    AssertEquals(ValidateObjectBinding(*rack, *room2), RCC_OBJECT_HIERARCHY_VIOLATION);
    AssertEquals(ValidateObjectBinding(*rack, *zone), RCC_SUCCESS);    // Spatial and thermal parents are independent
+
+   room1->deleteObject();
+   room2->deleteObject();
+   facility->deleteObject();
+   container->deleteObject();
+   zone->deleteObject();
+   domain->deleteObject();
 
    EndTest();
 }
@@ -316,6 +336,8 @@ static void TestRoomNXSL()
       WriteToTerminalEx(L"\n   Script error: %s\n", vm->getErrorText());
    AssertTrue(success);
    delete vm;
+
+   container->deleteObject();
 
    EndTest();
 }

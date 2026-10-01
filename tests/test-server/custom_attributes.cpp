@@ -273,6 +273,8 @@ static void TestInheritance()
    AssertTrue(!wcscmp(child->getCustomAttribute(L"list").cstr(), L"[1,2]"));
    AssertTrue(!wcscmp(grandchild->getCustomAttribute(L"list").cstr(), L"[1,2]"));
 
+   parent->deleteObject();
+
    EndTest();
 }
 

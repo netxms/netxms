@@ -81,5 +81,7 @@ void TestNodeIPChange()
    AssertEquals(iface1->getStatus(), STATUS_UNMANAGED);
    AssertEquals(iface2->getStatus(), STATUS_UNMANAGED);
 
+   node->deleteObject();
+
    EndTest();
 }
