@@ -7596,12 +7596,18 @@ void ClientSession::decommissionNode(const NXCPMessage& request)
             {
                time_t expirationTime = static_cast<time_t>(request.getFieldAsInt64(VID_DECOMMISSION_TIME));
                bool clearIpAddresses = request.getFieldAsBoolean(VID_CLEAR_IP_ADDRESSES);
-
-               static_cast<Node*>(object.get())->decommission(expirationTime, clearIpAddresses);
-               response.setField(VID_RCC, RCC_SUCCESS);
-               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_userId, m_workstation, m_id, object->getId(),
-                  _T("Node %s decommissioned, expiration time %u, clear IP addresses: %s"),
-                  object->getName(), static_cast<uint32_t>(expirationTime), clearIpAddresses ? _T("yes") : _T("no"));
+               if (expirationTime > 0)
+               {
+                  static_cast<Node*>(object.get())->decommission(expirationTime, clearIpAddresses);
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  WriteAuditLog(AUDIT_OBJECTS, TRUE, m_userId, m_workstation, m_id, object->getId(),
+                     _T("Node %s decommissioned, expiration time %u, clear IP addresses: %s"),
+                     object->getName(), static_cast<uint32_t>(expirationTime), clearIpAddresses ? _T("yes") : _T("no"));
+               }
+               else
+               {
+                  response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+               }
             }
             else
             {

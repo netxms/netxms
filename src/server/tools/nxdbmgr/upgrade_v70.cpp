@@ -165,6 +165,29 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.46 to 70.47
+ */
+static bool H_UpgradeFromV46()
+{
+   // Decommissioned state is now derived from decommission_time: clear stale state bit
+   // and reset time for nodes that had lost the bit (they stay non-decommissioned)
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE nodes SET decommission_time=0 WHERE decommission_time<>0 AND id IN (SELECT object_id FROM object_properties WHERE BITAND(state,16777216)=0 AND BITAND(state_before_maint,16777216)=0)"));
+      CHK_EXEC(SQLQuery(L"UPDATE object_properties SET state=state-16777216 WHERE BITAND(state,16777216)<>0 AND object_id IN (SELECT id FROM nodes)"));
+      CHK_EXEC(SQLQuery(L"UPDATE object_properties SET state_before_maint=state_before_maint-16777216 WHERE BITAND(state_before_maint,16777216)<>0 AND object_id IN (SELECT id FROM nodes)"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE nodes SET decommission_time=0 WHERE decommission_time<>0 AND id IN (SELECT object_id FROM object_properties WHERE (state & 16777216)=0 AND (state_before_maint & 16777216)=0)"));
+      CHK_EXEC(SQLQuery(L"UPDATE object_properties SET state=state-16777216 WHERE (state & 16777216)<>0 AND object_id IN (SELECT id FROM nodes)"));
+      CHK_EXEC(SQLQuery(L"UPDATE object_properties SET state_before_maint=state_before_maint-16777216 WHERE (state_before_maint & 16777216)<>0 AND object_id IN (SELECT id FROM nodes)"));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(47));
+   return true;
+}
+
+/**
  * Upgrade from 70.45 to 70.46
  */
 static bool H_UpgradeFromV45()
@@ -1612,6 +1635,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 46, 70, 47, H_UpgradeFromV46 },
    { 45, 70, 46, H_UpgradeFromV45 },
    { 44, 70, 45, H_UpgradeFromV44 },
    { 43, 70, 44, H_UpgradeFromV43 },

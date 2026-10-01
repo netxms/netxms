@@ -129,7 +129,6 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	public static final int NSF_ICMP_UNREACHABLE         = 0x00200000;
 	public static final int NSF_SSH_UNREACHABLE          = 0x00400000;
 	public static final int NSF_MODBUS_UNREACHABLE       = 0x00800000;
-	public static final int NSF_DECOMMISSIONED           = 0x01000000;
 	public static final int NSF_AGENT_RESTART_PENDING    = 0x02000000;
 	public static final int NSF_NETCONF_UNREACHABLE      = 0x04000000;
 
@@ -490,7 +489,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
     */
    public boolean isDecommissioned()
    {
-      return (stateFlags & NSF_DECOMMISSIONED) != 0;
+      return decommissionTime != null;
    }
 
    /**

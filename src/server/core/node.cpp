@@ -2816,7 +2816,7 @@ void Node::deleteInterface(Interface *iface)
  */
 bool Node::isManagementStatusChangeAllowed(bool isManaged)
 {
-   return !isManaged || !(m_state & NSF_DECOMMISSIONED);
+   return !isManaged || !isDecommissioned();
 }
 
 /**
@@ -16618,7 +16618,6 @@ static FlagNameMapping s_stateMapping[] =
    { NSF_SSH_UNREACHABLE, "sshUnreachable" },
    { NSF_NETCONF_UNREACHABLE, "netconfUnreachable" },
    { NSF_MODBUS_UNREACHABLE, "modbusUnreachable" },
-   { NSF_DECOMMISSIONED, "decommissioned" },
    { NSF_AGENT_RESTART_PENDING, "agentRestartPending" },
    { 0, nullptr }
 };
@@ -16742,7 +16741,9 @@ json_t *Node::toJson(uint32_t flags)
    json_object_set_new(root, "tunnelId", m_tunnelId.toJson());
 
    json_object_set_new(root, "capabilities", json_boolean_object(m_capabilities, s_capabilityMapping));
-   json_object_set_new(root, "state", json_boolean_object(m_state, s_stateMapping));
+   json_t *state = json_boolean_object(m_state, s_stateMapping);
+   json_object_set_new(state, "decommissioned", json_boolean(isDecommissioned()));
+   json_object_set_new(root, "state", state);
 
    json_object_set_new(root, "capabilityFlags", json_integer(m_capabilities));
    json_object_set_new(root, "stateFlags", json_integer(m_state));
@@ -17494,9 +17495,8 @@ bool Node::fillReconciliationStatusMessage(NXCPMessage *msg)
 void Node::decommission(time_t expirationTime, bool clearIpAddresses)
 {
    lockProperties();
-   m_state |= NSF_DECOMMISSIONED;
    m_decommissionTime = expirationTime;
-   setModified(MODIFY_NODE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+   setModified(MODIFY_NODE_PROPERTIES);
 
    if (clearIpAddresses)
    {
@@ -17540,10 +17540,8 @@ void Node::decommission(time_t expirationTime, bool clearIpAddresses)
 void Node::recommission()
 {
    lockProperties();
-   m_state &= ~NSF_DECOMMISSIONED;
-   m_stateBeforeMaintenance &= ~NSF_DECOMMISSIONED;   // Do not let end of maintenance restore the flag
    m_decommissionTime = 0;
-   setModified(MODIFY_NODE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
+   setModified(MODIFY_NODE_PROPERTIES);
    unlockProperties();
 
    nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, _T("Node %s [%u] recommissioned"), m_name, m_id);

@@ -90,6 +90,16 @@ void TestRecommission()
    node->leaveMaintenanceMode(0);
    AssertFalse(node->isDecommissioned());
 
+   // Decommission during maintenance must survive end of maintenance; state flags are not touched
+   node->enterMaintenanceMode(0, _T("test"));
+   uint32_t stateBefore = node->getState();
+   Decommission(node);
+   AssertEquals(node->getState(), stateBefore);
+   node->leaveMaintenanceMode(0);
+   AssertTrue(node->isDecommissioned());
+   node->recommission();
+   AssertFalse(node->isDecommissioned());
+
    EndTest();
 
    StartTest(_T("RECOMMISSION console command"));
