@@ -8,7 +8,7 @@
       "id": 1,
       "guid": "6948eb95-d0d2-47e5-8600-0228c4a5479b",
       "name": "MSSQL Server",
-      "comments": "Monitors Microsoft SQL Server through the nxagentd 'mssql' subagent. Requires the subagent to be enabled on the node with at least one [mssql/connections/<id>] section (see bundled agent policy). Per-connection DCIs discover from MSSQL.Connections; per-database DCIs discover from MSSQL.AllDatabases, whose rows are emitted as 'connectionId,databaseName' and expand directly into the MSSQL.Database.* (connectionId, database) signature.",
+      "comments": "Monitors Microsoft SQL Server through the nxagentd 'mssql' subagent. Requires the subagent to be enabled on the node with at least one [mssql/connections/<id>] section (see bundled agent policy). Auto-binds to nodes whose agent reports at least one connection in MSSQL.Connections. Per-connection DCIs discover from MSSQL.Connections; per-database DCIs discover from MSSQL.AllDatabases, whose rows are emitted as 'connectionId,databaseName' and expand directly into the MSSQL.Database.* (connectionId, database) signature.",
       "exclusionGroup": "",
       "path": [
         "Database",
@@ -1099,7 +1099,19 @@
           "content": "# Enable the MSSQL monitoring subagent.\nSubAgent = mssql\n\n# Define one [mssql/connections/<id>] subsection per monitored SQL Server.\n# The subsection name becomes the connection Id discovered by MSSQL.Connections,\n# which drives the per-connection and per-database instance discovery in this template.\n# Use nxencpasswd to generate an encrypted password and set it via EncryptedPassword.\n#\n#[mssql/connections/sql1]\n#Server = 127.0.0.1\n#Login = monitoring\n#Password = secret\n#Database = master\n",
           "id": 1
         }
-      ]
+      ],
+      "autoBind": {
+        "filter": {
+          "autoBind": true,
+          "autoUnbind": false,
+          "source": "if (classof($object) != \"Node\")\n   return false;\nif (!$node.isAgent)\n   return false;\nconnections = $node.readAgentList(\"MSSQL.Connections\");\nreturn connections != null && connections.size > 0;\n"
+        },
+        "filter2": {
+          "autoBind": false,
+          "autoUnbind": false,
+          "source": ""
+        }
+      }
     }
   ],
   "traps": [],
