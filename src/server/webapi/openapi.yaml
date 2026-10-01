@@ -7042,8 +7042,10 @@ paths:
       operationId: getDciTableValue
       summary: Get last collected value of table DCI
       description: |
-        Retrieve last collected value of a table DCI (Data Collection Item) together with its collection timestamp.
-        If no value has been collected yet, both `timestamp` and `table` are `null`.
+        Retrieve last collected value of a table DCI (Data Collection Item) together with its collection timestamp
+        and current collection status. If no value has been collected yet, both `timestamp` and `table` are `null`.
+        The last collected table is returned even when the DCI currently has collection errors; use `errorCount`
+        and `lastCollectionError` to detect that the returned data may be stale.
       parameters:
         - name: object-id
           in: path
@@ -7071,6 +7073,28 @@ paths:
                   description:
                     type: string
                     description: DCI description
+                  status:
+                    type: integer
+                    description: Current DCI status (0 = active, 1 = disabled, 2 = not supported)
+                  errorCount:
+                    type: integer
+                    description: Number of consecutive collection errors (0 if last collection attempt was successful)
+                  lastCollectionError:
+                    type: string
+                    description: Reason of the last data collection error (`SUCCESS` if last collection attempt was successful)
+                    enum:
+                      - SUCCESS
+                      - COMM_ERROR
+                      - NOT_SUPPORTED
+                      - IGNORE
+                      - NO_SUCH_INSTANCE
+                      - COLLECTION_ERROR
+                      - ACCESS_DENIED
+                      - INVALID_DATA
+                      - UNKNOWN
+                  noValue:
+                    type: boolean
+                    description: True if DCI does not hold a value of its own (for example, instance discovery source DCI)
                   timestamp:
                     type: string
                     format: date-time

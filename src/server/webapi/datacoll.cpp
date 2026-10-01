@@ -345,6 +345,10 @@ int H_DataCollectionTableValue(Context *context)
    json_t *response = json_object();
    json_object_set_new(response, "id", json_integer(dciId));
    json_object_set_new(response, "description", json_string_t(dci->getDescription()));
+   json_object_set_new(response, "status", json_integer(dci->matchClusterResource() ? dci->getStatus() : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
+   json_object_set_new(response, "errorCount", json_integer(dci->getErrorCount()));
+   json_object_set_new(response, "lastCollectionError", json_string(DataCollectionErrorName(dci->getLastCollectionError())));
+   json_object_set_new(response, "noValue", json_boolean(!dci->hasValue()));
    if (table != nullptr)
    {
       json_object_set_new(response, "timestamp", timestamp.asJson());
