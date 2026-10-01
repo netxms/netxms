@@ -849,6 +849,12 @@ public class GeoNetworkMapViewer extends AbstractGeoMapViewer implements ISelect
       // dc + 1 is the group size N; centring on dc/2 gives a symmetric
       // [-(N-1)/2 .. +(N-1)/2] range of multipliers across positions [0..N-1].
       double shift = (link.getPosition() - dc / 2.0) * LINK_FAN_SPACING_PX;
+      // p1/p2 follow this link's own element order, so the normal flips for a
+      // link stored in the opposite orientation to the group's common first
+      // element. Flip the shift back so all siblings fan out on one axis
+      // instead of landing on top of each other.
+      if (link.isDirectionInverted())
+         shift = -shift;
       return new double[] { nx * shift, ny * shift };
    }
 
