@@ -381,6 +381,13 @@ static void TestDisplayHint()
    AssertEquals(FormatWithHint(_T("1q"), plainText, sizeof(plainText), buffer, 1024), _T("abc"));
    EndTest();
 
+   StartTest(_T("Display hint - missing octet length falls back to printable string"));
+   static const BYTE fcPortId[] = { 0x01, 0x0A, 0xFF };
+   AssertEquals(FormatWithHint(_T("x"), fcPortId, sizeof(fcPortId), buffer, 1024), _T("01 0A FF "));
+   AssertEquals(FormatWithHint(_T("*x"), fcPortId, sizeof(fcPortId), buffer, 1024), _T("01 0A FF "));
+   AssertEquals(FormatWithHint(_T("1x:x"), fcPortId, sizeof(fcPortId), buffer, 1024), _T("01 0A FF "));
+   EndTest();
+
    StartTest(_T("Display hint - not applied to non-octet-string value"));
    SNMP_Variable intVar(s_oidSysDescription);
    intVar.setValueFromUInt32(ASN_INTEGER, 42);
