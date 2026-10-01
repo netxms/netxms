@@ -25,13 +25,16 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.NXCException;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.constants.DataCollectionObjectStatus;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.DciLastValue;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.datacollection.views.DataComparisonView;
@@ -52,6 +55,7 @@ public class TableValueViewer extends BaseTableValueViewer
    private long objectId = 0;
    private long dciId = 0;
    private String objectName = null;
+   private String noDataMessage = null;
    private String statusMessage = null;
    private Action actionShowHistory;
    private Action actionShowLineChart;
@@ -288,58 +292,44 @@ public class TableValueViewer extends BaseTableValueViewer
    @Override
    protected Table readData() throws Exception
    {
+      noDataMessage = null;
       statusMessage = null;
       if (objectId == 0)
          return null;
 
-      Table table = session.getTableLastValues(objectId, dciId);
+      DciLastValue lastValue = session.getDciLastValue(objectId, dciId);
+      if (lastValue.getDciType() != DataCollectionObject.DCO_TYPE_TABLE)
+         throw new NXCException(RCC.INCOMPATIBLE_OPERATION);
 
-      // Always check DCI status to detect errors, even if table has cached data
-      DciValue dciInfo = getDciInfo();
-      if (dciInfo != null)
+      if (lastValue.getStatus() == DataCollectionObjectStatus.DISABLED)
       {
-         if (dciInfo.getStatus() == DataCollectionObjectStatus.DISABLED)
-         {
-            statusMessage = i18n.tr("Data collection is disabled");
-            return null;
-         }
-         else if (dciInfo.getStatus() == DataCollectionObjectStatus.UNSUPPORTED)
-         {
-            statusMessage = i18n.tr("Metric is not supported");
-            return null;
-         }
-         else if (dciInfo.getErrorCount() > 0)
-         {
-            statusMessage = String.format(i18n.tr("Data collection error (%d consecutive failures)"), dciInfo.getErrorCount());
-            return null;
-         }
-         else if ((table == null) || (table.getRowCount() == 0))
-         {
-            if (dciInfo.isNoValueObject())
-            {
-               statusMessage = i18n.tr("No data collected yet");
-               return null;
-            }
-         }
+         noDataMessage = i18n.tr("Data collection is disabled");
+         return null;
+      }
+      if (lastValue.getStatus() == DataCollectionObjectStatus.UNSUPPORTED)
+      {
+         noDataMessage = i18n.tr("Metric is not supported");
+         return null;
       }
 
+      // Server sends table structure only if at least one value was collected
+      Table table = lastValue.getTableValue();
+      if (table.getColumnCount() == 0)
+      {
+         if (lastValue.getErrorCount() > 0)
+            noDataMessage = String.format(i18n.tr("Data collection error (%d consecutive failures)"), lastValue.getErrorCount());
+         else
+            noDataMessage = i18n.tr("No data collected yet");
+         return null;
+      }
+
+      // Last collected table is shown even if DCI is in error state, with error indication above it
+      if (lastValue.getErrorCount() > 0)
+      {
+         statusMessage = String.format(i18n.tr("Data collection error (%d consecutive failures), last value collected at %s"), lastValue.getErrorCount(),
+               DateFormatFactory.getDateTimeFormat().format(lastValue.getTimestamp()));
+      }
       return table;
-   }
-
-   /**
-    * Get DCI info for this table DCI
-    *
-    * @return DCI value info or null if not found
-    */
-   private DciValue getDciInfo() throws Exception
-   {
-      DciValue[] dciList = session.getLastValues(objectId);
-      for(DciValue dci : dciList)
-      {
-         if ((dci.getId() == dciId) && (dci.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
-            return dci;
-      }
-      return null;
    }
 
    /**
@@ -347,6 +337,15 @@ public class TableValueViewer extends BaseTableValueViewer
     */
    @Override
    protected String getNoDataMessage()
+   {
+      return noDataMessage;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#getStatusMessage()
+    */
+   @Override
+   protected String getStatusMessage()
    {
       return statusMessage;
    }

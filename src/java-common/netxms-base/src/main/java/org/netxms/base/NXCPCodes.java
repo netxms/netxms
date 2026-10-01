@@ -1656,6 +1656,7 @@ public class NXCPCodes
    public static final long VID_TIMEZONE_RULE = 1067;
    public static final long VID_MEMORY_SCOPE = 1068;
    public static final long VID_SCOPE_ID = 1069;
+   public static final long VID_NO_VALUE_OBJECT = 1070;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

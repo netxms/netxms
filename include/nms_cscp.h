@@ -1853,6 +1853,7 @@ __PACK_END__
 #define VID_TIMEZONE_RULE           ((uint32_t)1067)
 #define VID_MEMORY_SCOPE            ((uint32_t)1068)
 #define VID_SCOPE_ID                ((uint32_t)1069)
+#define VID_NO_VALUE_OBJECT         ((uint32_t)1070)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

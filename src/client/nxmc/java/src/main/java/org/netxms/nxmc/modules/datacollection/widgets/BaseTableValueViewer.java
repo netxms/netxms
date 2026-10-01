@@ -64,6 +64,7 @@ public abstract class BaseTableValueViewer extends Composite
    protected SortableTableViewer viewer;
    protected TableLabelProvider labelProvider;
    protected CLabel errorLabel;
+   protected CLabel statusLabel;
    protected CellSelectionManager cellSelectionManager;
    protected Action actionUseMultipliers;
    protected Action actionShowFilter;
@@ -329,12 +330,14 @@ public abstract class BaseTableValueViewer extends Composite
          {
             final Table table = readData();
             final String noDataMessage = getNoDataMessage();
+            final String statusMessage = getStatusMessage();
             if (table == null)
             {
                runInUIThread(() -> {
                   if (viewer.getControl().isDisposed())
                      return;
 
+                  hideStatusMessage();
                   if (noDataMessage != null)
                   {
                      showOverlayMessage(noDataMessage);
@@ -357,6 +360,10 @@ public abstract class BaseTableValueViewer extends Composite
                   return;
 
                hideOverlayMessage();
+               if (statusMessage != null)
+                  showStatusMessage(statusMessage);
+               else
+                  hideStatusMessage();
                updateViewer(table);
                if (postRefreshHook != null)
                {
@@ -420,12 +427,59 @@ public abstract class BaseTableValueViewer extends Composite
    }
 
    /**
+    * Show status message above the table viewer (table data remains visible)
+    *
+    * @param message message to display
+    */
+   protected void showStatusMessage(String message)
+   {
+      if (isDisposed())
+         return;
+
+      if (statusLabel == null)
+      {
+         statusLabel = new CLabel(this, SWT.LEFT);
+         statusLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+         statusLabel.moveAbove(viewer.getControl());
+      }
+      statusLabel.setText(message);
+      layout(true, true);
+   }
+
+   /**
+    * Hide status message shown above the table viewer
+    */
+   protected void hideStatusMessage()
+   {
+      if (isDisposed())
+         return;
+
+      if (statusLabel != null)
+      {
+         statusLabel.dispose();
+         statusLabel = null;
+         layout(true, true);
+      }
+   }
+
+   /**
     * Read data to display
     *
     * @return table data
     * @throws Exception on error
     */
    protected abstract Table readData() throws Exception;
+
+   /**
+    * Get message to display above the table when data is available but needs a remark (e.g., DCI has collection errors).
+    * Called after <code>readData()</code>.
+    *
+    * @return message to display or null if no status message needed
+    */
+   protected String getStatusMessage()
+   {
+      return null;
+   }
 
    /**
     * Get message to display when no data is available. Subclasses can override this

@@ -22,6 +22,8 @@ import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.Table;
+import org.netxms.client.constants.DataCollectionError;
+import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 
@@ -37,6 +39,10 @@ public class DciLastValue
    private String value;
    private String rawValue;
    private Table tableValue;
+   private DataCollectionObjectStatus status;
+   private int errorCount;
+   private DataCollectionError lastCollectionError;
+   private boolean noValueObject;
 
    /**
     * Create from NXCP message
@@ -58,6 +64,11 @@ public class DciLastValue
          value = msg.getFieldAsString(NXCPCodes.VID_VALUE);
          rawValue = msg.getFieldAsString(NXCPCodes.VID_RAW_VALUE);
       }
+
+      status = DataCollectionObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS));
+      errorCount = msg.getFieldAsInt32(NXCPCodes.VID_ERROR_COUNT);
+      lastCollectionError = DataCollectionError.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_LAST_COLLECTION_ERROR));
+      noValueObject = msg.getFieldAsBoolean(NXCPCodes.VID_NO_VALUE_OBJECT);
    }
 
    /**
@@ -129,5 +140,45 @@ public class DciLastValue
    public Table getTableValue()
    {
       return tableValue;
+   }
+
+   /**
+    * Get DCI status
+    *
+    * @return DCI status
+    */
+   public DataCollectionObjectStatus getStatus()
+   {
+      return status;
+   }
+
+   /**
+    * Get number of consecutive data collection errors
+    *
+    * @return number of consecutive data collection errors
+    */
+   public int getErrorCount()
+   {
+      return errorCount;
+   }
+
+   /**
+    * Get error code of last data collection attempt
+    *
+    * @return error code of last data collection attempt
+    */
+   public DataCollectionError getLastCollectionError()
+   {
+      return lastCollectionError;
+   }
+
+   /**
+    * Check if this DCI never has a value of its own (for example, instance discovery source DCI)
+    *
+    * @return true if this DCI never has a value of its own
+    */
+   public boolean isNoValueObject()
+   {
+      return noValueObject;
    }
 }
