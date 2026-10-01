@@ -2222,6 +2222,15 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_AI_MESSAGE:
          deleteAIMessage(*request);
          break;
+      case CMD_GET_AI_MEMORY:
+         getAiMemory(*request);
+         break;
+      case CMD_MODIFY_AI_MEMORY_ENTRY:
+         modifyAiMemoryEntry(*request);
+         break;
+      case CMD_DELETE_AI_MEMORY_ENTRY:
+         deleteAiMemoryEntry(*request);
+         break;
       case CMD_GET_AI_OPERATORS:
          getAiOperators(*request);
          break;
@@ -21050,6 +21059,110 @@ void ClientSession::deleteAIMessage(const NXCPMessage& request)
    uint32_t rcc = DeleteAIMessage(messageId, m_userId);
 
    response.setField(VID_RCC, rcc);
+   sendMessage(response);
+}
+
+/**
+ * Get AI memory entries readable by current user
+ *
+ * Called by:
+ * CMD_GET_AI_MEMORY
+ */
+void ClientSession::getAiMemory(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   FillAIMemoryListMessage(&response, m_userId);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+}
+
+/**
+ * Create or modify AI memory entry. Access is checked by the memory store based on entry scope and user rights.
+ *
+ * Called by:
+ * CMD_MODIFY_AI_MEMORY_ENTRY
+ *
+ * Expected input parameters:
+ * VID_RECORD_ID      Entry ID (0 to create new entry)
+ * VID_MEMORY_SCOPE   Scope (create only): 0 = environment, 1 = user, 2 = object
+ * VID_SCOPE_ID       Scope ID (create only): user ID or object ID
+ * VID_TITLE          Title (optional on modify)
+ * VID_MESSAGE        Content (optional on modify)
+ * VID_LOCKED         Locked flag (optional on modify)
+ */
+void ClientSession::modifyAiMemoryEntry(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t entryId = request.getFieldAsUInt32(VID_RECORD_ID);
+   char *title = request.isFieldExist(VID_TITLE) ? request.getFieldAsUtf8String(VID_TITLE) : nullptr;
+   char *content = request.isFieldExist(VID_MESSAGE) ? request.getFieldAsUtf8String(VID_MESSAGE) : nullptr;
+
+   uint32_t rcc;
+   std::string errorText;
+   if (entryId == 0)
+   {
+      int scope = request.getFieldAsInt16(VID_MEMORY_SCOPE);
+      if ((scope >= 0) && (scope <= 2))
+      {
+         rcc = CreateAIMemoryEntry(static_cast<AIMemoryScope>(scope), request.getFieldAsUInt32(VID_SCOPE_ID), CHECK_NULL_EX_A(title), CHECK_NULL_EX_A(content),
+            request.getFieldAsBoolean(VID_LOCKED), false, m_userId, &entryId, &errorText);
+      }
+      else
+      {
+         rcc = RCC_INVALID_ARGUMENT;
+      }
+   }
+   else
+   {
+      json_t *changes = json_object();
+      if (title != nullptr)
+         json_object_set_new(changes, "title", json_string(title));
+      if (content != nullptr)
+         json_object_set_new(changes, "content", json_string(content));
+      if (request.isFieldExist(VID_LOCKED))
+         json_object_set_new(changes, "locked", json_boolean(request.getFieldAsBoolean(VID_LOCKED)));
+      rcc = ModifyAIMemoryEntry(entryId, changes, false, m_userId, &errorText);
+      json_decref(changes);
+   }
+
+   response.setField(VID_RCC, rcc);
+   if (rcc == RCC_SUCCESS)
+   {
+      response.setField(VID_RECORD_ID, entryId);
+      writeAuditLog(AUDIT_AI, true, 0, L"AI memory entry [%u] %s", entryId, (request.getFieldAsUInt32(VID_RECORD_ID) == 0) ? L"created" : L"modified");
+   }
+   else
+   {
+      if (!errorText.empty())
+         response.setFieldFromUtf8String(VID_ERROR_TEXT, errorText.c_str());
+      if (rcc == RCC_ACCESS_DENIED)
+         writeAuditLog(AUDIT_AI, false, 0, L"Access denied on changing AI memory entry [%u]", entryId);
+   }
+   MemFree(title);
+   MemFree(content);
+   sendMessage(response);
+}
+
+/**
+ * Delete AI memory entry
+ *
+ * Called by:
+ * CMD_DELETE_AI_MEMORY_ENTRY
+ *
+ * Expected input parameters:
+ * VID_RECORD_ID   Entry ID
+ */
+void ClientSession::deleteAiMemoryEntry(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   uint32_t entryId = request.getFieldAsUInt32(VID_RECORD_ID);
+   uint32_t rcc = DeleteAIMemoryEntry(entryId, false, m_userId);
+   response.setField(VID_RCC, rcc);
+   if (rcc == RCC_SUCCESS)
+      writeAuditLog(AUDIT_AI, true, 0, L"AI memory entry [%u] deleted", entryId);
+   else if (rcc == RCC_ACCESS_DENIED)
+      writeAuditLog(AUDIT_AI, false, 0, L"Access denied on deleting AI memory entry [%u]", entryId);
    sendMessage(response);
 }
 

@@ -82,6 +82,7 @@ import org.netxms.client.ai.AiAssistantSkill;
 import org.netxms.client.ai.AiDisabledItem;
 import org.netxms.client.ai.AiFunctionCall;
 import org.netxms.client.ai.AiMessage;
+import org.netxms.client.ai.AiMemoryEntry;
 import org.netxms.client.ai.AiOperator;
 import org.netxms.client.ai.AiOperatorCheck;
 import org.netxms.client.ai.AiOperatorInstructionsHistoryRecord;
@@ -17740,6 +17741,63 @@ public class NXCSession
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_MESSAGE);
       msg.setFieldUInt32(NXCPCodes.VID_AI_MESSAGE_ID, messageId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get AI memory entries readable by current user (all entries for users with "manage AI memory" right).
+    *
+    * @return list of memory entries
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AiMemoryEntry> getAiMemoryEntries() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AI_MEMORY);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<AiMemoryEntry> entries = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         entries.add(new AiMemoryEntry(response, fieldId));
+         fieldId += 20;
+      }
+      return entries;
+   }
+
+   /**
+    * Create or modify AI memory entry. Entry with ID 0 will be created on the server. Access is checked by the server
+    * according to entry scope: environment entries require "manage AI memory" right, user entries can be changed by
+    * their owner, object entries require modify access to the object.
+    *
+    * @param entry memory entry
+    * @return entry ID (assigned by server for new entries)
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public int modifyAiMemoryEntry(AiMemoryEntry entry) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_AI_MEMORY_ENTRY);
+      entry.fillMessage(msg);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt32(NXCPCodes.VID_RECORD_ID);
+   }
+
+   /**
+    * Delete AI memory entry.
+    *
+    * @param entryId entry ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteAiMemoryEntry(int entryId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AI_MEMORY_ENTRY);
+      msg.setFieldUInt32(NXCPCodes.VID_RECORD_ID, entryId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

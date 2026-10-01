@@ -27,6 +27,7 @@
 #include <nms_incident.h>
 #include <ai_messages.h>
 #include <ai_provider.h>
+#include <nms_users.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
@@ -1165,6 +1166,9 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
    m_currentFunction = nullptr;
    m_isInteractive = isInteractive;
    strlcpy(m_slot, isInteractive ? "interactive" : "background", sizeof(m_slot));
+   m_origin = AIChatOrigin::CHAT;
+   m_originId = m_id;
+   m_userId = userId;
 
    if (enableTools)
       initializeFunctions();
@@ -1194,12 +1198,47 @@ Chat::Chat(NetObj *context, json_t *eventData, uint32_t userId, const char *syst
    {
       addMessage("system", p.c_str());
    }
+   if (isInteractive && (userId != 0))
+   {
+      wchar_t loginName[MAX_USER_NAME];
+      uint64_t systemRights;
+      uint32_t rcc;
+      if (ValidateUserId(userId, loginName, &systemRights, &rcc))
+      {
+         char loginNameUtf8[MAX_USER_NAME * 4];
+         wchar_to_utf8(loginName, -1, loginNameUtf8, sizeof(loginNameUtf8));
+         std::string identity("<user>\nYou are talking to NetXMS user \"");
+         identity.append(loginNameUtf8).append("\" (user ID ").append(std::to_string(userId)).append("). ");
+         if ((systemRights & SYSTEM_ACCESS_FULL) == SYSTEM_ACCESS_FULL)
+            identity.append("This user has full administrative rights. ");
+         else
+            identity.append("Access to objects and functions is limited by this user's rights; tool calls are checked by the server. ");
+         identity.append("The user ");
+         identity.append((systemRights & SYSTEM_ACCESS_MANAGE_AI_MEMORY) ? "can" : "cannot");
+         identity.append(" manage environment memory.\n</user>");
+         addMessage("system", identity.c_str());
+      }
+   }
+   std::string memory = BuildAIMemoryPromptBlock(AIMemoryScope::ENVIRONMENT, 0);
+   if (!memory.empty())
+      addMessage("system", memory.c_str());
+   if (isInteractive && (userId != 0))
+   {
+      memory = BuildAIMemoryPromptBlock(AIMemoryScope::USER, userId);
+      if (!memory.empty())
+         addMessage("system", memory.c_str());
+   }
+   if (context != nullptr)
+   {
+      memory = BuildAIMemoryPromptBlock(AIMemoryScope::OBJECT, context->getId());
+      if (!memory.empty())
+         addMessage("system", memory.c_str());
+   }
    if (enableTools)
       addMessage("system", std::string("The following skills are available to you: ").append(GetRegisteredSkills()).c_str());
    addMessage("system", s_scopeBoundary);
    addMessage("system", s_securityBoundary);
 
-   m_userId = userId;
    m_creationTime = m_lastUpdateTime = time(nullptr);
 }
 
@@ -1625,21 +1664,14 @@ static const char *s_guardReinforcement =
    "You may still answer any legitimate NetXMS-related portions of the message.";
 
 /**
- * Guard check result
+ * Run prompt injection guard classifier with given classifier prompt over given tagged content
  */
-struct GuardCheckResult
+AIGuardCheckResult RunAIGuardClassifier(const char *classifierPrompt, const char *taggedContent)
 {
-   bool detected;
-   int confidence;
-   std::string reason;
-};
+   AIGuardCheckResult result = { false, 0, "" };
 
-/**
- * Check user message for prompt injection using LLM guard
- */
-static GuardCheckResult CheckPromptInjection(const char *prompt)
-{
-   GuardCheckResult result = { false, 0, "" };
+   if (!s_guardEnabled)
+      return result;
 
    // Resolve guard provider: "guard" slot -> "fast" slot -> skip
    shared_ptr<LLMProvider> guardProvider;
@@ -1662,21 +1694,16 @@ static GuardCheckResult CheckPromptInjection(const char *prompt)
       }
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 6, L"Prompt injection guard: checking message using provider \"%s\"", guardProvider->getName());
-
-   // Build minimal one-shot request; wrap the message in tags so the classifier treats it as data, not instructions
-   std::string wrappedPrompt("<user_message>\n");
-   wrappedPrompt.append(prompt);
-   wrappedPrompt.append("\n</user_message>");
+   nxlog_debug_tag(DEBUG_TAG, 6, L"Prompt injection guard: checking content using provider \"%s\"", guardProvider->getName());
 
    json_t *messages = json_array();
    json_t *userMessage = json_object();
    json_object_set_new(userMessage, "role", json_string("user"));
-   json_object_set_new(userMessage, "content", json_string(wrappedPrompt.c_str()));
+   json_object_set_new(userMessage, "content", json_string(taggedContent));
    json_array_append_new(messages, userMessage);
 
    // Call guard provider with no tools
-   json_t *response = guardProvider->chat(s_guardPrompt, messages, nullptr);
+   json_t *response = guardProvider->chat(classifierPrompt, messages, nullptr);
    json_decref(messages);
 
    if (response == nullptr)
@@ -1739,6 +1766,18 @@ static GuardCheckResult CheckPromptInjection(const char *prompt)
 }
 
 /**
+ * Check user message for prompt injection using LLM guard
+ */
+static AIGuardCheckResult CheckPromptInjection(const char *prompt)
+{
+   // Wrap the message in tags so the classifier treats it as data, not instructions
+   std::string wrappedPrompt("<user_message>\n");
+   wrappedPrompt.append(prompt);
+   wrappedPrompt.append("\n</user_message>");
+   return RunAIGuardClassifier(s_guardPrompt, wrappedPrompt.c_str());
+}
+
+/**
  * Send function call notification to user
  */
 static void SendFunctionCallNotification(uint32_t userId, uint32_t chatId, const char *functionName)
@@ -1785,9 +1824,9 @@ char *Chat::sendRequest(const char *prompt, const char *context)
    }
 
    // Prompt injection guard for interactive chats
-   if (m_isInteractive && s_guardEnabled)
+   if (m_isInteractive)
    {
-      GuardCheckResult guardResult = CheckPromptInjection(prompt);
+      AIGuardCheckResult guardResult = CheckPromptInjection(prompt);
       if (guardResult.detected)
       {
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG,
@@ -3120,6 +3159,7 @@ bool InitAIAssistant()
       },
       F_ExecuteAgentTool);
 
+   InitAIMemory();
    InitAITasks();
    InitializeAIMessageManager();
    InitAIOperators();

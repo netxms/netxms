@@ -58,6 +58,11 @@ int H_AiChatSendMessage(Context *context);
 int H_AiCharPollQuestion(Context *context);
 int H_AiDisabledItemCreate(Context *context);
 int H_AiDisabledItemDelete(Context *context);
+int H_AiMemoryEntries(Context *context);
+int H_AiMemoryEntryCreate(Context *context);
+int H_AiMemoryEntryDetails(Context *context);
+int H_AiMemoryEntryUpdate(Context *context);
+int H_AiMemoryEntryDelete(Context *context);
 int H_AiObservations(Context *context);
 int H_AiObservationStateUpdate(Context *context);
 int H_AiOperators(Context *context);
@@ -433,6 +438,15 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/ai/disabled-items/:item-type/:item-name")
       .DELETE(H_AiDisabledItemDelete)
+      .build();
+   RouteBuilder("v1/ai/memory")
+      .GET(H_AiMemoryEntries)
+      .POST(H_AiMemoryEntryCreate)
+      .build();
+   RouteBuilder("v1/ai/memory/:memory-id")
+      .GET(H_AiMemoryEntryDetails)
+      .PATCH(H_AiMemoryEntryUpdate)
+      .DELETE(H_AiMemoryEntryDelete)
       .build();
    RouteBuilder("v1/ai/observations")
       .GET(H_AiObservations)

@@ -605,7 +605,10 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_CREATE_EPP_CHAIN"),
       _T("CMD_MODIFY_EPP_CHAIN"),
       _T("CMD_DELETE_EPP_CHAIN"),
-      _T("CMD_GET_EPP_CHAIN_CALLERS")
+      _T("CMD_GET_EPP_CHAIN_CALLERS"),
+      _T("CMD_GET_AI_MEMORY"),
+      _T("CMD_MODIFY_AI_MEMORY_ENTRY"),
+      _T("CMD_DELETE_AI_MEMORY_ENTRY")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -621,7 +624,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_DEPLOY_REPORT_PACKAGE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_EPP_CHAIN_CALLERS))
+   if ((code >= CMD_LOGIN) && (code <= CMD_DELETE_AI_MEMORY_ENTRY))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

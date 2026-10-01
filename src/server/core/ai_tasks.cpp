@@ -393,6 +393,7 @@ void AITask::execute()
    m_mutex.unlock();
 
    Chat chat(nullptr, nullptr, m_userId, s_systemPrompt.c_str(), false);
+   chat.setOrigin(AIChatOrigin::AI_TASK, m_id);
    char *response = chat.sendRequest(prompt.c_str());
 
    m_mutex.lock();

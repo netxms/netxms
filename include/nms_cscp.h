@@ -766,6 +766,9 @@ __PACK_END__
 #define CMD_MODIFY_EPP_CHAIN              0x0230
 #define CMD_DELETE_EPP_CHAIN              0x0231
 #define CMD_GET_EPP_CHAIN_CALLERS         0x0232
+#define CMD_GET_AI_MEMORY                 0x0233
+#define CMD_MODIFY_AI_MEMORY_ENTRY        0x0234
+#define CMD_DELETE_AI_MEMORY_ENTRY        0x0235
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1848,6 +1851,8 @@ __PACK_END__
 #define VID_DEPTH                   ((uint32_t)1065)
 #define VID_SEND_GEOLOCATION        ((uint32_t)1066)
 #define VID_TIMEZONE_RULE           ((uint32_t)1067)
+#define VID_MEMORY_SCOPE            ((uint32_t)1068)
+#define VID_SCOPE_ID                ((uint32_t)1069)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

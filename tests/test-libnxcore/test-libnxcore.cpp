@@ -32,6 +32,7 @@
 #include <testtools.h>
 
 void TestAICheckLogic();
+void TestAIMemoryPromptBlock();
 void TestObjectIndex();
 void TestPhysicalPlacement();
 void TestSplitCommandLine();
@@ -49,6 +50,7 @@ int main(int argc, char *argv[])
 #endif
 
    TestAICheckLogic();
+   TestAIMemoryPromptBlock();
    TestObjectIndex();
    TestPhysicalPlacement();
    TestSplitCommandLine();

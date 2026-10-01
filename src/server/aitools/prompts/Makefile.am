@@ -10,6 +10,6 @@
 
 promptsdir=$(pkgdatadir)/prompts
 
-prompts_DATA = ai-data-storage.md overview.md
+prompts_DATA = overview.md
 
 EXTRA_DIST = $(prompts_DATA)

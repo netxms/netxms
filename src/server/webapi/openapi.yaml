@@ -1206,6 +1206,154 @@ paths:
         - BearerAuth: []
       tags:
         - AI Management
+  /v1/ai/memory:
+    get:
+      operationId: listAiMemoryEntries
+      summary: List AI memory entries
+      description: >-
+        Retrieve AI memory entries readable by the caller: all environment
+        entries, the caller's own user entries, and entries of objects the
+        caller can read. Users with the "manage AI memory" system access right
+        see all entries of all users and objects.
+      parameters:
+        - name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [environment, user, object]
+          description: Limit result to entries of given scope
+        - name: scopeId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: >-
+            Scope ID (user ID for user scope, object ID for object scope).
+            Defaults to the caller's user ID for user scope.
+      responses:
+        '200':
+          description: List of memory entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiMemoryEntry'
+        '400':
+          description: Invalid scope
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Memory
+    post:
+      operationId: createAiMemoryEntry
+      summary: Create AI memory entry
+      description: >-
+        Create a memory entry. Environment entries require the "manage AI
+        memory" system access right, user entries can be created for the
+        caller's own user ID, object entries require modify access to the
+        object. Title must be unique within scope.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiMemoryEntryConfig'
+      responses:
+        '201':
+          description: Entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiMemoryEntry'
+        '400':
+          description: Invalid request
+        '403':
+          description: Insufficient access rights
+        '409':
+          description: Entry with this title already exists in the scope
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Memory
+  /v1/ai/memory/{memory-id}:
+    parameters:
+      - name: memory-id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Memory entry ID
+    get:
+      operationId: getAiMemoryEntry
+      summary: Get AI memory entry
+      responses:
+        '200':
+          description: Memory entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiMemoryEntry'
+        '404':
+          description: Entry not found or not readable by the caller
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Memory
+    patch:
+      operationId: updateAiMemoryEntry
+      summary: Modify AI memory entry
+      description: >-
+        Change title, content, and/or locked flag of a memory entry. Only
+        provided fields are changed. Locked entries cannot be changed or
+        deleted by the model.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                locked:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated memory entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiMemoryEntry'
+        '400':
+          description: Invalid request
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Entry not found
+        '409':
+          description: Entry with this title already exists in the scope
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Memory
+    delete:
+      operationId: deleteAiMemoryEntry
+      summary: Delete AI memory entry
+      responses:
+        '204':
+          description: Entry deleted
+        '403':
+          description: Insufficient access rights
+        '404':
+          description: Entry not found
+      security:
+        - BearerAuth: []
+      tags:
+        - AI Memory
   /v1/ai/observations:
     get:
       operationId: listAiObservations
@@ -13552,6 +13700,68 @@ components:
           type: string
           enum: [new, acknowledged, dismissed]
           description: Observation triage state
+    AiMemoryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique entry identifier
+        scope:
+          type: string
+          enum: [environment, user, object]
+          description: Entry scope
+        scopeId:
+          type: integer
+          description: User ID for user scope, object ID for object scope, 0 for environment scope
+        title:
+          type: string
+          description: Entry title (unique within scope)
+        content:
+          type: string
+          description: Entry content
+        createdBy:
+          type: string
+          enum: [model, human]
+          description: Who created the entry
+        sourceUserId:
+          type: integer
+          description: ID of the user on whose behalf the entry was created
+        sourceType:
+          type: string
+          enum: [chat, task, operator, human]
+          description: Execution context that created the entry
+        sourceId:
+          type: integer
+          description: Chat ID, AI task ID, or AI operator instance ID depending on source type (0 for human)
+        createdAt:
+          type: integer
+          description: Creation time (UNIX timestamp)
+        updatedAt:
+          type: integer
+          description: Last modification time (UNIX timestamp)
+        locked:
+          type: boolean
+          description: True if the entry cannot be changed or deleted by the model
+    AiMemoryEntryConfig:
+      type: object
+      required: [scope, title, content]
+      properties:
+        scope:
+          type: string
+          enum: [environment, user, object]
+          description: Entry scope
+        scopeId:
+          type: integer
+          description: User ID for user scope (defaults to caller), object ID for object scope
+        title:
+          type: string
+          description: Entry title (unique within scope, max 127 bytes)
+        content:
+          type: string
+          description: Entry content (limited by the configured per-scope size)
+        locked:
+          type: boolean
+          description: Lock the entry against changes by the model
     AiOperator:
       type: object
       properties:

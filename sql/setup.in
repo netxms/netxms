@@ -33,6 +33,9 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperator.Checks.MaxPerInstance','32','32',1,0,'I','Maximum number of standing checks per AI operator instance.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperator.Instructions.HistoryDepth','20','20',1,0,'I','Number of standing instructions history records kept per AI operator instance.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperator.Instructions.MaxSize','8192','8192',1,0,'I','Maximum size of AI operator standing instructions text. Longer text returned by the model is truncated.','characters');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AI.Memory.EnvironmentMaxSize','16384','16384',1,0,'I','Maximum total size of environment memory entries injected into AI assistant prompts. Entries beyond this size are available to the model only on request.','bytes');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AI.Memory.UserMaxSize','8192','8192',1,0,'I','Maximum total size of per-user memory entries injected into AI assistant prompts. Entries beyond this size are available to the model only on request.','bytes');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AI.Memory.ObjectMaxSize','8192','8192',1,0,'I','Maximum total size of per-object memory entries injected into AI assistant prompts. Entries beyond this size are available to the model only on request.','bytes');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperatorExecutionLog.RetentionTime','90','90',1,0,'I','Retention time in days for the records in AI operator execution log. All records older than specified will be deleted by housekeeping process.','days');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperatorObservations.MaxRecordsPerInstance','1000','1000',1,0,'I','Default maximum number of retained observations per AI operator instance. Can be overridden per operator instance.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('AIOperatorObservations.RetentionTime','90','90',1,0,'I','Default retention time in days for AI operator observations. All records older than specified will be deleted by housekeeping process. Can be overridden per operator instance.','days');
@@ -588,7 +591,7 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    disabled_until,last_login,created,tfa_grace_logins)
    VALUES (3,'ai-operator',
            '$$', /* No password */
-           9007199254740992,84,'','AI operator account',5,0,  /* System access: USE_AI_ASSISTANT; flags: UF_DISABLED | UF_CANNOT_CHANGE_PASSWORD | UF_PASSWORD_NEVER_EXPIRES */
+           1161928703861587968,84,'','AI operator account',5,0,  /* System access: USE_AI_ASSISTANT | MANAGE_AI_MEMORY; flags: UF_DISABLED | UF_CANNOT_CHANGE_PASSWORD | UF_PASSWORD_NEVER_EXPIRES */
            '6da524c3-1fbd-420d-b8d7-3be28db46bed',0,'',0,0,0,0,0,0,5
           );
 
@@ -604,7 +607,7 @@ INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description
  * Default "Admins" group
  */
 INSERT INTO user_groups (id,name,system_access,ui_access_rules,flags,description,guid,created)
-   VALUES (1073741825, 'Admins', 1152921504606846975, '*', 0, 'Default administrative group',
+   VALUES (1073741825, 'Admins', 2305843009213693951, '*', 0, 'Default administrative group',
            '00000000-0000-0000-0000-000000000000',0
           );
 

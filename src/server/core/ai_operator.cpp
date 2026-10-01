@@ -486,6 +486,7 @@ void AIOperatorInstance::execute()
    m_mutex.unlock();
 
    Chat chat(nullptr, nullptr, s_operatorUserId, systemPrompt.c_str(), false);
+   chat.setOrigin(AIChatOrigin::AI_OPERATOR, m_id);
    if (slot[0] != 0)
       chat.setSlot(slot);
 

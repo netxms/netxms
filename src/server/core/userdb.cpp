@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <nms_users.h>
+#include <nxai.h>
 
 #define DEBUG_TAG _T("userdb")
 
@@ -896,7 +897,15 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
    // Update system access rights in all connected sessions
    // Use separate thread to avoid deadlocks
    if (id & GROUP_FLAG)
+   {
       ThreadPoolExecute(g_mainThreadPool, UpdateGlobalAccessRights);
+   }
+   else
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DeleteAIMemoryForScope(hdb, AIMemoryScope::USER, id);
+      DBConnectionPoolReleaseConnection(hdb);
+   }
 
    SendUserDBUpdate(USER_DB_DELETE, id, nullptr);
    return RCC_SUCCESS;

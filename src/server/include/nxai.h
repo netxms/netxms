@@ -552,6 +552,154 @@ void CleanAIOperatorObservations(DB_HANDLE hdb, time_t cycleStartTime);
  */
 void ShowAIOperators(ServerConsole *console);
 
+/**
+ * AI memory scope
+ */
+enum class AIMemoryScope
+{
+   ENVIRONMENT = 0,  // facts about the monitored environment as a whole (scope ID is 0)
+   USER = 1,         // notes about a user (scope ID is user ID)
+   OBJECT = 2        // notes about an object (scope ID is object ID)
+};
+
+/**
+ * Origin of a chat, recorded as provenance of memory entries written by the model
+ */
+enum class AIChatOrigin : char
+{
+   CHAT = 'C',         // interactive chat, chat bot session, or one-shot request
+   AI_TASK = 'T',      // AI task execution
+   AI_OPERATOR = 'O'   // AI operator instance iteration
+};
+
+/**
+ * Source type of memory entry written by human
+ */
+#define AI_MEMORY_SOURCE_HUMAN   'H'
+
+/**
+ * AI memory entry. Title and content are UTF-8. Entries published in the memory store are immutable: a modification
+ * creates an updated copy and replaces the stored entry, so references obtained from the store stay valid without locking.
+ */
+class NXCORE_EXPORTABLE AIMemoryEntry
+{
+private:
+   uint32_t m_id;
+   AIMemoryScope m_scope;
+   uint32_t m_scopeId;
+   std::string m_title;
+   std::string m_content;
+   bool m_createdByModel;
+   uint32_t m_sourceUserId;
+   char m_sourceType;
+   uint32_t m_sourceId;
+   time_t m_createdAt;
+   time_t m_updatedAt;
+   bool m_locked;
+
+public:
+   AIMemoryEntry(uint32_t id, AIMemoryScope scope, uint32_t scopeId, const char *title, const char *content,
+      bool createdByModel, uint32_t sourceUserId, char sourceType, uint32_t sourceId, time_t now);
+   AIMemoryEntry(DB_RESULT hResult, int row);
+
+   uint32_t getId() const { return m_id; }
+   AIMemoryScope getScope() const { return m_scope; }
+   uint32_t getScopeId() const { return m_scopeId; }
+   const std::string& getTitle() const { return m_title; }
+   const std::string& getContent() const { return m_content; }
+   bool isCreatedByModel() const { return m_createdByModel; }
+   uint32_t getSourceUserId() const { return m_sourceUserId; }
+   char getSourceType() const { return m_sourceType; }
+   uint32_t getSourceId() const { return m_sourceId; }
+   time_t getCreatedAt() const { return m_createdAt; }
+   time_t getUpdatedAt() const { return m_updatedAt; }
+   bool isLocked() const { return m_locked; }
+
+   void update(const char *title, const char *content, time_t now);
+   void setLocked(bool locked) { m_locked = locked; }
+
+   bool insertIntoDatabase(DB_HANDLE hdb) const;
+   bool updateInDatabase(DB_HANDLE hdb) const;
+
+   json_t *toJson() const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+};
+
+/**
+ * Initialize AI memory store (loads entries, registers memory tools)
+ */
+void InitAIMemory();
+
+/**
+ * Create memory entry. For model-originated writes (byModel) the content is checked by the prompt injection guard,
+ * provenance is taken from the current chat, and the locked flag is ignored. Entry ID is returned via entryId;
+ * a human-readable reason is returned via errorText (when provided) on validation or guard failure.
+ */
+uint32_t NXCORE_EXPORTABLE CreateAIMemoryEntry(AIMemoryScope scope, uint32_t scopeId, const char *title, const char *content,
+   bool locked, bool byModel, uint32_t userId, uint32_t *entryId, std::string *errorText = nullptr);
+
+/**
+ * Modify memory entry. Recognized fields in changes: "title", "content", "locked" (locked is ignored for model-originated writes).
+ */
+uint32_t NXCORE_EXPORTABLE ModifyAIMemoryEntry(uint32_t entryId, json_t *changes, bool byModel, uint32_t userId, std::string *errorText = nullptr);
+
+/**
+ * Delete memory entry
+ */
+uint32_t NXCORE_EXPORTABLE DeleteAIMemoryEntry(uint32_t entryId, bool byModel, uint32_t userId);
+
+/**
+ * Delete all memory entries of given scope (called when user or object is deleted). Database rows are deleted using
+ * given handle so that the caller's transaction covers them. Returns false on database failure.
+ */
+bool DeleteAIMemoryForScope(DB_HANDLE hdb, AIMemoryScope scope, uint32_t scopeId);
+
+/**
+ * Parse scope name ("environment", "user", "object"; case-insensitive). Returns false if name is not recognized.
+ */
+bool NXCORE_EXPORTABLE AIMemoryScopeFromName(const char *name, AIMemoryScope *scope);
+
+/**
+ * Get memory entry by ID without access check
+ */
+shared_ptr<AIMemoryEntry> NXCORE_EXPORTABLE GetAIMemoryEntry(uint32_t entryId);
+
+/**
+ * Check if given user can read given memory entry
+ */
+bool NXCORE_EXPORTABLE CanReadAIMemoryEntry(const AIMemoryEntry& entry, uint32_t userId);
+
+/**
+ * Get all memory entries readable by given user as JSON array (caller must call json_decref on result)
+ */
+json_t NXCORE_EXPORTABLE *GetAIMemoryEntriesAsJson(uint32_t userId);
+
+/**
+ * Get memory entries of given scope readable by given user as JSON array (caller must call json_decref on result)
+ */
+json_t NXCORE_EXPORTABLE *GetAIMemoryEntriesAsJson(uint32_t userId, AIMemoryScope scope, uint32_t scopeId);
+
+/**
+ * Fill NXCP message with all memory entries readable by given user
+ */
+void FillAIMemoryListMessage(NXCPMessage *msg, uint32_t userId);
+
+/**
+ * Build system prompt block with memory entries of given scope (empty string if there are no entries)
+ */
+std::string BuildAIMemoryPromptBlock(AIMemoryScope scope, uint32_t scopeId);
+
+/**
+ * Format memory entries into system prompt block: most recently updated entries first, total size limited
+ * to maxSize bytes (0 = unlimited; UTF-8 sequences are never split). Returns empty string for empty list.
+ */
+std::string NXCORE_EXPORTABLE FormatAIMemoryPromptBlock(const std::vector<shared_ptr<AIMemoryEntry>>& entries, size_t maxSize, const char *tag, const char *intro);
+
+/**
+ * Print memory entries to server console
+ */
+void ShowAIMemory(ServerConsole *console);
+
 #undef ERROR
 
 /**
@@ -592,6 +740,8 @@ private:
    std::string m_lastError;
    bool m_isInteractive;
    char m_slot[32];  // Provider slot (e.g., "interactive", "background", "fast", "analytical")
+   AIChatOrigin m_origin;
+   uint32_t m_originId;   // task or operator instance ID; chat ID for AIChatOrigin::CHAT
 
    void addMessage(const char *role, const char *content)
    {
@@ -627,6 +777,9 @@ public:
    bool isInteractive() const { return m_isInteractive; }
    const char *getSlot() const { return m_slot; }
    void setSlot(const char *slot) { strlcpy(m_slot, slot, sizeof(m_slot)); }
+   AIChatOrigin getOrigin() const { return m_origin; }
+   uint32_t getOriginId() const { return m_originId; }
+   void setOrigin(AIChatOrigin origin, uint32_t originId) { m_origin = origin; m_originId = originId; }
 
    void bindToIncident(uint32_t incidentId);
    void enableVisualizationOutput();
@@ -806,6 +959,22 @@ void NXCORE_EXPORTABLE AddAIAssistantPrompt(const char *text);
  * Add custom prompt from file
  */
 void NXCORE_EXPORTABLE AddAIAssistantPromptFromFile(const wchar_t *fileName);
+
+/**
+ * Result of prompt injection guard classification
+ */
+struct AIGuardCheckResult
+{
+   bool detected;
+   int confidence;
+   std::string reason;
+};
+
+/**
+ * Run prompt injection guard classifier with given classifier prompt over given tagged content.
+ * Returns "not detected" when guard is disabled or no guard provider is configured (fail open).
+ */
+AIGuardCheckResult RunAIGuardClassifier(const char *classifierPrompt, const char *taggedContent);
 
 /**
  * Get current chat context (thread-local).

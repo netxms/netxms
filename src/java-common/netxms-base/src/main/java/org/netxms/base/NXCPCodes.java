@@ -577,6 +577,9 @@ public class NXCPCodes
    public static final int CMD_MODIFY_EPP_CHAIN = 0x0230;
    public static final int CMD_DELETE_EPP_CHAIN = 0x0231;
    public static final int CMD_GET_EPP_CHAIN_CALLERS = 0x0232;
+   public static final int CMD_GET_AI_MEMORY = 0x0233;
+   public static final int CMD_MODIFY_AI_MEMORY_ENTRY = 0x0234;
+   public static final int CMD_DELETE_AI_MEMORY_ENTRY = 0x0235;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1651,6 +1654,8 @@ public class NXCPCodes
    public static final long VID_DEPTH = 1065;
    public static final long VID_SEND_GEOLOCATION = 1066;
    public static final long VID_TIMEZONE_RULE = 1067;
+   public static final long VID_MEMORY_SCOPE = 1068;
+   public static final long VID_SCOPE_ID = 1069;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

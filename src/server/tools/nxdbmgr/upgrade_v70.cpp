@@ -124,6 +124,103 @@ static bool ConvertPublicKeyCertificateMappings()
 }
 
 /**
+ * Migrate object_ai_data rows into ai_memory table (object scope). Returns false on failure.
+ */
+static bool MigrateObjectAIData()
+{
+   DB_RESULT hResult = SQLSelect(L"SELECT object_id,data_key,data_value FROM object_ai_data");
+   if (hResult == nullptr)
+      return false;
+
+   bool success = true;
+   int count = DBGetNumRows(hResult);
+   if (count > 0)
+   {
+      DB_STATEMENT hStmt = DBPrepare(g_dbHandle,
+         L"INSERT INTO ai_memory (id,scope_type,scope_id,title,content,created_by,source_user_id,source_type,source_id,created_at,updated_at,locked) "
+         L"VALUES (?,'2',?,?,?,'M',0,'C',0,?,?,'0')", count > 1);
+      if (hStmt != nullptr)
+      {
+         uint32_t now = static_cast<uint32_t>(time(nullptr));
+         for(int i = 0; (i < count) && success; i++)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(i + 1));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DBGetField(hResult, i, 1, nullptr, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 4, DB_SQLTYPE_TEXT, DBGetField(hResult, i, 2, nullptr, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, now);
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, now);
+            if (!SQLExecute(hStmt) && !g_ignoreErrors)
+               success = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else if (!g_ignoreErrors)
+      {
+         success = false;
+      }
+   }
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Upgrade from 70.45 to 70.46
+ */
+static bool H_UpgradeFromV45()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE ai_memory ("
+      L"   id integer not null,"
+      L"   scope_type char(1) not null,"
+      L"   scope_id integer not null,"
+      L"   title varchar(127) not null,"
+      L"   content $SQL:TEXT null,"
+      L"   created_by char(1) not null,"
+      L"   source_user_id integer not null,"
+      L"   source_type char(1) not null,"
+      L"   source_id integer not null,"
+      L"   created_at integer not null,"
+      L"   updated_at integer not null,"
+      L"   locked char(1) not null,"
+      L"   PRIMARY KEY(id))"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_memory_scope ON ai_memory(scope_type,scope_id)"));
+
+   CHK_EXEC(CreateConfigParam(L"AI.Memory.EnvironmentMaxSize", L"16384",
+      L"Maximum total size of environment memory entries injected into AI assistant prompts. Entries beyond this size are available to the model only on request.",
+      L"bytes", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AI.Memory.UserMaxSize", L"8192",
+      L"Maximum total size of per-user memory entries injected into AI assistant prompts. Entries beyond this size are available to the model only on request.",
+      L"bytes", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"AI.Memory.ObjectMaxSize", L"8192",
+      L"Maximum total size of per-object memory entries injected into AI assistant prompts. Entries beyond this size are available to the model only on request.",
+      L"bytes", 'I', true, false, false, false));
+
+   CHK_EXEC(MigrateObjectAIData());
+   CHK_EXEC(SQLQuery(L"DROP TABLE object_ai_data"));
+
+   // Add SYSTEM_ACCESS_MANAGE_AI_MEMORY (bit 60 = 0x1000000000000000 = 1152921504606846976) to Admins group and AI operator account
+   if ((g_dbSyntax == DB_SYNTAX_DB2) || (g_dbSyntax == DB_SYNTAX_INFORMIX) || (g_dbSyntax == DB_SYNTAX_ORACLE))
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+1152921504606846976 WHERE id=1073741825 AND BITAND(system_access, 1152921504606846976)=0"));
+      CHK_EXEC(SQLQuery(L"UPDATE users SET system_access=system_access+1152921504606846976 WHERE name='ai-operator' AND BITAND(system_access, 1152921504606846976)=0"));
+   }
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+1152921504606846976 WHERE id=1073741825 AND (CAST(system_access AS bigint) & CAST(1152921504606846976 AS bigint))=0"));
+      CHK_EXEC(SQLQuery(L"UPDATE users SET system_access=system_access+1152921504606846976 WHERE name='ai-operator' AND (CAST(system_access AS bigint) & CAST(1152921504606846976 AS bigint))=0"));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(L"UPDATE user_groups SET system_access=system_access+1152921504606846976 WHERE id=1073741825 AND (system_access & 1152921504606846976)=0"));
+      CHK_EXEC(SQLQuery(L"UPDATE users SET system_access=system_access+1152921504606846976 WHERE name='ai-operator' AND (system_access & 1152921504606846976)=0"));
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(46));
+   return true;
+}
+
+/**
  * Upgrade from 70.44 to 70.45
  */
 static bool H_UpgradeFromV44()
@@ -1515,6 +1612,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 45, 70, 46, H_UpgradeFromV45 },
    { 44, 70, 45, H_UpgradeFromV44 },
    { 43, 70, 44, H_UpgradeFromV43 },
    { 42, 70, 43, H_UpgradeFromV42 },

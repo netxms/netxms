@@ -50,6 +50,7 @@ int64_t GetEventProcessorQueueSize();
 void RangeScanCallback(const InetAddress& addr, int32_t zoneUIN, const Node *proxy, uint32_t rtt, const TCHAR *proto, ServerConsole *console, void *context);
 void CheckRange(const InetAddressListElement& range, void(*callback)(const InetAddress&, int32_t, const Node*, uint32_t, const TCHAR*, ServerConsole*, void*), ServerConsole *console, void *context);
 void ShowSyncerStats(ServerConsole *console);
+void ShowAIMemory(ServerConsole *console);
 void ShowAIOperators(ServerConsole *console);
 void ShowAIProviders(ServerConsole *console);
 void ShowAISlots(ServerConsole *console);
@@ -1357,7 +1358,11 @@ int NXCORE_EXPORTABLE ProcessConsoleCommand(const wchar_t *command, ServerConsol
       else if (IsCommand(_T("AI"), szBuffer, 2))
       {
          pArg = ExtractWord(pArg, szBuffer);
-         if (IsCommand(_T("OPERATORS"), szBuffer, 1))
+         if (IsCommand(_T("MEMORY"), szBuffer, 1))
+         {
+            ShowAIMemory(console);
+         }
+         else if (IsCommand(_T("OPERATORS"), szBuffer, 1))
          {
             ShowAIOperators(console);
          }
@@ -2356,6 +2361,7 @@ int NXCORE_EXPORTABLE ProcessConsoleCommand(const wchar_t *command, ServerConsol
             _T("   scan <range start> <range end> [proxy <id>|zone <uin>] [discovery] \n")
             _T("                                     - Manual active discovery scan for given range. Without 'discovery' parameter prints results only\n")
             _T("   set <variable> <value>            - Set value of server configuration variable\n")
+            _T("   show ai memory                    - Show AI memory entries\n")
             _T("   show ai operators                 - Show AI operator instances\n")
             _T("   show ai providers                 - Show configured AI providers\n")
             _T("   show ai slots                     - Show AI provider slots\n")
