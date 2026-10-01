@@ -697,6 +697,9 @@ TCHAR *SNMP_Variable::getValueWithDisplayHint(const TCHAR *hint, TCHAR *buffer, 
       if (repeatIndicator)
          hintPos++;
 
+      // Octet length is mandatory; a specification without it (e.g. "x" on an OCTET STRING) is malformed
+      if (!_istdigit(*hintPos))
+         return getValueAsPrintableString(buffer, bufferSize, &convertToHex);
       size_t octetLength = 0;
       while(_istdigit(*hintPos))
       {
