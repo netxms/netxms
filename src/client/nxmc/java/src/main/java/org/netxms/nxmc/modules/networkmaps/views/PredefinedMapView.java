@@ -1418,7 +1418,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       List<Long> nodes = new ArrayList<Long>(selection.size());
       for (Object object : selection.toList())
       {
-         if (object instanceof NetworkMapObject)
+         if (object instanceof AbstractObject)
+         {
+            nodes.add(((AbstractObject)object).getObjectId());
+         }
+         else if (object instanceof NetworkMapObject)
          {
             nodes.add(((NetworkMapObject)object).getObjectId());
          }
