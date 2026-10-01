@@ -342,6 +342,7 @@ wincert		Windows certificate store metrics
 winevt		Windows event collection (server side)
 winnt		WINNT platform subagent messages
 wol		Wake-on-lan functions
+wts		Agent: WTS session enumeration and process start in user sessions
 
 
 zone.*		Zone related

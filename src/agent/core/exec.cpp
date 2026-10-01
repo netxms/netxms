@@ -24,8 +24,8 @@
 
 #ifdef _WIN32
 #include <winternl.h>
-#include <WtsApi32.h>
 #include <userenv.h>
+#include <tlhelp32.h>
 #define WTS_DEBUG_TAG   _T("wts")
 #endif
 
@@ -274,67 +274,230 @@ static inline void ExecuteInAllSessionsLogError(const TCHAR *function, const TCH
 }
 
 /**
+ * Enumerate user sessions. When WTS enumeration is not available (for example, Terminal Services
+ * service is stopped), active console session is returned as the only session.
+ */
+StructArray<UserSession> EnumerateUserSessions()
+{
+   StructArray<UserSession> result;
+   DWORD consoleSessionId = WTSGetActiveConsoleSessionId();
+
+   WTS_SESSION_INFO *sessions;
+   DWORD sessionCount;
+   if (WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &sessionCount))
+   {
+      for (DWORD i = 0; i < sessionCount; i++)
+      {
+         UserSession *s = result.addPlaceholder();
+         s->id = sessions[i].SessionId;
+         s->state = sessions[i].State;
+         _tcslcpy(s->name, sessions[i].pWinStationName, 64);
+         s->console = (sessions[i].SessionId == consoleSessionId);
+      }
+      WTSFreeMemory(sessions);
+      return result;
+   }
+
+   TCHAR buffer[1024];
+   nxlog_debug_tag(WTS_DEBUG_TAG, 6, _T("EnumerateUserSessions: call to WTSEnumerateSessions failed (%s)"),
+         GetSystemErrorText(GetLastError(), buffer, 1024));
+   if (consoleSessionId == 0xFFFFFFFF)
+   {
+      nxlog_debug_tag(WTS_DEBUG_TAG, 6, _T("EnumerateUserSessions: no active console session"));
+      return result;
+   }
+
+   nxlog_debug_tag(WTS_DEBUG_TAG, 6, _T("EnumerateUserSessions: using console session #%u"), consoleSessionId);
+   UserSession *s = result.addPlaceholder();
+   s->id = consoleSessionId;
+   s->state = WTSActive;
+   _tcslcpy(s->name, _T("Console"), 64);
+   s->console = true;
+   return result;
+}
+
+/**
+ * Check if given process token belongs to interactively logged on user (not to system or service account)
+ */
+static bool IsInteractiveUserToken(HANDLE token)
+{
+   union
+   {
+      TOKEN_USER tokenUser;
+      BYTE buffer[sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE];
+   } user;
+   DWORD size;
+   if (!GetTokenInformation(token, TokenUser, &user, sizeof(user), &size))
+      return false;
+
+   PSID userSid = user.tokenUser.User.Sid;
+   if (IsWellKnownSid(userSid, WinLocalSystemSid) || IsWellKnownSid(userSid, WinLocalServiceSid) || IsWellKnownSid(userSid, WinNetworkServiceSid))
+      return false;
+
+   // Desktop Window Manager (S-1-5-90-*) and font driver host (S-1-5-96-*) virtual accounts are interactive but do not represent a user
+   SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+   if (!memcmp(GetSidIdentifierAuthority(userSid), &ntAuthority, sizeof(SID_IDENTIFIER_AUTHORITY)) && (*GetSidSubAuthorityCount(userSid) > 0))
+   {
+      DWORD rid = *GetSidSubAuthority(userSid, 0);
+      if ((rid == 90) || (rid == 96))
+         return false;
+   }
+
+   GetTokenInformation(token, TokenGroups, nullptr, 0, &size);
+   if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+      return false;
+
+   TOKEN_GROUPS *groups = static_cast<TOKEN_GROUPS*>(MemAlloc(size));
+   bool interactive = false;
+   if (GetTokenInformation(token, TokenGroups, groups, size, &size))
+   {
+      for (DWORD i = 0; i < groups->GroupCount; i++)
+      {
+         if (IsWellKnownSid(groups->Groups[i].Sid, WinInteractiveSid))
+         {
+            interactive = true;
+            break;
+         }
+      }
+   }
+   MemFree(groups);
+   return interactive;
+}
+
+/**
+ * Find token of interactively logged on user in given session by scanning processes running in that session.
+ * Returned token handle should be closed by caller. Returns nullptr if there are no interactive user processes in the session.
+ */
+HANDLE FindInteractiveUserToken(DWORD sessionId)
+{
+   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+   if (snapshot == INVALID_HANDLE_VALUE)
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(WTS_DEBUG_TAG, 6, _T("FindInteractiveUserToken: call to CreateToolhelp32Snapshot failed (%s)"),
+            GetSystemErrorText(GetLastError(), buffer, 1024));
+      return nullptr;
+   }
+
+   // Earliest created process is the one started by logon sequence for console user; processes started later
+   // via runas or elevation may have logon SID without access to winsta0\default, so their token is unusable
+   HANDLE userToken = nullptr;
+   FILETIME userTokenProcessCreationTime;
+   DWORD userTokenProcessId = 0;
+   TCHAR userTokenProcessName[MAX_PATH];
+
+   PROCESSENTRY32 pe;
+   pe.dwSize = sizeof(PROCESSENTRY32);
+   if (Process32First(snapshot, &pe))
+   {
+      do
+      {
+         DWORD processSessionId;
+         if (!ProcessIdToSessionId(pe.th32ProcessID, &processSessionId) || (processSessionId != sessionId))
+            continue;
+
+         HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pe.th32ProcessID);
+         if (hProcess == nullptr)
+            continue;
+
+         HANDLE token;
+         if (OpenProcessToken(hProcess, TOKEN_QUERY | TOKEN_DUPLICATE, &token))
+         {
+            FILETIME creationTime, exitTime, kernelTime, userTime;
+            if (IsInteractiveUserToken(token) && GetProcessTimes(hProcess, &creationTime, &exitTime, &kernelTime, &userTime) &&
+                ((userToken == nullptr) || (CompareFileTime(&creationTime, &userTokenProcessCreationTime) < 0)))
+            {
+               if (userToken != nullptr)
+                  CloseHandle(userToken);
+               userToken = token;
+               userTokenProcessCreationTime = creationTime;
+               userTokenProcessId = pe.th32ProcessID;
+               _tcslcpy(userTokenProcessName, pe.szExeFile, MAX_PATH);
+            }
+            else
+            {
+               CloseHandle(token);
+            }
+         }
+         CloseHandle(hProcess);
+      } while (Process32Next(snapshot, &pe));
+   }
+   CloseHandle(snapshot);
+
+   if (userToken != nullptr)
+      nxlog_debug_tag(WTS_DEBUG_TAG, 6, _T("FindInteractiveUserToken: using token of process %s (PID %u) in session #%u"),
+            userTokenProcessName, userTokenProcessId, sessionId);
+   return userToken;
+}
+
+/**
  * Execute given command in specific session
  */
-bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSessions, HANDLE *processHandle, DWORD *pid)
+bool ExecuteInSession(const UserSession& session, TCHAR *command, bool allSessions, HANDLE *processHandle, DWORD *pid)
 {
    const TCHAR *function = allSessions ? _T("ExecuteInAllSessions") : _T("ExecuteInSession");
    nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: attempting to execute command in session #%u (%s)"),
-         function, session->SessionId, session->pWinStationName);
- 
-   bool success = false;
-   HANDLE sessionToken;
-   if (WTSQueryUserToken(session->SessionId, &sessionToken))
-   {
-      HANDLE primaryToken;
-      if (DuplicateTokenEx(sessionToken, TOKEN_ALL_ACCESS, NULL, SecurityDelegation, TokenPrimary, &primaryToken))
-      {
-         // Without explicit environment block new process inherits environment of the agent service (USERPROFILE,
-         // APPDATA, etc. of the service account), and per-user folder lookup in it then resolves to service profile
-         // or fails, depending on token elevation
-         void *environment = nullptr;
-         if (!CreateEnvironmentBlock(&environment, primaryToken, FALSE))
-         {
-            ExecuteInAllSessionsLogError(function, _T("call to CreateEnvironmentBlock failed"));
-            environment = nullptr;
-         }
+         function, session.id, session.name);
 
-         STARTUPINFO si;
-         memset(&si, 0, sizeof(si));
-         si.cb = sizeof(si);
-         si.lpDesktop = _T("winsta0\\default");
-         PROCESS_INFORMATION pi;
-         if (CreateProcessAsUser(primaryToken, NULL, command, NULL, NULL, FALSE, CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT, environment, _T("C:\\"), &si, &pi))
-         {
-            nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: process created in session #%u (%s), PID %u"),
-                  function, session->SessionId, session->pWinStationName, pi.dwProcessId);
-            if (pid != nullptr)
-               *pid = pi.dwProcessId;
-            CloseHandle(pi.hThread);
-            if (processHandle != nullptr)
-               *processHandle = pi.hProcess;   // caller takes ownership of the handle
-            else
-               CloseHandle(pi.hProcess);
-            success = true;
-         }
+   HANDLE sessionToken;
+   if (!WTSQueryUserToken(session.id, &sessionToken))
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(WTS_DEBUG_TAG, 6, _T("%s: call to WTSQueryUserToken for session #%u (%s) failed (%s)"),
+            function, session.id, session.name, GetSystemErrorText(GetLastError(), buffer, 1024));
+      sessionToken = FindInteractiveUserToken(session.id);
+      if (sessionToken == nullptr)
+      {
+         nxlog_debug_tag(WTS_DEBUG_TAG, 6, _T("%s: no interactive user in session #%u (%s)"), function, session.id, session.name);
+         return false;
+      }
+   }
+
+   bool success = false;
+   HANDLE primaryToken;
+   if (DuplicateTokenEx(sessionToken, TOKEN_ALL_ACCESS, NULL, SecurityDelegation, TokenPrimary, &primaryToken))
+   {
+      // Without explicit environment block new process inherits environment of the agent service (USERPROFILE,
+      // APPDATA, etc. of the service account), and per-user folder lookup in it then resolves to service profile
+      // or fails, depending on token elevation
+      void *environment = nullptr;
+      if (!CreateEnvironmentBlock(&environment, primaryToken, FALSE))
+      {
+         ExecuteInAllSessionsLogError(function, _T("call to CreateEnvironmentBlock failed"));
+         environment = nullptr;
+      }
+
+      STARTUPINFO si;
+      memset(&si, 0, sizeof(si));
+      si.cb = sizeof(si);
+      si.lpDesktop = _T("winsta0\\default");
+      PROCESS_INFORMATION pi;
+      if (CreateProcessAsUser(primaryToken, NULL, command, NULL, NULL, FALSE, CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT, environment, _T("C:\\"), &si, &pi))
+      {
+         nxlog_debug_tag(WTS_DEBUG_TAG, 7, _T("%s: process created in session #%u (%s), PID %u"),
+               function, session.id, session.name, pi.dwProcessId);
+         if (pid != nullptr)
+            *pid = pi.dwProcessId;
+         CloseHandle(pi.hThread);
+         if (processHandle != nullptr)
+            *processHandle = pi.hProcess;   // caller takes ownership of the handle
          else
-         {
-            ExecuteInAllSessionsLogError(function, _T("call to CreateProcessAsUser failed"));
-         }
-         if (environment != nullptr)
-            DestroyEnvironmentBlock(environment);
-         CloseHandle(primaryToken);
+            CloseHandle(pi.hProcess);
+         success = true;
       }
       else
       {
-         ExecuteInAllSessionsLogError(function, _T("call to DuplicateTokenEx failed"));
+         ExecuteInAllSessionsLogError(function, _T("call to CreateProcessAsUser failed"));
       }
-      CloseHandle(sessionToken);
+      if (environment != nullptr)
+         DestroyEnvironmentBlock(environment);
+      CloseHandle(primaryToken);
    }
    else
    {
-      ExecuteInAllSessionsLogError(function, _T("call to WTSQueryUserToken failed"));
+      ExecuteInAllSessionsLogError(function, _T("call to DuplicateTokenEx failed"));
    }
+   CloseHandle(sessionToken);
    return success;
 }
 
@@ -343,26 +506,22 @@ bool ExecuteInSession(WTS_SESSION_INFO *session, TCHAR *command, bool allSession
  */
 bool ExecuteInAllSessions(const TCHAR *command)
 {
-   WTS_SESSION_INFO *sessions;
-   DWORD sessionCount;
-   if (!WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &sessions, &sessionCount))
-   {
-      ExecuteInAllSessionsLogError(_T("ExecuteInAllSessions"), _T("call to WTSEnumerateSessions failed"));
+   StructArray<UserSession> sessions = EnumerateUserSessions();
+   if (sessions.isEmpty())
       return false;
-   }
 
    TCHAR cmdLine[4096];
    _tcslcpy(cmdLine, command, 4096);
 
    bool success = true;
-   for (DWORD i = 0; i < sessionCount; i++)
+   for (int i = 0; i < sessions.size(); i++)
    {
-      if (sessions[i].SessionId == 0)
+      const UserSession *s = sessions.get(i);
+      if ((s->id == 0) && !s->console)
          continue;
-      ExecuteInSession(&sessions[i], cmdLine, true, nullptr, nullptr);
+      ExecuteInSession(*s, cmdLine, true, nullptr, nullptr);
    }
 
-   WTSFreeMemory(sessions);
    return success;
 }
 
