@@ -262,6 +262,12 @@ if (!_tcscmp(str1, str2))
    // Strings are equal
 ```
 
+## Compiler Floor and Dead Version Gates
+
+The supported floor is GCC 4.8, Clang 3.3 and Visual Studio 2015 (`_MSC_VER >= 1900`), with C++11 as the language ceiling. Preprocessor gates that can never be false at these minimums (`__GNUC__ < 4`, `__GNUC__ == 4 && __GNUC_MINOR__ < 8`, `_MSC_VER < 1900` and the like) are dead and may be removed during cleanups. Keep fallbacks for C++14+ features (e.g. `HAVE_STD_MAKE_UNIQUE`) since the ceiling is C++11.
+
+Exception: the Windows XP / pre-2003 64-bit atomic block in `include/nxatomic.h` (guarded by `!defined(_WIN64) && (_WIN32_WINNT < 0x0502)`) is intentionally retained even though the default `_WIN32_WINNT` makes it dead today — a WinXP agent build may still be needed. Do not remove it as obsolete code.
+
 ## Header Files
 
 Main headers to include:

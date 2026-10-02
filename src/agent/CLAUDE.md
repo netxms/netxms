@@ -78,9 +78,12 @@ Subagents provide platform-specific and technology-specific monitoring capabilit
 | `redis/` | Redis | Cache monitoring |
 | `java/` | Java | JVM via JMX |
 | `jmx/` | JMX | Generic JMX monitoring |
-| `python/` | Python | Python script execution |
 | `ssh/` | SSH | Remote command execution |
 | `prometheus/` | Prometheus | Prometheus metric scraping |
+| `docker/` | Docker | Container monitoring |
+| `aifileops/` | AI | File operations for AI tools, restricted by `FileAccessRootList` |
+
+There is no Python subagent; Python integrations use the agent extension protocol (see below).
 
 ### Protocol Subagents
 
@@ -90,6 +93,9 @@ Subagents provide platform-specific and technology-specific monitoring capabilit
 | `opcua/` | OPC UA | Industrial protocol |
 | `ping/` | ICMP | Ping functionality |
 | `netsvc/` | Network | TCP/HTTP service checks |
+| `lldpd/` | LLDP | Neighbor table via liblldpctl (`LLDP.Neighbors`) |
+| `netconf/` | NETCONF | NETCONF device access |
+| `sms/` | SMS | SMS sending via modem |
 
 ### Hardware Subagents
 
@@ -113,6 +119,9 @@ Subagents provide platform-specific and technology-specific monitoring capabilit
 | `tuxedo/` | Tuxedo | Oracle Tuxedo monitoring |
 | `vmgr/` | VMs | Virtual machine management |
 | `xen/` | Xen | Xen hypervisor monitoring |
+| `entsoe/`, `weather/` | External data | ENTSO-E electricity market data, weather data (Open-Meteo) |
+| `fbdev/` | Screenshots | Framebuffer screenshot capture |
+| `wineventsync/`, `winperf/`, `wmi/` | Windows | Event log synchronization, performance counters, WMI queries |
 | `devemu/` | Testing | Device emulator for testing |
 
 ## Creating a New Subagent
@@ -225,6 +234,8 @@ EnableLocalDatabase = yes
 ```
 
 Configuration uses **hierarchical bracket sections**: `[Section/Subsection/Instance]`. The trailing path element is the instance identifier and can supply an object's name directly — e.g. `[ENTSOE/Zone/LV]` defines zone "LV" with no separate `Name =` key. Use one such block per instance (zone/database/target) for multi-instance subagent config. The legacy asterisk-prefixed `*Section` syntax is deprecated — do not use it in new subagent/config designs even though older subagents still show it.
+
+A plain `Password` key already accepts an encrypted value — `DecryptPassword()` autodetects it. `EncryptedPassword` is a deprecated alias kept only where it already existed (some DB subagents); do not add it to new or unified `NX_CFG_TEMPLATE` tables.
 
 ## Debugging
 

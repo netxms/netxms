@@ -110,6 +110,8 @@ The **Configuration perspective** is for persistent server-side config (network 
 
 Location: `java/netxms-client/`
 
+**Parsing NXCP responses:** read new fields directly (`msg.getFieldAsX(VID_...)`). Do not add `isFieldPresent()` guards, "default when absent" fallbacks, or comments about older servers. Every release bumps the NXCP protocol version, so a client never connects to a server that lacks the fields it expects; such fallbacks are dead code.
+
 ### Key Classes
 
 | Class | Description |

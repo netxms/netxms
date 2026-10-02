@@ -45,6 +45,18 @@ For formatting into a `wchar_t *` buffer, use `nx_swprintf(buffer, size, L"...",
 
   These are strict (fail on wrong type) — distinct from the lenient coercing `json_object_get_*` getters. Keep blocks manual when the field has side effects, needs object-ID validation, targets a setter or `String`/`SharedString` member, or uses null-means-clear semantics — the helpers don't cover those.
 
+- **No synthetic measurements in serialized state.** When emitting derived or aggregate fields (timer min/max/average, sample counts) to JSON or NXCP, gate them on an "observed at least once" predicate (`lastCompleted != TIMESTAMP_NEVER`, count > 0, a non-null timestamp). A default-constructed zero reads as a real "0 ms" measurement. Omit the key (or emit `json_null()`) instead; identity and status fields stay unconditional. Reference: `PollState::toJson()`.
+
+- **Configuration import leaves existing ACLs alone.** When an import matches an existing entity by GUID and updates it, do not touch its stored access control list. Insert the default "Everyone" ACL row only on the branch that creates a new record. The unconditional delete-and-reinsert in `ImportObjectTool()` (`core/objtools.cpp`) is a bug to avoid copying, not a pattern to follow.
+
+- **Audit subsystem for deferred actions.** Scheduled task create/update/delete is audited under `AUDIT_SYSCFG` for every handler type, including `Maintenance.*`. `AUDIT_OBJECTS` is written when the object itself changes, i.e. when the scheduled task executes. Generally: audit the scheduling under its configuration subsystem and the effect under the subsystem of the thing affected.
+
+- **User ID 0 is the system account.** It is normally disabled and used by server code to mean "system / no user session" (`checkAccessRights` grants everything, background AI chats run as 0). Per-user features (AI memory, preferences, history) may legitimately skip it — do not report that as a bug.
+
+- **Object tool input fields only where they are consumed.** Only `TOOL_TYPE_ACTION`, `SERVER_COMMAND`, `SERVER_SCRIPT`, `SSH_COMMAND`, `URL` and library-script execution expand input fields (via `expandText()` or NXSL `$INPUT`). `TOOL_TYPE_SNMP_TABLE`, `AGENT_TABLE` and `AGENT_LIST` never do, so do not read, log or forward input fields on those paths.
+
+- **Use NetXMS utilities in module helper headers.** Server modules include `nms_common.h` / `nms_util.h` / `nms_core.h` through their main header, so a helper header included after them may use `IntegerToString`, `String`, containers etc. freely. The clangd LSP analyzing such a header in isolation reports `undeclared identifier` (the same false positive recurs in `nms_events.h` / `nms_core.h`); ignore it rather than rewriting to raw libc to make the header self-contained.
+
 ## Overview
 
 The NetXMS server (`netxmsd`) is the central management component that handles:
@@ -65,12 +77,18 @@ src/server/
 ├── netxmsd/        # Server executable entry point
 ├── tools/          # Server tools (nxdbmgr, nxadm, etc.)
 ├── webapi/         # REST API implementation
+├── mcp/            # Native MCP (Model Context Protocol) module, streamable HTTP
 ├── aitools/        # AI integration tools
 ├── ncdrivers/      # Notification channel drivers
+├── otlp/           # OpenTelemetry (OTLP) ingest and event/metric forwarders
 ├── jira/           # Jira helpdesk link module
 ├── redmine/        # Redmine helpdesk link module
+├── docker/         # Docker integration module
+├── ntopng/         # ntopng traffic observer module
+├── oxidized/       # Oxidized device configuration backup module
 ├── leef/           # LEEF log exporter
 ├── ntcb/           # Network topology builder
+├── nxreportd/      # Reporting server (Java)
 ├── pdsdrv/         # PDS drivers
 ├── wcc/            # Web connection cache
 └── wlcbridge/      # WLC bridge

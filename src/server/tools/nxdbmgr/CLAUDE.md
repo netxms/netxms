@@ -138,6 +138,7 @@ One commit per branch. Branches are independent — never merge stable branches 
 - Be defensive against pre-existing state — e.g. check `IsIndexExists` before `CREATE INDEX`. On PostgreSQL a failed statement poisons the entire upgrade transaction.
 - A helper needed by procedures in more than one chain file goes into `../libnxdbmgr/upgrade.cpp` with `LIBNXDBMGR_EXPORTABLE` and a declaration in `src/server/include/nxdbmgr_tools.h`.
 - Long data conversions that should not block the upgrade go through `RegisterOnlineUpgrade()` in `upgrade_online.cpp`; check `IsOnlineUpgradePending()` if a new step depends on one.
+- OpenSSL is a common dependency and may be used directly in upgrade procedures (`d2i_*` / `i2d_*`, EVP, …). Include `<nxcrypto.h>` plus the specific `<openssl/...>` header; configure already puts `-lssl -lcrypto` into global `LIBS`, so no `Makefile.am` change is needed. Do not hand-roll DER/ASN.1 or crypto to avoid the dependency.
 
 ## Verification checklist
 

@@ -24,6 +24,10 @@ When designing APIs: do not pair a value argument with a boolean that means "ign
 
 When replacing an in-tree mechanism (loader, registration scheme, plugin format), convert every in-tree user and delete all legacy machinery (old loader, macros, config variables, build glue, DB rows via upgrade) in the same change set. Do not keep a transitional dual path — both paths live in the same tree and release, so a coexistence window only adds review surface and dead code.
 
+When a shared helper performs a lookup that can fail (e.g. resolving an imported object reference), make the helper emit the diagnostic itself — give it the context and descriptor parameters it needs — rather than having every caller wrap it with its own logging. Duplicated wrappers drift.
+
+When hardening ingestion of an NXCP or JSON field, keep the existing `getFieldAs*` / `json_object_get_*` accessor and add the range or sanity check after it. Change the accessor type only when the current one actually loses information the code needs; the out-of-range value is the bug, not the narrow read.
+
 ## Component Documentation
 
 This monorepo has component-specific CLAUDE.md files:
@@ -39,6 +43,8 @@ This monorepo has component-specific CLAUDE.md files:
 | SNMP | [src/snmp/CLAUDE.md](src/snmp/CLAUDE.md) | SNMP protocol library and tools |
 | Notification Channels | [src/server/ncdrivers/CLAUDE.md](src/server/ncdrivers/CLAUDE.md) | Notification channel drivers |
 | WebAPI | [src/server/webapi/CLAUDE.md](src/server/webapi/CLAUDE.md) | REST API endpoints |
+| nxdbmgr | [src/server/tools/nxdbmgr/CLAUDE.md](src/server/tools/nxdbmgr/CLAUDE.md) | Database schema upgrades, multi-branch backport procedure |
+| Tests | [tests/CLAUDE.md](tests/CLAUDE.md) | C++ unit tests, agent subagent tests, Java integration tests |
 
 ## Quick Start
 
@@ -52,7 +58,7 @@ This monorepo has component-specific CLAUDE.md files:
 ./configure --prefix=/opt/netxms --with-sqlite --with-server --with-agent --with-tests --enable-debug
 # Database options: --with-pgsql --with-mysql --with-oracle --with-mssql
 
-# Build and install
+# Build and install (always pass -j; a serial build of this tree takes a very long time)
 make -j$(nproc)
 make install
 
@@ -180,6 +186,10 @@ node through `TestHelper.findManagementServer()`, so the server must have a node
 
 Prefer NetXMS containers for object collections and ownership management. For maps of plain scalar values (e.g. `nodeId → double`), `std::map` is acceptable and preferred — `HashMap` stores heap-allocated pointers, which forces a pointless per-entry allocation for scalars. `#include <map>` explicitly; it is not pulled in by `nms_util.h`.
 
+### Build System
+
+- Before removing an `AC_CHECK_FUNCS` / `AC_CHECK_*` probe from `configure.ac` because no first-party code reads its `HAVE_*` macro, grep the bundled third-party sources too: `src/jansson/jansson_private_config.h` includes the top-level `config.h` (non-Windows) and `hashtable_seed.c` reads `HAVE_GETTIMEOFDAY` / `HAVE_GETPID`; `src/sqlite/sqlite3.c` reads `HAVE_USLEEP`. When the symbol is guaranteed on the relevant platforms, the preferred fix is to hardcode the `HAVE_*` in the bundled library's own private config header (platform-guarded), not to keep the configure probe.
+
 ### Logging
 
 - Use `nxlog_debug_tag(tag, level, format, ...)` for debug output
@@ -236,7 +246,9 @@ When implementing a plan that spans multiple files, do NOT skip any files listed
 
 ## Translations
 
-When translating PO files or doing text transformations, preserve grammatical structure of the target language. Do not do word-by-word substitution. Process in contextual batches and verify grammar, especially noun/adjective ordering and gendered forms.
+Console PO files live in `src/client/nxmc/java/src/main/resources/po/`. Use `msgfmt --statistics` to check completeness and `msgfmt -c` to validate format specifiers.
+
+When translating PO files or doing text transformations, preserve grammatical structure of the target language. Do not do word-by-word substitution. Process in contextual batches and verify grammar, especially noun/adjective ordering and gendered forms. Technical terms (SNMP, SSH, DCI) stay untranslated.
 
 ## Contribution Workflow
 
