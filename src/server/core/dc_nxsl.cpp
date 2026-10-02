@@ -238,19 +238,84 @@ static int F_FindDCIByTagPattern(int argc, NXSL_Value **argv, NXSL_Value **resul
 }
 
 /**
+ * Get all data collection targets readable by script's user, filtered by trusted object check against context object
+ * (if trusted object checks are enabled). With trusted object checks enabled and no context object, returns empty list.
+ */
+static unique_ptr<SharedObjectArray<NetObj>> GetAccessibleDataCollectionTargets(NXSL_VM *vm, NetObj *contextObject)
+{
+   if ((g_flags & AF_CHECK_TRUSTED_OBJECTS) && (contextObject == nullptr))
+      return make_unique<SharedObjectArray<NetObj>>(0);
+
+   uint32_t contextObjectId = (contextObject != nullptr) ? contextObject->getId() : 0;
+   return g_idxObjectById.getObjects(
+      [vm, contextObjectId] (NetObj *object) -> bool
+      {
+         return object->isDataCollectionTarget() &&
+                ((contextObjectId == 0) || object->isTrustedObject(contextObjectId)) &&
+                vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, object);
+      });
+}
+
+/**
+ * NXSL function: Find DCI by ID on any data collection target
+ * First argument is DCI ID, optional second argument is context object for trusted object check
+ */
+static int F_FindDCIById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   NetObj *contextObject = nullptr;
+   if ((argc > 1) && !argv[1]->isNull())
+   {
+      if (!argv[1]->isObject())
+         return NXSL_ERR_NOT_OBJECT;
+
+      NXSL_Object *object = argv[1]->getValueAsObject();
+      if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
+         return NXSL_ERR_BAD_CLASS;
+
+      contextObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
+   }
+
+   uint32_t dciId = argv[0]->getValueAsUInt32();
+   *result = vm->createValue();
+   unique_ptr<SharedObjectArray<NetObj>> targets = GetAccessibleDataCollectionTargets(vm, contextObject);
+   for(int i = 0; i < targets->size(); i++)
+   {
+      shared_ptr<DCObject> dci = static_cast<DataCollectionTarget*>(targets->get(i))->getDCObjectById(dciId, vm->getUserId());
+      if (dci != nullptr)
+      {
+         *result = dci->createNXSLObject(vm);
+         break;
+      }
+   }
+   return NXSL_ERR_SUCCESS;
+}
+
+/**
  * NXSL function: Find all DCIs with matching name, description, tag, or related object
+ * First argument is data collection target to search on, or null to search on all data collection targets
+ * accessible to script's user (with trusted object checks enabled, global search returns empty list)
  */
 static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    if ((argc < 1) || (argc > 5))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-	if (!argv[0]->isObject())
-		return NXSL_ERR_NOT_OBJECT;
+   NXSL_Object *object = nullptr;
+   if (!argv[0]->isNull())
+   {
+      if (!argv[0]->isObject())
+         return NXSL_ERR_NOT_OBJECT;
 
-	NXSL_Object *object = argv[0]->getValueAsObject();
-   if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
-      return NXSL_ERR_BAD_CLASS;
+      object = argv[0]->getValueAsObject();
+      if (!object->getClass()->instanceOf(_T("DataCollectionTarget")))
+         return NXSL_ERR_BAD_CLASS;
+   }
 
    const wchar_t *nameFilter = nullptr, *descriptionFilter = nullptr, *tagFilter = nullptr;
    uint32_t relatedObjectId = 0;
@@ -305,9 +370,20 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
       }
    }
 
-   shared_ptr<DataCollectionTarget> node = *static_cast<shared_ptr<DataCollectionTarget>*>(object->getData());
-	*result = node->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, vm->getUserId());
-	return 0;
+   NXSL_Array *list = new NXSL_Array(vm);
+   if (object != nullptr)
+   {
+      DataCollectionTarget *target = static_cast<shared_ptr<DataCollectionTarget>*>(object->getData())->get();
+      target->getAllDCObjectsForNXSL(list, vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, vm->getUserId());
+   }
+   else
+   {
+      unique_ptr<SharedObjectArray<NetObj>> targets = GetAccessibleDataCollectionTargets(vm, nullptr);
+      for(int i = 0; i < targets->size(); i++)
+         static_cast<DataCollectionTarget*>(targets->get(i))->getAllDCObjectsForNXSL(list, vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, vm->getUserId());
+   }
+   *result = vm->createValue(list);
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -888,6 +964,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { "CreateDCI", F_CreateDCI, 7, true },
    { "DetectAnomalies", F_DetectAnomalies, -1, true },
    { "FindAllDCIs", F_FindAllDCIs, -1, true },
+   { "FindDCIById", F_FindDCIById, -1, true },
    { "FindDCIByName", F_FindDCIByName, 2, true },
    { "FindDCIByDescription", F_FindDCIByDescription, 2, true },
    { "FindDCIByTag", F_FindDCIByTag, 2, true },

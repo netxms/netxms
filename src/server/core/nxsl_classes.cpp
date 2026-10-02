@@ -2007,7 +2007,9 @@ NXSL_METHOD_DEFINITION(DataCollectionTarget, findAllDCIs)
    }
 
    DataCollectionTarget *target = static_cast<shared_ptr<DataCollectionTarget>*>(object->getData())->get();
-   *result = target->getAllDCObjectsForNXSL(vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, 0);
+   NXSL_Array *list = new NXSL_Array(vm);
+   target->getAllDCObjectsForNXSL(list, vm, nameFilter, descriptionFilter, tagFilter, relatedObjectId, 0);
+   *result = vm->createValue(list);
    return 0;
 }
 
@@ -8783,6 +8785,15 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("origin"))
    {
 		value = vm->createValue(dci->getOrigin());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("owner"))
+   {
+      shared_ptr<NetObj> owner = FindObjectById(dci->getOwnerId());
+      value = (owner != nullptr) ? owner->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ownerId"))
+   {
+      value = vm->createValue(dci->getOwnerId());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("pollingInterval"))
    {

@@ -2226,7 +2226,7 @@ public:
    unique_ptr<SharedObjectArray<DCObject>> getAllDCObjects(uint32_t userId = 0) const;
    unique_ptr<SharedObjectArray<DCObject>> getDCObjectsByRegex(const TCHAR *regex, bool searchName, uint32_t userId) const;
    SharedObjectArray<DCObject> getDCObjectsByFilter(std::function<bool (DCObject*)> filter, uint32_t userId = 0) const;
-   NXSL_Value *getAllDCObjectsForNXSL(NXSL_VM *vm, const wchar_t *name, const wchar_t *description, const wchar_t *tag, uint32_t relatedObjectId, uint32_t userId) const;
+   void getAllDCObjectsForNXSL(NXSL_Array *list, NXSL_VM *vm, const wchar_t *name, const wchar_t *description, const wchar_t *tag, uint32_t relatedObjectId, uint32_t userId) const;
    void setDCIModificationFlag() { lockProperties(); m_dciListModified = true; unlockProperties(); }
    void sendItemsToClient(ClientSession *session, uint32_t requestId) const;
    virtual HashSet<uint32_t> *getRelatedEventsList() const;
