@@ -86,14 +86,18 @@ private:
    ObjectQueue<ForwardedEvent> m_queue;
    EFSendStatus m_sendStatus;
    bool m_healthCheckStatus;
+   bool m_healthFailure;            // true if current FAILED status was set because of driver health
    bool m_queueOverflow;
    time_t m_lastMessageTime;
    uint32_t m_messageCount;
    uint32_t m_failureCount;
    uint32_t m_droppedCount;
+   uint32_t m_replacedDriverFailureCount;   // losses reported by previous driver instances (protected by m_driverLock)
+   uint32_t m_replacedDriverDroppedCount;
    wchar_t m_errorMessage[MAX_NC_ERROR_MESSAGE];
 
    void workerThread();
+   void getLossCounters(uint32_t *failureCount, uint32_t *droppedCount) const;
 
    void setError(const wchar_t *message)
    {
@@ -169,11 +173,14 @@ EventForwarder::EventForwarder(EventForwarderDriver *driver, const wchar_t *name
    wcslcpy(m_errorMessage, CHECK_NULL_EX(errorMessage), MAX_NC_ERROR_MESSAGE);
    m_sendStatus = EFSendStatus::UNKNOWN;
    m_healthCheckStatus = false;
+   m_healthFailure = false;
    m_queueOverflow = false;
    m_lastMessageTime = 0;
    m_messageCount = 0;
    m_failureCount = 0;
    m_droppedCount = 0;
+   m_replacedDriverFailureCount = 0;
+   m_replacedDriverDroppedCount = 0;
    m_workerThread = ThreadCreateEx(this, &EventForwarder::workerThread);
 }
 
@@ -214,10 +221,13 @@ void EventForwarder::workerThread()
       m_lastMessageTime = time(nullptr);
 
       bool success = false;
+      bool healthy = false;
       for(int attempt = 0; attempt <= EF_MAX_RETRY; attempt++)
       {
          m_driverLock.lock();
          success = (m_driver != nullptr) ? m_driver->forward(fe->getEvent(), fe->getRecipient(), fe->getSource()) : false;
+         if (success)
+            healthy = m_driver->checkHealth();
          m_driverLock.unlock();
 
          if (success)
@@ -240,11 +250,23 @@ void EventForwarder::workerThread()
 
       if (success)
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, L"Event successfully forwarded via \"%s\"", m_name);
-         clearError();
+         // Driver that delivers asynchronously accepts events even when its target is unreachable
+         if (healthy)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, L"Event successfully forwarded via \"%s\"", m_name);
+            m_healthFailure = false;
+            clearError();
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, L"Event accepted by forwarder \"%s\" but driver reports delivery problems", m_name);
+            m_healthFailure = true;
+            setError(L"Delivery failure");
+         }
       }
       else
       {
+         m_healthFailure = false;
          m_failureCount++;
          m_droppedCount++;
          if (m_driver != nullptr)
@@ -287,10 +309,30 @@ void EventForwarder::enqueue(const Event& event, const TCHAR *recipient, const s
 }
 
 /**
+ * Get failure and dropped event counters, including losses reported by driver for events
+ * that it accepted but was not able to deliver later
+ */
+void EventForwarder::getLossCounters(uint32_t *failureCount, uint32_t *droppedCount) const
+{
+   m_driverLock.lock();
+   *failureCount = m_failureCount + m_replacedDriverFailureCount;
+   *droppedCount = m_droppedCount + m_replacedDriverDroppedCount;
+   if (m_driver != nullptr)
+   {
+      *failureCount += m_driver->getFailureCount();
+      *droppedCount += m_driver->getDroppedCount();
+   }
+   m_driverLock.unlock();
+}
+
+/**
  * Fill NXCPMessage with event forwarder data
  */
 void EventForwarder::fillMessage(NXCPMessage *msg, uint32_t base) const
 {
+   uint32_t failureCount, droppedCount;
+   getLossCounters(&failureCount, &droppedCount);
+
    msg->setField(base, m_name);
    msg->setField(base + 1, m_description);
    msg->setField(base + 2, m_driverName);
@@ -301,9 +343,9 @@ void EventForwarder::fillMessage(NXCPMessage *msg, uint32_t base) const
    msg->setField(base + 7, m_healthCheckStatus);
    msg->setFieldFromTime(base + 8, m_lastMessageTime);
    msg->setField(base + 9, m_messageCount);
-   msg->setField(base + 10, m_failureCount);
+   msg->setField(base + 10, failureCount);
    msg->setField(base + 11, static_cast<uint32_t>(m_queue.size()));
-   msg->setField(base + 12, m_droppedCount);
+   msg->setField(base + 12, droppedCount);
 }
 
 /**
@@ -311,6 +353,9 @@ void EventForwarder::fillMessage(NXCPMessage *msg, uint32_t base) const
  */
 json_t *EventForwarder::toJson(bool includeSensitiveData) const
 {
+   uint32_t failureCount, droppedCount;
+   getLossCounters(&failureCount, &droppedCount);
+
    json_t *root = json_object();
    json_object_set_new(root, "name", json_string_t(m_name));
    json_object_set_new(root, "description", json_string_t(m_description));
@@ -323,9 +368,9 @@ json_t *EventForwarder::toJson(bool includeSensitiveData) const
    json_object_set_new(root, "healthCheckStatus", json_boolean(m_healthCheckStatus));
    json_object_set_new(root, "lastMessageTime", json_time_string(m_lastMessageTime));
    json_object_set_new(root, "messageCount", json_integer(m_messageCount));
-   json_object_set_new(root, "failureCount", json_integer(m_failureCount));
+   json_object_set_new(root, "failureCount", json_integer(failureCount));
    json_object_set_new(root, "queueSize", json_integer(m_queue.size()));
-   json_object_set_new(root, "droppedCount", json_integer(m_droppedCount));
+   json_object_set_new(root, "droppedCount", json_integer(droppedCount));
    return root;
 }
 
@@ -373,6 +418,11 @@ void EventForwarder::update(const wchar_t *description, const wchar_t *driverNam
          setError(errorMessage.isEmpty() ? L"Driver not initialized" : errorMessage.cstr());
 
       m_driverLock.lock();
+      if (m_driver != nullptr)
+      {
+         m_replacedDriverFailureCount += m_driver->getFailureCount();
+         m_replacedDriverDroppedCount += m_driver->getDroppedCount();
+      }
       delete m_driver;
       m_driver = driver;
       m_driverLock.unlock();
@@ -420,8 +470,24 @@ void EventForwarder::checkHealth()
    m_driverLock.lock();
    if (m_driver != nullptr)
       status = m_driver->checkHealth();
+   bool driverPresent = (m_driver != nullptr);
    m_driverLock.unlock();
    m_healthCheckStatus = status;
+
+   // Reflect health of asynchronously delivering driver in send status even when no events are flowing
+   if (driverPresent)
+   {
+      if (!status)
+      {
+         m_healthFailure = true;
+         setError(L"Delivery failure");
+      }
+      else if (m_healthFailure)
+      {
+         m_healthFailure = false;
+         clearError();
+      }
+   }
 }
 
 /**

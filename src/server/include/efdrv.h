@@ -57,6 +57,20 @@ public:
     * Optional health check. Returns true if the driver is operational.
     */
    virtual bool checkHealth() { return true; }
+
+   /**
+    * Get number of events that were accepted by forward() (it returned true) but could not
+    * be delivered to the target afterwards. Only relevant for drivers that deliver
+    * asynchronously; such drivers should also report delivery problems via checkHealth(),
+    * which must be cheap for them because it is called after each accepted event.
+    */
+   virtual uint32_t getFailureCount() const { return 0; }
+
+   /**
+    * Get total number of events that were accepted by forward() (it returned true) but lost
+    * afterwards for any reason (delivery failures included).
+    */
+   virtual uint32_t getDroppedCount() const { return 0; }
 };
 
 /**

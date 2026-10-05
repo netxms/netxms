@@ -116,7 +116,8 @@ private:
    bool m_stop;
    bool m_healthStatus;
    bool m_queueOverflow;
-   uint32_t m_droppedCount;
+   uint32_t m_failureCount;        // events lost in failed batches
+   uint32_t m_droppedCount;        // all lost events, buffer overflow included
 
    CURL *m_curl;
 
@@ -131,6 +132,8 @@ public:
 
    virtual bool forward(const Event& event, const TCHAR *recipient, const shared_ptr<NetObj>& source) override;
    virtual bool checkHealth() override { return m_healthStatus; }
+   virtual uint32_t getFailureCount() const override { return m_failureCount; }
+   virtual uint32_t getDroppedCount() const override { return m_droppedCount; }
 };
 
 /**
@@ -194,6 +197,7 @@ OtlpEventForwarderDriver::OtlpEventForwarderDriver(json_t *configuration) :
    m_stop = false;
    m_healthStatus = true;
    m_queueOverflow = false;
+   m_failureCount = 0;
    m_droppedCount = 0;
    m_flushThread = ThreadCreateEx(this, &OtlpEventForwarderDriver::flushThread);
 
@@ -482,6 +486,7 @@ void OtlpEventForwarderDriver::flushThread()
       {
          m_healthStatus = false;
          m_bufferLock.lock();
+         m_failureCount += static_cast<uint32_t>(batch.size());
          m_droppedCount += static_cast<uint32_t>(batch.size());
          uint32_t totalDropped = m_droppedCount;
          m_bufferLock.unlock();
