@@ -2512,24 +2512,16 @@ String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameter
    if (*eptr != 0)
       return String(value);
 
-   StringBuffer result;
-   TCHAR prefixSymbol[8] = _T("");
+   bool appendUnits = useUnits && !units.isEmpty();
    if (useMultiplier)
-   {
-      result.append(FormatNumber(inVal, useBinaryPrefixes, m_multiplier, 2));
-   }
-   else
-   {
-      result.append(value);
-   }
+      return FormatNumber(inVal, useBinaryPrefixes, m_multiplier, 2, appendUnits ? units.cstr() : nullptr);
 
-   if (useUnits && !units.isEmpty())
+   StringBuffer result(value);
+   if (appendUnits)
    {
-      if (*prefixSymbol == 0)
-         result.append(_T(" "));
+      result.append(_T(" "));
       result.append(units);
    }
-
    return result;
 }
 
