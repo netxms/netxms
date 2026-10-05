@@ -165,6 +165,20 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.47 to 70.48
+ */
+static bool H_UpgradeFromV47()
+{
+   if (GetSchemaLevelForMajorVersion(62) < 45)
+   {
+      CHK_EXEC(DBResizeColumn(g_dbHandle, L"scheduled_tasks", L"params", 2047, true));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 45));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(48));
+   return true;
+}
+
+/**
  * Upgrade from 70.46 to 70.47
  */
 static bool H_UpgradeFromV46()
@@ -1635,6 +1649,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 47, 70, 48, H_UpgradeFromV47 },
    { 46, 70, 47, H_UpgradeFromV46 },
    { 45, 70, 46, H_UpgradeFromV45 },
    { 44, 70, 45, H_UpgradeFromV44 },

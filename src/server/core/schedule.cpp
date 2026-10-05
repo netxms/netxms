@@ -188,8 +188,8 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
    m_flags = DBGetFieldULong(hResult, row, 6);
    m_recurrent = !m_schedule.isEmpty();
 
-   wchar_t persistentData[1024];
-   DBGetField(hResult, row, 3, persistentData, 1024);
+   wchar_t persistentData[2048];
+   DBGetField(hResult, row, 3, persistentData, 2048);
    uint32_t userId = DBGetFieldULong(hResult, row, 7);
    uint32_t objectId = DBGetFieldULong(hResult, row, 8);
    wchar_t key[256], comments[256];
@@ -277,7 +277,7 @@ void ScheduledTask::saveToDatabase(bool newObject) const
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_taskHandlerId, DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_schedule, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_parameters->m_persistentData, DB_BIND_STATIC, 1023);
+      DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_parameters->m_persistentData, DB_BIND_STATIC, 2047);
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_scheduledExecutionTime));
       DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_lastExecutionTime));
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_flags);

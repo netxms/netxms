@@ -1680,7 +1680,7 @@ void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId, EventRuleEx
    {
       // Schedule delayed incident creation using scheduler. Task parameters are passed as JSON document
       // that has to fit into scheduled_tasks.params, so texts are trimmed until serialized form fits.
-      const size_t maxDataLength = 1023;
+      const size_t maxDataLength = 2047;
 
       StringBuffer title;
       if (m_incidentTitle != nullptr && m_incidentTitle[0] != 0)
