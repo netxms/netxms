@@ -88,33 +88,33 @@ static bool GenericStartTls(SOCKET hSocket, uint32_t timeout, const char *ourLin
  * @param hSocket TCP socket connected to the surveyed application server
  * @param timeout Timeout in milliseconds
  * @param host    Surveyed application server hostname
- * @param proto   Application protocol string. Supported values: "smtp"
+ * @param proto   Application protocol string. Supported values: "smtp", "imap", "pop3"
  * @param descrTag description of the connection for log messages
  * @return True if successful, false otherwise
  */
-static bool SetupStartTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, const char *proto, const TCHAR *descrTag)
+static bool SetupStartTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, const TCHAR *proto, const TCHAR *descrTag)
 {
 // Newline regex: \r (which might be omitted), then \n
 #define NL_RE "\\r?\\n"
-   if (!strcmp(proto, "smtp"))
+   if (!_tcscmp(proto, _T("smtp")))
    {
       const char ourLine[] = "EHLO mail.example.com.\r\nSTARTTLS\r\n";
       const char expectRegex[] = NL_RE "220 .*" NL_RE;
       return GenericStartTls(hSocket, timeout, ourLine, expectRegex, descrTag);
    }
-   else if (!strcmp(proto, "imap"))
+   else if (!_tcscmp(proto, _T("imap")))
    {
       const char ourLine[] = "cmd1 CAPABILITY\r\ncmd2 STARTTLS\r\n";
       const char expectRegex[] = NL_RE "cmd2 .*" NL_RE;
       return GenericStartTls(hSocket, timeout, ourLine, expectRegex, descrTag);
    }
-   else if (!strcmp(proto, "pop3"))
+   else if (!_tcscmp(proto, _T("pop3")))
    {
       const char ourLine[] = "STLS\r\n";
       const char expectRegex[] = "\\+OK .*" NL_RE "\\+OK .*" NL_RE;
       return GenericStartTls(hSocket, timeout, ourLine, expectRegex, descrTag);
    }
-   nxlog_write_tag(NXLOG_ERROR, startTlsTag, _T("%s: unknown protocol %hs"), descrTag, proto);
+   nxlog_write_tag(NXLOG_ERROR, startTlsTag, _T("%s: unknown protocol %s"), descrTag, proto);
    return false;
 #undef NL_RE
 }
@@ -296,13 +296,12 @@ static inline int GetCertificateDaysUntilExpiration(X509 *cert)
 LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char host[1024], sniServerName[1024];
-   TCHAR portText[32];
-   char startTlsInProto[5] = "";
+   TCHAR portText[32], arg4[256];
 
    if (!AgentGetParameterArgA(parameters, 1, host, sizeof(host)) ||
        !AgentGetParameterArg(parameters, 2, portText, sizeof(portText) / sizeof(TCHAR)) ||
        !AgentGetParameterArgA(parameters, 3, sniServerName, sizeof(sniServerName)) ||
-       !AgentGetParameterArgA(parameters, 4, startTlsInProto, sizeof(startTlsInProto)))
+       !AgentGetParameterArg(parameters, 4, arg4, sizeof(arg4) / sizeof(TCHAR)))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (host[0] == 0 || portText[0] == 0)
@@ -319,9 +318,15 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
       return SYSINFO_RC_UNSUPPORTED;
    }
 
-   const OptionList options(parameters, 4);
+   // Argument 4 is StartTLS protocol if it is not in key=value form (legacy syntax), otherwise it is the first named option
+   Trim(arg4);
+   bool positionalStartTlsProto = (arg4[0] != 0) && (_tcschr(arg4, _T('=')) == nullptr);
+
+   const OptionList options(parameters, positionalStartTlsProto ? 5 : 4);
    if (!options.isValid())
       return SYSINFO_RC_UNSUPPORTED;
+
+   const TCHAR *startTlsProto = positionalStartTlsProto ? arg4 : options.get(_T("starttls"), _T(""));
 
    uint32_t timeout = options.getAsUInt32(_T("timeout"), g_netsvcTimeout);
 
@@ -332,12 +337,12 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
       return SYSINFO_RC_ERROR;
    }
 
-   if (startTlsInProto[0] != '\0') {
+   if (startTlsProto[0] != 0) {
       const char *serverName = (sniServerName[0] != 0) ? sniServerName : host;
       TCHAR descrTag[256];
-      _sntprintf(descrTag, sizeof(descrTag), _T("%hs StartTLS %hs:%u"), startTlsInProto, serverName, port);
+      _sntprintf(descrTag, sizeof(descrTag), _T("%s StartTLS %hs:%u"), startTlsProto, serverName, port);
 
-      bool startTlsSuccess = SetupStartTLSSession(hSocket, timeout, serverName, startTlsInProto, descrTag);
+      bool startTlsSuccess = SetupStartTLSSession(hSocket, timeout, serverName, startTlsProto, descrTag);
       if (!startTlsSuccess) {
          nxlog_debug_tag(startTlsTag, 7, _T("%s: StartTLS error"), descrTag);
          return SYSINFO_RC_ERROR;
