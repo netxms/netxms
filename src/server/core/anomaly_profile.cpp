@@ -39,7 +39,7 @@
 /**
  * Cooldown period before re-generating a profile (in seconds)
  */
-#define PROFILE_REGENERATION_COOLDOWN  86400   // 24 hours
+#define PROFILE_REGENERATION_COOLDOWN  43200   // 12 hours
 
 /**
  * Maximum retry count for scheduled task
