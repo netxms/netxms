@@ -963,8 +963,8 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
 {
    { "CreateDCI", F_CreateDCI, 7, true },
    { "DetectAnomalies", F_DetectAnomalies, -1, true },
-   { "FindAllDCIs", F_FindAllDCIs, -1, true },
-   { "FindDCIById", F_FindDCIById, -1, true },
+   { "FindAllDCIs", F_FindAllDCIs, -1, false },
+   { "FindDCIById", F_FindDCIById, -1, false },
    { "FindDCIByName", F_FindDCIByName, 2, true },
    { "FindDCIByDescription", F_FindDCIByDescription, 2, true },
    { "FindDCIByTag", F_FindDCIByTag, 2, true },
