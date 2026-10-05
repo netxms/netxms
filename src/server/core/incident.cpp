@@ -1148,7 +1148,10 @@ void SendIncidentsToClient(uint32_t objectId, uint32_t requestId, ClientSession 
 
 /**
  * Scheduled task handler for delayed incident creation from alarm
- * Persistent data format: "alarm=<id>;object=<id>;title=<text>;comment=<text>[;ai_analyze=1;ai_depth=<n>;ai_assign=<0|1>;ai_prompt=<text>]"
+ * Persistent data is a JSON document:
+ *    {"alarm":<id>,"object":<id>,"title":<text>,"description":<text>,"aiAnalyze":<bool>,"aiDepth":<n>,"aiAssign":<bool>,"aiPrompt":<text>}
+ * Tasks scheduled by older server versions use legacy format
+ *    "alarm=<id>;object=<id>;title=<text>;description=<text>[;ai_analyze=1;ai_depth=<n>;ai_assign=<0|1>;ai_prompt=<text>]"
  */
 void CreateIncidentFromAlarmTask(const shared_ptr<ScheduledTaskParameters>& parameters)
 {
@@ -1163,36 +1166,60 @@ void CreateIncidentFromAlarmTask(const shared_ptr<ScheduledTaskParameters>& para
 
    uint32_t alarmId = 0;
    uint32_t objectId = 0;
-   wchar_t title[256] = L"";
-   wchar_t initialComment[2001] = L"";
+   MutableString title;
+   MutableString description;
 
    // AI analysis parameters
    bool aiAnalyze = false;
    int aiDepth = 0;
    bool aiAutoAssign = false;
-   wchar_t aiPrompt[2001] = L"";
+   MutableString aiPrompt;
 
    // Parse persistent data
-   StringList parts(data, L";");
-   for (int i = 0; i < parts.size(); i++)
+   if (data[0] == L'{')
    {
-      const wchar_t *part = parts.get(i);
-      if (wcsncmp(part, L"alarm=", 6) == 0)
-         alarmId = wcstoul(part + 6, nullptr, 10);
-      else if (_tcsncmp(part, L"object=", 7) == 0)
-         objectId = wcstoul(part + 7, nullptr, 10);
-      else if (wcsncmp(part, L"title=", 6) == 0)
-         wcslcpy(title, part + 6, 256);
-      else if (wcsncmp(part, L"comment=", 8) == 0)
-         wcslcpy(initialComment, part + 8, 2001);
-      else if (wcsncmp(part, L"ai_analyze=", 11) == 0)
-         aiAnalyze = (wcstoul(part + 11, nullptr, 10) != 0);
-      else if (wcsncmp(part, L"ai_depth=", 9) == 0)
-         aiDepth = static_cast<int>(wcstol(part + 9, nullptr, 10));
-      else if (wcsncmp(part, L"ai_assign=", 10) == 0)
-         aiAutoAssign = (wcstoul(part + 10, nullptr, 10) != 0);
-      else if (wcsncmp(part, L"ai_prompt=", 10) == 0)
-         wcslcpy(aiPrompt, part + 10, 2001);
+      char *utf8data = UTF8StringFromWideString(data);
+      json_t *json = json_loads(utf8data, 0, nullptr);
+      MemFree(utf8data);
+      if (json == nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, L"CreateIncidentFromAlarmTask: cannot parse persistent data");
+         return;
+      }
+
+      alarmId = json_object_get_uint32(json, "alarm");
+      objectId = json_object_get_uint32(json, "object");
+      title = json_object_get_string(json, "title", L"");
+      description = json_object_get_string(json, "description", L"");
+      aiAnalyze = json_object_get_boolean(json, "aiAnalyze");
+      aiDepth = json_object_get_int32(json, "aiDepth");
+      aiAutoAssign = json_object_get_boolean(json, "aiAssign");
+      aiPrompt = json_object_get_string(json, "aiPrompt", L"");
+      json_decref(json);
+   }
+   else
+   {
+      StringList parts(data, L";");
+      for (int i = 0; i < parts.size(); i++)
+      {
+         const wchar_t *part = parts.get(i);
+         if (wcsncmp(part, L"alarm=", 6) == 0)
+            alarmId = wcstoul(part + 6, nullptr, 10);
+         else if (wcsncmp(part, L"object=", 7) == 0)
+            objectId = wcstoul(part + 7, nullptr, 10);
+         else if (wcsncmp(part, L"title=", 6) == 0)
+            title = part + 6;
+         else if (wcsncmp(part, L"description=", 12) == 0)
+            description = part + 12;
+         else if (wcsncmp(part, L"ai_analyze=", 11) == 0)
+            aiAnalyze = (wcstoul(part + 11, nullptr, 10) != 0);
+         else if (wcsncmp(part, L"ai_depth=", 9) == 0)
+            aiDepth = static_cast<int>(wcstol(part + 9, nullptr, 10));
+         else if (wcsncmp(part, L"ai_assign=", 10) == 0)
+            aiAutoAssign = (wcstoul(part + 10, nullptr, 10) != 0);
+         else if (wcsncmp(part, L"ai_prompt=", 10) == 0)
+            aiPrompt = part + 10;
+      }
    }
 
    if (alarmId == 0)
@@ -1224,11 +1251,11 @@ void CreateIncidentFromAlarmTask(const shared_ptr<ScheduledTaskParameters>& para
    }
 
    // Use alarm message as title if not provided
-   const wchar_t *finalTitle = (title[0] != 0) ? title : alarm->getMessage();
+   const wchar_t *finalTitle = !title.isEmpty() ? title.cstr() : alarm->getMessage();
 
    // Create the incident (initial comment will be added as first comment)
    uint32_t incidentId;
-   uint32_t rcc = CreateIncident(objectId, finalTitle, (initialComment[0] != 0) ? initialComment : nullptr, alarmId, 0, &incidentId);
+   uint32_t rcc = CreateIncident(objectId, finalTitle, !description.isEmpty() ? description.cstr() : nullptr, alarmId, 0, &incidentId);
 
    if (rcc == RCC_SUCCESS)
    {
@@ -1237,7 +1264,7 @@ void CreateIncidentFromAlarmTask(const shared_ptr<ScheduledTaskParameters>& para
       // Trigger AI analysis if enabled
       if (aiAnalyze)
       {
-         SpawnIncidentAIAnalysis(incidentId, aiDepth, aiAutoAssign, (aiPrompt[0] != 0) ? aiPrompt : nullptr);
+         SpawnIncidentAIAnalysis(incidentId, aiDepth, aiAutoAssign, !aiPrompt.isEmpty() ? aiPrompt.cstr() : nullptr);
       }
    }
    else
