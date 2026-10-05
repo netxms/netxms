@@ -96,9 +96,19 @@ static time_t ParseOxidizedTimestamp(const char *ts)
 
    struct tm tm;
    memset(&tm, 0, sizeof(tm));
-   if (strptime(ts, "%Y-%m-%d %H:%M:%S", &tm) != nullptr)
-      return timegm(&tm);
-   return 0;
+   const char *zone = strptime(ts, "%Y-%m-%d %H:%M:%S", &tm);
+   if (zone == nullptr)
+      return 0;
+
+   time_t t = timegm(&tm);
+   while(*zone == ' ')
+      zone++;
+   if (((*zone == '+') || (*zone == '-')) && isdigit(zone[1]) && isdigit(zone[2]) && isdigit(zone[3]) && isdigit(zone[4]))
+   {
+      int offset = ((zone[1] - '0') * 10 + (zone[2] - '0')) * 3600 + ((zone[3] - '0') * 10 + (zone[4] - '0')) * 60;
+      t -= (*zone == '-') ? -offset : offset;
+   }
+   return t;
 }
 
 /**
