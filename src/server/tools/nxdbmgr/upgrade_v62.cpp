@@ -27,6 +27,16 @@
 #include <openssl/x509.h>
 
 /**
+ * Upgrade from 62.44 to 62.45
+ */
+static bool H_UpgradeFromV44()
+{
+   CHK_EXEC(DBResizeColumn(g_dbHandle, L"scheduled_tasks", L"params", 2047, true));
+   CHK_EXEC(SetMinorSchemaVersion(45));
+   return true;
+}
+
+/**
  * Convert hex encoded PKCS#1 RSA public key (format of public key certificate mapping data before 62.44) to public
  * key fingerprint - SHA-256 hash of DER encoded SubjectPublicKeyInfo. Returns false if data is not PKCS#1 RSA public
  * key (keys of other types were stored without key parameters and cannot be converted).
@@ -1483,6 +1493,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 44, 62, 45, H_UpgradeFromV44 },
    { 43, 62, 44, H_UpgradeFromV43 },
    { 42, 62, 43, H_UpgradeFromV42 },
    { 41, 62, 42, H_UpgradeFromV41 },
