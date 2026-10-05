@@ -377,7 +377,7 @@ bool IsAnomalousValue(const DataCollectionTarget& dcTarget, const DCObject& dci,
    int64_t w = static_cast<int64_t>(width) * 60000; // width in milliseconds
    for(int i = 0; i < depth; i++)
    {
-      t -= 86400 * period;
+      t -= _LL(86400000) * period;
       timeRanges[i].first = t;
       timeRanges[i].second = t + w;
    }
