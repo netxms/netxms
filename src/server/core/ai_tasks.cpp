@@ -359,13 +359,26 @@ AITask::AITask(DB_RESULT hResult, int row) : m_description(DBGetFieldAsString(hR
  */
 void AITask::execute()
 {
-   // Re-check that user still have AI access rights
-   if ((GetEffectiveSystemRights(m_userId) & SYSTEM_ACCESS_USE_AI_ASSISTANT) == 0)
+   // Re-check that user account is still enabled and have AI access rights.
+   // System account (ID 0) is normally disabled, but owns tasks registered by server code (NXSL), so only rights are checked for it.
+   uint64_t systemRights;
+   if (m_userId == 0)
+   {
+      systemRights = GetEffectiveSystemRights(m_userId);
+   }
+   else
+   {
+      wchar_t loginName[MAX_USER_NAME];
+      uint32_t rcc;
+      if (!ValidateUserId(m_userId, loginName, &systemRights, &rcc))
+         systemRights = 0;
+   }
+   if ((systemRights & SYSTEM_ACCESS_USE_AI_ASSISTANT) == 0)
    {
       m_mutex.lock();
       m_state = AITaskState::FAILED;
       m_mutex.unlock();
-      nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" execution failed (user %u lost AI access rights)", m_id, m_description.cstr(), m_userId);
+      nxlog_debug_tag(DEBUG_TAG, 5, L"AI task [%u] \"%s\" execution failed (user %u is disabled, deleted, or lost AI access rights)", m_id, m_description.cstr(), m_userId);
       logExecution();
       deleteFromDatabase();
       clearExecutingState();
