@@ -183,7 +183,46 @@ static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE *handle, uint32_t execu
 #endif   /* _WIN32_WINNT >= 0x0600 */
 
 /**
- * Build process command line
+ * Append command line argument quoted so that CommandLineToArgvW in the child yields exactly this string
+ */
+static void AppendQuotedArgument(StringBuffer& cmdLine, const TCHAR *arg)
+{
+   if ((*arg != 0) && (_tcspbrk(arg, _T(" \t\"")) == nullptr))
+   {
+      cmdLine.append(arg);
+      return;
+   }
+
+   cmdLine.append(_T('"'));
+   size_t backslashes = 0;
+   for(const TCHAR *p = arg; *p != 0; p++)
+   {
+      if (*p == _T('\\'))
+      {
+         backslashes++;
+         continue;
+      }
+      if (*p == _T('"'))
+      {
+         for(size_t i = 0; i < backslashes * 2 + 1; i++)
+            cmdLine.append(_T('\\'));
+      }
+      else
+      {
+         for(size_t i = 0; i < backslashes; i++)
+            cmdLine.append(_T('\\'));
+      }
+      backslashes = 0;
+      cmdLine.append(*p);
+   }
+   for(size_t i = 0; i < backslashes * 2; i++)
+      cmdLine.append(_T('\\'));
+   cmdLine.append(_T('"'));
+}
+
+/**
+ * Build process command line. For argument array form each element becomes exactly one argument of the
+ * child process; the raw first element is returned as application name for CreateProcess.
  */
 static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuffer, StringBuffer& cmdLine)
 {
@@ -191,25 +230,26 @@ static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuff
    if (cmd[0] == _T('['))
    {
       bool squotes = false, dquotes = false, firstElement = true;
+      StringBuffer element;
       for (const TCHAR *p = cmd + 1; *p != 0; p++)
       {
          if (!squotes && !dquotes)
          {
-            if (*p == ']')
-            {
-               if (firstElement)
-                  appNameBuffer = cmdLine;
-               break;
-            }
-
-            if (*p == ',')
+            if ((*p == ']') || (*p == ','))
             {
                if (firstElement)
                {
-                  appNameBuffer = cmdLine;
+                  appNameBuffer = element;
                   firstElement = false;
                }
-               cmdLine.append(_T(' '));
+               else
+               {
+                  cmdLine.append(_T(' '));
+               }
+               AppendQuotedArgument(cmdLine, element);
+               element.clear();
+               if (*p == ']')
+                  break;
             }
             else if (*p == '\'')
             {
@@ -226,7 +266,7 @@ static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuff
          {
             if (*(p + 1) == _T('\''))
             {
-               cmdLine.append(_T('\''));
+               element.append(_T('\''));
                p++;
             }
             else
@@ -238,7 +278,7 @@ static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuff
          {
             if (*(p + 1) == _T('"'))
             {
-               cmdLine.append(_T('"'));
+               element.append(_T('"'));
                p++;
             }
             else
@@ -248,7 +288,7 @@ static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuff
          }
          else
          {
-            cmdLine.append(*p);
+            element.append(*p);
          }
       }
       appName = appNameBuffer.cstr();

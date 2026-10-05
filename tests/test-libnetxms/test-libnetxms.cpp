@@ -3901,6 +3901,13 @@ int main(int argc, char *argv[])
          TestProcessExecutorWorker();
          return 0;
       }
+      else if (!strcmp(argv[1], "@args"))
+      {
+         // Print each argument after the mode marker followed by '|' so the parent can check argument boundaries
+         for(int i = 2; i < argc; i++)
+            printf("%s|", argv[i]);
+         return 0;
+      }
       else if (!strcmp(argv[1], "@subproc"))
       {
          if ((argc > 2) && !strcmp(argv[2], "-debug"))
@@ -3989,7 +3996,7 @@ int main(int argc, char *argv[])
       nxlog_set_debug_level(9);
 
    // Older sanitizer versions seems to trigger false positive after vfork
-#if defined(__linux__) && (!WITH_ADDRESS_SANITIZER || (__GNUC__ > 8))
+#if defined(_WIN32) || (defined(__linux__) && (!WITH_ADDRESS_SANITIZER || (__GNUC__ > 8)))
    TestProcessExecutor(argv[0]);
    TestSubProcess(argv[0], debug);
 #endif

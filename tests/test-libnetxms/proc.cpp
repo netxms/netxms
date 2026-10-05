@@ -125,6 +125,29 @@ void TestProcessExecutor(const char *procname)
    }
    EndTest();
 #endif
+
+   StartTest(_T("Process executor - [] command line argument boundaries"));
+   _sntprintf(cmdLine, MAX_PATH, _T("['%hs', '@args', 'a b', '', 'c\"d', 'd''d', \"c'c\", \"other '\"\"\", 'e f\\', '\\\"f', 'g\th', 'plain']"), procname);
+   OutputCapturingProcessExecutor e8(cmdLine);
+   AssertTrue(e8.execute());
+   AssertTrue(e8.waitForCompletion(5000));
+   AssertEquals(e8.getExitCode(), 0u);
+   AssertEquals(e8.getOutput(), "a b||c\"d|d'd|c'c|other '\"|e f\\|\\\"f|g\th|plain|");
+   EndTest();
+
+   // Element with unbalanced quotes never terminates, so it and everything after it is dropped
+   StartTest(_T("Process executor - [] command line with unbalanced quotes"));
+   static const TCHAR *unbalancedTemplates[] = { _T("['%hs', '@args', 'c'd']"), _T("['%hs', '@args', ''']") };
+   for(int i = 0; i < 2; i++)
+   {
+      _sntprintf(cmdLine, MAX_PATH, unbalancedTemplates[i], procname);
+      OutputCapturingProcessExecutor unbalanced(cmdLine);
+      AssertTrue(unbalanced.execute());
+      AssertTrue(unbalanced.waitForCompletion(5000));
+      AssertEquals(unbalanced.getExitCode(), 0u);
+      AssertEquals(unbalanced.getOutput(), "");
+   }
+   EndTest();
 }
 
 /**
