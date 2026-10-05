@@ -1678,33 +1678,53 @@ void EPRule::createIncidentFromAlarm(Event *event, uint32_t alarmId, EventRuleEx
    }
    else
    {
-      // Schedule delayed incident creation using scheduler
-      StringBuffer persistentData;
-      persistentData.appendFormattedString(_T("alarm=%u;object=%u"), alarmId, event->getSourceId());
+      // Schedule delayed incident creation using scheduler. Task parameters are passed as JSON document
+      // that has to fit into scheduled_tasks.params, so texts are trimmed until serialized form fits.
+      const size_t maxDataLength = 1023;
 
+      StringBuffer title;
       if (m_incidentTitle != nullptr && m_incidentTitle[0] != 0)
-      {
-         String title = event->expandText(m_incidentTitle);
-         persistentData.append(_T(";title="));
-         persistentData.append(title);
-      }
-      if (m_incidentDescription != nullptr)
-      {
-         String desc = event->expandText(m_incidentDescription);
-         persistentData.append(_T(";description="));
-         persistentData.append(desc);
-      }
+         title.append(event->expandText(m_incidentTitle));
 
-      // Add AI analysis parameters if enabled
+      StringBuffer description;
+      if (m_incidentDescription != nullptr)
+         description.append(event->expandText(m_incidentDescription));
+
+      StringBuffer aiPrompt;
       if (m_flags & RF_AI_ANALYZE_INCIDENT)
+         aiPrompt.append(m_incidentAIPrompt);
+
+      StringBuffer persistentData;
+      while(true)
       {
-         persistentData.appendFormattedString(_T(";ai_analyze=1;ai_depth=%d;ai_assign=%d"),
-            m_incidentAIAnalysisDepth, (m_flags & RF_AI_AUTO_ASSIGN) ? 1 : 0);
-         if (m_incidentAIPrompt != nullptr && m_incidentAIPrompt[0] != 0)
+         json_t *json = json_object();
+         json_object_set_new(json, "alarm", json_integer(alarmId));
+         json_object_set_new(json, "object", json_integer(event->getSourceId()));
+         if (!title.isEmpty())
+            json_object_set_new(json, "title", json_string_t(title));
+         if (!description.isEmpty())
+            json_object_set_new(json, "description", json_string_t(description));
+         if (m_flags & RF_AI_ANALYZE_INCIDENT)
          {
-            persistentData.append(_T(";ai_prompt="));
-            persistentData.append(m_incidentAIPrompt);
+            json_object_set_new(json, "aiAnalyze", json_true());
+            json_object_set_new(json, "aiDepth", json_integer(m_incidentAIAnalysisDepth));
+            json_object_set_new(json, "aiAssign", json_boolean((m_flags & RF_AI_AUTO_ASSIGN) != 0));
+            if (!aiPrompt.isEmpty())
+               json_object_set_new(json, "aiPrompt", json_string_t(aiPrompt));
          }
+
+         char *text = json_dumps(json, JSON_COMPACT);
+         json_decref(json);
+         persistentData.clear();
+         persistentData.appendUtf8String(text);
+         MemFree(text);
+
+         if (persistentData.length() <= maxDataLength)
+            break;
+
+         // Trim longer of description and AI prompt first, title only when both are exhausted
+         StringBuffer& longest = (description.length() >= aiPrompt.length()) ? description : aiPrompt;
+         (longest.isEmpty() ? title : longest).shrink(persistentData.length() - maxDataLength);
       }
 
       wchar_t comments[256];
