@@ -750,7 +750,7 @@ public abstract class AbstractObject
 	}
 	
 	/**
-    * Internal worker function for getAllChilds.
+    * Internal worker function for getAllChildren.
     *
     * @param classFilter class filter
     * @param set result set
