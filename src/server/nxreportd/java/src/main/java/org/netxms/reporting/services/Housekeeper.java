@@ -99,7 +99,7 @@ public class Housekeeper
       logger.info("Running housekeeping tasks");
 
       // Default to 10 years to avoid accidental data loss when property is not set or not yet received from server
-      long retentionTime = server.getConfigurationPropertyAsInt("nxreportd.resultsRetenstionTime", 3650);
+      long retentionTime = server.getConfigurationPropertyAsInt("nxreportd.resultsRetentionTime", 3650);
       logger.info("Report results retention time is set to " + retentionTime + " days");
 
       ReportManager reportManager = server.getReportManager();
