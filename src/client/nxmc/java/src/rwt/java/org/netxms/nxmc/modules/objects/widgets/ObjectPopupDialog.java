@@ -126,7 +126,7 @@ public class ObjectPopupDialog extends PopupDialog
          AbstractObject abstractObject = (AbstractObject)object;
          statusLabel = new CLabel(dialogArea, SWT.NONE);
          statusLabel.setText(StatusDisplayInfo.getStatusText(abstractObject.getStatus()).toUpperCase());
-         statusLabel.setForeground(StatusDisplayInfo.getStatusColor(abstractObject.getStatus()));
+         statusLabel.setForeground(StatusDisplayInfo.getStatusTextColor(abstractObject.getStatus()));
          statusLabel.setFont(boldFont);
          
          StringBuilder sb = new StringBuilder();

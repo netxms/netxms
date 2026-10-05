@@ -148,9 +148,8 @@ public class StatusExplanationDialog extends Dialog
       statusHeader.setText(i18n.tr("Current status:"));
 
       statusLabel = new RoundedLabel(dialogArea);
-      statusLabel.setBlendMode(false);
       statusLabel.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
-      statusLabel.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()));
+      statusLabel.setLabelColors(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()), StatusDisplayInfo.getStatusTextColor(object.getStatus()));
       gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
       statusLabel.setLayoutData(gd);
 
@@ -215,7 +214,6 @@ public class StatusExplanationDialog extends Dialog
       alarmHeader.setText(i18n.tr("Alarm severity:"));
 
       alarmLabel = new RoundedLabel(dialogArea);
-      alarmLabel.setBlendMode(false);
       alarmLabel.setText("");
       gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
       alarmLabel.setLayoutData(gd);
@@ -225,7 +223,6 @@ public class StatusExplanationDialog extends Dialog
       additionalHeader.setText(i18n.tr("Additional status:"));
 
       additionalLabel = new RoundedLabel(dialogArea);
-      additionalLabel.setBlendMode(false);
       additionalLabel.setText("");
       gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
       additionalLabel.setLayoutData(gd);
@@ -322,8 +319,11 @@ public class StatusExplanationDialog extends Dialog
             int propagatedStatus = child.get("propagatedStatus").getAsInt();
             if (propagatedStatus >= 0 && propagatedStatus <= 4)
             {
-               item.setBackground(1, StatusDisplayInfo.getStatusBackgroundColor(child.get("status").getAsInt()));
+               int status = child.get("status").getAsInt();
+               item.setBackground(1, StatusDisplayInfo.getStatusBackgroundColor(status));
+               item.setForeground(1, StatusDisplayInfo.getStatusTextColor(status));
                item.setBackground(2, StatusDisplayInfo.getStatusBackgroundColor(propagatedStatus));
+               item.setForeground(2, StatusDisplayInfo.getStatusTextColor(propagatedStatus));
             }
          }
       }
@@ -342,7 +342,7 @@ public class StatusExplanationDialog extends Dialog
       else
       {
          alarmLabel.setText(alarmText);
-         alarmLabel.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(alarmSeverity));
+         alarmLabel.setLabelColors(StatusDisplayInfo.getStatusBackgroundColor(alarmSeverity), StatusDisplayInfo.getStatusTextColor(alarmSeverity));
       }
 
       // Additional status
@@ -360,7 +360,7 @@ public class StatusExplanationDialog extends Dialog
          if (additionalExplanation != null)
             text += " (" + additionalExplanation + ")";
          additionalLabel.setText(text);
-         additionalLabel.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(additionalStatus));
+         additionalLabel.setLabelColors(StatusDisplayInfo.getStatusBackgroundColor(additionalStatus), StatusDisplayInfo.getStatusTextColor(additionalStatus));
       }
 
       // Deciding factor

@@ -46,7 +46,7 @@ public class VPNConnectorListLabelProvider extends LabelProvider implements ITab
       switch(columnIndex)
       {
          case VpnView.COLUMN_STATUS:
-            StatusDisplayInfo.getStatusColor(vpn.getStatus());
+            return StatusDisplayInfo.getStatusTextColor(vpn.getStatus());
       }
       return null;
    }

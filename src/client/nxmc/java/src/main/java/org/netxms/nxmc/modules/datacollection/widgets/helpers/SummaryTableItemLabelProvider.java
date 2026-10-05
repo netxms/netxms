@@ -23,7 +23,6 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableCell;
 import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.TableRow;
@@ -36,11 +35,6 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
  */
 public class SummaryTableItemLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
-   private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
-   private static final Color[] FOREGROUND_COLORS =
-      { null, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
-   
    private boolean useMultipliers = false;
    private TableColumnDefinition[] columns = null;
 
@@ -83,7 +77,7 @@ public class SummaryTableItemLabelProvider extends LabelProvider implements ITab
          return null;
       
       TableCell cell = row.get(columnIndex);
-      return (cell.getStatus() >= 0) && (cell.getStatus() < FOREGROUND_COLORS.length) ? FOREGROUND_COLORS[cell.getStatus()] : null;
+      return (cell.getStatus() > 0) ? StatusDisplayInfo.getStatusTextColor(cell.getStatus()) : null;
    }
 
    /**
@@ -98,7 +92,7 @@ public class SummaryTableItemLabelProvider extends LabelProvider implements ITab
          return null;
       
       TableCell cell = row.get(columnIndex);
-      return (cell.getStatus() > 0) ? StatusDisplayInfo.getStatusColor(cell.getStatus()) : null;
+      return (cell.getStatus() > 0) ? StatusDisplayInfo.getStatusBackgroundColor(cell.getStatus()) : null;
    }
 
    /**

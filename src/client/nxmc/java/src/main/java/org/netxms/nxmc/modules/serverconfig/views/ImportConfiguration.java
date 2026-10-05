@@ -216,25 +216,25 @@ public class ImportConfiguration extends ConfigurationView
 
             if (line.startsWith("[ERROR]") || line.startsWith("[FAILURE]"))
             {
-               StyleRange r = new StyleRange(1, line.indexOf(']') - 1, StatusDisplayInfo.getStatusColor(Severity.CRITICAL), null);
+               StyleRange r = new StyleRange(1, line.indexOf(']') - 1, StatusDisplayInfo.getStatusTextColor(Severity.CRITICAL), null);
                r.fontStyle = SWT.BOLD;
                styles.add(r);
             }
             else if (line.startsWith("[WARNING]"))
             {
-               StyleRange r = new StyleRange(1, 7, StatusDisplayInfo.getStatusColor(Severity.MAJOR), null);
+               StyleRange r = new StyleRange(1, 7, StatusDisplayInfo.getStatusTextColor(Severity.MAJOR), null);
                r.fontStyle = SWT.BOLD;
                styles.add(r);
             }
             else if (line.startsWith("[SUCCESS]"))
             {
-               StyleRange r = new StyleRange(1, 7, StatusDisplayInfo.getStatusColor(Severity.NORMAL), null);
+               StyleRange r = new StyleRange(1, 7, StatusDisplayInfo.getStatusTextColor(Severity.NORMAL), null);
                r.fontStyle = SWT.BOLD;
                styles.add(r);
             }
             else if (line.startsWith("[INFO]"))
             {
-               StyleRange r = new StyleRange(1, 4, StatusDisplayInfo.getStatusColor(Severity.UNKNOWN), null);
+               StyleRange r = new StyleRange(1, 4, StatusDisplayInfo.getStatusTextColor(Severity.UNKNOWN), null);
                r.fontStyle = SWT.BOLD;
                styles.add(r);
             }

@@ -156,7 +156,7 @@ public class EventDetailsDialog extends Dialog
 
       Label severityText = new Label(severityComposite, SWT.NONE);
       severityText.setText(StatusDisplayInfo.getStatusText(severity));
-      severityText.setForeground(StatusDisplayInfo.getStatusColor(severity));
+      severityText.setForeground(StatusDisplayInfo.getStatusTextColor(severity));
 
       // Source
       createLabel(dialogArea, i18n.tr("Source:"));

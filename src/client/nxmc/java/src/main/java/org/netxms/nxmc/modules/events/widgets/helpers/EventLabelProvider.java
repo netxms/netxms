@@ -51,7 +51,8 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public Color getForeground(Object element)
 	{
-      return null;
+      Severity severity = getSeverity(element);
+      return (severity != null) ? StatusDisplayInfo.getStatusTextColor(severity) : null;
 	}
 
    /**
@@ -60,19 +61,26 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public Color getBackground(Object element)
 	{
+      Severity severity = getSeverity(element);
+      return (severity != null) ? StatusDisplayInfo.getStatusBackgroundColor(severity) : null;
+	}
+
+   /**
+    * Get severity of given element for coloring purposes.
+    *
+    * @param element element
+    * @return severity or null if element should not be colored
+    */
+   private Severity getSeverity(Object element)
+   {
       if (!showColor)
          return null;
-
-      Severity severity;
       if (element instanceof Event)
-         severity = ((Event)element).getSeverity();
-      else if (element instanceof HistoricalEvent)
-         severity = ((HistoricalEvent)element).getSeverity();
-      else
-         return null;
-
-      return StatusDisplayInfo.getStatusBackgroundColor(severity);
-	}
+         return ((Event)element).getSeverity();
+      if (element instanceof HistoricalEvent)
+         return ((HistoricalEvent)element).getSeverity();
+      return null;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

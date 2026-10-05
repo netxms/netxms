@@ -214,11 +214,11 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
       switch(((BusinessServiceCheck)element).getState())
       {
          case OPERATIONAL:
-            return StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL);
+            return StatusDisplayInfo.getStatusTextColor(ObjectStatus.NORMAL);
          case DEGRADED:
-            return StatusDisplayInfo.getStatusColor(ObjectStatus.MINOR);
+            return StatusDisplayInfo.getStatusTextColor(ObjectStatus.MINOR);
          case FAILED:
-            return StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL);
+            return StatusDisplayInfo.getStatusTextColor(ObjectStatus.CRITICAL);
       }
       return null;
 	}

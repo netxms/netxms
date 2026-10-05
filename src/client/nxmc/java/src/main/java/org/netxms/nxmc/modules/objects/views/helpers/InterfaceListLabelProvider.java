@@ -276,33 +276,33 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
          case InterfacesView.COLUMN_STATUS:
-				return StatusDisplayInfo.getStatusColor(iface.getStatus());
+				return StatusDisplayInfo.getStatusTextColor(iface.getStatus());
          case InterfacesView.COLUMN_OPER_STATE:
 				switch(iface.getOperState())
 				{
 					case Interface.OPER_STATE_UP:
-						return StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL);
+						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.NORMAL);
 					case Interface.OPER_STATE_DOWN:
-						return StatusDisplayInfo.getStatusColor((iface.getAdminState() == Interface.ADMIN_STATE_DOWN) ? ObjectStatus.DISABLED : ObjectStatus.CRITICAL);
+						return StatusDisplayInfo.getStatusTextColor((iface.getAdminState() == Interface.ADMIN_STATE_DOWN) ? ObjectStatus.DISABLED : ObjectStatus.CRITICAL);
 					case Interface.OPER_STATE_TESTING:
-						return StatusDisplayInfo.getStatusColor(ObjectStatus.TESTING);
+						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.TESTING);
                case Interface.OPER_STATE_DORMANT:
-                  return StatusDisplayInfo.getStatusColor(ObjectStatus.MINOR);
+                  return StatusDisplayInfo.getStatusTextColor(ObjectStatus.MINOR);
                case Interface.OPER_STATE_NOT_PRESENT:
-                  return StatusDisplayInfo.getStatusColor(ObjectStatus.DISABLED);
+                  return StatusDisplayInfo.getStatusTextColor(ObjectStatus.DISABLED);
 				}
-				return StatusDisplayInfo.getStatusColor(ObjectStatus.UNKNOWN);
+				return StatusDisplayInfo.getStatusTextColor(ObjectStatus.UNKNOWN);
          case InterfacesView.COLUMN_ADMIN_STATE:
 				switch(iface.getAdminState())
 				{
 					case Interface.ADMIN_STATE_UP:
-						return StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL);
+						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.NORMAL);
 					case Interface.ADMIN_STATE_DOWN:
-						return StatusDisplayInfo.getStatusColor(ObjectStatus.DISABLED);
+						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.DISABLED);
 					case Interface.ADMIN_STATE_TESTING:
-						return StatusDisplayInfo.getStatusColor(ObjectStatus.TESTING);
+						return StatusDisplayInfo.getStatusTextColor(ObjectStatus.TESTING);
 				}
-				return StatusDisplayInfo.getStatusColor(ObjectStatus.UNKNOWN);
+				return StatusDisplayInfo.getStatusTextColor(ObjectStatus.UNKNOWN);
 			default:
 				return null;
 		}

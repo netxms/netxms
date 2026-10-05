@@ -46,7 +46,7 @@ public class NetworkServiceListLabelProvider extends LabelProvider implements IT
       switch(columnIndex)
       {
          case NetworkServiceView.COLUMN_STATUS:
-            StatusDisplayInfo.getStatusColor(ns.getStatus());
+            return StatusDisplayInfo.getStatusTextColor(ns.getStatus());
       }
       initProtocolArray();
       return null;

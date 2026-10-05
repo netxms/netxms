@@ -224,11 +224,11 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	public Color getForeground(Object element, int columnIndex)
 	{
       if (((DciValue)element).getStatus() == DataCollectionObjectStatus.DISABLED)
-			return StatusDisplayInfo.getStatusColor(ObjectStatus.UNMANAGED);
+			return StatusDisplayInfo.getStatusTextColor(ObjectStatus.UNMANAGED);
       if (showErrors && (((DciValue)element).getErrorCount() > 0))
-         return StatusDisplayInfo.getStatusColor((((DciValue)element).getLastCollectionError() == DataCollectionError.INVALID_DATA) ? ObjectStatus.MAJOR : ObjectStatus.CRITICAL);
+         return StatusDisplayInfo.getStatusTextColor((((DciValue)element).getLastCollectionError() == DataCollectionError.INVALID_DATA) ? ObjectStatus.MAJOR : ObjectStatus.CRITICAL);
       if (((DciValue)element).isAnomalyDetected())
-         return StatusDisplayInfo.getStatusColor(ObjectStatus.MAJOR);
+         return StatusDisplayInfo.getStatusTextColor(ObjectStatus.MAJOR);
 		return null;
 	}
 

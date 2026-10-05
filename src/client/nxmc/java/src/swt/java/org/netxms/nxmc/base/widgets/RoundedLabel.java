@@ -145,6 +145,31 @@ public class RoundedLabel extends Canvas
    }
 
    /**
+    * Set label background and text colors explicitly (blend mode is not applied). Passing null as background resets label to
+    * default appearance.
+    *
+    * @param background background color or null
+    * @param foreground text color (ignored if background is null)
+    */
+   public void setLabelColors(Color background, Color foreground)
+   {
+      if (background != null)
+      {
+         fillColor = background;
+         borderColor = null;
+         label.setForeground(foreground);
+      }
+      else
+      {
+         fillColor = getParent().getBackground();
+         borderColor = null;
+         label.setForeground(ColorConverter.isDarkColor(fillColor) ? labelLightColor : labelDarkColor);
+      }
+      label.setBackground(fillColor);
+      redraw();
+   }
+
+   /**
     * Set label foreground colors. Can pass null as any color to reset to default value.
     *
     * @param darkColor dark foreground color (to be used on light background)

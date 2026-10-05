@@ -92,17 +92,17 @@ public class AccessPointListLabelProvider extends LabelProvider implements ITabl
             switch(ap.getState())
             {
                case DOWN:
-                  return StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL);
+                  return StatusDisplayInfo.getStatusTextColor(ObjectStatus.CRITICAL);
                case UNKNOWN:
-                  return StatusDisplayInfo.getStatusColor(ObjectStatus.UNKNOWN);
+                  return StatusDisplayInfo.getStatusTextColor(ObjectStatus.UNKNOWN);
                case UNPROVISIONED:
-                  return StatusDisplayInfo.getStatusColor(ObjectStatus.MAJOR);
+                  return StatusDisplayInfo.getStatusTextColor(ObjectStatus.MAJOR);
                case UP:
-                  return StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL);
+                  return StatusDisplayInfo.getStatusTextColor(ObjectStatus.NORMAL);
             }
             return null;
          case AccessPointsView.COLUMN_STATUS:
-            return StatusDisplayInfo.getStatusColor(ap.getStatus());
+            return StatusDisplayInfo.getStatusTextColor(ap.getStatus());
 			default:
 				return null;
 		}

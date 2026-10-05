@@ -44,9 +44,6 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
-import org.netxms.nxmc.resources.ThemeEngine;
-import org.netxms.nxmc.tools.ColorCache;
-import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -65,7 +62,6 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
 	private int diameter;
 	private int centerX;
 	private int centerY;
-	private ColorCache cCache;
 	private Map<Long, ObjectData> objects;
    private List<Integer> fontSize;
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", ".AppleSystemUIFont", "Verdana", "Arial" };
@@ -86,7 +82,6 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
 	{
 		super(parent, SWT.FILL);
 		this.rootObject = rootObject;    
-      cCache = new ColorCache(this);
       valueFonts = FontTools.getFonts(FONT_NAMES, FONT_BASE_SIZE, SWT.BOLD, 16);
 
 		this.objects = new HashMap<Long, ObjectData>();
@@ -228,7 +223,7 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
          text = WidgetHelper.fitStringToArea(gc, text, diameter / 2 - PADDING_HORIZONTAL * 2, lineNum).getResult();
          h = gc.textExtent(text).y;
 
-         gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(obj.getStatus()), cCache));
+         gc.setForeground(StatusDisplayInfo.getStatusFillTextColor(obj.getStatus()));
 
          if (middle >= 90 && middle <= 180 || middle > 180 && middle < 270)
          {
@@ -455,7 +450,6 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
 
       gc.setAntialias(SWT.ON);
       gc.setTextAntialias(SWT.ON);
-      gc.setForeground(ThemeEngine.getForegroundColor("StatusMap.Text"));
       gc.setLineWidth(1);
 
 	   objectMap.clear();
@@ -515,7 +509,7 @@ public class ObjectStatusSunburstDiagram extends Canvas implements PaintListener
          h = gc.textExtent(text).y;
          l = gc.textExtent(text).x;
       }
-      gc.setForeground(ColorConverter.selectTextColorByBackgroundColor(StatusDisplayInfo.getStatusColor(rootObject.getStatus()), cCache));
+      gc.setForeground(StatusDisplayInfo.getStatusFillTextColor(rootObject.getStatus()));
       gc.drawText(text, centerX - l / 2, centerY - h / 2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 
       objectMap.add(new ObjectPosition(0, 360, 1, rootObject));

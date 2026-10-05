@@ -60,7 +60,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 	@Override
 	public Color getForeground(Object element)
 	{
-      return null;
+      return showColor ? StatusDisplayInfo.getStatusTextColor(severityMap[((SyslogRecord)element).getSeverity()]) : null;
 	}
 
    /**

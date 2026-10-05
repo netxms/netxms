@@ -81,7 +81,7 @@ public class RackElementInfoCard extends Section
          gd.horizontalSpan = 2;
          status.setLayoutData(gd);
          status.setText(StatusDisplayInfo.getStatusText(e.getStatus()));
-         status.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(e.getStatus()));
+         status.setLabelColors(StatusDisplayInfo.getStatusBackgroundColor(e.getStatus()), StatusDisplayInfo.getStatusTextColor(e.getStatus()));
 
          if (e instanceof AbstractNode)
          {

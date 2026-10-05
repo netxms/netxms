@@ -60,7 +60,22 @@ public class Theme
    public static Theme load(File file) throws Exception
    {
       Serializer serializer = XMLTools.createSerializer();
-      return serializer.read(Theme.class, file, false);
+      Theme theme = serializer.read(Theme.class, file, false);
+      theme.dropLegacyStatusElements();
+      return theme;
+   }
+
+   /**
+    * Remove status color elements saved by older versions. Themes saved before "Status.&lt;name&gt;.Fill" elements were introduced
+    * hold fill color as foreground of "Status.&lt;name&gt;", which would now be used as text color, so all status elements of such
+    * theme are dropped and replaced by defaults.
+    */
+   private void dropLegacyStatusElements()
+   {
+      for(String tag : elements.keySet())
+         if (tag.startsWith("Status.") && tag.endsWith(".Fill"))
+            return;
+      elements.keySet().removeIf(tag -> tag.startsWith("Status.") || tag.equals("StatusMap.Text"));
    }
 
    /**

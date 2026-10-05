@@ -29,7 +29,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
-import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
  * Widget representing object status
@@ -72,14 +71,13 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 
 		e.gc.setAntialias(SWT.ON);
 		e.gc.setTextAntialias(SWT.ON);
-      e.gc.setForeground(ThemeEngine.getForegroundColor("StatusMap.Text"));
-		e.gc.setLineWidth(1);
+      e.gc.setLineWidth(1);
 
-		e.gc.setBackground(StatusDisplayInfo.getStatusColor(object.getStatus()));
-		e.gc.setAlpha(127);
-		e.gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-		e.gc.setAlpha(255);
-		e.gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+      e.gc.setBackground(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()));
+      e.gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+      e.gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
+      e.gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+      e.gc.setForeground(StatusDisplayInfo.getStatusTextColor(object.getStatus()));
 
 		final String text = (object instanceof AbstractNode) ?
             (getObjectDisplayName() + "\n" + ((AbstractNode)object).getPrimaryIP().getHostAddress()) : //$NON-NLS-1$

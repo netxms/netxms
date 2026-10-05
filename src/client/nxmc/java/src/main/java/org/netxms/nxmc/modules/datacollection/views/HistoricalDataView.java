@@ -410,7 +410,7 @@ public class HistoricalDataView extends ViewWithContext
             runInUIThread(() -> {
                labelDciName.setText(data.getDciName());
                labelDciDescription.setText(data.getDciDescription());
-               labelDciDescription.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(data.getActiveThresholdSeverity()));
+               labelDciDescription.setLabelColors(StatusDisplayInfo.getStatusBackgroundColor(data.getActiveThresholdSeverity()), StatusDisplayInfo.getStatusTextColor(data.getActiveThresholdSeverity()));
                if (data.getMeasurementUnit() != null)
                {
                   labelDciUnits.setText(data.getMeasurementUnit().getName());

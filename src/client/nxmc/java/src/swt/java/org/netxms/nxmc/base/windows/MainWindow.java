@@ -503,7 +503,6 @@ public class MainWindow extends Window implements MessageAreaHolder
       filler.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
       objectsOutOfSyncIndicator = new RoundedLabel(headerArea);
-      objectsOutOfSyncIndicator.setBlendMode(false);
       objectsOutOfSyncIndicator.setLabelForeground(null, headerForegroundColor);
       objectsOutOfSyncIndicator.setFont(headerFont);
       objectsOutOfSyncIndicator.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
@@ -1319,7 +1318,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       {
          getShell().getDisplay().asyncExec(() -> {
             objectsOutOfSyncIndicator.setText(i18n.tr("OBJECTS OUT OF SYNC"));
-            objectsOutOfSyncIndicator.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(Severity.MINOR));
+            objectsOutOfSyncIndicator.setLabelColors(StatusDisplayInfo.getStatusBackgroundColor(Severity.MINOR), StatusDisplayInfo.getStatusTextColor(Severity.MINOR));
             headerArea.layout(true);
          });
       }

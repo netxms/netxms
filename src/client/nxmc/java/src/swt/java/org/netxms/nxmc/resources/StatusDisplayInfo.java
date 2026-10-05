@@ -24,7 +24,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.ColorCache;
 import org.xnap.commons.i18n.I18n;
@@ -34,14 +33,18 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class StatusDisplayInfo
 {
+   private static final String[] THEME_TAGS = { "Normal", "Warning", "Minor", "Major", "Critical", "Unknown", "Unmanaged", "Disabled", "Testing" };
+
    private static I18n i18n = LocalizationHelper.getI18n(StatusDisplayInfo.class);
 	private static String[] statusText = new String[9];
 	private static ImageDescriptor[] statusImageDescriptors = new ImageDescriptor[9];
 	private static Image[] statusImages = new Image[9];
    private static ImageDescriptor[] overlayImageDescriptors = new ImageDescriptor[9];
-	private static ColorCache colorCache;
-	private static Color statusColor[] = new Color[9]; 
-   private static Color statusBackgroundColor[] = new Color[9];
+   private static ColorCache colorCache;
+   private static Color[] statusFillColor = new Color[9];
+   private static Color[] statusBackgroundColor = new Color[9];
+   private static Color[] statusTextColor = new Color[9];
+   private static Color[] statusFillTextColor = new Color[9];
 
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
@@ -84,32 +87,21 @@ public final class StatusDisplayInfo
 		updateStatusColors();
 	}
 
-	/**
-	 * Update status colors
-	 */
-	public static void updateStatusColors()
-	{
-      PreferenceStore ps = PreferenceStore.getInstance();
-
-      statusColor[0] = colorCache.create(ps.getAsColor("Status.Colors.Normal", ThemeEngine.getForegroundColorDefinition("Status.Normal")));
-      statusColor[1] = colorCache.create(ps.getAsColor("Status.Colors.Warning", ThemeEngine.getForegroundColorDefinition("Status.Warning")));
-      statusColor[2] = colorCache.create(ps.getAsColor("Status.Colors.Minor", ThemeEngine.getForegroundColorDefinition("Status.Minor")));
-      statusColor[3] = colorCache.create(ps.getAsColor("Status.Colors.Major", ThemeEngine.getForegroundColorDefinition("Status.Major")));
-      statusColor[4] = colorCache.create(ps.getAsColor("Status.Colors.Critical", ThemeEngine.getForegroundColorDefinition("Status.Critical")));
-      statusColor[5] = colorCache.create(ps.getAsColor("Status.Colors.Unknown", ThemeEngine.getForegroundColorDefinition("Status.Unknown")));
-      statusColor[6] = colorCache.create(ps.getAsColor("Status.Colors.Unmanaged", ThemeEngine.getForegroundColorDefinition("Status.Unmanaged")));
-      statusColor[7] = colorCache.create(ps.getAsColor("Status.Colors.Disabled", ThemeEngine.getForegroundColorDefinition("Status.Disabled")));
-      statusColor[8] = colorCache.create(ps.getAsColor("Status.Colors.Testing", ThemeEngine.getForegroundColorDefinition("Status.Testing")));
-
-      statusBackgroundColor[0] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Normal", ThemeEngine.getBackgroundColorDefinition("Status.Normal")));
-      statusBackgroundColor[1] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Warning", ThemeEngine.getBackgroundColorDefinition("Status.Warning")));
-      statusBackgroundColor[2] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Minor", ThemeEngine.getBackgroundColorDefinition("Status.Minor")));
-      statusBackgroundColor[3] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Major", ThemeEngine.getBackgroundColorDefinition("Status.Major")));
-      statusBackgroundColor[4] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Critical", ThemeEngine.getBackgroundColorDefinition("Status.Critical")));
-      statusBackgroundColor[5] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Unknown", ThemeEngine.getBackgroundColorDefinition("Status.Unknown")));
-      statusBackgroundColor[6] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Unmanaged", ThemeEngine.getBackgroundColorDefinition("Status.Unmanaged")));
-      statusBackgroundColor[7] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Disabled", ThemeEngine.getBackgroundColorDefinition("Status.Disabled")));
-      statusBackgroundColor[8] = colorCache.create(ps.getAsColor("Status.BackgroundColors.Testing", ThemeEngine.getBackgroundColorDefinition("Status.Testing")));
+   /**
+    * Load status colors from current theme. Each status has two theme elements: "Status.&lt;name&gt;" holds tinted background and
+    * matching text color (for table rows and labels), "Status.&lt;name&gt;.Fill" holds solid fill color and matching text color to
+    * be drawn over it (for status maps, gauges, map figures, etc.).
+    */
+   public static void updateStatusColors()
+   {
+      for(int i = 0; i < THEME_TAGS.length; i++)
+      {
+         String tag = "Status." + THEME_TAGS[i];
+         statusBackgroundColor[i] = colorCache.create(ThemeEngine.getBackgroundColorDefinition(tag));
+         statusTextColor[i] = colorCache.create(ThemeEngine.getForegroundColorDefinition(tag));
+         statusFillColor[i] = colorCache.create(ThemeEngine.getBackgroundColorDefinition(tag + ".Fill"));
+         statusFillTextColor[i] = colorCache.create(ThemeEngine.getForegroundColorDefinition(tag + ".Fill"));
+      }
    }
 
 	/**
@@ -247,31 +239,31 @@ public final class StatusDisplayInfo
       return getStatusOverlayImageDescriptor(ObjectStatus.getByValue(code));
    }
 
-	/**
-	 * Get color for given status/severity code.
-	 * 
-	 * @param status Status code
-	 * @return Color for given code
-	 */
-	public static Color getStatusColor(ObjectStatus status)
-	{
-		return statusColor[status.getValue()];
-	}
+   /**
+    * Get fill color for given status/severity code. Intended for solid drawing (status maps, gauges, map figures, chart palettes).
+    *
+    * @param status Status code
+    * @return Color for given code
+    */
+   public static Color getStatusColor(ObjectStatus status)
+   {
+      return statusFillColor[status.getValue()];
+   }
 
    /**
-    * Get color for given status/severity code.
-    * 
+    * Get fill color for given status/severity code. Intended for solid drawing (status maps, gauges, map figures, chart palettes).
+    *
     * @param severity Severity code
     * @return Color for given code
     */
    public static Color getStatusColor(Severity severity)
    {
-      return statusColor[severity.getValue()];
+      return statusFillColor[severity.getValue()];
    }
 
    /**
-    * Get color for given status/severity code.
-    * 
+    * Get fill color for given status/severity code. Intended for solid drawing (status maps, gauges, map figures, chart palettes).
+    *
     * @param code Status or severity code
     * @return Color for given code
     */
@@ -281,37 +273,101 @@ public final class StatusDisplayInfo
    }
 
    /**
-    * Get background color for given status/severity code.
-    * 
+    * Get text color for drawing text over fill color (as returned by <code>getStatusColor</code>) for given status/severity code.
+    *
+    * @param status Status code
+    * @return Color for given code
+    */
+   public static Color getStatusFillTextColor(ObjectStatus status)
+   {
+      return statusFillTextColor[status.getValue()];
+   }
+
+   /**
+    * Get text color for drawing text over fill color (as returned by <code>getStatusColor</code>) for given status/severity code.
+    *
+    * @param severity Severity code
+    * @return Color for given code
+    */
+   public static Color getStatusFillTextColor(Severity severity)
+   {
+      return statusFillTextColor[severity.getValue()];
+   }
+
+   /**
+    * Get text color for drawing text over fill color (as returned by <code>getStatusColor</code>) for given status/severity code.
+    *
+    * @param code Status or severity code
+    * @return Color for given code
+    */
+   public static Color getStatusFillTextColor(int code)
+   {
+      return getStatusFillTextColor(ObjectStatus.getByValue(code));
+   }
+
+   /**
+    * Get tinted background color for given status/severity code. Intended for table rows and labels, paired with text color returned by <code>getStatusTextColor</code>.
+    *
     * @param status Status code
     * @return Color for given code
     */
    public static Color getStatusBackgroundColor(ObjectStatus status)
    {
-      Color color = statusBackgroundColor[status.getValue()];
-      return (color != null) ? color : getStatusColor(status);
+      return statusBackgroundColor[status.getValue()];
    }
 
    /**
-    * Get background color for given status/severity code.
-    * 
+    * Get tinted background color for given status/severity code. Intended for table rows and labels, paired with text color returned by <code>getStatusTextColor</code>.
+    *
     * @param severity Severity code
     * @return Color for given code
     */
    public static Color getStatusBackgroundColor(Severity severity)
    {
-      Color color = statusBackgroundColor[severity.getValue()];
-      return (color != null) ? color : getStatusColor(severity);
+      return statusBackgroundColor[severity.getValue()];
    }
 
    /**
-    * Get background color for given status/severity code.
-    * 
+    * Get tinted background color for given status/severity code. Intended for table rows and labels, paired with text color returned by <code>getStatusTextColor</code>.
+    *
     * @param code Status or severity code
     * @return Color for given code
     */
    public static Color getStatusBackgroundColor(int code)
    {
       return getStatusBackgroundColor(ObjectStatus.getByValue(code));
+   }
+
+   /**
+    * Get text color for given status/severity code. Readable both on default widget background and on tinted background returned by <code>getStatusBackgroundColor</code>.
+    *
+    * @param status Status code
+    * @return Color for given code
+    */
+   public static Color getStatusTextColor(ObjectStatus status)
+   {
+      return statusTextColor[status.getValue()];
+   }
+
+   /**
+    * Get text color for given status/severity code. Readable both on default widget background and on tinted background returned by <code>getStatusBackgroundColor</code>.
+    *
+    * @param severity Severity code
+    * @return Color for given code
+    */
+   public static Color getStatusTextColor(Severity severity)
+   {
+      return statusTextColor[severity.getValue()];
+   }
+
+   /**
+    * Get text color for given status/severity code. Readable both on default widget background and on tinted background returned by <code>getStatusBackgroundColor</code>.
+    *
+    * @param code Status or severity code
+    * @return Color for given code
+    */
+   public static Color getStatusTextColor(int code)
+   {
+      return getStatusTextColor(ObjectStatus.getByValue(code));
    }
 }

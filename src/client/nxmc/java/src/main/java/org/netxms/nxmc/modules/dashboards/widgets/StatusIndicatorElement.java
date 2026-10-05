@@ -54,7 +54,6 @@ import org.netxms.nxmc.modules.dashboards.views.DrilldownDashboardView;
 import org.netxms.nxmc.modules.networkmaps.views.AdHocPredefinedMapView;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
-import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -519,10 +518,8 @@ public class StatusIndicatorElement extends ElementWidget
       private void drawContent(GC gc)
       {
          gc.setAntialias(SWT.ON);
-         if (config.isFullColorRange())
-            gc.setBackground(StatusDisplayInfo.getStatusColor(status));
-         else
-            gc.setBackground((status == ObjectStatus.NORMAL) ? StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL) : StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL));
+         ObjectStatus displayedStatus = config.isFullColorRange() ? status : ((status == ObjectStatus.NORMAL) ? ObjectStatus.NORMAL : ObjectStatus.CRITICAL);
+         gc.setBackground(StatusDisplayInfo.getStatusColor(displayedStatus));
 
          Rectangle clientArea = getClientArea();
          Rectangle indicatorRect;
@@ -567,7 +564,7 @@ public class StatusIndicatorElement extends ElementWidget
             Point textExtent = gc.textExtent(label);
             if (config.getLabelType() == StatusIndicatorConfig.LABEL_INSIDE)
             {
-               gc.setForeground(getDisplay().getSystemColor(ColorConverter.isDarkColor(gc.getBackground()) ? SWT.COLOR_GRAY : SWT.COLOR_BLACK));
+               gc.setForeground(StatusDisplayInfo.getStatusFillTextColor(displayedStatus));
                gc.drawText(elementConfig.getLabel(), (clientArea.width - textExtent.x) / 2, (clientArea.height - textExtent.y) / 2);
             }
             else

@@ -118,6 +118,28 @@ public class RoundedLabel extends Composite
    }
 
    /**
+    * Set label background and text colors explicitly (blend mode is not applied). Passing null as background resets label to
+    * default appearance.
+    *
+    * @param background background color or null
+    * @param foreground text color (ignored if background is null)
+    */
+   public void setLabelColors(Color background, Color foreground)
+   {
+      if (background != null)
+      {
+         label.setBackground(background);
+         label.setForeground(foreground);
+      }
+      else
+      {
+         Color fillColor = getParent().getBackground();
+         label.setBackground(fillColor);
+         label.setForeground(ColorConverter.isDarkColor(fillColor) ? labelLightColor : labelDarkColor);
+      }
+   }
+
+   /**
     * Set label foreground colors. Can pass null as any color to reset to default value.
     *
     * @param darkColor dark foreground color (to be used on light background)

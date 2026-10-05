@@ -39,7 +39,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -357,7 +356,6 @@ public class WebServiceQueryView extends AdHocObjectView
       gd.verticalIndent = 5;
       gd.horizontalIndent = 10;
       statusLabel.setLayoutData(gd);
-      statusLabel.setBlendMode(true);
 
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.verticalIndent = 5;
@@ -637,18 +635,18 @@ public class WebServiceQueryView extends AdHocObjectView
     */
    void showStatus(int statusCode)
    {
-      Color color;
+      Severity severity;
       HttpStatus status = HttpStatus.of(statusCode);
       statusLabel.setText(status.toString());
       if (status.isSuccess())
-         color = StatusDisplayInfo.getStatusColor(Severity.NORMAL);
+         severity = Severity.NORMAL;
       else if (status.isRedirection())
-         color = StatusDisplayInfo.getStatusColor(Severity.UNKNOWN);
+         severity = Severity.UNKNOWN;
       else if (status.isError())
-         color = StatusDisplayInfo.getStatusColor(Severity.CRITICAL);
+         severity = Severity.CRITICAL;
       else
-         color = StatusDisplayInfo.getStatusColor(Severity.MINOR);
-      statusLabel.setLabelBackground(color);
+         severity = Severity.MINOR;
+      statusLabel.setLabelColors(StatusDisplayInfo.getStatusBackgroundColor(severity), StatusDisplayInfo.getStatusTextColor(severity));
       statusLabel.getParent().layout(true, true);
    }
 

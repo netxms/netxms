@@ -192,7 +192,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
    @Override
    public Color getForeground(Object element)
    {
-      return null;
+      return showColor ? StatusDisplayInfo.getStatusTextColor(((AlarmHandle)element).alarm.getCurrentSeverity()) : null;
    }
 
    /**

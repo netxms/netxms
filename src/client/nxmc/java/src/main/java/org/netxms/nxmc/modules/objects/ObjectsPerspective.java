@@ -381,7 +381,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       separator.setLayoutData(gd);
 
       objectStatus = new RoundedLabel(headerArea);
-      objectStatus.setBlendMode(false);
       objectStatus.setToolTipText(i18n.tr("Object status"));
       gd = new GridData(SWT.FILL, SWT.FILL, false, true);
       gd.widthHint = WidgetHelper.getTextWidth(objectStatus, StatusDisplayInfo.getStatusText(ObjectStatus.UNMANAGED) + 10);
@@ -585,7 +584,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
             objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" (maintenance)"));
          else
             objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
-         objectStatus.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()));
+         objectStatus.setLabelColors(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()), StatusDisplayInfo.getStatusTextColor(object.getStatus()));
 
          if (objectDetails != null)
             updateObjectDetails(object);
@@ -628,7 +627,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" (maintenance)"));
       else
          objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
-      objectStatus.setLabelBackground(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()));
+      objectStatus.setLabelColors(StatusDisplayInfo.getStatusBackgroundColor(object.getStatus()), StatusDisplayInfo.getStatusTextColor(object.getStatus()));
 
       updateObjectToolBar(object);
       updateObjectMenuBar(object);

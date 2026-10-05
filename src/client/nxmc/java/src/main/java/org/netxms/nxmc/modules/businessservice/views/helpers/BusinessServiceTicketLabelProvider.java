@@ -76,7 +76,8 @@ public class BusinessServiceTicketLabelProvider extends LabelProvider implements
 	@Override
 	public Color getForeground(Object element, int columnIndex)
 	{
-	   return null;
+      BusinessServiceTicket check = (BusinessServiceTicket)element;
+      return StatusDisplayInfo.getStatusTextColor((check.getCloseTime().getTime() == 0) ? ObjectStatus.MAJOR : ObjectStatus.NORMAL);
 	}
 
    /**
@@ -86,6 +87,6 @@ public class BusinessServiceTicketLabelProvider extends LabelProvider implements
 	public Color getBackground(Object element, int columnIndex)
 	{
       BusinessServiceTicket check = (BusinessServiceTicket)element;
-		return check.getCloseTime().getTime() == 0 ? StatusDisplayInfo.getStatusColor(ObjectStatus.MAJOR) : StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL);  
+      return StatusDisplayInfo.getStatusBackgroundColor((check.getCloseTime().getTime() == 0) ? ObjectStatus.MAJOR : ObjectStatus.NORMAL);
 	}
 }

@@ -98,7 +98,7 @@ public class NodeListLabelProvider extends LabelProvider implements ITableLabelP
 		switch(columnIndex)
 		{
 			case NodesView.COLUMN_STATUS:
-				return StatusDisplayInfo.getStatusColor(node.getStatus());
+				return StatusDisplayInfo.getStatusTextColor(node.getStatus());
 			default:
 				return null;
 		}

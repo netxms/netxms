@@ -85,7 +85,7 @@ public class AgentFileLabelProvider extends BaseFileLabelProvider implements ITa
    public Color getForeground(Object element)
    {
       if (((AgentFile)element).isPlaceholder())
-         return StatusDisplayInfo.getStatusColor(ObjectStatus.DISABLED);
+         return StatusDisplayInfo.getStatusTextColor(ObjectStatus.DISABLED);
       return null;
    }
 
