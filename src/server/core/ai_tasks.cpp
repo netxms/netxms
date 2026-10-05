@@ -389,7 +389,8 @@ void AITask::execute()
    m_mutex.lock();
    m_lastExecutionTime = now;
    m_state = AITaskState::RUNNING;
-   std::string prompt(m_prompt);
+   std::string prompt("<instructions>");
+   prompt.append(m_prompt);
    prompt.append("</instructions>\n<current_time>");
    prompt.append(FormatISO8601Timestamp(now));
    prompt.append("</current_time>\n<iteration>");

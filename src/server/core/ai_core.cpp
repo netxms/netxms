@@ -2653,9 +2653,7 @@ void NXCORE_EXPORTABLE SpawnIncidentAIAnalysis(uint32_t incidentId, int depth, b
       return;
    }
 
-   // Capture custom prompt as String for the lambda
    String prompt = (customPrompt != nullptr) ? customPrompt : _T("");
-
    ThreadPoolExecute(s_aiTaskThreadPool,
       [incidentId, depth, autoAssign, prompt] () -> void
       {
@@ -2706,11 +2704,14 @@ void ShowAIProviders(ServerConsole *console)
       const WCHAR *typeName;
       switch (p->getType())
       {
-         case LLMProviderType::OPENAI:
-            typeName = L"OpenAI";
-            break;
          case LLMProviderType::ANTHROPIC:
             typeName = L"Anthropic";
+            break;
+         case LLMProviderType::MISTRAL:
+            typeName = L"Mistral";
+            break;
+         case LLMProviderType::OPENAI:
+            typeName = L"OpenAI";
             break;
          default:
             typeName = L"Ollama";
