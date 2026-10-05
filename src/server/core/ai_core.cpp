@@ -2880,6 +2880,9 @@ bool InitAIAssistant()
                case LLMProviderType::MISTRAL:
                   strlcpy(config.url, "https://api.mistral.ai/v1/chat/completions", sizeof(config.url));
                   break;
+               case LLMProviderType::OPENAI:
+                  strlcpy(config.url, "https://api.openai.com/v1/chat/completions", sizeof(config.url));
+                  break;
                default:
                   strlcpy(config.url, "http://127.0.0.1:11434/api/chat", sizeof(config.url));
                   break;
@@ -2898,10 +2901,13 @@ bool InitAIAssistant()
             switch(config.type)
             {
                case LLMProviderType::ANTHROPIC:
-                  strlcpy(config.model, "claude-sonnet-4-20250514", sizeof(config.model));
+                  strlcpy(config.model, "claude-sonnet-5-5", sizeof(config.model));
                   break;
                case LLMProviderType::MISTRAL:
                   strlcpy(config.model, "mistral-large-latest", sizeof(config.model));
+                  break;
+               case LLMProviderType::OPENAI:
+                  strlcpy(config.model, "gpt-6-luna", sizeof(config.model));
                   break;
                default:
                   strlcpy(config.model, "llama3.2", sizeof(config.model));
