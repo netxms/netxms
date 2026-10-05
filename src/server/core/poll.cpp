@@ -450,6 +450,9 @@ void PollManager(Condition *startCondition)
    {
       WatchdogNotify(watchdogId);
 
+      if (HACheckFence())
+         break;   // node fenced - no further pollers are launched
+
       // Check for management node every 10 minutes, and on request when
       // the cluster peer's identity becomes known
       counter++;

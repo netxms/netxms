@@ -650,7 +650,8 @@ static void LoadGlobalConfig()
    if ((g_defaultAgentCacheMode != AGENT_CACHE_ON) && (g_defaultAgentCacheMode != AGENT_CACHE_OFF))
    {
       nxlog_debug_tag(_T("dc"), 1, _T("Invalid value %d of Agent.DefaultCacheMode: reset to %d (OFF)"), g_defaultAgentCacheMode, AGENT_CACHE_OFF);
-      ConfigWriteInt(_T("Agent.DefaultCacheMode"), AGENT_CACHE_OFF, true, true, true);
+      if (!HAIsClusterMode())   // runs during passive bring-up on cluster nodes, which must not write configuration
+         ConfigWriteInt(_T("Agent.DefaultCacheMode"), AGENT_CACHE_OFF, true, true, true);
       g_defaultAgentCacheMode = AGENT_CACHE_OFF;
    }
    if (ConfigReadBoolean(_T("Objects.Subnets.DeleteEmpty"), true))
@@ -1384,17 +1385,34 @@ bool NXCORE_EXPORTABLE Initialize()
    TCHAR buffer[256];
    MetaDataReadStr(_T("ServerID"), buffer, 256, _T(""));
    Trim(buffer);
-   if (buffer[0] != 0)
+   if (buffer[0] == 0)
    {
-      g_serverId = _tcstoull(buffer, nullptr, 16);
+      // Generate new ID. The server ID is also the cluster identity, so two
+      // nodes bootstrapping the same empty database must end up with one
+      // value: insert only if absent (primary key on var_name makes the
+      // first writer win) and then re-read what the database holds.
+      uint64_t serverId = ((UINT64)time(nullptr) << 31) | (UINT64)((UINT32)rand() & 0x7FFFFFFF);
+      _sntprintf(buffer, 256, UINT64X_FMT(_T("016")), serverId);
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO metadata (var_name,var_value) VALUES ('ServerID',?)"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
+         DBExecute(hStmt);   // failure means another server inserted first
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+      MetaDataReadStrFromDatabase(_T("ServerID"), buffer, 256, _T(""));
+      Trim(buffer);
+      if (buffer[0] == 0)
+      {
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Cannot store server ID in database"));
+         return false;
+      }
+      if (_tcstoull(buffer, nullptr, 16) != serverId)
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server ID was initialized concurrently by another server; using the stored value"));
    }
-   else
-   {
-      // Generate new ID
-      g_serverId = ((UINT64)time(nullptr) << 31) | (UINT64)((UINT32)rand() & 0x7FFFFFFF);
-      _sntprintf(buffer, 256, UINT64X_FMT(_T("016")), g_serverId);
-      MetaDataWriteStr(_T("ServerID"), buffer);
-   }
+   g_serverId = _tcstoull(buffer, nullptr, 16);
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
 
    // Read cluster configuration (affects database lock semantics)
@@ -2039,6 +2057,17 @@ void NXCORE_EXPORTABLE FastShutdown(ShutdownReason reason)
 	InitiateProcessShutdown();
 
    NXSL_VM::stopAll();
+
+   // A cluster node that never activated holds no state worth saving (and
+   // its warm copy may differ from what the active node has written), and a
+   // fenced node must not write at all
+   HAWaitForActivation();
+   if (HAIsFenced() || (HAIsClusterMode() && !s_activationStarted))
+   {
+      nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Server shutdown complete (passive cluster node, database state not modified)"));
+      nxlog_close();
+      return;
+   }
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	SaveObjects(hdb, INVALID_INDEX, true);

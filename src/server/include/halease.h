@@ -112,7 +112,7 @@ private:
    bool connect();
    void disconnect();
    bool buildQueries();
-   int64_t poll();      // returns remaining validity in seconds, INT64_MIN on query failure
+   int64_t poll(int64_t *holderTerm = nullptr, int64_t *holderIncarnation = nullptr);   // returns remaining validity in seconds, INT64_MIN on query failure
    void tryAcquire();
    void refresh();
    void doRelease();

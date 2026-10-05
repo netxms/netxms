@@ -377,9 +377,17 @@ static void WriterThread()
       }
 
       int count = 0;
+      bool fenced = false;
       DBBegin(hdb);
       while(true)
       {
+         if (HACheckFence())
+         {
+            delete trap;   // node fenced - abandon batch, no further role-sensitive work
+            fenced = true;
+            break;
+         }
+
          DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, trap->id);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(trap->timestamp));
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, trap->addr.toString(ipAddrText), DB_BIND_STATIC);
@@ -401,10 +409,13 @@ static void WriterThread()
          if ((trap == nullptr) || (trap == INVALID_POINTER_VALUE))
             break;
       }
-      DBCommit(hdb);
+      if (fenced)
+         DBRollback(hdb);
+      else
+         DBCommit(hdb);
       DBFreeStatement(hStmt);
       DBConnectionPoolReleaseConnection(hdb);
-      if (trap == INVALID_POINTER_VALUE)
+      if (fenced || (trap == INVALID_POINTER_VALUE))
          break;
    }
 

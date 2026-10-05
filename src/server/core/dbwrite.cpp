@@ -416,7 +416,10 @@ static void DBWriteThread()
          break;
 
       if (HACheckFence())
+      {
+         MemFree(rq);
          break;   // node fenced - no further role-sensitive work
+      }
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -844,6 +847,17 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
          continue;
       }
 
+      if (HAIsFenced())
+      {
+         // Node fenced - discard batches the prepare threads queued before they
+         // noticed the fence (they post their end-of-job indicators after it)
+         InterlockedAdd(&writer->pendingRequests, -statement->numRecords);
+         MemFree(statement->statement);
+         MemFree(statement->attributesStatement);
+         memoryPool.free(statement);
+         continue;
+      }
+
       if (writerPool != nullptr)
       {
          ThreadPoolExecute(writerPool,
@@ -1117,7 +1131,8 @@ static void RawDataWriteThread()
          break;   // node fenced - no further role-sensitive work
       SaveRawData(maxRecords, writerPool);
 	}
-   SaveRawData(maxRecords, writerPool);
+   if (!HAIsFenced())
+      SaveRawData(maxRecords, writerPool);   // final flush on shutdown; a fenced node must not write
 
    if (writerPool != nullptr)
       ThreadPoolDestroy(writerPool);

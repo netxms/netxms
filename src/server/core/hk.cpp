@@ -67,10 +67,13 @@ static size_t s_throttlingHighWatermark = 250000;
 static size_t s_throttlingLowWatermark = 50000;
 
 /**
- * Throttle housekeeper if needed. Returns false if shutdown time has arrived and housekeeper process should be aborted.
+ * Throttle housekeeper if needed. Returns false if shutdown time has arrived or the node has been fenced and housekeeper process should be aborted.
  */
 bool ThrottleHousekeeper()
 {
+   if (HACheckFence())
+      return false;   // node fenced - abort the run, no further role-sensitive work
+
    if (s_throttlingHighWatermark == 0)
       return !s_shutdown;
 

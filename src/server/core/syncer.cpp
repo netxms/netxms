@@ -90,13 +90,17 @@ void ShowSyncerStats(ServerConsole *console)
 }
 
 /**
- * Save object to database on separate thread
+ * Save object to database in a transaction together with its HA change journal
+ * entry (no-op outside cluster mode; a failed append fails the save). The entry
+ * is appended after all class-specific writes so that its sequence number is
+ * allocated right before commit: the standby applier treats a sequence number
+ * that stays invisible for too long as a rolled back transaction.
  */
-static void SaveObject(NetObj *object)
+static void SaveObjectInTransaction(DB_HANDLE hdb, NetObj *object)
 {
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DBBegin(hdb);
-   if (object->saveToDatabase(hdb))
+   if (object->saveToDatabase(hdb) &&
+       HAJournalAppend(hdb, HAJournalEntityType::OBJECT, HAJournalChangeType::CHANGE, object->getId(), object->getObjectClass()))
    {
       DBCommit(hdb);
       object->markAsSaved();
@@ -105,6 +109,15 @@ static void SaveObject(NetObj *object)
    {
       DBRollback(hdb);
    }
+}
+
+/**
+ * Save object to database on separate thread
+ */
+static void SaveObject(NetObj *object)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   SaveObjectInTransaction(hdb, object);
    DBConnectionPoolReleaseConnection(hdb);
    InterlockedDecrement(&s_outstandingSaveRequests);
 }
@@ -126,8 +139,12 @@ void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData)
       if (object->isDeleted())
       {
          nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 5, _T("Object %s [%d] marked for deletion"), object->getName(), object->getId());
+         // HA change journal tombstone rides in the same transaction as the
+         // delete (no-op outside cluster mode); deletions do not go through
+         // the save path, hence the explicit entry
          DBBegin(hdb);
-         if (object->deleteFromDatabase(hdb))
+         if (object->deleteFromDatabase(hdb) &&
+             HAJournalAppend(hdb, HAJournalEntityType::OBJECT, HAJournalChangeType::REMOVE, object->getId(), object->getObjectClass()))
          {
             nxlog_debug_tag(DEBUG_TAG_OBJECT_SYNC, 4, _T("Object %d \"%s\" deleted from database"), object->getId(), object->getName());
             DBCommit(hdb);
@@ -155,16 +172,7 @@ void SaveObjects(DB_HANDLE hdb, uint32_t watchdogId, bool saveRuntimeData)
 		   }
 		   else
 		   {
-            DBBegin(hdb);
-            if (object->saveToDatabase(hdb))
-            {
-               DBCommit(hdb);
-               object->markAsSaved();
-            }
-            else
-            {
-               DBRollback(hdb);
-            }
+            SaveObjectInTransaction(hdb, object);
 		   }
 		}
 		else if (saveRuntimeData)

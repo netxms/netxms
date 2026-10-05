@@ -52,7 +52,11 @@ A secondary liveness property:
   fencing tokens (a term check inside every write), which is explicitly out
   of scope. Consequence for parameters: lease validity must comfortably
   exceed typical statement runtimes, and bulk writers must use bounded
-  batches.
+  batches. Every writer thread checks the fence flag before each statement
+  or transaction, so at most one transaction per writer is in flight when
+  the fence trips; the largest such transaction is a batched log write of
+  `DBWriter.MaxRecordsPerTransaction` rows, which sizes the record ID gap
+  applied at activation (section 7.2).
 - **Byzantine behavior.** A node that lies about its identity or term is not
   defended against; both nodes are trusted code on trusted hosts. The peer
   channel is mutually authenticated only to keep third parties out.
@@ -188,7 +192,11 @@ SELECT term, holder_guid, holder_name, expires_at - DBNOW
 
 The fourth column is the remaining validity *as computed by the DB*; the
 standby never interprets `expires_at` against its own clock. Negative or
-zero → attempt acquire.
+zero → attempt acquire. A valid lease whose `holder_incarnation` is this
+process's own means an acquire UPDATE succeeded but its verification read
+failed: the node adopts the lease (state ACTIVE, deadline derived from the
+remaining validity the DB reports, promotion handler invoked) instead of
+sitting on an unknowingly held lease until it expires.
 
 ### 2.5 Promotion rule
 
@@ -230,9 +238,12 @@ Fencing triggers:
 Fencing raises the global **fence flag** (a process-wide atomic, checked
 lock-free). Semantics:
 
-- Checked at *dispatch* boundaries: DB writer batch start, event processing
-  loop, poller task launch, scheduler task launch, notification send, journal
-  append. A set flag means the work item is not started.
+- Checked at *dispatch* boundaries: DB writer batch start and every record
+  within a batch (generic, idata, raw data, event log, syslog, SNMP trap,
+  Windows event and OpenTelemetry log writers; a batch interrupted by the
+  fence is rolled back), event processing loop, poll manager cycle and
+  poller task launch, housekeeper step, scheduler task launch, notification
+  send, journal append. A set flag means the work item is not started.
 - Already-running statements are not interrupted (residual window,
   section 1.3).
 - After raising the flag the process completes fencing by an **orderly
@@ -306,18 +317,30 @@ CREATE TABLE ha_sync_state
   `max(seq)`, `max(applied_seq)` in `ha_sync_state` and the age-based
   truncation point (`HAJournalQueryHead`). Pruning routinely empties the
   table once the standby has caught up, and every pruned entry is at or
-  below one of the other two values, so the sequence never restarts. A
-  freshly loaded standby starts from the same head, so the first entry the
-  active writes after it is exactly head + 1.
-- The journal row is written **in the same transaction** as the object save,
-  or immediately after the delete on the deletion path (deletions do not go
-  through the save path — `Syncer` deletes are a separate code path, hence
-  explicit tombstones).
+  below one of the other two values, so the sequence never restarts. At
+  activation the counter is seeded to head + record ID gap (section 7.2), so
+  entries the predecessor still commits inside the residual window cannot
+  collide, and the new head is recorded as the activating node's
+  `ha_sync_state` row: a freshly loaded standby therefore starts past the
+  gap, a standby whose applier is already running skips a gap lying below
+  that declared head at once (`HAJournalQueryPeerDeclaredHead`) instead of
+  waiting out the 60 s grace, and the first entry the active writes after
+  it is exactly head + 1.
+- The journal row is written **in the same transaction** as the object save
+  or delete, as the last statement before commit (`Syncer`, the single save
+  and delete path). Appending last matters: the sequence number is
+  allocated when the row is inserted, and the standby treats a sequence
+  number that stays invisible for 60 s as a rolled back transaction, so the
+  allocation must sit as close to the commit as possible. Deletions do not
+  go through the save path, hence explicit tombstones.
 - Alarm changes journal `entity_type='1'` on every alarm create / state
   change / terminate, alongside the alarm's own DB write (the alarm DB
-  writer wraps both in one transaction). Individual alarm deletions journal
-  a tombstone through the same serialized lazy SQL writer queue;
-  delete-alarms-of-deleted-object is covered by the object's own tombstone.
+  writer wraps both in one transaction). Individual alarm deletions run
+  synchronously in one transaction with their tombstone (`DeleteAlarm`),
+  never through the lazy SQL writer, for the same reason: a tombstone whose
+  sequence number was allocated at enqueue time but inserted after a writer
+  backlog would be mistaken for a rolled back transaction and skipped.
+  Delete-alarms-of-deleted-object is covered by the object's own tombstone.
 - Journal append checks the fence flag like any role-sensitive write, and a
   failed append fails the enclosing save transaction — an entity change
   never commits without its journal entry.
@@ -326,9 +349,9 @@ CREATE TABLE ha_sync_state
   runtime status for objects with no other changes; this self-heals after
   activation through normal polling and event processing, and the journal
   volume saved is substantial on large installs.
-- Implementation: `hajournal.cpp`; append hooks at the end of the base
-  `NetObj::saveToDatabase` / `NetObj::deleteFromDatabase` (single choke
-  points inside the caller's transaction) and in the alarm DB writer thread.
+- Implementation: `hajournal.cpp`; append calls in `syncer.cpp` right before
+  the commit of the object save and delete transactions, in the alarm DB
+  writer thread, and in `DeleteAlarm`.
 
 ### 3.3 Applying (standby node)
 
@@ -598,10 +621,14 @@ support.
   mid-activation simply loses the incarnation; the peer (or this node,
   restarted) takes over from the DB state.
 
-Module API: `NXMODULE` grows optional `pfInitPassive` / `pfActivate` entry
-points; existing modules keep working in standalone mode unchanged (their
-current init is treated as activate-time). Inventory of core subsystems and
-their required split: section 7.1.
+Module API: the existing `NXMODULE` hooks already split along this line and
+no new entry points are added. `pfInitialize`, `pfLoadObjects`,
+`pfLinkObjects` and `pfPostObjectLoad` run during passive bring-up on every
+node and are bound by the `initPassive()` rules above; `pfServerStarted` is
+the module's `activate()` and runs only on the active node after it has won
+the lease. The contract is documented on the structure in `nxmodule.h`; all
+in-tree modules start their listeners and senders from `pfServerStarted`.
+Inventory of core subsystems and their required split: section 7.1.
 
 ### 5.3 Graceful switchover sequence (active side)
 
@@ -945,10 +972,23 @@ Immune (query max() on demand, no in-memory counter): config repository IDs
 bounds (loghandle.cpp). Ephemeral runtime counters (tunnel IDs, agent
 connection IDs) reset per process by design.
 
-Implementation shape for phase 1: gather every seed site behind one
-`RebaseAllocators()` entry point called from the activation sequence
-(section 5.2), so future counters cannot be forgotten — each subsystem
-registers its seed function rather than being listed in a central table.
+Implementation shape (as built): `InitIdTable()` is idempotent
+(`max(current, database maximum)` per group, re-reads the last event ID) and
+is simply re-run by the activation thread; the certificate action log
+counter, the only standalone counter seeded during passive bring-up, has an
+explicit reseed call next to it. Every other standalone counter is seeded by
+its subsystem's start function inside `ActivateServer()`, so it is seeded
+for the first time at activation. Consequence for maintenance: a `Start*` /
+`Load*` function that seeds a counter must not be moved into passive
+bring-up without adding a reseed to the activation thread.
+
+Record ID gap: counters for tables written by lazy or batched writers
+(event log, audit log, syslog, SNMP trap log, Windows event log,
+OpenTelemetry log, notification log, alarm state changes, alarms, the
+change journal sequence, and the IDG groups for append-only logs) start at
+database maximum + `HAGetRecordIdGap()`, twice
+`DBWriter.MaxRecordsPerTransaction`, which covers one in-flight transaction
+per writer of the predecessor (section 1.3).
 
 ## 8. Open questions
 

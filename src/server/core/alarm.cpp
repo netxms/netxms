@@ -2241,27 +2241,36 @@ void NXCORE_EXPORTABLE DeleteAlarm(uint32_t alarmId, bool objectCleanup)
    if (!objectCleanup)
       s_alarmList.unlock();
 
-   // Delete from database
+   // Delete from database in one transaction together with the HA journal
+   // tombstone (no-op outside cluster mode). Synchronous rather than through
+   // the lazy SQL writer: the tombstone's sequence number is allocated when
+   // the row is inserted, so it cannot lag behind a writer backlog and be
+   // mistaken for a rolled back transaction by the standby. Object-cleanup
+   // deletions are covered by the object's own tombstone.
    if (found && !objectCleanup)
    {
-      TCHAR szQuery[256];
+      static const TCHAR *tables[] = { _T("alarms"), _T("alarm_events"), _T("alarm_notes"), _T("alarm_state_changes") };
 
-      _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%u"), alarmId);
-      QueueSQLRequest(szQuery);
-
-      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%u"), alarmId);
-      QueueSQLRequest(szQuery);
-
-      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_notes WHERE alarm_id=%u"), alarmId);
-      QueueSQLRequest(szQuery);
-
-      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_state_changes WHERE alarm_id=%u"), alarmId);
-      QueueSQLRequest(szQuery);
-
-      // HA journal tombstone follows the delete on the same serialized SQL
-      // writer queue (object-cleanup deletions are covered by the object's
-      // own tombstone)
-      HAJournalAppendAsync(HAJournalEntityType::ALARM, HAJournalChangeType::REMOVE, alarmId, 0);
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      bool success = DBBegin(hdb);
+      if (success)
+      {
+         TCHAR query[256];
+         for(int i = 0; success && (i < 4); i++)
+         {
+            _sntprintf(query, 256, _T("DELETE FROM %s WHERE alarm_id=%u"), tables[i], alarmId);
+            success = DBQuery(hdb, query);
+         }
+         if (success)
+            success = HAJournalAppend(hdb, HAJournalEntityType::ALARM, HAJournalChangeType::REMOVE, alarmId, 0);
+         if (success)
+            DBCommit(hdb);
+         else
+            DBRollback(hdb);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+      if (!success)
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot delete alarm [%u] from database"), alarmId);
 
       UpdateObjectOnAlarmResolve(objectId, alarmId, true);
    }

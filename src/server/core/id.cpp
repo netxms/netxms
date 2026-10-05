@@ -539,6 +539,7 @@ bool InitIdTable()
    // predecessor may still commit after this node has taken over the cluster
    // lease (see HAGetRecordIdGap)
    uint32_t recordIdGap = HAGetRecordIdGap();
+   s_freeIdTable[IDG_ALARM] += recordIdGap;   // alarm rows are inserted by the lazy alarm writer, so they are in flight like log records
    s_freeIdTable[IDG_BUSINESS_SERVICE_RECORD] += recordIdGap;
    s_freeIdTable[IDG_MAINTENANCE_JOURNAL] += recordIdGap;
    s_freeIdTable[IDG_INCIDENT_ACTIVITY] += recordIdGap;

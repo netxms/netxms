@@ -975,18 +975,31 @@ static void ApplierThread()
                // Gap: seq allocated but row not visible yet (uncommitted or rolled back)
                if (pendingGapSeq != newWatermark + 1)
                {
-                  pendingGapSeq = newWatermark + 1;
-                  pendingGapTime = time(nullptr);
-                  blocked = true;
-                  return;
+                  // A gap entirely below the journal head another node has declared
+                  // (an activating node records its seeded head, which sits above a
+                  // deliberate gap) cannot hold pending transactions - skip it now
+                  if (HAJournalQueryPeerDeclaredHead() >= entry.seq - 1)
+                  {
+                     nxlog_debug_tag(DEBUG_TAG, 4, L"Journal gap " INT64_FMTW L".." INT64_FMTW L" is below the head declared by the peer, skipped", newWatermark + 1, entry.seq - 1);
+                  }
+                  else
+                  {
+                     pendingGapSeq = newWatermark + 1;
+                     pendingGapTime = time(nullptr);
+                     blocked = true;
+                     return;
+                  }
                }
-               if (time(nullptr) - pendingGapTime < 60)
+               else if (time(nullptr) - pendingGapTime < 60)
                {
                   blocked = true;
                   return;
                }
-               nxlog_debug_tag(DEBUG_TAG, 4, L"Journal gap at " INT64_FMTW L" aged out (rolled back transaction)", pendingGapSeq);
-               pendingGapSeq = 0;
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 4, L"Journal gap at " INT64_FMTW L" aged out (rolled back transaction)", pendingGapSeq);
+                  pendingGapSeq = 0;
+               }
             }
             batch.push_back(entry);
             newWatermark = entry.seq;

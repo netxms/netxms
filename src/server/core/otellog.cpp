@@ -107,9 +107,17 @@ static void OtelLogWriterThread()
       }
 
       int count = 0;
+      bool fenced = false;
       DBBegin(hdb);
       while(true)
       {
+         if (HACheckFence())
+         {
+            delete record;   // node fenced - abandon batch, no further role-sensitive work
+            fenced = true;
+            break;
+         }
+
          char *attributes = SerializeAttributes(record);
 
          DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, s_recordId++);
@@ -142,10 +150,13 @@ static void OtelLogWriterThread()
          if ((record == nullptr) || (record == INVALID_POINTER_VALUE))
             break;
       }
-      DBCommit(hdb);
+      if (fenced)
+         DBRollback(hdb);
+      else
+         DBCommit(hdb);
       DBFreeStatement(hStmt);
       DBConnectionPoolReleaseConnection(hdb);
-      if (record == INVALID_POINTER_VALUE)
+      if (fenced || (record == INVALID_POINTER_VALUE))
          break;
    }
 
@@ -180,6 +191,7 @@ static void OtelLogWriterThread_PGSQL()
 
       query = queryBase;
       int countTxn = 0, countStmt = 0;
+      bool fenced = false;
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (!DBBegin(hdb))
@@ -191,6 +203,13 @@ static void OtelLogWriterThread_PGSQL()
 
       while(true)
       {
+         if (HACheckFence())
+         {
+            delete record;   // node fenced - abandon batch, no further role-sensitive work
+            fenced = true;
+            break;
+         }
+
          query.append(L'(');
          query.append(s_recordId++);
          if (convertTimestamp)
@@ -256,6 +275,12 @@ static void OtelLogWriterThread_PGSQL()
          record = s_writerQueue.getOrBlock(500);
          if ((record == nullptr) || (record == INVALID_POINTER_VALUE))
             break;
+      }
+      if (fenced)
+      {
+         DBRollback(hdb);
+         DBConnectionPoolReleaseConnection(hdb);
+         break;
       }
       if (countStmt > 0)
       {

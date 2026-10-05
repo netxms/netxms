@@ -99,7 +99,18 @@ struct CloudConnectorInterface;
 struct TrafficConnectorInterface;
 
 /**
- * Module registration structure
+ * Module registration structure.
+ *
+ * Lifecycle in cluster mode (doc/HA_Design.md section 5): pfInitialize,
+ * pfLoadObjects, pfLinkObjects and pfPostObjectLoad run during passive
+ * bring-up on every cluster node, including a standby that may never become
+ * active. They may read the database and build in-memory state, but must not
+ * write to the database, start threads that write or send anything, open
+ * listeners, generate events, or contact agents and external systems. All
+ * such role-sensitive work belongs in pfServerStarted, which runs only on the
+ * active node after it has won the cluster lease. Standalone servers call
+ * the same hooks in the same order, so a module written to this rule needs
+ * no cluster-specific code.
  */
 typedef struct
 {

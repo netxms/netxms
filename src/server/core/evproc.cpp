@@ -236,6 +236,12 @@ static void EventLogger()
             event = s_loggerQueue.getOrBlock(500);
 			   while((event != nullptr) && (event != INVALID_POINTER_VALUE))
 				{
+               if (HACheckFence())
+               {
+                  delete event;   // node fenced - no further role-sensitive work
+                  event = nullptr;
+                  break;
+               }
 				   if (IsEventWriteAllowed(event))
 				   {
 		            WriteEvent(hStmt, event);

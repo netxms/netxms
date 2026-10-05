@@ -176,9 +176,17 @@ static void WindowsEventWriterThread()
       }
 
       int count = 0;
+      bool fenced = false;
       DBBegin(hdb);
       while(true)
       {
+         if (HACheckFence())
+         {
+            delete event;   // node fenced - abandon batch, no further role-sensitive work
+            fenced = true;
+            break;
+         }
+
          DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, s_eventId++);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (int32_t)event->timestamp);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, event->nodeId);
@@ -205,10 +213,13 @@ static void WindowsEventWriterThread()
          if ((event == nullptr) || (event == INVALID_POINTER_VALUE))
             break;
       }
-      DBCommit(hdb);
+      if (fenced)
+         DBRollback(hdb);
+      else
+         DBCommit(hdb);
       DBFreeStatement(hStmt);
       DBConnectionPoolReleaseConnection(hdb);
-      if (event == INVALID_POINTER_VALUE)
+      if (fenced || (event == INVALID_POINTER_VALUE))
          break;
    }
 
@@ -243,6 +254,7 @@ static void WindowsEventWriterThread_PGSQL()
 
       query = queryBase;
       int countTxn = 0, countStmt = 0;
+      bool fenced = false;
 
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (!DBBegin(hdb))
@@ -254,6 +266,13 @@ static void WindowsEventWriterThread_PGSQL()
 
       while(true)
       {
+         if (HACheckFence())
+         {
+            delete event;   // node fenced - abandon batch, no further role-sensitive work
+            fenced = true;
+            break;
+         }
+
          query.append(_T('('));
          query.append(s_eventId++);
          if (convertTimestamp)
@@ -307,6 +326,12 @@ static void WindowsEventWriterThread_PGSQL()
          event = g_windowsEventWriterQueue.getOrBlock(500);
          if ((event == nullptr) || (event == INVALID_POINTER_VALUE))
             break;
+      }
+      if (fenced)
+      {
+         DBRollback(hdb);
+         DBConnectionPoolReleaseConnection(hdb);
+         break;
       }
       if (countStmt > 0)
       {

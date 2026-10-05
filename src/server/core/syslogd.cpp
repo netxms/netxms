@@ -736,9 +736,17 @@ static void SyslogWriterThread()
       }
 
       int count = 0;
+      bool fenced = false;
       DBBegin(hdb);
       while(true)
       {
+         if (HACheckFence())
+         {
+            delete msg;   // node fenced - abandon batch, no further role-sensitive work
+            fenced = true;
+            break;
+         }
+
          DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, msg->getId());
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(msg->getTimestamp()));
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, msg->getFacility());
@@ -768,10 +776,13 @@ static void SyslogWriterThread()
          if ((msg == nullptr) || (msg == INVALID_POINTER_VALUE))
             break;
       }
-      DBCommit(hdb);
+      if (fenced)
+         DBRollback(hdb);
+      else
+         DBCommit(hdb);
       DBFreeStatement(hStmt);
       DBConnectionPoolReleaseConnection(hdb);
-      if (msg == INVALID_POINTER_VALUE)
+      if (fenced || (msg == INVALID_POINTER_VALUE))
          break;
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Syslog writer thread stopped"));

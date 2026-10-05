@@ -247,9 +247,10 @@ HALeaseStatus HALeaseManager::getStatus()
 /**
  * Read lease table and update cached status. Returns remaining validity in
  * seconds as computed by the database (negative if expired), or INT64_MIN on
- * query failure.
+ * query failure. Holder term and incarnation are returned through the
+ * optional output arguments (unchanged on failure).
  */
-int64_t HALeaseManager::poll()
+int64_t HALeaseManager::poll(int64_t *holderTerm, int64_t *holderIncarnation)
 {
    DB_RESULT hResult = DBSelect(m_hdb, m_pollQuery);
    if (hResult == nullptr)
@@ -268,6 +269,7 @@ int64_t HALeaseManager::poll()
 
    int64_t term = DBGetFieldInt64(hResult, 0, 0);
    uuid holderGuid = DBGetFieldGUID(hResult, 0, 1);
+   int64_t incarnation = DBGetFieldInt64(hResult, 0, 2);
    wchar_t holderName[64];
    DBGetField(hResult, 0, 3, holderName, 64);
    int64_t remainingValidity = DBGetFieldInt64(hResult, 0, 4);
@@ -276,6 +278,10 @@ int64_t HALeaseManager::poll()
    DBFreeResult(hResult);
 
    updateStatus(term, holderGuid, holderName, holderAddress, remainingValidity);
+   if (holderTerm != nullptr)
+      *holderTerm = term;
+   if (holderIncarnation != nullptr)
+      *holderIncarnation = incarnation;
    return remainingValidity;
 }
 
@@ -515,11 +521,29 @@ void HALeaseManager::mainLoop()
             break;
          case HALeaseState::STANDBY:
          {
-            int64_t remainingValidity = poll();
+            int64_t sendTime = GetMonotonicClockTime();
+            int64_t holderTerm = 0, holderIncarnation = 0;
+            int64_t remainingValidity = poll(&holderTerm, &holderIncarnation);
             if ((remainingValidity != INT64_MIN) && (remainingValidity <= 0) && !m_shutdown.load())
             {
                m_fastPollCycles = 0;
                tryAcquire();
+            }
+            else if ((remainingValidity != INT64_MIN) && (remainingValidity > static_cast<int64_t>(m_fenceMargin)) &&
+                     (holderIncarnation == static_cast<int64_t>(m_incarnation)) && !m_shutdown.load())
+            {
+               // This process holds the lease without knowing it: the acquisition
+               // UPDATE went through but its verification read failed. Only this
+               // process can write its own incarnation, so the lease is ours;
+               // adopt it with a deadline derived from the validity the database
+               // reports now (no later than the one acquisition would have set).
+               m_term = holderTerm;
+               m_fenceDeadline = sendTime + (remainingValidity - m_fenceMargin) * 1000;
+               m_state = static_cast<int>(HALeaseState::ACTIVE);
+               nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Cluster lease held by this node adopted (term " INT64_FMTW L")", m_term.load());
+               if (m_promotionHandler != nullptr)
+                  m_promotionHandler(m_term.load());
+               waitTime = 0;
             }
             else if (m_fastPollCycles.load() > 0)
             {

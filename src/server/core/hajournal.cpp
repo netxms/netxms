@@ -86,7 +86,12 @@ int64_t HAJournalQueryHead()
 /**
  * Initialize journal writer: seed the sequence counter from the journal head
  * in the database. Part of the activation-time ID allocator rebase - the same
- * max()-idempotent pattern as InitIdTable().
+ * max()-idempotent pattern as InitIdTable(). The sequence starts above a gap
+ * (HAGetRecordIdGap) so entries the predecessor still commits inside the
+ * residual window cannot collide with this node's. The new head is recorded
+ * as this node's applied watermark: HAJournalQueryHead includes ha_sync_state,
+ * so a freshly loaded standby starts its applier past the gap instead of
+ * waiting out the missing-sequence grace period on the first new entry.
  */
 bool HAJournalInit()
 {
@@ -99,11 +104,13 @@ bool HAJournalInit()
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Cannot read change journal head");
       return false;
    }
+   head += HAGetRecordIdGap();
 
    int64_t current = s_sequence.load();
    while((current < head) && !s_sequence.compare_exchange_weak(current, head))
       ;
    s_writerActive = true;
+   HAJournalSaveWatermark(s_sequence.load());
    nxlog_debug_tag(DEBUG_TAG, 2, L"Change journal writer initialized (head " INT64_FMTW L")", s_sequence.load());
    return true;
 }
@@ -136,24 +143,6 @@ bool HAJournalAppend(DB_HANDLE hdb, HAJournalEntityType entityType, HAJournalCha
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
    return success;
-}
-
-/**
- * Append journal entry through the lazy SQL writer queue. For entity deletes
- * issued via QueueSQLRequest (queue order preserves delete-then-journal
- * sequencing on the same serialized writer).
- */
-void HAJournalAppendAsync(HAJournalEntityType entityType, HAJournalChangeType changeType, uint32_t entityId, int entityClass)
-{
-   if (!s_writerActive.load() || HAIsFenced())
-      return;
-
-   wchar_t query[256];
-   nx_swprintf(query, 256,
-      L"INSERT INTO ha_change_journal (seq,entity_type,change_type,entity_id,entity_class,created_at) VALUES (" INT64_FMTW L",'%c','%c',%u,%d,%s)",
-      static_cast<int64_t>(++s_sequence), L'0' + static_cast<int>(entityType), L'0' + static_cast<int>(changeType),
-      entityId, entityClass, HAGetDbTimeExpression(g_dbSyntax));
-   QueueSQLRequest(query);
 }
 
 /**
@@ -216,6 +205,30 @@ int64_t HAJournalReadWatermark()
    }
    DBConnectionPoolReleaseConnection(hdb);
    return watermark;
+}
+
+/**
+ * Get the highest sequence number any other node has declared applied
+ * (ha_sync_state rows of other nodes; 0 if none or on failure). An activating
+ * node records its seeded journal head there (HAJournalInit), so sequence
+ * numbers at or below this value can no longer belong to pending transactions
+ * - the applier uses it to skip the activation gap without waiting.
+ */
+int64_t HAJournalQueryPeerDeclaredHead()
+{
+   HALeaseManager *manager = HAGetLeaseManager();
+   if (manager == nullptr)
+      return 0;
+
+   wchar_t guidText[64];
+   manager->getNodeGuid().toString(guidText);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   wchar_t query[128];
+   nx_swprintf(query, 128, L"SELECT max(applied_seq) FROM ha_sync_state WHERE node_guid<>'%s'", guidText);
+   int64_t head = QueryInt64(hdb, query);
+   DBConnectionPoolReleaseConnection(hdb);
+   return (head > 0) ? head : 0;
 }
 
 /**

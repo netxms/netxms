@@ -138,13 +138,18 @@ bool NXCORE_EXPORTABLE HAIsClusterMode()
  * A demoted node cannot recall statements already handed to the database when
  * it fenced (residual commit window, doc/HA_Design.md 1.3), so records written
  * by the predecessor can still appear after the new active has read the table
- * maximum. Starting above them prevents primary key collisions. The number of
- * such records is bounded by the number of writer threads; gaps in log record
- * IDs are normal (they already occur after a server crash).
+ * maximum. Starting above them prevents primary key collisions. Every writer
+ * has at most one transaction in flight, and the largest one is a batched log
+ * write of DBWriter.MaxRecordsPerTransaction records, so the gap is sized to
+ * two such batches. Gaps in log record IDs are normal (they already occur
+ * after a server crash).
  */
 uint32_t NXCORE_EXPORTABLE HAGetRecordIdGap()
 {
-   return (s_clusterMode != 0) ? 100 : 0;
+   if (s_clusterMode == 0)
+      return 0;
+   int maxRecords = ConfigReadInt(L"DBWriter.MaxRecordsPerTransaction", 1000);
+   return static_cast<uint32_t>(std::max(maxRecords, 50)) * 2;
 }
 
 /**

@@ -121,11 +121,11 @@ struct HAJournalEntry
  */
 bool HAJournalInit();
 bool NXCORE_EXPORTABLE HAJournalAppend(DB_HANDLE hdb, HAJournalEntityType entityType, HAJournalChangeType changeType, uint32_t entityId, int entityClass);
-void NXCORE_EXPORTABLE HAJournalAppendAsync(HAJournalEntityType entityType, HAJournalChangeType changeType, uint32_t entityId, int entityClass);
 int64_t NXCORE_EXPORTABLE HAJournalGetHead();
 int64_t HAJournalQueryHead();
 void NXCORE_EXPORTABLE HAJournalSaveWatermark(int64_t seq);
 int64_t NXCORE_EXPORTABLE HAJournalReadWatermark();
+int64_t HAJournalQueryPeerDeclaredHead();
 int64_t NXCORE_EXPORTABLE HAJournalGetTruncationPoint();
 int64_t NXCORE_EXPORTABLE HAJournalReplay(int64_t watermark, std::function<void(const HAJournalEntry&)> handler);
 void HAJournalPrune(DB_HANDLE hdb);
