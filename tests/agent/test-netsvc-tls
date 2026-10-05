@@ -31,7 +31,21 @@ then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
 if O=$("$NETXMS_HOME_BIN"nxget "$AGNT" 'TLS.Certificate.Issuer(pop3.mailbox.org,110,,pop3)')
 then [[ "$O" == "C=US,O=DigiCert Inc,OU=www.digicert.com,CN=Thawte TLS RSA CA G1" ]]; else false; fi
 
+# STARTTLS: named option (preferred syntax)
+if O=$("$NETXMS_HOME_BIN"nxget "$AGNT" 'TLS.Certificate.Issuer(mail.netxms.org,587,,starttls=smtp)')
+then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
+
+if O=$("$NETXMS_HOME_BIN"nxget "$AGNT" 'TLS.Certificate.Issuer(mail.netxms.org,143,,timeout=5000,starttls=imap)')
+then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
+
+# STARTTLS: positional protocol followed by named options
+if O=$("$NETXMS_HOME_BIN"nxget "$AGNT" 'TLS.Certificate.Issuer(mail.netxms.org,25,,smtp,timeout=5000)')
+then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
+
 # HTTPS
+if O=$("$NETXMS_HOME_BIN"nxget "$AGNT" 'TLS.Certificate.Issuer(badssl.com,443,,timeout=5000)')
+then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
+
 if O=$("$NETXMS_HOME_BIN"nxget "$AGNT" 'TLS.Certificate.Issuer(badssl.com,443)')
 then [[ "$O" == "C=US,O=Let's Encrypt,CN=R3" ]]; else false; fi
 
