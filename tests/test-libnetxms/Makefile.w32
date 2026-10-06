@@ -8,6 +8,7 @@ SOURCES = \
 	cc.cpp \
 	config.cpp \
 	crypto.cpp \
+	format.cpp \
 	gauge64.cpp \
 	geolocation.cpp \
 	markdown.cpp \

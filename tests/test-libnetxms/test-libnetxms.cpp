@@ -12,6 +12,8 @@
 NETXMS_EXECUTABLE_HEADER(test-libnetxms)
 
 void TestConfig();
+void TestFormatNumber();
+void TestFormatDCIValue();
 void TestGauge64();
 void TestMemoryPool();
 void TestObjectMemoryPool();
@@ -3963,6 +3965,8 @@ int main(int argc, char *argv[])
    TestIntegerToString();
    TestParseDuration();
    TestParseTimestamp();
+   TestFormatNumber();
+   TestFormatDCIValue();
    TestQueue();
    TestSharedObjectQueue();
    TestSQueue();
