@@ -892,16 +892,16 @@ uint32_t NXCORE_EXPORTABLE DeleteAssetAttribute(const TCHAR *name)
 }
 
 /**
- * Validate date
+ * Validate date (expected format YYYYMMDD)
  */
-bool isValidDate(uint32_t formatedDate)
+bool IsValidDate(uint32_t date)
 {
-   int year = formatedDate / 10000 - 1900;
-   if (year > 0)
+   int year = date / 10000 - 1900;
+   if (year < 0)
       return false;
 
-   int day = formatedDate % 100;
-   int month = (formatedDate % 10000) / 100 - 1;
+   int day = date % 100;
+   int month = (date % 10000) / 100 - 1;
 
    struct tm tmp;
    memset(&tmp, 0, sizeof(struct tm));
@@ -1067,7 +1067,7 @@ std::pair<uint32_t, String> NXCORE_EXPORTABLE ValidateAssetPropertyValue(const T
          uint32_t date = _tcstoul(value, &error, 0);
          if ((date != 0) && (*error == 0))
          {
-            if (isValidDate(date))
+            if (!IsValidDate(date))
             {
                resultText = _T("Invalid date");
             }
