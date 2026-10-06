@@ -286,6 +286,10 @@ json_t *Asset::getPropertiesAsJson() const
  */
 std::pair<uint32_t, String> Asset::setProperty(const TCHAR *attr, const TCHAR *value, uint32_t userId)
 {
+   // Writing current value back is always allowed (validation would report unique constraint violation against this asset itself)
+   if (isSamePropertyValue(attr, value))
+      return std::pair<uint32_t, String>(RCC_SUCCESS, L"");
+
    std::pair<uint32_t, String> result = ValidateAssetPropertyValue(attr, value);
    if (result.first == RCC_SUCCESS)
    {
