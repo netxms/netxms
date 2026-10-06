@@ -337,17 +337,20 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
       return SYSINFO_RC_ERROR;
    }
 
-   if (startTlsProto[0] != 0) {
+   if (startTlsProto[0] != 0)
+   {
       const char *serverName = (sniServerName[0] != 0) ? sniServerName : host;
       TCHAR descrTag[256];
-      _sntprintf(descrTag, sizeof(descrTag), _T("%s StartTLS %hs:%u"), startTlsProto, serverName, port);
+      _sntprintf(descrTag, 256, _T("%s StartTLS %hs:%u"), startTlsProto, serverName, port);
 
       bool startTlsSuccess = SetupStartTLSSession(hSocket, timeout, serverName, startTlsProto, descrTag);
-      if (!startTlsSuccess) {
+      if (!startTlsSuccess)
+      {
          nxlog_debug_tag(startTlsTag, 7, _T("%s: StartTLS error"), descrTag);
          return SYSINFO_RC_ERROR;
       }
    }
+
    bool success = SetupTLSSession(hSocket, timeout, (sniServerName[0] != 0) ? sniServerName : host, port,
        [host, port, arg, value](SSL_CTX *context, SSL *ssl) -> bool
        {
