@@ -48,6 +48,7 @@ void TestNodeIPChange();
 void TestObjectHierarchy();
 void TestRecommission();
 void TestSampleAttributes();
+void TestUserGroups();
 
 /**
  * Scratch work directory holding the configuration file, database, data directory and log
@@ -266,6 +267,7 @@ int main(int argc, char *argv[])
    TestObjectHierarchy();
    TestRecommission();
    TestSampleAttributes();
+   TestUserGroups();
 
    SetTestFailureHook(nullptr);
 

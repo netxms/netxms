@@ -23,6 +23,9 @@
 #include "nxcore.h"
 #include <nms_users.h>
 #include <nxai.h>
+#include <set>
+#include <unordered_map>
+#include <vector>
 
 #define DEBUG_TAG _T("userdb")
 
@@ -106,36 +109,64 @@ static inline void RemoveDatabaseObject(UserDatabaseObject *object)
 }
 
 /**
+ * Collect all groups whose rights apply to given user: groups the user is a direct member of, groups
+ * containing those groups, and so on. Walks bottom-up from the user over a reverse "member -> containing
+ * groups" index built from current member lists, so each group is visited at most once regardless of how
+ * many paths lead to it. Mirrors Group::isMember() semantics: a disabled or deleted group neither grants
+ * rights nor propagates membership to groups containing it, and "Everyone" contains every user.
+ * Access to user database must be locked.
+ */
+static void CollectUserGroups(uint32_t userId, std::set<uint32_t>& groups)
+{
+   std::unordered_map<uint32_t, std::vector<uint32_t>> containers;
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
+   {
+      UserDatabaseObject *object = it.next();
+      if (!object->isGroup() || object->isDeleted() || object->isDisabled())
+         continue;
+
+      const IntegerArray<uint32_t>& members = static_cast<Group*>(object)->getMembers();
+      for(int i = 0; i < members.size(); i++)
+         containers[members.get(i)].push_back(object->getId());
+   }
+
+   UserDatabaseObject *everyone = s_userDatabase.get(GROUP_EVERYONE);
+   if ((everyone != nullptr) && !everyone->isDeleted() && !everyone->isDisabled())
+      groups.insert(GROUP_EVERYONE);
+
+   // "Everyone" is seeded even when disabled: Group::isMember() reports it as containing every user
+   // before checking the disabled flag, so groups nesting "Everyone" still contain every user
+   std::vector<uint32_t> queue;
+   queue.push_back(userId);
+   queue.push_back(GROUP_EVERYONE);
+   while(!queue.empty())
+   {
+      uint32_t id = queue.back();
+      queue.pop_back();
+
+      auto c = containers.find(id);
+      if (c == containers.end())
+         continue;
+
+      for(uint32_t groupId : c->second)
+      {
+         if (groups.insert(groupId).second)
+            queue.push_back(groupId);
+      }
+   }
+}
+
+/**
  * Get effective system rights for user
  */
 static uint64_t GetEffectiveSystemRights(User *user)
 {
    uint64_t systemRights = user->getSystemRights();
-   GroupSearchPath searchPath;
-   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
-   while(it.hasNext())
-   {
-      UserDatabaseObject *object = it.next();
-      if (object->isDeleted() || object->isDisabled() || !object->isGroup())
-         continue;
-
-      // The previous search path is checked to avoid performing a deep membership search again
-      if (searchPath.contains(object->getId()))
-      {
-         systemRights |= object->getSystemRights();
-         continue;
-      }
-
-      searchPath.clear();
-      if (static_cast<Group*>(object)->isMember(user->getId(), &searchPath))
-      {
-         systemRights |= object->getSystemRights();
-      }
-      else
-      {
-         searchPath.clear();
-      }
-   }
+   std::set<uint32_t> groups;
+   CollectUserGroups(user->getId(), groups);
+   for(uint32_t groupId : groups)
+      systemRights |= s_userDatabase.get(groupId)->getSystemRights();
    return systemRights;
 }
 
@@ -160,41 +191,16 @@ static String GetEffectiveUIAccessRules(User *user)
    if ((r != nullptr) && (*r != 0))
       uiAccessRules.append(r);
 
-   GroupSearchPath searchPath;
-   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
-   while(it.hasNext())
+   std::set<uint32_t> groups;
+   CollectUserGroups(user->getId(), groups);
+   for(uint32_t groupId : groups)
    {
-      UserDatabaseObject *object = it.next();
-      if (object->isDeleted() || object->isDisabled() || !object->isGroup())
-         continue;
-
-      // The previous search path is checked to avoid performing a deep membership search again
-      if (searchPath.contains(object->getId()))
+      r = s_userDatabase.get(groupId)->getUIAccessRules();
+      if ((r != nullptr) && (*r != 0))
       {
-         r = object->getUIAccessRules();
-         if ((r != nullptr) && (*r != 0))
-         {
-            if (!uiAccessRules.isEmpty())
-               uiAccessRules.append(_T(';'));
-            uiAccessRules.append(r);
-         }
-         continue;
-      }
-
-      searchPath.clear();
-      if (static_cast<Group*>(object)->isMember(user->getId(), &searchPath))
-      {
-         r = object->getUIAccessRules();
-         if ((r != nullptr) && (*r != 0))
-         {
-            if (!uiAccessRules.isEmpty())
-               uiAccessRules.append(_T(';'));
-            uiAccessRules.append(r);
-         }
-      }
-      else
-      {
-         searchPath.clear();
+         if (!uiAccessRules.isEmpty())
+            uiAccessRules.append(_T(';'));
+         uiAccessRules.append(r);
       }
    }
    return uiAccessRules;
