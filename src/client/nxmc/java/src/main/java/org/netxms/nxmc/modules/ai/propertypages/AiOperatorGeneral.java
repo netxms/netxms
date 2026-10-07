@@ -30,6 +30,7 @@ import org.netxms.nxmc.base.widgets.LabeledDurationInput;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.users.widgets.UserSelector;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -52,6 +53,7 @@ public class AiOperatorGeneral extends PropertyPage
    private LabeledSpinner spinnerRetentionDays;
    private LabeledSpinner spinnerMaxRecords;
    private LabeledText textPersonaPrompt;
+   private UserSelector ownerSelector;
    private Button checkEnabled;
 
    /**
@@ -104,6 +106,14 @@ public class AiOperatorGeneral extends PropertyPage
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalSpan = 2;
       textDescription.setLayoutData(gd);
+
+      ownerSelector = new UserSelector(dialogArea, SWT.NONE);
+      ownerSelector.setLabel(i18n.tr("Owner (account the operator runs as; <none> = default AI operator account)"));
+      if (operator.getOwnerUserId() != 0)
+         ownerSelector.setUserId(operator.getOwnerUserId());
+      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      gd.horizontalSpan = 2;
+      ownerSelector.setLayoutData(gd);
 
       textScopeFilter = new LabeledText(dialogArea, SWT.NONE);
       textScopeFilter.setLabel(i18n.tr("Scope filter (object names or IDs, empty for all accessible objects)"));
@@ -190,6 +200,8 @@ public class AiOperatorGeneral extends PropertyPage
 
       operator.setName(name);
       operator.setDescription(textDescription.getText().trim());
+      int ownerUserId = ownerSelector.getUserId();
+      operator.setOwnerUserId((ownerUserId > 0) ? ownerUserId : 0); // selector reports -1 or 0 for "<none>"
       operator.setScopeFilter(textScopeFilter.getText().trim());
       operator.setModelSlot(textModelSlot.getText().trim());
       operator.setMinInterval(minInterval.getValue());

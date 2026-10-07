@@ -13800,7 +13800,9 @@ components:
           description: Instance description
         ownerUserId:
           type: integer
-          description: ID of the user who created the instance
+          description: >-
+            ID of the owner user account. The instance executes with this account's rights:
+            tool calls and standing check scripts see exactly what this user can access.
         enabled:
           type: boolean
           description: True if the instance is enabled
@@ -13891,6 +13893,12 @@ components:
         description:
           type: string
           description: Instance description
+        ownerUserId:
+          type: integer
+          description: >-
+            Owner user account the instance executes as. Must be an existing, enabled user (not a group
+            or the system account) with the AI assistant access right. Defaults to the built-in
+            "ai-operator" account on creation.
         enabled:
           type: boolean
           description: Enable or disable the instance

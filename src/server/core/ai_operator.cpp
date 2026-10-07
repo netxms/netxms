@@ -65,6 +65,40 @@ static bool UpdateIntegerAttribute(json_t *config, const char *tag, uint32_t *at
 }
 
 /**
+ * Validate AI operator instance owner. Instance executes with owner's rights, so the owner must be an existing,
+ * enabled user account (never a group or the system account) holding the AI assistant access right.
+ * Returns RCC_SUCCESS, RCC_INVALID_USER_ID, or RCC_ACCOUNT_DISABLED.
+ */
+static uint32_t ValidateOwnerUserId(uint32_t userId)
+{
+   if ((userId == 0) || (userId & GROUP_FLAG))
+      return RCC_INVALID_USER_ID;
+
+   wchar_t loginName[MAX_USER_NAME];
+   uint64_t systemRights;
+   uint32_t rcc;
+   if (!ValidateUserId(userId, loginName, &systemRights, &rcc))
+      return rcc;
+   return (systemRights & SYSTEM_ACCESS_USE_AI_ASSISTANT) ? RCC_SUCCESS : RCC_INVALID_USER_ID;
+}
+
+/**
+ * Get default owner for new AI operator instances (out-of-band AI operator account).
+ * Returns INVALID_UID if the account does not exist.
+ */
+static uint32_t GetDefaultOwnerUserId()
+{
+   if (s_operatorUserId == INVALID_UID)
+   {
+      // Account could be created after server startup
+      s_operatorUserId = ResolveUserName(AI_OPERATOR_ACCOUNT_NAME);
+      if (s_operatorUserId != INVALID_UID)
+         nxlog_debug_tag(DEBUG_TAG, 2, L"AI operator account \"%s\" resolved to user ID %u", AI_OPERATOR_ACCOUNT_NAME, s_operatorUserId);
+   }
+   return s_operatorUserId;
+}
+
+/**
  * Create new AI operator instance
  */
 AIOperatorInstance::AIOperatorInstance(const wchar_t *name, uint32_t ownerUserId)
@@ -399,9 +433,14 @@ void AIOperatorInstance::execute()
       return;
    }
 
-   if ((GetEffectiveSystemRights(s_operatorUserId) & SYSTEM_ACCESS_USE_AI_ASSISTANT) == 0)
+   // Re-check that owner account is still valid: instance executes with owner's rights
+   uint32_t ownerRcc = ValidateOwnerUserId(m_ownerUserId);
+   if (ownerRcc != RCC_SUCCESS)
    {
-      handleFailure("AI operator account does not have AI assistant access right", now);
+      char error[128];
+      snprintf(error, 128, "Owner account [%u] %s", m_ownerUserId,
+         (ownerRcc == RCC_ACCOUNT_DISABLED) ? "is disabled" : "does not exist or does not have AI assistant access right");
+      handleFailure(error, now);
       logExecution('F', 0, 0, 0, m_lastExplanation);
       saveToDatabase();
       m_mutex.unlock();
@@ -482,10 +521,11 @@ void AIOperatorInstance::execute()
 
    char slot[64];
    strlcpy(slot, m_modelSlot, 64);
+   uint32_t ownerUserId = m_ownerUserId;
 
    m_mutex.unlock();
 
-   Chat chat(nullptr, nullptr, s_operatorUserId, systemPrompt.c_str(), false);
+   Chat chat(nullptr, nullptr, ownerUserId, systemPrompt.c_str(), false);
    chat.setOrigin(AIChatOrigin::AI_OPERATOR, m_id);
    if (slot[0] != 0)
       chat.setSlot(slot);
@@ -596,6 +636,16 @@ uint32_t AIOperatorInstance::modifyFromJSON(json_t *config)
    if (!json_object_update_boolean(config, "instructionsLocked", &instructionsLocked))
       return RCC_INVALID_ARGUMENT;
 
+   uint32_t ownerUserId = m_ownerUserId;
+   if (!UpdateIntegerAttribute(config, "ownerUserId", &ownerUserId))
+      return RCC_INVALID_ARGUMENT;
+   if (ownerUserId != m_ownerUserId)
+   {
+      uint32_t rcc = ValidateOwnerUserId(ownerUserId);
+      if (rcc != RCC_SUCCESS)
+         return rcc;
+   }
+
    char modelSlot[64];
    memcpy(modelSlot, m_modelSlot, sizeof(modelSlot));
    uint32_t minInterval = m_minInterval;
@@ -632,6 +682,11 @@ uint32_t AIOperatorInstance::modifyFromJSON(json_t *config)
    m_instructionsLocked = instructionsLocked;
    if (instructions != nullptr)
       setInstructions(json_is_string(instructions) ? json_string_value(instructions) : "", time(nullptr));
+   if (ownerUserId != m_ownerUserId)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"AI operator [%u] \"%s\" owner changed from user [%u] to user [%u]", m_id, m_name, m_ownerUserId, ownerUserId);
+      m_ownerUserId = ownerUserId;
+   }
    memcpy(m_modelSlot, modelSlot, sizeof(m_modelSlot));
    m_minInterval = minInterval;
    m_maxInterval = maxInterval;
@@ -765,18 +820,29 @@ void AIOperatorInstance::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 /**
  * Create AI operator instance from JSON configuration
  */
-uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t ownerUserId, uint32_t *instanceId)
+uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t *instanceId)
 {
    const char *name = json_object_get_string_utf8(config, "name", nullptr);
    if ((name == nullptr) || (*name == 0))
       return RCC_INVALID_ARGUMENT;
+
+   // Owner defaults to the out-of-band AI operator account when not given explicitly
+   uint32_t ownerUserId = GetDefaultOwnerUserId();
+   if (!UpdateIntegerAttribute(config, "ownerUserId", &ownerUserId))
+      return RCC_INVALID_ARGUMENT;
+   uint32_t rcc = ValidateOwnerUserId(ownerUserId);
+   if (rcc != RCC_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Cannot create AI operator instance \"%hs\": owner user [%u] is not valid (RCC=%u)", name, ownerUserId, rcc);
+      return rcc;
+   }
 
    wchar_t wname[64];
    utf8_to_wchar(name, -1, wname, 64);
    wname[63] = 0;
 
    shared_ptr<AIOperatorInstance> instance = make_shared<AIOperatorInstance>(wname, ownerUserId);
-   uint32_t rcc = instance->modifyFromJSON(config);
+   rcc = instance->modifyFromJSON(config);
    if (rcc != RCC_SUCCESS)
    {
       // Instructions history record could be written before instance record save failed
@@ -1193,10 +1259,10 @@ static void AbortCheckRun(const shared_ptr<AICheckRunToken>& token)
 }
 
 /**
- * Execute compiled standing check script under the AI operator account's security context.
+ * Execute compiled standing check script under the security context of given user (owner of the AI operator instance).
  * Must not be called with instance lock held.
  */
-static AICheckResult ExecuteCheckScript(const shared_ptr<NXSL_Program>& program, uint32_t objectId, const wchar_t *checkName, uint32_t timeLimit)
+static AICheckResult ExecuteCheckScript(const shared_ptr<NXSL_Program>& program, uint32_t objectId, const wchar_t *checkName, uint32_t timeLimit, uint32_t userId)
 {
    AICheckResult result;
 
@@ -1228,7 +1294,7 @@ static AICheckResult ExecuteCheckScript(const shared_ptr<NXSL_Program>& program,
       SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
    else
       vm->setGlobalVariable("$object", vm->createValue());
-   vm->setSecurityContext(new NXSL_UserSecurityContext(s_operatorUserId));
+   vm->setSecurityContext(new NXSL_UserSecurityContext(userId));
 
    auto token = make_shared<AICheckRunToken>(vm);
    if (timeLimit > 0)
@@ -1444,7 +1510,7 @@ bool AIOperatorCheck::recordRun(time_t now, const AICheckResult& result, AICheck
  * Modify standing check from JSON configuration. Compiles the source before committing any change,
  * so a rejected request never leaves the check partially modified.
  */
-uint32_t AIOperatorCheck::modifyFromJSON(json_t *config, bool byModel, MutableString *errorText)
+uint32_t AIOperatorCheck::modifyFromJSON(json_t *config, bool byModel, uint32_t ownerUserId, MutableString *errorText)
 {
    if (byModel && m_locked)
    {
@@ -1548,7 +1614,7 @@ uint32_t AIOperatorCheck::modifyFromJSON(json_t *config, bool byModel, MutableSt
       return RCC_INVALID_ARGUMENT;
    }
 
-   // Bound object must exist and be readable by the AI operator account, so that the script sees
+   // Bound object must exist and be readable by the instance owner, so that the script sees
    // exactly what the operator's tool calls see
    if ((objectId != 0) && (objectId != m_objectId))
    {
@@ -1558,9 +1624,9 @@ uint32_t AIOperatorCheck::modifyFromJSON(json_t *config, bool byModel, MutableSt
          SetErrorText(errorText, L"object does not exist");
          return RCC_INVALID_ARGUMENT;
       }
-      if ((s_operatorUserId != INVALID_UID) && !object->checkAccessRights(s_operatorUserId, OBJECT_ACCESS_READ))
+      if (!object->checkAccessRights(ownerUserId, OBJECT_ACCESS_READ))
       {
-         SetErrorText(errorText, L"AI operator account has no read access to object");
+         SetErrorText(errorText, L"owner account of the AI operator instance has no read access to object");
          return RCC_INVALID_ARGUMENT;
       }
    }
@@ -1584,6 +1650,10 @@ uint32_t AIOperatorCheck::modifyFromJSON(json_t *config, bool byModel, MutableSt
       m_program = shared_ptr<NXSL_Program>(program);
       m_compileError = L"";
    }
+   // Error counter is restarted when the script changes or a check disabled after repeated errors is enabled again,
+   // otherwise a single new error would disable it immediately
+   if ((source != nullptr) || (enabled && !m_enabled))
+      m_consecutiveErrors = 0;
    m_interval = interval;
    m_objectId = objectId;
    m_action = action;
@@ -1808,7 +1878,7 @@ uint32_t AIOperatorInstance::createCheck(json_t *config, bool byModel, uint32_t 
    }
 
    shared_ptr<AIOperatorCheck> check = make_shared<AIOperatorCheck>(m_id, byModel);
-   uint32_t rcc = check->modifyFromJSON(config, byModel, errorText);
+   uint32_t rcc = check->modifyFromJSON(config, byModel, m_ownerUserId, errorText);
    if (rcc != RCC_SUCCESS)
       return rcc;
 
@@ -1835,7 +1905,7 @@ uint32_t AIOperatorInstance::modifyCheck(uint32_t checkId, json_t *config, bool 
       return RCC_NO_SUCH_RECORD;
 
    AIOperatorCheck *check = m_checks.get(index);
-   uint32_t rcc = check->modifyFromJSON(config, byModel, errorText);
+   uint32_t rcc = check->modifyFromJSON(config, byModel, m_ownerUserId, errorText);
    if (rcc != RCC_SUCCESS)
       return rcc;
 
@@ -1875,22 +1945,40 @@ uint32_t AIOperatorInstance::deleteCheck(uint32_t checkId, bool byModel)
 }
 
 /**
- * Get standing check by ID
+ * Serialize standing check to JSON. Returns nullptr if check does not exist.
  */
-shared_ptr<AIOperatorCheck> AIOperatorInstance::getCheck(uint32_t checkId) const
+json_t *AIOperatorInstance::getCheckAsJson(uint32_t checkId) const
 {
    LockGuard lockGuard(m_mutex);
    int index = findCheckIndex(checkId);
-   return (index != -1) ? m_checks.getShared(index) : shared_ptr<AIOperatorCheck>();
+   return (index != -1) ? m_checks.get(index)->toJson() : nullptr;
 }
 
 /**
- * Get all standing checks
+ * Serialize all standing checks to JSON array
  */
-void AIOperatorInstance::getChecks(SharedObjectArray<AIOperatorCheck> *checks) const
+json_t *AIOperatorInstance::getChecksAsJson() const
 {
    LockGuard lockGuard(m_mutex);
-   checks->addAll(m_checks);
+   json_t *output = json_array();
+   for(int i = 0; i < m_checks.size(); i++)
+      json_array_append_new(output, m_checks.get(i)->toJson());
+   return output;
+}
+
+/**
+ * Fill NXCP message with all standing checks
+ */
+void AIOperatorInstance::fillCheckListMessage(NXCPMessage *msg) const
+{
+   LockGuard lockGuard(m_mutex);
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < m_checks.size(); i++)
+   {
+      m_checks.get(i)->fillMessage(msg, fieldId);
+      fieldId += 30;
+   }
+   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(m_checks.size()));
 }
 
 /**
@@ -1952,6 +2040,7 @@ void AIOperatorInstance::runCheck(shared_ptr<AIOperatorCheck> check)
    shared_ptr<NXSL_Program> program = check->getProgram();
    String compileError = check->getCompileError();
    uint32_t objectId = check->getObjectId();
+   uint32_t ownerUserId = m_ownerUserId;
    wchar_t checkName[64];
    wcscpy(checkName, check->getName());
    m_mutex.unlock();
@@ -1959,7 +2048,7 @@ void AIOperatorInstance::runCheck(shared_ptr<AIOperatorCheck> check)
    AICheckResult result;
    if (program != nullptr)
    {
-      result = ExecuteCheckScript(program, objectId, checkName, timeLimit);
+      result = ExecuteCheckScript(program, objectId, checkName, timeLimit, ownerUserId);
    }
    else
    {
@@ -2112,12 +2201,12 @@ uint32_t NXCORE_EXPORTABLE DeleteAIOperatorCheck(uint32_t instanceId, uint32_t c
 }
 
 /**
- * Get standing check of AI operator instance
+ * Get standing check of AI operator instance as JSON object
  */
-shared_ptr<AIOperatorCheck> NXCORE_EXPORTABLE GetAIOperatorCheck(uint32_t instanceId, uint32_t checkId)
+json_t NXCORE_EXPORTABLE *GetAIOperatorCheckAsJson(uint32_t instanceId, uint32_t checkId)
 {
    shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
-   return (instance != nullptr) ? instance->getCheck(checkId) : shared_ptr<AIOperatorCheck>();
+   return (instance != nullptr) ? instance->getCheckAsJson(checkId) : nullptr;
 }
 
 /**
@@ -2126,16 +2215,7 @@ shared_ptr<AIOperatorCheck> NXCORE_EXPORTABLE GetAIOperatorCheck(uint32_t instan
 json_t NXCORE_EXPORTABLE *GetAIOperatorChecksAsJson(uint32_t instanceId)
 {
    shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
-   if (instance == nullptr)
-      return nullptr;
-
-   SharedObjectArray<AIOperatorCheck> checks;
-   instance->getChecks(&checks);
-
-   json_t *output = json_array();
-   for(int i = 0; i < checks.size(); i++)
-      json_array_append_new(output, checks.get(i)->toJson());
-   return output;
+   return (instance != nullptr) ? instance->getChecksAsJson() : nullptr;
 }
 
 /**
@@ -2146,17 +2226,7 @@ uint32_t FillAIOperatorCheckListMessage(uint32_t instanceId, NXCPMessage *msg)
    shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
    if (instance == nullptr)
       return RCC_INVALID_TASK_ID;
-
-   SharedObjectArray<AIOperatorCheck> checks;
-   instance->getChecks(&checks);
-
-   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
-   for(int i = 0; i < checks.size(); i++)
-   {
-      checks.get(i)->fillMessage(msg, fieldId);
-      fieldId += 30;
-   }
-   msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(checks.size()));
+   instance->fillCheckListMessage(msg);
    return RCC_SUCCESS;
 }
 
@@ -2433,7 +2503,7 @@ static std::string F_TestCheck(json_t *arguments, uint32_t userId)
    if (program == nullptr)
       return CheckRccToMessage(RCC_NXSL_COMPILATION_ERROR, errorText);
 
-   AICheckResult result = ExecuteCheckScript(shared_ptr<NXSL_Program>(program), objectId, L"test", ConfigReadULong(L"AIOperator.Checks.ExecutionTimeLimit", 10));
+   AICheckResult result = ExecuteCheckScript(shared_ptr<NXSL_Program>(program), objectId, L"test", ConfigReadULong(L"AIOperator.Checks.ExecutionTimeLimit", 10), userId);
 
    std::string output("verdict=");
    output.append(VerdictToName(result.verdict));
@@ -2530,21 +2600,15 @@ static void AIOperatorSchedulerThread()
       if (!ConfigReadBoolean(L"AIOperator.Enabled", true))
          continue;
 
-      if (s_operatorUserId == INVALID_UID)
-      {
-         // Account could be created after server startup
-         s_operatorUserId = ResolveUserName(AI_OPERATOR_ACCOUNT_NAME);
-         if (s_operatorUserId == INVALID_UID)
-            continue;
-         nxlog_debug_tag(DEBUG_TAG, 2, L"AI operator account \"%s\" resolved to user ID %u", AI_OPERATOR_ACCOUNT_NAME, s_operatorUserId);
-      }
-
       time_t now = time(nullptr);
+      time_t interruptCooldown = ConfigReadULong(L"AIOperator.InterruptCooldown", 60);
       std::vector<shared_ptr<AIOperatorInstance>> instancesToExecute;
       std::vector<std::pair<shared_ptr<AIOperatorInstance>, shared_ptr<AIOperatorCheck>>> checksToRun;
 
       // Mark selected instances and checks as executing at enqueue time to prevent double dispatch.
-      // An instance with pending check interrupts is due regardless of its next execution time.
+      // An instance with pending check interrupts is due regardless of its next execution time, but not
+      // sooner than the interrupt cooldown after its last iteration; interrupts arriving inside the cooldown
+      // stay queued and are consumed by the next dispatch.
       s_instancesLock.lock();
       for(const shared_ptr<AIOperatorInstance>& instance : s_instances)
       {
@@ -2555,7 +2619,9 @@ static void AIOperatorSchedulerThread()
             continue;
          }
 
-         if (!instance->isExecuting() && ((instance->getNextExecutionTime() <= now) || instance->hasPendingInterrupts()))
+         if (!instance->isExecuting() &&
+             ((instance->getNextExecutionTime() <= now) ||
+              (instance->hasPendingInterrupts() && (now - instance->getLastExecutionTime() >= interruptCooldown))))
          {
             instance->setExecuting();
             instancesToExecute.push_back(instance);
@@ -2630,7 +2696,7 @@ void InitAIOperators()
    s_instanceId = ConfigReadInt(L"AIOperator.LastInstanceId", 0);
    s_operatorUserId = ResolveUserName(AI_OPERATOR_ACCOUNT_NAME);
    if (s_operatorUserId == INVALID_UID)
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"AI operator account \"%s\" not found, AI operator instances will not be executed", AI_OPERATOR_ACCOUNT_NAME);
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"AI operator account \"%s\" not found, new AI operator instances must be assigned an owner explicitly", AI_OPERATOR_ACCOUNT_NAME);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 

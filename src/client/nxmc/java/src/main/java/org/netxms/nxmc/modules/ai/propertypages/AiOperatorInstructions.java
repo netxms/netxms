@@ -188,7 +188,7 @@ public class AiOperatorInstructions extends PropertyPage
     */
    private void loadHistory()
    {
-      new Job(i18n.tr("Loading standing instructions history"), null) {
+      new Job(i18n.tr("Loading standing instructions history"), null, getMessageArea(false)) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

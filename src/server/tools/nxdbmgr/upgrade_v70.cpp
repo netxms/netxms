@@ -165,6 +165,47 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.49 to 70.50
+ */
+static bool H_UpgradeFromV49()
+{
+   // AI operator instances now execute with their owner's rights. Previously owner_user_id only recorded the creating
+   // user, so all existing instances are reassigned to the built-in AI operator account. If that account is missing,
+   // owner is set to 0 (invalid) and the instances fail validation at execution time instead of running as the creator.
+   uint32_t ownerId = 0;
+   DB_RESULT hResult = SQLSelect(L"SELECT id FROM users WHERE name='ai-operator'");
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         ownerId = DBGetFieldUInt32(hResult, 0, 0);
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+
+   wchar_t query[128];
+   nx_swprintf(query, 128, L"UPDATE ai_operator_instances SET owner_user_id=%u", ownerId);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetMinorSchemaVersion(50));
+   return true;
+}
+
+/**
+ * Upgrade from 70.48 to 70.49
+ */
+static bool H_UpgradeFromV48()
+{
+   CHK_EXEC(CreateConfigParam(L"AIOperator.InterruptCooldown", L"60",
+      L"Minimum time between an AI operator instance iteration and the next iteration started by a fired standing check with 'wake' action. Interrupts arriving sooner are queued until it elapses.",
+      L"seconds", 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(49));
+   return true;
+}
+
+/**
  * Upgrade from 70.47 to 70.48
  */
 static bool H_UpgradeFromV47()
@@ -1649,6 +1690,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 49, 70, 50, H_UpgradeFromV49 },
+   { 48, 70, 49, H_UpgradeFromV48 },
    { 47, 70, 48, H_UpgradeFromV47 },
    { 46, 70, 47, H_UpgradeFromV46 },
    { 45, 70, 46, H_UpgradeFromV45 },

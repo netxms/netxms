@@ -315,11 +315,12 @@ public:
     */
    bool recordRun(time_t now, const AICheckResult& result, AICheckTransition transition);
 
-   uint32_t modifyFromJSON(json_t *config, bool byModel, MutableString *errorText);
+   uint32_t modifyFromJSON(json_t *config, bool byModel, uint32_t ownerUserId, MutableString *errorText);
 
    bool saveToDatabase() const;
    void deleteFromDatabase();
 
+   // Serialization reads mutable string members, so it must be called with the owning instance's lock held
    json_t *toJson() const;
    json_t *toPromptJson() const;
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
@@ -346,7 +347,7 @@ private:
    mutable Mutex m_mutex;
    wchar_t m_name[64];
    MutableString m_description;
-   uint32_t m_ownerUserId;
+   uint32_t m_ownerUserId;    // Account the instance executes as; bounds tool calls and check scripts
    bool m_enabled;
    std::string m_scopeFilter;
    char m_modelSlot[64];
@@ -430,8 +431,9 @@ public:
    uint32_t createCheck(json_t *config, bool byModel, uint32_t *checkId, MutableString *errorText);
    uint32_t modifyCheck(uint32_t checkId, json_t *config, bool byModel, MutableString *errorText);
    uint32_t deleteCheck(uint32_t checkId, bool byModel);
-   shared_ptr<AIOperatorCheck> getCheck(uint32_t checkId) const;
-   void getChecks(SharedObjectArray<AIOperatorCheck> *checks) const;
+   json_t *getCheckAsJson(uint32_t checkId) const;   // returns nullptr if check does not exist
+   json_t *getChecksAsJson() const;
+   void fillCheckListMessage(NXCPMessage *msg) const;
    int getCheckCount(int *enabledCount) const;
    void loadCheck(const shared_ptr<AIOperatorCheck>& check) { m_checks.add(check); }  // startup only, no locking
    void collectDueChecks(time_t now, std::vector<shared_ptr<AIOperatorCheck>> *checks);
@@ -451,8 +453,9 @@ void InitAIOperators();
 
 /**
  * Create AI operator instance from JSON configuration. Instance ID is returned via instanceId.
+ * Owner defaults to the out-of-band AI operator account unless "ownerUserId" is given in configuration.
  */
-uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t ownerUserId, uint32_t *instanceId);
+uint32_t NXCORE_EXPORTABLE CreateAIOperatorInstance(json_t *config, uint32_t *instanceId);
 
 /**
  * Modify AI operator instance from JSON configuration
@@ -511,9 +514,10 @@ uint32_t NXCORE_EXPORTABLE ModifyAIOperatorCheck(uint32_t instanceId, uint32_t c
 uint32_t NXCORE_EXPORTABLE DeleteAIOperatorCheck(uint32_t instanceId, uint32_t checkId, bool byModel);
 
 /**
- * Get standing check of AI operator instance
+ * Get standing check of AI operator instance as JSON object (caller must call json_decref on result).
+ * Returns nullptr if instance or check does not exist.
  */
-shared_ptr<AIOperatorCheck> NXCORE_EXPORTABLE GetAIOperatorCheck(uint32_t instanceId, uint32_t checkId);
+json_t NXCORE_EXPORTABLE *GetAIOperatorCheckAsJson(uint32_t instanceId, uint32_t checkId);
 
 /**
  * Get standing checks of AI operator instance as JSON array (caller must call json_decref on result).

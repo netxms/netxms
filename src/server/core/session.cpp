@@ -21214,6 +21214,7 @@ void ClientSession::getAiOperators(const NXCPMessage& request)
  * VID_MAX_RECORDS      Observation record cap, 0 = server default (optional)
  * VID_INSTRUCTIONS     Standing instructions (optional)
  * VID_LOCKED           Standing instructions lock flag (optional)
+ * VID_USER_ID          Owner user ID - account the instance executes as (optional, defaults to AI operator account on create)
  *
  * Return values:
  * VID_RCC              Request completion code
@@ -21260,16 +21261,21 @@ void ClientSession::modifyAiOperator(const NXCPMessage& request)
          json_object_set_new(config, "observationRetentionDays", json_integer(request.getFieldAsUInt32(VID_RETENTION_TIME)));
       if (request.isFieldExist(VID_MAX_RECORDS))
          json_object_set_new(config, "observationMaxRecords", json_integer(request.getFieldAsUInt32(VID_MAX_RECORDS)));
+      bool ownerGiven = request.isFieldExist(VID_USER_ID);
+      if (ownerGiven)
+         json_object_set_new(config, "ownerUserId", json_integer(request.getFieldAsUInt32(VID_USER_ID)));
 
       uint32_t instanceId = request.getFieldAsUInt32(VID_AI_OPERATOR_ID);
       bool create = (instanceId == 0);
-      uint32_t rcc = create ? CreateAIOperatorInstance(config, m_userId, &instanceId) : ModifyAIOperatorInstance(instanceId, config);
+      uint32_t rcc = create ? CreateAIOperatorInstance(config, &instanceId) : ModifyAIOperatorInstance(instanceId, config);
       json_decref(config);
       response.setField(VID_RCC, rcc);
       if (rcc == RCC_SUCCESS)
       {
          response.setField(VID_AI_OPERATOR_ID, instanceId);
          writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] %s", instanceId, create ? L"created" : L"modified");
+         if (ownerGiven)
+            writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] owner set to user [%u]", instanceId, request.getFieldAsUInt32(VID_USER_ID));
       }
    }
    else

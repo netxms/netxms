@@ -41,6 +41,12 @@ static int MapAIOperatorRCC(Context *context, uint32_t rcc)
       case RCC_INVALID_ARGUMENT:
          context->setErrorResponse("Invalid configuration");
          return 400;
+      case RCC_INVALID_USER_ID:
+         context->setErrorResponse("Invalid owner: user does not exist, is a group or the system account, or has no AI assistant access right");
+         return 400;
+      case RCC_ACCOUNT_DISABLED:
+         context->setErrorResponse("Invalid owner: user account is disabled");
+         return 400;
       default:
          context->setErrorResponse("Internal server error");
          return 500;
@@ -80,11 +86,13 @@ int H_AiOperatorCreate(Context *context)
    }
 
    uint32_t instanceId;
-   uint32_t rcc = CreateAIOperatorInstance(request, context->getUserId(), &instanceId);
+   uint32_t rcc = CreateAIOperatorInstance(request, &instanceId);
    if (rcc != RCC_SUCCESS)
       return MapAIOperatorRCC(context, rcc);
 
    context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] created", instanceId);
+   if (json_object_get(request, "ownerUserId") != nullptr)
+      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] owner set to user [%u]", instanceId, json_object_get_uint32(request, "ownerUserId", 0));
 
    shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
    if (instance == nullptr)   // deleted concurrently
@@ -140,6 +148,8 @@ int H_AiOperatorUpdate(Context *context)
       return MapAIOperatorRCC(context, rcc);
 
    context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] modified", instanceId);
+   if (json_object_get(request, "ownerUserId") != nullptr)
+      context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"AI operator instance [%u] owner set to user [%u]", instanceId, json_object_get_uint32(request, "ownerUserId", 0));
 
    shared_ptr<AIOperatorInstance> instance = GetAIOperatorInstance(instanceId);
    if (instance == nullptr)   // deleted concurrently
@@ -280,10 +290,9 @@ int H_AiOperatorCheckCreate(Context *context)
 
    context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Standing check [%u] of AI operator instance [%u] created", checkId, instanceId);
 
-   shared_ptr<AIOperatorCheck> check = GetAIOperatorCheck(instanceId, checkId);
-   if (check == nullptr)   // deleted concurrently
+   json_t *output = GetAIOperatorCheckAsJson(instanceId, checkId);
+   if (output == nullptr)   // deleted concurrently
       return 201;
-   json_t *output = check->toJson();
    context->setResponseData(output);
    json_decref(output);
    return 201;
@@ -297,14 +306,13 @@ int H_AiOperatorCheckDetails(Context *context)
    if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_AI_OPERATORS))
       return 403;
 
-   shared_ptr<AIOperatorCheck> check = GetAIOperatorCheck(context->getPlaceholderValueAsUInt32(L"operator-id"), context->getPlaceholderValueAsUInt32(L"check-id"));
-   if (check == nullptr)
+   json_t *output = GetAIOperatorCheckAsJson(context->getPlaceholderValueAsUInt32(L"operator-id"), context->getPlaceholderValueAsUInt32(L"check-id"));
+   if (output == nullptr)
    {
       context->setErrorResponse("Standing check not found");
       return 404;
    }
 
-   json_t *output = check->toJson();
    context->setResponseData(output);
    json_decref(output);
    return 200;
@@ -337,13 +345,12 @@ int H_AiOperatorCheckUpdate(Context *context)
 
    context->writeAuditLog(AUDIT_SYSCFG, true, 0, L"Standing check [%u] of AI operator instance [%u] modified", checkId, instanceId);
 
-   shared_ptr<AIOperatorCheck> check = GetAIOperatorCheck(instanceId, checkId);
-   if (check == nullptr)   // deleted concurrently
+   json_t *output = GetAIOperatorCheckAsJson(instanceId, checkId);
+   if (output == nullptr)   // deleted concurrently
    {
       context->setErrorResponse("Standing check not found");
       return 404;
    }
-   json_t *output = check->toJson();
    context->setResponseData(output);
    json_decref(output);
    return 200;

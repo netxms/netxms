@@ -240,7 +240,7 @@ public class AiOperatorChecks extends PropertyPage
     */
    private void refresh()
    {
-      new Job(i18n.tr("Loading standing checks"), null) {
+      new Job(i18n.tr("Loading standing checks"), null, getMessageArea(false)) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -304,7 +304,7 @@ public class AiOperatorChecks extends PropertyPage
     */
    private void saveCheck(final AiOperatorCheck check)
    {
-      new Job(i18n.tr("Saving standing check"), null) {
+      new Job(i18n.tr("Saving standing check"), null, getMessageArea(false)) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -333,7 +333,7 @@ public class AiOperatorChecks extends PropertyPage
          return;
 
       final Object[] objects = selection.toArray();
-      new Job(i18n.tr("Deleting standing checks"), null) {
+      new Job(i18n.tr("Deleting standing checks"), null, getMessageArea(false)) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

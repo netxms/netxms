@@ -155,6 +155,8 @@ public class AiOperator
       msg.setField(NXCPCodes.VID_PROMPT, personaPrompt);
       msg.setFieldInt32(NXCPCodes.VID_RETENTION_TIME, observationRetentionDays);
       msg.setFieldInt32(NXCPCodes.VID_MAX_RECORDS, observationMaxRecords);
+      if (ownerUserId != 0) // 0 is not a valid owner: omitted means "server default" on create and "keep current" on modify
+         msg.setFieldInt32(NXCPCodes.VID_USER_ID, ownerUserId);
       if (instructionsModified)
          msg.setField(NXCPCodes.VID_INSTRUCTIONS, instructions);
       msg.setField(NXCPCodes.VID_LOCKED, instructionsLocked);
@@ -201,11 +203,22 @@ public class AiOperator
    }
 
    /**
-    * @return the ownerUserId
+    * @return ID of the owner user account the instance executes as
     */
    public int getOwnerUserId()
    {
       return ownerUserId;
+   }
+
+   /**
+    * Set owner user account the instance executes as. Value 0 is not sent to the server: on create the server assigns the
+    * default AI operator account, on modify the current owner is kept.
+    *
+    * @param ownerUserId owner user ID
+    */
+   public void setOwnerUserId(int ownerUserId)
+   {
+      this.ownerUserId = ownerUserId;
    }
 
    /**
