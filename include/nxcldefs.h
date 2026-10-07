@@ -1163,6 +1163,7 @@ enum HistoricalDataType
 #define DCF_UNSUPPORTED_AS_ERROR     ((uint32_t)0x080000)
 #define DCF_USE_SNMP_MIB_ENUM        ((uint32_t)0x100000)
 #define DCF_ADD_INSTANCE_OID_COLUMN  ((uint32_t)0x200000)
+#define DCF_TEMPLATE_OVERRIDE        ((uint32_t)0x400000)
 
 /**
  * DCI state flags

@@ -1293,6 +1293,13 @@ void DCObject::updateFromTemplate(DCObject *src)
 {
    lock();
 
+   if (m_flags & DCF_TEMPLATE_OVERRIDE)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 5, _T("DCObject::updateFromTemplate(%u): skipped, template override flag set"), m_id);
+      unlock();
+      return;
+   }
+
    // Capture old storage class before updating retention settings
    DCObjectStorageClass oldStorageClass = getStorageClass();
 
@@ -1318,7 +1325,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    }
 
    m_source = src->m_source;
-   m_flags = src->m_flags;
+   m_flags = src->m_flags & ~DCF_TEMPLATE_OVERRIDE;   // override flag is meaningful only on target side
    m_sourceNode = src->m_sourceNode;
    m_resourceId = src->m_resourceId;
    m_snmpPort = src->m_snmpPort;

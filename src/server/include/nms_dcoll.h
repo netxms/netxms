@@ -490,6 +490,7 @@ public:
    bool isAggregateWithErrors() const { return (m_flags & DCF_AGGREGATE_WITH_ERRORS) ? true : false; }
    bool isStoreChangesOnly() const { return (m_flags & DCF_STORE_CHANGES_ONLY) ? true : false; }
    bool isUnsupportedAsError() const { return (m_flags & DCF_UNSUPPORTED_AS_ERROR) ? true : false; }
+   bool isTemplateOverride() const { return (m_flags & DCF_TEMPLATE_OVERRIDE) ? true : false; }
    bool isAdvancedSchedule() const { return m_pollingScheduleType == DC_POLLING_SCHEDULE_ADVANCED; }
    int getAggregationFunction() const { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    DCObjectStorageClass getStorageClass() const { return (m_retentionType == DC_RETENTION_CUSTOM) ? storageClassFromRetentionTime(m_retentionTime) : DCObjectStorageClass::DEFAULT; }
@@ -511,7 +512,13 @@ public:
    void setBusyFlag() { m_busy = 1; }
    void clearBusyFlag();
    void setNextPollTime(time_t t) { m_nextPollTime = t; }
-   void setTemplateId(uint32_t templateId, uint32_t dwItemId) { m_templateId = templateId; m_templateItemId = dwItemId; }
+   void setTemplateId(uint32_t templateId, uint32_t dwItemId)
+   {
+      m_templateId = templateId;
+      m_templateItemId = dwItemId;
+      if (templateId == 0)
+         m_flags &= ~DCF_TEMPLATE_OVERRIDE;   // override only makes sense while linked to template
+   }
    void updateTimeIntervals() { lock(); updateTimeIntervalsInternal(); unlock(); }
    void fillSchedulingDataMessage(NXCPMessage *msg, uint32_t base) const;
 

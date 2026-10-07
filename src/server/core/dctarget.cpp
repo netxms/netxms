@@ -941,6 +941,7 @@ bool DataCollectionTarget::applyTemplateItem(uint32_t templateId, DCObject *dcOb
    {
       // New item from template, just add it
 		DCObject *newObject = dcObject->clone();
+      newObject->clearFlag(DCF_TEMPLATE_OVERRIDE);  // override is a target-side setting, never inherited from template
       newObject->setTemplateId(templateId, dcObject->getId());
       newObject->changeBinding(CreateUniqueId(IDG_ITEM), self(), true);
       bResult = addDCObject(newObject, true);
@@ -967,30 +968,50 @@ bool DataCollectionTarget::applyTemplateItem(uint32_t templateId, DCObject *dcOb
 /**
  * Clean deleted template items from target's DCI list
  * Arguments is template id and list of valid template item ids.
- * all items related to given template and not presented in list should be deleted.
+ * all items related to given template and not presented in list should be deleted,
+ * except items with template override flag set - those are kept as standalone DCIs.
  */
 void DataCollectionTarget::cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList)
 {
    writeLockDciAccess();  // write lock
 
+   bool detached = false;
    IntegerArray<uint32_t> deleteList;
    for(int i = 0; i < m_dcObjects.size(); i++)
-      if (m_dcObjects.get(i)->getTemplateId() == templateId)
-      {
-         int j;
-         for(j = 0; j < dciList.size(); j++)
-            if (m_dcObjects.get(i)->getTemplateItemId() == dciList.get(j))
-               break;
+   {
+      DCObject *dco = m_dcObjects.get(i);
+      if (dco->getTemplateId() != templateId)
+         continue;
 
-         // Delete DCI if it's not in list
-         if (j == dciList.size())
-            deleteList.add(m_dcObjects.get(i)->getId());
+      int j;
+      for(j = 0; j < dciList.size(); j++)
+         if (dco->getTemplateItemId() == dciList.get(j))
+            break;
+
+      if (j == dciList.size())
+      {
+         if (dco->isTemplateOverride())
+         {
+            nxlog_debug_tag(DEBUG_TAG_DC_TEMPLATES, 5, _T("DataCollectionTarget::cleanDeletedTemplateItems(%s [%u]): DCI \"%s\" [%u] has template override flag, kept as standalone"),
+                  m_name, m_id, dco->getName().cstr(), dco->getId());
+            dco->setTemplateId(0, 0);
+            NotifyClientsOnDCIUpdate(*this, dco);
+            detached = true;
+         }
+         else
+         {
+            deleteList.add(dco->getId());
+         }
       }
+   }
 
    for(int i = 0; i < deleteList.size(); i++)
       deleteDCObject(deleteList.get(i), false);
 
    unlockDciAccess();
+
+   if (detached)
+      setModified(MODIFY_DATA_COLLECTION, false);
 }
 
 /**
@@ -3127,6 +3148,7 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const Insta
 
    DCObject *dco = root->clone();
 
+   dco->clearFlag(DCF_TEMPLATE_OVERRIDE);  // instance DCI follows its root even if root itself is overridden
    dco->setTemplateId(object->getId(), root->getId());
    dco->setInstanceName(value->getInstanceName());
    dco->setInstanceDiscoveryMethod(IDM_NONE);

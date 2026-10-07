@@ -1262,6 +1262,8 @@ void DCTable::updateResultColumns(const shared_ptr<Table>& t) const
 void DCTable::updateFromTemplate(DCObject *src)
 {
 	DCObject::updateFromTemplate(src);
+   if (isTemplateOverride())
+      return;  // local changes protected, columns and thresholds must not be touched either
 
 	if (src->getType() != DCO_TYPE_TABLE)
 	{

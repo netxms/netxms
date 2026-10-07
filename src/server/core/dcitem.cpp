@@ -3039,6 +3039,8 @@ bool DCItem::deleteEntry(Timestamp timestamp)
 void DCItem::updateFromTemplate(DCObject *src)
 {
 	DCObject::updateFromTemplate(src);
+   if (isTemplateOverride())
+      return;  // local changes protected, thresholds must not be touched either
 
 	if (src->getType() != DCO_TYPE_ITEM)
 	{

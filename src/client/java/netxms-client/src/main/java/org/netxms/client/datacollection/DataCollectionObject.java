@@ -47,6 +47,7 @@ public abstract class DataCollectionObject
    public static final int DCF_AGGREGATE_WITH_ERRORS    = 0x004000;
    public static final int DCF_HIDE_ON_LAST_VALUES_PAGE = 0x008000;
    public static final int DCF_UNSUPPORTED_AS_ERROR     = 0x080000;
+   public static final int DCF_TEMPLATE_OVERRIDE        = 0x400000;
 
    // Instance discovery methods
    public static final int IDM_NONE = 0;
@@ -846,6 +847,30 @@ public abstract class DataCollectionObject
    public boolean isTransformAggregated()
    {
       return (flags & DCF_TRANSFORM_AGGREGATED) != 0;
+   }
+
+   /**
+    * Check if template override flag is set. When set on DCI created from template, local changes
+    * are protected from being overwritten by template updates (link to template is preserved).
+    *
+    * @return true if template override flag is set
+    */
+   public boolean isTemplateOverride()
+   {
+      return (flags & DCF_TEMPLATE_OVERRIDE) != 0;
+   }
+
+   /**
+    * Set or clear template override flag.
+    *
+    * @param enable true to protect local changes from template updates
+    */
+   public void setTemplateOverride(boolean enable)
+   {
+      if (enable)
+         flags |= DCF_TEMPLATE_OVERRIDE;
+      else
+         flags &= ~DCF_TEMPLATE_OVERRIDE;
    }
 
    public void setTransformAggregated(boolean enable)

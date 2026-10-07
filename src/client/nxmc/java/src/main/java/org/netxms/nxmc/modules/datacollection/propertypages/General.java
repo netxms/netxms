@@ -137,6 +137,7 @@ public class General extends AbstractDCIPropertyPage
 	private Text retentionTime;
 	private Button checkSaveOnlyChangedValues;
 	private Spinner sampleSaveInterval;
+   private Button checkTemplateOverride;
 
    /**
     * Create page.
@@ -491,6 +492,19 @@ public class General extends AbstractDCIPropertyPage
          checkSaveOnlyChangedValues.setLayoutData(gd);
       }
 
+      if (dco.getTemplateId() != 0)
+      {
+         checkTemplateOverride = new Button(dialogArea, SWT.CHECK);
+         checkTemplateOverride.setText((dco.getTemplateId() == dco.getNodeId()) ?
+               i18n.tr("Override instance discovery settings (protect local changes from being overwritten)") :
+               i18n.tr("Override template settings (protect local changes from being overwritten)"));
+         checkTemplateOverride.setSelection(dco.isTemplateOverride());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         checkTemplateOverride.setLayoutData(gd);
+      }
+
       onOriginChange();
       return dialogArea;
    }
@@ -542,6 +556,8 @@ public class General extends AbstractDCIPropertyPage
       dco.setPollingInterval(scheduleFixed.getSelection() ? pollingInterval.getText() : null);
       dco.setRetentionType(getRetentionType());
       dco.setRetentionTime(storageFixed.getSelection() ? retentionTime.getText() : null);
+      if (checkTemplateOverride != null)
+         dco.setTemplateOverride(checkTemplateOverride.getSelection());
 
       if (dco instanceof DataCollectionItem)
       {

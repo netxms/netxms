@@ -275,22 +275,25 @@ public class DataCollectionObjectEditor
       }
       else if (dco.getTemplateId() == dco.getNodeId())
       {
-         message = i18n.tr("This DCI was added by instance discovery\nAll local changes can be overwritten at any moment");
+         message = dco.isTemplateOverride() ?
+               i18n.tr("This DCI was added by instance discovery\nLocal changes are protected by the override flag") :
+               i18n.tr("This DCI was added by instance discovery\nAll local changes can be overwritten at any moment");
       }
       else if (dco.getTemplateId() != 0)
       {
+         String warning = dco.isTemplateOverride() ? i18n.tr("Local changes are protected by the override flag") : i18n.tr("All local changes can be overwritten at any moment");
          AbstractObject object = Registry.getSession().findObjectById(dco.getTemplateId());
          if (object != null)
          {
             message = String.format(
                   (object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ?
-                        i18n.tr("This DCI was added by cluster \"%s\"\nAll local changes can be overwritten at any moment") :
-                           i18n.tr("This DCI was added by template \"%s\"\nAll local changes can be overwritten at any moment"),
-                  object.getObjectName());
+                        i18n.tr("This DCI was added by cluster \"%s\"\n%s") :
+                           i18n.tr("This DCI was added by template \"%s\"\n%s"),
+                  object.getObjectName(), warning);
          }
          else
          {
-            message = String.format(i18n.tr("This DCI was added by unknown object with ID %d\nAll local changes can be overwritten at any moment"), dco.getTemplateId());
+            message = String.format(i18n.tr("This DCI was added by unknown object with ID %d\n%s"), dco.getTemplateId(), warning);
          }
       }
       return message;
