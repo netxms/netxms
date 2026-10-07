@@ -577,6 +577,14 @@ void ClientSession::finalize()
       });
    m_scriptExecutorsLock.unlock();
 
+   m_rtDciFeeds.forEach(
+      [] (const uint32_t& id, const shared_ptr<RealTimeDciFeed>& feed) -> EnumerationCallbackResult
+      {
+         feed->cancel();
+         return _CONTINUE;
+      });
+   m_rtDciFeeds.clear();
+
    // Waiting while reference count becomes 0
    if (m_refCount > 0)
    {
@@ -1873,6 +1881,12 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_CLOSE_TCP_PROXY:
          closeTcpProxy(*request);
+         break;
+      case CMD_START_RT_DCI_READ:
+         startRealTimeDciRead(*request);
+         break;
+      case CMD_STOP_RT_DCI_READ:
+         stopRealTimeDciRead(*request);
          break;
       case CMD_GET_AGENT_POLICY_LIST:
          getPolicyList(*request);
@@ -16948,6 +16962,91 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
    {
       conn->closeTcpProxy(agentChannelId);
       writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Closed TCP proxy channel %u"), clientChannelId);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Start real-time DCI read feed. Feed ID is the request ID; data is pushed as CMD_RT_DCI_DATA
+ * messages with that ID until feed is stopped or session is closed.
+ */
+void ClientSession::startRealTimeDciRead(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if ((object != nullptr) && object->isDataCollectionTarget())
+   {
+      if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+      {
+         uint32_t dciId = request.getFieldAsUInt32(VID_DCI_ID);
+         shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, m_userId);
+         if (dci != nullptr)
+         {
+            int origin = dci->getDataSource();
+            if ((dci->getType() != DCO_TYPE_ITEM) || (origin == DS_PUSH_AGENT) || (origin == DS_OTLP) || (origin == DS_COMPUTED))
+            {
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
+            else if (m_rtDciFeeds.size() >= MAX_RT_DCI_FEEDS_PER_SESSION)
+            {
+               debugPrintf(4, L"startRealTimeDciRead: feed limit reached");
+               response.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
+            }
+            else
+            {
+               uint32_t interval = request.getFieldAsUInt32(VID_POLLING_INTERVAL);
+               if (interval < 1)
+                  interval = 1;
+               else if (interval > 3600)
+                  interval = 3600;
+
+               auto feed = make_shared<RealTimeDciFeed>(request.getId(), m_id, static_cast<DCItem&>(*dci), interval);
+               m_rtDciFeeds.set(request.getId(), feed);
+               RealTimeDciFeed::start(feed);
+               debugPrintf(5, L"Real-time read feed [%u] started for DCI \"%s\" [%u] on %s [%u] (interval %u s)",
+                     request.getId(), dci->getDescription().cstr(), dciId, object->getName(), object->getId(), interval);
+               response.setField(VID_RCC, RCC_SUCCESS);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INVALID_DCI_ID);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, (object != nullptr) ? RCC_INCOMPATIBLE_OPERATION : RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Stop real-time DCI read feed
+ */
+void ClientSession::stopRealTimeDciRead(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t feedId = request.getFieldAsUInt32(VID_REQUEST_ID);
+   shared_ptr<RealTimeDciFeed> feed = m_rtDciFeeds.getShared(feedId);
+   if (feed != nullptr)
+   {
+      feed->cancel();
+      m_rtDciFeeds.remove(feedId);
+      debugPrintf(5, L"Real-time read feed [%u] stopped", feedId);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
    }
 
    sendMessage(response);

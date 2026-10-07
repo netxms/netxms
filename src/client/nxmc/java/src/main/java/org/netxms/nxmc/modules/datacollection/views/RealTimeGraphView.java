@@ -18,9 +18,11 @@
  */
 package org.netxms.nxmc.modules.datacollection.views;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -30,9 +32,14 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Widget;
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
+import org.netxms.client.MessageHandler;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.DataOrigin;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataSeries;
@@ -44,20 +51,21 @@ import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewWithContext;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.nxmc.tools.ViewRefreshController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Real-time graph view. Polls selected metrics on demand (via on-the-fly metric query) at a fixed
- * interval and plots the values in a scrolling chart. Collected values are kept only in memory for
- * the duration of the configured time window and are never stored on the server.
+ * Real-time graph view. Opens a server-side real-time read feed for every selected DCI; the server reads each DCI at the
+ * configured interval through its full configuration (source node, SNMP parameters, delta calculation, transformation script)
+ * and pushes samples to this view, which plots them in a scrolling chart. Collected values are kept only in memory for the
+ * duration of the visible time window and are never stored on the server.
  */
 public class RealTimeGraphView extends ViewWithContext
 {
@@ -73,13 +81,17 @@ public class RealTimeGraphView extends ViewWithContext
    private NXCSession session = Registry.getSession();
    private Chart chart = null;
    private Composite chartParent = null;
-   private ViewRefreshController refreshController;
+   private Display display;
    private ChartDciConfig[] dciList;
-   private DataOrigin[] origins;
+   private DataSeries[] seriesTemplates;
    private List<List<DciDataRow>> buffers;
    private int pollInterval = 2;
    private boolean paused = false;
-   private boolean updateInProgress = false;
+
+   private final Object feedLock = new Object();
+   private long[] feedIds; // guarded by feedLock
+   private int[] errorCodes; // last reported error code per series, 0 if none (UI thread only)
+   private int[] errorMessageIds; // message area entry per series, -1 if none (UI thread only)
 
    private Action actionPause;
    private Action actionClear;
@@ -114,17 +126,17 @@ public class RealTimeGraphView extends ViewWithContext
     *
     * @param contextObject context object
     * @param items set of DCIs to show
-    * @param origins data origins of the DCIs (parallel to items), used for on-demand metric query
+    * @param series empty data series carrying presentation metadata (data type, units, multiplier) of each DCI, parallel to items
     * @param contextId owning context ID
     */
-   public RealTimeGraphView(AbstractObject contextObject, List<ChartDciConfig> items, List<DataOrigin> origins, long contextId)
+   public RealTimeGraphView(AbstractObject contextObject, List<ChartDciConfig> items, List<DataSeries> series, long contextId)
    {
       super(LocalizationHelper.getI18n(RealTimeGraphView.class).tr("Real-Time Graph"),
             ResourceManager.getImageDescriptor("icons/object-views/rt-chart-line.png"), buildId(contextObject, items), false);
       this.objectId = contextObject.getObjectId();
       this.contextId = contextId;
       this.dciList = items.toArray(new ChartDciConfig[items.size()]);
-      this.origins = origins.toArray(new DataOrigin[origins.size()]);
+      this.seriesTemplates = series.toArray(new DataSeries[series.size()]);
       updateFullName(this.dciList);
    }
 
@@ -137,7 +149,7 @@ public class RealTimeGraphView extends ViewWithContext
             ResourceManager.getImageDescriptor("icons/object-views/rt-chart-line.png"), UUID.randomUUID().toString(), false);
       fullName = LocalizationHelper.getI18n(RealTimeGraphView.class).tr("Real-Time Graph");
       dciList = new ChartDciConfig[0];
-      origins = new DataOrigin[0];
+      seriesTemplates = new DataSeries[0];
    }
 
    /**
@@ -199,7 +211,7 @@ public class RealTimeGraphView extends ViewWithContext
       view.fullName = fullName;
       view.pollInterval = pollInterval;
       view.dciList = dciList;
-      view.origins = origins;
+      view.seriesTemplates = seriesTemplates;
       view.paused = paused;
 
       // Copy already accumulated data so the cloned view continues from the current state
@@ -267,6 +279,7 @@ public class RealTimeGraphView extends ViewWithContext
    protected void createContent(Composite parent)
    {
       chartParent = parent;
+      display = parent.getDisplay();
       createActions();
 
       ChartConfiguration chartConfiguration = new ChartConfiguration();
@@ -294,15 +307,14 @@ public class RealTimeGraphView extends ViewWithContext
       if (haveData)
          renderBuffers();
 
-      refreshController = new ViewRefreshController(this, pollInterval, new Runnable() {
-         @Override
-         public void run()
-         {
-            if ((chart == null) || ((Widget)chart).isDisposed())
-               return;
-            updateChart();
-         }
-      });
+      feedIds = new long[dciList.length];
+      errorCodes = new int[dciList.length];
+      errorMessageIds = new int[dciList.length];
+      for(int i = 0; i < dciList.length; i++)
+         errorMessageIds[i] = -1;
+
+      if (!paused)
+         restartFeeds();
    }
 
    /**
@@ -314,7 +326,7 @@ public class RealTimeGraphView extends ViewWithContext
          @Override
          public void run()
          {
-            updateChart();
+            refresh();
          }
       };
 
@@ -323,10 +335,11 @@ public class RealTimeGraphView extends ViewWithContext
          public void run()
          {
             paused = isChecked();
-            refreshController.setInterval(paused ? -1 : pollInterval);
+            restartFeeds();
          }
       };
       actionPause.setImageDescriptor(ResourceManager.getImageDescriptor("icons/pause.png"));
+      actionPause.setChecked(paused);
 
       actionClear = new Action(i18n.tr("&Clear")) {
          @Override
@@ -345,8 +358,11 @@ public class RealTimeGraphView extends ViewWithContext
             @Override
             public void run()
             {
-               if (isChecked())
-                  setPollInterval(interval);
+               if (isChecked() && (interval != pollInterval))
+               {
+                  pollInterval = interval;
+                  restartFeeds();
+               }
             }
          };
          intervalActions[i].setChecked(interval == pollInterval);
@@ -354,15 +370,192 @@ public class RealTimeGraphView extends ViewWithContext
    }
 
    /**
-    * Set polling interval.
+    * Stop all running feeds and, unless view is paused, start new ones with current polling interval. Runs in a background job;
+    * concurrent invocations are serialized so that stop/start sequences never interleave.
+    */
+   private void restartFeeds()
+   {
+      final boolean start = !paused;
+      final int interval = pollInterval;
+      Job job = new Job(i18n.tr("Starting real-time data feeds"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            synchronized(feedLock)
+            {
+               stopFeedsInternal();
+               if (start)
+                  startFeedsInternal(interval);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot start real-time data feeds");
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
+
+   /**
+    * Stop all running feeds in a background job (used on view disposal).
+    */
+   private void stopFeeds()
+   {
+      Job job = new Job(i18n.tr("Stopping real-time data feeds"), null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            synchronized(feedLock)
+            {
+               stopFeedsInternal();
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setUser(false);
+      job.setSystem(true);
+      job.start();
+   }
+
+   /**
+    * Start feed for every series. Caller must hold feedLock. Series whose feed cannot be started get an error entry in the message
+    * area instead of failing the whole view.
     *
     * @param interval polling interval in seconds
+    * @throws IOException on communication failure
     */
-   private void setPollInterval(int interval)
+   private void startFeedsInternal(int interval) throws IOException
    {
-      pollInterval = interval;
-      if (!paused)
-         refreshController.setInterval(pollInterval);
+      for(int i = 0; i < dciList.length; i++)
+      {
+         final int index = i;
+         try
+         {
+            feedIds[i] = session.startRealtimeDciRead(dciList[i].nodeId, dciList[i].dciId, interval, new MessageHandler() {
+               @Override
+               public boolean processMessage(NXCPMessage msg)
+               {
+                  onFeedMessage(index, msg);
+                  return true;
+               }
+            });
+         }
+         catch(NXCException e)
+         {
+            final int rcc = e.getErrorCode();
+            runInUIThread(() -> reportError(index, rcc));
+         }
+      }
+   }
+
+   /**
+    * Stop all running feeds. Caller must hold feedLock.
+    */
+   private void stopFeedsInternal()
+   {
+      for(int i = 0; i < feedIds.length; i++)
+      {
+         if (feedIds[i] == 0)
+            continue;
+         try
+         {
+            session.stopRealtimeDciRead(feedIds[i]);
+         }
+         catch(Exception e)
+         {
+            logger.debug("Cannot stop real-time read feed {}", feedIds[i], e);
+         }
+         feedIds[i] = 0;
+      }
+   }
+
+   /**
+    * Run given code in UI thread if view is still alive.
+    *
+    * @param runnable code to run
+    */
+   private void runInUIThread(Runnable runnable)
+   {
+      if ((display == null) || display.isDisposed())
+         return;
+      display.asyncExec(() -> {
+         if ((chart != null) && !((Widget)chart).isDisposed())
+            runnable.run();
+      });
+   }
+
+   /**
+    * Process data message pushed by server for given series. Called on session receiver thread.
+    *
+    * @param index series index
+    * @param msg data message
+    */
+   private void onFeedMessage(int index, NXCPMessage msg)
+   {
+      final int rcc = msg.getFieldAsInt32(NXCPCodes.VID_RCC);
+      if (rcc != RCC.SUCCESS)
+      {
+         runInUIThread(() -> reportError(index, rcc));
+         return;
+      }
+
+      final double value;
+      try
+      {
+         value = Double.parseDouble(msg.getFieldAsString(NXCPCodes.VID_VALUE).trim());
+      }
+      catch(NumberFormatException | NullPointerException e)
+      {
+         return; // non-numeric value, nothing to plot
+      }
+      final Date timestamp = msg.getFieldAsTimestamp(NXCPCodes.VID_TIMESTAMP);
+      runInUIThread(() -> appendValue(index, timestamp, value));
+   }
+
+   /**
+    * Append value to given series, clear its error indication if any, and re-render chart. Must be called in UI thread.
+    *
+    * @param index series index
+    * @param timestamp sample timestamp
+    * @param value sample value
+    */
+   private void appendValue(int index, Date timestamp, double value)
+   {
+      if (errorMessageIds[index] != -1)
+      {
+         deleteMessage(errorMessageIds[index]);
+         errorMessageIds[index] = -1;
+         errorCodes[index] = 0;
+      }
+      buffers.get(index).add(new DciDataRow(timestamp, Double.valueOf(value)));
+      renderBuffers();
+   }
+
+   /**
+    * Show error reported by server for given series. Only the latest distinct error per series is shown. Must be called in UI
+    * thread.
+    *
+    * @param index series index
+    * @param rcc error code
+    */
+   private void reportError(int index, int rcc)
+   {
+      if (errorCodes[index] == rcc)
+         return;
+      if (errorMessageIds[index] != -1)
+         deleteMessage(errorMessageIds[index]);
+      errorCodes[index] = rcc;
+      ChartDciConfig dci = dciList[index];
+      String name = dci.name.isEmpty() ? dci.dciDescription : dci.name;
+      errorMessageIds[index] = addMessage(MessageArea.WARNING, name + ": " + RCC.getText(rcc, Locale.getDefault().getLanguage(), null), true);
    }
 
    /**
@@ -375,84 +568,9 @@ public class RealTimeGraphView extends ViewWithContext
       for(int i = 0; i < buffers.size(); i++)
       {
          buffers.get(i).clear();
-         chart.updateParameter(i, new DataSeries(), false);
+         chart.updateParameter(i, new DataSeries(seriesTemplates[i]), false);
       }
       chart.refresh();
-   }
-
-   /**
-    * Query current values for all metrics and append them to the chart.
-    */
-   private void updateChart()
-   {
-      if (updateInProgress || paused || (chart == null) || ((Widget)chart).isDisposed())
-         return;
-
-      updateInProgress = true;
-      final ChartDciConfig[] dciList = this.dciList;
-      final DataOrigin[] origins = this.origins;
-      Job job = new Job(i18n.tr("Querying real-time metric values"), this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            final Date timestamp = new Date();
-            final double[] values = new double[dciList.length];
-            for(int i = 0; i < dciList.length; i++)
-            {
-               try
-               {
-                  String value = session.queryMetric(dciList[i].nodeId, origins[i], dciList[i].dciName);
-                  values[i] = ((value != null) && !value.isBlank()) ? Double.parseDouble(value.trim()) : Double.NaN;
-               }
-               catch(NumberFormatException e)
-               {
-                  values[i] = Double.NaN; // non-numeric metric value, skip this sample
-               }
-               catch(Exception e)
-               {
-                  logger.debug("Cannot query metric {} on node [{}]", dciList[i].dciName, dciList[i].nodeId, e);
-                  values[i] = Double.NaN;
-               }
-            }
-
-            runInUIThread(() -> {
-               if ((chart != null) && !((Widget)chart).isDisposed())
-                  appendData(timestamp, values);
-               updateInProgress = false;
-            });
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return null;
-         }
-
-         @Override
-         protected void jobFailureHandler(Exception e)
-         {
-            updateInProgress = false;
-         }
-      };
-      job.setUser(false);
-      job.start();
-   }
-
-   /**
-    * Append newly collected values to the in-memory buffers, trim values outside the visible time
-    * window, and re-render the chart.
-    *
-    * @param timestamp collection timestamp
-    * @param values collected values (NaN for metrics that could not be queried)
-    */
-   private void appendData(Date timestamp, double[] values)
-   {
-      for(int i = 0; i < buffers.size(); i++)
-      {
-         if (!Double.isNaN(values[i]))
-            buffers.get(i).add(new DciDataRow(timestamp, Double.valueOf(values[i])));
-      }
-      renderBuffers();
    }
 
    /**
@@ -468,7 +586,7 @@ public class RealTimeGraphView extends ViewWithContext
          while(!buffer.isEmpty() && (buffer.get(0).getTimestamp().getTime() < cutoff))
             buffer.remove(0);
 
-         DataSeries series = new DataSeries();
+         DataSeries series = new DataSeries(seriesTemplates[i]);
          for(DciDataRow row : buffer)
             series.addDataRow(row);
          chart.updateParameter(i, series, false);
@@ -527,12 +645,14 @@ public class RealTimeGraphView extends ViewWithContext
    }
 
    /**
+    * Restart feeds, forcing immediate re-read of all metrics.
+    *
     * @see org.netxms.nxmc.base.views.View#refresh()
     */
    @Override
    public void refresh()
    {
-      updateChart();
+      restartFeeds();
    }
 
    /**
@@ -541,8 +661,8 @@ public class RealTimeGraphView extends ViewWithContext
    @Override
    public void dispose()
    {
-      if (refreshController != null)
-         refreshController.dispose();
+      if (feedIds != null)
+         stopFeeds();
       super.dispose();
    }
 }

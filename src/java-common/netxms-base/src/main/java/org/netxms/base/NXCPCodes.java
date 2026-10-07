@@ -219,7 +219,7 @@ public class NXCPCodes
 	public static final int CMD_IMPORT_CONFIGURATION = 0x00C1;
 	public static final int CMD_GET_TRAP_CFG_RO = 0x00C2;
 	public static final int CMD_SNMP_REQUEST = 0x00C3;
-// unused:	public static final int CMD_GET_DCI_INFO = 0x00C4;
+   public static final int CMD_RT_DCI_DATA = 0x00C4;
 	public static final int CMD_GET_GRAPH_LIST = 0x00C5;
 	public static final int CMD_SAVE_GRAPH = 0x00C6;
 	public static final int CMD_DELETE_GRAPH = 0x00C7;
@@ -494,7 +494,8 @@ public class NXCPCodes
    public static final int CMD_CLEAR_AI_ASSISTANT_CHAT = 0x01D9;
    public static final int CMD_LINK_NETWORK_MAP_NODES = 0x01DA;
    public static final int CMD_GET_DC_OBJECT = 0x01DB;
-   // 0x01DC and 0x01DD are retired (former AI assistant function list/call, replaced by native MCP endpoint); can be reused
+   public static final int CMD_START_RT_DCI_READ = 0x01DC;
+   public static final int CMD_STOP_RT_DCI_READ = 0x01DD;
    public static final int CMD_GET_AI_AGENT_TASKS = 0x01DE;
    public static final int CMD_DELETE_AI_AGENT_TASK = 0x01DF;
    public static final int CMD_ADD_AI_AGENT_TASK = 0x01E0;

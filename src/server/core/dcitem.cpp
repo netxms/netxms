@@ -3599,10 +3599,13 @@ void DCItem::prepareForRecalc()
 }
 
 /**
- * Recalculate old value (should be executed on DCI copy)
+ * Recalculate value using this DCI's delta calculation method and transformation script (should be executed on DCI copy).
+ * On transformation failure value is left unchanged and error code is returned.
  */
-void DCItem::recalculateValue(ItemValue &value)
+DataCollectionError DCItem::recalculateValue(ItemValue &value)
 {
+   lock();  // transform() expects locked DCI and releases the lock for the duration of script execution
+
    if (m_prevValueTimeStamp.isNull())
       m_prevRawValue = value;  // Delta should be zero for first poll
    ItemValue rawValue = value;
@@ -3612,9 +3615,11 @@ void DCItem::recalculateValue(ItemValue &value)
    auto owner = m_owner.lock();
    if ((owner->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (transform(value, (value.getTimeStamp() > m_prevValueTimeStamp) ? (value.getTimeStamp() - m_prevValueTimeStamp) : 0) != DCE_SUCCESS)
+      DataCollectionError rc = transform(value, (value.getTimeStamp() > m_prevValueTimeStamp) ? (value.getTimeStamp() - m_prevValueTimeStamp) : 0);
+      if (rc != DCE_SUCCESS)
       {
-         return;
+         unlock();
+         return rc;
       }
    }
 
@@ -3632,6 +3637,8 @@ void DCItem::recalculateValue(ItemValue &value)
    }
 
    m_lastPollTime = value.getTimeStamp();
+   unlock();
+   return DCE_SUCCESS;
 }
 
 /**

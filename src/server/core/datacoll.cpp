@@ -62,7 +62,7 @@ uuid g_nxslExitDCInvalidData = uuid::parseA("b3f6f73c-8a33-45b0-8e6f-f3c2cce4e94
 /**
  * Collect data for DCI
  */
-static void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, wchar_t *buffer, uint32_t *error)
+void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, wchar_t *buffer, uint32_t *error)
 {
    if (dcTarget->getObjectClass() == OBJECT_CLUSTER)
    {

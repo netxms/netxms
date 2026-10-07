@@ -399,7 +399,7 @@ __PACK_END__
 #define CMD_IMPORT_CONFIGURATION          0x00C1
 #define CMD_GET_TRAP_CFG_RO               0x00C2
 #define CMD_SNMP_REQUEST                  0x00C3
-// unused: #define CMD_GET_DCI_INFO                  0x00C4
+#define CMD_RT_DCI_DATA                   0x00C4
 #define CMD_GET_GRAPH_LIST                0x00C5
 #define CMD_SAVE_GRAPH                    0x00C6
 #define CMD_DELETE_GRAPH                  0x00C7
@@ -679,8 +679,8 @@ __PACK_END__
 #define CMD_CLEAR_AI_ASSISTANT_CHAT       0x01D9
 #define CMD_LINK_NETWORK_MAP_NODES        0x01DA
 #define CMD_GET_DC_OBJECT                 0x01DB
-// retired, can reuse: #define CMD_GET_AI_ASSISTANT_FUNCTIONS    0x01DC
-// retired, can reuse: #define CMD_CALL_AI_ASSISTANT_FUNCTION    0x01DD
+#define CMD_START_RT_DCI_READ             0x01DC
+#define CMD_STOP_RT_DCI_READ              0x01DD
 #define CMD_GET_AI_AGENT_TASKS            0x01DE
 #define CMD_DELETE_AI_AGENT_TASK          0x01DF
 #define CMD_ADD_AI_AGENT_TASK             0x01E0

@@ -133,6 +133,7 @@ bool SaveFirstFreeDCIId(DB_HANDLE hdb);
 #define DEBUG_TAG_DC_MODBUS         _T("dc.modbus")
 #define DEBUG_TAG_DC_NETCONF        _T("dc.netconf")
 #define DEBUG_TAG_DC_POLLER         _T("dc.poller")
+#define DEBUG_TAG_DC_RTREAD         _T("dc.rtread")
 #define DEBUG_TAG_DC_SSH            _T("dc.ssh")
 #define DEBUG_TAG_DC_TEMPLATES      _T("dc.templates")
 #define DEBUG_TAG_DC_THRESHOLDS     _T("dc.thresholds")
@@ -420,6 +421,44 @@ struct TcpProxy
 };
 
 /**
+ * Real-time DCI read feed: periodically reads value of configured DCI (through its private
+ * working copy, so delta calculation and transformation script are applied without touching
+ * state of the live DCI) and pushes the result to the owning client session as CMD_RT_DCI_DATA
+ * messages with message ID equal to feed ID.
+ */
+class RealTimeDciFeed
+{
+private:
+   uint32_t m_id;
+   session_id_t m_sessionId;
+   uint32_t m_objectId;
+   uint32_t m_dciId;
+   DCItem *m_dci;    // Private working copy of the DCI
+   uint32_t m_interval;    // Polling interval in milliseconds
+   VolatileCounter m_cancelled;
+   bool m_firstSample;
+
+   static void poll(const shared_ptr<RealTimeDciFeed>& feed);
+   static void schedule(const shared_ptr<RealTimeDciFeed>& feed, uint32_t delay);
+
+public:
+   RealTimeDciFeed(uint32_t id, session_id_t sessionId, const DCItem& dci, uint32_t interval);
+   ~RealTimeDciFeed();
+
+   uint32_t getId() const { return m_id; }
+   bool isCancelled() const { return m_cancelled != 0; }
+
+   void cancel() { InterlockedIncrement(&m_cancelled); }
+
+   static void start(const shared_ptr<RealTimeDciFeed>& feed) { schedule(feed, 0); }
+};
+
+/**
+ * Maximum number of concurrent real-time DCI read feeds per client session
+ */
+#define MAX_RT_DCI_FEEDS_PER_SESSION   64
+
+/**
  * Client session console
  */
 class NXCORE_EXPORTABLE ClientSessionConsole : public ServerConsole
@@ -572,6 +611,7 @@ private:
 	ObjectArray<TcpProxy> m_tcpProxyConnections;
 	Mutex m_tcpProxyLock;
 	VolatileCounter m_tcpProxyChannelId;
+	SynchronizedSharedHashMap<uint32_t, RealTimeDciFeed> m_rtDciFeeds;
 	HashSet<uint32_t> m_pendingObjectNotifications;
    Mutex m_pendingObjectNotificationsLock;
    bool m_objectNotificationScheduled;
@@ -895,6 +935,8 @@ private:
    void unbindAgentTunnel(const NXCPMessage& request);
    void setupTcpProxy(const NXCPMessage& request);
    void closeTcpProxy(const NXCPMessage& request);
+   void startRealTimeDciRead(const NXCPMessage& request);
+   void stopRealTimeDciRead(const NXCPMessage& request);
    void expandMacros(const NXCPMessage& request);
    void updatePolicy(const NXCPMessage& request);
    void deletePolicy(const NXCPMessage& request);

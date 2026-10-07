@@ -786,7 +786,7 @@ public:
 	void setDataType(BYTE dataType) { m_dataType = dataType; }
 
 	void prepareForRecalc();
-	void recalculateValue(ItemValue &value);
+	DataCollectionError recalculateValue(ItemValue &value);
 
    static bool testTransformation(DataCollectionTarget *object, const shared_ptr<DCObjectInfo>& dcObjectInfo,
             const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
@@ -1201,6 +1201,7 @@ static inline uint32_t RCCFromDCIError(DataCollectionError error)
  * Functions
  */
 void InitDataCollector();
+void GetItemData(DataCollectionTarget *dcTarget, const DCItem& dci, wchar_t *buffer, uint32_t *error);
 void WriteFullParamListToMessage(NXCPMessage *msg, int origin, uint16_t flags);
 int GetDCObjectType(uint32_t nodeId, uint32_t dciId);
 

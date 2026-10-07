@@ -167,6 +167,13 @@ built subagent — keep the `_SOURCES` list current when the subagent gains file
 - Follow the root C++ guidelines (C++11 max, 3-space indent, brace on new line).
 - Keep tests deterministic and self-contained; tests that need a live server or
   database (integration, HA harness, Oracle CLOB) are separated out and gated.
+- Any test that links objects into parent/child relations must unlink or delete
+  them (`deleteObject()`) before returning. Parent/child lists are
+  `SharedObjectArray` on both sides, so every linked pair is a `shared_ptr`
+  cycle; objects still linked at exit are reported by LeakSanitizer as indirect
+  leaks and break the `--enable-sanitizer` build (issue #3732). `CleanupObjects()`
+  does not break these cycles, and LSan suppressions cannot target them without
+  also masking real object leaks.
 - When fixing a library bug, prefer adding/extending a case in the matching
   `test-lib*` binary — recent history shows this is the expected pattern
   (e.g. thread-pool stalled-expansion test for #3436, libnxsrv suite for #3442).

@@ -77,6 +77,43 @@ public class DataSeries
 	}
 
    /**
+    * Create empty data series carrying presentation metadata (data type, measurement unit, multiplier) of given DCI.
+    *
+    * @param dci DCI last value object
+    */
+   public DataSeries(DciValue dci)
+   {
+      nodeId = dci.getNodeId();
+      dciId = dci.getId();
+      dciName = dci.getName();
+      dciDescription = dci.getDescription();
+      dataType = dci.getDataType();
+      activeThresholdSeverity = Severity.NORMAL;
+      measurementUnits = dci.getMeasurementUnit();
+      multiplierPower = dci.getMultiplier();
+      useMultiplier = dci.getMultipliersSelection();
+   }
+
+   /**
+    * Create empty data series carrying presentation metadata (data type, measurement unit, multiplier) of given DCI.
+    *
+    * @param dci DCI configuration object
+    */
+   public DataSeries(DataCollectionItem dci)
+   {
+      nodeId = dci.getNodeId();
+      dciId = dci.getId();
+      dciName = dci.getName();
+      dciDescription = dci.getDescription();
+      dataType = dci.getDataType();
+      activeThresholdSeverity = Severity.NORMAL;
+      String units = dci.getUnitName();
+      measurementUnits = ((units != null) && !units.isBlank()) ? new MeasurementUnit(units) : null;
+      multiplierPower = dci.getMultiplier();
+      useMultiplier = dci.getMultipliersSelection();
+   }
+
+   /**
     * Create data series with single value
     * 
     * @param value initial value

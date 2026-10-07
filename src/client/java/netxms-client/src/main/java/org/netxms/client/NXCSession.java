@@ -7262,6 +7262,60 @@ public class NXCSession
    }
 
    /**
+    * Start real-time read feed for given DCI. Server will read the DCI at given interval through its configuration (source node,
+    * SNMP parameters, delta calculation, transformation script) and push each sample as CMD_RT_DCI_DATA message with message ID
+    * equal to returned feed ID. Each message carries VID_RCC (success or error code explaining why sample is missing), and on
+    * success VID_VALUE (transformed value as string) and VID_TIMESTAMP (sample time in milliseconds). Feed must be stopped with
+    * {@link #stopRealtimeDciRead(long)}; all feeds are stopped automatically when session is closed.
+    *
+    * @param nodeId DCI owner object ID
+    * @param dciId DCI ID
+    * @param interval polling interval in seconds
+    * @param handler handler for pushed data messages
+    * @return feed ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long startRealtimeDciRead(long nodeId, long dciId, int interval, MessageHandler handler) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_START_RT_DCI_READ);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_DCI_ID, dciId);
+      msg.setFieldInt32(NXCPCodes.VID_POLLING_INTERVAL, interval);
+
+      // Slow targets can stretch effective interval well beyond configured one; do not let subscription expire between samples
+      handler.setMessageWaitTimeout(Math.max(interval * 3, 60) * 1000);
+      addMessageSubscription(NXCPCodes.CMD_RT_DCI_DATA, msg.getMessageId(), handler);
+      try
+      {
+         sendMessage(msg);
+         waitForRCC(msg.getMessageId());
+      }
+      catch(IOException | NXCException | RuntimeException e)
+      {
+         removeMessageSubscription(NXCPCodes.CMD_RT_DCI_DATA, msg.getMessageId());
+         throw e;
+      }
+      return msg.getMessageId();
+   }
+
+   /**
+    * Stop real-time DCI read feed started by {@link #startRealtimeDciRead(long, long, int, MessageHandler)}.
+    *
+    * @param feedId feed ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void stopRealtimeDciRead(long feedId) throws IOException, NXCException
+   {
+      removeMessageSubscription(NXCPCodes.CMD_RT_DCI_DATA, feedId);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_STOP_RT_DCI_READ);
+      msg.setFieldUInt32(NXCPCodes.VID_REQUEST_ID, feedId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Query list (enumeration) from agent running on given node. This call will cause server to make an actual call to the agent and
     * return current values for the given list. Result is not cached.
     *

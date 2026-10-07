@@ -27,8 +27,10 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
+import org.netxms.client.datacollection.DataSeries;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.View;
@@ -79,6 +81,7 @@ public class ShowHistoricalDataMenuItems
          manager.add(items.actionShowHistory);
          manager.add(items.actionRawLineChart);
          manager.add(items.actionShowLineChart);
+         items.actionShowRealTimeChart.setEnabled(items.hasPollableDci());
          manager.add(items.actionShowRealTimeChart);
          manager.add(items.actionShowBarChart);
          manager.add(items.actionShowPieChart);
@@ -196,6 +199,23 @@ public class ShowHistoricalDataMenuItems
    {
       return dci instanceof DataCollectionObject ? ((DataCollectionObject)dci).getOrigin() : ((DciValue)dci).getSource();
    }
+
+   /**
+    * Check if current selection contains at least one DCI that can be read on demand. Values of push-style origins (PUSH, OTLP)
+    * and computed DCIs only exist when they arrive, so real-time chart cannot be built for them.
+    *
+    * @return true if at least one selected DCI can be read on demand
+    */
+   private boolean hasPollableDci()
+   {
+      for(Object o : viewer.getStructuredSelection().toList())
+      {
+         DataOrigin origin = getOrigin(o);
+         if ((origin != DataOrigin.PUSH) && (origin != DataOrigin.OTLP) && (origin != DataOrigin.COMPUTED))
+            return true;
+      }
+      return false;
+   }
    
    /**
     * Show line chart for selected items
@@ -264,15 +284,15 @@ public class ShowHistoricalDataMenuItems
          return;
 
       List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(selection.size());
-      List<DataOrigin> origins = new ArrayList<DataOrigin>(selection.size());
+      List<DataSeries> series = new ArrayList<DataSeries>(selection.size());
       for(Object o : selection.toList())
       {
          items.add(getConfigFromObject(o));
-         origins.add(getOrigin(o));
+         series.add((o instanceof DataCollectionItem) ? new DataSeries((DataCollectionItem)o) : new DataSeries((DciValue)o));
       }
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
-      view.openView(new RealTimeGraphView(parent, items, origins, contextId));
+      view.openView(new RealTimeGraphView(parent, items, series, contextId));
    }
 
    /**
