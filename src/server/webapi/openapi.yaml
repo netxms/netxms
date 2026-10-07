@@ -6832,6 +6832,111 @@ paths:
         - BearerAuth: []
       tags:
         - Objects
+  /v1/data-collection/current-values:
+    post:
+      operationId: getDciCurrentValuesBulk
+      summary: Get last values of selected DCIs
+      description: >-
+        Retrieve last collected values of an explicit list of DCIs, possibly on different
+        objects, in one request. Each entry has the same shape as in
+        GET /v1/objects/{object-id}/data-collection/current-values, plus `index` of the
+        request item it answers. Items that cannot be served (object or DCI missing, no
+        access) are listed in `errors` instead. When `delegate` names a network map or
+        dashboard the caller can read, DCIs it references are served on objects the caller
+        holds only "delegated read" on. When an item selects a cell of a table DCI,
+        `dataType` and `value` are the value of that cell and `timestamp` is the time the
+        table containing it was collected; if the cell does not exist (or the table was not
+        collected yet) `dataType` is 6 (null), `value` is empty and `timestamp` is null, same
+        as for a DCI without collected value.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  maxItems: 500
+                  items:
+                    type: object
+                    required:
+                      - objectId
+                      - dciId
+                    properties:
+                      objectId:
+                        type: integer
+                        minimum: 1
+                      dciId:
+                        type: integer
+                        minimum: 1
+                      column:
+                        type: string
+                        description: >-
+                          Table column. Must be given together with `instance`; both select
+                          a table cell. Ignored for a DCI that is not a table.
+                      instance:
+                        type: string
+                        description: >-
+                          Table row instance. Must be given together with `column`; both
+                          select a table cell. Ignored for a DCI that is not a table.
+                delegate:
+                  type: integer
+                  minimum: 1
+                  description: ID of a network map or dashboard, for delegated read.
+      responses:
+        '200':
+          description: Values retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  values:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/DCIValue'
+                        - type: object
+                          properties:
+                            index:
+                              type: integer
+                              description: Position of the answered item in the request `items` array (0-based).
+                  errors:
+                    type: array
+                    description: Request items that cannot be served.
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: integer
+                          description: Position of the item in the request `items` array (0-based).
+                        reason:
+                          type: string
+                          enum:
+                            - Object not found
+                            - Access denied
+                            - Object is not data collection target
+                            - DCI not found
+        '400':
+          description: >-
+            Invalid request - missing or malformed `items`, more than 500 items, an item
+            without positive integer `objectId` and `dciId`, an item with only one of
+            `column` and `instance`, or `delegate` is not a positive integer or not a network
+            map or dashboard.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: >-
+            The caller cannot read the delegate object. Checked before the delegate's class.
+        '404':
+          description: The delegate object does not exist.
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Collection
   /v1/objects/{object-id}/data-collection/current-values:
     get:
       operationId: getDciCurrentValues
