@@ -47,18 +47,19 @@ import org.xnap.commons.i18n.I18n;
 public class AlarmListLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
    private final I18n i18n = LocalizationHelper.getI18n(AlarmListLabelProvider.class);
-   private static final String[] stateText = 
-         { 
+   private static final String[] stateText =
+         {
             LocalizationHelper.getI18n(AlarmListLabelProvider.class).tr("Outstanding"),
             LocalizationHelper.getI18n(AlarmListLabelProvider.class).tr("Acknowledged"),
             LocalizationHelper.getI18n(AlarmListLabelProvider.class).tr("Resolved"),
-            LocalizationHelper.getI18n(AlarmListLabelProvider.class).tr("Terminated") 
+            LocalizationHelper.getI18n(AlarmListLabelProvider.class).tr("Terminated")
          };
 
    private NXCSession session;
-   private Image[] stateImages = new Image[5];
+   private Image[] stateImages = new Image[6];
    private boolean blinkState = true;
    private boolean showColor = true;
+   private boolean iconsOnly = false;
    private TreeViewer viewer;
    private BaseObjectLabelProvider objectLabelProvider;
 
@@ -76,6 +77,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
       stateImages[2] = ResourceManager.getImage("icons/alarms/resolved.png");
       stateImages[3] = ResourceManager.getImage("icons/alarms/terminated.png");
       stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");
+      stateImages[5] = ResourceManager.getImage("icons/alarms/acknowledged_timed.png");
    }
 
    /**
@@ -92,6 +94,8 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
          case AlarmList.COLUMN_STATE:
             if (alarm.getState() == Alarm.STATE_OUTSTANDING)
                return blinkState ? stateImages[Alarm.STATE_OUTSTANDING] : SharedIcons.IMG_EMPTY;
+            if ((alarm.getState() == Alarm.STATE_ACKNOWLEDGED) && (alarm.getAckTime() > 0))
+               return stateImages[5];
             if ((alarm.getState() == Alarm.STATE_ACKNOWLEDGED) && alarm.isSticky())
                return stateImages[4];
             return stateImages[alarm.getState()];
@@ -114,12 +118,9 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
       switch((Integer)viewer.getTree().getColumn(columnIndex).getData("ID"))
       {
          case AlarmList.COLUMN_SEVERITY:
-            return StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity());
+            return iconsOnly ? null : getSeverityText(alarm);
          case AlarmList.COLUMN_STATE:
-            int time = alarm.getAckTime();
-            String timeString = time > 0
-                  ? " (" + DateFormatFactory.getDateTimeFormat().format(System.currentTimeMillis() + time * 1000) + ")" : "";
-            return stateText[alarm.getState()] + timeString;
+            return iconsOnly ? null : getStateText(alarm);
          case AlarmList.COLUMN_SOURCE:
             return session.getObjectName(alarm.getSourceObjectId());
          case AlarmList.COLUMN_ZONE:
@@ -156,6 +157,25 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
             return null;
       }
       return null;
+   }
+
+   /**
+    * Get severity text for given alarm.
+    */
+   public String getSeverityText(Alarm alarm)
+   {
+      return StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity());
+   }
+
+   /**
+    * Get state text for given alarm (includes acknowledgment expiration time if set).
+    */
+   public String getStateText(Alarm alarm)
+   {
+      int time = alarm.getAckTime();
+      String timeString = time > 0
+            ? " (" + DateFormatFactory.getDateTimeFormat().format(System.currentTimeMillis() + time * 1000L) + ")" : "";
+      return stateText[alarm.getState()] + timeString;
    }
 
    /**
@@ -218,5 +238,21 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
    public void setShowColor(boolean showColor)
    {
       this.showColor = showColor;
+   }
+
+   /**
+    * @return true if severity and state columns show icons without text
+    */
+   public boolean isIconsOnly()
+   {
+      return iconsOnly;
+   }
+
+   /**
+    * @param iconsOnly true to show icons without text in severity and state columns
+    */
+   public void setIconsOnly(boolean iconsOnly)
+   {
+      this.iconsOnly = iconsOnly;
    }
 }

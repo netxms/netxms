@@ -7797,6 +7797,10 @@ msgstr "Событие"
 msgid "Show status &colors"
 msgstr "Выделить &цветом"
 
+#: src/main/java/org/netxms/nxmc/modules/alarms/widgets/AlarmList.java:634
+msgid "Show severity and state as &icons only"
+msgstr "Показывать серьезность и состояние только &значками"
+
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/EventTraceWidget.java:181
 #: src/main/java/org/netxms/nxmc/modules/events/widgets/SyslogTraceWidget.java:158
 #: src/main/java/org/netxms/nxmc/modules/objects/widgets/ObjectStatusIndicator.java:111

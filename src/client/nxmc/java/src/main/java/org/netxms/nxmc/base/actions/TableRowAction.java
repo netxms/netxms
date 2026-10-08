@@ -184,7 +184,7 @@ public abstract class TableRowAction extends Action
             String[] headerRow = new String[numColumns];
             for(int i = 0; i < numColumns; i++)
             {
-               headerRow[i] = columns[i].getText();
+               headerRow[i] = (columns[i].getText().isEmpty() && (columns[i].getToolTipText() != null)) ? columns[i].getToolTipText() : columns[i].getText();
             }
             data.add(headerRow);
          }
@@ -194,7 +194,7 @@ public abstract class TableRowAction extends Action
          {
             String[] row = new String[numColumns];
             for(int i = 0; i < numColumns; i++)
-               row[i] = item.getText(i);
+               row[i] = getTreeCellText(item, i);
             data.add(row);
             if (!selectionOnly)
             {
@@ -212,16 +212,24 @@ public abstract class TableRowAction extends Action
     * @param data data array to fill
     * @param numColumns number of columns in tree viewer
     */
-   private static void addSubItems(TreeItem root, List<String[]> data, int numColumns)
+   private void addSubItems(TreeItem root, List<String[]> data, int numColumns)
    {
       for(TreeItem item : root.getItems())
       {
          String[] row = new String[numColumns];
          for(int i = 0; i < numColumns; i++)
-            row[i] = item.getText(i);
+            row[i] = getTreeCellText(item, i);
          data.add(row);
          addSubItems(item, data, numColumns);
       }
+   }
+
+   /**
+    * Get text for given tree cell. Can be overridden when exported text differs from displayed text.
+    */
+   protected String getTreeCellText(TreeItem item, int columnIndex)
+   {
+      return item.getText(columnIndex);
    }
 
    /**

@@ -78,6 +78,7 @@ import org.netxms.nxmc.base.widgets.Section;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.dialogs.EditCommentDialog;
 import org.netxms.nxmc.modules.alarms.views.helpers.EventTreeComparator;
@@ -150,7 +151,7 @@ public class AlarmDetails extends AdHocObjectView
 	private long dciId;
 	private ViewRefreshController refreshController = null;
 	private boolean updateInProgress = false;
-   private Image[] stateImages = new Image[5];
+   private Image[] stateImages = new Image[6];
    private CopyTableRowsAction copyEvent;
 
    /**
@@ -168,6 +169,7 @@ public class AlarmDetails extends AdHocObjectView
       stateImages[2] = ResourceManager.getImage("icons/alarms/resolved.png");
       stateImages[3] = ResourceManager.getImage("icons/alarms/terminated.png");
       stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");
+      stateImages[5] = ResourceManager.getImage("icons/alarms/acknowledged_timed.png");
    }
 
    protected AlarmDetails()
@@ -181,6 +183,7 @@ public class AlarmDetails extends AdHocObjectView
       stateImages[2] = ResourceManager.getImage("icons/alarms/resolved.png");
       stateImages[3] = ResourceManager.getImage("icons/alarms/terminated.png");
       stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");
+      stateImages[5] = ResourceManager.getImage("icons/alarms/acknowledged_timed.png");
    }
 
    /**
@@ -808,11 +811,16 @@ public class AlarmDetails extends AdHocObjectView
 		alarmSeverity.setImage(StatusDisplayInfo.getStatusImage(alarm.getCurrentSeverity()));
 		alarmSeverity.setText(StatusDisplayInfo.getStatusText(alarm.getCurrentSeverity()));
 
-		int state = alarm.getState();
-		if ((state == Alarm.STATE_ACKNOWLEDGED) && alarm.isSticky())
-			state = Alarm.STATE_TERMINATED + 1;
-		alarmState.setImage(stateImages[state]);
-		alarmState.setText(stateText[alarm.getState()]);
+		int stateImageIndex = alarm.getState();
+		if ((alarm.getState() == Alarm.STATE_ACKNOWLEDGED) && (alarm.getAckTime() > 0))
+			stateImageIndex = 5;
+		else if ((alarm.getState() == Alarm.STATE_ACKNOWLEDGED) && alarm.isSticky())
+			stateImageIndex = 4;
+		alarmState.setImage(stateImages[stateImageIndex]);
+		int ackTime = alarm.getAckTime();
+		String ackExpirationTime = (ackTime > 0)
+		      ? " (" + DateFormatFactory.getDateTimeFormat().format(System.currentTimeMillis() + ackTime * 1000L) + ")" : "";
+		alarmState.setText(stateText[alarm.getState()] + ackExpirationTime);
 
 		AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
 		alarmSource.setImage((object != null) ? objectLabelProvider.getImage(object) : SharedIcons.IMG_UNKNOWN_OBJECT);

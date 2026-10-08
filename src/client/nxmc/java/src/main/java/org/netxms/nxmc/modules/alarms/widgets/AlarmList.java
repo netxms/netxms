@@ -50,6 +50,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -148,12 +149,14 @@ public class AlarmList extends CompositeWithMessageArea
    private Action actionUnlinkIssue;
    private Action actionCreateIncident;
    private Action actionExportToCsv;
+   private Action actionExportAllToCsv;
    private Action actionShowAlarmDetails;
    private Action actionQueryAssistant;
    private MenuManager timeAcknowledgeMenu;
    private List<Action> timeAcknowledge;
    private Action timeAcknowledgeOther;
    private Action actionShowColor;
+   private Action actionIconsOnly;
    private boolean initShowfilter;
    private boolean isLocalNotificationsEnabled = false;
    private long rootObject;
@@ -220,6 +223,8 @@ public class AlarmList extends CompositeWithMessageArea
       alarmViewer.setComparator(new AlarmComparator());
       alarmFilter = new AlarmListFilter();
       alarmViewer.addFilter(alarmFilter);
+      if (PreferenceStore.getInstance().getAsBoolean("AlarmList.IconsOnly", false))
+         setIconsOnly(true);
       alarmViewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -386,6 +391,15 @@ public class AlarmList extends CompositeWithMessageArea
                   alarmViewer.refresh();
                }
             }
+            else if (event.getProperty().equals("AlarmList.IconsOnly"))
+            {
+               boolean iconsOnly = ps.getAsBoolean("AlarmList.IconsOnly", false);
+               if (labelProvider.isIconsOnly() != iconsOnly)
+               {
+                  setIconsOnly(iconsOnly);
+                  actionIconsOnly.setChecked(iconsOnly);
+               }
+            }
          }
       };
       ps.addPropertyChangeListener(propertyChangeListener);
@@ -446,7 +460,7 @@ public class AlarmList extends CompositeWithMessageArea
 						if (i > 0)
 							sb.append(newLine);
 						sb.append('[');
-						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_SEVERITY)));
+						sb.append(labelProvider.getSeverityText(((AlarmHandle)selection[i].getData()).alarm));
 						sb.append("]\t");
 						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_SOURCE)));
 						sb.append('\t');
@@ -577,7 +591,8 @@ public class AlarmList extends CompositeWithMessageArea
       };
       actionGoToDci.setId("AlarmList.GoToDci");
 
-      actionExportToCsv = new ExportToCsvAction(view, alarmViewer, true);
+      actionExportToCsv = new AlarmExportToCsvAction(true);
+      actionExportAllToCsv = new AlarmExportToCsvAction(false);
 
 		//time based sticky acknowledgement
       timeAcknowledgeOther = new Action("Other...") {
@@ -605,6 +620,16 @@ public class AlarmList extends CompositeWithMessageArea
          }
       };
       actionShowColor.setChecked(labelProvider.isShowColor());
+
+      actionIconsOnly = new Action(i18n.tr("Show severity and state as &icons only"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            setIconsOnly(actionIconsOnly.isChecked());
+            PreferenceStore.getInstance().set("AlarmList.IconsOnly", actionIconsOnly.isChecked());
+         }
+      };
+      actionIconsOnly.setChecked(labelProvider.isIconsOnly());
 
       actionShowAlarmDetails = new Action(i18n.tr("Show &alarm details")) {
          @Override
@@ -1359,6 +1384,22 @@ public class AlarmList extends CompositeWithMessageArea
    }
 
    /**
+    * Get action to toggle icons-only severity and state columns
+    */
+   public IAction getActionIconsOnly()
+   {
+      return actionIconsOnly;
+   }
+
+   /**
+    * Get action to export all alarms to CSV
+    */
+   public IAction getActionExportAllToCsv()
+   {
+      return actionExportAllToCsv;
+   }
+
+   /**
     * Get action to reset column order to default.
     *
     * @return action for resetting column order
@@ -1386,6 +1427,23 @@ public class AlarmList extends CompositeWithMessageArea
    public Action getActionAutoSizeColumns()
    {
       return alarmViewer.getAutoSizeColumnsAction();
+   }
+
+   /**
+    * Switch severity and state columns between icon with text under named header and icon only under unnamed header
+    * (column name is kept as header tooltip).
+    */
+   private void setIconsOnly(boolean iconsOnly)
+   {
+      labelProvider.setIconsOnly(iconsOnly);
+      TreeColumn severityColumn = alarmViewer.getColumnById(COLUMN_SEVERITY);
+      severityColumn.setText(iconsOnly ? "" : i18n.tr("Severity"));
+      severityColumn.setToolTipText(iconsOnly ? i18n.tr("Severity") : null);
+      TreeColumn stateColumn = alarmViewer.getColumnById(COLUMN_STATE);
+      stateColumn.setText(iconsOnly ? "" : i18n.tr("State"));
+      stateColumn.setToolTipText(iconsOnly ? i18n.tr("State") : null);
+      alarmViewer.resetAutoResizeBaseline();
+      alarmViewer.refresh();
    }
 
    /**
@@ -1533,6 +1591,37 @@ public class AlarmList extends CompositeWithMessageArea
          for(int i = 0; i < values.length; i++)
             values[i] = objects.get(i).getObjectName();
          return values;
+      }
+   }
+
+   /**
+    * CSV export that contains severity and state text also when columns show icons only
+    */
+   private class AlarmExportToCsvAction extends ExportToCsvAction
+   {
+      AlarmExportToCsvAction(boolean selectionOnly)
+      {
+         super(view, alarmViewer, selectionOnly);
+      }
+
+      /**
+       * @see org.netxms.nxmc.base.actions.TableRowAction#getTreeCellText(org.eclipse.swt.widgets.TreeItem, int)
+       */
+      @Override
+      protected String getTreeCellText(TreeItem item, int columnIndex)
+      {
+         AlarmHandle handle = (AlarmHandle)item.getData();
+         if (handle != null) // placeholder child of collapsed item has no data
+         {
+            switch((Integer)alarmViewer.getTree().getColumn(columnIndex).getData("ID"))
+            {
+               case COLUMN_SEVERITY:
+                  return labelProvider.getSeverityText(handle.alarm);
+               case COLUMN_STATE:
+                  return labelProvider.getStateText(handle.alarm);
+            }
+         }
+         return super.getTreeCellText(item, columnIndex);
       }
    }
 

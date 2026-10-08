@@ -465,7 +465,7 @@ public class SortableTreeViewer extends TreeViewer
             if (clickedColumn != null && clickedColumn.getData("savedWidth") == null)
             {
                MenuItem hideItem = new MenuItem(headerMenu, SWT.PUSH);
-               hideItem.setText(i18n.tr("Hide \"{0}\"", clickedColumn.getText()));
+               hideItem.setText(i18n.tr("Hide \"{0}\"", (clickedColumn.getText().isEmpty() && (clickedColumn.getToolTipText() != null)) ? clickedColumn.getToolTipText() : clickedColumn.getText()));
                hideItem.addListener(SWT.Selection, ev -> hideColumn(clickedColumnId));
                hideItem.setEnabled(visibleCount > 1);
             }
@@ -490,7 +490,7 @@ public class SortableTreeViewer extends TreeViewer
                {
                   int colId = (Integer)c.getData("ID");
                   MenuItem showItem = new MenuItem(showMenu, SWT.PUSH);
-                  showItem.setText(c.getText());
+                  showItem.setText((c.getText().isEmpty() && (c.getToolTipText() != null)) ? c.getToolTipText() : c.getText());
                   showItem.addListener(SWT.Selection, ev -> showColumn(colId));
                }
             }

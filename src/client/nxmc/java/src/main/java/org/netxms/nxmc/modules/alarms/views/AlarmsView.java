@@ -24,7 +24,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryContentProposalProvider;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmList;
@@ -40,7 +39,6 @@ public class AlarmsView extends ObjectView
    private final I18n i18n = LocalizationHelper.getI18n(AlarmsView.class);
 
    protected AlarmList alarmList;
-   private Action actionExportToCsv;
 
    /**
     * Create alarm view
@@ -70,16 +68,6 @@ public class AlarmsView extends ObjectView
       alarmList = new AlarmList(this, parent, SWT.NONE, "AlarmView.AlarmList", () -> AlarmsView.this.isActive());
       setFilterClient(alarmList.getViewer(), alarmList.getFilter());
       enableFilterAutocomplete(new SearchQueryContentProposalProvider(alarmList.getAttributeProposals()));
-
-      createActions();
-   }
-
-   /**
-    * Create actions
-    */
-   private void createActions()
-   {
-      actionExportToCsv = new ExportToCsvAction(this, alarmList.getViewer(), false);
    }
 
    /**
@@ -144,6 +132,7 @@ public class AlarmsView extends ObjectView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(alarmList.getActionShowColors());
+      manager.add(alarmList.getActionIconsOnly());
       manager.add(alarmList.getActionResetColumnOrder());
       manager.add(alarmList.getActionShowAllColumns());
       Action autoSizeAction = alarmList.getActionAutoSizeColumns();
@@ -153,7 +142,7 @@ public class AlarmsView extends ObjectView
          manager.add(autoSizeAction);
       }
       manager.add(new Separator());
-      manager.add(actionExportToCsv);
+      manager.add(alarmList.getActionExportAllToCsv());
       super.fillLocalMenu(manager);
    }
 }
