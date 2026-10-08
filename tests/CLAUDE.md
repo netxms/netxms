@@ -34,6 +34,7 @@ column below.
 | `ha/` | `ha-node-sim` + Python `harness.py` — adversarial HA lease-manager harness (issue #3364). Compiles the real `src/server/core/halease.cpp` against a shared DB. | via `@TEST_MODULES@` |
 | `integration/` | Java/Maven integration tests (`EppScriptTest`, `SingleUseTokenTest`, NXSL resource scripts) against a running server | Maven (separate) |
 | `nx-2488/` | Manual web-service caching repro (SQL patch, NXSL scripts, trivial web server) | manual (not in build) |
+| `nxdbmgr-check/` | Defect injection test for `nxdbmgr check`: `run.sh` initializes a scratch database (SQLite or PostgreSQL), applies `baseline.sql`, injects `inject-defects.sql`, runs a forced check and verifies the output against `expected-first-run.txt` / `unexpected-first-run.txt` and the database state against `assert-*.sql` | manual (not in build) |
 | `tools/` | Standalone Python helpers: `otlp-log-sender`, `otlp-mock-collector` (for OTLP ingestion testing, issue #3292) | manual (not in build) |
 
 Inside the enabled tests tree, `include`, `config`, `suite`, `test-libnetxms`,

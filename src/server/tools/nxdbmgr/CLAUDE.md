@@ -18,7 +18,7 @@ Command line tool that initializes, checks, upgrades, migrates, exports and impo
 | `upgrade.cpp` | Upgrade driver; version checks; `SetMajorSchemaVersion` / `SetMinorSchemaVersion` / `Get`/`SetSchemaLevelForMajorVersion` |
 | `upgrade_v<major>.cpp` | One file per schema major version — the upgrade procedures for that chain |
 | `upgrade_online.cpp` | Background ("online") upgrades that run in the server after schema upgrade |
-| `check.cpp` | `nxdbmgr check` — consistency checks and repairs |
+| `check.cpp` | `nxdbmgr check` — consistency checks and repairs. Stages run from the `s_checkStages[]` array; set-based stages use `CheckSelect()` / `CheckQuery()`, whose failure sets `s_checkAborted` so no later stage starts and the whole check rolls back (a failed statement poisons a PostgreSQL transaction). Most referential checks are entries of `s_orphanRelations[]` (stage group, plain-language description used in prompts, child table.column, parent source or subquery, fix: delete row / reset to zero / report only, whether zero means "not set"); the entries run under four operator-facing stages (object, data collection, event processing policy, report-only references) and every prompt carries the description first and the table.column in parentheses. To cover a new table add an entry there, in dependency order (parents before their dependents), and inject one defect for it into `tests/nxdbmgr-check/inject-defects.sql`. Hand-written stages cover polymorphic or coupled cases (class coverage, duplicate IDs/GUIDs, container cycles, template bindings, peer and path-check pairs, event codes, EPP last-entry guard). |
 | `init.cpp` | `nxdbmgr init` — fresh install from `sql/*.in` baselines |
 | `export.cpp`, `migrate.cpp`, `convert.cpp`, `tdata_convert.cpp` | Export/import, cross-DB migration, TimescaleDB conversion |
 | `../libnxdbmgr/` | Shared helpers (`CreateTable`, `CreateConfigParam`, `SQLQuery`, …), exported to nxdbmgr and the server |
@@ -27,6 +27,21 @@ Command line tool that initializes, checks, upgrades, migrates, exports and impo
 | `sql/*.in` (repo root) | Fresh-install schema baseline |
 
 Commands: `init`, `upgrade`, `check`, `check-data-tables`, `export`, `import`, `migrate`, `convert`, `background-upgrade`, `background-convert`, `batch`, `get`, `set`, `set-user-password`, `unlock`, `unlock-user`, `reset-monitoring`, `reset-system-account`. Run `nxdbmgr -h` for the full option list.
+
+## Testing `nxdbmgr check`
+
+`tests/nxdbmgr-check/run.sh` (manual, not in the build) initializes a scratch database (SQLite by
+default, `-d pgsql -U <dba user>` creates and drops a `nxdbmgr_check_<random>` database), applies
+`baseline.sql`, injects `inject-defects.sql`, runs a forced check and verifies the output against
+`expected-first-run.txt` / `unexpected-first-run.txt` and the database state through
+`assert-after-first-run.sql`, then removes report-only defects with `cleanup-report-only.sql` and
+requires a clean `-E` check plus `assert-after-cleanup.sql`. Every new check needs an injected
+defect, a fragment of its message, a state assertion, and a "must not be reported" fixture where a
+false positive is plausible. Fixture rules forced by `ExecSQLBatch`: comments are `/* ... */` only
+and may not contain `;` or `'`; one statement per `;`; an assertion is
+`INSERT INTO nxdbmgr_check_assert (id) SELECT CASE WHEN (<condition>) THEN <unique id> ELSE 0 END FROM nxdbmgr_check_assert WHERE id=0`
+(a false condition inserts the duplicate key 0 and fails the batch). Injected IDs use the 999xxx
+range, baseline objects 990xxx.
 
 ## Schema versioning model
 
