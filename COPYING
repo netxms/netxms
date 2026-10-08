@@ -1,48 +1,127 @@
-NetXMS source code has mixed licensing - most libraries licensed under 
-GNU Lesser General Public License (LGPL), and rest of the NetXMS components
-licensed under GNU General Public Lcense (GPL). There are also various
-third party libraries bundled with NetXMS source code, with different
-licensing. Detailed list of licensing per component is following:
+NetXMS licensing
 
-NetXMS components:
+NetXMS source code has mixed licensing. Most libraries are licensed under the
+GNU Lesser General Public License, and the rest of the NetXMS components under
+the GNU General Public License. Third-party libraries and code fragments
+bundled with the source tree carry their own licenses, listed at the end.
 
-libnetxms       LGPL
-libnxcl         LGPL
-libnxdb         LGPL
-libnxlp         LGPL
-libnxmap        LGPL
-libnxmb         GPL
-libnxsl         LGPL
-libnxsnmp       LGPL
-libnxsrv        LGPL
-nxagentd        GPL
-nxalarm         GPL
-nxav            GPL
-nxcon           GPL
-nxcptest        GPL
-nxevent         GPL
-nxlexer         GPL
-nxlptest        GPL
-nxmibc          GPL
-nxnotify        GPL
-nxpush          GPL
-nxscript        GPL
-nxsms           GPL
-nxsnmpget       GPL
-nxsnmpset       GPL
-nxsnmpwalk      GPL
-nxuilib         GPL
+Abbreviations used below:
 
-all subagents   GPL
-all DB drivers  GPL
-all notification channel drivers GPL
+  GPL    GNU General Public License version 2, or (at your option) any later
+         version. Full text in GPL.txt.
+  LGPL   GNU Lesser General Public License version 3, or (at your option) any
+         later version. Full text in LGPL.txt.
+
+Each source file carries its own license notice. Where a notice and this list
+disagree, the notice in the file applies.
 
 
-Third party components bundled with NetXMS:
+Libraries
 
-sqlite          BSD-like
+  libnetxms        LGPL    core utility library
+  libnxsl          LGPL    NXSL script interpreter
+  libnxdb          LGPL    database abstraction layer
+  libnxsnmp        LGPL    SNMP protocol
+  libnxlp          LGPL    log parser
+  libnxsrv         LGPL    shared server-side code
+  libnxagent       LGPL    shared agent-side code
+  libnxclient      LGPL    C client library
+  libnxnetconf     LGPL    NETCONF client
+  libethernetip    LGPL    EtherNet/IP client
+  libnxjava        LGPL    Java bridge, C++ part; org.netxms.bridge
+                           Java classes GPL
+  libnxmb          GPL     message bus
+  libnxsde         GPL     structured data extractor
+  libnxtux         GPL     Tuxedo helper
+  libnxdbmgr       GPL     shared code of nxdbmgr
 
 
-Third party code within NetXMS:
+Server
 
-ICE		public domain
+  netxmsd                              GPL
+  WebAPI module                        GPL
+  server integration modules           GPL     aitools, docker, jira, leef,
+                                               mcp, ntcb, ntopng, otlp,
+                                               oxidized, redmine, wcc,
+                                               wlcbridge
+  nxreportd                            GPL
+  server tools                         GPL     nxdbmgr, nxadm, nxaction, nxap,
+                                               nxdownload, nxget, nxminfo,
+                                               nxupload, nxwsget, nddload
+  database drivers (src/db/dbdrv)      GPL
+  network device drivers               LGPL or GPL as stated in each driver's
+    (src/server/drivers)               files; tplink, qtech and eltex: MIT
+  notification channel drivers         LGPL, except nxagent, shell, smtp,
+    (src/server/ncdrivers)             textfile and xmpp: GPL
+  performance data storage drivers     LGPL    clickhouse, influxdb
+    (src/server/pdsdrv)
+
+
+Agent
+
+  nxagentd                             GPL
+  nxsagent, nxuseragent, smbios        GPL
+  subagents (src/agent/subagents)      GPL, except the database subagents
+                                       dbquery, mongodb, mssql, mysql, oracle,
+                                       pgsql and redis: LGPL; ubntlw Java
+                                       plugin: MIT
+
+
+Clients and tools
+
+  nxmc (desktop and web console)       GPL
+  netxms-client (Java library)         GPL
+  netxms-base (Java library)           GPL
+  netxms-mobile-agent (Java)           GPL
+  nxshell, nxalarm, nxevent,           GPL
+  nxnotify, nxpush, nxapisrv,
+  nxweblauncher, nxtcpproxy
+  SNMP tools: nxmibc, nxmibdump,       GPL
+  nxsnmpget, nxsnmpset, nxsnmpwalk
+  nxcproxy, nxscript, nxcsum,          GPL
+  nxdevcfg, nxencpasswd, nxgenguid,
+  nxlptest, nxping, nxcrashsrv
+
+
+Third-party libraries bundled with NetXMS
+
+  src/jansson      MIT                                   Petri Lehtinen
+  src/sqlite       public domain
+  src/libpng       PNG Reference Library License version 2
+  src/libargon2    CC0 1.0 or Apache License 2.0, at your option
+
+
+Third-party code within NetXMS components
+
+  libnetxms/lz4.c, lz4.h              BSD 2-Clause        LZ4, Yann Collet
+  libnetxms/pugixml.cpp,              MIT                 pugixml,
+    include/pugixml.h, pugiconfig.h                       Arseny Kapoulkine
+  include/uthash.h                    BSD                 uthash,
+                                                          Troy D. Hanson
+  libnetxms/diff.cpp, diff.h          Apache License 2.0  diff-match-patch,
+                                                          Google
+  libnetxms/getopt.cpp, getoptw.cpp   BSD                 NetBSD Foundation,
+                                                          Todd C. Miller
+  libnetxms/md4.cpp                   public domain       Alexander Peslyak
+  libnetxms/md5.cpp, md5.h            permissive          Aladdin Enterprises,
+                                                          L. Peter Deutsch
+  libnetxms/sha1.cpp, sha1.h          public domain       Steve Reid
+  libnetxms/sha2.cpp, sha2.h          BSD 3-Clause        Olivier Gay
+  libnetxms/ice.c, ice.h              public domain       ICE, Matthew Kwan
+  libnetxms/memmem.cpp                MIT                 musl, Rich Felker
+  libnetxms/strlcpy.cpp, strlcat.cpp, ISC / BSD           Todd C. Miller
+    wcslcpy.cpp, wcslcat.cpp
+  libnetxms/strptime.cpp              BSD                 NetBSD Foundation
+  libnetxms/qsort.cpp                 zlib/libpng         Gareth McCaughan
+  agent/subagents/linux/wireguard.c,  LGPL 2.1 or later   embeddable WireGuard
+    wireguard.h                                           library,
+                                                          Jason A. Donenfeld,
+                                                          Pablo Neira Ayuso
+  netxms-base, com.jcraft.jzlib       BSD 3-Clause        JCraft, Inc.
+  netxms-base, DiffMatchPatch.java    Apache License 2.0  diff-match-patch
+                                                          authors
+  nxmc, base/widgets/ansi             Apache License 2.0  Mihai Nita
+  server/otlp, *.proto and generated/ Apache License 2.0  OpenTelemetry Authors
+  server/drivers/tplink, qtech, eltex MIT                 Procyshin Dmitriy,
+                                                          Raden Solutions
+  agent/subagents/ubntlw              MIT                 RF Elements s.r.o.
