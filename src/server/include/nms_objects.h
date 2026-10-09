@@ -4218,6 +4218,15 @@ enum class DeviceBackupJobStatus
 };
 
 /**
+ * Agent configuration type (for server-side agent configuration cache)
+ */
+enum class AgentConfigType
+{
+   MASTER_FILE = 0,
+   EFFECTIVE = 1
+};
+
+/**
  * Result of SNMP trap credential validation
  */
 enum class TrapCredentialCheckResult
@@ -4811,6 +4820,9 @@ public:
 
    void setAgentRestartTime() { m_agentRestartTime = time(nullptr); }
    time_t getAgentRestartTime() { return m_agentRestartTime; }
+
+   uint32_t readAgentConfiguration(AgentConfigType type, TCHAR **content, time_t *cacheTime);
+   void updateAgentConfigCache(AgentConfigType type, const TCHAR *content);
 
    shared_ptr<Interface> createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated, bool fakeInterface);
    shared_ptr<Interface> createNewInterface(const InetAddress& ipAddr, const MacAddress& macAddr, bool fakeInterface);

@@ -1915,6 +1915,8 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
    if (success)
       success = executeQueryOnObject(hdb, L"DELETE FROM node_snmp_agents WHERE node_id=?");
    if (success)
+      success = executeQueryOnObject(hdb, L"DELETE FROM agent_config_cache WHERE node_id=?");
+   if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM radios WHERE owner_id=?"));
    return success;
 }
@@ -6551,6 +6553,20 @@ bool Node::confPollAgent()
             sendPollerMsg(_T("   Hardware ID changed to %s\r\n"), buffer);
          }
          unlockProperties();
+      }
+
+      // Refresh cached agent configuration (served to clients when agent is unreachable)
+      TCHAR *configText;
+      size_t configSize;
+      if (pAgentConn->readConfigFile(&configText, &configSize) == ERR_SUCCESS)
+      {
+         updateAgentConfigCache(AgentConfigType::MASTER_FILE, configText);
+         MemFree(configText);
+      }
+      if (pAgentConn->readEffectiveConfig(&configText, &configSize) == ERR_SUCCESS)
+      {
+         updateAgentConfigCache(AgentConfigType::EFFECTIVE, configText);
+         MemFree(configText);
       }
 
       // Check IP forwarding status
@@ -12412,6 +12428,144 @@ shared_ptr<AgentTunnel> Node::establishReverseAgentTunnel(bool *legacyAllowed)
    }
 
    return RegisterOutboundTunnel(newTunnel);
+}
+
+/**
+ * Read agent configuration of given type. Reads from agent if possible (updating cached copy),
+ * otherwise falls back to cached copy stored in database. On success *content is set to allocated
+ * configuration text (caller is responsible for freeing it), and *cacheTime is set to time when cached
+ * copy was last updated, or 0 if configuration was read directly from agent.
+ */
+uint32_t Node::readAgentConfiguration(AgentConfigType type, TCHAR **content, time_t *cacheTime)
+{
+   *content = nullptr;
+   *cacheTime = 0;
+
+   uint32_t rcc;
+   shared_ptr<AgentConnectionEx> conn = createAgentConnection();
+   if (conn != nullptr)
+   {
+      size_t size;
+      rcc = (type == AgentConfigType::MASTER_FILE) ? conn->readConfigFile(content, &size) : conn->readEffectiveConfig(content, &size);
+      if (rcc == ERR_SUCCESS)
+      {
+         updateAgentConfigCache(type, *content);
+         return ERR_SUCCESS;
+      }
+      if (rcc == ERR_ACCESS_DENIED)
+         return rcc;
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, L"Node::readAgentConfiguration(%s [%u]): cannot read configuration from agent (%s), trying cached copy", m_name, m_id, AgentErrorCodeToText(rcc));
+   }
+   else
+   {
+      rcc = ERR_NOT_CONNECTED;
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 5, L"Node::readAgentConfiguration(%s [%u]): agent connection not available, trying cached copy", m_name, m_id);
+   }
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT update_time,content FROM agent_config_cache WHERE node_id=? AND config_type=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(type));
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            *cacheTime = DBGetFieldTime(hResult, 0, 0);
+            *content = DBGetField(hResult, 0, 1, nullptr, 0);
+            if (*content == nullptr)
+               *content = MemCopyStringW(L"");
+            rcc = ERR_SUCCESS;
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Update cached copy of agent configuration. Content is rewritten only when changed, timestamp is always updated.
+ */
+void Node::updateAgentConfigCache(AgentConfigType type, const TCHAR *content)
+{
+   if (content == nullptr)
+      return;
+
+   BYTE hash[MD5_DIGEST_SIZE];
+   CalculateMD5Hash(content, wcslen(content) * sizeof(wchar_t), hash);
+   wchar_t hashText[MD5_DIGEST_SIZE * 2 + 1];
+   BinToStr(hash, MD5_DIGEST_SIZE, hashText);
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   bool exists = false;
+   wchar_t storedHash[64] = L"";
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT content_hash FROM agent_config_cache WHERE node_id=? AND config_type=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(type));
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            exists = true;
+            DBGetField(hResult, 0, 0, storedHash, 64);
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+
+   if (!exists)
+   {
+      hStmt = DBPrepare(hdb, L"INSERT INTO agent_config_cache (node_id,config_type,update_time,content_hash,content) VALUES (?,?,?,?,?)");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(type));
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(time(nullptr)));
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, hashText, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_TEXT, content, DB_BIND_STATIC);
+         DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+   }
+   else if (wcscmp(storedHash, hashText))
+   {
+      nxlog_debug_tag(DEBUG_TAG_AGENT, 6, L"Node::updateAgentConfigCache(%s [%u]): cached %s configuration updated", m_name, m_id,
+            (type == AgentConfigType::MASTER_FILE) ? L"master" : L"effective");
+      hStmt = DBPrepare(hdb, L"UPDATE agent_config_cache SET update_time=?,content_hash=?,content=? WHERE node_id=? AND config_type=?");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<int64_t>(time(nullptr)));
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, hashText, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_TEXT, content, DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(type));
+         DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+   }
+   else
+   {
+      hStmt = DBPrepare(hdb, L"UPDATE agent_config_cache SET update_time=? WHERE node_id=? AND config_type=?");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<int64_t>(time(nullptr)));
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(type));
+         DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+   }
+
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)

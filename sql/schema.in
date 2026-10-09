@@ -555,6 +555,20 @@ CREATE TABLE software_inventory
 ) TABLE_TYPE;
 
 /**
+ * Cached copies of agent configuration (master file and effective configuration)
+ * config_type: 0 = master configuration file, 1 = effective (merged) configuration
+ */
+CREATE TABLE agent_config_cache
+(
+  node_id integer not null,
+  config_type integer not null,
+  update_time integer not null,
+  content_hash varchar(63) not null,
+  content SQL_TEXT null,
+  PRIMARY KEY(node_id,config_type)
+) TABLE_TYPE;
+
+/**
  * Node hardware inventory
  */
 CREATE TABLE hardware_inventory

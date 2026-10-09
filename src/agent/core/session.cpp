@@ -717,6 +717,9 @@ void CommSession::processCommand(NXCPMessage *request)
          case CMD_WRITE_AGENT_CONFIG_FILE:
             updateConfig(request, &response);
             break;
+         case CMD_GET_AGENT_EFFECTIVE_CONFIG:
+            getEffectiveConfig(&response);
+            break;
          case CMD_ENABLE_AGENT_TRAPS:
             m_acceptTraps = true;
             m_serverAcksTraps = request->getFieldAsBoolean(VID_TRAP_ACK_SUPPORTED);
@@ -1471,6 +1474,25 @@ void CommSession::getConfig(NXCPMessage *pMsg)
    {
       pMsg->setField(VID_RCC,
          pMsg->setFieldFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
+   }
+   else
+   {
+      pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
+   }
+}
+
+/**
+ * Get agent's effective configuration (master file merged with included files and policies) in XML form
+ */
+void CommSession::getEffectiveConfig(NXCPMessage *pMsg)
+{
+   if (m_masterServer)
+   {
+      shared_ptr<Config> config = g_config;
+      char *xml = UTF8StringFromTString(config->createXml().cstr());
+      pMsg->setField(VID_CONFIG_FILE, reinterpret_cast<const BYTE*>(xml), strlen(xml));
+      MemFree(xml);
+      pMsg->setField(VID_RCC, ERR_SUCCESS);
    }
    else
    {

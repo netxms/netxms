@@ -27,12 +27,14 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.agent.config.AgentConfigurationFile;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Memento;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewNotRestoredException;
 import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SaveConfigDialog;
 import org.netxms.nxmc.modules.agentmanagement.widgets.AgentConfigEditor;
@@ -51,6 +53,7 @@ public class AgentConfigurationEditor extends AdHocObjectView
 
 	private AgentConfigEditor editor;
 	private boolean modified = false;
+   private boolean readOnly = false;
 	private String textSavedVeriosn = null;
 	private Action actionSave;
    private Action actionSaveAndApply;
@@ -82,6 +85,7 @@ public class AgentConfigurationEditor extends AdHocObjectView
       AgentConfigurationEditor view = (AgentConfigurationEditor)origin;
       editor.setText(view.editor.getText());
       modified = view.modified;
+      setReadOnly(view.readOnly);
       actionSave.setEnabled(view.actionSave.isEnabled());
    }
 
@@ -96,7 +100,7 @@ public class AgentConfigurationEditor extends AdHocObjectView
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
-            if (!modified)
+            if (!modified && !readOnly)
 				{
 					modified = true;
 					actionSave.setEnabled(true);
@@ -192,14 +196,20 @@ public class AgentConfigurationEditor extends AdHocObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final String config = session.readAgentConfigurationFile(getObjectId());
+            final AgentConfigurationFile config = session.readAgentConfigurationFile(getObjectId());
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  editor.setText(config);
+                  editor.setText(config.getContent());
                   modified = false;
                   actionSave.setEnabled(false);
+                  setReadOnly(config.isCached());
+                  if (config.isCached())
+                  {
+                     addMessage(MessageArea.WARNING, i18n.tr("Agent is not reachable. Showing cached copy of configuration from {0}, editing is disabled.",
+                           DateFormatFactory.getDateTimeFormat().format(config.getCacheTime())), true);
+                  }
                }
             });
          }
@@ -240,7 +250,7 @@ public class AgentConfigurationEditor extends AdHocObjectView
     */
    private void saveConfig(final boolean saveAndApply)
    {
-      if (!modified)
+      if (!modified || readOnly)
          return;
 
       clearMessages();
@@ -268,6 +278,20 @@ public class AgentConfigurationEditor extends AdHocObjectView
             return i18n.tr("Cannot save agent configuration");
          }
       }.start();
+   }
+
+   /**
+    * Switch editor between read-only (cached configuration shown) and editable mode.
+    *
+    * @param readOnly true to make editor read-only
+    */
+   private void setReadOnly(boolean readOnly)
+   {
+      this.readOnly = readOnly;
+      editor.getTextWidget().setEditable(!readOnly);
+      actionSaveAndApply.setEnabled(!readOnly);
+      if (readOnly)
+         actionSave.setEnabled(false);
    }
 
    /**

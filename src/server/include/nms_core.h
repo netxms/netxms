@@ -784,7 +784,7 @@ private:
    void enumUserVariables(const NXCPMessage& request);
    void deleteUserVariable(const NXCPMessage& request);
    void changeObjectZone(const NXCPMessage& request);
-   void readAgentConfigFile(const NXCPMessage& request);
+   void readAgentConfiguration(const NXCPMessage& request, AgentConfigType type);
    void writeAgentConfigFile(const NXCPMessage& request);
    void executeAction(const NXCPMessage& request);
    void getObjectTools(const NXCPMessage& request);

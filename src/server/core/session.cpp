@@ -1422,7 +1422,10 @@ void ClientSession::processRequest(NXCPMessage *request)
          setupEncryption(*request);
          break;
       case CMD_READ_AGENT_CONFIG_FILE:
-         readAgentConfigFile(*request);
+         readAgentConfiguration(*request, AgentConfigType::MASTER_FILE);
+         break;
+      case CMD_GET_AGENT_EFFECTIVE_CONFIG:
+         readAgentConfiguration(*request, AgentConfigType::EFFECTIVE);
          break;
       case CMD_WRITE_AGENT_CONFIG_FILE:
          writeAgentConfigFile(*request);
@@ -9958,9 +9961,10 @@ void ClientSession::setupEncryption(const NXCPMessage& request)
 }
 
 /**
- * Get agent's configuration file
+ * Get agent's configuration (master file or effective configuration). Cached copy is returned
+ * with VID_READ_ONLY set and VID_TIMESTAMP holding cache time when agent is not reachable.
  */
-void ClientSession::readAgentConfigFile(const NXCPMessage& request)
+void ClientSession::readAgentConfiguration(const NXCPMessage& request, AgentConfigType type)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
@@ -9972,30 +9976,28 @@ void ClientSession::readAgentConfigFile(const NXCPMessage& request)
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ_AGENT))
          {
-            shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
-            if (pConn != nullptr)
+            TCHAR *content;
+            time_t cacheTime;
+            uint32_t rcc = static_cast<Node&>(*object).readAgentConfiguration(type, &content, &cacheTime);
+            switch(rcc)
             {
-               TCHAR *content;
-               size_t size;
-               uint32_t dwResult = pConn->readConfigFile(&content, &size);
-               switch(dwResult)
-               {
-                  case ERR_SUCCESS:
-                     response.setField(VID_RCC, RCC_SUCCESS);
-                     response.setField(VID_CONFIG_FILE, content);
-                     MemFree(content);
-                     break;
-                  case ERR_ACCESS_DENIED:
-                     response.setField(VID_RCC, RCC_ACCESS_DENIED);
-                     break;
-                  default:
-                     response.setField(VID_RCC, RCC_COMM_FAILURE);
-                     break;
-               }
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_COMM_FAILURE);
+               case ERR_SUCCESS:
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  response.setField(VID_CONFIG_FILE, content);
+                  response.setField(VID_READ_ONLY, cacheTime != 0);
+                  if (cacheTime != 0)
+                     response.setFieldFromTime(VID_TIMESTAMP, cacheTime);
+                  MemFree(content);
+                  break;
+               case ERR_ACCESS_DENIED:
+                  response.setField(VID_RCC, RCC_ACCESS_DENIED);
+                  break;
+               case ERR_UNKNOWN_COMMAND:   // agent too old to support requested configuration type
+                  response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
+                  break;
+               default:
+                  response.setField(VID_RCC, RCC_COMM_FAILURE);
+                  break;
             }
          }
          else
@@ -10039,6 +10041,7 @@ void ClientSession::writeAgentConfigFile(const NXCPMessage& request)
                if (agentRCC == ERR_SUCCESS)
                {
                   writeAuditLogWithValues(AUDIT_SYSCFG, true, object->getId(), nullptr, content, 'T', _T("New agent configuration file successfully uploaded to \"%s\""), object->getName());
+                  static_cast<Node&>(*object).updateAgentConfigCache(AgentConfigType::MASTER_FILE, content);
                }
 
                if ((request.getFieldAsUInt16(VID_APPLY_FLAG) != 0) && (agentRCC == ERR_SUCCESS))

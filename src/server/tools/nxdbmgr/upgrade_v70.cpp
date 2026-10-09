@@ -165,6 +165,23 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.50 to 70.51
+ */
+static bool H_UpgradeFromV50()
+{
+   CHK_EXEC(CreateTable(
+      L"CREATE TABLE agent_config_cache ("
+      L"   node_id integer not null,"
+      L"   config_type integer not null,"
+      L"   update_time integer not null,"
+      L"   content_hash varchar(63) not null,"
+      L"   content $SQL:TEXT null,"
+      L"   PRIMARY KEY(node_id,config_type))"));
+   CHK_EXEC(SetMinorSchemaVersion(51));
+   return true;
+}
+
+/**
  * Upgrade from 70.49 to 70.50
  */
 static bool H_UpgradeFromV49()
@@ -1690,6 +1707,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 50, 70, 51, H_UpgradeFromV50 },
    { 49, 70, 50, H_UpgradeFromV49 },
    { 48, 70, 49, H_UpgradeFromV48 },
    { 47, 70, 48, H_UpgradeFromV47 },
