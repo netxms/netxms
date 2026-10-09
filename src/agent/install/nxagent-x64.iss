@@ -53,7 +53,6 @@ Source: "..\..\..\out\x64\Release\bin\db2.ddr"; DestDir: "{app}\bin"; Flags: ign
 Source: "..\..\..\out\x64\Release\bin\informix.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x64\Release\bin\mariadb.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x64\Release\bin\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\out\x64\Release\bin\mysql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x64\Release\bin\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x64\Release\bin\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x64\Release\bin\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
