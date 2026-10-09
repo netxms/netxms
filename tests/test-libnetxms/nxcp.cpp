@@ -313,6 +313,7 @@ void TestNXCPMessageCodeName()
    AssertEquals(NXCPMessageCodeName(CMD_RESTORE_DEVICE_CONFIG, buffer), _T("CMD_RESTORE_DEVICE_CONFIG"));
    AssertEquals(NXCPMessageCodeName(CMD_GET_TRAFFIC_CONNECTORS, buffer), _T("CMD_GET_TRAFFIC_CONNECTORS"));
    AssertEquals(NXCPMessageCodeName(CMD_QUERY_TRAFFIC_DATA, buffer), _T("CMD_QUERY_TRAFFIC_DATA"));
+   AssertEquals(NXCPMessageCodeName(CMD_GET_AGENT_EFFECTIVE_CONFIG, buffer), _T("CMD_GET_AGENT_EFFECTIVE_CONFIG"));
    EndTest();
 
    StartTest(_T("NXCP message code name - reporting server table"));

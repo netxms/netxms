@@ -2654,9 +2654,9 @@ uint32_t AgentConnection::setupEncryption(RSA_KEY serverKey)
 }
 
 /**
- * Get configuration file from agent
+ * Read configuration text from agent using given command (CMD_READ_AGENT_CONFIG_FILE or CMD_GET_AGENT_EFFECTIVE_CONFIG)
  */
-uint32_t AgentConnection::readConfigFile(TCHAR **content, size_t *sizeptr)
+uint32_t AgentConnection::readConfigInternal(uint16_t command, TCHAR **content, size_t *sizeptr)
 {
    *content = nullptr;
    *sizeptr = 0;
@@ -2668,7 +2668,7 @@ uint32_t AgentConnection::readConfigFile(TCHAR **content, size_t *sizeptr)
    uint32_t requestId = generateRequestId();
 
    NXCPMessage msg(m_nProtocolVersion);
-   msg.setCode(CMD_READ_AGENT_CONFIG_FILE);
+   msg.setCode(command);
    msg.setId(requestId);
 
    if (sendMessage(&msg))
@@ -2709,6 +2709,22 @@ uint32_t AgentConnection::readConfigFile(TCHAR **content, size_t *sizeptr)
    }
 
    return rcc;
+}
+
+/**
+ * Get master configuration file from agent
+ */
+uint32_t AgentConnection::readConfigFile(TCHAR **content, size_t *sizeptr)
+{
+   return readConfigInternal(CMD_READ_AGENT_CONFIG_FILE, content, sizeptr);
+}
+
+/**
+ * Get effective (merged) configuration from agent in XML form
+ */
+uint32_t AgentConnection::readEffectiveConfig(TCHAR **content, size_t *sizeptr)
+{
+   return readConfigInternal(CMD_GET_AGENT_EFFECTIVE_CONFIG, content, sizeptr);
 }
 
 /**

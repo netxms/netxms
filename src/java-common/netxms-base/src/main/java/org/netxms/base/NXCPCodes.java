@@ -581,6 +581,7 @@ public class NXCPCodes
    public static final int CMD_GET_AI_MEMORY = 0x0233;
    public static final int CMD_MODIFY_AI_MEMORY_ENTRY = 0x0234;
    public static final int CMD_DELETE_AI_MEMORY_ENTRY = 0x0235;
+   public static final int CMD_GET_AGENT_EFFECTIVE_CONFIG = 0x0236;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

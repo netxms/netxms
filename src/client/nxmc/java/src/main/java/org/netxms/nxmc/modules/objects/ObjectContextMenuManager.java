@@ -76,6 +76,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.SendUserAgentNotificationAction;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.PackageSelectionDialog;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
+import org.netxms.nxmc.modules.agentmanagement.views.AgentEffectiveConfigurationView;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentExplorer;
 import org.netxms.nxmc.modules.assetmanagement.CreateAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
@@ -146,6 +147,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionTakeScreenshot;
    private Action actionOpenRemoteControlView;
    private Action actionEditAgentConfig;
+   private Action actionShowEffectiveAgentConfig;
    private Action actionExecuteScript;
    private Action actionOpenMibExprorer;
    private Action actionOpenAgentExplorer;
@@ -349,6 +351,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             openAgentConfigEditor();
+         }
+      };
+
+      actionShowEffectiveAgentConfig = new Action(i18n.tr("Show effective agent configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png")) {
+         @Override
+         public void run()
+         {
+            openEffectiveAgentConfigView();
          }
       };
 
@@ -884,6 +894,7 @@ public class ObjectContextMenuManager extends MenuManager
       if ((object instanceof Node) && ((Node)object).hasAgent())
       {
          menu.add(actionEditAgentConfig);
+         menu.add(actionShowEffectiveAgentConfig);
       }
       if (containsNodesWithAgent(selection))
       {
@@ -1569,6 +1580,19 @@ public class ObjectContextMenuManager extends MenuManager
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new AgentConfigurationEditor((Node)object, contextId));
+   }
+
+   /**
+    * Open view showing effective agent configuration
+    */
+   private void openEffectiveAgentConfigView()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Node))
+         return;
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new AgentEffectiveConfigurationView((Node)object, contextId));
    }
 
    /**

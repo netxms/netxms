@@ -75,6 +75,7 @@ import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.AgentConfiguration;
+import org.netxms.client.agent.config.AgentConfigurationFile;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.client.ai.AiAgentTask;
 import org.netxms.client.ai.AiAssistantFunction;
@@ -11304,20 +11305,37 @@ public class NXCSession
    }
 
    /**
-    * Get agent's master configuration file.
+    * Get agent's master configuration file. If agent is not reachable, server returns cached copy
+    * (if available) marked as cached.
     *
     * @param nodeId Node ID
     * @return Master configuration file of agent running on given node
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String readAgentConfigurationFile(long nodeId) throws IOException, NXCException
+   public AgentConfigurationFile readAgentConfigurationFile(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_READ_AGENT_CONFIG_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getFieldAsString(NXCPCodes.VID_CONFIG_FILE);
+      return new AgentConfigurationFile(waitForRCC(msg.getMessageId()));
+   }
+
+   /**
+    * Get agent's effective configuration (master configuration file merged with additional configuration files
+    * and policies) in XML form. If agent is not reachable, server returns cached copy (if available) marked as cached.
+    *
+    * @param nodeId Node ID
+    * @return Effective configuration of agent running on given node
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public AgentConfigurationFile readAgentEffectiveConfiguration(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_EFFECTIVE_CONFIG);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      sendMessage(msg);
+      return new AgentConfigurationFile(waitForRCC(msg.getMessageId()));
    }
 
    /**
