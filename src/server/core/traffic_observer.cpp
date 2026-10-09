@@ -70,7 +70,7 @@ TrafficObserver::TrafficObserver(const wchar_t *name, const NXCPMessage& request
    m_zoneUIN = request.isFieldExist(VID_ZONE_UIN) ? request.getFieldAsInt32(VID_ZONE_UIN) : 0;
    m_linkedNodeId = request.getFieldAsUInt32(VID_LINKED_NODE_ID);
    m_removalPolicy = request.getFieldAsInt16(VID_REMOVAL_POLICY);
-   m_gracePeriod = request.getFieldAsUInt32(VID_GRACE_PERIOD);
+   m_gracePeriod = request.isFieldExist(VID_GRACE_PERIOD) ? request.getFieldAsUInt32(VID_GRACE_PERIOD) : 30;
    m_syncConfig = request.getFieldAsUtf8String(VID_SYNC_CONFIG);
    m_lastDiscoveryStatus = 0;
    m_lastDiscoveryTime = 0;
@@ -571,6 +571,32 @@ void TrafficObserver::calculateCompoundStatus(bool forcedRecalc)
 }
 
 /**
+ * Get most critical additional status from analyzer connection state
+ */
+int TrafficObserver::getAdditionalMostCriticalStatus(StringBuffer *explanation)
+{
+   switch(m_connectionState)
+   {
+      case TRAFFIC_OBSERVER_STATE_CONNECTED:
+         if (explanation != nullptr)
+            explanation->append(L"Analyzer API is reachable");
+         return STATUS_NORMAL;
+      case TRAFFIC_OBSERVER_STATE_UNREACHABLE:
+         if (explanation != nullptr)
+            explanation->append(L"Analyzer API is not reachable");
+         return STATUS_MAJOR;
+      case TRAFFIC_OBSERVER_STATE_AUTH_FAILURE:
+         if (explanation != nullptr)
+            explanation->append(L"Analyzer rejected credentials");
+         return STATUS_MAJOR;
+      default:
+         if (explanation != nullptr)
+            explanation->append(L"Analyzer connection state is unknown");
+         return STATUS_UNKNOWN;
+   }
+}
+
+/**
  * Update backend product/version/edition and capability set from connection test result,
  * notifying clients if anything changed
  */
@@ -745,7 +771,9 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
             GetTrafficConnectorErrorMessage(status));
       }
 
-      ObservationPointDescriptor *points = (connector->DiscoverPoints != nullptr) ? connector->DiscoverPoints(credentials) : nullptr;
+      // Discovery is pointless against an unreachable analyzer; the connection test result becomes the discovery status
+      bool connected = (status == TrafficConnectorStatus::SUCCESS) || (status == TrafficConnectorStatus::NOT_IMPLEMENTED);
+      ObservationPointDescriptor *points = (connected && (connector->DiscoverPoints != nullptr)) ? connector->DiscoverPoints(credentials) : nullptr;
       json_decref(credentials);
       unique_ptr<ObservationPointDescriptor> pointsHolder(points);   // owns the list even on early poll cancellation returns
       if (points != nullptr)
@@ -777,8 +805,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
 
             if (point != nullptr)
             {
-               point->updateFromDiscovery(d, m_id);
-               point->setName(wName);
+               point->updateFromDiscovery(d, m_id);   // name is set on creation only, so user renames survive discovery
                nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 6, L"Updated existing observation point \"%s\" [%u] (external ID: %hs)", point->getName(), point->getId(), d->externalId);
             }
             else
@@ -874,13 +901,16 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
       }
       else
       {
-         sendPollerMsg(POLLER_ERROR L"   Observation point discovery returned no results\r\n");
-         nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Point discovery returned no results for traffic observer \"%s\" [%u]", m_name, m_id);
+         const wchar_t *reason = connected ? L"Observation point discovery returned no results" : GetTrafficConnectorErrorMessage(status);
+         sendPollerMsg(POLLER_ERROR L"   Observation point discovery failed (%s)\r\n", reason);
+         nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Point discovery failed for traffic observer \"%s\" [%u] (%s)", m_name, m_id, reason);
 
+         char reasonUtf8[256];
+         wchar_to_utf8(reason, -1, reasonUtf8, sizeof(reasonUtf8));
          lockProperties();
          m_lastDiscoveryStatus = 2;
          m_lastDiscoveryTime = time(nullptr);
-         m_lastDiscoveryMessage = "Observation point discovery returned no results";
+         m_lastDiscoveryMessage = reasonUtf8;
          setModified(MODIFY_TRAFFIC_OBSERVER_PROPERTIES);
          unlockProperties();
       }
@@ -1102,6 +1132,12 @@ void TrafficObserver::prepareForDeletion()
    while (m_statusPollState.isPending() || m_configurationPollState.isPending())
       ThreadSleepMs(100);
    nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 4, L"TrafficObserver::prepareForDeletion(%s [%u]): no outstanding polls left", m_name, m_id);
+
+   // Observation points exist only as part of their observer; the generic cascade
+   // would keep a point that is also bound to a container, with a dangling owner
+   unique_ptr<SharedObjectArray<NetObj>> points = getChildren(OBJECT_OBSERVATIONPOINT);
+   for (int i = 0; i < points->size(); i++)
+      points->get(i)->deleteObject();
 
    super::prepareForDeletion();
 }

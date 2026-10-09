@@ -500,6 +500,10 @@ static void ActivationThread(int64_t term)
       _exit(NETXMSD_EXIT_RESTART_STANDBY);
    }
 
+   // Observation point host records are written by the matching pass directly, not through
+   // the change journal - reload them so the index matches what the previous active persisted
+   LoadObservationPointHosts();
+
    // Seed change journal sequence from the journal head and enable journal
    // writes for this node (it is about to become the writing active)
    if (!HAJournalInit())

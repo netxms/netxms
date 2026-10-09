@@ -31,6 +31,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.Table;
+import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.TableRow;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
@@ -86,6 +87,7 @@ public class TrafficQueryTable extends Composite
    private String sortColumn = null;
    private int sortDirection = SWT.UP;
    private Table currentData = null;
+   private boolean persistenceEnabled = false;
    private SortableTableViewer viewer;
    private TableLabelProvider labelProvider;
    private CLabel messageLabel = null;
@@ -315,6 +317,11 @@ public class TrafficQueryTable extends Composite
          return;
       }
 
+      // Rows are copied positionally into the current table, so a result with a different
+      // column set (other connector, other query after an object switch) needs new columns
+      if (viewer.isInitialized() && !sameColumns(currentData, table))
+         viewer.reset();
+
       if (!viewer.isInitialized())
       {
          final String[] names = table.getColumnDisplayNames();
@@ -324,7 +331,11 @@ public class TrafficQueryTable extends Composite
          if (columnIndex == -1)
             columnIndex = 0; // fallback to first column
          viewer.createColumns(names, widths, columnIndex, sortDirection);
-         viewer.enablePersistence(configId);
+         if (!persistenceEnabled)
+         {
+            viewer.enablePersistence(configId);
+            persistenceEnabled = true;
+         }
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
          labelProvider.setColumns(table.getColumns());
 
@@ -337,6 +348,27 @@ public class TrafficQueryTable extends Composite
          currentData.addAll(table);
          viewer.refresh();
       }
+   }
+
+   /**
+    * Check if two tables have the same column set (names and data types, in order)
+    *
+    * @param a first table
+    * @param b second table
+    * @return true if column sets match
+    */
+   private static boolean sameColumns(Table a, Table b)
+   {
+      if (a.getColumnCount() != b.getColumnCount())
+         return false;
+      for(int i = 0; i < a.getColumnCount(); i++)
+      {
+         TableColumnDefinition ca = a.getColumnDefinition(i);
+         TableColumnDefinition cb = b.getColumnDefinition(i);
+         if (!ca.getName().equals(cb.getName()) || (ca.getDataType() != cb.getDataType()))
+            return false;
+      }
+      return true;
    }
 
    /**

@@ -27,7 +27,7 @@
 TrafficConnectorStatus NtopngSyncHostAliases(const StringMap& aliases, json_t *credentials)
 {
    TrafficConnectorStatus result = TrafficConnectorStatus::SUCCESS;
-   int synced = 0;
+   int synced = 0, consecutiveFailures = 0;
    for (KeyValuePair<const wchar_t> *alias : aliases)
    {
       char hostKey[128];
@@ -55,13 +55,19 @@ TrafficConnectorStatus NtopngSyncHostAliases(const StringMap& aliases, json_t *c
       {
          json_decref(response);
          synced++;
+         consecutiveFailures = 0;
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngSyncHostAliases: cannot set alias for host %hs (VLAN %d)", hostKey, vlan);
          result = status;
-         if (status == TrafficConnectorStatus::AUTH_ERROR)
-            break;   // subsequent requests will fail the same way
+         // A rejected token fails every request the same way, and a run of failures means the
+         // analyzer is down - each further attempt would only burn a full request timeout
+         if ((status == TrafficConnectorStatus::AUTH_ERROR) || (status == TrafficConnectorStatus::CONNECTOR_UNAVAILABLE) || (++consecutiveFailures >= 3))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, L"NtopngSyncHostAliases: aborting after %d consecutive failure(s)", consecutiveFailures);
+            break;
+         }
       }
    }
    nxlog_debug_tag(DEBUG_TAG, 6, L"NtopngSyncHostAliases: %d of %d aliases pushed", synced, aliases.size());

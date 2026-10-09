@@ -277,6 +277,9 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, Ti
       case DS_SSH:
          ds = _T("ssh");
          break;
+      case DS_TRAFFIC_OBSERVER:
+         ds = _T("trafficobserver");
+         break;
       case DS_WEB_SERVICE:
          ds = _T("websvc");
          break;

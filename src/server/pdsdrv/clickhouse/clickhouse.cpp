@@ -343,6 +343,9 @@ bool ClickHouseStorageDriver::saveDCItemValue(DCItem *dci, Timestamp timestamp, 
       case DS_SSH:
          record.dataSource = "ssh";
          break;
+      case DS_TRAFFIC_OBSERVER:
+         record.dataSource = "trafficobserver";
+         break;
       case DS_WEB_SERVICE:
          record.dataSource = "websvc";
          break;
