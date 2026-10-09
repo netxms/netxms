@@ -32,8 +32,7 @@ ArchitecturesAllowed=x64
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed
 Name: "tools"; Description: "Command Line Tools"; Types: full
 Name: "server"; Description: "NetXMS Server"; Types: full compact
-Name: "server\mariadb"; Description: "MariaDB Client Library"; Types: full
-Name: "server\mysql"; Description: "MySQL Client Library"; Types: full
+Name: "server\mariadb"; Description: "MariaDB/MySQL Client Library"; Types: full
 Name: "server\pgsql"; Description: "PostgreSQL Client Library"; Types: full
 Name: "server\reporting"; Description: "Reporting Server"; Types: full
 
@@ -72,7 +71,6 @@ Source: "..\..\..\out\x64\Release\bin\db2.ddr"; DestDir: "{app}\bin"; Flags: ign
 Source: "..\..\..\out\x64\Release\bin\informix.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\mariadb.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\..\..\out\x64\Release\bin\mysql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
@@ -254,16 +252,11 @@ Source: "..\..\server\tools\scripts\nx-collect-server-diag.cmd"; DestDir: "{app}
 Source: "..\..\server\tools\scripts\zip.ps1"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 ; Third party files
 Source: "..\files\windows\x64\jq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\libcrypto-1_1-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\pgsql
 Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x64\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "..\files\windows\x64\libintl-8.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x64\libmariadb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mariadb
 Source: "..\files\windows\x64\libmicrohttpd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "..\files\windows\x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "..\files\windows\x64\libssl-1_1-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\pgsql
 Source: "..\files\windows\x64\libstrophe.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x64\modbus.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
@@ -735,7 +728,7 @@ Begin
   Case dbInitType.ItemIndex Of
     0: Result := 'mariadb.ddr';
     1: Result := 'mssql.ddr';
-    2: Result := 'mysql.ddr';
+    2: Result := 'mariadb.ddr';
     3: Result := 'oracle.ddr';
     4: Result := 'pgsql.ddr';
     5: Result := 'sqlite.ddr';
