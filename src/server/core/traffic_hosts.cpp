@@ -142,32 +142,88 @@ static shared_ptr<Node> FindObservedNodeAllZones(const InetAddress& ipAddr, int 
 }
 
 /**
- * Persist and index the matched host set for one point. Takes the matched
- * records (non-owning array) and transfers record ownership to the index.
+ * Merge the host set seen in one matching pass into the index and persist the point's
+ * records. Hosts seen in this pass get their node mapping, address and last-seen time
+ * refreshed (first-seen is kept from the existing record); hosts that resolve to no node
+ * only update an existing record (to unmatched) and never create one. Records for hosts
+ * absent from this pass are left in place and retired by the housekeeper once past the
+ * retention period, so a host idle at the moment of a single pass keeps its record.
+ * Takes ownership of the records in the array.
  */
-static void UpdatePointHostRecords(uint32_t pointId, ObjectArray<ObservationPointHostRecord> *matches)
+static void MergePointHostRecords(uint32_t pointId, ObjectArray<ObservationPointHostRecord> *seen)
 {
-   // Persist to database (full replace for this point)
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DBBegin(hdb);
-
-   DB_STATEMENT hDelete = DBPrepare(hdb, L"DELETE FROM observation_point_hosts WHERE point_id=?");
-   if (hDelete != nullptr)
+   // Merge into the in-memory index; track nodes whose observation set changes so
+   // their object messages (observation point list) get refreshed
+   HashSet<uint32_t> oldNodes, newNodes;
+   ObjectArray<ObservationPointHostRecord> snapshot(seen->size(), 64, Ownership::True);
+   s_hostRecordsLock.writeLock();
+   for (KeyValuePair<ObservationPointHostRecord> *p : s_hostRecords)
    {
-      DBBind(hDelete, 1, DB_SQLTYPE_INTEGER, pointId);
-      DBExecute(hDelete);
-      DBFreeStatement(hDelete);
+      if ((p->value->pointId == pointId) && (p->value->nodeId != 0))
+         oldNodes.put(p->value->nodeId);
    }
+   for (int i = 0; i < seen->size(); i++)
+   {
+      ObservationPointHostRecord *r = seen->get(i);
+      wchar_t key[192];
+      BuildRecordKey(r->pointId, r->hostKey, key, 192);
+      ObservationPointHostRecord *existing = s_hostRecords.get(key);
+      if (existing != nullptr)
+      {
+         existing->nodeId = r->nodeId;
+         existing->ipAddr = r->ipAddr;
+         existing->vlan = r->vlan;
+         existing->lastSeen = r->lastSeen;
+         delete r;
+      }
+      else if (r->nodeId != 0)
+      {
+         s_hostRecords.set(key, r);   // index takes ownership
+      }
+      else
+      {
+         delete r;
+      }
+   }
+   seen->setOwner(Ownership::False);
+   for (KeyValuePair<ObservationPointHostRecord> *p : s_hostRecords)
+   {
+      if (p->value->pointId == pointId)
+      {
+         snapshot.add(new ObservationPointHostRecord(*p->value));
+         if (p->value->nodeId != 0)
+            newNodes.put(p->value->nodeId);
+      }
+   }
+   RebuildObservedNodesLocked();
+   s_hostRecordsLock.unlock();
 
-   if (matches->size() > 0)
+   // Persist the point's record set (rewritten as a whole so the table always mirrors the index)
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   bool success = DBBegin(hdb);
+   if (success)
+   {
+      DB_STATEMENT hDelete = DBPrepare(hdb, L"DELETE FROM observation_point_hosts WHERE point_id=?");
+      if (hDelete != nullptr)
+      {
+         DBBind(hDelete, 1, DB_SQLTYPE_INTEGER, pointId);
+         success = DBExecute(hDelete);
+         DBFreeStatement(hDelete);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+   if (success && (snapshot.size() > 0))
    {
       DB_STATEMENT hInsert = DBPrepare(hdb,
          L"INSERT INTO observation_point_hosts (point_id,host_key,ip_addr,vlan,node_id,first_seen,last_seen) VALUES (?,?,?,?,?,?,?)", true);
       if (hInsert != nullptr)
       {
-         for (int i = 0; i < matches->size(); i++)
+         for (int i = 0; success && (i < snapshot.size()); i++)
          {
-            ObservationPointHostRecord *r = matches->get(i);
+            ObservationPointHostRecord *r = snapshot.get(i);
             wchar_t ipText[64];
             DBBind(hInsert, 1, DB_SQLTYPE_INTEGER, r->pointId);
             DBBind(hInsert, 2, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, r->hostKey, DB_BIND_STATIC);
@@ -176,35 +232,22 @@ static void UpdatePointHostRecords(uint32_t pointId, ObjectArray<ObservationPoin
             DBBind(hInsert, 5, DB_SQLTYPE_INTEGER, r->nodeId);
             DBBind(hInsert, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(r->firstSeen));
             DBBind(hInsert, 7, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(r->lastSeen));
-            DBExecute(hInsert);
+            success = DBExecute(hInsert);
          }
          DBFreeStatement(hInsert);
       }
+      else
+      {
+         success = false;
+      }
    }
-
-   DBCommit(hdb);
+   if (success)
+      DBCommit(hdb);
+   else
+      DBRollback(hdb);
    DBConnectionPoolReleaseConnection(hdb);
-
-   // Transfer records into the in-memory index; track nodes whose observation
-   // set changes so their object messages (observation point list) get refreshed
-   HashSet<uint32_t> oldNodes, newNodes;
-   s_hostRecordsLock.writeLock();
-   for (KeyValuePair<ObservationPointHostRecord> *p : s_hostRecords)
-   {
-      if (p->value->pointId == pointId)
-         oldNodes.put(p->value->nodeId);
-   }
-   RemovePointRecordsLocked(pointId);
-   for (int i = 0; i < matches->size(); i++)
-   {
-      ObservationPointHostRecord *r = matches->get(i);
-      wchar_t key[192];
-      BuildRecordKey(r->pointId, r->hostKey, key, 192);
-      newNodes.put(r->nodeId);
-      s_hostRecords.set(key, r);   // index takes ownership
-   }
-   RebuildObservedNodesLocked();
-   s_hostRecordsLock.unlock();
+   if (!success)
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_TRAFFIC_POLL, L"Cannot save host records of observation point [%u] to database", pointId);
 
    HashSet<uint32_t> affectedNodes;
    for (const uint32_t *nodeId : oldNodes)
@@ -243,8 +286,9 @@ void RunObservationPointHostMatching(ObservationPoint *point)
    bool allZones = (zoneUIN < 0);
    uint32_t pointId = point->getId();
 
-   ObjectArray<ObservationPointHostRecord> matches(hosts->size(), 64, Ownership::False);
-   int collisions = 0;
+   ObjectArray<ObservationPointHostRecord> seen(hosts->size(), 64, Ownership::True);
+   int collisions = 0, matched = 0;
+   time_t now = time(nullptr);
    for (int i = 0; i < hosts->size(); i++)
    {
       TrafficHostEntry *h = hosts->get(i);
@@ -254,24 +298,24 @@ void RunObservationPointHostMatching(ObservationPoint *point)
          continue;
 
       shared_ptr<Node> node = allZones ? FindObservedNodeAllZones(h->ipAddr, &collisions) : FindNodeByIP(zoneUIN, h->ipAddr);
-      if (node == nullptr)
-         continue;
+      if (node != nullptr)
+         matched++;
 
       auto r = new ObservationPointHostRecord();
       r->pointId = pointId;
       strlcpy(r->hostKey, h->hostKey, sizeof(r->hostKey));
       r->ipAddr = h->ipAddr;
       r->vlan = h->vlan;
-      r->nodeId = node->getId();
-      r->firstSeen = (h->firstSeen != 0) ? h->firstSeen : time(nullptr);
-      r->lastSeen = (h->lastSeen != 0) ? h->lastSeen : time(nullptr);
-      matches.add(r);
+      r->nodeId = (node != nullptr) ? node->getId() : 0;
+      r->firstSeen = (h->firstSeen != 0) ? h->firstSeen : now;
+      r->lastSeen = (h->lastSeen != 0) ? h->lastSeen : now;
+      seen.add(r);
    }
    delete hosts;
 
-   UpdatePointHostRecords(pointId, &matches);
-   nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Host matching for observation point [%u]: %d host record(s), %d cross-zone collision(s) skipped",
-      pointId, matches.size(), collisions);
+   MergePointHostRecords(pointId, &seen);
+   nxlog_debug_tag(DEBUG_TAG_TRAFFIC_POLL, 5, L"Host matching for observation point [%u]: %d active host(s) seen, %d matched, %d cross-zone collision(s) skipped",
+      pointId, seen.size(), matched, collisions);
 }
 
 /**
