@@ -189,7 +189,7 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
  */
 static bool SubAgentInit(Config *config)
 {
-	g_mysqlDriver = DBLoadDriver(config->getValue(_T("/MySQL/Driver"), _T("mysql.ddr")), nullptr, nullptr, nullptr);
+	g_mysqlDriver = DBLoadDriver(config->getValue(_T("/MySQL/Driver"), _T("mariadb.ddr")), nullptr, nullptr, nullptr);
 	if (g_mysqlDriver == nullptr)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("MYSQL: failed to load database driver"));
