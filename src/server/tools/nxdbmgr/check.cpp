@@ -739,6 +739,125 @@ static void CheckClusters()
 }
 
 /**
+ * Check traffic observer and observation point objects and their host records
+ */
+static void CheckTrafficObservers()
+{
+   StartStage(L"Traffic observer object properties");
+   CheckMissingObjectProperties(L"traffic_observers", L"traffic observer", 0);
+   EndStage();
+
+   StartStage(L"Observation point object properties");
+   CheckMissingObjectProperties(L"observation_points", L"observation point", 0);
+   EndStage();
+
+   wchar_t name[MAX_OBJECT_NAME], query[256];
+
+   StartStage(L"Traffic observer analyzer nodes");
+   DB_RESULT hResult = SQLSelect(L"SELECT id,node_id FROM traffic_observers WHERE node_id<>0");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      SetStageWorkTotal(count);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t observerId = DBGetFieldULong(hResult, i, 0);
+         uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
+         if (!IsDatabaseRecordExist(g_dbHandle, L"nodes", L"id", nodeId))
+         {
+            g_dbCheckErrors++;
+            if (GetYesNoEx(L"Traffic observer \"%s\" [%u] refers to non-existing node [%u] as analyzer node. Dereference?",
+                     DBMgrGetObjectName(observerId, name), observerId, nodeId))
+            {
+               nx_swprintf(query, 256, L"UPDATE traffic_observers SET node_id=0 WHERE id=%u", observerId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+
+   StartStage(L"Observation point owners");
+   hResult = SQLSelect(L"SELECT id,observer_id FROM observation_points");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      SetStageWorkTotal(count);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t pointId = DBGetFieldULong(hResult, i, 0);
+         uint32_t observerId = DBGetFieldULong(hResult, i, 1);
+         if (!IsDatabaseRecordExist(g_dbHandle, L"traffic_observers", L"id", observerId))
+         {
+            g_dbCheckErrors++;
+            if (GetYesNoEx(L"Observation point \"%s\" [%u] refers to non-existing traffic observer [%u]. Delete it?",
+                     DBMgrGetObjectName(pointId, name), pointId, observerId))
+            {
+               nx_swprintf(query, 256, L"DELETE FROM observation_points WHERE id=%u", pointId);
+               if (SQLQuery(query))
+               {
+                  nx_swprintf(query, 256, L"DELETE FROM observation_point_hosts WHERE point_id=%u", pointId);
+                  SQLQuery(query);
+                  nx_swprintf(query, 256, L"DELETE FROM object_properties WHERE object_id=%u", pointId);
+                  SQLQuery(query);
+                  g_dbCheckFixes++;
+               }
+            }
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+
+   StartStage(L"Observation point host records");
+   hResult = SQLSelect(L"SELECT DISTINCT point_id FROM observation_point_hosts");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t pointId = DBGetFieldULong(hResult, i, 0);
+         if (!IsDatabaseRecordExist(g_dbHandle, L"observation_points", L"id", pointId))
+         {
+            g_dbCheckErrors++;
+            if (GetYesNoEx(L"Host records refer to non-existing observation point [%u]. Delete them?", pointId))
+            {
+               nx_swprintf(query, 256, L"DELETE FROM observation_point_hosts WHERE point_id=%u", pointId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   hResult = SQLSelect(L"SELECT DISTINCT node_id FROM observation_point_hosts WHERE node_id<>0");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         uint32_t nodeId = DBGetFieldULong(hResult, i, 0);
+         if (!IsDatabaseRecordExist(g_dbHandle, L"nodes", L"id", nodeId))
+         {
+            g_dbCheckErrors++;
+            if (GetYesNoEx(L"Host records refer to non-existing node [%u]. Unlink them?", nodeId))
+            {
+               nx_swprintf(query, 256, L"UPDATE observation_point_hosts SET node_id=0 WHERE node_id=%u", nodeId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+}
+
+/**
  * Returns TRUE if SELECT returns non-empty set
  */
 static bool CheckResultSet(TCHAR *query)
@@ -1946,6 +2065,7 @@ void CheckDatabase()
          CheckComponents(_T("Network service"), _T("network_services"));
          CheckClusters();
          CheckAccessPoints();
+         CheckTrafficObservers();
          CheckTemplateToTargetMapping();
          CheckBusinessServices();
          CheckObjectProperties();
