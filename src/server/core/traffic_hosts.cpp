@@ -81,7 +81,8 @@ static void NotifyNodesOnObservationChange(const HashSet<uint32_t>& nodes)
 }
 
 /**
- * Load host records from the database at startup
+ * Load host records from the database, replacing the in-memory index (at startup
+ * and on warm-standby activation, since the table is not change-journaled)
  */
 void LoadObservationPointHosts()
 {
@@ -91,6 +92,7 @@ void LoadObservationPointHosts()
    {
       int count = DBGetNumRows(hResult);
       s_hostRecordsLock.writeLock();
+      s_hostRecords.clear();
       for (int i = 0; i < count; i++)
       {
          auto r = new ObservationPointHostRecord();

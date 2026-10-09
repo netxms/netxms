@@ -22218,43 +22218,45 @@ void ClientSession::getTrafficMetricDefinitions(const NXCPMessage& request)
          return;
    }
 
-   TrafficConnectorInterface *connector = nullptr;
+   // Observer and point level: the observer's connector, filtered by its capability set.
+   // Host level on Node/Template: every registered connector (a template can be applied to
+   // nodes observed by different analyzers), merged by metric name, no capability filtering.
+   StringList connectorNames;
    uint64_t capabilities = 0;
    bool filterByCapabilities = false;
    if (observer != nullptr)
    {
-      connector = FindTrafficConnector(observer->getConnectorName());
+      connectorNames.add(observer->getConnectorName());
       capabilities = observer->getCapabilities();
       filterByCapabilities = true;
    }
    else
    {
-      // Host level on Node/Template: use the only registered connector (no capability filtering)
-      StringList names = GetTrafficConnectorNames();
-      if (names.size() == 1)
-         connector = FindTrafficConnector(names.get(0));
+      connectorNames.addAll(GetTrafficConnectorNames());
    }
 
-   if ((connector == nullptr) || (connector->GetMetricDefinitions == nullptr))
-   {
-      response.setField(VID_NUM_ELEMENTS, 0);
-      response.setField(VID_RCC, RCC_SUCCESS);
-      sendMessage(response);
-      return;
-   }
-
-   json_t *credentials = (observer != nullptr) ? observer->getCredentials() : nullptr;
-   ObjectArray<TrafficMetricDefinition> *definitions = connector->GetMetricDefinitions(level, credentials);
-   json_decref(credentials);
-
+   StringSet listedMetrics;
    uint32_t count = 0, fieldId = VID_TRAFFIC_METRIC_LIST_BASE;
-   if (definitions != nullptr)
+   for (int n = 0; n < connectorNames.size(); n++)
    {
+      TrafficConnectorInterface *connector = FindTrafficConnector(connectorNames.get(n));
+      if ((connector == nullptr) || (connector->GetMetricDefinitions == nullptr))
+         continue;
+
+      json_t *credentials = (observer != nullptr) ? observer->getCredentials() : nullptr;
+      ObjectArray<TrafficMetricDefinition> *definitions = connector->GetMetricDefinitions(level, credentials);
+      json_decref(credentials);
+      if (definitions == nullptr)
+         continue;
+
       for (int i = 0; i < definitions->size(); i++)
       {
          TrafficMetricDefinition *d = definitions->get(i);
          if (filterByCapabilities && (d->requiredCapability != 0) && ((capabilities & d->requiredCapability) == 0))
             continue;
+         if (listedMetrics.contains(d->name))
+            continue;
+         listedMetrics.add(d->name);
          response.setField(fieldId++, d->name);
          response.setField(fieldId++, d->displayName);
          response.setField(fieldId++, d->unit);

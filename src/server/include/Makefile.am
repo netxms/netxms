@@ -17,6 +17,7 @@ serverinclude_HEADERS = \
 	auth-token.h \
 	chatdrv.h \
 	cloud-connector.h \
+	traffic-connector.h \
 	dci_table_creation.h \
 	device-backup.h \
 	efdrv.h \

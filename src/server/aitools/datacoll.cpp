@@ -134,6 +134,18 @@ static int ParseOrigin(const char *str)
       return DS_MODBUS;
    if (!stricmp(str, "internal"))
       return DS_INTERNAL;
+   if (!stricmp(str, "windowsPerformance"))
+      return DS_WINPERF;
+   if (!stricmp(str, "smclp"))
+      return DS_SMCLP;
+   if (!stricmp(str, "ethernetIp"))
+      return DS_ETHERNET_IP;
+   if (!stricmp(str, "cloudConnector"))
+      return DS_CLOUD_CONNECTOR;
+   if (!stricmp(str, "otlp"))
+      return DS_OTLP;
+   if (!stricmp(str, "trafficObserver"))
+      return DS_TRAFFIC_OBSERVER;
    if (!stricmp(str, "netconf"))
       return DS_NETCONF;
    if (!stricmp(str, "computed"))

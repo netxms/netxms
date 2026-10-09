@@ -207,7 +207,7 @@ public class NXCObjectCreationData
       credentials = "";
       discoveryFilter = "";
       removalPolicy = 0;
-      gracePeriod = 0;
+      gracePeriod = 30;
       settlementLag = 5;
       providerId = "";
       domainType = PowerDomainType.OTHER;

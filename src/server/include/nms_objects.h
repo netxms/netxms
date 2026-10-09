@@ -3804,6 +3804,7 @@ public:
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+   virtual int getAdditionalMostCriticalStatus(StringBuffer *explanation = nullptr) override;
 
    SharedString getConnectorName() const { return GetAttributeWithLock(m_connectorName, m_mutexProperties); }
    json_t *getCredentials() const
