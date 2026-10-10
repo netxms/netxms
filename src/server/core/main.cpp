@@ -1653,6 +1653,9 @@ bool ActivateServer()
    ActivateObjectStore();
    nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Objects loaded and initialized"));
 
+   if (!HAIsClusterMode())   // in cluster mode client listeners are started during passive bring-up
+      InitClientListeners();
+
    // Load observation point host records for traffic observer subsystem
    LoadObservationPointHosts();
 
@@ -1702,9 +1705,6 @@ bool ActivateServer()
    int importMode = ConfigReadInt(_T("Server.ImportConfigurationOnStartup"), 1);
    if (importMode > 0)
       ImportLocalConfiguration(importMode == 2);
-
-   if (!HAIsClusterMode())   // in cluster mode client listeners are started during passive bring-up
-      InitClientListeners();
 
    // Create syncer thread pool
    int maxSize = ConfigReadInt(_T("ThreadPool.Syncer.MaxSize"), 1);
