@@ -161,9 +161,9 @@ uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context);
  * Valid options for getopt()
  */
 #if defined(_WIN32)
-#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:O:P:Q:r:RsSt:TUvW:X:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:e:EfFG:hHiIkKlM:n:N:o:O:P:Q:r:RsSt:TUvW:X:Z:z:"
 #else
-#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:p:O:P:Q:r:St:Tu:vW:xX:Z:z:"
+#define VALID_OPTIONS   "B:c:CdD:fFg:G:hkKlM:o:O:p:P:Q:r:St:Tu:vW:xX:Z:z:"
 #endif
 
 /**
@@ -171,8 +171,8 @@ uint32_t H_SystemExecute(const shared_ptr<ActionExecutionContext>& context);
  */
 enum class Command
 {
-   CHECK_CONFIG,
    CREATE_CONFIG,
+   DUMP_CONFIG,
    GET_LOG_LOCATION,
    HELP,
    INSTALL_EVENT_SOURCE,
@@ -187,6 +187,16 @@ enum class Command
    SHUTDOWN_EXT_AGENTS,
    START_SERVICE,
    STOP_SERVICE
+};
+
+/**
+ * Config output formats
+ */
+enum class ConfigOutputFormat
+{
+   JSON,
+   TREE,
+   XML
 };
 
 /**
@@ -466,6 +476,7 @@ static TCHAR m_szHelpText[] =
    _T("   -n <name>        : Service name\n")
    _T("   -N <name>        : Service display name\n")
 #endif
+   _T("   -o <format>      : Set configuration outpot format (json, tree, or xml)\n")
    _T("   -O <option>      : Set configuration option\n")
 #ifndef _WIN32
    _T("   -p               : Path to pid file (default: /var/run/nxagentd.pid)\n")
@@ -2128,6 +2139,7 @@ static void SearchConfig(const TCHAR *file, TCHAR *buffer)
 int main(int argc, char *argv[])
 {
    Command command = Command::RUN_AGENT;
+   ConfigOutputFormat configOutputFormat = ConfigOutputFormat::TREE;
    int exitCode = 0;
    BOOL bRestart = FALSE;
    uint32_t oldPID, dwMainPID;
@@ -2172,6 +2184,7 @@ int main(int argc, char *argv[])
    static struct option longOptions[] =
    {
       { (char *)"debug-tag", 1, nullptr, 't' },
+      { (char *)"output-format", 1, nullptr, 'o' },
       { (char *)"reset-identity", 0, nullptr, 'T' },
       { (char *)"zone-uin", 1, nullptr, 'B' },
       { nullptr, 0, 0, 0 }
@@ -2213,8 +2226,8 @@ int main(int argc, char *argv[])
             strlcpy(g_szConfigFile, optarg, MAX_PATH);
 #endif
             break;
-         case 'C':   // Configuration check only
-            command = Command::CHECK_CONFIG;
+         case 'C':   // Configuration dump
+            command = Command::DUMP_CONFIG;
             break;
          case 'd':   // Run as daemon
             g_dwFlags |= AF_DAEMON;
@@ -2266,13 +2279,30 @@ int main(int argc, char *argv[])
          case 'l':
             command = Command::GET_LOG_LOCATION;
             break;
-         case 'O':   // Override configuration values
-            if (optarg != nullptr)
+         case 'o':
+            if (!stricmp(optarg, "json"))
             {
-               if (!cmdLineConfigValues.isEmpty())
-                  cmdLineConfigValues.append(_T("\n"));
-               cmdLineConfigValues.appendMBString(optarg);
+               configOutputFormat = ConfigOutputFormat::JSON;
             }
+            else if (!stricmp(optarg, "tree"))
+            {
+               configOutputFormat = ConfigOutputFormat::TREE;
+            }
+            else if (!stricmp(optarg, "xml"))
+            {
+               configOutputFormat = ConfigOutputFormat::XML;
+            }
+            else
+            {
+               fprintf(stderr, "Invalid configuration output format \"%s\"\n", optarg);
+               command = Command::NONE;
+               exitCode = 1;
+            }
+            break;
+         case 'O':   // Override configuration values
+            if (!cmdLineConfigValues.isEmpty())
+               cmdLineConfigValues.append(_T("\n"));
+            cmdLineConfigValues.appendMBString(optarg);
             break;
 #ifndef _WIN32
          case 'p':   // PID file
@@ -2653,13 +2683,28 @@ int main(int argc, char *argv[])
          }
 #endif   /* _WIN32 */
          break;
-      case Command::CHECK_CONFIG:
+      case Command::DUMP_CONFIG:
          {
             bool validConfig = LoadConfig(configSection, cmdLineConfigValues, true, false);
             if (validConfig)
             {
                config = g_config;
-               config->print(stdout);
+               if (configOutputFormat == ConfigOutputFormat::TREE)
+               {
+                  config->print(stdout);
+               }
+               else if (configOutputFormat == ConfigOutputFormat::JSON)
+               {
+                  json_t *json = config->createJson(nullptr, false);
+                  char *s = json_dumps(json, JSON_INDENT(3));
+                  json_decref(json);
+                  _tprintf(_T("%hs\n"), s);
+                  MemFree(s);
+               }
+               else if (configOutputFormat == ConfigOutputFormat::XML)
+               {
+                  _tprintf(_T("%s\n"), config->createXml().cstr());
+               }
                validConfig = config->parseTemplate(configSection, m_cfgTemplate);
                for(int i = 0; i < config->getWarnings().size(); i++)
                   ConsolePrintf(_T("WARNING: %s\n"), config->getWarnings().get(i));

@@ -1468,35 +1468,34 @@ uint32_t CommSession::installPackage(NXCPMessage *request)
 /**
  * Get agent's configuration file
  */
-void CommSession::getConfig(NXCPMessage *pMsg)
+void CommSession::getConfig(NXCPMessage *response)
 {
    if (m_masterServer)
    {
-      pMsg->setField(VID_RCC,
-         pMsg->setFieldFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
+      response->setField(VID_RCC, response->setFieldFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
    }
    else
    {
-      pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
 }
 
 /**
  * Get agent's effective configuration (master file merged with included files and policies) in XML form
  */
-void CommSession::getEffectiveConfig(NXCPMessage *pMsg)
+void CommSession::getEffectiveConfig(NXCPMessage *response)
 {
    if (m_masterServer)
    {
       shared_ptr<Config> config = g_config;
-      char *xml = UTF8StringFromTString(config->createXml().cstr());
-      pMsg->setField(VID_CONFIG_FILE, reinterpret_cast<const BYTE*>(xml), strlen(xml));
-      MemFree(xml);
-      pMsg->setField(VID_RCC, ERR_SUCCESS);
+      json_t *json = config->createJson(nullptr, false);
+      response->setField(VID_CONFIG_FILE, json, true);
+      json_decref(json);
+      response->setField(VID_RCC, ERR_SUCCESS);
    }
    else
    {
-      pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
    }
 }
 
