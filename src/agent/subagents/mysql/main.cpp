@@ -189,7 +189,16 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
  */
 static bool SubAgentInit(Config *config)
 {
-	g_mysqlDriver = DBLoadDriver(config->getValue(_T("/MySQL/Driver"), _T("mariadb.ddr")), nullptr, nullptr, nullptr);
+#ifdef _WIN32
+	const TCHAR *defaultDriver = _T("mariadb.ddr");
+#else
+	// Packages allow either driver to be installed alongside the subagent
+	TCHAR libdir[MAX_PATH], mariadbDriver[MAX_PATH];
+	GetNetXMSDirectory(nxDirLib, libdir);
+	_sntprintf(mariadbDriver, MAX_PATH, _T("%s/dbdrv/mariadb.ddr"), libdir);
+	const TCHAR *defaultDriver = (_taccess(mariadbDriver, F_OK) == 0) ? _T("mariadb.ddr") : _T("mysql.ddr");
+#endif
+	g_mysqlDriver = DBLoadDriver(config->getValue(_T("/MySQL/Driver"), defaultDriver), nullptr, nullptr, nullptr);
 	if (g_mysqlDriver == nullptr)
 	{
 		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("MYSQL: failed to load database driver"));
