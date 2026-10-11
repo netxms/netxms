@@ -821,12 +821,24 @@ void ConfigEntry::createJson(json_t *parent, bool toCamelCase) const
    {
       json_t *obj = json_object();
       for (ConfigEntry *e = m_first; e != nullptr; e = e->getNext())
-         e->createJson(obj);
+         e->createJson(obj, toCamelCase);
       json_object_set_new(parent, utf8Name.c_str(), obj);
    }
    else if (!m_values.isEmpty())
    {
-      json_object_set_new(parent, utf8Name.c_str(), json_string_t(m_values.get(m_values.size() - 1)));
+      if (m_values.size() == 1)
+      {
+         json_object_set_new(parent, utf8Name.c_str(), json_string_t(m_values.get(0)));
+      }
+      else
+      {
+         json_t *values = json_array();
+         for(int i = m_values.size() - 1; i >= 0; i--)
+         {
+            json_array_append_new(values, json_string_t(m_values.get(i)));
+         }
+         json_object_set_new(parent, utf8Name.c_str(), values);
+      }
    }
 }
 
@@ -1731,6 +1743,35 @@ static void CharData(void *userData, const XML_Char *s, int len)
 }
 
 /**
+ * Add scalar JSON value to config entry as string. Objects, arrays, and null are ignored.
+ */
+static void AddJsonScalarValue(ConfigEntry *entry, json_t *value)
+{
+   if (json_is_string(value))
+   {
+      TCHAR *tvalue = TStringFromUTF8String(json_string_value(value));
+      entry->addValue(tvalue);
+      MemFree(tvalue);
+   }
+   else if (json_is_integer(value))
+   {
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, INT64_FMT, json_integer_value(value));
+      entry->addValue(buffer);
+   }
+   else if (json_is_real(value))
+   {
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, _T("%f"), json_real_value(value));
+      entry->addValue(buffer);
+   }
+   else if (json_is_boolean(value))
+   {
+      entry->addValue(json_is_true(value) ? _T("true") : _T("false"));
+   }
+}
+
+/**
  * Recursively load JSON object into config entry
  */
 static void LoadJsonObject(ConfigEntry *parent, json_t *obj, const Config *owner, bool merge)
@@ -1749,27 +1790,16 @@ static void LoadJsonObject(ConfigEntry *parent, json_t *obj, const Config *owner
       {
          LoadJsonObject(entry, value, owner, merge);
       }
-      else if (json_is_string(value))
+      else if (json_is_array(value))
       {
-         TCHAR *tvalue = TStringFromUTF8String(json_string_value(value));
-         entry->addValue(tvalue);
-         MemFree(tvalue);
+         // Arrays are written by createJson() with the effective value first, so add
+         // elements in reverse order to make the first element the most recent value
+         for(size_t i = json_array_size(value); i > 0; i--)
+            AddJsonScalarValue(entry, json_array_get(value, i - 1));
       }
-      else if (json_is_integer(value))
+      else
       {
-         TCHAR buffer[64];
-         _sntprintf(buffer, 64, INT64_FMT, json_integer_value(value));
-         entry->addValue(buffer);
-      }
-      else if (json_is_real(value))
-      {
-         TCHAR buffer[64];
-         _sntprintf(buffer, 64, _T("%f"), json_real_value(value));
-         entry->addValue(buffer);
-      }
-      else if (json_is_boolean(value))
-      {
-         entry->addValue(json_is_true(value) ? _T("true") : _T("false"));
+         AddJsonScalarValue(entry, value);
       }
 
       MemFree(tkey);

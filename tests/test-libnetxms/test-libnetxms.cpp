@@ -12,6 +12,7 @@
 NETXMS_EXECUTABLE_HEADER(test-libnetxms)
 
 void TestConfig();
+void TestConfigSerialization();
 void TestFormatNumber();
 void TestFormatDCIValue();
 void TestGauge64();
@@ -3938,6 +3939,7 @@ int main(int argc, char *argv[])
    TestRWLock();
    TestGauge64();
    TestConfig();
+   TestConfigSerialization();
    TestMemoryPool();
    TestObjectMemoryPool();
    TestString();
