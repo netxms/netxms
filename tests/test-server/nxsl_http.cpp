@@ -32,6 +32,10 @@
 #include <microhttpd.h>
 #include <testtools.h>
 
+#if MHD_VERSION < 0x00097002
+#define MHD_Result int
+#endif
+
 #define TEST_HTTP_PORT     14780
 #define TEST_BASE_URL      "http://127.0.0.1:14780"
 
