@@ -9976,14 +9976,14 @@ void ClientSession::readAgentConfiguration(const NXCPMessage& request, AgentConf
       {
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_READ_AGENT))
          {
-            TCHAR *content;
+            char *content;
             time_t cacheTime;
             uint32_t rcc = static_cast<Node&>(*object).readAgentConfiguration(type, &content, &cacheTime);
             switch(rcc)
             {
                case ERR_SUCCESS:
                   response.setField(VID_RCC, RCC_SUCCESS);
-                  response.setField(VID_CONFIG_FILE, content);
+                  response.setFieldFromUtf8String(VID_CONFIG_FILE, content);
                   response.setField(VID_READ_ONLY, cacheTime != 0);
                   if (cacheTime != 0)
                      response.setFieldFromTime(VID_TIMESTAMP, cacheTime);
@@ -10031,7 +10031,7 @@ void ClientSession::writeAgentConfigFile(const NXCPMessage& request)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
-         TCHAR *content = request.getFieldAsString(VID_CONFIG_FILE);
+         char *content = request.getFieldAsUtf8String(VID_CONFIG_FILE);
          if (object->checkAccessRights(m_userId, OBJECT_ACCESS_CONFIGURE_AGENT))
          {
             shared_ptr<AgentConnectionEx> pConn = static_cast<Node&>(*object).createAgentConnection();
@@ -10040,7 +10040,9 @@ void ClientSession::writeAgentConfigFile(const NXCPMessage& request)
                uint32_t agentRCC = pConn->writeConfigFile(content);
                if (agentRCC == ERR_SUCCESS)
                {
-                  writeAuditLogWithValues(AUDIT_SYSCFG, true, object->getId(), nullptr, content, 'T', _T("New agent configuration file successfully uploaded to \"%s\""), object->getName());
+                  wchar_t *wcontent = WideStringFromUTF8String(content);
+                  writeAuditLogWithValues(AUDIT_SYSCFG, true, object->getId(), nullptr, wcontent, 'T', _T("New agent configuration file successfully uploaded to \"%s\""), object->getName());
+                  MemFree(wcontent);
                   static_cast<Node&>(*object).updateAgentConfigCache(AgentConfigType::MASTER_FILE, content);
                }
 
@@ -10077,7 +10079,9 @@ void ClientSession::writeAgentConfigFile(const NXCPMessage& request)
          }
          else
          {
-            writeAuditLogWithValues(AUDIT_SYSCFG, false, object->getId(), nullptr, content, 'T', _T("Access denied on uploading agent configuration file to \"%s\""), object->getName());
+            wchar_t *wcontent = WideStringFromUTF8String(content);
+            writeAuditLogWithValues(AUDIT_SYSCFG, false, object->getId(), nullptr, wcontent, 'T', _T("Access denied on uploading agent configuration file to \"%s\""), object->getName());
+            MemFree(wcontent);
             response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
          MemFree(content);

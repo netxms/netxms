@@ -1,6 +1,6 @@
 /*
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2024 Raden Solutions
+** Copyright (C) 2004-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,8 @@ enum class Operation
    CHECK_SERVICE,
    FILE_SET_INFO,
    GET,
-   GET_CONFIG,
+   GET_CONFIG_FILE,
+   GET_EFFECTIVE_CONFIG,
    GET_LIST,
    GET_PARAMS,
    GET_SCREENSHOT,
@@ -184,29 +185,30 @@ static int ListParameters(AgentConnection *pConn)
 /**
  * Get configuration file
  */
-static int GetConfig(AgentConnection *pConn)
+static int GetConfig(AgentConnection *pConn, bool effectiveConfig)
 {
-   TCHAR *content;
-   size_t size;
-   uint32_t rcc = pConn->readConfigFile(&content, &size);
+   char *content = nullptr;
+   uint32_t rcc = effectiveConfig ? pConn->readEffectiveConfig(&content) : pConn->readConfigFile(&content);
    if (rcc == ERR_SUCCESS)
    {
-      TranslateStr(content, _T("\r\n"), _T("\n"));
-      _fputts(content, stdout);
-      if (size > 0)
+      StringBuffer sb(content, "UTF8");
+      sb.replace(_T("\r\n"), _T("\n"));
+      _fputts(sb, stdout);
+      if (!sb.isEmpty())
       {
-         if (content[size - 1] != _T('\n'))
-            fputc('\n', stdout);
+         if (sb.charAt(sb.length() - 1) != _T('\n'))
+            _fputtc(_T('\n'), stdout);
       }
       else
       {
-         fputc('\n', stdout);
+         _fputtc(_T('\n'), stdout);
       }
    }
    else
    {
       WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
+   MemFree(content);
    return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
@@ -403,8 +405,11 @@ static bool ParseAdditionalOptionCb(const char ch, const wchar_t *optarg)
       case 'I':
          s_operation = Operation::GET_PARAMS;
          break;
+      case 'c':
+         s_operation = Operation::GET_EFFECTIVE_CONFIG;
+         break;
       case 'C':
-         s_operation = Operation::GET_CONFIG;
+         s_operation = Operation::GET_CONFIG_FILE;
          break;
       case 'l':
          s_operation = Operation::GET_LIST;
@@ -516,7 +521,7 @@ static bool ParseAdditionalOptionCb(const char ch, const wchar_t *optarg)
  */
 static bool IsArgMissingCb(int currentCount)
 {
-   return currentCount < (((s_operation == Operation::CHECK_SERVICE) || (s_operation == Operation::GET_PARAMS) || (s_operation == Operation::GET_CONFIG) || (s_operation == Operation::GET_SYSTEM_TIME) || (s_operation == Operation::GET_USER_SESSIONS)) ? 1 : 2);
+   return currentCount < (((s_operation == Operation::CHECK_SERVICE) || (s_operation == Operation::GET_PARAMS) || (s_operation == Operation::GET_CONFIG_FILE) || (s_operation == Operation::GET_EFFECTIVE_CONFIG) || (s_operation == Operation::GET_SYSTEM_TIME) || (s_operation == Operation::GET_USER_SESSIONS)) ? 1 : 2);
 }
 
 /**
@@ -543,8 +548,11 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, wchar_t **argv, int
                exitCode = Get(conn, argv[pos++]);
             } while((exitCode == 0) && (s_batchMode) && (pos < argc));
             break;
-         case Operation::GET_CONFIG:
-            exitCode = GetConfig(conn);
+         case Operation::GET_CONFIG_FILE:
+            exitCode = GetConfig(conn, false);
+            break;
+         case Operation::GET_EFFECTIVE_CONFIG:
+            exitCode = GetConfig(conn, true);
             break;
          case Operation::GET_LIST:
             exitCode = GetList(conn, argv[optind + 1]);
@@ -590,6 +598,7 @@ int main(int argc, char *argv[])
    tool.mainHelpText = L"Usage: nxget [<options>] <host> [<parameter> [<parameter> ...]]\n"
                        L"Tool specific options are:\n"
                        L"   -b           : Batch mode - get all parameters listed on command line.\n"
+                       L"   -c           : Get agent's effective configuration\n"
                        L"   -C           : Get agent's configuration file\n"
                        L"   -d delimiter : Print table content as delimited text.\n"
                        L"   -E           : Take screenshot. First parameter is file name, second (optional) is session name.\n"
@@ -609,7 +618,7 @@ int main(int argc, char *argv[])
                        L"   -T           : Requested parameter is a table.\n"
                        L"   -U           : Get list of active user sessions.\n"
                        L"   -Y           : Read remote system time.\n";
-   tool.additionalOptions = "bCd:EfFi:IlnN:o:P:r:R:t:TUY";
+   tool.additionalOptions = "bcCd:EfFi:IlnN:o:P:r:R:t:TUY";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

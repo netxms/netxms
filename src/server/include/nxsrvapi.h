@@ -1248,7 +1248,6 @@ private:
 
    InterfaceList *parseInterfaceTable(Table *data);
    InterfaceList *parseInterfaceList(StringList *data);
-   uint32_t readConfigInternal(uint16_t command, TCHAR **content, size_t *sizeptr);
 
 protected:
    virtual shared_ptr<AbstractCommChannel> createChannel();
@@ -1355,9 +1354,9 @@ public:
          const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);
    uint32_t getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentListDefinition> **listList, ObjectArray<AgentTableDefinition> **tableList);
    uint32_t getActionList(ObjectArray<AgentActionDefinition> **actionList);
-   uint32_t readConfigFile(TCHAR **content, size_t *size);
-   uint32_t readEffectiveConfig(TCHAR **content, size_t *size);
-   uint32_t writeConfigFile(const TCHAR *content);
+   uint32_t readConfigFile(char **content);
+   uint32_t readEffectiveConfig(char **content);
+   uint32_t writeConfigFile(const char *content);
    uint32_t getPolicyInventory(AgentPolicyInfo **info);
    uint32_t uninstallPolicy(const uuid& guid);
    uint32_t getUserSessions(ObjectArray<UserSession> **sessions);

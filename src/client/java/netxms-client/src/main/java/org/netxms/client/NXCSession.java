@@ -11316,14 +11316,14 @@ public class NXCSession
    public AgentConfigurationFile readAgentConfigurationFile(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_READ_AGENT_CONFIG_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
       return new AgentConfigurationFile(waitForRCC(msg.getMessageId()));
    }
 
    /**
-    * Get agent's effective configuration (master configuration file merged with additional configuration files
-    * and policies) in XML form. If agent is not reachable, server returns cached copy (if available) marked as cached.
+    * Get agent's effective configuration (master configuration file merged with additional configuration files and policies) in
+    * JSON form. If agent is not reachable, server returns cached copy (if available) marked as cached.
     *
     * @param nodeId Node ID
     * @return Effective configuration of agent running on given node
@@ -11333,9 +11333,11 @@ public class NXCSession
    public AgentConfigurationFile readAgentEffectiveConfiguration(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_EFFECTIVE_CONFIG);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
-      return new AgentConfigurationFile(waitForRCC(msg.getMessageId()));
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      System.out.println(response);
+      return new AgentConfigurationFile(response);
    }
 
    /**
@@ -11351,9 +11353,9 @@ public class NXCSession
    public void writeAgentConfigurationFile(long nodeId, String config, boolean apply) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_WRITE_AGENT_CONFIG_FILE);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       msg.setField(NXCPCodes.VID_CONFIG_FILE, config);
-      msg.setFieldInt16(NXCPCodes.VID_APPLY_FLAG, apply ? 1 : 0);
+      msg.setField(NXCPCodes.VID_APPLY_FLAG, apply);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

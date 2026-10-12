@@ -6556,14 +6556,13 @@ bool Node::confPollAgent()
       }
 
       // Refresh cached agent configuration (served to clients when agent is unreachable)
-      TCHAR *configText;
-      size_t configSize;
-      if (pAgentConn->readConfigFile(&configText, &configSize) == ERR_SUCCESS)
+      char *configText;
+      if (pAgentConn->readConfigFile(&configText) == ERR_SUCCESS)
       {
          updateAgentConfigCache(AgentConfigType::MASTER_FILE, configText);
          MemFree(configText);
       }
-      if (pAgentConn->readEffectiveConfig(&configText, &configSize) == ERR_SUCCESS)
+      if (pAgentConn->readEffectiveConfig(&configText) == ERR_SUCCESS)
       {
          updateAgentConfigCache(AgentConfigType::EFFECTIVE, configText);
          MemFree(configText);
@@ -12436,7 +12435,7 @@ shared_ptr<AgentTunnel> Node::establishReverseAgentTunnel(bool *legacyAllowed)
  * configuration text (caller is responsible for freeing it), and *cacheTime is set to time when cached
  * copy was last updated, or 0 if configuration was read directly from agent.
  */
-uint32_t Node::readAgentConfiguration(AgentConfigType type, TCHAR **content, time_t *cacheTime)
+uint32_t Node::readAgentConfiguration(AgentConfigType type, char **content, time_t *cacheTime)
 {
    *content = nullptr;
    *cacheTime = 0;
@@ -12445,8 +12444,7 @@ uint32_t Node::readAgentConfiguration(AgentConfigType type, TCHAR **content, tim
    shared_ptr<AgentConnectionEx> conn = createAgentConnection();
    if (conn != nullptr)
    {
-      size_t size;
-      rcc = (type == AgentConfigType::MASTER_FILE) ? conn->readConfigFile(content, &size) : conn->readEffectiveConfig(content, &size);
+      rcc = (type == AgentConfigType::MASTER_FILE) ? conn->readConfigFile(content) : conn->readEffectiveConfig(content);
       if (rcc == ERR_SUCCESS)
       {
          updateAgentConfigCache(type, *content);
@@ -12474,9 +12472,9 @@ uint32_t Node::readAgentConfiguration(AgentConfigType type, TCHAR **content, tim
          if (DBGetNumRows(hResult) > 0)
          {
             *cacheTime = DBGetFieldTime(hResult, 0, 0);
-            *content = DBGetField(hResult, 0, 1, nullptr, 0);
+            *content = DBGetFieldUTF8(hResult, 0, 1, nullptr, 0);
             if (*content == nullptr)
-               *content = MemCopyStringW(L"");
+               *content = MemCopyStringA("");
             rcc = ERR_SUCCESS;
          }
          DBFreeResult(hResult);
@@ -12490,13 +12488,13 @@ uint32_t Node::readAgentConfiguration(AgentConfigType type, TCHAR **content, tim
 /**
  * Update cached copy of agent configuration. Content is rewritten only when changed, timestamp is always updated.
  */
-void Node::updateAgentConfigCache(AgentConfigType type, const TCHAR *content)
+void Node::updateAgentConfigCache(AgentConfigType type, const char *content)
 {
    if (content == nullptr)
       return;
 
    BYTE hash[MD5_DIGEST_SIZE];
-   CalculateMD5Hash(content, wcslen(content) * sizeof(wchar_t), hash);
+   CalculateMD5Hash(content, strlen(content), hash);
    wchar_t hashText[MD5_DIGEST_SIZE * 2 + 1];
    BinToStr(hash, MD5_DIGEST_SIZE, hashText);
 
@@ -12531,7 +12529,7 @@ void Node::updateAgentConfigCache(AgentConfigType type, const TCHAR *content)
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(type));
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(time(nullptr)));
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, hashText, DB_BIND_STATIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_TEXT, content, DB_BIND_STATIC);
+         DBBind(hStmt, 5, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, content, DB_BIND_STATIC);
          DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -12545,7 +12543,7 @@ void Node::updateAgentConfigCache(AgentConfigType type, const TCHAR *content)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<int64_t>(time(nullptr)));
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, hashText, DB_BIND_STATIC);
-         DBBind(hStmt, 3, DB_SQLTYPE_TEXT, content, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, content, DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(type));
          DBExecute(hStmt);
@@ -12568,6 +12566,9 @@ void Node::updateAgentConfigCache(AgentConfigType type, const TCHAR *content)
    DBConnectionPoolReleaseConnection(hdb);
 }
 
+/**
+ * Create agent connection
+ */
 shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
 {
    if (!(m_capabilities & NC_IS_NATIVE_AGENT) ||

@@ -4821,8 +4821,8 @@ public:
    void setAgentRestartTime() { m_agentRestartTime = time(nullptr); }
    time_t getAgentRestartTime() { return m_agentRestartTime; }
 
-   uint32_t readAgentConfiguration(AgentConfigType type, TCHAR **content, time_t *cacheTime);
-   void updateAgentConfigCache(AgentConfigType type, const TCHAR *content);
+   uint32_t readAgentConfiguration(AgentConfigType type, char **content, time_t *cacheTime);
+   void updateAgentConfigCache(AgentConfigType type, const char *content);
 
    shared_ptr<Interface> createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated, bool fakeInterface);
    shared_ptr<Interface> createNewInterface(const InetAddress& ipAddr, const MacAddress& macAddr, bool fakeInterface);

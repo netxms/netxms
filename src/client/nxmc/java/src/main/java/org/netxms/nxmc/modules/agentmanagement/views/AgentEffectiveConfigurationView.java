@@ -22,11 +22,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.client.agent.config.AgentConfigurationFile;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.JsonViewer;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -42,7 +42,7 @@ public class AgentEffectiveConfigurationView extends AdHocObjectView
 {
    private final I18n i18n = LocalizationHelper.getI18n(AgentEffectiveConfigurationView.class);
 
-   private Text textArea;
+   private JsonViewer textArea;
 
    /**
     * Create effective configuration view for given node.
@@ -72,7 +72,7 @@ public class AgentEffectiveConfigurationView extends AdHocObjectView
    protected void postClone(View origin)
    {
       super.postClone(origin);
-      textArea.setText(((AgentEffectiveConfigurationView)origin).textArea.getText());
+      textArea.setContent(((AgentEffectiveConfigurationView)origin).textArea.getContent(), false);
    }
 
    /**
@@ -81,7 +81,7 @@ public class AgentEffectiveConfigurationView extends AdHocObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      textArea = new Text(parent, SWT.MULTI | SWT.READ_ONLY | SWT.H_SCROLL | SWT.V_SCROLL);
+      textArea = new JsonViewer(parent, SWT.NONE);
       textArea.setFont(JFaceResources.getTextFont());
    }
 
@@ -117,7 +117,7 @@ public class AgentEffectiveConfigurationView extends AdHocObjectView
          {
             final AgentConfigurationFile config = session.readAgentEffectiveConfiguration(getObjectId());
             runInUIThread(() -> {
-               textArea.setText(config.getContent());
+               textArea.setContent(config.getContent(), false);
                if (config.isCached())
                {
                   addMessage(MessageArea.WARNING, i18n.tr("Agent is not reachable. Showing cached copy of configuration from {0}.",

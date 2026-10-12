@@ -2654,96 +2654,86 @@ uint32_t AgentConnection::setupEncryption(RSA_KEY serverKey)
 }
 
 /**
- * Read configuration text from agent using given command (CMD_READ_AGENT_CONFIG_FILE or CMD_GET_AGENT_EFFECTIVE_CONFIG)
+ * Get master configuration file from agent
  */
-uint32_t AgentConnection::readConfigInternal(uint16_t command, TCHAR **content, size_t *sizeptr)
+uint32_t AgentConnection::readConfigFile(char **content)
 {
    *content = nullptr;
-   *sizeptr = 0;
 
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   uint32_t rcc;
    uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_READ_AGENT_CONFIG_FILE, requestId, m_nProtocolVersion);
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
 
-   NXCPMessage msg(m_nProtocolVersion);
-   msg.setCode(command);
-   msg.setId(requestId);
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   if (response == nullptr)
+      return ERR_REQUEST_TIMEOUT;
 
-   if (sendMessage(&msg))
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
    {
-      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
-      if (response != nullptr)
-      {
-         rcc = response->getFieldAsUInt32(VID_RCC);
-         if (rcc == ERR_SUCCESS)
-         {
-            size_t size = response->getFieldAsBinary(VID_CONFIG_FILE, nullptr, 0);
-            BYTE *utf8Text = (BYTE *)malloc(size + 1);
-            response->getFieldAsBinary(VID_CONFIG_FILE, (BYTE *)utf8Text, size);
+      size_t size = response->getFieldAsBinary(VID_CONFIG_FILE, nullptr, 0);
+      *content = MemAllocStringA(size + 1);
+      response->getFieldAsBinary(VID_CONFIG_FILE, reinterpret_cast<BYTE*>(*content), size);
 
-            // We expect text file, so replace all non-printable characters with spaces
-            for(size_t i = 0; i < size; i++)
-               if ((utf8Text[i] < ' ') &&
-                   (utf8Text[i] != '\t') &&
-                   (utf8Text[i] != '\r') &&
-                   (utf8Text[i] != '\n'))
-                  utf8Text[i] = ' ';
-            utf8Text[size] = 0;
-
-            *content = WideStringFromUTF8String((char *)utf8Text);
-            MemFree(utf8Text);
-            *sizeptr = _tcslen(*content);
-         }
-         delete response;
-      }
-      else
-      {
-         rcc = ERR_REQUEST_TIMEOUT;
-      }
-   }
-   else
-   {
-      rcc = ERR_CONNECTION_BROKEN;
+      // We expect text file, so replace all non-printable characters with spaces
+      char *p = *content;
+      for(size_t i = 0; i < size; i++)
+         if ((p[i] < ' ') &&
+             (p[i] != '\t') &&
+             (p[i] != '\r') &&
+             (p[i] != '\n'))
+            p[i] = ' ';
+      p[size] = 0;
    }
 
+   delete response;
    return rcc;
 }
 
 /**
- * Get master configuration file from agent
+ * Get effective (merged) configuration from agent in JSON form
  */
-uint32_t AgentConnection::readConfigFile(TCHAR **content, size_t *sizeptr)
+uint32_t AgentConnection::readEffectiveConfig(char **content)
 {
-   return readConfigInternal(CMD_READ_AGENT_CONFIG_FILE, content, sizeptr);
-}
+   *content = nullptr;
 
-/**
- * Get effective (merged) configuration from agent in XML form
- */
-uint32_t AgentConnection::readEffectiveConfig(TCHAR **content, size_t *sizeptr)
-{
-   return readConfigInternal(CMD_GET_AGENT_EFFECTIVE_CONFIG, content, sizeptr);
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_GET_AGENT_EFFECTIVE_CONFIG, requestId, m_nProtocolVersion);
+   if (!sendMessage(&msg))
+      return ERR_CONNECTION_BROKEN;
+
+   NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+   if (response == nullptr)
+      return ERR_REQUEST_TIMEOUT;
+
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc == ERR_SUCCESS)
+   {
+      *content = response->getFieldAsUtf8String(VID_CONFIG_FILE);
+   }
+
+   delete response;
+   return rcc;
 }
 
 /**
  * Update configuration file on agent
  */
-uint32_t AgentConnection::writeConfigFile(const TCHAR *content)
+uint32_t AgentConnection::writeConfigFile(const char *content)
 {
-   NXCPMessage msg(m_nProtocolVersion);
-
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
    uint32_t requestId = generateRequestId();
-
-   msg.setCode(CMD_WRITE_AGENT_CONFIG_FILE);
-   msg.setId(requestId);
-   char *utf8content = UTF8StringFromWideString(content);
-   msg.setField(VID_CONFIG_FILE, (BYTE *)utf8content, strlen(utf8content));
-   MemFree(utf8content);
+   NXCPMessage msg(CMD_WRITE_AGENT_CONFIG_FILE, requestId, m_nProtocolVersion);
+   msg.setField(VID_CONFIG_FILE, reinterpret_cast<const BYTE*>(content), strlen(content));
 
    uint32_t rcc;
    if (sendMessage(&msg))
@@ -2754,7 +2744,6 @@ uint32_t AgentConnection::writeConfigFile(const TCHAR *content)
    {
       rcc = ERR_CONNECTION_BROKEN;
    }
-
    return rcc;
 }
 
