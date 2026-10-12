@@ -615,7 +615,9 @@ void TrafficObserver::updateBackendInfo(const TrafficBackendInfo& info)
 }
 
 /**
- * Update connection state, generating up/down events on transitions
+ * Update connection state, generating up/down events on transitions. Object status
+ * follows the connection state, so it is recalculated here rather than only by the
+ * status poll (the configuration poll changes the state as well).
  */
 void TrafficObserver::updateConnectionState(int16_t newState, const wchar_t *details)
 {
@@ -628,6 +630,7 @@ void TrafficObserver::updateConnectionState(int16_t newState, const wchar_t *det
       return;
 
    setModified(MODIFY_RUNTIME);
+   calculateCompoundStatus(true);
 
    if ((newState == TRAFFIC_OBSERVER_STATE_UNREACHABLE) || (newState == TRAFFIC_OBSERVER_STATE_AUTH_FAILURE))
    {
@@ -765,13 +768,14 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
          updateConnectionState(TRAFFIC_OBSERVER_STATE_CONNECTED, nullptr);
          sendPollerMsg(L"   Backend: %hs %hs (%hs), capabilities 0x%08X\r\n", info.product, info.version, info.edition, static_cast<uint32_t>(info.capabilities));
       }
-      else
+      else if (status != TrafficConnectorStatus::NOT_IMPLEMENTED)
       {
          updateConnectionState((status == TrafficConnectorStatus::AUTH_ERROR) ? TRAFFIC_OBSERVER_STATE_AUTH_FAILURE : TRAFFIC_OBSERVER_STATE_UNREACHABLE,
             GetTrafficConnectorErrorMessage(status));
       }
 
-      // Discovery is pointless against an unreachable analyzer; the connection test result becomes the discovery status
+      // Discovery is pointless against an unreachable analyzer; the connection test result becomes the discovery status.
+      // A connector without a connection test says nothing about reachability, so the state is left as is and discovery proceeds.
       bool connected = (status == TrafficConnectorStatus::SUCCESS) || (status == TrafficConnectorStatus::NOT_IMPLEMENTED);
       ObservationPointDescriptor *points = (connected && (connector->DiscoverPoints != nullptr)) ? connector->DiscoverPoints(credentials) : nullptr;
       json_decref(credentials);
