@@ -996,41 +996,23 @@ json_t NXCORE_EXPORTABLE *GetActions()
  */
 json_t *CreateActionExportRecord(uint32_t id)
 {
-   json_t *action = nullptr;
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name,is_markdown,send_geolocation FROM actions WHERE action_id=?"));
-   if (hStmt == nullptr)
-   {
-      DBConnectionPoolReleaseConnection(hdb);
+   shared_ptr<Action> action = s_actions.getShared(id);
+   if (action == nullptr)
       return nullptr;
-   }
 
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-   DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != nullptr)
-   {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         TCHAR buffer[256];
-         action = json_object();
-         json_object_set_new(action, "id", json_integer(id));
-         json_object_set_new(action, "guid", json_string_t(DBGetFieldGUID(hResult, 0, 0).toString()));
-         json_object_set_new(action, "name", json_string_t(DBGetField(hResult, 0, 1, buffer, 256)));
-         json_object_set_new(action, "type", json_integer(DBGetFieldULong(hResult, 0, 2)));
-         json_object_set_new(action, "recipientAddress", json_string_t(DBGetField(hResult, 0, 3, buffer, 256)));
-         json_object_set_new(action, "emailSubject", json_string_t(DBGetField(hResult, 0, 4, buffer, 256)));
-         json_object_set_new(action, "data", json_string_t(DBGetField(hResult, 0, 5, buffer, 256)));
-         json_object_set_new(action, "channelName", json_string_t(DBGetField(hResult, 0, 6, buffer, 256)));
-         json_object_set_new(action, "isMarkdown", json_boolean(DBGetFieldLong(hResult, 0, 7) != 0));
-         json_object_set_new(action, "sendGeoLocation", json_boolean(DBGetFieldLong(hResult, 0, 8) != 0));
-      }
-      DBFreeResult(hResult);
-   }
-   DBFreeStatement(hStmt);
-   DBConnectionPoolReleaseConnection(hdb);
-
-   return action;
+   json_t *json = json_object();
+   json_object_set_new(json, "id", json_integer(action->id));
+   json_object_set_new(json, "guid", action->guid.toJson());
+   json_object_set_new(json, "name", json_string_t(action->name));
+   json_object_set_new(json, "type", json_integer(static_cast<int32_t>(action->type)));
+   json_object_set_new(json, "isDisabled", json_boolean(action->isDisabled));
+   json_object_set_new(json, "recipientAddress", json_string_t(action->rcptAddr));
+   json_object_set_new(json, "emailSubject", json_string_t(action->emailSubject));
+   json_object_set_new(json, "data", json_string_t(CHECK_NULL_EX(action->data)));
+   json_object_set_new(json, "channelName", json_string_t(action->channelName));
+   json_object_set_new(json, "isMarkdown", json_boolean(action->isMarkdown));
+   json_object_set_new(json, "sendGeoLocation", json_boolean(action->sendGeoLocation));
+   return json;
 }
 
 /**
@@ -1210,6 +1192,7 @@ bool ImportAction(json_t *action, bool overwrite, ImportContext *context)
    _tcslcpy(actionObj->rcptAddr, rcptAddr, MAX_RCPT_ADDR_LEN);
    String channelName = json_object_get_string(action, "channelName", _T(""));
    _tcslcpy(actionObj->channelName, channelName, MAX_OBJECT_NAME);
+   actionObj->isDisabled = json_is_true(json_object_get(action, "isDisabled"));
    actionObj->isMarkdown = json_is_true(json_object_get(action, "isMarkdown"));
    actionObj->sendGeoLocation = json_is_true(json_object_get(action, "sendGeoLocation"));
    String data = json_object_get_string(action, "data", _T(""));
