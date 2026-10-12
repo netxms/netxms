@@ -25,6 +25,8 @@
 #include <WtsApi32.h>
 #include <tlhelp32.h>
 #include <winternl.h>
+#define SECURITY_WIN32
+#include <security.h>
 #else
 #include <signal.h>
 #include <syslog.h>
@@ -472,9 +474,66 @@ static void ReconcileExternalSubagentProcesses()
 }
 
 /**
+ * Read list of users whose sessions are not used for running external subagents
+ * (configuration parameter ExternalSubagentWatchdogExcludedUsers)
+ */
+static void ReadExternalSubagentExcludedUsers(StringList *users)
+{
+   shared_ptr<Config> config = g_config;
+   ConfigEntry *entry = config->getEntry(_T("/CORE/ExternalSubagentWatchdogExcludedUsers"));
+   if (entry != nullptr)
+   {
+      for(int i = 0; i < entry->getValueCount(); i++)
+         users->add(entry->getValue(i));
+   }
+}
+
+/**
+ * Check if given user (in DOMAIN\user form) is in the list of users excluded from running external subagents.
+ * List entries are matched case-insensitively either as bare user name or as DOMAIN\user.
+ */
+static bool IsUserExcludedFromExternalSubagents(const TCHAR *qualifiedUser, const StringList& excludedUsers)
+{
+   if (excludedUsers.containsIgnoreCase(qualifiedUser))
+      return true;
+   const TCHAR *user = _tcsrchr(qualifiedUser, _T('\\'));
+   return (user != nullptr) && excludedUsers.containsIgnoreCase(user + 1);
+}
+
+/**
+ * Startup check for external subagent loader: returns false (and logs the reason) if loader runs under user
+ * excluded from running external subagents. Loader can be started not only by the watchdog (autostart entry,
+ * scheduled task, manual start), so the exclusion list is enforced in the loader itself as well.
+ * If process user cannot be determined, loader is allowed to start: unlike the watchdog, which can skip
+ * a session and try another one, exiting here would leave external subagents not running at all.
+ */
+bool CheckExternalSubagentLoaderUser()
+{
+   StringList excludedUsers;
+   ReadExternalSubagentExcludedUsers(&excludedUsers);
+   if (excludedUsers.isEmpty())
+      return true;
+
+   TCHAR user[512];
+   ULONG size = 512;
+   if (!GetUserNameEx(NameSamCompatible, user, &size))
+   {
+      TCHAR errorText[1024];
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Cannot determine process user (%s), ExternalSubagentWatchdogExcludedUsers is not applied"),
+            GetSystemErrorText(GetLastError(), errorText, 1024));
+      return true;
+   }
+
+   if (!IsUserExcludedFromExternalSubagents(user, excludedUsers))
+      return true;
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("External subagent loader is running as user %s listed in ExternalSubagentWatchdogExcludedUsers, exiting"), user);
+   return false;
+}
+
+/**
  * Check if external subagents can be started in given session. Session is not suitable if logged on user
  * cannot be determined, nobody is logged on to it, or logged on user is in the list of excluded users.
- * List entries are matched case-insensitively either as bare user name or as DOMAIN\user.
  */
 static bool IsSessionSuitableForExternalSubagents(const WTS_SESSION_INFO& session, const StringList& excludedUsers)
 {
@@ -506,8 +565,10 @@ static bool IsSessionSuitableForExternalSubagents(const WTS_SESSION_INFO& sessio
    }
 
    TCHAR qualifiedUser[512];
-   _sntprintf(qualifiedUser, 512, _T("%s\\%s"), domain, user);
-   bool suitable = !excludedUsers.containsIgnoreCase(user) && !excludedUsers.containsIgnoreCase(qualifiedUser);
+   _tcslcpy(qualifiedUser, domain, 512);
+   _tcslcat(qualifiedUser, _T("\\"), 512);
+   _tcslcat(qualifiedUser, user, 512);
+   bool suitable = !IsUserExcludedFromExternalSubagents(qualifiedUser, excludedUsers);
    if (!suitable)
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Session %u (%s) skipped: logged on user %s is excluded"), session.SessionId, session.pWinStationName, qualifiedUser);
 
@@ -533,15 +594,7 @@ void ExternalSubagentWatchdog()
 
    // Sessions logged on by these users are never used for starting external subagents
    StringList excludedUsers;
-   {
-      shared_ptr<Config> config = g_config;
-      ConfigEntry *excludedUsersEntry = config->getEntry(_T("/CORE/ExternalSubagentWatchdogExcludedUsers"));
-      if (excludedUsersEntry != nullptr)
-      {
-         for(int i = 0; i < excludedUsersEntry->getValueCount(); i++)
-            excludedUsers.add(excludedUsersEntry->getValue(i));
-      }
-   }
+   ReadExternalSubagentExcludedUsers(&excludedUsers);
    TCHAR *excludedUsersText = excludedUsers.join(_T(", "));
    nxlog_debug_tag(DEBUG_TAG, 3, _T("External subagent watchdog excluded users: %s"), excludedUsers.isEmpty() ? _T("none") : excludedUsersText);
    MemFree(excludedUsersText);

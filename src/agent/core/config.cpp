@@ -26,6 +26,8 @@
 
 #ifdef _WIN32
 #include <shlobj.h>
+#define SECURITY_WIN32
+#include <security.h>
 #endif
 
 /**
@@ -344,9 +346,9 @@ static HRESULT s_appDataFolderResult = S_OK;
 void LogDataDirectorySource()
 {
 #ifdef _WIN32
-   TCHAR userName[256];
-   DWORD size = 256;
-   if (!GetUserName(userName, &size))
+   TCHAR userName[512];
+   ULONG size = 512;
+   if (!GetUserNameEx(NameSamCompatible, userName, &size))
       _tcscpy(userName, _T("(unknown)"));
    DWORD sessionId = 0;
    ProcessIdToSessionId(GetCurrentProcessId(), &sessionId);

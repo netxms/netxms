@@ -103,7 +103,7 @@ LIBS = -lnxagent -lnxsde -lnxsnmp -lethernetip -lnxdb -lnetxms -lnxjansson \
 	$(SSL_LIBS) \
 	$(PCRE_LIBS) \
 	$(WIN_LIBS) \
-	-lmsi -lntdll
+	-lmsi -lntdll -lsecur32
 
 # ncrypt.dll (CNG) is Vista+; link it only for non-XP builds (cng_engine.cpp is
 # excluded and tunnel.cpp's CNG paths are gated for WINXP).

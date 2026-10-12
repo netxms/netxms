@@ -260,6 +260,10 @@ uint32_t g_webSvcCacheExpirationTime = 600;  // 10 minutes by default
 char g_caBundle[1024] = "";
 bool g_restartPending = false;   // Restart pending flag
 
+#ifdef _WIN32
+static bool s_startupCancelled = false;   // Startup stopped intentionally before initialization completed (not an error)
+#endif
+
 #ifndef _WIN32
 TCHAR g_szPidFile[MAX_PATH] = _T("/var/run/nxagentd.pid");
 #endif
@@ -1132,6 +1136,16 @@ BOOL Initialize()
 	{
 		g_dwFlags |= AF_SUBAGENT_LOADER;
 		nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Switched to external subagent loader mode, master agent address is %s"), g_masterAgent);
+
+#ifdef _WIN32
+      // Loader can be started not only by the external subagent watchdog (autostart entry, scheduled task,
+      // manual start), so the excluded users list is enforced here as well, before any subagent is loaded
+      if (!CheckExternalSubagentLoaderUser())
+      {
+         s_startupCancelled = true;
+         return FALSE;
+      }
+#endif
 	}
 
    if (g_dataDirRecoveryPath[0] != 0)
@@ -2598,6 +2612,10 @@ int main(int argc, char *argv[])
             if (Initialize())
             {
                Main();
+            }
+            else if (s_startupCancelled)
+            {
+               nxlog_close();
             }
             else
             {

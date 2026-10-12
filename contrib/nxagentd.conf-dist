@@ -323,6 +323,23 @@
 # ExternalParameterShellExec = Test:dir c:\ | wc -l
 
 #
+# ExternalSubagentWatchdogExcludedUsers
+#
+# Windows only. Users whose interactive sessions must not run external
+# subagents. External subagent watchdog does not start external subagent
+# loaders in sessions of listed users, and a loader started in such session
+# by other means (autostart entry, scheduled task, manual start) exits at
+# startup. Entries are matched case-insensitively as bare user name or as
+# DOMAIN\user. To list multiple users, use multiple entries. The parameter
+# belongs to the top level ([CORE] section) of the configuration file: it is
+# read from there by both master agent and loader, entries placed in [EXT:name]
+# sections are ignored.
+#
+# Examples:
+# ExternalSubagentWatchdogExcludedUsers = Administrator
+# ExternalSubagentWatchdogExcludedUsers = CORP\support
+
+#
 # Agent extensions (generic JSON-RPC over TCP loopback)
 #
 # Extensions are independent processes that expose metrics, lists, tables, and

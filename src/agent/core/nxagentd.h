@@ -1020,6 +1020,7 @@ void InstallEventSource(const TCHAR *path);
 void RemoveEventSource();
 
 bool ExecuteInAllSessions(const TCHAR *command);
+bool CheckExternalSubagentLoaderUser();
 
 BOOL GetPeCertificateInfo(LPCWSTR filePath, PE_CERT_INFO *certInfo);
 uint32_t ValidateUpgradePackage(const TCHAR *pkgFile, bool allowDowngrade);
