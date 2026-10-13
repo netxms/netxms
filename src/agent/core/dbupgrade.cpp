@@ -79,6 +79,8 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
       _T("  version integer not null,")
       _T("  content_hash varchar(32) not null,")
       _T("  PRIMARY KEY(guid,server_id))")));
+   // Policies stored before content_hash column was added (schema version 12) have NULL hash; empty hash forces policy redeployment by server
+   CHK_EXEC(Query(_T("UPDATE agent_policy SET content_hash='' WHERE content_hash IS NULL")));
    CHK_EXEC(Query(_T("INSERT INTO agent_policy_new (guid,type,server_info,server_id,version,content_hash) SELECT guid,type,server_info,server_id,version,content_hash FROM agent_policy")));
    CHK_EXEC(Query(_T("DROP TABLE agent_policy")));
    CHK_EXEC(Query(_T("ALTER TABLE agent_policy_new RENAME TO agent_policy")));
