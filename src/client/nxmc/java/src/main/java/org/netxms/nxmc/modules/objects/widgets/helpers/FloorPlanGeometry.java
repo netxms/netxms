@@ -212,6 +212,25 @@ public final class FloorPlanGeometry
    }
 
    /**
+    * Get offset that aligns one of two parallel edges with the grid: the edge closer to a grid line wins. This lets an item
+    * whose size is not a multiple of the grid step be aligned on either side.
+    *
+    * @param min coordinate of the first edge
+    * @param max coordinate of the second edge
+    * @param origin grid origin
+    * @param step grid step (no snapping if 0)
+    * @return offset to add to item position
+    */
+   public static int snapDelta(double min, double max, int origin, int step)
+   {
+      if (step <= 0)
+         return 0;
+      double deltaMin = origin + Math.round((min - origin) / step) * step - min;
+      double deltaMax = origin + Math.round((max - origin) / step) * step - max;
+      return (int)Math.round((Math.abs(deltaMin) <= Math.abs(deltaMax)) ? deltaMin : deltaMax);
+   }
+
+   /**
     * Normalize rotation angle to range 0..359.
     *
     * @param degrees angle in degrees

@@ -85,6 +85,9 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
    private static final int HANDLE_SIZE = 7;
    private static final int EDGE_HIT_DISTANCE = 6;
    private static final int DEFAULT_ELEMENT_SIZE = 500;
+   private static final int FRONT_BAND_MIN = 3;   // pixels
+   private static final int FRONT_ARROW_LENGTH = 7;
+   private static final int FRONT_ARROW_HALF_WIDTH = 5;
 
    private final I18n i18n = LocalizationHelper.getI18n(FloorPlanWidget.class);
 
@@ -508,9 +511,7 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
          gc.setAlpha(255);
          gc.setForeground(colorRackBorder);
          gc.drawPolygon(p);
-         gc.setLineWidth(3);
-         gc.drawLine(p[6], p[7], p[4], p[5]);   // front face
-         gc.setLineWidth(1);
+         drawRackFront(gc, p);
          drawLabel(gc, p, rack.getObjectName(), colorText);
          if (editMode && rackWarnings.contains(rack.getObjectId()))
             drawWarningOutline(gc, p);
@@ -673,6 +674,44 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
          index = index / 26 - 1;
       } while(index >= 0);
       return sb.toString();
+   }
+
+   /**
+    * Mark front face of a rack: filled band along the front edge and an arrow pointing out of it. Front edge of footprint
+    * polygon runs from far left corner (index 3) to far right corner (index 2); depth direction is from reference corner
+    * (index 0) to far left corner.
+    *
+    * @param gc graphics context
+    * @param p footprint polygon in screen coordinates
+    */
+   private void drawRackFront(GC gc, int[] p)
+   {
+      double depth = Math.hypot(p[6] - p[0], p[7] - p[1]);
+      if (depth < 1)
+         return;
+      double ux = (p[6] - p[0]) / depth;   // unit vector along depth, pointing to the front
+      double uy = (p[7] - p[1]) / depth;
+
+      double band = Math.max(FRONT_BAND_MIN, depth * 0.15);
+      gc.setBackground(colorRackBorder);
+      gc.fillPolygon(new int[] {
+         p[6], p[7], p[4], p[5],
+         (int)Math.round(p[4] - ux * band), (int)Math.round(p[5] - uy * band),
+         (int)Math.round(p[6] - ux * band), (int)Math.round(p[7] - uy * band)
+      });
+
+      double width = Math.hypot(p[4] - p[6], p[5] - p[7]);
+      if (width < FRONT_ARROW_HALF_WIDTH * 3)
+         return;
+      double mx = (p[6] + p[4]) / 2.0;
+      double my = (p[7] + p[5]) / 2.0;
+      double wx = -uy;   // unit vector along front edge
+      double wy = ux;
+      gc.fillPolygon(new int[] {
+         (int)Math.round(mx + ux * FRONT_ARROW_LENGTH), (int)Math.round(my + uy * FRONT_ARROW_LENGTH),
+         (int)Math.round(mx + wx * FRONT_ARROW_HALF_WIDTH), (int)Math.round(my + wy * FRONT_ARROW_HALF_WIDTH),
+         (int)Math.round(mx - wx * FRONT_ARROW_HALF_WIDTH), (int)Math.round(my - wy * FRONT_ARROW_HALF_WIDTH)
+      });
    }
 
    /**
@@ -876,24 +915,28 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
 
       if (editMode && (selection != null))
       {
-         int rx = snapX(toRoomX(e.x) - dragOffsetX);
-         int ry = snapY(toRoomY(e.y) - dragOffsetY);
+         int rx = toRoomX(e.x) - dragOffsetX;
+         int ry = toRoomY(e.y) - dragOffsetY;
          if (selection instanceof Rack)
          {
-            RackPlacement p = model.getPlacement(((Rack)selection).getObjectId());
-            p.x = rx;
-            p.y = ry;
+            Rack rack = (Rack)selection;
+            RackPlacement p = model.getPlacement(rack.getObjectId());
+            int[] s = snapFootprint(rx, ry, rack.getWidth(), rack.getDepth(), p.rotation);
+            p.x = s[0];
+            p.y = s[1];
          }
          else if (selection instanceof RoomPassiveElement)
          {
-            ((RoomPassiveElement)selection).x = rx;
-            ((RoomPassiveElement)selection).y = ry;
+            RoomPassiveElement element = (RoomPassiveElement)selection;
+            int[] s = snapFootprint(rx, ry, element.width, element.depth, element.rotation);
+            element.x = s[0];
+            element.y = s[1];
          }
          else if (selection instanceof OutlineVertex)
          {
             RoomPoint p = model.getOutline().get(((OutlineVertex)selection).index);
-            p.x = rx;
-            p.y = ry;
+            p.x = snapX(rx);
+            p.y = snapY(ry);
          }
       }
       else if (editMode && moveBackdropMode)
@@ -977,6 +1020,29 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
    }
 
    /**
+    * Snap footprint to grid. Whichever edge of the footprint's bounding box is closer to a grid line gets aligned with it, so
+    * an item whose size is not a multiple of the tile size can be aligned on either side.
+    *
+    * @param x X coordinate of reference corner
+    * @param y Y coordinate of reference corner
+    * @param width footprint width
+    * @param depth footprint depth
+    * @param rotation rotation in degrees
+    * @return snapped reference corner as array of x, y (unchanged if snapping is off)
+    */
+   private int[] snapFootprint(int x, int y, int width, int depth, int rotation)
+   {
+      if (!snapToGrid)
+         return new int[] { x, y };
+      Room room = model.getRoom();
+      double[] b = FloorPlanGeometry.bounds(FloorPlanGeometry.footprint(x, y, width, depth, rotation));
+      return new int[] {
+         x + FloorPlanGeometry.snapDelta(b[0], b[2], room.getGridOriginX(), room.getGridTileSize()),
+         y + FloorPlanGeometry.snapDelta(b[1], b[3], room.getGridOriginY(), room.getGridTileSize())
+      };
+   }
+
+   /**
     * Handle model change: revalidate, redraw, notify listener
     */
    private void modelChanged()
@@ -992,7 +1058,8 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
     */
 
    /**
-    * Rotate selected rack or passive element by given angle keeping its footprint centre in place.
+    * Rotate selected rack or passive element by given angle keeping its footprint centre in place (adjusted to the grid if
+    * snapping is on).
     *
     * @param degrees rotation angle (positive is clockwise)
     */
@@ -1005,8 +1072,9 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
          double[] before = centre(getRackPolygon(rack, p));
          p.rotation = FloorPlanGeometry.normalizeRotation(p.rotation + degrees);
          double[] after = centre(getRackPolygon(rack, p));
-         p.x += (int)Math.round(before[0] - after[0]);
-         p.y += (int)Math.round(before[1] - after[1]);
+         int[] s = snapFootprint(p.x + (int)Math.round(before[0] - after[0]), p.y + (int)Math.round(before[1] - after[1]), rack.getWidth(), rack.getDepth(), p.rotation);
+         p.x = s[0];
+         p.y = s[1];
       }
       else if (selection instanceof RoomPassiveElement)
       {
@@ -1014,8 +1082,9 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
          double[] before = centre(getElementPolygon(e));
          e.rotation = FloorPlanGeometry.normalizeRotation(e.rotation + degrees);
          double[] after = centre(getElementPolygon(e));
-         e.x += (int)Math.round(before[0] - after[0]);
-         e.y += (int)Math.round(before[1] - after[1]);
+         int[] s = snapFootprint(e.x + (int)Math.round(before[0] - after[0]), e.y + (int)Math.round(before[1] - after[1]), e.width, e.depth, e.rotation);
+         e.x = s[0];
+         e.y = s[1];
          model.markRoomModified();
       }
       else
@@ -1076,8 +1145,9 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
          return;
 
       Rectangle area = getClientArea();
-      p.x = snapX(toRoomX(area.width / 2) - rack.getWidth() / 2);
-      p.y = snapY(toRoomY(area.height / 2) - rack.getDepth() / 2);
+      int[] s = snapFootprint(toRoomX(area.width / 2) - rack.getWidth() / 2, toRoomY(area.height / 2) - rack.getDepth() / 2, rack.getWidth(), rack.getDepth(), p.rotation);
+      p.x = s[0];
+      p.y = s[1];
       p.placed = true;
       setSelection(rack);
       modelChanged();
@@ -1092,8 +1162,9 @@ public class FloorPlanWidget extends Canvas implements PaintListener, MouseListe
    {
       RoomPassiveElement e = new RoomPassiveElement();
       Rectangle area = getClientArea();
-      e.x = snapX(toRoomX(area.width / 2) - DEFAULT_ELEMENT_SIZE / 2);
-      e.y = snapY(toRoomY(area.height / 2) - DEFAULT_ELEMENT_SIZE / 2);
+      int[] s = snapFootprint(toRoomX(area.width / 2) - DEFAULT_ELEMENT_SIZE / 2, toRoomY(area.height / 2) - DEFAULT_ELEMENT_SIZE / 2, DEFAULT_ELEMENT_SIZE, DEFAULT_ELEMENT_SIZE, 0);
+      e.x = s[0];
+      e.y = s[1];
       e.width = DEFAULT_ELEMENT_SIZE;
       e.depth = DEFAULT_ELEMENT_SIZE;
       model.getPassiveElements().add(e);
