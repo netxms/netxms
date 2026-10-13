@@ -99,7 +99,8 @@ public abstract class ObjectView extends ViewWithContext
             if ((n.getCode() == SessionNotification.OBJECT_CHANGED) && ((n.getSubCode() == getObjectId()) || isRelatedObject(n.getSubCode())))
             {
                getDisplay().asyncExec(() -> {
-                  setContext(n.getObject(), false);
+                  if (n.getSubCode() == getObjectId())
+                     setContext(n.getObject(), false); // Context object itself was updated; related objects must not replace it
                   onObjectUpdate((AbstractObject)n.getObject());
                });
             }

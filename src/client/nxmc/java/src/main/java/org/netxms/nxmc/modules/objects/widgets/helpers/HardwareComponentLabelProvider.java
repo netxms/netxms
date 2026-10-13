@@ -28,6 +28,7 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HardwareComponentCategory;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.MeasurementUnit;
+import org.netxms.client.objects.Asset;
 import org.netxms.nxmc.modules.objects.widgets.HardwareInventoryTable;
 
 /**
@@ -36,6 +37,7 @@ import org.netxms.nxmc.modules.objects.widgets.HardwareInventoryTable;
 public class HardwareComponentLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private Map<HardwareComponentCategory, String> categoryNames;
+   private Map<String, Asset> componentAssets = new HashMap<>();
    
    /**
     * Constructor
@@ -55,6 +57,16 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
+   /**
+    * Set assets linked to components, keyed by component serial number.
+    *
+    * @param componentAssets assets keyed by component serial number
+    */
+   public void setComponentAssets(Map<String, Asset> componentAssets)
+   {
+      this.componentAssets = componentAssets;
+   }
+
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
@@ -105,6 +117,9 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
             return c.getType();
          case HardwareInventoryTable.COLUMN_VENDOR:
             return c.getVendor();
+         case HardwareInventoryTable.COLUMN_ASSET:
+            Asset asset = c.getSerialNumber().isEmpty() ? null : componentAssets.get(c.getSerialNumber());
+            return (asset != null) ? asset.getObjectName() : "";
       }      
       return null;
    }

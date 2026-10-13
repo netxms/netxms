@@ -1738,10 +1738,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_ASSET_LINK, 'SYS_ASSET_LINK', '8dae7b06-b854-4d88-9eb7-721b6110c200',
       EVENT_SEVERITY_NORMAL, 1,
       'Asset %<assetName> linked',
-      'Generated when asset is linked with node.'  CONCAT CRLF CONCAT
+      'Generated when asset is linked with object.'  CONCAT CRLF CONCAT
       'Parameters:'  CONCAT CRLF CONCAT
       '   1) assetId - asset ID'  CONCAT CRLF CONCAT
-      '   2) assetName - asset name'
+      '   2) assetName - asset name'  CONCAT CRLF CONCAT
+      '   3) componentSerial - serial number of linked component (empty if asset is linked to the object itself)'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1749,10 +1750,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       EVENT_ASSET_UNLINK, 'SYS_ASSET_UNLINK', 'f149433b-ea2f-4bfd-bf23-35e7778b1b55',
       EVENT_SEVERITY_NORMAL, 1,
       'Asset %<assetName> unlinked',
-      'Generated when asset is unlinked from node.'  CONCAT CRLF CONCAT
+      'Generated when asset is unlinked from object.'  CONCAT CRLF CONCAT
       'Parameters:'  CONCAT CRLF CONCAT
       '   1) assetId - asset ID'  CONCAT CRLF CONCAT
-      '   2) assetName - asset name'
+      '   2) assetName - asset name'  CONCAT CRLF CONCAT
+      '   3) componentSerial - serial number of unlinked component (empty if asset was linked to the object itself)'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

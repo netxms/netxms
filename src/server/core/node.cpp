@@ -5963,6 +5963,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;
 
    UpdateAssetLinkage(this);
+   UpdateComponentAssetLinkage(this);
    autoFillAssetProperties();
 
    // Finish configuration poll
@@ -15329,6 +15330,115 @@ NXSL_Value *Node::getHardwareComponentsForNXSL(NXSL_VM* vm)
       }
    }
    unlockProperties();
+   return vm->createValue(a);
+}
+
+/**
+ * Collect serial numbers of components in ENTITY-MIB tree
+ */
+static void CollectComponentSerialNumbers(const Component *component, StringSet *serials)
+{
+   const TCHAR *serial = component->getSerial();
+   if ((serial != nullptr) && (*serial != 0))
+      serials->add(serial);
+   for(const Component *child : component->getChildren())
+      CollectComponentSerialNumbers(child, serials);
+}
+
+/**
+ * Get serial numbers of all inventoried components of this node (ENTITY-MIB component tree and agent hardware inventory),
+ * excluding node's own serial number. Returns nullptr if node has no component inventory at all.
+ */
+unique_ptr<StringSet> Node::getComponentSerialNumbers() const
+{
+   lockProperties();
+   if ((m_components == nullptr) && (m_hardwareComponents == nullptr))
+   {
+      unlockProperties();
+      return unique_ptr<StringSet>();
+   }
+
+   auto serials = make_unique<StringSet>();
+   if ((m_components != nullptr) && (m_components->getRoot() != nullptr))
+      CollectComponentSerialNumbers(m_components->getRoot(), serials.get());
+   if (m_hardwareComponents != nullptr)
+   {
+      for(const HardwareComponent *c : *m_hardwareComponents)
+      {
+         if (*c->getSerialNumber() != 0)
+            serials->add(c->getSerialNumber());
+      }
+   }
+   if ((m_serialNumber != nullptr) && (*m_serialNumber != 0))
+      serials->remove(m_serialNumber);
+   unlockProperties();
+   return serials;
+}
+
+/**
+ * Find component in ENTITY-MIB tree by serial number
+ */
+static const Component *FindComponentBySerialNumber(const Component *component, const wchar_t *serial)
+{
+   const TCHAR *componentSerial = component->getSerial();
+   if ((componentSerial != nullptr) && !wcscmp(componentSerial, serial))
+      return component;
+   for(const Component *child : component->getChildren())
+   {
+      const Component *match = FindComponentBySerialNumber(child, serial);
+      if (match != nullptr)
+         return match;
+   }
+   return nullptr;
+}
+
+/**
+ * Get vendor and model of inventoried component identified by serial number. Returns false if component not found.
+ */
+bool Node::getComponentIdentification(const wchar_t *serial, MutableString *vendor, MutableString *model) const
+{
+   bool found = false;
+   lockProperties();
+   if ((m_components != nullptr) && (m_components->getRoot() != nullptr))
+   {
+      const Component *c = FindComponentBySerialNumber(m_components->getRoot(), serial);
+      if (c != nullptr)
+      {
+         *vendor = CHECK_NULL_EX(c->getVendor());
+         *model = CHECK_NULL_EX(c->getModel());
+         found = true;
+      }
+   }
+   if (!found && (m_hardwareComponents != nullptr))
+   {
+      for(const HardwareComponent *c : *m_hardwareComponents)
+      {
+         if (!wcscmp(c->getSerialNumber(), serial))
+         {
+            *vendor = c->getVendor();
+            *model = c->getModel();
+            found = true;
+            break;
+         }
+      }
+   }
+   unlockProperties();
+   return found;
+}
+
+/**
+ * Get assets linked to components of this node for NXSL script
+ */
+NXSL_Value *Node::getComponentAssetsForNXSL(NXSL_VM *vm)
+{
+   NXSL_Array *a = new NXSL_Array(vm);
+   unique_ptr<SharedObjectArray<NetObj>> assets = GetComponentAssets(m_id);
+   for(int i = 0; i < assets->size(); i++)
+   {
+      NetObj *asset = assets->get(i);
+      if (vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, asset))
+         a->append(asset->createNXSLObject(vm));
+   }
    return vm->createValue(a);
 }
 

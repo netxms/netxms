@@ -165,6 +165,20 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.51 to 70.52
+ */
+static bool H_UpgradeFromV51()
+{
+   // Component assets (issue #3594): asset linked to a replaceable component of a node (stack member, transceiver, disk, etc.)
+   // identified by component serial number; empty value means link to the object itself
+   CHK_EXEC(SQLQuery(L"ALTER TABLE assets ADD component_serial varchar(63) null"));
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET description='Generated when asset is linked with object.\r\nParameters:\r\n   1) assetId - asset ID\r\n   2) assetName - asset name\r\n   3) componentSerial - serial number of linked component (empty if asset is linked to the object itself)' WHERE guid='8dae7b06-b854-4d88-9eb7-721b6110c200'"));
+   CHK_EXEC(SQLQuery(L"UPDATE event_cfg SET description='Generated when asset is unlinked from object.\r\nParameters:\r\n   1) assetId - asset ID\r\n   2) assetName - asset name\r\n   3) componentSerial - serial number of unlinked component (empty if asset was linked to the object itself)' WHERE guid='f149433b-ea2f-4bfd-bf23-35e7778b1b55'"));
+   CHK_EXEC(SetMinorSchemaVersion(52));
+   return true;
+}
+
+/**
  * Upgrade from 70.50 to 70.51
  */
 static bool H_UpgradeFromV50()
@@ -1707,6 +1721,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 51, 70, 52, H_UpgradeFromV51 },
    { 50, 70, 51, H_UpgradeFromV50 },
    { 49, 70, 50, H_UpgradeFromV49 },
    { 48, 70, 49, H_UpgradeFromV48 },

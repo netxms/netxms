@@ -2937,6 +2937,7 @@ void NetObj::prepareForDeletion()
          UnlinkAsset(asset.get(), nullptr);
       }
    }
+   UnlinkComponentAssets(this);
 }
 
 /**

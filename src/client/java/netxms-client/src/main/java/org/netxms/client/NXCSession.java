@@ -7464,6 +7464,8 @@ public class NXCSession
             if (data.getAssetProperties() != null)
                msg.setFieldsFromStringMap(data.getAssetProperties(), NXCPCodes.VID_ASSET_PROPERTIES_BASE, NXCPCodes.VID_NUM_ASSET_PROPERTIES);
             msg.setFieldUInt32(NXCPCodes.VID_LINKED_OBJECT, data.getLinkedObjectId());
+            if (data.getComponentSerial() != null)
+               msg.setField(NXCPCodes.VID_SERIAL_NUMBER, data.getComponentSerial());
             break;
          case AbstractObject.OBJECT_CHASSIS:
             msg.setFieldUInt32(NXCPCodes.VID_CONTROLLER_ID, data.getControllerId());
@@ -17327,6 +17329,48 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_UPDATE_IDENTIFICATION, updateIdentification);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Link asset object to component of given node (stack member, transceiver, disk, etc.) identified by serial number. Component
+    * must be present in node's hardware inventory (ENTITY-MIB component tree or agent hardware inventory). Node's own asset link
+    * is not affected. If asset is already linked to another object or component, that link will be removed. Component serial
+    * number is written into asset's serial number attribute.
+    *
+    * @param assetId asset object ID
+    * @param nodeId node object ID
+    * @param componentSerial serial number of node's component
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void linkAsset(long assetId, long nodeId, String componentSerial) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_LINK_ASSET);
+      msg.setFieldUInt32(NXCPCodes.VID_ASSET_ID, assetId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
+      msg.setField(NXCPCodes.VID_SERIAL_NUMBER, componentSerial);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get assets linked to components of given object (assets representing stack members, transceivers, disks, etc. of a node).
+    *
+    * @param objectId object ID
+    * @return list of component assets (can be empty)
+    */
+   public List<Asset> getComponentAssets(long objectId)
+   {
+      List<Asset> result = new ArrayList<Asset>();
+      synchronized(objectList)
+      {
+         for(AbstractObject object : objectList.values())
+         {
+            if ((object instanceof Asset) && (((Asset)object).getLinkedObjectId() == objectId) && ((Asset)object).isComponent())
+               result.add((Asset)object);
+         }
+      }
+      return result;
    }
 
    /**

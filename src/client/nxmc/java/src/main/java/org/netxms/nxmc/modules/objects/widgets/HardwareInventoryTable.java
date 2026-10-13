@@ -52,10 +52,12 @@ public class HardwareInventoryTable extends AbstractHardwareInventoryWidget
    public static final int COLUMN_SERIAL_NUMBER = 7;
    public static final int COLUMN_LOCATION = 8;
    public static final int COLUMN_DESCRIPTION = 9;
+   public static final int COLUMN_ASSET = 10;
 
    private final I18n i18n = LocalizationHelper.getI18n(HardwareInventoryTable.class);
 
    private SortableTableViewer viewer;
+   private HardwareComponentLabelProvider labelProvider;
 
    /**
     * Create new hardware inventory widget.
@@ -69,11 +71,12 @@ public class HardwareInventoryTable extends AbstractHardwareInventoryWidget
       super(parent, style, view);
 
       final String[] names = { i18n.tr("Category"), i18n.tr("Index"), i18n.tr("Type"), i18n.tr("Vendor"), i18n.tr("Model"),
-            i18n.tr("Capacity"), i18n.tr("Part number"), i18n.tr("Serial number"), i18n.tr("Location"), i18n.tr("Description") };
-      final int[] widths = { 100, 70, 100, 200, 200, 90, 130, 130, 200, 300 };
+            i18n.tr("Capacity"), i18n.tr("Part number"), i18n.tr("Serial number"), i18n.tr("Location"), i18n.tr("Description"), i18n.tr("Asset") };
+      final int[] widths = { 100, 70, 100, 200, 200, 90, 130, 130, 200, 300, 150 };
       viewer = new SortableTableViewer(this, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION, "HardwareInventoryTable");
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new HardwareComponentLabelProvider());
+      labelProvider = new HardwareComponentLabelProvider();
+      viewer.setLabelProvider(labelProvider);
       viewer.setComparator(new HardwareComponentComparator());
    }
 
@@ -92,6 +95,9 @@ public class HardwareInventoryTable extends AbstractHardwareInventoryWidget
                @Override
                public void run()
                {
+                  if (viewer.getTable().isDisposed())
+                     return;
+                  labelProvider.setComponentAssets(getComponentAssets());
                   viewer.setInput(components.toArray());
                   viewer.packColumns(false);
                }
@@ -104,6 +110,16 @@ public class HardwareInventoryTable extends AbstractHardwareInventoryWidget
             return "Unable to get node hardware inventory";
          }
       }.start();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget#refreshComponentAssets()
+    */
+   @Override
+   public void refreshComponentAssets()
+   {
+      labelProvider.setComponentAssets(getComponentAssets());
+      viewer.refresh();
    }
 
    /**

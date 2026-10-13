@@ -1689,7 +1689,15 @@ NXSL_Value *NXSL_AssetClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
 
    NXSL_VM *vm = object->vm();
    auto asset = SharedObjectFromData<Asset>(object);
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("lastUpdateTimestamp"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("componentSerial"))
+   {
+      value = vm->createValue(asset->getComponentSerial());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isComponent"))
+   {
+      value = vm->createValue(asset->isComponent());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastUpdateTimestamp"))
    {
       value = vm->createValue(static_cast<int64_t>(asset->getLastUpdateTimestamp()));
    }
@@ -3946,6 +3954,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       shared_ptr<Cluster> cluster = node->getCluster();
       value = (cluster != nullptr) ? cluster->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("componentAssets"))
+   {
+      value = node->getComponentAssetsForNXSL(vm);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("components"))
    {

@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.PhysicalComponent;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.EntityMibTreeViewer;
@@ -51,6 +52,17 @@ public class ComponentTreeLabelProvider extends LabelProvider implements ITableL
 	};
 
 	private Map<Integer, Interface> interfaces = new HashMap<Integer, Interface>();
+   private Map<String, Asset> componentAssets = new HashMap<>();
+
+   /**
+    * Set assets linked to components, keyed by component serial number.
+    *
+    * @param componentAssets assets keyed by component serial number
+    */
+   public void setComponentAssets(Map<String, Asset> componentAssets)
+   {
+      this.componentAssets = componentAssets;
+   }
 
 	/**
 	 * Set current node
@@ -113,6 +125,9 @@ public class ComponentTreeLabelProvider extends LabelProvider implements ITableL
 				return c.getSerialNumber();
          case EntityMibTreeViewer.COLUMN_VENDOR:
 				return c.getVendor();
+         case EntityMibTreeViewer.COLUMN_ASSET:
+            Asset asset = ((c.getSerialNumber() == null) || c.getSerialNumber().isEmpty()) ? null : componentAssets.get(c.getSerialNumber());
+            return (asset != null) ? asset.getObjectName() : "";
 		}
 		return null;
 	}

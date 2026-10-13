@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,13 +40,21 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -74,9 +82,12 @@ public class AssetView extends ObjectView
    public static final int IS_UNIQUE = 3;
    public static final int SYSTEM_TYPE = 4;
 
+   private Composite header;
    private SortableTableViewer viewer;
    private AssetPropertyFilter filter;
    private Map<String, String> properties;
+   private List<Asset> assets = new ArrayList<>();  // All assets shown by this view: the asset itself, or primary + component assets of the object
+   private Asset currentAsset;  // Asset whose properties are displayed
    private AssetPropertyReader propertyReader;
    private MenuManager attributeSelectionSubMenu;
    private MenuManager attributeSelectionPopupMenu;
@@ -98,7 +109,12 @@ public class AssetView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && ((context instanceof Asset) || (((AbstractObject)context).getAssetId() != 0));
+      if (context == null)
+         return false;
+      if (context instanceof Asset)
+         return true;
+      AbstractObject object = (AbstractObject)context;
+      return (object.getAssetId() != 0) || !Registry.getSession().getComponentAssets(object.getObjectId()).isEmpty();
    }
 
    /**
@@ -118,9 +134,30 @@ public class AssetView extends ObjectView
    {
       propertyReader = new AssetPropertyReader();
 
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.verticalSpacing = 0;
+      parent.setLayout(layout);
+
+      // Header shows where the asset is linked (for asset context) or lets user pick one of object's assets (for object context)
+      header = new Composite(parent, SWT.NONE);
+      GridLayout headerLayout = new GridLayout();
+      headerLayout.numColumns = 4;
+      headerLayout.marginWidth = 8;
+      headerLayout.marginHeight = 0;
+      headerLayout.marginTop = 4;
+      headerLayout.marginBottom = 8;
+      headerLayout.horizontalSpacing = 8;
+      header.setLayout(headerLayout);
+      header.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
       final int[] widths = { 200, 400, 100, 100, 200 };
       final String[] names = { i18n.tr("Property"), i18n.tr("Value"), i18n.tr("Mandatory"), i18n.tr("Unique"), i18n.tr("System type") };
       viewer = new SortableTableViewer(parent, names, widths, NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI, "Asset");
+      viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new AssetPropertyListLabelProvider(propertyReader));
       viewer.setComparator(new AssetPropertyComparator(propertyReader));
@@ -229,28 +266,109 @@ public class AssetView extends ObjectView
    @Override
    public void refresh()
    {
-      Asset asset = null;
+      long selectedAssetId = (currentAsset != null) ? currentAsset.getObjectId() : 0;
+      assets.clear();
       AbstractObject object = getObject();
-      if (object != null)
+      if (object instanceof Asset)
       {
-         if (object instanceof Asset)
+         assets.add((Asset)object);
+      }
+      else if (object != null)
+      {
+         Asset primaryAsset = (object.getAssetId() != 0) ? session.findObjectById(object.getAssetId(), Asset.class) : null;
+         if (primaryAsset != null)
+            assets.add(primaryAsset);
+         List<Asset> componentAssets = session.getComponentAssets(object.getObjectId());
+         componentAssets.sort((a1, a2) -> a1.getObjectName().compareToIgnoreCase(a2.getObjectName()));
+         assets.addAll(componentAssets);
+      }
+
+      // Keep previously selected asset if it is still linked, otherwise fall back to the first one
+      currentAsset = null;
+      for(Asset a : assets)
+      {
+         if (a.getObjectId() == selectedAssetId)
          {
-            asset = (Asset)object;
+            currentAsset = a;
+            break;
+         }
+      }
+      if ((currentAsset == null) && !assets.isEmpty())
+         currentAsset = assets.get(0);
+
+      updateHeader();
+      showAssetProperties();
+   }
+
+   /**
+    * Rebuild header content for current context.
+    */
+   private void updateHeader()
+   {
+      for(Control c : header.getChildren())
+         c.dispose();
+
+      AbstractObject object = getObject();
+      if (object instanceof Asset)
+      {
+         final Asset asset = (Asset)object;
+         if (asset.getLinkedObjectId() != 0)
+         {
+            new Label(header, SWT.NONE).setText(i18n.tr("Linked to:"));
+            Link link = new Link(header, SWT.NONE);
+            link.setText("<a>" + session.getObjectName(asset.getLinkedObjectId()).replace("&", "&&") + "</a>");
+            link.setToolTipText(i18n.tr("Go to object"));
+            link.addListener(SWT.Selection, (e) -> MainWindow.switchToObject(asset.getLinkedObjectId(), 0));
+            if (asset.isComponent())
+            {
+               new Label(header, SWT.NONE).setText(i18n.tr("Component:"));
+               new Label(header, SWT.NONE).setText(asset.getComponentSerial());
+            }
          }
          else
          {
-            long assetId = object.getAssetId();
-            if (assetId != 0)
-               asset = session.findObjectById(assetId, Asset.class);
+            new Label(header, SWT.NONE).setText(i18n.tr("Not linked to any object"));
          }
       }
-      properties = (asset != null) ? new HashMap<String, String>(asset.getProperties()) : new HashMap<String, String>(0);
+      else if (object != null)
+      {
+         new Label(header, SWT.NONE).setText(i18n.tr("Asset:"));
+         final Combo selector = new Combo(header, SWT.READ_ONLY | SWT.DROP_DOWN);
+         for(Asset a : assets)
+         {
+            selector.add(a.isComponent() ? i18n.tr("{0} (component {1})", a.getObjectName(), a.getComponentSerial()) : a.getObjectName());
+         }
+         selector.select(assets.indexOf(currentAsset));
+         selector.setEnabled(assets.size() > 1);
+         selector.addListener(SWT.Selection, (e) -> {
+            int index = selector.getSelectionIndex();
+            if ((index >= 0) && (index < assets.size()) && (assets.get(index) != currentAsset))
+            {
+               currentAsset = assets.get(index);
+               showAssetProperties();
+            }
+         });
+         GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+         gd.widthHint = 300;
+         selector.setLayoutData(gd);
+      }
+
+      header.layout(true, true);
+      header.getParent().layout(true, true);
+   }
+
+   /**
+    * Show properties of currently selected asset.
+    */
+   private void showAssetProperties()
+   {
+      properties = (currentAsset != null) ? new HashMap<String, String>(currentAsset.getProperties()) : new HashMap<String, String>(0);
       viewer.setInput(properties.entrySet().toArray());
       checkMandatoryAttributes();
 
       if (actionAdd != null)
       {
-         actionAdd.setEnabled(properties.size() < session.getAssetManagementSchemaSize());
+         actionAdd.setEnabled((currentAsset != null) && (properties.size() < session.getAssetManagementSchemaSize()));
       }
    }
 
@@ -457,7 +575,14 @@ public class AssetView extends ObjectView
    @Override
    protected boolean isRelatedObject(long objectId)
    {
-      return objectId == getAssetId();
+      for(Asset a : assets)
+      {
+         if (a.getObjectId() == objectId)
+            return true;
+      }
+      // Asset newly linked to this object (as primary or component asset)
+      Asset asset = session.findObjectById(objectId, Asset.class);
+      return (asset != null) && (asset.getLinkedObjectId() == getObjectId());
    }
 
    /**
@@ -486,11 +611,6 @@ public class AssetView extends ObjectView
     */
    private long getAssetId()
    {
-      AbstractObject object = getObject();
-      if (object == null)
-         return 0;
-      if (object instanceof Asset)
-         return object.getObjectId();
-      return object.getAssetId();
+      return (currentAsset != null) ? currentAsset.getObjectId() : 0;
    }
 }

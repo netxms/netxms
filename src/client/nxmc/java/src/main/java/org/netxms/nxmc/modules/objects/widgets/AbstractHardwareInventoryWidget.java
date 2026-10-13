@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.objects.widgets;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ColumnViewer;
@@ -26,6 +28,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.Asset;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 
@@ -72,6 +75,24 @@ public abstract class AbstractHardwareInventoryWidget extends Composite
     * Refresh widget
     */
    public abstract void refresh();
+
+   /**
+    * Reload assets linked to components and update their display without re-reading inventory from server.
+    */
+   public abstract void refreshComponentAssets();
+
+   /**
+    * Get assets linked to components of the node displayed by this widget, keyed by component serial number.
+    *
+    * @return assets keyed by component serial number
+    */
+   protected Map<String, Asset> getComponentAssets()
+   {
+      Map<String, Asset> assets = new HashMap<>();
+      for(Asset a : session.getComponentAssets(view.getObjectId()))
+         assets.put(a.getComponentSerial(), a);
+      return assets;
+   }
 
    /**
     * Clear data form view

@@ -18357,6 +18357,9 @@ components:
         linkedObjectId:
           type: integer
           description: (Asset) Optional ID of an existing object to link the new asset to. Server will update asset identification (serial number or MAC address) from that object and run auto fill scripts after linking. Requires modify access to that object.
+        componentSerial:
+          type: string
+          description: (Asset) Optional serial number of a component of the linked object (stack member, transceiver, disk, etc.). When set, the new asset is linked to that component instead of the object itself, linked object must be a node, and the serial number must be present in node's ENTITY-MIB component tree or agent hardware inventory. Node's own asset link is not affected. Serial number is written into asset's serial number attribute.
     ObjectDetails:
       type: object
       properties:

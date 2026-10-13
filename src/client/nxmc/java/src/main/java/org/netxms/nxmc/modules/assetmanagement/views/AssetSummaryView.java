@@ -60,6 +60,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AssetSummaryView extends ObjectView
 {
+   public static final int COLUMN_LINK = 1;
+
    private final I18n i18n = LocalizationHelper.getI18n(AssetSummaryView.class);
 
    private SortableTableViewer viewer;
@@ -105,6 +107,7 @@ public class AssetSummaryView extends ObjectView
 
       viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.addColumn(i18n.tr("Asset"), SWT.DEFAULT);
+      viewer.addColumn(i18n.tr("Linked to"), SWT.DEFAULT);
 
       List<AssetAttribute> attributes = new ArrayList<>(session.getAssetManagementSchema().values());
       attributes.sort((a1, a2) -> a1.getEffectiveDisplayName().compareToIgnoreCase(a2.getEffectiveDisplayName()));
@@ -179,7 +182,13 @@ public class AssetSummaryView extends ObjectView
          return;
       }
 
-      List<AbstractObject> assets = root.getAllChildren(-1).stream().filter((object) -> (object instanceof Asset) || (object.getAssetId() != 0)).collect(Collectors.toList());
+      List<AbstractObject> assets = new ArrayList<>(root.getAllChildren(-1).stream().filter((object) -> (object instanceof Asset) || (object.getAssetId() != 0)).collect(Collectors.toList()));
+      if (!(root instanceof AssetGroup) && !(root instanceof AssetRoot))
+      {
+         // Assets linked to node components are not part of the object tree under root, so they have to be added explicitly
+         for(AbstractObject node : root.getAllChildren(AbstractObject.OBJECT_NODE))
+            assets.addAll(session.getComponentAssets(node.getObjectId()));
+      }
       viewer.setInput(assets);
 
       // Re-read "hide" setting in case it was changed by another view
@@ -201,8 +210,10 @@ public class AssetSummaryView extends ObjectView
       TableColumn[] columns = viewer.getTable().getColumns();
       for(int i = 1; i < columns.length; i++)
       {
-         boolean empty = true;
          String attr = (String)columns[i].getData("Attribute");
+         if (attr == null)
+            continue;   // Not an attribute column
+         boolean empty = true;
          for(Object o : (List<?>)viewer.getInput())
          {
             Asset asset = getAsset(o);

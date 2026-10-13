@@ -26,6 +26,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.modules.assetmanagement.views.AssetSummaryView;
 import org.netxms.nxmc.tools.ComparatorHelper;
 
 /**
@@ -56,8 +57,11 @@ public class AssetListComparator extends ViewerComparator
       String attribute = (String)((SortableTableViewer)viewer).getTable().getSortColumn().getData("Attribute");
       if (attribute == null)
       {
-         // Compare by object name
-         result = ((AbstractObject)e1).getObjectName().compareToIgnoreCase(((AbstractObject)e2).getObjectName());
+         int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
+         if (column == AssetSummaryView.COLUMN_LINK)
+            result = AssetListLabelProvider.getLinkText(e1, session).compareToIgnoreCase(AssetListLabelProvider.getLinkText(e2, session));
+         else
+            result = ((AbstractObject)e1).getObjectName().compareToIgnoreCase(((AbstractObject)e2).getObjectName());
       }
       else
       {

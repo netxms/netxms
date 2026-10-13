@@ -3566,6 +3566,7 @@ CREATE TABLE assets
 (
    id integer not null,
    linked_object_id integer not null,
+   component_serial varchar(63) null,
    last_update_timestamp integer not null,
    last_update_uid integer not null,
    PRIMARY KEY(id)

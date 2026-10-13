@@ -165,6 +165,22 @@ public class CreateAssetFromObjectAction extends ObjectAction<AbstractObject>
          macAddress = sensor.getMacAddress();
       }
 
+      return buildPrefilledProperties(serial, vendor, model, ipAddress, macAddress);
+   }
+
+   /**
+    * Build initial asset property values from identification data of an object or component. Values are mapped to asset attributes by
+    * system type; MAC address is used only when serial number is not available (mirrors server-side identification logic).
+    *
+    * @param serial serial number (can be null)
+    * @param vendor vendor name (can be null)
+    * @param model model name (can be null)
+    * @param ipAddress IP address (can be null)
+    * @param macAddress MAC address (can be null)
+    * @return property values keyed by attribute name
+    */
+   public static Map<String, String> buildPrefilledProperties(String serial, String vendor, String model, String ipAddress, MacAddress macAddress)
+   {
       Map<String, String> properties = new HashMap<>();
       for(AssetAttribute a : Registry.getSession().getAssetManagementSchema().values())
       {
@@ -175,7 +191,6 @@ public class CreateAssetFromObjectAction extends ObjectAction<AbstractObject>
                value = serial;
                break;
             case MAC_ADDRESS:
-               // Mirror server-side identification logic - MAC address is used only when serial number is not available
                if (((serial == null) || serial.isEmpty()) && (macAddress != null) && !macAddress.isNull())
                   value = macAddress.toString();
                break;

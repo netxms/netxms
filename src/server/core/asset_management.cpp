@@ -1169,12 +1169,35 @@ unique_ptr<StringSet> NXCORE_EXPORTABLE GetAssetAttributeNames(bool mandatoryOnl
 unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const Asset& asset, const shared_ptr<NetObj>& linkedObject)
 {
    auto contexts = make_unique<ObjectArray<AssetPropertyAutofillContext>>(0, 16, Ownership::True);
+
+   SharedString componentVendor, componentModel;
+   if (asset.isComponent() && (linkedObject->getObjectClass() == OBJECT_NODE))
+   {
+      MutableString vendor, model;
+      if (static_pointer_cast<Node>(linkedObject)->getComponentIdentification(asset.getComponentSerial(), &vendor, &model))
+      {
+         componentVendor = SharedString(vendor);
+         componentModel = SharedString(model);
+      }
+   }
+
    s_schemaLock.readLock();
    for (KeyValuePair<AssetAttribute> *a : s_schema)
    {
       if (a->value->getSystemType() != AMSystemType::None)
       {
          SharedString newValue;
+         if (asset.isComponent())
+         {
+            // Asset represents component of the node: vendor and model are taken from component inventory, other system types are not applicable
+            if (((a->value->getSystemType() == AMSystemType::Vendor) || (a->value->getSystemType() == AMSystemType::Model)) && (linkedObject->getObjectClass() == OBJECT_NODE))
+            {
+               newValue = (a->value->getSystemType() == AMSystemType::Vendor) ? componentVendor : componentModel;
+            }
+            if (!newValue.isNull() && !newValue.isEmpty())
+               contexts->add(new AssetPropertyAutofillContext(a->key, a->value->getDataType(), nullptr, nullptr, newValue, a->value->getSystemType()));
+            continue;
+         }
          switch (a->value->getSystemType())
          {
             case AMSystemType::MacAddress:
@@ -1281,9 +1304,10 @@ static inline MacAddress GetMacAddress(const NetObj& object)
 }
 
 /**
- * Update identification fields for asset (serial number and MAC address)
+ * Update identification fields for asset (serial number and MAC address). If component serial is not empty, asset is
+ * identified as given component of the object and only serial number is updated.
  */
-std::pair<uint32_t, String> UpdateAssetIdentification(Asset *asset, NetObj *object, uint32_t userId)
+std::pair<uint32_t, String> NXCORE_EXPORTABLE UpdateAssetIdentification(Asset *asset, NetObj *object, const wchar_t *componentSerial, uint32_t userId)
 {
    TCHAR serialAttributeName[MAX_OBJECT_NAME] = _T("");
    TCHAR macAttributeName[MAX_OBJECT_NAME] = _T("");
@@ -1301,6 +1325,13 @@ std::pair<uint32_t, String> UpdateAssetIdentification(Asset *asset, NetObj *obje
 
    std::pair<uint32_t, String> result;
 
+   if ((componentSerial != nullptr) && (*componentSerial != 0))
+   {
+      if (serialAttributeName[0] != 0)
+         return asset->setProperty(serialAttributeName, componentSerial, userId);
+      return std::pair<uint32_t, String>(RCC_SUCCESS, _T(""));
+   }
+
    SharedString serialNumber = GetSerialNumber(*object);
    if ((serialAttributeName[0] != 0) && !serialNumber.isEmpty())
    {
@@ -1317,14 +1348,32 @@ std::pair<uint32_t, String> UpdateAssetIdentification(Asset *asset, NetObj *obje
 }
 
 /**
- * Link asset to object
+ * Link asset to object. If component serial is not empty, asset is linked to given component of the object
+ * (object's own asset link is not affected); otherwise asset becomes object's asset.
  */
-void NXCORE_EXPORTABLE LinkAsset(Asset *asset, NetObj *object, ClientSession *session)
+void NXCORE_EXPORTABLE LinkAsset(Asset *asset, NetObj *object, const wchar_t *componentSerial, ClientSession *session)
 {
-   if (asset->getLinkedObjectId() == object->getId())
+   bool componentLink = (componentSerial != nullptr) && (*componentSerial != 0);
+   if (componentLink ? asset->isLinkedToComponent(object->getId(), componentSerial) : ((asset->getLinkedObjectId() == object->getId()) && !asset->isComponent()))
       return;
 
    UnlinkAsset(asset, session);
+
+   if (componentLink)
+   {
+      asset->setLinkedObject(object->getId(), componentSerial);
+      WriteAssetChangeLog(asset->getId(), nullptr, AssetOperation::Link, nullptr, componentSerial, (session != nullptr) ? session->getUserId() : 0, object->getId());
+      EventBuilder(EVENT_ASSET_LINK, object->getId()).
+                     param(_T("assetId"), asset->getId()).
+                     param(_T("assetName"), asset->getName()).
+                     param(_T("componentSerial"), componentSerial).post();
+      if (session != nullptr)
+      {
+         session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Asset linked with component %s of object %s [%u]"), componentSerial, object->getName(), object->getId());
+         session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Component %s linked with asset %s [%u]"), componentSerial, asset->getName(), asset->getId());
+      }
+      return;
+   }
 
    if (object->getAssetId() != 0)
    {
@@ -1335,12 +1384,13 @@ void NXCORE_EXPORTABLE LinkAsset(Asset *asset, NetObj *object, ClientSession *se
       }
    }
 
-   asset->setLinkedObjectId(object->getId());
+   asset->setLinkedObject(object->getId(), nullptr);
    object->setAssetId(asset->getId());
    WriteAssetChangeLog(asset->getId(), nullptr, AssetOperation::Link, nullptr, nullptr, (session != nullptr) ? session->getUserId() : 0, object->getId());
    EventBuilder(EVENT_ASSET_LINK, object->getId()).
                   param(_T("assetId"), asset->getId()).
-                  param(_T("assetName"), asset->getName()).post();
+                  param(_T("assetName"), asset->getName()).
+                  param(_T("componentSerial"), _T("")).post();
    if (session != nullptr)
    {
       session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Asset linked with object %s [%u]"), object->getName(), object->getId());
@@ -1359,18 +1409,56 @@ void NXCORE_EXPORTABLE UnlinkAsset(Asset *asset, ClientSession *session)
    shared_ptr<NetObj> object = FindObjectById(asset->getLinkedObjectId());
    if (object != nullptr)
    {
-      asset->setLinkedObjectId(0);
-      object->setAssetId(0);
-      WriteAssetChangeLog(asset->getId(), nullptr, AssetOperation::Unlink, nullptr, nullptr, (session != nullptr) ? session->getUserId() : 0, object->getId());
+      String componentSerial = asset->getComponentSerial();
+      asset->setLinkedObject(0, nullptr);
+      if (object->getAssetId() == asset->getId())
+         object->setAssetId(0);
+      WriteAssetChangeLog(asset->getId(), nullptr, AssetOperation::Unlink, componentSerial.isEmpty() ? nullptr : componentSerial.cstr(), nullptr, (session != nullptr) ? session->getUserId() : 0, object->getId());
       EventBuilder(EVENT_ASSET_UNLINK, object->getId()).
                      param(_T("assetId"), asset->getId()).
-                     param(_T("assetName"), asset->getName()).post();
+                     param(_T("assetName"), asset->getName()).
+                     param(_T("componentSerial"), componentSerial).post();
       if (session != nullptr)
       {
-         session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Link with asset %s [%u] removed"), asset->getName(), asset->getId());
-         session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Link with object %s [%u] removed"), object->getName(), object->getId());
+         if (componentSerial.isEmpty())
+         {
+            session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Link with asset %s [%u] removed"), asset->getName(), asset->getId());
+            session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Link with object %s [%u] removed"), object->getName(), object->getId());
+         }
+         else
+         {
+            session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Link between component %s and asset %s [%u] removed"), componentSerial.cstr(), asset->getName(), asset->getId());
+            session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Link with component %s of object %s [%u] removed"), componentSerial.cstr(), object->getName(), object->getId());
+         }
       }
    }
+   else
+   {
+      asset->setLinkedObject(0, nullptr);
+   }
+}
+
+/**
+ * Get all assets linked to components of given object
+ */
+unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE GetComponentAssets(uint32_t objectId)
+{
+   return g_idxAssetById.getObjects(
+      [objectId] (NetObj *object) -> bool
+      {
+         Asset *asset = static_cast<Asset*>(object);
+         return (asset->getLinkedObjectId() == objectId) && asset->isComponent();
+      });
+}
+
+/**
+ * Unlink all component assets from given object (called when object is being deleted)
+ */
+void NXCORE_EXPORTABLE UnlinkComponentAssets(NetObj *object)
+{
+   unique_ptr<SharedObjectArray<NetObj>> assets = GetComponentAssets(object->getId());
+   for(int i = 0; i < assets->size(); i++)
+      UnlinkAsset(static_cast<Asset*>(assets->get(i)), nullptr);
 }
 
 /**
@@ -1415,7 +1503,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                object->getName(), object->getId(), asset->getName(), asset->getId(), attrTypeName, objectValue);
          if (asset->getLinkedObjectId() == 0)
          {
-            LinkAsset(asset.get(), object, nullptr);
+            LinkAsset(asset.get(), object, nullptr, nullptr);
             nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
             object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
          }
@@ -1431,7 +1519,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
                UpdateAssetLinkage(otherObject.get(), matchByMacAllowed);
                if (otherObject->getAssetId() == 0)
                {
-                  LinkAsset(asset.get(), object, nullptr);
+                  LinkAsset(asset.get(), object, nullptr, nullptr);
                   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
                   object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
                }
@@ -1449,8 +1537,8 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
             else
             {
                nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: asset %s [%u] linked to non-existing object"), object->getName(), object->getId(), asset->getName(), asset->getId());
-               asset->setLinkedObjectId(0);
-               LinkAsset(asset.get(), object, nullptr);
+               asset->setLinkedObject(0, nullptr);
+               LinkAsset(asset.get(), object, nullptr, nullptr);
                nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
                object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
             }
@@ -1466,7 +1554,7 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
 /**
  * Check asset link to node/sensor/access point/etc. and update link if necessary
  */
-void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
+void NXCORE_EXPORTABLE UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
 {
    TCHAR serialAttributeName[MAX_OBJECT_NAME] = _T("");
    TCHAR macAttributeName[MAX_OBJECT_NAME] = _T("");
@@ -1531,6 +1619,108 @@ void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
    else
    {
       UpdateAssetLinkageInternal(object, serialAttributeName, serialNumber, _T("serial number"), false);
+   }
+}
+
+/**
+ * Check links between assets and node components (stack members, transceivers, disks, etc.) and update them if necessary.
+ * Component assets are identified by serial number only: assets linked to components no longer present in node's inventory are
+ * unlinked, and unlinked assets with serial number matching component serial are linked.
+ */
+void NXCORE_EXPORTABLE UpdateComponentAssetLinkage(Node *node)
+{
+   unique_ptr<StringSet> serials = node->getComponentSerialNumbers();
+   if (serials == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): no component inventory"), node->getName(), node->getId());
+      return;
+   }
+
+   node->sendPollerMsg(_T("Checking component asset linkage\r\n"));
+
+   // Unlink assets whose components are no longer present
+   unique_ptr<SharedObjectArray<NetObj>> linkedAssets = GetComponentAssets(node->getId());
+   for(int i = 0; i < linkedAssets->size(); i++)
+   {
+      Asset *asset = static_cast<Asset*>(linkedAssets->get(i));
+      String serial = asset->getComponentSerial();
+      if (!serials->contains(serial))
+      {
+         nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): component %s linked to asset %s [%u] not found in inventory"),
+               node->getName(), node->getId(), serial.cstr(), asset->getName(), asset->getId());
+         UnlinkAsset(asset, nullptr);
+         node->sendPollerMsg(POLLER_WARNING _T("   Component %s not found, unlinked from asset \"%s\"\r\n"), serial.cstr(), asset->getName());
+      }
+   }
+
+   TCHAR serialAttributeName[MAX_OBJECT_NAME] = _T("");
+   s_schemaLock.readLock();
+   for (KeyValuePair<AssetAttribute> *a : s_schema)
+   {
+      if (a->value->getSystemType() == AMSystemType::Serial)
+      {
+         _tcslcpy(serialAttributeName, a->key, MAX_OBJECT_NAME);
+         break;
+      }
+   }
+   s_schemaLock.unlock();
+   if (serialAttributeName[0] == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): serial number attribute not defined in schema"), node->getName(), node->getId());
+      return;
+   }
+
+   // Link assets matching component serial numbers
+   for(const TCHAR *serial : *serials)
+   {
+      shared_ptr<Asset> asset = FindAssetByPropertyValue(serialAttributeName, serial);
+      if ((asset == nullptr) || asset->isLinkedToComponent(node->getId(), serial))
+         continue;
+
+      if (asset->getLinkedObjectId() != 0)
+      {
+         shared_ptr<NetObj> otherObject = FindObjectById(asset->getLinkedObjectId());
+         if (otherObject != nullptr)
+         {
+            if (asset->isComponent() && (otherObject->getObjectClass() == OBJECT_NODE))
+            {
+               // Check if component is still present on other node (component may have been moved)
+               unique_ptr<StringSet> otherSerials = static_cast<Node&>(*otherObject).getComponentSerialNumbers();
+               if (otherSerials == nullptr)
+               {
+                  nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): asset %s [%u] matches component %s but is linked to node %s [%u] without component inventory"),
+                        node->getName(), node->getId(), asset->getName(), asset->getId(), serial, otherObject->getName(), otherObject->getId());
+                  node->sendPollerMsg(POLLER_WARNING _T("   Asset \"%s\" matches component %s but is linked to node \"%s\"\r\n"), asset->getName(), serial, otherObject->getName());
+                  continue;
+               }
+               if (!otherSerials->contains(serial))
+               {
+                  nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): component %s moved from node %s [%u]"),
+                        node->getName(), node->getId(), serial, otherObject->getName(), otherObject->getId());
+                  LinkAsset(asset.get(), node, serial, nullptr);
+                  node->sendPollerMsg(POLLER_INFO _T("   Component %s linked to asset \"%s\" (moved from node \"%s\")\r\n"), serial, asset->getName(), otherObject->getName());
+                  continue;
+               }
+            }
+
+            nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): asset %s [%u] matches component %s but is linked to object %s [%u]"),
+                  node->getName(), node->getId(), asset->getName(), asset->getId(), serial, otherObject->getName(), otherObject->getId());
+            EventBuilder(EVENT_ASSET_LINK_CONFLICT, node->getId()).
+                  param(_T("assetId"), asset->getId()).
+                  param(_T("assetName"), asset->getName()).
+                  param(_T("currentNodeId"), otherObject->getId()).
+                  param(_T("currentNodeName"), otherObject->getName()).post();
+            node->sendPollerMsg(POLLER_WARNING _T("   Component %s cannot be linked to asset \"%s\" because of conflict with object \"%s\"\r\n"), serial, asset->getName(), otherObject->getName());
+            continue;
+         }
+
+         nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): asset %s [%u] linked to non-existing object"), node->getName(), node->getId(), asset->getName(), asset->getId());
+         asset->setLinkedObject(0, nullptr);
+      }
+
+      LinkAsset(asset.get(), node, serial, nullptr);
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): component %s linked to asset %s [%u]"), node->getName(), node->getId(), serial, asset->getName(), asset->getId());
+      node->sendPollerMsg(POLLER_INFO _T("   Component %s linked to asset \"%s\"\r\n"), serial, asset->getName());
    }
 }
 

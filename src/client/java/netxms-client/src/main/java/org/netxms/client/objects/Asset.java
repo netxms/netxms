@@ -30,6 +30,7 @@ import org.netxms.client.NXCSession;
 public class Asset extends GenericObject
 {
    private long linkedObjectId;
+   private String componentSerial;
    private Date lastUpdateTimestamp;
    private int lastUpdateUserId;
    private Map<String, String> properties;
@@ -45,6 +46,9 @@ public class Asset extends GenericObject
 		super(msg, session);
 
       linkedObjectId = msg.getFieldAsInt64(NXCPCodes.VID_LINKED_OBJECT);
+      componentSerial = msg.getFieldAsString(NXCPCodes.VID_SERIAL_NUMBER);
+      if (componentSerial == null)
+         componentSerial = "";
       lastUpdateTimestamp = msg.getFieldAsDate(NXCPCodes.VID_LAST_UPDATE_TIMESTAMP);
       lastUpdateUserId = msg.getFieldAsInt32(NXCPCodes.VID_LAST_UPDATE_UID);
       properties = msg.getStringMapFromFields(NXCPCodes.VID_ASSET_PROPERTIES_BASE, NXCPCodes.VID_NUM_ASSET_PROPERTIES);
@@ -65,6 +69,27 @@ public class Asset extends GenericObject
    public long getLinkedObjectId()
    {
       return linkedObjectId;
+   }
+
+   /**
+    * Get serial number of linked component. Asset can be linked either to an object as a whole or to a component of a node
+    * (stack member, transceiver, disk, etc.) identified by serial number.
+    *
+    * @return serial number of linked component or empty string if asset is linked to an object as a whole (or not linked)
+    */
+   public String getComponentSerial()
+   {
+      return componentSerial;
+   }
+
+   /**
+    * Check if this asset represents a component of linked node rather than the node itself.
+    *
+    * @return true if asset is linked to a component of a node
+    */
+   public boolean isComponent()
+   {
+      return !componentSerial.isEmpty();
    }
 
    /**

@@ -45,6 +45,7 @@ bool AssetGroup::showThresholdSummary() const
 Asset::Asset() : NetObj()
 {
    m_linkedObjectId = 0;
+   m_componentSerial[0] = 0;
    m_lastUpdateTimestamp = 0;
    m_lastUpdateUserId = 0;
    m_status = STATUS_NORMAL;
@@ -57,6 +58,7 @@ Asset::Asset(const TCHAR *name, const StringMap& properties) : NetObj(), m_prope
 {
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    m_linkedObjectId = 0;
+   m_componentSerial[0] = 0;
    m_lastUpdateTimestamp = 0;
    m_lastUpdateUserId = 0;
    m_status = STATUS_NORMAL;
@@ -79,7 +81,7 @@ bool Asset::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedS
    if (!loadCommonProperties(hdb, preparedStatements))
       return false;
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT linked_object_id,last_update_timestamp,last_update_uid FROM assets WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT linked_object_id,component_serial,last_update_timestamp,last_update_uid FROM assets WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -92,8 +94,9 @@ bool Asset::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *preparedS
       if (DBGetNumRows(hResult) != 0)
       {
          m_linkedObjectId = DBGetFieldULong(hResult, 0, 0);
-         m_lastUpdateTimestamp = DBGetFieldULong(hResult, 0, 1);
-         m_lastUpdateUserId = DBGetFieldULong(hResult, 0, 2);
+         DBGetField(hResult, 0, 1, m_componentSerial, 64);
+         m_lastUpdateTimestamp = DBGetFieldULong(hResult, 0, 2);
+         m_lastUpdateUserId = DBGetFieldULong(hResult, 0, 3);
          success = true;
       }
       DBFreeResult(hResult);
@@ -133,15 +136,16 @@ bool Asset::saveToDatabase(DB_HANDLE hdb)
    bool success = super::saveToDatabase(hdb);
    if (success && (m_modified & MODIFY_ASSET_PROPERTIES))
    {
-      static const TCHAR *columns[] = { _T("linked_object_id"), _T("last_update_timestamp"), _T("last_update_uid"), nullptr };
+      static const TCHAR *columns[] = { _T("linked_object_id"), _T("component_serial"), _T("last_update_timestamp"), _T("last_update_uid"), nullptr };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("assets"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_linkedObjectId);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastUpdateTimestamp));
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_lastUpdateUserId);
-         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_componentSerial, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastUpdateTimestamp));
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_lastUpdateUserId);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -201,6 +205,7 @@ void Asset::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageLocked(msg, userId);
    msg->setField(VID_LINKED_OBJECT, m_linkedObjectId);
+   msg->setField(VID_SERIAL_NUMBER, m_componentSerial);
    msg->setFieldFromTime(VID_LAST_UPDATE_TIMESTAMP, m_lastUpdateTimestamp);
    msg->setField(VID_LAST_UPDATE_UID, m_lastUpdateUserId);
    m_properties.fillMessage(msg, VID_ASSET_PROPERTIES_BASE, VID_NUM_ASSET_PROPERTIES);
@@ -234,6 +239,7 @@ json_t *Asset::toJson(uint32_t flags)
 
    lockProperties();
    json_object_set_new(root, "linkedObjectId", json_integer(m_linkedObjectId));
+   json_object_set_new(root, "componentSerial", json_string_w(m_componentSerial));
    json_object_set_new(root, "lastUpdateTimestamp", json_integer(m_lastUpdateTimestamp));
    json_object_set_new(root, "lastUpdateUserId", json_integer(m_lastUpdateUserId));
    json_object_set_new(root, "properties", m_properties.toJson());
@@ -257,6 +263,34 @@ void Asset::calculateCompoundStatus(bool forcedRecalc)
 void Asset::prepareForDeletion()
 {
    UnlinkAsset(this, nullptr);
+}
+
+/**
+ * Set linked object. Component serial should be empty or nullptr if asset is linked to the object itself.
+ */
+void Asset::setLinkedObject(uint32_t objectId, const wchar_t *componentSerial)
+{
+   lockProperties();
+   m_linkedObjectId = objectId;
+   if ((objectId != 0) && (componentSerial != nullptr))
+      wcslcpy(m_componentSerial, componentSerial, 64);
+   else
+      m_componentSerial[0] = 0;
+   setModified(MODIFY_ASSET_PROPERTIES);
+   unlockProperties();
+}
+
+/**
+ * Check if asset is linked to given component of given object
+ */
+bool Asset::isLinkedToComponent(uint32_t objectId, const wchar_t *componentSerial) const
+{
+   if (m_linkedObjectId != objectId)
+      return false;
+   lockProperties();
+   bool match = !wcscmp(m_componentSerial, componentSerial);
+   unlockProperties();
+   return match;
 }
 
 /**
@@ -403,6 +437,8 @@ NXSL_Value *Asset::getPropertyValueForNXSL(NXSL_VM *vm, const TCHAR *name) const
 void Asset::dumpProperties(ServerConsole *console) const
 {
    lockProperties();
+   if (m_componentSerial[0] != 0)
+      console->printf(_T("   Linked component: %s\n"), m_componentSerial);
    if (!m_properties.isEmpty())
    {
       console->print(_T("   Properties:\n"));

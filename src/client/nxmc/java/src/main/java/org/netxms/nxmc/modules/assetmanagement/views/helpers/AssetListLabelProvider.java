@@ -26,6 +26,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.modules.assetmanagement.views.AssetSummaryView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 
 /**
@@ -69,6 +70,8 @@ public class AssetListLabelProvider extends LabelProvider implements ITableLabel
    {
       if (columnIndex == 0)
          return objectLabelProvider.getText(element);
+      if (columnIndex == AssetSummaryView.COLUMN_LINK)
+         return getLinkText(element, session);
 
       String attribute = (String)viewer.getColumnById(columnIndex).getData("Attribute");
       if (attribute == null)
@@ -79,6 +82,27 @@ public class AssetListLabelProvider extends LabelProvider implements ITableLabel
          return null;
 
       return propertyReader.valueToText(attribute, asset.getProperties().get(attribute));
+   }
+
+   /**
+    * Get text describing asset link for given list element: for asset element - name of linked object (with component serial number
+    * for component assets), for other objects - name of linked asset.
+    *
+    * @param element list element (asset or object linked to asset)
+    * @param session client session
+    * @return link description
+    */
+   public static String getLinkText(Object element, NXCSession session)
+   {
+      if (element instanceof Asset)
+      {
+         Asset asset = (Asset)element;
+         if (asset.getLinkedObjectId() == 0)
+            return "";
+         String name = session.getObjectName(asset.getLinkedObjectId());
+         return asset.isComponent() ? name + " / " + asset.getComponentSerial() : name;
+      }
+      return session.getObjectName(((AbstractObject)element).getAssetId());
    }
 
    /**

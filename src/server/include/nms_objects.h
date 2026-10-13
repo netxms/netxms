@@ -4876,6 +4876,10 @@ public:
    shared_ptr<VrrpInfo> getVrrpInfo() const { return GetAttributeWithLock(m_vrrpInfo, m_mutexProperties); }
    shared_ptr<ComponentTree> getComponents() const { return GetAttributeWithLock(m_components, m_mutexProperties); }
    shared_ptr<DeviceView> getDeviceView() const { return GetAttributeWithLock(m_deviceView, m_mutexProperties); }
+   unique_ptr<StringSet> getComponentSerialNumbers() const;
+   bool getComponentIdentification(const wchar_t *serial, MutableString *vendor, MutableString *model) const;
+   bool hasComponent(const wchar_t *serial) const { MutableString vendor, model; return getComponentIdentification(serial, &vendor, &model); }
+   NXSL_Value *getComponentAssetsForNXSL(NXSL_VM *vm);
 
    ObjectArray<AccessPointInfo> *getAccessPoints();
    uint32_t getAccessPointCount() const;
@@ -6289,6 +6293,7 @@ private:
 
    StringMap m_properties;
    uint32_t m_linkedObjectId;
+   wchar_t m_componentSerial[64];   // Serial number of linked component of the object (empty if asset is linked to the object itself)
    time_t m_lastUpdateTimestamp;
    uint32_t m_lastUpdateUserId;
 
@@ -6321,8 +6326,11 @@ public:
    time_t getLastUpdateTimestamp() const { return m_lastUpdateTimestamp; }
    uint32_t getLastUpdateUserId() const { return m_lastUpdateUserId; }
 
-   void setLinkedObjectId(uint32_t objectId)  { lockProperties(); m_linkedObjectId = objectId; setModified(MODIFY_ASSET_PROPERTIES); unlockProperties(); }
+   void setLinkedObject(uint32_t objectId, const wchar_t *componentSerial);
    uint32_t getLinkedObjectId() const { return m_linkedObjectId; }
+   String getComponentSerial() const { lockProperties(); String serial(m_componentSerial); unlockProperties(); return serial; }
+   bool isComponent() const { return m_componentSerial[0] != 0; }
+   bool isLinkedToComponent(uint32_t objectId, const wchar_t *componentSerial) const;
    SharedString getProperty(const TCHAR *attr);
    json_t *getPropertiesAsJson() const;
 
@@ -7217,6 +7225,7 @@ extern InetAddressIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByUIN;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxAssetById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNetMapById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxChassisById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxCircuitById;

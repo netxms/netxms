@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.views.elements;
 
+import java.util.List;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.MapType;
@@ -84,13 +85,30 @@ public class ObjectInfo extends TableElement
             addPair(i18n.tr("Asset"), asset.getObjectNameWithPath(), false);
          }
       }
+      List<Asset> componentAssets = session.getComponentAssets(object.getObjectId());
+      if (!componentAssets.isEmpty())
+      {
+         componentAssets.sort((a1, a2) -> a1.getObjectName().compareToIgnoreCase(a2.getObjectName()));
+         StringBuilder sb = new StringBuilder();
+         for(Asset a : componentAssets)
+         {
+            if (sb.length() > 0)
+               sb.append(", ");
+            sb.append(a.getObjectName()).append(" (").append(a.getComponentSerial()).append(')');
+         }
+         addPair(i18n.tr("Component assets"), sb.toString(), false);
+      }
 
       switch(object.getObjectClass())
 		{
          case AbstractObject.OBJECT_ASSET:
             Asset asset = (Asset)object;
             if (asset.getLinkedObjectId() != 0)
+            {
                addPair(i18n.tr("Linked to"), session.getObjectNameWithAlias(asset.getLinkedObjectId()));
+               if (asset.isComponent())
+                  addPair(i18n.tr("Linked component"), asset.getComponentSerial());
+            }
             break;
          case AbstractObject.OBJECT_CLUSTER:
             Cluster cluster = (Cluster)object;

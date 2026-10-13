@@ -72,7 +72,7 @@ ObjectIndex g_idxCloudDomainById;
 ObjectIndex g_idxResourceById;
 ObjectIndex g_idxTrafficObserverById;
 ObjectIndex g_idxObservationPointById;
-ObjectIndex g_idxAssetById;
+ObjectIndex NXCORE_EXPORTABLE g_idxAssetById;
 ObjectIndex g_idxCollectorById;
 ObjectIndex g_idxFacilityById;
 ObjectIndex g_idxPowerDomainById;
@@ -1892,13 +1892,19 @@ void ActivateObjectStore()
              {
                 nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Link between asset \"%s\" [%u] and non-existing object [%u] deleted"),
                    asset->getName(), asset->getId(), asset->getLinkedObjectId());
-                asset->setLinkedObjectId(0);
+                asset->setLinkedObject(0, nullptr);
              }
-             else if (asset->getId() != linkedObject->getAssetId())
+             else if (!asset->isComponent() && (asset->getId() != linkedObject->getAssetId()))
              {
                 nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Invalid link between asset \"%s\" [%u] and object \"%s\" [%u] deleted (asset ID mismatch: [%u], expected [%u])"),
                    asset->getName(), asset->getId(), linkedObject->getName(), linkedObject->getId(), linkedObject->getAssetId(), asset->getId());
-                asset->setLinkedObjectId(0);
+                asset->setLinkedObject(0, nullptr);
+             }
+             else if (asset->isComponent() && (linkedObject->getObjectClass() != OBJECT_NODE))
+             {
+                nxlog_debug_tag(DEBUG_TAG_OBJECT_INIT, 2, _T("Invalid link between asset \"%s\" [%u] and component of object \"%s\" [%u] deleted (object is not a node)"),
+                   asset->getName(), asset->getId(), linkedObject->getName(), linkedObject->getId());
+                asset->setLinkedObject(0, nullptr);
              }
           }
          return _CONTINUE;
@@ -3117,9 +3123,17 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
    uint32_t assetId = json_object_get_uint32(json, "assetId");
    shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(assetId, OBJECT_ASSET));
 
-   // Object to link the new asset to (create + link + autofill in one request)
+   // Object to link the new asset to (create + link + autofill in one request); if component serial number is given,
+   // new asset will be linked to that component of the object instead of the object itself
    uint32_t linkedObjectId = (objectClass == OBJECT_ASSET) ? json_object_get_uint32(json, "linkedObjectId") : 0;
    shared_ptr<NetObj> linkedObject = FindObjectById(linkedObjectId);
+   wchar_t componentSerial[64] = L"";
+   if (linkedObject != nullptr)
+   {
+      wchar_t *value = json_object_get_string_w(json, "componentSerial", L"");
+      wcslcpy(componentSerial, value, 64);
+      MemFree(value);
+   }
 
    if (((parent == nullptr) && (objectClass != OBJECT_NODE)) || ((assetId != 0) && (asset == nullptr)) ||
        ((linkedObjectId != 0) && (linkedObject == nullptr)))
@@ -3145,14 +3159,33 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
    // (as well as to the asset currently linked to that object, because it will be unlinked)
    if (linkedObject != nullptr)
    {
-      if (!IsValidAssetLinkTargetClass(linkedObject->getObjectClass()))
-         return RCC_INCOMPATIBLE_OPERATION;
-      shared_ptr<NetObj> oldAsset = FindObjectById(linkedObject->getAssetId(), OBJECT_ASSET);
-      if (!linkedObject->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) ||
-          ((oldAsset != nullptr) && !oldAsset->checkAccessRights(userId, OBJECT_ACCESS_MODIFY)))
+      if (componentSerial[0] != 0)
       {
-         session->writeAuditLog(AUDIT_OBJECTS, false, linkedObject->getId(), L"Access denied on linking this object to new asset \"%s\"", objectName);
-         return RCC_ACCESS_DENIED;
+         // Component link: object must be a node with given component in inventory; node's own asset link is not affected
+         if (linkedObject->getObjectClass() != OBJECT_NODE)
+            return RCC_INCOMPATIBLE_OPERATION;
+         if (!static_cast<Node&>(*linkedObject).hasComponent(componentSerial))
+         {
+            nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"CreateObjectFromJSON: component with serial number %s not found on node %s [%u]", componentSerial, linkedObject->getName(), linkedObject->getId());
+            return RCC_INVALID_ARGUMENT;
+         }
+         if (!linkedObject->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+         {
+            session->writeAuditLog(AUDIT_OBJECTS, false, linkedObject->getId(), L"Access denied on linking component %s of this object to new asset \"%s\"", componentSerial, objectName);
+            return RCC_ACCESS_DENIED;
+         }
+      }
+      else
+      {
+         if (!IsValidAssetLinkTargetClass(linkedObject->getObjectClass()))
+            return RCC_INCOMPATIBLE_OPERATION;
+         shared_ptr<NetObj> oldAsset = FindObjectById(linkedObject->getAssetId(), OBJECT_ASSET);
+         if (!linkedObject->checkAccessRights(userId, OBJECT_ACCESS_MODIFY) ||
+             ((oldAsset != nullptr) && !oldAsset->checkAccessRights(userId, OBJECT_ACCESS_MODIFY)))
+         {
+            session->writeAuditLog(AUDIT_OBJECTS, false, linkedObject->getId(), L"Access denied on linking this object to new asset \"%s\"", objectName);
+            return RCC_ACCESS_DENIED;
+         }
       }
    }
 
@@ -3486,19 +3519,19 @@ uint32_t CreateObjectFromJSON(json_t *json, GenericClientSession *session, share
    json_decref(objData);
 
    if (asset != nullptr)
-      LinkAsset(asset.get(), object.get(), nullptr);
+      LinkAsset(asset.get(), object.get(), nullptr, nullptr);
 
    if (linkedObject != nullptr)
    {
       shared_ptr<Asset> newAsset = static_pointer_cast<Asset>(object);
-      std::pair<uint32_t, String> result = UpdateAssetIdentification(newAsset.get(), linkedObject.get(), userId);
+      std::pair<uint32_t, String> result = UpdateAssetIdentification(newAsset.get(), linkedObject.get(), componentSerial, userId);
       if (result.first != RCC_SUCCESS)
       {
          // Not a fatal error - asset is already created from validated properties, so link it anyway
          nxlog_debug_tag(DEBUG_TAG_OBJECT_DATA, 4, L"CreateObjectFromJSON: cannot update identification of new asset \"%s\" [%u] from object %s [%u] (%s)",
                newAsset->getName(), newAsset->getId(), linkedObject->getName(), linkedObject->getId(), result.second.cstr());
       }
-      LinkAsset(newAsset.get(), linkedObject.get(), nullptr);
+      LinkAsset(newAsset.get(), linkedObject.get(), componentSerial, nullptr);
       newAsset->autoFillProperties();
    }
 

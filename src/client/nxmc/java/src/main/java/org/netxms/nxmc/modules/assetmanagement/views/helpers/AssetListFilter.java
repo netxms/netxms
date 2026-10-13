@@ -57,8 +57,9 @@ public class AssetListFilter extends ViewerFilter implements AbstractViewerFilte
          return true;
 
       final String name = ((AbstractObject)element).getObjectName().toLowerCase();
+      final String link = AssetListLabelProvider.getLinkText(element, session).toLowerCase();
       final Asset asset = getAsset(element);
-      return filter.matchesEachToken(token -> name.contains(token) || matchProperties(asset, token));
+      return filter.matchesEachToken(token -> name.contains(token) || link.contains(token) || matchProperties(asset, token));
    }
 
    /**

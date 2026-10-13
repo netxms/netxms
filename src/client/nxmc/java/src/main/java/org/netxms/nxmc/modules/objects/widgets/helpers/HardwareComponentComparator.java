@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.widgets.helpers;
 
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
@@ -73,6 +74,10 @@ public class HardwareComponentComparator extends ViewerComparator
             break;
          case HardwareInventoryTable.COLUMN_VENDOR:
             result = c1.getVendor().compareToIgnoreCase(c2.getVendor());
+            break;
+         case HardwareInventoryTable.COLUMN_ASSET:
+            ITableLabelProvider labelProvider = (ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider();
+            result = labelProvider.getColumnText(e1, column).compareToIgnoreCase(labelProvider.getColumnText(e2, column));
             break;
       }
       

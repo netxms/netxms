@@ -6914,9 +6914,13 @@ void ClientSession::createObject(const NXCPMessage& request)
    uint32_t assetId = request.getFieldAsUInt32(VID_ASSET_ID);
    shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(assetId, OBJECT_ASSET));
 
-   // Object to link the new asset to (create + link + autofill in one request)
+   // Object to link the new asset to (create + link + autofill in one request); if component serial number is given,
+   // new asset will be linked to that component of the object instead of the object itself
    uint32_t linkedObjectId = (objectClass == OBJECT_ASSET) ? request.getFieldAsUInt32(VID_LINKED_OBJECT) : 0;
    shared_ptr<NetObj> linkedObject = FindObjectById(linkedObjectId);
+   TCHAR componentSerial[64] = _T("");
+   if (linkedObject != nullptr)
+      request.getFieldAsString(VID_SERIAL_NUMBER, componentSerial, 64);
 
    if (((parent != nullptr) || (objectClass == OBJECT_NODE)) &&
        ((assetId == 0) || (asset != nullptr)) &&
@@ -6944,10 +6948,32 @@ void ClientSession::createObject(const NXCPMessage& request)
          }
 
          // Object to be linked to the new asset should be of valid class and user should have modify access to it
-         // (as well as to the asset currently linked to that object, because it will be unlinked)
+         // (as well as to the asset currently linked to that object, because it will be unlinked). For component link
+         // object should be a node and component with given serial number should be present in its inventory.
          if ((rcc == RCC_SUCCESS) && (linkedObject != nullptr))
          {
-            if (IsValidAssetLinkTargetClass(linkedObject->getObjectClass()))
+            if (componentSerial[0] != 0)
+            {
+               if (linkedObject->getObjectClass() != OBJECT_NODE)
+               {
+                  debugPrintf(4, L"Creation of asset object \"%s\" failed (object %s [%u] is not a node and cannot have component assets)",
+                        objectName, linkedObject->getName(), linkedObject->getId());
+                  rcc = RCC_INCOMPATIBLE_OPERATION;
+               }
+               else if (!static_cast<Node&>(*linkedObject).hasComponent(componentSerial))
+               {
+                  debugPrintf(4, L"Creation of asset object \"%s\" failed (component with serial number %s not found on node %s [%u])",
+                        objectName, componentSerial, linkedObject->getName(), linkedObject->getId());
+                  response.setField(VID_ERROR_TEXT, StringBuffer(L"Component with serial number ").append(componentSerial).append(L" not found in node inventory"));
+                  rcc = RCC_INVALID_ARGUMENT;
+               }
+               else if (!linkedObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY))
+               {
+                  writeAuditLog(AUDIT_OBJECTS, false, linkedObject->getId(), L"Access denied on linking component %s of this object to new asset \"%s\"", componentSerial, objectName);
+                  rcc = RCC_ACCESS_DENIED;
+               }
+            }
+            else if (IsValidAssetLinkTargetClass(linkedObject->getObjectClass()))
             {
                shared_ptr<NetObj> oldAsset = FindObjectById(linkedObject->getAssetId(), OBJECT_ASSET);
                if (!linkedObject->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) ||
@@ -7305,20 +7331,20 @@ void ClientSession::createObject(const NXCPMessage& request)
 
                if (asset != nullptr)
                {
-                  LinkAsset(asset.get(), object.get(), this);
+                  LinkAsset(asset.get(), object.get(), nullptr, this);
                }
 
                if (linkedObject != nullptr)
                {
                   shared_ptr<Asset> newAsset = static_pointer_cast<Asset>(object);
-                  std::pair<uint32_t, String> result = UpdateAssetIdentification(newAsset.get(), linkedObject.get(), m_userId);
+                  std::pair<uint32_t, String> result = UpdateAssetIdentification(newAsset.get(), linkedObject.get(), componentSerial, m_userId);
                   if (result.first != RCC_SUCCESS)
                   {
                      // Not a fatal error - asset is already created from validated properties, so link it anyway
                      debugPrintf(4, L"Cannot update identification of new asset \"%s\" [%u] from object %s [%u] (%s)",
                            newAsset->getName(), newAsset->getId(), linkedObject->getName(), linkedObject->getId(), result.second.cstr());
                   }
-                  LinkAsset(newAsset.get(), linkedObject.get(), this);
+                  LinkAsset(newAsset.get(), linkedObject.get(), componentSerial, this);
                   newAsset->autoFillProperties();
                }
 
@@ -20426,11 +20452,14 @@ void ClientSession::deleteAssetProperty(const NXCPMessage& request)
  * CMD_LINK_ASSET
  *
  * Expected input parameters:
- * VID_ASSET_ID      asset object id
- * VID_OBJECT_ID     other object id
+ * VID_ASSET_ID               asset object id
+ * VID_OBJECT_ID              other object id
+ * VID_SERIAL_NUMBER          optional serial number of object's component to link asset to (object must be a node)
+ * VID_UPDATE_IDENTIFICATION  if set, asset identification properties (serial number or MAC address) will be updated from object
  *
  * Return values:
  * VID_RCC                          Request completion code
+ * VID_ERROR_TEXT                   Error details (optional)
  */
 void ClientSession::linkAsset(const NXCPMessage& request)
 {
@@ -20440,22 +20469,54 @@ void ClientSession::linkAsset(const NXCPMessage& request)
    shared_ptr<NetObj> newTarget = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if ((asset != nullptr) && (newTarget != nullptr))
    {
+      TCHAR componentSerial[64];
+      request.getFieldAsString(VID_SERIAL_NUMBER, componentSerial, 64);
+      bool componentLink = (componentSerial[0] != 0);
+
       shared_ptr<NetObj> oldTarget = FindObjectById(asset->getLinkedObjectId());
-      shared_ptr<Asset> oldAsset = (newTarget->getAssetId() != 0) ? static_pointer_cast<Asset>(FindObjectById(newTarget->getAssetId(), OBJECT_ASSET)) : shared_ptr<Asset>();
+      // Asset currently linked to new target will be unlinked unless this is a component link
+      shared_ptr<Asset> oldAsset = (!componentLink && (newTarget->getAssetId() != 0)) ? static_pointer_cast<Asset>(FindObjectById(newTarget->getAssetId(), OBJECT_ASSET)) : shared_ptr<Asset>();
       if ((asset->getLinkedObjectId() == 0) || (oldTarget != nullptr))
       {
          if (asset->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) && newTarget->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY) &&
              ((oldTarget == nullptr) || oldTarget->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)) &&
              ((oldAsset == nullptr) || oldAsset->checkAccessRights(m_userId, OBJECT_ACCESS_MODIFY)))
          {
-            if (IsValidAssetLinkTargetClass(newTarget->getObjectClass()))
+            if (componentLink)
+            {
+               if (newTarget->getObjectClass() != OBJECT_NODE)
+               {
+                  response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+               }
+               else if (!static_cast<Node&>(*newTarget).hasComponent(componentSerial))
+               {
+                  response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+                  response.setField(VID_ERROR_TEXT, StringBuffer(L"Component with serial number ").append(componentSerial).append(L" not found in node inventory"));
+               }
+               else
+               {
+                  // Component serial number is asset's identity, so it is always written into asset properties
+                  std::pair<uint32_t, String> result = UpdateAssetIdentification(asset.get(), newTarget.get(), componentSerial, m_userId);
+                  if (result.first == RCC_SUCCESS)
+                  {
+                     LinkAsset(asset.get(), newTarget.get(), componentSerial, this);
+                     asset->autoFillProperties();
+                  }
+                  else
+                  {
+                     response.setField(VID_ERROR_TEXT, result.second);
+                  }
+                  response.setField(VID_RCC, result.first);
+               }
+            }
+            else if (IsValidAssetLinkTargetClass(newTarget->getObjectClass()))
             {
                if (request.getFieldAsBoolean(VID_UPDATE_IDENTIFICATION))
                {
-                  std::pair<uint32_t, String> result = UpdateAssetIdentification(asset.get(), newTarget.get(), m_userId);
+                  std::pair<uint32_t, String> result = UpdateAssetIdentification(asset.get(), newTarget.get(), nullptr, m_userId);
                   if (result.first == RCC_SUCCESS)
                   {
-                     LinkAsset(asset.get(), newTarget.get(), this);
+                     LinkAsset(asset.get(), newTarget.get(), nullptr, this);
                      asset->autoFillProperties();
                   }
                   else
@@ -20466,7 +20527,7 @@ void ClientSession::linkAsset(const NXCPMessage& request)
                }
                else
                {
-                  LinkAsset(asset.get(), newTarget.get(), this);
+                  LinkAsset(asset.get(), newTarget.get(), nullptr, this);
                   response.setField(VID_RCC, RCC_SUCCESS);
                }
             }

@@ -117,6 +117,7 @@ public class NXCObjectCreationData
    private long assetId;
    private Map<String, String> assetProperties;
    private long linkedObjectId;
+   private String componentSerial;
    private String connectorName;
    private String credentials;
    private String discoveryFilter;
@@ -1358,6 +1359,29 @@ public class NXCObjectCreationData
    }
 
    /**
+    * Get serial number of linked object's component that newly created asset will represent (only for asset creation).
+    *
+    * @return component serial number or null if asset will be linked to the object itself
+    */
+   public String getComponentSerial()
+   {
+      return componentSerial;
+   }
+
+   /**
+    * Set serial number of linked object's component that newly created asset will represent (only for asset creation, used
+    * together with linked object ID). Linked object must be a node and component with given serial number must be present
+    * in its hardware inventory. New asset will be linked to that component instead of the node itself; node's own asset
+    * link is not affected.
+    *
+    * @param componentSerial component serial number or null to link asset to the object itself
+    */
+   public void setComponentSerial(String componentSerial)
+   {
+      this.componentSerial = componentSerial;
+   }
+
+   /**
     * @return the connectorName
     */
    public String getConnectorName()
@@ -1612,7 +1636,7 @@ public class NXCObjectCreationData
             ", ifType=" + ifType + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic + ", port=" + port + ", physicalPort=" + physicalPort + ", createStatusDci=" + createStatusDci +
             ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" + chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" +
             sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", model=" + model + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", gatewayNodeId=" +
-            gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + ", linkedObjectId=" + linkedObjectId +
+            gatewayNodeId + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + ", linkedObjectId=" + linkedObjectId + ", componentSerial=" + componentSerial +
             ", connectorName=" + connectorName + ", credentials=" + credentials +
             ", discoveryFilter=" + discoveryFilter + ", removalPolicy=" + removalPolicy + ", gracePeriod=" + gracePeriod + ", settlementLag=" + settlementLag + ", providerId=" + providerId +
             ", domainType=" + domainType + ", feedTag=" + feedTag + ", ratedPower=" + ratedPower + ", zoneType=" + zoneType + ", ratedCapacity=" + ratedCapacity +

@@ -51,6 +51,7 @@ public class EntityMibTreeViewer extends AbstractHardwareInventoryWidget
    public static final int COLUMN_SERIAL = 5;
    public static final int COLUMN_VENDOR = 6;
    public static final int COLUMN_INTERFACE = 7;
+   public static final int COLUMN_ASSET = 8;
 
    private final I18n i18n = LocalizationHelper.getI18n(EntityMibTreeViewer.class);
 
@@ -68,8 +69,8 @@ public class EntityMibTreeViewer extends AbstractHardwareInventoryWidget
    {
       super(parent, style, view);
 
-      final String[] names = new String[] { i18n.tr("Name"), i18n.tr("Class"), i18n.tr("Description"), i18n.tr("Model"), i18n.tr("Firmware"), i18n.tr("Serial Number"), i18n.tr("Vendor"), i18n.tr("Interface") };
-      final int[] widths = new int[] { 200, 100, 250, 150, 100, 150, 150, 150 };
+      final String[] names = new String[] { i18n.tr("Name"), i18n.tr("Class"), i18n.tr("Description"), i18n.tr("Model"), i18n.tr("Firmware"), i18n.tr("Serial Number"), i18n.tr("Vendor"), i18n.tr("Interface"), i18n.tr("Asset") };
+      final int[] widths = new int[] { 200, 100, 250, 150, 100, 150, 150, 150, 150 };
       viewer = new SortableTreeViewer(this, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       labelProvider = new ComponentTreeLabelProvider();
       viewer.setLabelProvider(labelProvider);
@@ -101,6 +102,7 @@ public class EntityMibTreeViewer extends AbstractHardwareInventoryWidget
                      if (view.getObjectId() == objectId)
                      {
                         labelProvider.setNode((AbstractNode)view.getObject());
+                        labelProvider.setComponentAssets(getComponentAssets());
                         viewer.setInput(new Object[] { root });
                         viewer.expandAll();
                         viewer.packColumns(false);
@@ -135,6 +137,16 @@ public class EntityMibTreeViewer extends AbstractHardwareInventoryWidget
             return "Unable to get node hardware inventory";
          }
       }.start();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget#refreshComponentAssets()
+    */
+   @Override
+   public void refreshComponentAssets()
+   {
+      labelProvider.setComponentAssets(getComponentAssets());
+      viewer.refresh();
    }
 
    /**
