@@ -1509,15 +1509,38 @@ static void UpdateAssetLinkageInternal(NetObj *object, const TCHAR *attributeNam
          }
          else
          {
+            if (asset->getLinkedObjectId() == object->getId())
+            {
+               // Asset is linked to this object but object does not reference it: either asset is linked to a component of this object
+               // (component serial equal to object's own serial) or object side of the link was lost. Do not re-evaluate this object's
+               // linkage recursively in either case.
+               if (asset->isComponent())
+               {
+                  nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: asset %s [%u] already linked to component %s of this object"),
+                        object->getName(), object->getId(), asset->getName(), asset->getId(), asset->getComponentSerial().cstr());
+                  object->sendPollerMsg(_T("   Asset \"%s\" is a match but already linked to component %s of this object\r\n"), asset->getName(), asset->getComponentSerial().cstr());
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: asset %s [%u] linked to this object but object does not reference it, restoring link"),
+                        object->getName(), object->getId(), asset->getName(), asset->getId());
+                  object->setAssetId(asset->getId());
+                  object->sendPollerMsg(POLLER_INFO _T("   Linked to asset \"%s\"\r\n"), asset->getName());
+               }
+               return;
+            }
+
             nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: asset %s [%u] already linked to another object"), object->getName(), object->getId(), asset->getName(), asset->getId());
             shared_ptr<NetObj> otherObject = FindObjectById(asset->getLinkedObjectId());
             if (otherObject != nullptr)
             {
                object->sendPollerMsg(POLLER_WARNING _T("   Asset \"%s\" is a match but already linked to another object \"%s\"\r\n"), asset->getName(), otherObject->getName());
 
-               // Attempt to update other object linkage
-               UpdateAssetLinkage(otherObject.get(), matchByMacAllowed);
-               if (otherObject->getAssetId() == 0)
+               // Attempt to update other object linkage. Component links are not affected by UpdateAssetLinkage - they are
+               // re-evaluated by component inventory check during configuration poll of the other object.
+               if (!asset->isComponent())
+                  UpdateAssetLinkage(otherObject.get(), matchByMacAllowed);
+               if (asset->getLinkedObjectId() == 0)
                {
                   LinkAsset(asset.get(), object, nullptr, nullptr);
                   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: linked to asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
@@ -1679,6 +1702,13 @@ void NXCORE_EXPORTABLE UpdateComponentAssetLinkage(Node *node)
 
       if (asset->getLinkedObjectId() != 0)
       {
+         if ((asset->getLinkedObjectId() == node->getId()) && !asset->isComponent())
+         {
+            nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateComponentAssetLinkage(%s [%u]): asset %s [%u] matches component %s but is linked to the node itself"),
+                  node->getName(), node->getId(), asset->getName(), asset->getId(), serial);
+            continue;
+         }
+
          shared_ptr<NetObj> otherObject = FindObjectById(asset->getLinkedObjectId());
          if (otherObject != nullptr)
          {
