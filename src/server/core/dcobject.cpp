@@ -1269,7 +1269,7 @@ bool DCObject::loadThresholdsFromDB(DB_HANDLE hdb, DB_STATEMENT *preparedStateme
 }
 
 /**
- * Expand {instance} macro in name and description
+ * Expand {instance}, {instance-value} and {instance-name} macros in name, description and user tag
  */
 void DCObject::expandInstance()
 {
@@ -1284,6 +1284,15 @@ void DCObject::expandInstance()
    temp.replace(_T("{instance-value}"), m_instanceDiscoveryData);
    temp.replace(_T("{instance-name}"), m_instanceName);
    m_description = temp;
+
+   if (!m_userTag.isEmpty())
+   {
+      temp = m_userTag;
+      temp.replace(_T("{instance}"), m_instanceDiscoveryData);
+      temp.replace(_T("{instance-value}"), m_instanceDiscoveryData);
+      temp.replace(_T("{instance-name}"), m_instanceName);
+      m_userTag = temp;
+   }
 }
 
 /**
