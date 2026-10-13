@@ -456,8 +456,11 @@ public class NXCSession
    private Map<Long, AbstractObject> partialObjectList = new HashMap<Long, AbstractObject>();
    private Map<Integer, Zone> zoneList = new HashMap<Integer, Zone>();
    private Map<Integer, ObjectCategory> objectCategories = new HashMap<Integer, ObjectCategory>();
-   private boolean objectsSynchronized = false;
+   private volatile boolean objectsSynchronized = false;
    private volatile boolean objectSyncPending = false;
+   private volatile long objectSyncRequestId = 0; // ID of CMD_GET_OBJECTS request in progress, 0 if none
+   private volatile int objectSyncGeneration = 0; // incremented on each successful full object synchronization
+   private final Object objectSyncLock = new Object();
    private Set<String> responsibleUserTags = new HashSet<String>();
 
    // Users
@@ -649,7 +652,13 @@ public class NXCSession
                      }
                      break;
                   case NXCPCodes.CMD_OBJECT_LIST_END:
-                     completeSync(syncObjects);
+                     // Completion of request that already failed on client side (e.g. timed out) has to be ignored,
+                     // otherwise it would release semaphore for next synchronization attempt prematurely
+                     synchronized(syncObjects)
+                     {
+                        if (msg.getMessageId() == objectSyncRequestId)
+                           completeSync(syncObjects);
+                     }
                      break;
                   case NXCPCodes.CMD_OBJECT_CATEGORY_UPDATE:
                      processObjectCategoryUpdate(msg);
@@ -3921,30 +3930,46 @@ public class NXCSession
    {
       syncObjectCategories();
 
-      syncObjects.acquireUninterruptibly();
-      try
+      int generation = objectSyncGeneration;
+      synchronized(objectSyncLock)
       {
-         NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECTS);
-         msg.setField(NXCPCodes.VID_SYNC_NODE_COMPONENTS, syncNodeComponents);
-         sendMessage(msg);
-         waitForRCC(msg.getMessageId());
+         // Synchronization started by another thread (e.g. background synchronization after login) may complete while this
+         // call is waiting for the lock; if it already delivered everything this call asks for, do not request objects again
+         if ((objectSyncGeneration != generation) && (objectsSynchronized || !syncNodeComponents))
+            return;
 
-         waitForSync(syncObjects, commandTimeout * 10);
-      }
-      catch(Exception e)
-      {
-         // Reset semaphore to initial state, so that next synchronization attempt will not be blocked.
-         // Simple release is not sufficient here because completion notification may still arrive later.
-         syncObjects.drainPermits();
-         syncObjects.release();
-         throw e;
-      }
-      finally
-      {
+         syncObjects.acquireUninterruptibly();
+         try
+         {
+            NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OBJECTS);
+            msg.setField(NXCPCodes.VID_SYNC_NODE_COMPONENTS, syncNodeComponents);
+            objectSyncRequestId = msg.getMessageId();
+            sendMessage(msg);
+            waitForRCC(msg.getMessageId());
+
+            waitForSync(syncObjects, commandTimeout * 10);
+            objectSyncRequestId = 0;
+         }
+         catch(Exception e)
+         {
+            // Reset semaphore to initial state, so that next synchronization attempt will not be blocked. Completion
+            // notification may have arrived between timeout and this point, so simple release is not sufficient.
+            // Completion arriving after request ID is reset is dropped by receiver.
+            synchronized(syncObjects)
+            {
+               objectSyncRequestId = 0;
+               syncObjects.drainPermits();
+               syncObjects.release();
+            }
+            objectSyncPending = false;
+            sendNotification(new SessionNotification(SessionNotification.OBJECT_SYNC_FAILED));
+            throw e;
+         }
+
+         objectsSynchronized = objectsSynchronized || syncNodeComponents;
+         objectSyncGeneration++;
          objectSyncPending = false;
       }
-
-      objectsSynchronized = objectsSynchronized || syncNodeComponents;
       sendNotification(new SessionNotification(SessionNotification.OBJECT_SYNC_COMPLETED));
       subscribe(CHANNEL_OBJECTS);
    }
@@ -13893,7 +13918,7 @@ public class NXCSession
    /**
     * Mark object synchronization as pending. Intended for clients that call {@link #syncObjects(boolean)} from background thread and
     * have to indicate that object tree is not available yet. Pending state is reset automatically when object synchronization
-    * completes or fails.
+    * completes (notification <code>OBJECT_SYNC_COMPLETED</code>) or fails (notification <code>OBJECT_SYNC_FAILED</code>).
     */
    public void setObjectSyncPending()
    {

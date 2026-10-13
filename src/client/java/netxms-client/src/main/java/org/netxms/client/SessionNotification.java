@@ -119,6 +119,7 @@ public class SessionNotification
    public static final int RECONNECT_COMPLETED = 2004;
    public static final int RECONNECT_ATTEMPT_FAILED = 2005;
    public static final int INACTIVITY_TIMEOUT = 2006;
+   public static final int OBJECT_SYNC_FAILED = 2007;
 
    // Reporting server notifications
    public static final int RS_RESULTS_MODIFIED = 3001;

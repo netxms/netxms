@@ -1055,6 +1055,8 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          AbstractObject object = session.findObjectById(id, false);
          if (object != null)
             objectBrowser.selectObject(object);
+         else if (session.isObjectSyncPending())
+            objectBrowser.selectObjectWhenAvailable(id); // Object may arrive with background synchronization
       }
    }
 

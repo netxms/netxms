@@ -57,6 +57,7 @@ import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.LoadingObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -629,6 +630,12 @@ public class ObjectContextMenuManager extends MenuManager
       IStructuredSelection selection = (IStructuredSelection)selectionProvider.getSelection();
       if (selection.isEmpty())
          return;
+
+      for(Object o : selection.toList())
+      {
+         if (o instanceof LoadingObject)
+            return; // Placeholder shown while objects are being synchronized is not an object to act upon
+      }
 
       boolean singleObject = (selection.size() == 1);
       AbstractObject object = singleObject ? getObjectFromSelection() : null;

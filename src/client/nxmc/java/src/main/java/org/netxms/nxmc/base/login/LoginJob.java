@@ -212,7 +212,6 @@ public class LoginJob implements IRunnableWithProgress
          {
             // Object categories are needed for image library preload below and for object icons, so they are always synchronized here
             session.syncObjectCategories();
-            session.setObjectSyncPending();
          }
          else
          {
@@ -298,6 +297,7 @@ public class LoginJob implements IRunnableWithProgress
    private void startBackgroundObjectSync(final NXCSession session, final Display display, final boolean syncNodeComponents)
    {
       logger.info("Starting background object synchronization");
+      session.setObjectSyncPending();
       new Job(i18n.tr("Synchronizing objects"), null, null, display) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

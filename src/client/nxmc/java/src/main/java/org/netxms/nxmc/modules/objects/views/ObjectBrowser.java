@@ -780,6 +780,16 @@ public class ObjectBrowser extends NavigationView
    }
 
    /**
+    * Select object with given ID once it appears in the tree (see {@link ObjectTree#selectObjectWhenAvailable(long)}).
+    *
+    * @param objectId ID of object to be selected
+    */
+   public void selectObjectWhenAvailable(long objectId)
+   {
+      objectTree.selectObjectWhenAvailable(objectId);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#refresh()
     */
    @Override

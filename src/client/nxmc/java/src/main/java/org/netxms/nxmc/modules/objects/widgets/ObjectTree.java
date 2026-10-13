@@ -72,6 +72,7 @@ import org.netxms.client.objects.DashboardTemplate;
 import org.netxms.client.objects.DataCollectionContainer;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.LoadingObject;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -109,6 +110,7 @@ public class ObjectTree extends Composite
    private NXCSession session = null;
    private Map<Long, AbstractObject> updatedObjects = new HashMap<>();
    private boolean fullRefresh = false;
+   private long deferredSelectionObjectId = 0;
    private RefreshTimer refreshTimer;
    private ObjectStatusIndicator statusIndicator = null;
    private SelectionListener statusIndicatorSelectionListener = null;
@@ -148,9 +150,11 @@ public class ObjectTree extends Composite
             if (isDisposed() || objectTree.getControl().isDisposed())
                return;
 
+            boolean structureChanged;
             WidgetHelper.setRedraw(objectTree.getTree(), false);
             synchronized(updatedObjects)
             {
+               structureChanged = fullRefresh;
                if (fullRefresh)
                {
                   objectTree.refresh();
@@ -165,6 +169,8 @@ public class ObjectTree extends Composite
             if (statusIndicatorEnabled)
                updateStatusIndicator();
             WidgetHelper.setRedraw(objectTree.getTree(), true);
+            if (structureChanged && (deferredSelectionObjectId != 0))
+               applyDeferredSelection();
          }
       });
 
@@ -219,7 +225,8 @@ public class ObjectTree extends Composite
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if ((n.getCode() == SessionNotification.OBJECT_DELETED) || (n.getCode() == SessionNotification.OBJECT_SYNC_COMPLETED))
+            if ((n.getCode() == SessionNotification.OBJECT_DELETED) || (n.getCode() == SessionNotification.OBJECT_SYNC_COMPLETED) ||
+                (n.getCode() == SessionNotification.OBJECT_SYNC_FAILED))
             {
                synchronized(updatedObjects)
                {
@@ -421,7 +428,7 @@ public class ObjectTree extends Composite
    public long getFirstSelectedObject()
    {
       IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
-      if (selection.isEmpty())
+      if (selection.isEmpty() || (selection.getFirstElement() instanceof LoadingObject))
          return 0;
       return ((AbstractObject)selection.getFirstElement()).getObjectId();
    }
@@ -438,7 +445,9 @@ public class ObjectTree extends Composite
       Iterator<?> it = selection.iterator();
       while(it.hasNext())
       {
-         objects.add(((AbstractObject)it.next()).getObjectId());
+         AbstractObject object = (AbstractObject)it.next();
+         if (!(object instanceof LoadingObject))
+            objects.add(object.getObjectId());
       }
       return objects.toArray(new Long[objects.size()]);
    }
@@ -779,12 +788,13 @@ public class ObjectTree extends Composite
          @Override
          public void dragStart(DragSourceEvent event)
          {
-            if (getDragAndDropMode() == 2)
+            IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
+            if ((getDragAndDropMode() == 2) || containsLoadingPlaceholder(selection))
             {
                event.doit = false;
                return;
             }
-            LocalSelectionTransfer.getTransfer().setSelection(objectTree.getSelection());
+            LocalSelectionTransfer.getTransfer().setSelection(selection);
             event.doit = true;
          }
 
@@ -961,6 +971,7 @@ public class ObjectTree extends Composite
     */
    public void selectObject(AbstractObject object)
    {
+      deferredSelectionObjectId = 0;
       AbstractObject parent = getParent(object);
       if (parent != null)
       {
@@ -975,5 +986,49 @@ public class ObjectTree extends Composite
       }
       objectTree.setSelection(new StructuredSelection(object), true);
       objectTree.reveal(object);
+   }
+
+   /**
+    * Select object with given ID once it appears in the tree. Intended for restoring saved selection while object
+    * synchronization is still running in background. Deferred selection is applied after next full tree refresh, and only if
+    * nothing else was selected by that time.
+    *
+    * @param objectId ID of object to be selected
+    */
+   public void selectObjectWhenAvailable(long objectId)
+   {
+      deferredSelectionObjectId = objectId;
+   }
+
+   /**
+    * Apply deferred selection after full tree refresh.
+    */
+   private void applyDeferredSelection()
+   {
+      AbstractObject object = session.findObjectById(deferredSelectionObjectId, false);
+      if (object == null)
+         return; // Keep waiting - object may arrive with next synchronization attempt
+
+      IStructuredSelection selection = (IStructuredSelection)objectTree.getSelection();
+      if (selection.isEmpty() || (selection.getFirstElement() instanceof LoadingObject))
+         selectObject(object);
+      else
+         deferredSelectionObjectId = 0; // User already selected something else
+   }
+
+   /**
+    * Check if selection contains placeholder shown while objects are being synchronized.
+    *
+    * @param selection selection to check
+    * @return true if selection contains placeholder object
+    */
+   private static boolean containsLoadingPlaceholder(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (o instanceof LoadingObject)
+            return true;
+      }
+      return false;
    }
 }

@@ -323,6 +323,14 @@ public class AlarmList extends CompositeWithMessageArea
                   if (changed)
                      refreshTimer.execute();
                   break;
+               case SessionNotification.OBJECT_SYNC_COMPLETED:
+                  // Source object names of alarms received before background object synchronization completed could not be resolved
+                  synchronized(alarmList)
+                  {
+                     updateList.addAll(alarmList.keySet());
+                  }
+                  refreshTimer.execute();
+                  break;
                default:
                   break;
             }
