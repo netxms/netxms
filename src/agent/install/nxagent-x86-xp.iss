@@ -14,6 +14,7 @@ Source: "..\..\..\out\x86-xp\Release\bin\libnetxms.dll"; DestDir: "{app}\bin"; F
 Source: "..\..\..\out\x86-xp\Release\bin\libnxagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x86-xp\Release\bin\libnxnetconf.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
@@ -24,14 +25,17 @@ Source: "..\..\..\out\x86-xp\Release\bin\bind9.nsm"; DestDir: "{app}\bin"; Flags
 Source: "..\..\..\out\x86-xp\Release\bin\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x86-xp\Release\bin\gps.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\mssql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x86-xp\Release\bin\netconf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\ssh.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x86-xp\Release\bin\weather.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\winperf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86-xp\Release\bin\wmi.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

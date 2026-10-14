@@ -15,6 +15,7 @@ Source: "..\..\..\out\x86\Release\bin\libnxagent.dll"; DestDir: "{app}\bin"; Fla
 Source: "..\..\..\out\x86\Release\bin\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x86\Release\bin\libnxnetconf.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
@@ -27,12 +28,14 @@ Source: "..\..\..\out\x86\Release\bin\dbquery.nsm"; DestDir: "{app}\bin"; Flags:
 Source: "..\..\..\out\x86\Release\bin\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\entsoe.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x86\Release\bin\gps.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\mssql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\x86\Release\bin\netconf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x86\Release\bin\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

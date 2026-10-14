@@ -17,6 +17,7 @@ Source: "..\..\..\out\arm64\Release\bin\libnxagent.dll"; DestDir: "{app}\bin"; F
 Source: "..\..\..\out\arm64\Release\bin\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\libnxjava.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\arm64\Release\bin\libnxnetconf.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\nxagentd.exe"; DestDir: "{app}\bin"; BeforeInstall: RenameOldFile; Flags: ignoreversion signonce
@@ -29,12 +30,14 @@ Source: "..\..\..\out\arm64\Release\bin\dbquery.nsm"; DestDir: "{app}\bin"; Flag
 Source: "..\..\..\out\arm64\Release\bin\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\entsoe.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\arm64\Release\bin\gps.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\mssql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\arm64\Release\bin\mssql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\arm64\Release\bin\netconf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
@@ -52,7 +55,7 @@ Source: "..\..\..\out\arm64\Release\bin\wmi.nsm"; DestDir: "{app}\bin"; Flags: i
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\db2.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\informix.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\mariadb.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\out\arm64\Release\bin\mssql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\out\arm64\Release\bin\odbc.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\oracle.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 ;; NOT IMPLEMENTED ;; Source: "..\..\..\out\arm64\Release\bin\pgsql.ddr"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
