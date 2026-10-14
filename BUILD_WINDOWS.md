@@ -284,7 +284,7 @@ Update the SDK path in `config.mingw` and verify the per-architecture library fi
 - `C:/SDK-llvm-mingw/openssl/lib/x64/libssl.a` (or `.dll.a`)
 - `C:/SDK-llvm-mingw/openssl/lib/x64/libcrypto.a`
 
-Some vendor SDKs (PostgreSQL, MySQL, Oracle, DB2, ...) ship MSVC-style `*.lib` import libraries. Link those by exact file name, e.g. `-l:libpq.lib` (the `config.mingw` entries for the database drivers already do this).
+Some vendor SDKs (MySQL, Oracle, DB2, ...) ship MSVC-style `*.lib` import libraries. Link those by exact file name, e.g. `-l:libmysql.lib` (the `config.mingw` entries for those database drivers already do this). libpq and MariaDB are built with llvm-mingw and link normally via `-lpq` / `-lmariadb`.
 
 ### Resource compiler errors
 

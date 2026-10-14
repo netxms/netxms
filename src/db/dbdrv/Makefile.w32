@@ -9,10 +9,11 @@
 # A missing external database SDK is a build environment setup error and must
 # fail the build, not be silently skipped.
 #
-# The SDK-backed drivers below require a vendor client library, which ships as
-# x86/x64 import libraries only. arm64 is an agent-only target with no vendor
-# libraries, so there we build just the in-tree sqlite engine and the
-# Windows-native ODBC/MSSQL drivers.
+# The SDK-backed drivers below require a vendor client library. libpq and
+# MariaDB are built with llvm-mingw for all three architectures; the other
+# vendor SDKs ship x86/x64 MSVC import libraries only, so on arm64 we build
+# just pgsql, mariadb, the in-tree sqlite engine and the Windows-native
+# ODBC/MSSQL drivers.
 #   pgsql    -> PostgreSQL client (libpq)
 #   mysql    -> MySQL client
 #   mariadb  -> MariaDB client
@@ -22,28 +23,30 @@
 #   odbc     -> system ODBC (mingw-w64)
 #   mssql    -> SQL Server via system ODBC
 #   sqlite   -> bundled SQLite engine (nxsqlite)
-SDK_DRIVERS = \
+MINGW_SDK_DRIVERS = \
+	mariadb \
+	pgsql
+
+VENDOR_SDK_DRIVERS = \
 	db2 \
 	informix \
-	mariadb \
 	mysql \
-	oracle \
-	pgsql
+	oracle
 
 BASE_DRIVERS = \
 	mssql \
 	odbc \
 	sqlite
 
-# The Windows XP SDK ships none of the vendor client libraries, so the XP
-# profile (like arm64) builds only the in-tree sqlite engine and the
-# Windows-native ODBC/MSSQL drivers.
+# The Windows XP SDK ships none of the client libraries, so the XP profile
+# builds only the in-tree sqlite engine and the Windows-native ODBC/MSSQL
+# drivers.
 ifeq ($(WINXP),1)
 DRIVERS = $(BASE_DRIVERS)
 else ifeq ($(ARCH),arm64)
-DRIVERS = $(BASE_DRIVERS)
+DRIVERS = $(MINGW_SDK_DRIVERS) $(BASE_DRIVERS)
 else
-DRIVERS = $(SDK_DRIVERS) $(BASE_DRIVERS)
+DRIVERS = $(MINGW_SDK_DRIVERS) $(VENDOR_SDK_DRIVERS) $(BASE_DRIVERS)
 endif
 
 .PHONY: all clean install $(DRIVERS)

@@ -127,11 +127,13 @@ MODBUS_ROOT = $(SDK_ROOT)/libmodbus
 LIBSSH_ROOT = $(SDK_ROOT)/libssh
 
 # PostgreSQL client library (optional, for pgsql database driver)
-PGSQL_ROOT = $(SDK_ROOT)/PostgreSQL/$(ARCH)
+PGSQL_ROOT = $(SDK_ROOT)/libpq
 
-# MySQL/MariaDB client library (optional, for mysql database driver)
+# MariaDB client library (optional, for mariadb database driver)
+MARIADB_ROOT = $(SDK_ROOT)/mariadb
+
+# MySQL client library (optional, for mysql database driver)
 MYSQL_ROOT = $(SDK_ROOT)/mysql/$(ARCH)
-MARIADB_ROOT = $(SDK_ROOT)/MariaDB/$(ARCH)
 
 # libmosquitto (optional, for MQTT subagent)
 MOSQUITTO_ROOT = $(SDK_ROOT)/libmosquitto
@@ -338,13 +340,15 @@ PROTOBUF_LIBS = -L$(PROTOBUF_ROOT)/lib/$(ARCH) -lprotobuf
 MICROHTTPD_LIBS = -L$(MICROHTTPD_ROOT)/lib/$(ARCH) -lmicrohttpd
 SNAPPY_LIBS = -L$(SNAPPY_ROOT)/lib/$(ARCH) -lsnappy
 
-# Database client libraries. These SDKs ship MSVC-style import libs (*.lib),
-# which ld.lld links directly via -l:<file>.lib. The ODBC/MSSQL drivers use the
-# ODBC library from the mingw-w64 runtime; the sqlite driver uses the in-tree
-# nxsqlite engine, so neither needs an entry here.
-PGSQL_LIBS = -L$(PGSQL_ROOT)/lib -l:libpq.lib
+# Database client libraries. libpq and MariaDB are built with llvm-mingw and
+# follow the standard $(SDK_ROOT)/<name>/lib/$(ARCH) layout with GNU import
+# libraries (*.dll.a). The remaining vendor SDKs ship MSVC-style import libs
+# (*.lib), which ld.lld links directly via -l:<file>.lib. The ODBC/MSSQL
+# drivers use the ODBC library from the mingw-w64 runtime; the sqlite driver
+# uses the in-tree nxsqlite engine, so neither needs an entry here.
+PGSQL_LIBS = -L$(PGSQL_ROOT)/lib/$(ARCH) -lpq
+MARIADB_LIBS = -L$(MARIADB_ROOT)/lib/$(ARCH) -lmariadb
 MYSQL_LIBS = -L$(MYSQL_ROOT)/lib -l:libmysql.lib
-MARIADB_LIBS = -L$(MARIADB_ROOT)/lib -l:libmariadb.lib
 ORACLE_LIBS = -L$(ORACLE_ROOT)/sdk/lib/msvc -l:oci.lib
 INFORMIX_LIBS = -L$(INFORMIX_ROOT)/lib -l:iclit09b.lib
 
