@@ -17,7 +17,6 @@ serverinclude_HEADERS = \
 	auth-token.h \
 	chatdrv.h \
 	cloud-connector.h \
-	traffic-connector.h \
 	dci_table_creation.h \
 	device-backup.h \
 	efdrv.h \
@@ -27,9 +26,9 @@ serverinclude_HEADERS = \
 	local_admin.h \
 	ncdrv.h \
 	nddrv.h \
-	netxms-editline.h \
 	netxms_maps.h \
 	netxms_mt.h \
+	netxms-editline.h \
 	netxms-webapi.h \
 	nms_actions.h \
 	nms_alarm.h \
@@ -62,4 +61,5 @@ serverinclude_HEADERS = \
 	nxsrvapi.h \
 	pdsdrv.h \
 	server_console.h \
+	traffic-connector.h \
 	xml_to_json.h
