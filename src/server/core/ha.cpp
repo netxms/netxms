@@ -233,8 +233,9 @@ static void EnsureClusterMembership(const shared_ptr<Cluster>& cluster, const sh
 
 /**
  * Pending request for server cluster object update (peer identity changed)
+ * Word-sized: byte-sized atomic RMW (exchange) is not available on all POWER targets (AIX XL C++)
  */
-static std::atomic<bool> s_clusterObjectUpdateRequested(false);
+static std::atomic<int32_t> s_clusterObjectUpdateRequested(0);
 
 /**
  * Request server cluster object update on the poll manager's next cycle
@@ -245,7 +246,7 @@ static std::atomic<bool> s_clusterObjectUpdateRequested(false);
  */
 void HARequestServerClusterObjectUpdate()
 {
-   s_clusterObjectUpdateRequested = true;
+   s_clusterObjectUpdateRequested = 1;
 }
 
 /**
@@ -253,7 +254,7 @@ void HARequestServerClusterObjectUpdate()
  */
 bool HAConsumeServerClusterObjectUpdateRequest()
 {
-   return s_clusterObjectUpdateRequested.exchange(false);
+   return s_clusterObjectUpdateRequested.exchange(0) != 0;
 }
 
 /**
