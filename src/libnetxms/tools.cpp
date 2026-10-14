@@ -5715,7 +5715,7 @@ String LIBNETXMS_EXPORTABLE SecondsToUptime(uint64_t arg, bool withSeconds)
 
    StringBuffer sb;
    if (withSeconds)
-      sb.appendFormattedString(_T("%u days, %2u:%02u:%02u"), d, h, n, arg);
+      sb.appendFormattedString(_T("%u days, %2u:%02u:%02u"), d, h, n, static_cast<uint32_t>(arg));
    else
       sb.appendFormattedString(_T("%u days, %2u:%02u"), d, h, n);
    return sb;
