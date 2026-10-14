@@ -22,6 +22,7 @@ serverinclude_HEADERS = \
 	device-backup.h \
 	efdrv.h \
 	entity_mib.h \
+	halease.h \
 	hdlink.h \
 	local_admin.h \
 	ncdrv.h \
@@ -48,6 +49,7 @@ serverinclude_HEADERS = \
 	nxcore_discovery.h \
 	nxcore_ha.h \
 	nxcore_logs.h \
+	nxcore_netconf.h \
 	nxcore_ps.h \
 	nxcore_schedule.h \
 	nxcore_smclp.h \
