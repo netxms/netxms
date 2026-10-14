@@ -36,6 +36,13 @@
 #define MHD_Result int
 #endif
 
+#if MHD_VERSION < 0x00096200
+#define MHD_digest_auth_check2(connection, realm, username, password, nonceTimeout, algorithm) \
+   MHD_digest_auth_check(connection, realm, username, password, nonceTimeout)
+#define MHD_queue_auth_fail_response2(connection, realm, opaque, response, signalStale, algorithm) \
+   MHD_queue_auth_fail_response(connection, realm, opaque, response, signalStale)
+#endif
+
 #define TEST_HTTP_PORT     14780
 #define TEST_BASE_URL      "http://127.0.0.1:14780"
 
