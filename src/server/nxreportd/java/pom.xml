@@ -42,6 +42,16 @@
          </dependencies>
       </profile>
    </profiles>
+   <dependencyManagement>
+      <dependencies>
+         <!-- Apache POI transitively pulls log4j-api 2.23.1, which is affected by CVE-2026-49844 -->
+         <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.25.5</version>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
    <dependencies>
       <dependency>
          <groupId>org.junit.jupiter</groupId>
@@ -58,7 +68,7 @@
       <dependency>
          <groupId>ch.qos.logback</groupId>
          <artifactId>logback-classic</artifactId>
-         <version>1.5.32</version>
+         <version>1.5.38</version>
          <scope>compile</scope>
       </dependency>
       <dependency>
