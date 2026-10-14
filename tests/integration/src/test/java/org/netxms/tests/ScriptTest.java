@@ -375,24 +375,21 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       AbstractObject managementNode = TestHelper.findManagementServer(session);
       assertNotNull(managementNode);
       String webServiceId = "neste";
-      String webServiceUrl = "https://www.neste.lv/lv/content/degvielas-cenas";
+      String webServiceUrl = "https://www.neste.lv/privatpersonam/stacijas/degvielas-cenas";
 
-      List<WebServiceDefinition> definition = session.getWebServiceDefinitions();
-      boolean found = false;
-      for (WebServiceDefinition ws : definition)
+      WebServiceDefinition ws = null;
+      for(WebServiceDefinition d : session.getWebServiceDefinitions())
       {
-         if (ws.getName().equals(webServiceId))
+         if (d.getName().equals(webServiceId))
          {
-            found = true;
+            ws = d;
             break;
          }
       }
-      if (!found)
-      {
-         WebServiceDefinition ws = new WebServiceDefinition(webServiceId);
-         ws.setUrl(webServiceUrl);
-         session.modifyWebServiceDefinition(ws);
-      }
+      if (ws == null)
+         ws = new WebServiceDefinition(webServiceId);
+      ws.setUrl(webServiceUrl);
+      session.modifyWebServiceDefinition(ws);
 
       List<String> params = new ArrayList<String>();
       params.add(Long.toString(managementNode.getObjectId()));
