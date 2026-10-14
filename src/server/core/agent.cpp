@@ -27,7 +27,7 @@
 /**
  * Externals
  */
-void EnqueueSNMPTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine);
+void EnqueueSNMPTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *snmpTransport);
 bool IsTrapCredentialValidationEnabled(const shared_ptr<Node>& node);
 TrapCredentialCheckResult ValidateTrapCredentials(SNMP_PDU *pdu, SNMP_SecurityContext *securityContext);
 bool ValidateTrapCredentialsForAdditionalAgents(SNMP_PDU *pdu, const shared_ptr<Node>& node);
@@ -572,7 +572,10 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          if (pdu->parse(pduBytes, pduLenght, sctx, true))
          {
             debugPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): received PDU of type %d"), pdu->getCommand());
-            TrapCredentialCheckResult credCheck = (sctx != nullptr) ? ValidateTrapCredentials(pdu, sctx) : TrapCredentialCheckResult::OK;
+            // Engine ID discovery probe (RFC 3414 section 4) carries no credentials by design and must be
+            // answered before credential validation, otherwise INFORM senders never get past discovery
+            bool engineIdDiscovery = (pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0);
+            TrapCredentialCheckResult credCheck = ((sctx != nullptr) && !engineIdDiscovery) ? ValidateTrapCredentials(pdu, sctx) : TrapCredentialCheckResult::OK;
             if ((credCheck != TrapCredentialCheckResult::OK) && ValidateTrapCredentialsForAdditionalAgents(pdu, originNode))
             {
                wchar_t buffer[64];
@@ -602,13 +605,12 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                }
                if (snmpTransport != nullptr)
                   snmpTransport->setWaitForResponse(false);
-               EnqueueSNMPTrap(pdu, originSenderIP, zoneUIN, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine);
+               EnqueueSNMPTrap(pdu, originSenderIP, zoneUIN, msg->getFieldAsUInt16(VID_PORT), snmpTransport);
                pdu = nullptr; // prevent delete (PDU will be deleted by trap processor)
                delete snmpTransport;
             }
-            else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
+            else if (engineIdDiscovery)
             {
-               // Engine ID discovery
                debugPrintf(6, L"AgentConnectionEx::onSnmpTrap(): EngineId discovery");
 
                SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(self(), originNode.get(), originSenderIP, msg->getFieldAsUInt16(VID_PORT));

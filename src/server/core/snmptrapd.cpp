@@ -425,7 +425,7 @@ static void WriterThread()
 /**
  * Enqueue SNMP trap for processing
  */
-void EnqueueSNMPTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine)
+void EnqueueSNMPTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int srcPort, SNMP_Transport *snmpTransport)
 {
    InterlockedIncrement64(&g_snmpTrapsReceived);
 
@@ -440,14 +440,21 @@ void EnqueueSNMPTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN,
    if (isInformRq)
    {
       SNMP_PDU response(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
-      // Transport without credentials for this sender (default context) - respond with community from request
-      const SNMP_SecurityContext& securityContext = snmpTransport->getSecurityContext();
+      SNMP_SecurityContext& securityContext = snmpTransport->getSecurityContext();
       if ((securityContext.getSecurityModel() != SNMP_SECURITY_MODEL_USM) && (securityContext.getCommunity()[0] == 0))
       {
+         // Transport without credentials for this sender (default context) - respond with community from request
          snmpTransport->setSecurityContext(SNMP_SecurityContext(pdu->getCommunity()));
       }
+      else
+      {
+         // Sender matches response to request by context engine ID and context name (RFC 3412 section 7.1),
+         // so both must be echoed from the request; context name configured for the node must not replace it
+         securityContext.setContextName("");
+      }
       response.setMessageId(pdu->getMessageId());
-      response.setContextEngineId(localEngine->getId(), localEngine->getIdLen());
+      response.setContextEngineId(pdu->getContextEngineId(), pdu->getContextEngineIdLength());
+      response.setContextName(pdu->getContextName());
       snmpTransport->sendMessage(&response, 0);
    }
 
@@ -755,7 +762,10 @@ static void ReceiverThread()
          {
             InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
-            TrapCredentialCheckResult credCheck = ValidateTrapCredentials(pdu, &transport->getSecurityContext());
+            // Engine ID discovery probe (RFC 3414 section 4) carries no credentials by design and must be
+            // answered before credential validation, otherwise INFORM senders never get past discovery
+            bool engineIdDiscovery = (pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0);
+            TrapCredentialCheckResult credCheck = engineIdDiscovery ? TrapCredentialCheckResult::OK : ValidateTrapCredentials(pdu, &transport->getSecurityContext());
             shared_ptr<Node> sourceNode;
             if (credCheck != TrapCredentialCheckResult::OK)
             {
@@ -783,12 +793,11 @@ static void ReceiverThread()
                {
                   transport->getSecurityContext().setAuthoritativeEngine(localEngine);
                }
-               EnqueueSNMPTrap(pdu, sourceAddr, 0, ntohs(SA_PORT(&addr)), transport, &localEngine);
+               EnqueueSNMPTrap(pdu, sourceAddr, 0, ntohs(SA_PORT(&addr)), transport);
                pdu = nullptr; // prevent delete (PDU will be deleted by trap processor)
             }
-            else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
+            else if (engineIdDiscovery)
             {
-               // Engine ID discovery
                nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMPTrapReceiver: EngineId discovery"));
 
                SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
