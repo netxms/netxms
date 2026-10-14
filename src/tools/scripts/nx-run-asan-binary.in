@@ -55,37 +55,46 @@ else
 	CONFIG_NAME="netxmsd"
 fi
 
-# Check for config specified with -c
-CONFIG=`getopt -q -- c: "$@" | sed -e 's,--.*,,' | cut -d "'" -f 2 | xargs`
-if [ "x$CONFIG" == "x" ]; then
-	CONFIG="$SYSCONFDIR/$CONFIG_NAME.conf"
-	if [ ! -f "$CONFIG" ]; then
-		CONFIG="/etc/$CONFIG_NAME.conf"
+# Check for config specified with -c. test-server writes its own configuration file
+# into a scratch directory: it always uses the SQLite database driver and loads no modules
+if [ "$BINARY_NAME" == "test-server" ]; then
+	CONFIG=""
+else
+	CONFIG=`getopt -q -- c: "$@" | sed -e 's,--.*,,' | cut -d "'" -f 2 | xargs`
+	if [ "x$CONFIG" == "x" ]; then
+		CONFIG="$SYSCONFDIR/$CONFIG_NAME.conf"
+		if [ ! -f "$CONFIG" ]; then
+			CONFIG="/etc/$CONFIG_NAME.conf"
+		fi
 	fi
 fi
 
 if [ -f "$CONFIG" ]; then
 	echo "*** Using configuration file $CONFIG"
-
-	echo "*** Building database driver preload list"
 	DRIVERS=`cat $CONFIG | grep -v '#' | grep -i DBDriver | cut -d '=' -f 2 | xargs`
-	# Both agent and server can implicitly load sqlite.ddr
-	DRIVERS="sqlite.ddr $DRIVERS"
-	for DRIVER in $DRIVERS; do
-		if echo $DRIVER | grep -q /; then
-			FILE="$DRIVER"
-		else
-			FILE="$PKGLIBDIR/dbdrv/$DRIVER"
-		fi
-      get_extension "$FILE"
-      if [ "x$extension" != "xddr" -a "x$extension" != "xso" ]; then
-         FILE="${FILE}.ddr"
-      fi
-		if file -L $FILE | grep ELF; then
-			LD_PRELOAD="$LD_PRELOAD:$FILE"
-		fi
-	done
+else
+	DRIVERS=""
+fi
 
+# Both agent and server can implicitly load sqlite.ddr
+echo "*** Building database driver preload list"
+DRIVERS="sqlite.ddr $DRIVERS"
+for DRIVER in $DRIVERS; do
+	if echo $DRIVER | grep -q /; then
+		FILE="$DRIVER"
+	else
+		FILE="$PKGLIBDIR/dbdrv/$DRIVER"
+	fi
+	get_extension "$FILE"
+	if [ "x$extension" != "xddr" -a "x$extension" != "xso" ]; then
+		FILE="${FILE}.ddr"
+	fi
+	if file -L $FILE | grep ELF; then
+		LD_PRELOAD="$LD_PRELOAD:$FILE"
+	fi
+done
+
+if [ -f "$CONFIG" ]; then
 	if [ "$BINARY_NAME" == "nxagentd" ]; then
 		echo "*** Building subagents preload list"
 		SUBAGENTS=`cat $CONFIG | grep -v '#' | grep -i SubAgent | cut -d '=' -f 2 | xargs`
@@ -123,12 +132,14 @@ if [ -f "$CONFIG" ]; then
 				LD_PRELOAD="$LD_PRELOAD:$FILE"
 			fi
 		done
-
-		echo "*** Building network device drivers preload list"
-		for NDD in $NDDS; do
-			LD_PRELOAD="$LD_PRELOAD:$NDD"
-		done
 	fi
+fi
+
+if [ "x$NDDS" != "x" ]; then
+	echo "*** Building network device drivers preload list"
+	for NDD in $NDDS; do
+		LD_PRELOAD="$LD_PRELOAD:$NDD"
+	done
 fi
 
 LSAN_SUPPRESSIONS_FILE="$DATADIR/lsan-suppressions.txt"

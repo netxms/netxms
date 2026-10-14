@@ -95,7 +95,14 @@ fi
 if [ -x $BINDIR/test-server ]; then
 	echo ""
 	echo "********** test-server **********"
-	$BINDIR/test-server || exit 1
+	# test-server loads database and network device drivers like netxmsd does, so a sanitizer
+	# build must go through the same wrapper: without the preloaded libraries LeakSanitizer
+	# cannot symbolize allocations made in them and reports false leaks, failing the test
+	if ldd $BINDIR/test-server 2>/dev/null | grep -q libasan; then
+		$BINDIR/nx-run-asan-binary -ndd test-server || exit 1
+	else
+		$BINDIR/test-server || exit 1
+	fi
 fi
 
 exit 0

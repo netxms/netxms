@@ -107,6 +107,14 @@ The suite runner (`suite/netxms-test-suite.in`) invokes each test binary in
 turn and `exit 1`s on the first non-zero exit. Optional binaries are guarded
 with `[ -x ... ]` so a suite built without a given module still runs.
 
+In an `--enable-sanitizer` build the runner starts `test-server` through
+`nx-run-asan-binary -ndd test-server` (detected via `ldd | grep libasan`), the
+same wrapper `netxmsd-asan` uses. The wrapper preloads `libasan`, the SQLite
+database driver and the network device drivers so that LeakSanitizer can
+symbolize allocations made in libraries the server unloads at shutdown;
+without it those show up as false leaks and fail the run. Run a sanitizer
+build of `test-server` by hand the same way, not directly.
+
 ## Adding a new unit test
 
 For a **new test binary** five places must stay in sync — updating the
