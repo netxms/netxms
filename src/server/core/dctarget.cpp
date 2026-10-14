@@ -1312,6 +1312,18 @@ void DataCollectionTarget::queueItemsForPolling()
 
                if (target != nullptr)
                {
+                  // Node-level unreachable state is checked first: it can disagree with per-channel flags during status poll
+                  // (agent flag is cleared before node flag on recovery, node flag is set before agent flag on tunnel loss)
+                  // and data getters refuse to run while node is flagged unreachable
+                  if (target->getState() & DCSF_UNREACHABLE)
+                  {
+                     nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" skipped because node is unreachable"),
+                              m_name, object->getId(), object->getName().cstr());
+                     // Set next poll time to be at least half of status polling interval later to avoid re-checking too often
+                     object->setNextPollTime(currTime + g_statusPollingInterval / 2);
+                     object->clearBusyFlag();
+                     continue;  // Skip polling if node is unreachable
+                  }
                   if (((object->getDataSource() == DS_NATIVE_AGENT) || (object->getDataSource() == DS_WINPERF)) && (!target->isNativeAgent() || (target->getState() & NSF_AGENT_UNREACHABLE)))
                   {
                      nxlog_debug_tag(_T("obj.dc.queue"), 8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" skipped because agent is unreachable"),
