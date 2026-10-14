@@ -53,13 +53,19 @@ Type: filesandordirs; Name: "{app}\jetty-home\modules\*"
 Source: "..\..\..\out\x64\Release\bin\nxjansson.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: webui
 Source: "..\..\..\out\x64\Release\bin\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
 Source: "..\..\..\out\x64\Release\bin\nxweblauncher.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
+; MinGW runtime
+Source: "..\files\windows\x64\libc++.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libunwind.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libwinpthread-1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+; Libraries used by libnetxms
 Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\zlib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libexpat-1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libpcre-1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libpcre16-0.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\zlib1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\CRT\*"; DestDir: "{app}\bin"; Flags: ignoreversion
 ; Jetty binaries
 Source: "..\files\java\jetty-home\*"; Excludes: "webdefault.xml"; DestDir: "{app}\jetty-home"; Flags: ignoreversion recursesubdirs; Components: webui
 Source: "web\webdefault.xml"; DestDir: "{app}\jetty-home\etc"; Flags: ignoreversion; Components: webui
@@ -75,15 +81,12 @@ Source: "web\nxmc-{#VersionString}-standalone.jar"; DestDir: "{app}\jetty-base\w
 Source: "web\readme.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: webui
 ; Java Runtime
 Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
-; Install-time files
-Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall
 
 [Registry]
 Root: HKLM; Subkey: "Software\NetXMS\WebUI"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "Software\NetXMS\WebUI"; ValueType: string; ValueName: "LauncherConfigFile"; ValueData: "{app}\etc\launcher.conf"; Flags: uninsdeletekey
 
 [Run]
-Filename: "{app}\vcredist.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{app}"; StatusMsg: "Installing Visual C++ runtime..."; Flags: waituntilterminated
 Filename: "{app}\bin\nxweblauncher.exe"; Parameters: "remove"; WorkingDir: "{app}\bin"; StatusMsg: "Removing WebUI service..."; Flags: runhidden
 Filename: "{app}\bin\nxweblauncher.exe"; Parameters: "install"; WorkingDir: "{app}\bin"; StatusMsg: "Installing WebUI service..."; Flags: runhidden
 Filename: "net.exe"; Parameters: "start nxWebUI"; WorkingDir: "{app}\bin"; StatusMsg: "Starting WebUI service..."; Flags: runhidden

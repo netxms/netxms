@@ -48,6 +48,7 @@ Source: "..\..\..\out\x64\Release\bin\nxjansson.dll"; DestDir: "{app}\bin"; Flag
 Source: "..\..\..\out\x64\Release\bin\libnxagent.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\libnxdb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\libnxlp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\libnxnetconf.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\libnxsl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\libnxsde.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\libnxsnmp.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
@@ -59,10 +60,13 @@ Source: "..\..\..\out\x64\Release\bin\nxscript.exe"; DestDir: "{app}\bin"; Flags
 Source: "..\..\..\out\x64\Release\bin\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ; Modules
 Source: "..\..\..\out\x64\Release\bin\aitools.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\docker.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\leef.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\mcp.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\ntopng.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\ntcb.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\otlp.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\oxidized.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\wcc.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\webapi.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\wlcbridge.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
@@ -98,6 +102,7 @@ Source: "..\..\..\out\x64\Release\bin\telegram.ncd"; DestDir: "{app}\lib\ncdrv";
 Source: "..\..\..\out\x64\Release\bin\text2reach.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\textfile.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\twilio.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\webhook.ncd"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\websms.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\xmpp.ncd"; DestDir: "{app}\lib\ncdrv"; Flags: ignoreversion signonce; Components: server
 ; Reporting server
@@ -129,11 +134,13 @@ Source: "..\..\..\out\x64\Release\bin\dbquery.nsm"; DestDir: "{app}\bin"; Flags:
 Source: "..\..\..\out\x64\Release\bin\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\entsoe.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\gps.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\logwatch.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\mqtt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\mysql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\netconf.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
@@ -251,32 +258,42 @@ Source: "..\..\..\private\common\x64\Release\nxlicmgr.exe"; DestDir: "{app}\bin"
 Source: "..\..\server\tools\scripts\nx-collect-server-diag.cmd"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\..\server\tools\scripts\zip.ps1"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 ; Third party files
-Source: "..\files\windows\x64\jq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+; MinGW runtime
+Source: "..\files\windows\x64\libc++.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\libunwind.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\libwinpthread-1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+; Libraries used by libnetxms
+Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\libexpat-1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\libpcre-1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\libpcre16-0.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\zlib1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\capi.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\unzip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+; Libraries used by server and agent components
+Source: "..\files\windows\x64\libjq-1.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x64\libonig-5.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x64\libnxmodbus-5.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x64\libmicrohttpd-12.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x64\libprotobuf.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x64\libsnappy.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x64\libmosquitto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x64\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x64\libstrophe-0.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x64\libmariadb.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mariadb
-Source: "..\files\windows\x64\libmicrohttpd.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\files\windows\x64\auth_gssapi_client.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mariadb
+Source: "..\files\windows\x64\pvio_shmem.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mariadb
 Source: "..\files\windows\x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "..\files\windows\x64\libstrophe.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\modbus.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\prunsrv.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\reporting
 Source: "..\files\windows\x64\prunmgr.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\reporting
 Source: "..\files\windows\x64\reproxy.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\files\windows\x64\smartctl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\unzip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\zlib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\openssl-3\capi.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\openssl-3\libmosquitto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\openssl-3\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
-Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
-Source: "..\files\windows\x64\openssl-3\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\LICENSE.reproxy"; DestDir: "{app}"; Flags: ignoreversion; Components: server
+Source: "..\files\windows\x64\CRT\*"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 ; Install-time files
-Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
-Source: "..\files\windows\x64\vcredist-2013-x64.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: server\pgsql
 Source: "..\files\windows\x86\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
 
 [Icons]
@@ -344,8 +361,6 @@ Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\netscreen.*"""; W
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\ntws.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\procurve.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden
 Filename: "{app}\var\rm.exe"; Parameters: "-rf ""{app}\lib\ndd\qtech-olt.*"""; WorkingDir: "{app}\bin"; StatusMsg: "Removing old device drivers..."; Flags: runhidden
-Filename: "{app}\var\vcredist.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{app}\var"; StatusMsg: "Installing Visual C++ runtime..."; Flags: waituntilterminated
-Filename: "{app}\var\vcredist-2013-x64.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{app}\var"; StatusMsg: "Installing Visual C++ 2013 runtime..."; Flags: waituntilterminated; Components: server\pgsql
 Filename: "icacls.exe"; Parameters: """{app}"" /inheritance:r"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-18:(OI)(CI)F"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions
 Filename: "icacls.exe"; Parameters: """{app}"" /grant:r *S-1-5-19:(OI)(CI)RX"; StatusMsg: "Setting file system permissions..."; Flags: runhidden waituntilterminated; Tasks: fspermissions

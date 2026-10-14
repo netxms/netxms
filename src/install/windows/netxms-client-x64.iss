@@ -43,13 +43,19 @@ Root: HKLM; Subkey: "Software\NetXMS\Client"; ValueType: string; ValueName: "Ins
 ; Common files
 Source: "..\..\..\out\x64\Release\bin\nxjansson.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\..\..\out\x64\Release\bin\libnetxms.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\libexpat.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+; MinGW runtime
+Source: "..\files\windows\x64\libc++.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libunwind.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libwinpthread-1.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+; Libraries used by libnetxms
 Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\zlib.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libexpat-1.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libpcre-1.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libpcre16-0.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\zlib1.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libcrypto-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libssl-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\CRT\*"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\client\nxmc\nxmc.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; Common files for Java based components
 Source: "..\..\..\out\x64\Release\bin\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc
@@ -69,8 +75,6 @@ Source: "..\..\..\out\x64\Release\bin\nxshell.exe"; DestDir: "{app}"; Flags: ign
 Source: "..\..\..\out\x64\Release\bin\nxshell.exe"; DestDir: "{app}"; DestName: "nxai.exe"; Flags: ignoreversion signonce; Components: cmdline
 ; Java Runtime
 Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
-; Install-time files
-Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall
 
 [InstallDelete]
 Type: files; Name: "{app}\lib\java\*.jar"
@@ -84,5 +88,3 @@ Name: "{group}\NetXMS Client"; Filename: "{app}\nxmc.exe"; Components: nxmc
 Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: quicklaunchicon; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
-[Run]
-Filename: "{app}\vcredist.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{app}"; StatusMsg: "Installing Visual C++ runtime..."; Flags: waituntilterminated; Components: nxmc or cmdline
