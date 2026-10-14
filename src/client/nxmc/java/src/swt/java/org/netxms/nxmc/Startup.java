@@ -195,7 +195,16 @@ public class Startup
       if (doLogin(display, args))
       {
          NXCSession session = Registry.getSession();
+         PreferenceStore.getInstance().attachSession(session);
+         DateFormatFactory.updateFromPreferences();
          DateFormatFactory.updateTimeZone();
+         String serverLanguage = PreferenceStore.getInstance().getAsString("nxmc.language", "en");
+         if (!serverLanguage.equals(language))
+         {
+            I18n i18n = LocalizationHelper.getI18n(Startup.class);
+            MessageDialogHelper.openInformation(null, i18n.tr("Language"),
+                  i18n.tr("Language selected in your user preferences ({0}) differs from the current one. You have to restart client for the change to take effect.", serverLanguage));
+         }
          DataCollectionDisplayInfo.init();
          MaintenanceTimePeriods.init(session);
          MibCache.init(session, display);

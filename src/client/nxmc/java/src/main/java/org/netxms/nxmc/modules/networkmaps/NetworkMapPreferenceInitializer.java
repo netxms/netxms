@@ -33,5 +33,7 @@ public class NetworkMapPreferenceInitializer implements PreferenceInitializer
    public void initializeDefaultPreferences(PreferenceStore ps)
    {
       ps.setDefault("NetMap.DefaultLinkWidth", 5);
+
+      ps.declareServerBacked("NetMap.");
    }
 }

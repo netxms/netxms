@@ -295,10 +295,10 @@ int H_UserSetPassword(Context *context)
 }
 
 /**
- * Check whether the caller may view or manage authentication tokens of the given
- * user. Allowed for the user themselves or holders of the "manage users" right.
+ * Check whether the caller may access per-user resources (authentication tokens, variables)
+ * of the given user. Allowed for the user themselves or holders of the "manage users" right.
  */
-static bool CheckTokenAccess(Context *context, uint32_t userId)
+static bool CheckSelfServiceAccess(Context *context, uint32_t userId)
 {
    return (context->getUserId() == userId) || context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_USERS);
 }
@@ -317,7 +317,7 @@ int H_UserTokens(Context *context)
       context->setErrorResponse("Invalid user ID");
       return 400;
    }
-   if (!CheckTokenAccess(context, userId))
+   if (!CheckSelfServiceAccess(context, userId))
       return 403;
 
    json_t *output = AuthenticationTokensToJson(userId);
@@ -341,7 +341,7 @@ int H_UserTokenCreate(Context *context)
       context->setErrorResponse("Invalid user ID");
       return 400;
    }
-   if (!CheckTokenAccess(context, userId))
+   if (!CheckSelfServiceAccess(context, userId))
       return 403;
 
    json_t *request = context->getRequestDocument();
@@ -422,7 +422,7 @@ int H_UserTokenDelete(Context *context)
       context->setErrorResponse("Invalid user ID");
       return 400;
    }
-   if (!CheckTokenAccess(context, userId))
+   if (!CheckSelfServiceAccess(context, userId))
       return 403;
 
    uint32_t tokenId = context->getPlaceholderValueAsUInt32(L"token-id");
@@ -435,6 +435,156 @@ int H_UserTokenDelete(Context *context)
       return 404;
 
    context->writeAuditLog(AUDIT_SECURITY, true, 0, L"Revoked authentication token [%u] of user [%u]", tokenId, userId);
+   return 204;
+}
+
+/**
+ * Handler for GET /v1/users/:user-id/variables
+ */
+int H_UserVariables(Context *context)
+{
+   uint32_t userId = context->getPlaceholderValueAsUInt32(L"user-id");
+   if (userId & GROUP_FLAG)
+   {
+      context->setErrorResponse("Invalid user ID");
+      return 400;
+   }
+   if (!CheckSelfServiceAccess(context, userId))
+      return 403;
+
+   const char *p = context->getQueryParameter("pattern");
+   wchar_t *pattern = (p != nullptr) ? WideStringFromUTF8String(p) : nullptr;
+   StringMap variables;
+   uint32_t rcc = EnumerateUserVariables(userId, pattern, &variables);
+   MemFree(pattern);
+   if (rcc != RCC_SUCCESS)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+
+   json_t *output = variables.toJson();
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Build response document for single user variable
+ */
+static json_t *UserVariableToJson(const wchar_t *name, const wchar_t *value)
+{
+   json_t *output = json_object();
+   json_object_set_new(output, "name", json_string_w(name));
+   json_object_set_new(output, "value", json_string_w(value));
+   return output;
+}
+
+/**
+ * Handler for GET /v1/users/:user-id/variables/:variable-name
+ */
+int H_UserVariable(Context *context)
+{
+   uint32_t userId = context->getPlaceholderValueAsUInt32(L"user-id");
+   if (userId & GROUP_FLAG)
+   {
+      context->setErrorResponse("Invalid user ID");
+      return 400;
+   }
+   if (!CheckSelfServiceAccess(context, userId))
+      return 403;
+
+   const wchar_t *name = context->getPlaceholderValue(L"variable-name");
+   wchar_t *value = nullptr;
+   uint32_t rcc = GetUserVariable(userId, name, &value);
+   if (rcc == RCC_VARIABLE_NOT_FOUND)
+   {
+      context->setErrorResponse("Variable not found");
+      return 404;
+   }
+   if (rcc != RCC_SUCCESS)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+
+   json_t *output = UserVariableToJson(name, value);
+   MemFree(value);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for PUT /v1/users/:user-id/variables/:variable-name
+ */
+int H_UserVariableUpdate(Context *context)
+{
+   uint32_t userId = context->getPlaceholderValueAsUInt32(L"user-id");
+   if (userId & GROUP_FLAG)
+   {
+      context->setErrorResponse("Invalid user ID");
+      return 400;
+   }
+   if (!CheckSelfServiceAccess(context, userId))
+      return 403;
+
+   json_t *request = context->getRequestDocument();
+   if (request == nullptr)
+   {
+      context->setErrorResponse("Invalid request document");
+      return 400;
+   }
+
+   json_t *value = json_object_get(request, "value");
+   if (!json_is_string(value))
+   {
+      context->setErrorResponse("Missing or non-string value");
+      return 400;
+   }
+
+   const wchar_t *name = context->getPlaceholderValue(L"variable-name");
+   wchar_t *wvalue = WideStringFromUTF8String(json_string_value(value));
+   uint32_t rcc = SetUserVariable(userId, name, wvalue);
+   if (rcc == RCC_INVALID_OBJECT_NAME)
+   {
+      MemFree(wvalue);
+      context->setErrorResponse("Invalid variable name");
+      return 400;
+   }
+   if (rcc != RCC_SUCCESS)
+   {
+      MemFree(wvalue);
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+
+   json_t *output = UserVariableToJson(name, wvalue);
+   MemFree(wvalue);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for DELETE /v1/users/:user-id/variables/:variable-name
+ */
+int H_UserVariableDelete(Context *context)
+{
+   uint32_t userId = context->getPlaceholderValueAsUInt32(L"user-id");
+   if (userId & GROUP_FLAG)
+   {
+      context->setErrorResponse("Invalid user ID");
+      return 400;
+   }
+   if (!CheckSelfServiceAccess(context, userId))
+      return 403;
+
+   if (DeleteUserVariable(userId, context->getPlaceholderValue(L"variable-name")) != RCC_SUCCESS)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
    return 204;
 }
 

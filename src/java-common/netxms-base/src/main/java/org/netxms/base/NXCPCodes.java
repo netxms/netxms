@@ -91,8 +91,6 @@ public class NXCPCodes
 	public static final int CMD_GET_PARAMETER = 0x0041;
 	public static final int CMD_GET_LIST = 0x0042;
 	public static final int CMD_ACTION = 0x0043;
-	public static final int CMD_GET_CURRENT_USER_ATTR = 0x0044;
-	public static final int CMD_SET_CURRENT_USER_ATTR = 0x0045;
 	public static final int CMD_GET_ALL_ALARMS = 0x0046;
 	public static final int CMD_GET_ALARM_COMMENTS = 0x0047;
 	public static final int CMD_ACK_ALARM = 0x0048;

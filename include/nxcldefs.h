@@ -43,7 +43,7 @@
 #define MAX_DCI_TAG_LENGTH          64
 #define MAX_INSTANCE_LEN            1024
 #define MAX_STRING_VALUE            256
-#define MAX_USERVAR_NAME_LENGTH     64
+#define MAX_USERVAR_NAME_LENGTH     128
 #define MAX_AGENT_VERSION_LEN       64
 #define MAX_PLATFORM_NAME_LEN       64
 #define MAX_PACKAGE_NAME_LEN        64

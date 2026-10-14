@@ -45,6 +45,8 @@ public class BasePreferenceInitializer implements PreferenceInitializer
       ps.setDefault("DateFormatFactory.Format.Date", "dd.MM.yyyy"); 
       ps.setDefault("DateFormatFactory.Format.Time", "HH:mm:ss"); 
       ps.setDefault("DateFormatFactory.Format.ShortTime", "HH:mm"); 
-      ps.setDefault("DateFormatFactory.UseServerTimeZone", false);       
+      ps.setDefault("DateFormatFactory.UseServerTimeZone", false);
+
+      ps.declareServerBacked("DateFormatFactory.", "nxmc.language", "Appearance.ShowServerClock", "ServerClock.");
    }
 }

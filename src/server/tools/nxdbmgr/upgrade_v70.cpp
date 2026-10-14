@@ -165,6 +165,66 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.52 to 70.53
+ */
+static bool H_UpgradeFromV52()
+{
+   // Per-user UI preferences (issue #3480) are stored as user variables, so variable names get the same
+   // length as user custom attribute names. var_name is part of the primary key.
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, L"user_profiles"));
+   CHK_EXEC(DBResizeColumn(g_dbHandle, L"user_profiles", L"var_name", 127, false));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, L"user_profiles", L"user_id,var_name"));
+
+   // Dot-prefixed user custom attributes (client-side UI state stored by older clients) are replaced
+   // by user variables; move them over without the leading dot and drop the originals.
+   DB_RESULT hResult = SQLSelect(L"SELECT a.object_id,a.attr_name,a.attr_value FROM userdb_custom_attributes a INNER JOIN users u ON u.id=a.object_id WHERE a.attr_name LIKE '.%'");
+   if ((hResult == nullptr) && !g_ignoreErrors)
+      return false;
+
+   bool success = true;
+   int count = (hResult != nullptr) ? DBGetNumRows(hResult) : 0;
+   if (count > 0)
+   {
+      DB_STATEMENT hDelete = DBPrepare(g_dbHandle, L"DELETE FROM user_profiles WHERE user_id=? AND var_name=?", count > 1);
+      DB_STATEMENT hInsert = DBPrepare(g_dbHandle, L"INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (?,?,?)", count > 1);
+      if ((hDelete != nullptr) && (hInsert != nullptr))
+      {
+         for(int i = 0; (i < count) && success; i++)
+         {
+            uint32_t userId = DBGetFieldULong(hResult, i, 0);
+            wchar_t name[128];
+            DBGetField(hResult, i, 1, name, 128);
+            wchar_t *value = DBGetField(hResult, i, 2, nullptr, 0);
+
+            DBBind(hDelete, 1, DB_SQLTYPE_INTEGER, userId);
+            DBBind(hDelete, 2, DB_SQLTYPE_VARCHAR, &name[1], DB_BIND_STATIC);
+            DBBind(hInsert, 1, DB_SQLTYPE_INTEGER, userId);
+            DBBind(hInsert, 2, DB_SQLTYPE_VARCHAR, &name[1], DB_BIND_STATIC);
+            DBBind(hInsert, 3, DB_SQLTYPE_TEXT, CHECK_NULL_EX(value), DB_BIND_TRANSIENT);
+            if ((!SQLExecute(hDelete) || !SQLExecute(hInsert)) && !g_ignoreErrors)
+               success = false;
+            MemFree(value);
+         }
+      }
+      else if (!g_ignoreErrors)
+      {
+         success = false;
+      }
+      if (hInsert != nullptr)
+         DBFreeStatement(hInsert);
+      if (hDelete != nullptr)
+         DBFreeStatement(hDelete);
+   }
+   DBFreeResult(hResult);
+   if (!success && !g_ignoreErrors)
+      return false;
+
+   CHK_EXEC(SQLQuery(L"DELETE FROM userdb_custom_attributes WHERE attr_name LIKE '.%'"));
+   CHK_EXEC(SetMinorSchemaVersion(53));
+   return true;
+}
+
+/**
  * Upgrade from 70.51 to 70.52
  */
 static bool H_UpgradeFromV51()
@@ -1721,6 +1781,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 52, 70, 53, H_UpgradeFromV52 },
    { 51, 70, 52, H_UpgradeFromV51 },
    { 50, 70, 51, H_UpgradeFromV50 },
    { 49, 70, 50, H_UpgradeFromV49 },

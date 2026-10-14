@@ -22,9 +22,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.UUID;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -33,6 +39,7 @@ import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.internal.service.ContextProvider;
 import org.eclipse.rap.rwt.service.UISession;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.client.NXCSession;
 import org.netxms.nxmc.services.PreferenceInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,6 +159,10 @@ public class PreferenceStore extends Memento implements IPreferenceStore
 
    private File storeFile;
    private Set<IPropertyChangeListener> changeListeners = new HashSet<IPropertyChangeListener>();
+   private Set<String> serverBackedPrefixes = new HashSet<String>();
+   private NXCSession session = null;
+   private ExecutorService serverWriter = null;
+   private boolean applyingServerValues = false;
 
    /**
     * Default constructor
@@ -219,6 +230,110 @@ public class PreferenceStore extends Memento implements IPreferenceStore
    }
 
    /**
+    * Declare preferences as server-backed. Values of preferences whose names start with any of given prefixes
+    * are stored on server as variables of logged in user and shared between client installations; everything
+    * else stays local to this installation. Intended to be called from preference initializers.
+    *
+    * @param keyPrefixes preference name prefixes
+    */
+   public void declareServerBacked(String... keyPrefixes)
+   {
+      Collections.addAll(serverBackedPrefixes, keyPrefixes);
+   }
+
+   /**
+    * Check if given preference is server-backed.
+    *
+    * @param name preference name
+    * @return true if preference is stored on server
+    */
+   public boolean isServerBacked(String name)
+   {
+      for(String p : serverBackedPrefixes)
+         if (name.startsWith(p))
+            return true;
+      return false;
+   }
+
+   /**
+    * Attach client session after successful login. Loads server-backed preferences of logged in user (server values
+    * override local ones), uploads locally set server-backed preferences missing on server, and enables write-through
+    * of subsequent changes to server.
+    *
+    * @param session client session
+    */
+   public void attachSession(NXCSession session)
+   {
+      Map<String, String> serverValues;
+      try
+      {
+         serverValues = session.getUserVariables();
+      }
+      catch(Exception e)
+      {
+         logger.error("Cannot load user preferences from server", e);
+         return;
+      }
+
+      this.session = session;
+      applyingServerValues = true;
+      try
+      {
+         for(Map.Entry<String, String> e : serverValues.entrySet())
+         {
+            if (isServerBacked(e.getKey()) && !e.getValue().equals(properties.getProperty(e.getKey())))
+               set(e.getKey(), e.getValue());
+         }
+      }
+      finally
+      {
+         applyingServerValues = false;
+      }
+      save();
+
+      for(Object key : properties.keySet())
+      {
+         String name = (String)key;
+         if (isServerBacked(name) && !serverValues.containsKey(name))
+            writeToServer(name, properties.getProperty(name));
+      }
+      logger.debug("Server-backed preferences loaded (" + serverValues.size() + " variables on server)");
+   }
+
+   /**
+    * Write preference value to server asynchronously. Writes are serialized on a single worker thread, so the last
+    * change to a preference is also the last one to reach the server.
+    *
+    * @param name preference name
+    * @param value new value or null to delete
+    */
+   private synchronized void writeToServer(final String name, final String value)
+   {
+      if (serverWriter == null)
+      {
+         serverWriter = new ThreadPoolExecutor(0, 1, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), (r) -> {
+            Thread t = new Thread(r, "PreferenceStoreServerWriter");
+            t.setDaemon(true);
+            return t;
+         });
+      }
+      final NXCSession s = session;
+      serverWriter.execute(() -> {
+         try
+         {
+            if (value != null)
+               s.setUserVariable(name, value);
+            else
+               s.deleteUserVariable(name);
+         }
+         catch(Exception e)
+         {
+            logger.warn("Cannot save preference \"" + name + "\" on server", e);
+         }
+      });
+   }
+
+   /**
     * Add property change listener.
     *
     * @param listener listener to add
@@ -256,7 +371,11 @@ public class PreferenceStore extends Memento implements IPreferenceStore
          for(IPropertyChangeListener l : changeListeners)
             l.propertyChange(event);
       }
+      if (applyingServerValues)
+         return;  // Saved once after all server values are applied
       save();
+      if ((session != null) && isServerBacked(property))
+         writeToServer(property, newValue);
    }
 
    /**

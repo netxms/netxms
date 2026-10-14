@@ -598,6 +598,10 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(uint32_t id, const TCHAR *nam
 uint32_t NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(uint32_t id, const TCHAR *name);
 void NXCORE_EXPORTABLE EnumerateUserDbObjectAttributes(uint32_t id, EnumerationCallbackResult (*callback)(const TCHAR*, const TCHAR*, void*), void *context);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const TCHAR *value);
+uint32_t NXCORE_EXPORTABLE GetUserVariable(uint32_t userId, const wchar_t *name, wchar_t **value);
+uint32_t NXCORE_EXPORTABLE SetUserVariable(uint32_t userId, const wchar_t *name, const wchar_t *value);
+uint32_t NXCORE_EXPORTABLE DeleteUserVariable(uint32_t userId, const wchar_t *name);
+uint32_t NXCORE_EXPORTABLE EnumerateUserVariables(uint32_t userId, const wchar_t *pattern, StringMap *variables);
 uint32_t NXCORE_EXPORTABLE ResolveUserName(const TCHAR *loginName);
 TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail = false);
 uuid NXCORE_EXPORTABLE GetUserGuidById(uint32_t id);

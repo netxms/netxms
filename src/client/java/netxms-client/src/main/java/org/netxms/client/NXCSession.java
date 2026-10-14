@@ -6237,17 +6237,60 @@ public class NXCSession
    }
 
    /**
-    * Set custom attribute for currently logged in user. Server will allow to change
-    * only attributes whose name starts with dot.
+    * Get variable of currently logged in user. User variables hold per-user preferences and other
+    * client state shared between client applications; values are opaque strings.
     *
-    * @param name  Attribute's name
-    * @param value New attribute's value
-    * @throws IOException  if socket I/O error occurs
+    * @param name variable name
+    * @return variable value or null if variable is not set
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void setAttributeForCurrentUser(final String name, final String value) throws IOException, NXCException
+   public String getUserVariable(String name) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_CURRENT_USER_ATTR);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_USER_VARIABLE);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, msg.getMessageId());
+      int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
+      if (rcc == RCC.VARIABLE_NOT_FOUND)
+         return null;
+      if (rcc != RCC.SUCCESS)
+         throw new NXCException(rcc);
+      return response.getFieldAsString(NXCPCodes.VID_VALUE);
+   }
+
+   /**
+    * Get all variables of currently logged in user.
+    *
+    * @return map of variable names to values
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<String, String> getUserVariables() throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_ENUM_USER_VARIABLES);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_VARIABLES);
+      Map<String, String> variables = new HashMap<String, String>(count);
+      long fieldId = NXCPCodes.VID_VARLIST_BASE;
+      for(int i = 0; i < count; i++, fieldId += 2)
+         variables.put(response.getFieldAsString(fieldId), response.getFieldAsString(fieldId + 1));
+      return variables;
+   }
+
+   /**
+    * Set variable of currently logged in user. Variable is created if it does not exist and
+    * overwritten otherwise.
+    *
+    * @param name variable name (up to 127 characters; letters, digits, space and <code>_ - @ ( ) . /</code>)
+    * @param value variable value
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void setUserVariable(String name, String value) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_USER_VARIABLE);
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_VALUE, value);
       sendMessage(msg);
@@ -6255,21 +6298,18 @@ public class NXCSession
    }
 
    /**
-    * Get custom attribute for currently logged in user. If attribute is not set, empty string will
-    * be returned.
+    * Delete variable of currently logged in user. Deleting non-existent variable is not an error.
     *
-    * @param name Attribute's name
-    * @return Attribute's value
-    * @throws IOException  if socket I/O error occurs
+    * @param name variable name
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String getAttributeForCurrentUser(final String name) throws IOException, NXCException
+   public void deleteUserVariable(String name) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_CURRENT_USER_ATTR);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_USER_VARIABLE);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return response.getFieldAsString(NXCPCodes.VID_VALUE);
+      waitForRCC(msg.getMessageId());
    }
 
    /**

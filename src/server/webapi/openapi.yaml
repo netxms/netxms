@@ -13447,6 +13447,182 @@ paths:
         - BearerAuth: []
       tags:
         - Two-Factor Authentication
+  /v1/users/{user-id}/variables:
+    get:
+      operationId: listUserVariables
+      summary: List user variables
+      description: |
+        Return all variables (per-user preferences and other UI state) of the user as a
+        flat JSON object mapping variable name to value. Values are opaque strings: scalars
+        are stored as plain text, structured values as serialized JSON, and the reader
+        decides how to interpret them. A user may read their own variables; reading another
+        user's variables requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+        - name: pattern
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Glob pattern (`*` and `?` wildcards) to filter variable names; all variables if omitted
+      responses:
+        '200':
+          description: Variables retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+                example:
+                  DateFormatFactory.Format.Date: dd.MM.yyyy
+                  WelcomePage.SeenVersions: 7.0.0
+        '400':
+          description: Invalid user ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied (not self and no MANAGE_USERS right)
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+  /v1/users/{user-id}/variables/{variable-name}:
+    get:
+      operationId: getUserVariable
+      summary: Get user variable
+      description: |
+        Return a single variable of the user. A user may read their own variables; reading
+        another user's variables requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+        - name: variable-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Variable name
+      responses:
+        '200':
+          description: Variable retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserVariable'
+        '400':
+          description: Invalid user ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied (not self and no MANAGE_USERS right)
+        '404':
+          description: Variable not found
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+    put:
+      operationId: setUserVariable
+      summary: Set user variable
+      description: |
+        Create or overwrite a single variable of the user. Each variable is written
+        independently, so concurrent sessions of one user only overwrite the keys they both
+        touch. Variable names are limited to 127 characters and may contain letters, digits,
+        space and the characters `_ - @ ( ) . /`. A user may set their own variables; setting
+        another user's variables requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+        - name: variable-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Variable name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  type: string
+                  description: Variable value (opaque text; serialize structured values as JSON)
+      responses:
+        '200':
+          description: Variable stored successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserVariable'
+        '400':
+          description: Invalid user ID, invalid variable name, or missing/non-string value
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied (not self and no MANAGE_USERS right)
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
+    delete:
+      operationId: deleteUserVariable
+      summary: Delete user variable
+      description: |
+        Delete a single variable of the user. Deleting a variable that does not exist is not
+        an error. A user may delete their own variables; deleting another user's variables
+        requires MANAGE_USERS access right.
+      parameters:
+        - name: user-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: User ID
+        - name: variable-name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Variable name
+      responses:
+        '204':
+          description: Variable deleted
+        '400':
+          description: Invalid user ID
+        '401':
+          description: Unauthorized
+        '403':
+          description: Access denied (not self and no MANAGE_USERS right)
+        '500':
+          description: Database failure
+      security:
+        - BearerAuth: []
+      tags:
+        - Users
   /v1/2fa/drivers:
     get:
       operationId: list2faDrivers
@@ -15932,6 +16108,19 @@ components:
             Clear-text token value. Returned only by the create operation, which is the single
             point where the server gives it out; it is absent from token listings. A lost token
             cannot be recovered and has to be revoked and re-issued.
+    UserVariable:
+      type: object
+      description: Single per-user variable (preference or other UI state)
+      properties:
+        name:
+          type: string
+          description: Variable name
+        value:
+          type: string
+          description: Variable value (opaque text)
+      required:
+        - name
+        - value
     AuthenticationTokenCreateInput:
       type: object
       description: Request body for issuing a new authentication token.

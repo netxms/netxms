@@ -364,6 +364,10 @@ int H_UserSetPassword(Context *context);
 int H_UserTokens(Context *context);
 int H_UserTokenCreate(Context *context);
 int H_UserTokenDelete(Context *context);
+int H_UserVariable(Context *context);
+int H_UserVariableDelete(Context *context);
+int H_UserVariables(Context *context);
+int H_UserVariableUpdate(Context *context);
 int H_UserGroups(Context *context);
 int H_UserGroupDetails(Context *context);
 int H_UserGroupCreate(Context *context);
@@ -1159,6 +1163,14 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/users/:user-id/tokens/:token-id")
       .DELETE(H_UserTokenDelete)
+      .build();
+   RouteBuilder("v1/users/:user-id/variables")
+      .GET(H_UserVariables)
+      .build();
+   RouteBuilder("v1/users/:user-id/variables/:variable-name")
+      .GET(H_UserVariable)
+      .PUT(H_UserVariableUpdate)
+      .DELETE(H_UserVariableDelete)
       .build();
    RouteBuilder("v1/users/:user-id/2fa-bindings")
       .GET(H_User2FABindings)

@@ -850,8 +850,6 @@ private:
    void cancelFileMonitoring(const NXCPMessage& request);
 	void testDCITransformation(const NXCPMessage& request);
 	void getBackgroundTaskState(const NXCPMessage& request);
-	void getUserCustomAttribute(const NXCPMessage& request);
-	void setUserCustomAttribute(const NXCPMessage& request);
 	void openServerLog(const NXCPMessage& request);
 	void closeServerLog(const NXCPMessage& request);
 	void queryServerLog(const NXCPMessage& request);

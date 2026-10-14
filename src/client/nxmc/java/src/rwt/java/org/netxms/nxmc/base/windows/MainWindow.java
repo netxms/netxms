@@ -330,7 +330,9 @@ public class MainWindow extends Window implements MessageAreaHolder
       String serverSeen = "";
       try
       {
-         serverSeen = session.getAttributeForCurrentUser(".WelcomePage.SeenVersions");
+         String v = session.getUserVariable("WelcomePage.SeenVersions");
+         if (v != null)
+            serverSeen = v;
       }
       catch(Exception e)
       {

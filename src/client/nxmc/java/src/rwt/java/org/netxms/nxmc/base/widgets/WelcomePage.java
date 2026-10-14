@@ -211,8 +211,8 @@ public class WelcomePage extends Composite
          protected void run(IProgressMonitor monitor) throws Exception
          {
             NXCSession session = Registry.getSession(getDisplay());
-            String serverSeen = session.getAttributeForCurrentUser(".WelcomePage.SeenVersions");
-            session.setAttributeForCurrentUser(".WelcomePage.SeenVersions", addVersion(serverSeen, serverVersion));
+            String serverSeen = session.getUserVariable("WelcomePage.SeenVersions");
+            session.setUserVariable("WelcomePage.SeenVersions", addVersion((serverSeen != null) ? serverSeen : "", serverVersion));
          }
 
          @Override

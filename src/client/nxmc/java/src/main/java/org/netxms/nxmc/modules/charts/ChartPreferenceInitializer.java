@@ -38,5 +38,7 @@ public class ChartPreferenceInitializer implements PreferenceInitializer
       ps.setDefault("Chart.EnableZoom", true);
       ps.setDefault("Chart.ShowTitle", false);
       ps.setDefault("Chart.ShowToolTips", true);
+
+      ps.declareServerBacked("Chart.");
    }
 }

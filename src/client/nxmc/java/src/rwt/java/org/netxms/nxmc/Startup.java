@@ -292,6 +292,15 @@ public class Startup implements EntryPoint, StartupParameters
       }
 
       NXCSession session = Registry.getSession();
+      PreferenceStore.getInstance().attachSession(session);
+      DateFormatFactory.updateFromPreferences();
+      DateFormatFactory.updateTimeZone();
+      String serverLanguage = PreferenceStore.getInstance().getAsString("nxmc.language", "en");
+      if (!serverLanguage.equals(language))
+      {
+         MessageDialogHelper.openInformation(null, i18n.tr("Language"),
+               i18n.tr("Language selected in your user preferences ({0}) differs from the current one. You have to reload the page for the change to take effect.", serverLanguage));
+      }
       MibCache.init(session, display);
       ObjectToolsCache.attachSession(display, session);
       SummaryTablesCache.attachSession(display, session);

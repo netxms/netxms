@@ -42,5 +42,7 @@ public class ObjectsPreferenceInitializer implements PreferenceInitializer
       ps.setDefault("ObjectStatusIndicator.hideUnmanaged", true);
       ps.setDefault("ObjectStatusIndicator.hideUnknown", true);
       ps.setDefault("ObjectStatusIndicator.hideDisabled", true);
+
+      ps.declareServerBacked("ObjectBrowser.", "ObjectStatusIndicator.", "CustomAttributes.ShowHidden");
    }
 }

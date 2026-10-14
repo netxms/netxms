@@ -33,5 +33,7 @@ public class LogViewerPreferenceInitializer implements PreferenceInitializer
    public void initializeDefaultPreferences(PreferenceStore ps)
    {
       ps.setDefault("LogViewer.PageSize", 400);
+
+      ps.declareServerBacked("LogViewer.");
    }
 }

@@ -2194,3 +2194,140 @@ void NXCORE_EXPORTABLE SetUserDbObjectAttr(uint32_t id, const TCHAR *name, const
    }
    s_userDatabaseLock.unlock();
 }
+
+/**
+ * Get user variable. On success value is returned in *value (caller must free it with MemFree).
+ * Returns RCC_SUCCESS, RCC_VARIABLE_NOT_FOUND, or RCC_DB_FAILURE.
+ */
+uint32_t NXCORE_EXPORTABLE GetUserVariable(uint32_t userId, const wchar_t *name, wchar_t **value)
+{
+   uint32_t rcc = RCC_DB_FAILURE;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_value FROM user_profiles WHERE user_id=? AND var_name=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            *value = DBGetField(hResult, 0, 0, nullptr, 0);
+            if (*value == nullptr)
+               *value = MemCopyStringW(L"");
+            rcc = RCC_SUCCESS;
+         }
+         else
+         {
+            rcc = RCC_VARIABLE_NOT_FOUND;
+         }
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Set user variable. Variable is created if it does not exist and overwritten otherwise.
+ * Returns RCC_SUCCESS, RCC_INVALID_OBJECT_NAME, or RCC_DB_FAILURE.
+ */
+uint32_t NXCORE_EXPORTABLE SetUserVariable(uint32_t userId, const wchar_t *name, const wchar_t *value)
+{
+   if ((name == nullptr) || (wcslen(name) >= MAX_USERVAR_NAME_LENGTH) || !IsValidObjectName(name))
+      return RCC_INVALID_OBJECT_NAME;
+
+   uint32_t rcc = RCC_DB_FAILURE;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   bool exist = false;
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_name FROM user_profiles WHERE user_id=? AND var_name=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         exist = (DBGetNumRows(hResult) > 0);
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+
+      hStmt = DBPrepare(hdb, exist ?
+               L"UPDATE user_profiles SET var_value=? WHERE user_id=? AND var_name=?" :
+               L"INSERT INTO user_profiles (var_value,user_id,var_name) VALUES (?,?,?)");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_TEXT, CHECK_NULL_EX(value), DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+         if (DBExecute(hStmt))
+            rcc = RCC_SUCCESS;
+         DBFreeStatement(hStmt);
+      }
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Delete user variable. Deleting non-existent variable is not an error.
+ * Returns RCC_SUCCESS or RCC_DB_FAILURE.
+ */
+uint32_t NXCORE_EXPORTABLE DeleteUserVariable(uint32_t userId, const wchar_t *name)
+{
+   uint32_t rcc = RCC_DB_FAILURE;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"DELETE FROM user_profiles WHERE user_id=? AND var_name=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(name), DB_BIND_STATIC);
+      if (DBExecute(hStmt))
+         rcc = RCC_SUCCESS;
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}
+
+/**
+ * Enumerate user variables. Fills given map with name/value pairs of all variables of given user
+ * whose names match pattern (all variables if pattern is null, empty, or "*").
+ * Returns RCC_SUCCESS or RCC_DB_FAILURE.
+ */
+uint32_t NXCORE_EXPORTABLE EnumerateUserVariables(uint32_t userId, const wchar_t *pattern, StringMap *variables)
+{
+   bool matchAll = (pattern == nullptr) || (pattern[0] == 0) || !wcscmp(pattern, L"*");
+
+   uint32_t rcc = RCC_DB_FAILURE;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_name,var_value FROM user_profiles WHERE user_id=?");
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         int rows = DBGetNumRows(hResult);
+         for(int i = 0; i < rows; i++)
+         {
+            wchar_t name[MAX_USERVAR_NAME_LENGTH];
+            DBGetField(hResult, i, 0, name, MAX_USERVAR_NAME_LENGTH);
+            if (matchAll || MatchString(pattern, name, true))
+            {
+               wchar_t *value = DBGetField(hResult, i, 1, nullptr, 0);
+               variables->setPreallocated(MemCopyStringW(name), (value != nullptr) ? value : MemCopyStringW(L""));
+            }
+         }
+         rcc = RCC_SUCCESS;
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+   return rcc;
+}

@@ -1638,12 +1638,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_BACKGROUND_TASK_STATE:
          getBackgroundTaskState(*request);
          break;
-      case CMD_GET_CURRENT_USER_ATTR:
-         getUserCustomAttribute(*request);
-         break;
-      case CMD_SET_CURRENT_USER_ATTR:
-         setUserCustomAttribute(*request);
-         break;
       case CMD_OPEN_SERVER_LOG:
          openServerLog(*request);
          break;
@@ -9548,212 +9542,19 @@ void ClientSession::getListsList(const NXCPMessage& request)
  */
 void ClientSession::getUserVariable(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-
-   uint32_t dwUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
-   if ((dwUserId == m_userId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
-   {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-      // Try to read variable from database
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM user_profiles WHERE user_id=? AND var_name=?"));
-      if (hStmt != nullptr)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwUserId);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, request.getFieldAsString(VID_NAME, nullptr, 0), DB_BIND_DYNAMIC);
-         DB_RESULT hResult = DBSelectPrepared(hStmt);
-         if (hResult != nullptr)
-         {
-            if (DBGetNumRows(hResult) > 0)
-            {
-               TCHAR *value = DBGetField(hResult, 0, 0, nullptr, 0);
-               msg.setField(VID_RCC, RCC_SUCCESS);
-               msg.setField(VID_VALUE, value);
-               MemFree(value);
-            }
-            else
-            {
-               msg.setField(VID_RCC, RCC_VARIABLE_NOT_FOUND);
-            }
-            DBFreeResult(hResult);
-         }
-         else
-         {
-            msg.setField(VID_RCC, RCC_DB_FAILURE);
-         }
-         DBFreeStatement(hStmt);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   sendMessage(&msg);
-}
-
-/**
- * Set user variable
- */
-void ClientSession::setUserVariable(const NXCPMessage& request)
-{
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-
-   uint32_t userId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
-   if ((userId == m_userId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
-   {
-      // Check variable name
-      TCHAR varName[MAX_USERVAR_NAME_LENGTH];
-      request.getFieldAsString(VID_NAME, varName, MAX_USERVAR_NAME_LENGTH);
-      if (IsValidObjectName(varName))
-      {
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-         // Check if variable already exist in database
-         bool bExist = false;
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_name FROM user_profiles WHERE user_id=? AND var_name=?"));
-         if (hStmt != nullptr)
-         {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
-            DB_RESULT hResult = DBSelectPrepared(hStmt);
-            if (hResult != nullptr)
-            {
-               if (DBGetNumRows(hResult) > 0)
-                  bExist = true;
-               DBFreeResult(hResult);
-            }
-            DBFreeStatement(hStmt);
-
-            // Update value in database
-            if (bExist)
-               hStmt = DBPrepare(hdb, _T("UPDATE user_profiles SET var_value=? WHERE user_id=? AND var_name=?"));
-            else
-               hStmt = DBPrepare(hdb, _T("INSERT INTO user_profiles (var_value,user_id,var_name) VALUES (?,?,?)"));
-            if (hStmt != nullptr)
-            {
-               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
-               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
-               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, request.getFieldAsString(VID_VALUE), DB_BIND_DYNAMIC);
-
-               if (DBExecute(hStmt))
-                  msg.setField(VID_RCC, RCC_SUCCESS);
-               else
-                  msg.setField(VID_RCC, RCC_DB_FAILURE);
-               DBFreeStatement(hStmt);
-            }
-            else
-            {
-               msg.setField(VID_RCC, RCC_DB_FAILURE);
-            }
-         }
-         else
-         {
-            msg.setField(VID_RCC, RCC_DB_FAILURE);
-         }
-         DBConnectionPoolReleaseConnection(hdb);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
-      }
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   sendMessage(msg);
-}
-
-/**
- * Enum user variables
- */
-void ClientSession::enumUserVariables(const NXCPMessage& request)
-{
-   NXCPMessage msg;
-   TCHAR szPattern[MAX_USERVAR_NAME_LENGTH], szQuery[256], szName[MAX_DB_STRING];
-   UINT32 i, dwNumRows, dwNumVars, dwId, dwUserId;
-   DB_RESULT hResult;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
-
-   dwUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
-   if ((dwUserId == m_userId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
-   {
-      request.getFieldAsString(VID_SEARCH_PATTERN, szPattern, MAX_USERVAR_NAME_LENGTH);
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      _sntprintf(szQuery, 256, _T("SELECT var_name FROM user_profiles WHERE user_id=%d"), dwUserId);
-      hResult = DBSelect(hdb, szQuery);
-      if (hResult != nullptr)
-      {
-         dwNumRows = DBGetNumRows(hResult);
-         for(i = 0, dwNumVars = 0, dwId = VID_VARLIST_BASE; i < dwNumRows; i++)
-         {
-            DBGetField(hResult, i, 0, szName, MAX_DB_STRING);
-            if (MatchString(szPattern, szName, FALSE))
-            {
-               dwNumVars++;
-               msg.setField(dwId++, szName);
-            }
-         }
-         msg.setField(VID_NUM_VARIABLES, dwNumVars);
-         msg.setField(VID_RCC, RCC_SUCCESS);
-         DBFreeResult(hResult);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-
-   sendMessage(msg);
-}
-
-/**
- * Delete user variable(s)
- */
-void ClientSession::deleteUserVariable(const NXCPMessage& request)
-{
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    uint32_t userId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
    if ((userId == m_userId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-      // Try to delete variable from database
-      TCHAR varName[MAX_USERVAR_NAME_LENGTH];
-      request.getFieldAsString(VID_NAME, varName, MAX_USERVAR_NAME_LENGTH);
-      TranslateStr(varName, _T("*"), _T("%"));
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM user_profiles WHERE user_id=? AND var_name LIKE ?"));
-      if (hStmt != nullptr)
-      {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, userId);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
-
-         if (DBExecute(hStmt))
-            response.setField(VID_RCC, RCC_SUCCESS);
-         else
-            response.setField(VID_RCC, RCC_DB_FAILURE);
-
-         DBFreeStatement(hStmt);
-      }
-      else
-         response.setField(VID_RCC, RCC_DB_FAILURE);
-      DBConnectionPoolReleaseConnection(hdb);
+      wchar_t *name = request.getFieldAsString(VID_NAME);
+      wchar_t *value = nullptr;
+      uint32_t rcc = GetUserVariable(userId, CHECK_NULL_EX(name), &value);
+      if (rcc == RCC_SUCCESS)
+         response.setField(VID_VALUE, value);
+      response.setField(VID_RCC, rcc);
+      MemFree(value);
+      MemFree(name);
    }
    else
    {
@@ -9764,133 +9565,191 @@ void ClientSession::deleteUserVariable(const NXCPMessage& request)
 }
 
 /**
- * Copy or move user variable(s) to another user
+ * Set user variable
+ */
+void ClientSession::setUserVariable(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t userId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
+   if ((userId == m_userId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
+   {
+      wchar_t *name = request.getFieldAsString(VID_NAME);
+      wchar_t *value = request.getFieldAsString(VID_VALUE);
+      response.setField(VID_RCC, SetUserVariable(userId, name, value));
+      MemFree(value);
+      MemFree(name);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Enumerate user variables. Response contains name/value pairs starting at VID_VARLIST_BASE
+ * with stride 2, count is in VID_NUM_VARIABLES. Optional VID_SEARCH_PATTERN limits the result.
+ */
+void ClientSession::enumUserVariables(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t userId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
+   if ((userId == m_userId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
+   {
+      wchar_t *pattern = request.getFieldAsString(VID_SEARCH_PATTERN);
+      StringMap variables;
+      uint32_t rcc = EnumerateUserVariables(userId, pattern, &variables);
+      if (rcc == RCC_SUCCESS)
+      {
+         uint32_t fieldId = VID_VARLIST_BASE;
+         for(KeyValuePair<const wchar_t> *v : variables)
+         {
+            response.setField(fieldId++, v->key);
+            response.setField(fieldId++, v->value);
+         }
+         response.setField(VID_NUM_VARIABLES, variables.size());
+      }
+      response.setField(VID_RCC, rcc);
+      MemFree(pattern);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Delete user variable
+ */
+void ClientSession::deleteUserVariable(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint32_t userId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
+   if ((userId == m_userId) || (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
+   {
+      wchar_t *name = request.getFieldAsString(VID_NAME);
+      response.setField(VID_RCC, DeleteUserVariable(userId, name));
+      MemFree(name);
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Copy or move user variables to another user. VID_NAME holds variable name pattern
+ * ('*' is a wildcard). Existing variables of destination user are overwritten.
  */
 void ClientSession::copyUserVariable(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   TCHAR szVarName[MAX_USERVAR_NAME_LENGTH], szCurrVar[MAX_USERVAR_NAME_LENGTH];
-   UINT32 dwSrcUserId, dwDstUserId;
-   int i, nRows;
-   BOOL bMove, bExist;
-   DB_RESULT hResult, hResult2;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      uint32_t srcUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
+      uint32_t dstUserId = request.getFieldAsUInt32(VID_DST_USER_ID);
+      bool move = request.getFieldAsBoolean(VID_MOVE_FLAG);
 
-      dwSrcUserId = request.isFieldExist(VID_USER_ID) ? request.getFieldAsUInt32(VID_USER_ID) : m_userId;
-      dwDstUserId = request.getFieldAsUInt32(VID_DST_USER_ID);
-      bMove = (BOOL)request.getFieldAsUInt16(VID_MOVE_FLAG);
-      request.getFieldAsString(VID_NAME, szVarName, MAX_USERVAR_NAME_LENGTH);
-      TranslateStr(szVarName, _T("*"), _T("%"));
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_name,var_value FROM user_profiles WHERE user_id=? AND var_name LIKE ?"));
+      StringBuffer pattern = request.getFieldAsString(VID_NAME, MAX_USERVAR_NAME_LENGTH);
+      pattern.replace(L"*", L"%");
+
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"SELECT var_name,var_value FROM user_profiles WHERE user_id=? AND var_name LIKE ?");
       if (hStmt != nullptr)
       {
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwSrcUserId);
-         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szVarName, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
-
-         hResult = DBSelectPrepared(hStmt);
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, srcUserId);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, pattern, DB_BIND_STATIC);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
          DBFreeStatement(hStmt);
          if (hResult != nullptr)
          {
-            nRows = DBGetNumRows(hResult);
-            for(i = 0; i < nRows; i++)
+            uint32_t rcc = RCC_SUCCESS;
+            int rows = DBGetNumRows(hResult);
+            for(int i = 0; (i < rows) && (rcc == RCC_SUCCESS); i++)
             {
-               DBGetField(hResult, i, 0, szCurrVar, MAX_USERVAR_NAME_LENGTH);
+               wchar_t name[MAX_USERVAR_NAME_LENGTH];
+               DBGetField(hResult, i, 0, name, MAX_USERVAR_NAME_LENGTH);
 
-               // Check if variable already exist in database
-               hStmt = DBPrepare(hdb, _T("SELECT var_name FROM user_profiles WHERE user_id=? AND var_name=?"));
-               if (hStmt != nullptr)
+               bool exist = false;
+               hStmt = DBPrepare(hdb, L"SELECT var_name FROM user_profiles WHERE user_id=? AND var_name=?");
+               if (hStmt == nullptr)
                {
-                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwDstUserId);
-                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
-
-                  hResult2 = DBSelectPrepared(hStmt);
-                  if (hResult2 != nullptr)
-                  {
-                     bExist = (DBGetNumRows(hResult2) > 0);
-                     DBFreeResult(hResult2);
-                  }
-                  else
-                  {
-                     bExist = FALSE;
-                  }
-                  DBFreeStatement(hStmt);
-               }
-               else
-               {
-                  msg.setField(VID_RCC, RCC_DB_FAILURE);
+                  rcc = RCC_DB_FAILURE;
                   break;
                }
-
-               if (bExist)
-                  hStmt = DBPrepare(hdb, _T("UPDATE user_profiles SET var_value=? WHERE user_id=? AND var_name=?"));
-               else
-                  hStmt = DBPrepare(hdb, _T("INSERT INTO user_profiles (var_value,user_id,var_name) VALUES (?,?,?)"));
-
-               if (hStmt != nullptr)
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dstUserId);
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+               DB_RESULT hResult2 = DBSelectPrepared(hStmt);
+               if (hResult2 != nullptr)
                {
-                  DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, DBGetField(hResult, i, 1, nullptr, 0), DB_BIND_DYNAMIC);
-                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dwDstUserId);
-                  DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
-
-                  DBExecute(hStmt);
-                  DBFreeStatement(hStmt);
+                  exist = (DBGetNumRows(hResult2) > 0);
+                  DBFreeResult(hResult2);
                }
-               else
+               DBFreeStatement(hStmt);
+
+               hStmt = DBPrepare(hdb, exist ?
+                        L"UPDATE user_profiles SET var_value=? WHERE user_id=? AND var_name=?" :
+                        L"INSERT INTO user_profiles (var_value,user_id,var_name) VALUES (?,?,?)");
+               if (hStmt == nullptr)
                {
-                  msg.setField(VID_RCC, RCC_DB_FAILURE);
+                  rcc = RCC_DB_FAILURE;
                   break;
                }
+               DBBind(hStmt, 1, DB_SQLTYPE_TEXT, DBGetField(hResult, i, 1, nullptr, 0), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dstUserId);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+               if (!DBExecute(hStmt))
+                  rcc = RCC_DB_FAILURE;
+               DBFreeStatement(hStmt);
 
-               if (bMove)
+               if (move && (rcc == RCC_SUCCESS))
                {
-                  hStmt = DBPrepare(hdb, _T("DELETE FROM user_profiles WHERE user_id=? AND var_name=?"));
-                  if (hStmt != nullptr)
+                  hStmt = DBPrepare(hdb, L"DELETE FROM user_profiles WHERE user_id=? AND var_name=?");
+                  if (hStmt == nullptr)
                   {
-                     DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwSrcUserId);
-                     DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, szCurrVar, DB_BIND_STATIC, MAX_USERVAR_NAME_LENGTH - 1);
-
-                     DBExecute(hStmt);
-                     DBFreeStatement(hStmt);
-                  }
-                  else
-                  {
-                     msg.setField(VID_RCC, RCC_DB_FAILURE);
+                     rcc = RCC_DB_FAILURE;
                      break;
                   }
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, srcUserId);
+                  DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+                  if (!DBExecute(hStmt))
+                     rcc = RCC_DB_FAILURE;
+                  DBFreeStatement(hStmt);
                }
 
-               writeAuditLog(AUDIT_SECURITY, true, 0, _T("User variable %s %s from [%d] to [%d]"),
-                        szCurrVar, bMove ? _T("moved") : _T("copied"), dwSrcUserId, dwDstUserId);
+               if (rcc == RCC_SUCCESS)
+                  writeAuditLog(AUDIT_SECURITY, true, 0, L"User variable %s %s from [%u] to [%u]", name, move ? L"moved" : L"copied", srcUserId, dstUserId);
             }
             DBFreeResult(hResult);
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_RCC, rcc);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_DB_FAILURE);
+            response.setField(VID_RCC, RCC_DB_FAILURE);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         response.setField(VID_RCC, RCC_DB_FAILURE);
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on copy user variable"));
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SECURITY, false, 0, L"Access denied on copy user variable");
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -13716,56 +13575,6 @@ void ClientSession::getBackgroundTaskState(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_JOB_ID);
    }
    sendMessage(response);
-}
-
-/**
- * Get custom attribute for current user
- */
-void ClientSession::getUserCustomAttribute(const NXCPMessage& request)
-{
-	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
-	TCHAR *name = request.getFieldAsString(VID_NAME);
-	if ((name != nullptr) && (*name == _T('.')))
-	{
-		const TCHAR *value = GetUserDbObjectAttr(m_userId, name);
-		response.setField(VID_VALUE, CHECK_NULL_EX(value));
-		response.setField(VID_RCC, RCC_SUCCESS);
-	}
-	else
-	{
-		response.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
-	MemFree(name);
-
-	sendMessage(&response);
-}
-
-/**
- * Set custom attribute for current user
- */
-void ClientSession::setUserCustomAttribute(const NXCPMessage& request)
-{
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request.getId());
-
-	TCHAR *name = request.getFieldAsString(VID_NAME);
-	if ((name != nullptr) && (*name == _T('.')))
-	{
-		TCHAR *value = request.getFieldAsString(VID_VALUE);
-		SetUserDbObjectAttr(m_userId, name, CHECK_NULL_EX(value));
-		msg.setField(VID_RCC, RCC_SUCCESS);
-		MemFree(value);
-	}
-	else
-	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-	}
-	MemFree(name);
-
-	sendMessage(&msg);
 }
 
 /**
