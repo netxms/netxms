@@ -107,7 +107,20 @@ public class PinboardPerspective extends Perspective
          }
          catch (Exception e)
          {
-            Registry.getMainWindow().pinView(new NonRestorableView(e, v != null ? v.getFullName() : id), PinLocation.PINBOARD);
+            String name = id;
+            if (v != null)
+            {
+               try
+               {
+                  // View may be only partially restored at this point, so its name may not be available
+                  name = v.getFullName();
+               }
+               catch(Exception e2)
+               {
+                  logger.debug("Cannot get name of partially restored view " + id, e2);
+               }
+            }
+            Registry.getMainWindow().pinView(new NonRestorableView(e, name), PinLocation.PINBOARD);
             logger.error("Cannot instantiate saved view", e);
          }
       }     
