@@ -112,7 +112,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_GET_LIST"),
       _T("CMD_ACTION"),
       _T("CMD_RESIZE_SSH_CHANNEL"),
-      _T("CMD_SETUP_SSH_TERMINAL")
+      _T("CMD_SETUP_SSH_TERMINAL"),
       _T("CMD_GET_ALL_ALARMS"),
       _T("CMD_GET_ALARM_COMMENTS"),
       _T("CMD_ACK_ALARM"),
