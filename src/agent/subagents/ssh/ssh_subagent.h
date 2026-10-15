@@ -138,9 +138,11 @@ public:
    /**
     * Open interactive channel with PTY and shell for network device CLI access
     * @param terminalType Terminal type for PTY (e.g., "xterm", "vt100", "dumb"), defaults to "xterm"
+    * @param columns PTY width in columns
+    * @param rows PTY height in rows
     * @return SSH channel handle on success, nullptr on failure
     */
-   ssh_channel openInteractiveChannel(const char *terminalType = "xterm");
+   ssh_channel openInteractiveChannel(const char *terminalType = "xterm", int columns = 200, int rows = 24);
 
    /**
     * Test if command execution channel is available
@@ -175,6 +177,7 @@ public:
    uint32_t getChannelId() const { return m_channelId; }
 
    void writeToChannel(const BYTE *data, size_t size);
+   void resize(int columns, int rows);
 };
 
 /* Channel proxy management */

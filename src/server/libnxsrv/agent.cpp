@@ -3453,12 +3453,15 @@ void AgentConnection::processTcpProxyData(uint32_t channelId, const void *data, 
 }
 
 /**
- * Open SSH channel
+ * Open SSH channel. Data handler, if provided, is registered before the request is sent, so data arriving
+ * from the channel before the setup response is not lost. It is removed again if setup fails.
  */
-uint32_t AgentConnection::openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, const char *terminalType, uint32_t *channelId)
+uint32_t AgentConnection::openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, const char *terminalType, int columns, int rows, SSHChannelDataCallback dataHandler, uint32_t *channelId)
 {
    uint32_t requestId = generateRequestId();
    *channelId = requestId;
+   if (dataHandler != nullptr)
+      setSSHChannelDataHandler(requestId, dataHandler);
 
    NXCPMessage msg(CMD_SETUP_SSH_CHANNEL, requestId, m_nProtocolVersion);
    msg.setField(VID_IP_ADDRESS, target);
@@ -3467,6 +3470,8 @@ uint32_t AgentConnection::openSSHChannel(const InetAddress& target, uint16_t por
    msg.setField(VID_PASSWORD, password);
    msg.setField(VID_SSH_KEY_ID, keyId);
    msg.setField(VID_CHANNEL_ID, requestId);
+   msg.setField(VID_WIDTH, static_cast<int32_t>(columns));
+   msg.setField(VID_HEIGHT, static_cast<int32_t>(rows));
    if (terminalType != nullptr && terminalType[0] != '\0')
       msg.setFieldFromUtf8String(VID_TERMINAL_TYPE, terminalType);
 
@@ -3492,6 +3497,8 @@ uint32_t AgentConnection::openSSHChannel(const InetAddress& target, uint16_t por
    {
       rcc = ERR_CONNECTION_BROKEN;
    }
+   if ((rcc != ERR_SUCCESS) && (dataHandler != nullptr))
+      removeSSHChannelDataHandler(requestId);
    return rcc;
 }
 
@@ -3517,6 +3524,37 @@ uint32_t AgentConnection::sendSSHChannelData(uint32_t channelId, const BYTE *dat
    MemFree(msg);
 
    return success ? ERR_SUCCESS : ERR_CONNECTION_BROKEN;
+}
+
+/**
+ * Change PTY size of SSH channel
+ */
+uint32_t AgentConnection::resizeSSHChannel(uint32_t channelId, int columns, int rows)
+{
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_RESIZE_SSH_CHANNEL, requestId, m_nProtocolVersion);
+   msg.setField(VID_CHANNEL_ID, channelId);
+   msg.setField(VID_WIDTH, static_cast<int32_t>(columns));
+   msg.setField(VID_HEIGHT, static_cast<int32_t>(rows));
+   uint32_t rcc;
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
+   }
+   return rcc;
 }
 
 /**

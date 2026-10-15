@@ -13936,10 +13936,10 @@ shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t 
       m_driver->getSSHDriverHints(&hints);
    }
 
-   // Open SSH channel through agent
+   // Open SSH channel through agent (200 columns so that long output lines are not wrapped before parsing)
    uint32_t channelId;
    uint32_t rcc = agentConn->openSSHChannel(m_ipAddress, m_sshPort, (login != nullptr) ? login : m_sshLogin.cstr(),
-            (password != nullptr) ? password : m_sshPassword.cstr(), (keyId != 0) ? keyId : m_sshKeyId, hints.terminalType, &channelId);
+            (password != nullptr) ? password : m_sshPassword.cstr(), (keyId != 0) ? keyId : m_sshKeyId, hints.terminalType, 200, 24, nullptr, &channelId);
    if (rcc != ERR_SUCCESS)
    {
       nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): cannot open interactive SSH channel via proxy node %s [%u] (%u: %s)",

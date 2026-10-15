@@ -1365,8 +1365,9 @@ public:
    uint32_t setupTcpProxy(const InetAddress& ipAddr, uint16_t port, uint32_t *channelId);
    uint32_t closeTcpProxy(uint32_t channelId);
 
-   uint32_t openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, const char *terminalType, uint32_t *channelId);
+   uint32_t openSSHChannel(const InetAddress& target, uint16_t port, const TCHAR *user, const TCHAR *password, uint32_t keyId, const char *terminalType, int columns, int rows, SSHChannelDataCallback dataHandler, uint32_t *channelId);
    uint32_t sendSSHChannelData(uint32_t channelId, const BYTE *data, size_t size);
+   uint32_t resizeSSHChannel(uint32_t channelId, int columns, int rows);
    uint32_t closeSSHChannel(uint32_t channelId);
    void setSSHChannelDataHandler(uint32_t channelId, SSHChannelDataCallback handler);
    void removeSSHChannelDataHandler(uint32_t channelId);

@@ -30,11 +30,11 @@ public final class ProtocolVersion
    // Versions
    public static final int ALARMS    = 4;
    public static final int BASE      = 62;
-   public static final int FULL      = 59;
+   public static final int FULL      = 60;
    public static final int MOBILE    = 1;
    public static final int PUSH      = 1;
    public static final int SCHEDULER = 2;
-   public static final int TCPPROXY  = 1;
+   public static final int TCPPROXY  = 2;
    public static final int TRAP      = 1;
 
    // Indexes

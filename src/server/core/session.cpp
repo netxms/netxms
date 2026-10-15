@@ -295,6 +295,14 @@ ClientSession::~ClientSession() noexcept
 
    delete m_loginInfo;
 
+   // Unregister SSH channel data handlers capturing this session from agent connections that may outlive it
+   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
+   {
+      TcpProxy *p = m_tcpProxyConnections.get(i);
+      if (p->sshChannel)
+         p->agentConnection->closeSSHChannel(p->agentChannelId);
+   }
+
    debugPrintf(5, _T("Session object destroyed"));
 }
 
@@ -467,6 +475,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
       {
          shared_ptr<AgentConnectionEx> conn;
          uint32_t agentChannelId = 0;
+         bool sshChannel = false;
          m_tcpProxyLock.lock();
          for(int i = 0; i < m_tcpProxyConnections.size(); i++)
          {
@@ -475,11 +484,16 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
             {
                conn = p->agentConnection;
                agentChannelId = p->agentChannelId;
+               sshChannel = p->sshChannel;
                break;
             }
          }
          m_tcpProxyLock.unlock();
-         if ((conn != nullptr) && conn->isConnected())
+         if ((conn != nullptr) && conn->isConnected() && sshChannel)
+         {
+            conn->sendSSHChannelData(agentChannelId, static_cast<const BYTE*>(msg->getBinaryData()), msg->getBinaryDataSize());
+         }
+         else if ((conn != nullptr) && conn->isConnected())
          {
             size_t size = msg->getBinaryDataSize();
             size_t msgSize = size + NXCP_HEADER_SIZE;
@@ -1878,6 +1892,12 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_CLOSE_TCP_PROXY:
          closeTcpProxy(*request);
+         break;
+      case CMD_SETUP_SSH_TERMINAL:
+         setupSshTerminal(*request);
+         break;
+      case CMD_RESIZE_SSH_CHANNEL:
+         resizeSshTerminal(*request);
          break;
       case CMD_START_RT_DCI_READ:
          startRealTimeDciRead(*request);
@@ -16721,7 +16741,7 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
                      sendMessage(msg);
                      msg.deleteAllFields();
                   }
-                  auto proxy = new TcpProxy(conn, 0, clientChannelId, proxyNode->getId());
+                  auto proxy = new TcpProxy(conn, 0, clientChannelId, proxyNode->getId(), false);
                   m_tcpProxyLock.lock();
                   m_tcpProxyConnections.add(proxy);
                   m_tcpProxyLock.unlock();
@@ -16775,6 +16795,187 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
 }
 
 /**
+ * Setup interactive SSH terminal session to a node. SSH session is terminated on the node's SSH proxy agent
+ * (ssh subagent); PTY data is relayed to the client over a regular TCP proxy channel (CMD_TCP_PROXY_DATA),
+ * so client can use the same channel object as for TCP proxy.
+ */
+void ClientSession::setupSshTerminal(const NXCPMessage& request)
+{
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+
+   if (!(m_systemAccessRights & SYSTEM_ACCESS_SETUP_TCP_PROXY))
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting up SSH terminal"));
+      sendMessage(msg);
+      return;
+   }
+
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(request.getFieldAsUInt32(VID_NODE_ID), OBJECT_NODE));
+   if (node == nullptr)
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      sendMessage(msg);
+      return;
+   }
+
+   if (!node->checkAccessRights(m_userId, OBJECT_ACCESS_CONTROL))
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, node->getId(), _T("Access denied on setting up SSH terminal"));
+      sendMessage(msg);
+      return;
+   }
+
+   int columns = request.getFieldAsInt32(VID_WIDTH);
+   int rows = request.getFieldAsInt32(VID_HEIGHT);
+   if ((columns < 1) || (columns > 1024) || (rows < 1) || (rows > 1024))
+   {
+      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      sendMessage(msg);
+      return;
+   }
+
+   uint32_t proxyId = node->getEffectiveSshProxy();
+   shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+   if (proxyNode == nullptr)
+   {
+      debugPrintf(4, _T("Requested SSH terminal to node %s [%u] but its SSH proxy [%u] is not available"), node->getName(), node->getId(), proxyId);
+      msg.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
+      sendMessage(msg);
+      return;
+   }
+
+   // Credentials: provided by client, or stored node credentials if login is not provided
+   TCHAR login[256], password[256];
+   uint32_t keyId;
+   if (request.isFieldExist(VID_USER_NAME))
+   {
+      request.getFieldAsString(VID_USER_NAME, login, 256);
+      request.getFieldAsString(VID_PASSWORD, password, 256);
+      keyId = request.getFieldAsUInt32(VID_SSH_KEY_ID);
+   }
+   else
+   {
+      _tcslcpy(login, node->getSshLogin(), 256);
+      _tcslcpy(password, node->getSshPassword(), 256);
+      keyId = node->getSshKeyId();
+   }
+
+   char terminalType[32];
+   request.getFieldAsUtf8String(VID_TERMINAL_TYPE, terminalType, 32);
+   if (terminalType[0] == 0)
+   {
+      SSHDriverHints hints;
+      if (node->getDriver() != nullptr)
+         node->getDriver()->getSSHDriverHints(&hints);
+      strlcpy(terminalType, hints.terminalType, 32);
+   }
+
+   shared_ptr<AgentConnectionEx> conn = proxyNode->createAgentConnection();
+   if (conn == nullptr)
+   {
+      debugPrintf(4, _T("SSH terminal to node %s [%u] via %s [%u] setup failed (no connection to agent)"), node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId());
+      msg.setField(VID_RCC, RCC_COMM_FAILURE);
+      sendMessage(msg);
+      return;
+   }
+   conn->setTcpProxyCallback(this);   // for agent disconnect notifications
+
+   uint32_t clientChannelId = request.getFieldAsUInt32(VID_CHANNEL_ID);
+   if (clientChannelId == 0)
+      clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
+
+   debugPrintf(4, _T("Setting up SSH terminal to %s [%u] (%s:%u, user \"%s\", key %u, term %hs, size %dx%d) via node %s [%u]"),
+         node->getName(), node->getId(), node->getIpAddress().toString().cstr(), node->getSshPort(), login, keyId, terminalType, columns, rows, proxyNode->getName(), proxyNode->getId());
+
+   if (request.getFieldAsBoolean(VID_ENABLE_TWO_PHASE_SETUP))
+   {
+      // Send first confirmation
+      msg.setField(VID_RCC, RCC_SUCCESS);
+      msg.setField(VID_CHANNEL_ID, clientChannelId);
+      msg.setField(VID_ENABLE_TWO_PHASE_SETUP, true);
+      sendMessage(msg);
+      msg.deleteAllFields();
+   }
+
+   auto proxy = new TcpProxy(conn, 0, clientChannelId, proxyNode->getId(), true);
+   m_tcpProxyLock.lock();
+   m_tcpProxyConnections.add(proxy);
+   m_tcpProxyLock.unlock();
+
+   uint32_t rcc = conn->openSSHChannel(node->getIpAddress(), node->getSshPort(), login, password, keyId, terminalType, columns, rows,
+      [this, clientChannelId] (const BYTE *data, size_t size, bool errorIndicator)
+      {
+         onSshTerminalData(clientChannelId, data, size, errorIndicator);
+      }, &proxy->agentChannelId);
+   if (rcc == ERR_SUCCESS)
+   {
+      msg.setField(VID_RCC, RCC_SUCCESS);
+      msg.setField(VID_CHANNEL_ID, clientChannelId);
+      writeAuditLog(AUDIT_SYSCFG, true, node->getId(), _T("Created SSH terminal session to %s port %u as user \"%s\" via %s [%u] (client channel %u)"),
+            node->getIpAddress().toString().cstr(), node->getSshPort(), login, proxyNode->getName(), proxyNode->getId(), clientChannelId);
+      debugPrintf(3, _T("Created SSH terminal session to %s [%u] via node %s [%u] (agent channel = %u, client channel = %u)"),
+            node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId(), proxy->agentChannelId, clientChannelId);
+   }
+   else
+   {
+      m_tcpProxyLock.lock();
+      m_tcpProxyConnections.remove(proxy);
+      m_tcpProxyLock.unlock();
+      msg.setField(VID_RCC, AgentErrorToRCC(rcc));
+      debugPrintf(4, _T("SSH terminal to node %s [%u] via %s [%u] setup failed (%s)"), node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId(), AgentErrorCodeToText(rcc));
+   }
+   sendMessage(msg);
+}
+
+/**
+ * Change PTY size of interactive SSH terminal session
+ */
+void ClientSession::resizeSshTerminal(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   int columns = request.getFieldAsInt32(VID_WIDTH);
+   int rows = request.getFieldAsInt32(VID_HEIGHT);
+   if ((columns < 1) || (columns > 1024) || (rows < 1) || (rows > 1024))
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      sendMessage(response);
+      return;
+   }
+
+   uint32_t clientChannelId = request.getFieldAsUInt32(VID_CHANNEL_ID);
+   shared_ptr<AgentConnectionEx> conn;
+   uint32_t agentChannelId = 0;
+   m_tcpProxyLock.lock();
+   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
+   {
+      TcpProxy *p = m_tcpProxyConnections.get(i);
+      if ((p->clientChannelId == clientChannelId) && p->sshChannel)
+      {
+         conn = p->agentConnection;
+         agentChannelId = p->agentChannelId;
+         break;
+      }
+   }
+   m_tcpProxyLock.unlock();
+
+   if (conn != nullptr)
+   {
+      uint32_t rcc = conn->resizeSSHChannel(agentChannelId, columns, rows);
+      debugPrintf(6, _T("SSH terminal channel %u resized to %dx%d (%s)"), clientChannelId, columns, rows, AgentErrorCodeToText(rcc));
+      response.setField(VID_RCC, AgentErrorToRCC(rcc));
+   }
+   else
+   {
+      debugPrintf(5, _T("Resize request for unknown SSH terminal channel %u"), clientChannelId);
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+   sendMessage(response);
+}
+
+/**
  * Close TCP proxy session
  */
 void ClientSession::closeTcpProxy(const NXCPMessage& request)
@@ -16785,6 +16986,7 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
 
    shared_ptr<AgentConnectionEx> conn;
    uint32_t agentChannelId, nodeId;
+   bool sshChannel = false;
    m_tcpProxyLock.lock();
    for(int i = 0; i < m_tcpProxyConnections.size(); i++)
    {
@@ -16794,6 +16996,7 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
          agentChannelId = p->agentChannelId;
          nodeId = p->nodeId;
          conn = p->agentConnection;
+         sshChannel = p->sshChannel;
          m_tcpProxyConnections.remove(i);
          break;
       }
@@ -16802,8 +17005,16 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
 
    if (conn != nullptr)
    {
-      conn->closeTcpProxy(agentChannelId);
-      writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Closed TCP proxy channel %u"), clientChannelId);
+      if (sshChannel)
+      {
+         conn->closeSSHChannel(agentChannelId);
+         writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Closed SSH terminal session (client channel %u)"), clientChannelId);
+      }
+      else
+      {
+         conn->closeTcpProxy(agentChannelId);
+         writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Closed TCP proxy channel %u"), clientChannelId);
+      }
    }
 
    sendMessage(response);
@@ -16918,29 +17129,62 @@ void ClientSession::onTcpProxyData(AgentConnectionEx *conn, uint32_t agentChanne
    m_tcpProxyLock.unlock();
 
    if (clientChannelId != 0)
+      sendTcpProxyDataToClient(clientChannelId, data, size, errorIndicator);
+}
+
+/**
+ * Process data received from interactive SSH channel used for SSH terminal session (in direction from agent to client)
+ */
+void ClientSession::onSshTerminalData(uint32_t clientChannelId, const void *data, size_t size, bool errorIndicator)
+{
+   bool found = false;
+   m_tcpProxyLock.lock();
+   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
    {
-      if (size > 0)
+      TcpProxy *p = m_tcpProxyConnections.get(i);
+      if ((p->clientChannelId == clientChannelId) && p->sshChannel)
       {
-         size_t msgSize = size + NXCP_HEADER_SIZE;
-         if (msgSize % 8 != 0)
-            msgSize += 8 - msgSize % 8;
-         NXCP_MESSAGE *msg = static_cast<NXCP_MESSAGE*>(MemAlloc(msgSize));
-         msg->code = htons(CMD_TCP_PROXY_DATA);
-         msg->flags = htons(MF_BINARY);
-         msg->id = htonl(clientChannelId);
-         msg->numFields = htonl(static_cast<uint32_t>(size));
-         msg->size = htonl(static_cast<uint32_t>(msgSize));
-         memcpy(msg->fields, data, size);
-         postRawMessageAndDelete(msg);
+         found = true;
+         if (size == 0) // close indicator
+         {
+            debugPrintf(5, _T("Received SSH terminal channel %u close notification"), clientChannelId);
+            m_tcpProxyConnections.remove(i);
+         }
+         break;
       }
-      else
-      {
-         debugPrintf(5, _T("Received end-of-stream indicator on TCP proxy channel %u (%s closure)"), clientChannelId, errorIndicator ? _T("error") : _T("normal"));
-         NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0);
-         msg.setField(VID_CHANNEL_ID, clientChannelId);
-         msg.setField(VID_RCC, errorIndicator ? RCC_REMOTE_SOCKET_READ_ERROR : RCC_SUCCESS);
-         postMessage(msg);
-      }
+   }
+   m_tcpProxyLock.unlock();
+
+   if (found)
+      sendTcpProxyDataToClient(clientChannelId, data, size, errorIndicator);
+}
+
+/**
+ * Send data received from TCP proxy or SSH terminal channel to client (size 0 indicates end of stream)
+ */
+void ClientSession::sendTcpProxyDataToClient(uint32_t clientChannelId, const void *data, size_t size, bool errorIndicator)
+{
+   if (size > 0)
+   {
+      size_t msgSize = size + NXCP_HEADER_SIZE;
+      if (msgSize % 8 != 0)
+         msgSize += 8 - msgSize % 8;
+      NXCP_MESSAGE *msg = static_cast<NXCP_MESSAGE*>(MemAlloc(msgSize));
+      msg->code = htons(CMD_TCP_PROXY_DATA);
+      msg->flags = htons(MF_BINARY);
+      msg->id = htonl(clientChannelId);
+      msg->numFields = htonl(static_cast<uint32_t>(size));
+      msg->size = htonl(static_cast<uint32_t>(msgSize));
+      memcpy(msg->fields, data, size);
+      postRawMessageAndDelete(msg);
+   }
+   else
+   {
+      debugPrintf(5, _T("Received end-of-stream indicator on TCP proxy channel %u (%s closure)"), clientChannelId, errorIndicator ? _T("error") : _T("normal"));
+      NXCPMessage msg(CMD_CLOSE_TCP_PROXY, 0);
+      msg.setField(VID_CHANNEL_ID, clientChannelId);
+      msg.setField(VID_RCC, errorIndicator ? RCC_REMOTE_SOCKET_READ_ERROR : RCC_SUCCESS);
+      postMessage(msg);
    }
 }
 

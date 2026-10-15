@@ -107,6 +107,7 @@ import org.netxms.nxmc.modules.objects.actions.SetInterfacePeerInformation;
 import org.netxms.nxmc.modules.objects.dialogs.DecommissionNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.EffectiveRightsDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
+import org.netxms.nxmc.modules.objects.dialogs.SshConnectDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog.RelationType;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedTemplateObjectSelectionDialog;
@@ -117,6 +118,7 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.RemoteControlView;
 import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
+import org.netxms.nxmc.modules.objects.views.SshTerminalView;
 import org.netxms.nxmc.modules.datacollection.views.WebServiceQueryView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.tools.views.NetworkScanView;
@@ -147,6 +149,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionExplainStatus;
    private Action actionTakeScreenshot;
    private Action actionOpenRemoteControlView;
+   private Action actionOpenSshTerminal;
    private Action actionEditAgentConfig;
    private Action actionShowEffectiveAgentConfig;
    private Action actionExecuteScript;
@@ -344,6 +347,14 @@ public class ObjectContextMenuManager extends MenuManager
          public void run()
          {
             openRemoteControlView();
+         }
+      };
+
+      actionOpenSshTerminal = new Action(i18n.tr("SSH &terminal..."), ResourceManager.getImageDescriptor("icons/object-tools/terminal.png")) {
+         @Override
+         public void run()
+         {
+            openSshTerminal();
          }
       };
 
@@ -922,6 +933,10 @@ public class ObjectContextMenuManager extends MenuManager
          if (node.hasVNC())
          {
             menu.add(actionOpenRemoteControlView);
+         }
+         if (isSshTerminalAllowed(node))
+         {
+            menu.add(actionOpenSshTerminal);
          }
          if (node.hasAgent() && node.getPlatformName().startsWith("windows-"))
          {
@@ -1574,6 +1589,37 @@ public class ObjectContextMenuManager extends MenuManager
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new RemoteControlView((Node)object, contextId));
+   }
+
+   /**
+    * Check if SSH terminal can be opened for given node: node should have valid primary IP address and user should
+    * have rights to setup TCP proxy and control the node (same requirements as for TCP proxy setup on the server).
+    *
+    * @param node node to check
+    * @return true if SSH terminal can be opened
+    */
+   private static boolean isSshTerminalAllowed(Node node)
+   {
+      return node.getPrimaryIP().isValidUnicastAddress() &&
+            ((Registry.getSession().getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_SETUP_TCP_PROXY) != 0) &&
+            ((node.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_CONTROL) != 0);
+   }
+
+   /**
+    * Open SSH terminal for selected node
+    */
+   private void openSshTerminal()
+   {
+      AbstractObject object = getObjectFromSelection();
+      if (!(object instanceof Node))
+         return;
+
+      SshConnectDialog dlg = new SshConnectDialog(view.getWindow().getShell(), (Node)object);
+      if (dlg.open() != Window.OK)
+         return;
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new SshTerminalView((Node)object, contextId, dlg.getSettings()));
    }
 
    /**

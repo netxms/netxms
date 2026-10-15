@@ -82,6 +82,7 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
       ((ApplicationImpl)app).getApplicationContext().getStartupPage().addJsLibrary("rwt-resources/" + SWT.getVersion() + "/nxmc-library.js");
 
       registerAllResources(app, "vncviewer");
+      registerAllResources(app, "terminal");
 
       app.addServiceHandler(DownloadServiceHandler.ID, new DownloadServiceHandler());
       app.addServiceHandler(VideoServiceHandler.ID, new VideoServiceHandler());

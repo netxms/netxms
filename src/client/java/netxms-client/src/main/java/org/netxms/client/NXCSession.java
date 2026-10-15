@@ -15710,6 +15710,59 @@ public class NXCSession
    }
 
    /**
+    * Setup interactive SSH terminal session to given node. SSH session is established by node's SSH proxy agent and PTY data is
+    * relayed over TCP proxy channel, so returned proxy object is used in the same way as for TCP proxy: raw terminal input is
+    * written to its output stream, terminal output is read from its input stream, and it should be disposed with
+    * TcpProxy.close() call when no longer needed.
+    *
+    * @param nodeId target node ID
+    * @param login SSH login name or null to use credentials stored in node properties
+    * @param password SSH password (ignored if login is null)
+    * @param keyId ID of server-side SSH key pair to use for authentication or 0 (ignored if login is null)
+    * @param terminalType terminal type for PTY (for example "xterm"); server uses device driver default if null or empty
+    * @param columns initial PTY width in columns
+    * @param rows initial PTY height in rows
+    * @return TCP proxy object representing SSH terminal session
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public TcpProxy setupSshTerminal(long nodeId, String login, String password, int keyId, String terminalType, int columns, int rows) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SETUP_SSH_TERMINAL);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      if (login != null)
+      {
+         msg.setField(NXCPCodes.VID_USER_NAME, login);
+         msg.setField(NXCPCodes.VID_PASSWORD, (password != null) ? password : "");
+         msg.setFieldInt32(NXCPCodes.VID_SSH_KEY_ID, keyId);
+      }
+      if ((terminalType != null) && !terminalType.isEmpty())
+         msg.setField(NXCPCodes.VID_TERMINAL_TYPE, terminalType);
+      msg.setFieldInt32(NXCPCodes.VID_WIDTH, columns);
+      msg.setFieldInt32(NXCPCodes.VID_HEIGHT, rows);
+      return setupTcpProxyInternal(msg);
+   }
+
+   /**
+    * Change PTY size of SSH terminal session created by setupSshTerminal().
+    *
+    * @param proxy proxy object returned by setupSshTerminal()
+    * @param columns new PTY width in columns
+    * @param rows new PTY height in rows
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void resizeSshTerminal(TcpProxy proxy, int columns, int rows) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESIZE_SSH_CHANNEL);
+      msg.setFieldInt32(NXCPCodes.VID_CHANNEL_ID, proxy.getChannelId());
+      msg.setFieldInt32(NXCPCodes.VID_WIDTH, columns);
+      msg.setFieldInt32(NXCPCodes.VID_HEIGHT, rows);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Close TCP proxy channel.
     *
     * @param channelId proxy channel ID

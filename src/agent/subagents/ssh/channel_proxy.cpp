@@ -177,7 +177,13 @@ void SSHChannelProxy::readerThreadInternal()
          }
          break;
       }
-      // nbytes == 0 means timeout, continue loop
+      else if (ssh_channel_is_eof(m_sshChannel))
+      {
+         // libssh returns 0 both on timeout and at EOF; remote side closed the channel (e.g. shell exit)
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u reached end of stream"), m_channelId);
+         break;
+      }
+      // nbytes == 0 without EOF means timeout, continue loop
    }
 
    // Notify server of channel closure
@@ -230,8 +236,22 @@ void SSHChannelProxy::writeToChannel(const BYTE *data, size_t size)
 }
 
 /**
+ * Change PTY size of the SSH channel
+ */
+void SSHChannelProxy::resize(int columns, int rows)
+{
+   if (m_sshChannel != nullptr && m_running)
+   {
+      if (ssh_channel_change_pty_size(m_sshChannel, columns, rows) != SSH_OK)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u PTY resize to %dx%d failed"), m_channelId, columns, rows);
+      }
+   }
+}
+
+/**
  * Handle SSH channel command from server
- * Called for CMD_SETUP_SSH_CHANNEL, CMD_SSH_CHANNEL_DATA, CMD_CLOSE_SSH_CHANNEL
+ * Called for CMD_SETUP_SSH_CHANNEL, CMD_SSH_CHANNEL_DATA, CMD_RESIZE_SSH_CHANNEL, CMD_CLOSE_SSH_CHANNEL
  * For binary messages (CMD_SSH_CHANNEL_DATA), response will be nullptr
  */
 bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
@@ -265,6 +285,14 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
             if (terminalType[0] == 0)
                strcpy(terminalType, "vt100");
 
+            // PTY size; 200x24 if not provided by server (wide enough for parsing long output lines)
+            int columns = request->getFieldAsInt32(VID_WIDTH);
+            int rows = request->getFieldAsInt32(VID_HEIGHT);
+            if ((columns < 1) || (columns > 1024))
+               columns = 200;
+            if ((rows < 1) || (rows > 1024))
+               rows = 24;
+
             // Get or create SSH session - always create new session for interactive channels
             // because some devices (like Cisco) don't support multiple channels per session
             SSHSession *sshSession = AcquireSession(addr, port, user, password, keys, true);
@@ -278,7 +306,7 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
             }
 
             // Open interactive channel
-            ssh_channel channel = sshSession->openInteractiveChannel(terminalType);
+            ssh_channel channel = sshSession->openInteractiveChannel(terminalType, columns, rows);
             if (channel == nullptr)
             {
                TCHAR ipAddrText[64];
@@ -313,6 +341,34 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
             else
             {
                nxlog_debug_tag(DEBUG_TAG, 6, _T("CMD_SSH_CHANNEL_DATA: channel %u not found"), channelId);
+            }
+            return true;
+         }
+
+      case CMD_RESIZE_SSH_CHANNEL:
+         {
+            if (response == nullptr)
+               return false;
+
+            uint32_t channelId = request->getFieldAsUInt32(VID_CHANNEL_ID);
+            int columns = request->getFieldAsInt32(VID_WIDTH);
+            int rows = request->getFieldAsInt32(VID_HEIGHT);
+            if ((columns < 1) || (columns > 1024) || (rows < 1) || (rows > 1024))
+            {
+               response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
+               return true;
+            }
+
+            SSHChannelProxy *proxy = FindSSHChannelProxy(channelId);
+            if (proxy != nullptr)
+            {
+               proxy->resize(columns, rows);
+               response->setField(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("CMD_RESIZE_SSH_CHANNEL: channel %u not found"), channelId);
+               response->setField(VID_RCC, ERR_INVALID_OBJECT);
             }
             return true;
          }

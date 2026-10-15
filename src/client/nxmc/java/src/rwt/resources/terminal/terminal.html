@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <title>SSH Terminal</title>
+   <link rel="stylesheet" href="xterm.css">
+   <style>
+      html, body { height: 100%; margin: 0; padding: 0; background: #000000; overflow: hidden; }
+      #terminal { position: absolute; top: 0; left: 0; right: 0; bottom: 0; padding: 2px; }
+   </style>
+</head>
+<body>
+   <div id="terminal"></div>
+   <script src="xterm.js"></script>
+   <script src="addon-fit.js"></script>
+   <script>
+      (function() {
+         var path = new URLSearchParams(window.location.search).get("path");
+         var term = new Terminal({ cursorBlink: true, scrollback: 10000, fontSize: 14, fontFamily: "Consolas, 'DejaVu Sans Mono', 'Liberation Mono', monospace" });
+         var fitAddon = new FitAddon.FitAddon();
+         term.loadAddon(fitAddon);
+         term.open(document.getElementById("terminal"));
+         fitAddon.fit();
+         term.focus();
+
+         var ws = new WebSocket(((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/" + path);
+         ws.binaryType = "arraybuffer";
+         var encoder = new TextEncoder();
+         var closed = false;
+
+         function sendControl(msg)
+         {
+            if (ws.readyState === WebSocket.OPEN)
+               ws.send(JSON.stringify(msg));
+         }
+
+         ws.onopen = function() {
+            sendControl({ type: "init", cols: term.cols, rows: term.rows });
+         };
+         ws.onmessage = function(event) {
+            if (typeof event.data === "string")
+            {
+               var msg = JSON.parse(event.data);
+               if (msg.type === "error")
+                  term.write("\r\n\x1b[31m*** " + msg.message + " ***\x1b[0m\r\n");
+               else if (msg.type === "closed")
+               {
+                  closed = true;
+                  term.write("\r\n\x1b[33m*** Connection closed ***\x1b[0m\r\n");
+               }
+            }
+            else
+            {
+               term.write(new Uint8Array(event.data));
+            }
+         };
+         ws.onclose = function() {
+            if (!closed)
+            {
+               closed = true;
+               term.write("\r\n\x1b[33m*** Connection closed ***\x1b[0m\r\n");
+            }
+         };
+         ws.onerror = function() {
+            term.write("\r\n\x1b[31m*** Websocket error ***\x1b[0m\r\n");
+         };
+
+         term.onData(function(data) {
+            if (ws.readyState === WebSocket.OPEN)
+               ws.send(encoder.encode(data));
+         });
+
+         window.addEventListener("resize", function() {
+            fitAddon.fit();
+            sendControl({ type: "resize", cols: term.cols, rows: term.rows });
+         });
+      })();
+   </script>
+</body>
+</html>

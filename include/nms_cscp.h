@@ -271,6 +271,8 @@ __PACK_END__
 #define CMD_GET_PARAMETER                 0x0041
 #define CMD_GET_LIST                      0x0042
 #define CMD_ACTION                        0x0043
+#define CMD_RESIZE_SSH_CHANNEL            0x0044
+#define CMD_SETUP_SSH_TERMINAL            0x0045
 #define CMD_GET_ALL_ALARMS                0x0046
 #define CMD_GET_ALARM_COMMENTS            0x0047
 #define CMD_ACK_ALARM                     0x0048

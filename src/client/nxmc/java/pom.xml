@@ -343,6 +343,22 @@
                <version>1.17</version>
                <scope>${lib.scope}</scope>
             </dependency>
+            <dependency>
+               <groupId>org.netxms</groupId>
+               <artifactId>swt-terminal</artifactId>
+               <version>1.1.200</version>
+               <scope>${lib.scope}</scope>
+               <exclusions>
+                  <exclusion>
+                     <groupId>org.eclipse.platform</groupId>
+                     <artifactId>org.eclipse.swt</artifactId>
+                  </exclusion>
+                  <exclusion>
+                     <groupId>org.eclipse.platform</groupId>
+                     <artifactId>org.eclipse.swt.gtk.linux.x86_64</artifactId>
+                  </exclusion>
+               </exclusions>
+            </dependency>
          </dependencies>
          <build>
             <plugins>
@@ -647,6 +663,12 @@
          <groupId>com.google.code.gson</groupId>
          <artifactId>gson</artifactId>
          <version>2.13.1</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
+         <groupId>com.github.mwiede</groupId>
+         <artifactId>jsch</artifactId>
+         <version>2.28.8</version>
          <scope>${lib.scope}</scope>
       </dependency>
       <dependency>

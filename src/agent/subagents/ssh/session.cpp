@@ -364,7 +364,7 @@ bool SSHSession::execute(const char *command, StringList *output, ActionExecutio
  *
  * @param terminalType Terminal type for PTY (e.g., "xterm", "vt100", "dumb")
  */
-ssh_channel SSHSession::openInteractiveChannel(const char *terminalType)
+ssh_channel SSHSession::openInteractiveChannel(const char *terminalType, int columns, int rows)
 {
    if (!isConnected())
    {
@@ -388,9 +388,8 @@ ssh_channel SSHSession::openInteractiveChannel(const char *terminalType)
    }
 
    // Request PTY (pseudo-terminal) with terminal type and size
-   // 200 columns for long output lines, 24 rows
    const char *term = (terminalType != nullptr && terminalType[0] != '\0') ? terminalType : "vt100";
-   if (ssh_channel_request_pty_size(channel, term, 200, 24) != SSH_OK)
+   if (ssh_channel_request_pty_size(channel, term, columns, rows) != SSH_OK)
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("SSHSession::openInteractiveChannel: PTY request failed on %s:%d (%hs)"),
                       m_addr.toString().cstr(), m_port, ssh_get_error(m_session));
@@ -409,8 +408,8 @@ ssh_channel SSHSession::openInteractiveChannel(const char *terminalType)
       return nullptr;
    }
 
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("SSHSession::openInteractiveChannel: interactive channel opened on %s:%d (term=%hs)"),
-                   m_addr.toString().cstr(), m_port, term);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("SSHSession::openInteractiveChannel: interactive channel opened on %s:%d (term=%hs, size=%dx%d)"),
+                   m_addr.toString().cstr(), m_port, term, columns, rows);
    m_lastAccess = time(nullptr);
    return channel;
 }

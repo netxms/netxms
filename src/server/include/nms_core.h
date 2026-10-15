@@ -411,12 +411,14 @@ struct TcpProxy
    uint32_t agentChannelId;
    uint32_t clientChannelId;
    uint32_t nodeId;
+   bool sshChannel;  // true if agent side is an interactive SSH channel (CMD_SSH_CHANNEL_*) instead of a TCP proxy channel
 
-   TcpProxy(const shared_ptr<AgentConnectionEx>& c, uint32_t aid, uint32_t cid, uint32_t nid) : agentConnection(c)
+   TcpProxy(const shared_ptr<AgentConnectionEx>& c, uint32_t aid, uint32_t cid, uint32_t nid, bool ssh) : agentConnection(c)
    {
       agentChannelId = aid;
       clientChannelId = cid;
       nodeId = nid;
+      sshChannel = ssh;
    }
 };
 
@@ -933,6 +935,10 @@ private:
    void unbindAgentTunnel(const NXCPMessage& request);
    void setupTcpProxy(const NXCPMessage& request);
    void closeTcpProxy(const NXCPMessage& request);
+   void setupSshTerminal(const NXCPMessage& request);
+   void resizeSshTerminal(const NXCPMessage& request);
+   void onSshTerminalData(uint32_t clientChannelId, const void *data, size_t size, bool errorIndicator);
+   void sendTcpProxyDataToClient(uint32_t clientChannelId, const void *data, size_t size, bool errorIndicator);
    void startRealTimeDciRead(const NXCPMessage& request);
    void stopRealTimeDciRead(const NXCPMessage& request);
    void expandMacros(const NXCPMessage& request);
