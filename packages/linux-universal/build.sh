@@ -3,13 +3,13 @@
 # Build universal Linux agent packages inside the builder container.
 #
 # Expects a clean NetXMS source tree mounted at /src and writes results to /out:
-#   nxagent-<version>-<suffix>.apkg      self-extracting installer (dynamic variant)
-#   nxagent-<version>-<suffix>.tar.gz    bin/ and lib/ of the dynamic variant
-#   nxagentd-<version>-<suffix>-static   single static binary (depends on glibc only)
+#   nxagent-<version>-<suffix>.apkg         self-extracting installer (dynamic variant)
+#   nxagent-<version>-<suffix>.tar.gz       bin/ and lib/ of the dynamic variant
+#   nxagentd-<version>-<suffix>-static.gz   gzip-compressed static binary (depends on glibc only)
 #
 # Environment:
 #   VARIANTS      "dynamic static" (default) or a subset
-#   SUFFIX        package suffix, default Linux-<machine>
+#   SUFFIX        package suffix, default linux-<machine>
 #   CONFIGURE_EXTRA  extra arguments passed to both configure runs
 #   STATIC_SUBAGENTS  --with-static-subagents-list value for the static variant
 #
@@ -21,7 +21,7 @@ OUT=/out
 PREFIX=/opt/netxms
 NP=$(nproc)
 VARIANTS="${VARIANTS:-dynamic static}"
-SUFFIX="${SUFFIX:-Linux-$(uname -m)}"
+SUFFIX="${SUFFIX:-linux-$(uname -m)}"
 CONFIGURE_EXTRA="${CONFIGURE_EXTRA:-}"
 STATIC_SUBAGENTS="${STATIC_SUBAGENTS:-default}"
 
@@ -73,6 +73,7 @@ build_static()
    echo "=== Static variant: configure"
    ./configure --prefix=$PREFIX --with-static-agent --with-static-subagents-list="$STATIC_SUBAGENTS" $DEPS \
       --disable-lmsensors --disable-lldpd --enable-release-build $CONFIGURE_EXTRA
+   echo "=== Static variant: subagents linked into nxagentd: $(sed -n 's/^STATIC_SUBAGENT_LIST = //p' src/agent/core/Makefile)"
    echo "=== Static variant: make"
    make -j$NP
    echo "=== Static variant: final link"
@@ -82,7 +83,7 @@ build_static()
    echo "=== Static variant: verifying portability"
    $CHECK_ELF --libc-only src/agent/core/nxagentd
 
-   cp src/agent/core/nxagentd $OUT/nxagentd-$VERSION-$SUFFIX-static
+   gzip -9 -n -c src/agent/core/nxagentd > $OUT/nxagentd-$VERSION-$SUFFIX-static.gz
 }
 
 first=yes

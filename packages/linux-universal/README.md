@@ -5,7 +5,8 @@ Container-based build of the two universal Linux agent variants:
 * **dynamic** — `nxagentd` plus shared libraries and subagents, packed as
   `nxagent-<version>-<suffix>.apkg` (self-extracting installer) and `.tar.gz`
 * **static** — single `nxagentd` binary that depends on glibc only, linked by
-  `src/agent/core/static_link.sh`
+  `src/agent/core/static_link.sh` and shipped gzip-compressed as
+  `nxagentd-<version>-<suffix>-static.gz`
 
 The image is based on PyPA manylinux (CentOS 7 userland, glibc 2.17, GCC 10 from
 devtoolset), so the output runs on any distribution with glibc 2.17 or newer. All
@@ -34,7 +35,7 @@ Environment variables accepted by `build.sh` (pass with `-e`):
 | Variable | Default | Meaning |
 |---|---|---|
 | `VARIANTS` | `dynamic static` | which variants to build |
-| `SUFFIX` | `Linux-<uname -m>` | package name suffix |
+| `SUFFIX` | `linux-<uname -m>` | package name suffix |
 | `CONFIGURE_EXTRA` | | extra `configure` arguments for both variants |
 | `STATIC_SUBAGENTS` | `default` | `--with-static-subagents-list` for the static variant |
 
@@ -54,7 +55,7 @@ docker run --rm --platform linux/arm64 --user $(id -u):$(id -g) \
 
 32-bit x86 builds use the i686 image. It runs natively on any x86_64 host; the
 `manylinux-entrypoint` wrapper switches to the 32-bit personality so `uname -m`
-reports `i686` and the package suffix becomes `Linux-i686`.
+reports `i686` and the package suffix becomes `linux-i686`.
 
 ```sh
 docker build --platform linux/386 \
