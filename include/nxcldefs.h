@@ -1143,6 +1143,17 @@ enum HistoricalDataType
 };
 
 /**
+ * DCI history export: request flags, output formats, and downloadable file types
+ */
+#define DATA_EXPORT_FLAG_ANONYMIZE     0x0001
+#define DATA_EXPORT_FLAG_KEEP_MAPPING  0x0002
+
+#define DATA_EXPORT_FORMAT_CSV         0
+
+#define DATA_EXPORT_FILE_ARCHIVE       0
+#define DATA_EXPORT_FILE_MAPPING       1
+
+/**
  * DCI flags
  */
 #define DCF_DETECT_ANOMALIES_IFOREST ((uint32_t)0x000001)

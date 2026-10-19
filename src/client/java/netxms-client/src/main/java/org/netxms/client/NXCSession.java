@@ -123,6 +123,9 @@ import org.netxms.client.datacollection.DciPushData;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.client.datacollection.DataExportMetric;
+import org.netxms.client.datacollection.DataExportRequest;
+import org.netxms.client.datacollection.DataExportResult;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
@@ -17099,6 +17102,69 @@ public class NXCSession
       }
 
       return list;
+   }
+
+   /**
+    * Resolve metrics that given export request would select, without running the export.
+    *
+    * @param request export request (format and anonymization options are ignored)
+    * @return list of metrics the export would contain
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<DataExportMetric> getDataExportMetrics(DataExportRequest request) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_DATA_EXPORT_METRICS);
+      request.fillMessage(msg);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
+      List<DataExportMetric> metrics = new ArrayList<>(count);
+      long fieldId = NXCPCodes.VID_ITEM_LIST;
+      for(int i = 0; i < count; i++, fieldId += 10)
+         metrics.add(new DataExportMetric(response, fieldId));
+      return metrics;
+   }
+
+   /**
+    * Start export of DCI history as background task on server. Use <code>getBackgroundTaskInfo()</code> to track progress and
+    * <code>downloadDataExportFile()</code> to retrieve produced files once the task is completed.
+    *
+    * @param request export request
+    * @return background task ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public long startDataExport(DataExportRequest request) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_DCI_DATA);
+      request.fillMessage(msg);
+      sendMessage(msg);
+      return waitForRCC(msg.getMessageId()).getFieldAsInt64(NXCPCodes.VID_TASK_ID);
+   }
+
+   /**
+    * Download file produced by completed DCI history export. Server removes export files once every produced file has
+    * been downloaded, so each file can be retrieved only once.
+    *
+    * @param taskId export task ID (as returned by <code>startDataExport()</code>)
+    * @param mappingFile true to download pseudonym mapping file instead of the archive
+    * @param timeout file transfer timeout (since arrival of last file part) in milliseconds
+    * @return received file with export statistics
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public DataExportResult downloadDataExportFile(long taskId, boolean mappingFile, int timeout) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_DATA_EXPORT_FILE);
+      msg.setFieldInt64(NXCPCodes.VID_TASK_ID, taskId);
+      msg.setFieldInt16(NXCPCodes.VID_FILE_TYPE, mappingFile ? 1 : 0);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      ReceivedFile file = waitForFile(msg.getMessageId(), timeout);
+      if (file.getStatus() != ReceivedFile.SUCCESS)
+         throw new NXCException((file.getStatus() == ReceivedFile.TIMEOUT) ? RCC.TIMEOUT : RCC.IO_ERROR);
+      return new DataExportResult(response, file.getFile());
    }
 
    /**

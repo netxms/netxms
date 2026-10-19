@@ -49,6 +49,7 @@ crypto.cert	Certificate related messages
 crypto.crl	CRL
 
 darwin		MacOS platform subagent messages
+dataexport	DCI history export (tagged DCI export tool)
 dbquery		DBquery subagent messages
 dload			DLL/shared library load unload information
 

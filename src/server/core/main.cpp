@@ -1542,6 +1542,7 @@ retry_db_lock:
    if (!LoadNetXMSModules())
       return false;   // Mandatory module not loaded
    InitializeDeviceBackupInterface();
+   InitDataExport();
    InitializeCloudConnectors();
    InitializeTrafficConnectors();
 

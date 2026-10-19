@@ -46,6 +46,7 @@ void TestScheduleFields();
 void TestScheduleDayOfWeek();
 void TestScheduleSeconds();
 void TestTimeZoneRule();
+void TestZipArchiveWriter();
 void TestWebSocketURLParsing();
 void TestWebSocketClient();
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
@@ -3997,6 +3998,7 @@ int main(int argc, char *argv[])
    TestScheduleDayOfWeek();
    TestScheduleSeconds();
    TestTimeZoneRule();
+   TestZipArchiveWriter();
 
    if (debug)
       nxlog_set_debug_level(9);

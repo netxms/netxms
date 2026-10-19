@@ -25,6 +25,7 @@ make -C src/server
 | `openapi.yaml` | OpenAPI 3.0 specification for all endpoints |
 | `alarms.cpp` | Alarm management endpoints |
 | `datacoll.cpp` | Data collection and history endpoints |
+| `data_export.cpp` | DCI history export (tagged DCIs to CSV-in-ZIP, background task, anonymization) |
 | `dcst.cpp` | DCI summary table endpoints |
 | `epp.cpp` | Event processing policy endpoints |
 | `events.cpp` | Event template endpoints |

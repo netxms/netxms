@@ -582,6 +582,9 @@ public class NXCPCodes
    public static final int CMD_MODIFY_AI_MEMORY_ENTRY = 0x0234;
    public static final int CMD_DELETE_AI_MEMORY_ENTRY = 0x0235;
    public static final int CMD_GET_AGENT_EFFECTIVE_CONFIG = 0x0236;
+   public static final int CMD_EXPORT_DCI_DATA = 0x0237;
+   public static final int CMD_GET_DCI_DATA_EXPORT_FILE = 0x0238;
+   public static final int CMD_GET_DCI_DATA_EXPORT_METRICS = 0x0239;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1659,6 +1662,8 @@ public class NXCPCodes
    public static final long VID_MEMORY_SCOPE = 1068;
    public static final long VID_SCOPE_ID = 1069;
    public static final long VID_NO_VALUE_OBJECT = 1070;
+   public static final long VID_FILE_TYPE = 1071;
+   public static final long VID_DATA_FORMAT = 1072;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;
@@ -1668,6 +1673,7 @@ public class NXCPCodes
    public static final long VID_TRANSLATION_LIST_BASE = 0x68000000L;
    public static final long VID_DISABLED_EXTRAS_BASE = 0x58000000L;
    public static final long VID_RESOURCE_TAG_LIST_BASE = 0x7D000000L;
+   public static final long VID_TAG_LIST_BASE = 0x7E000000L;
    public static final long VID_DELETED_RULE_LIST_BASE = 0x7A000000L;
    public static final long VID_CONFLICT_LIST_BASE = 0x7B000000L;
    public static final long VID_RULE_VERSION_LIST_BASE = 0x7C000000L;

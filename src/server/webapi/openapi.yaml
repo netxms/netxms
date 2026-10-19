@@ -88,6 +88,8 @@ tags:
   - name: Traffic Observers
     description: Traffic connector information
   - name: Logs
+  - name: Data Export
+    description: Export of tagged DCI history for external analysis
     description: Server-side log discovery and querying
   - name: Background Tasks
     description: Status of long-running server-side tasks started by other endpoints
@@ -2008,6 +2010,174 @@ paths:
         - BearerAuth: []
       tags:
         - Background Tasks
+  /v1/data-export:
+    post:
+      operationId: startDataExport
+      summary: Start DCI history export
+      description: >-
+        Start a server-side export of DCI history for metrics selected either by system tag patterns under a root object
+        or by an explicit DCI list. The export runs as a background task; poll GET /v1/data-export/{task-id} for progress
+        and download the produced archive from GET /v1/data-export/{task-id}/file once the task is completed. The archive
+        is a ZIP with metrics.csv (one row per metric, including the classifier tag and a stable metric identifier),
+        data.csv (one row per sample, with provenance attributes) and manifest.json. With "anonymize" set, object names
+        are replaced with class-based pseudonyms and metric identifiers with HMAC-derived pseudonyms that stay stable across
+        exports from the same server; "keepMapping" additionally produces a pseudonym-to-identity mapping file that is
+        downloaded separately and is never part of the archive. Requires read access to the root object and to every
+        exported DCI. Every export is recorded in the audit log.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataExportRequest'
+      responses:
+        '201':
+          description: Export task started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskId:
+                    type: integer
+                    format: int64
+                    description: Background task ID
+        '400':
+          description: Invalid request (bad time period, unknown tier, unsupported format, no selection)
+        '401':
+          description: Unauthorized
+        '403':
+          description: No read access to root object
+        '404':
+          description: Root object not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Export
+  /v1/data-export/metrics:
+    post:
+      operationId: getDataExportMetrics
+      summary: Preview DCI history export selection
+      description: >-
+        Resolve the metrics that the export request given in the body would select, without running the export. The
+        result lists each metric with its classifier tag, owner, unit, origin and the history tier that would actually
+        be read. Use it to let the operator review and narrow the selection, then pass the chosen metrics to
+        POST /v1/data-export as "dciList". Format and anonymization fields of the request are ignored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataExportRequest'
+      responses:
+        '200':
+          description: Selected metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DataExportMetric'
+                  skippedCount:
+                    type: integer
+                    description: Number of matching DCIs excluded as non-numeric, table, or inaccessible
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: No read access to root object
+        '404':
+          description: Root object not found
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Export
+  /v1/data-export/{task-id}:
+    get:
+      operationId: getDataExportState
+      summary: Get DCI history export state
+      description: >-
+        Retrieve state and progress of an export task started by POST /v1/data-export. Export statistics and archive size
+        are included once the task is completed. Only the user who started the export can query it.
+      parameters:
+        - name: task-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Task ID returned by POST /v1/data-export
+      responses:
+        '200':
+          description: Export state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExportState'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Export was started by another user
+        '404':
+          description: Export task does not exist or its files have already been removed
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Export
+  /v1/data-export/{task-id}/file:
+    get:
+      operationId: downloadDataExportFile
+      summary: Download DCI history export file
+      description: >-
+        Download the archive (type=archive, default) or the pseudonym mapping file (type=mapping) produced by a completed
+        export. Produced files are removed from the server once every produced file has been downloaded, or one hour
+        after completion, whichever comes first, so each file can be downloaded only once.
+      parameters:
+        - name: task-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Task ID returned by POST /v1/data-export
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - archive
+              - mapping
+            default: archive
+          description: File to download
+      responses:
+        '200':
+          description: File content; Content-Disposition carries a suggested file name
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized
+        '403':
+          description: Export was started by another user
+        '404':
+          description: Export task does not exist, file was not produced, or files have already been removed
+        '409':
+          description: Export is not completed yet
+      security:
+        - BearerAuth: []
+      tags:
+        - Data Export
   /v1/alarm-categories:
     get:
       operationId: listAlarmCategories
@@ -17196,6 +17366,147 @@ components:
         wsUrl:
           type: string
           description: WebSocket URL path to connect for streaming output
+    DataExportRequest:
+      type: object
+      properties:
+        rootObjectId:
+          type: integer
+          description: Root of the object subtree searched for tagged DCIs; required unless dciList is given
+        tagPatterns:
+          type: array
+          items:
+            type: string
+          description: Glob patterns (* and ? wildcards) matched against DCI system tag, e.g. "eed.*"
+          example: ["eed.*", "power.*", "cooling.*", "env.*"]
+        dciList:
+          type: array
+          description: Explicit metric selection; when not empty, rootObjectId and tagPatterns are ignored
+          items:
+            type: object
+            required:
+              - ownerId
+              - dciId
+            properties:
+              ownerId:
+                type: integer
+                description: Object ID of the DCI owner
+              dciId:
+                type: integer
+                description: DCI ID
+        timeFrom:
+          description: Start of export period (ISO 8601 string or UNIX time in seconds)
+          oneOf:
+            - type: string
+              format: date-time
+            - type: integer
+        timeTo:
+          description: End of export period, inclusive (ISO 8601 string or UNIX time in seconds)
+          oneOf:
+            - type: string
+              format: date-time
+            - type: integer
+        tier:
+          type: string
+          enum:
+            - raw
+            - hourly
+            - daily
+          default: raw
+          description: >-
+            History tier to export. Aggregated tiers produce one row per bucket with average in "value" and additional
+            min, max and count columns; metrics for which the requested tier is not available fall back to raw samples.
+        format:
+          type: string
+          enum:
+            - csv
+          default: csv
+          description: Output format
+        anonymize:
+          type: boolean
+          default: false
+          description: Replace object names with class-based pseudonyms and metric identifiers with stable pseudonyms
+        keepMapping:
+          type: boolean
+          default: false
+          description: Produce pseudonym mapping file (anonymized exports only), downloadable with type=mapping
+      required:
+        - timeFrom
+        - timeTo
+    DataExportMetric:
+      type: object
+      properties:
+        ownerId:
+          type: integer
+          description: Object ID of the DCI owner
+        dciId:
+          type: integer
+          description: DCI ID
+        tag:
+          type: string
+          description: System (classifier) tag
+        name:
+          type: string
+          description: DCI name
+        description:
+          type: string
+          description: DCI description
+        unit:
+          type: string
+          description: Unit name
+        origin:
+          type: string
+          description: Data origin name (e.g. snmp, nxagent, push, computed)
+        dataType:
+          type: string
+          description: Transformed data type name
+        tier:
+          type: string
+          enum:
+            - raw
+            - hourly
+            - daily
+          description: History tier that export will read for this metric
+    DataExportState:
+      type: object
+      properties:
+        taskId:
+          type: integer
+          format: int64
+          description: Background task ID
+        state:
+          type: string
+          enum:
+            - pending
+            - running
+            - completed
+            - failed
+          description: Current task state
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Completion percentage
+        failureReason:
+          type: string
+          nullable: true
+          description: Failure description for failed tasks
+        metricCount:
+          type: integer
+          description: Number of exported metrics (completed tasks only)
+        skippedCount:
+          type: integer
+          description: Number of selected DCIs skipped as non-numeric or inaccessible (completed tasks only)
+        sampleCount:
+          type: integer
+          format: int64
+          description: Number of sample rows in data.csv (completed tasks only)
+        archiveSize:
+          type: integer
+          format: int64
+          description: Archive size in bytes (completed tasks only)
+        mappingAvailable:
+          type: boolean
+          description: True if a pseudonym mapping file was produced (completed tasks only)
     BackgroundTask:
       type: object
       properties:

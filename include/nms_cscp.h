@@ -770,6 +770,9 @@ __PACK_END__
 #define CMD_MODIFY_AI_MEMORY_ENTRY        0x0234
 #define CMD_DELETE_AI_MEMORY_ENTRY        0x0235
 #define CMD_GET_AGENT_EFFECTIVE_CONFIG    0x0236
+#define CMD_EXPORT_DCI_DATA               0x0237
+#define CMD_GET_DCI_DATA_EXPORT_FILE      0x0238
+#define CMD_GET_DCI_DATA_EXPORT_METRICS   0x0239
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1855,6 +1858,8 @@ __PACK_END__
 #define VID_MEMORY_SCOPE            ((uint32_t)1068)
 #define VID_SCOPE_ID                ((uint32_t)1069)
 #define VID_NO_VALUE_OBJECT         ((uint32_t)1070)
+#define VID_FILE_TYPE               ((uint32_t)1071)
+#define VID_DATA_FORMAT             ((uint32_t)1072)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)
@@ -1862,6 +1867,7 @@ __PACK_END__
 // Base values for EPP optimistic concurrency
 #define VID_DELETED_RULE_LIST_BASE  ((uint32_t)0x7A000000)
 #define VID_RESOURCE_TAG_LIST_BASE  ((uint32_t)0x7D000000)
+#define VID_TAG_LIST_BASE           ((uint32_t)0x7E000000)
 #define VID_CONFLICT_LIST_BASE      ((uint32_t)0x7B000000)
 #define VID_RULE_VERSION_LIST_BASE  ((uint32_t)0x7C000000)
 

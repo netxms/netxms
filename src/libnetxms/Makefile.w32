@@ -97,6 +97,7 @@ SOURCES = \
 	wcslcpy.cpp \
 	windll.cpp \
 	xml.cpp \
+	zipwriter.cpp \
 	ztools.cpp
 
 # On Vista+ Windows QSort maps to the CRT qsort_s (see nms_util.h); the XP build lacks

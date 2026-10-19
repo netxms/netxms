@@ -123,6 +123,10 @@ int H_DeviceConfigBackups(Context *context);
 int H_DeviceConfigBackupDetails(Context *context);
 int H_DeviceConfigRestore(Context *context);
 int H_DataCollectionHistory(Context *context);
+int H_DataExportFile(Context *context);
+int H_DataExportMetrics(Context *context);
+int H_DataExportStart(Context *context);
+int H_DataExportState(Context *context);
 int H_DataCollectionTableValue(Context *context);
 int H_PerformanceViewDCIs(Context *context);
 int H_DataCollectionConfigList(Context *context);
@@ -496,6 +500,18 @@ static bool InitModule(Config *config)
       .build();
    RouteBuilder("v1/background-tasks/:task-id")
       .GET(H_BackgroundTaskDetails)
+      .build();
+   RouteBuilder("v1/data-export")
+      .POST(H_DataExportStart)
+      .build();
+   RouteBuilder("v1/data-export/metrics")
+      .POST(H_DataExportMetrics)
+      .build();
+   RouteBuilder("v1/data-export/:task-id")
+      .GET(H_DataExportState)
+      .build();
+   RouteBuilder("v1/data-export/:task-id/file")
+      .GET(H_DataExportFile)
       .build();
    RouteBuilder("v1/alarm-categories")
       .GET(H_AlarmCategories)

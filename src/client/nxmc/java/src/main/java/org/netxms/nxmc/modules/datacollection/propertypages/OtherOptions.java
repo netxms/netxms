@@ -40,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class OtherOptions extends AbstractDCIPropertyPage
 {
-   private static final String[] TAGS = {
+   public static final String[] TAGS = {
       "iface.inbound.bits", "iface.inbound.bytes", "iface.inbound.util", "iface.outbound.bits", "iface.outbound.bytes", "iface.outbound.util", "iface.speed",
       "eed.edc", "eed.eit", "eed.win", "eed.reuse", "eed.ren",
       "power.feed", "power.in", "power.out", "power.gen",

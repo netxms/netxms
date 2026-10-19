@@ -1015,6 +1015,9 @@ private:
    void getBusinessServiceTickets(const NXCPMessage& request);
    void executeSshCommand(const NXCPMessage& request);
    void findDci(const NXCPMessage& request);
+   void exportDciData(const NXCPMessage& request);
+   void getDciDataExportFile(const NXCPMessage& request);
+   void getDciDataExportMetrics(const NXCPMessage& request);
    void getEventRefences(const NXCPMessage& request);
    void readMaintenanceJournal(const NXCPMessage& request);
    void writeMaintenanceJournal(const NXCPMessage& request);
@@ -1451,6 +1454,75 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareTieredDataSelect(DB_HANDLE hdb, uint32_t n
          DciAggregationFunction function, uint32_t maxRows, const wchar_t *condition);
 DciTier NXCORE_EXPORTABLE ResolveDciTier(DciTier requested, const DCObject& dci, int dciType, int64_t timeFrom, int64_t timeTo,
          uint32_t runtimeFlags, int autoSelectThreshold);
+
+/**
+ * DCI history export request
+ */
+struct NXCORE_EXPORTABLE DataExportRequest
+{
+   uint32_t rootObjectId;                                // Root of object subtree to search for tagged DCIs (ignored when dciList is not empty)
+   StringList tagPatterns;                               // Glob patterns matched against DCI system tag
+   std::vector<std::pair<uint32_t, uint32_t>> dciList;   // Explicit (owner object ID, DCI ID) list; takes precedence over tag patterns
+   int64_t timeFrom;                                     // Milliseconds since epoch, inclusive
+   int64_t timeTo;                                       // Milliseconds since epoch, inclusive
+   DciTier tier;                                         // DCI_TIER_RAW, DCI_TIER_HOURLY, or DCI_TIER_DAILY
+   int format;                                           // DATA_EXPORT_FORMAT_*
+   bool anonymize;
+   bool keepMapping;                                     // Produce pseudonym mapping file (anonymized exports only)
+
+   DataExportRequest()
+   {
+      rootObjectId = 0;
+      timeFrom = 0;
+      timeTo = 0;
+      tier = DCI_TIER_RAW;
+      format = DATA_EXPORT_FORMAT_CSV;
+      anonymize = false;
+      keepMapping = false;
+   }
+
+   DataExportRequest(const NXCPMessage& msg);
+};
+
+/**
+ * Metric selected by export request (preview of what an export would contain)
+ */
+struct NXCORE_EXPORTABLE DataExportMetricInfo
+{
+   uint32_t ownerId;
+   uint32_t dciId;
+   MutableString tag;
+   MutableString name;
+   MutableString description;
+   MutableString unit;
+   int origin;
+   int dataType;
+   DciTier tier;     // Tier that will actually be read for this metric
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
+   json_t *toJson() const;
+};
+
+/**
+ * State of DCI history export (result of completed background task)
+ */
+struct DataExportInfo
+{
+   uint32_t userId;           // User who started export
+   MutableString archiveFile; // Full path to archive
+   MutableString mappingFile; // Full path to pseudonym mapping file (empty if not produced)
+   uint32_t metricCount;
+   uint32_t skippedCount;
+   uint64_t sampleCount;
+};
+
+class BackgroundTask;
+
+void InitDataExport();
+void NXCORE_EXPORTABLE ResolveDataExportSelection(const DataExportRequest& request, uint32_t userId, std::vector<DataExportMetricInfo>& metrics, uint32_t *skipped);
+shared_ptr<BackgroundTask> NXCORE_EXPORTABLE StartDataExport(const DataExportRequest& request, uint32_t userId);
+bool NXCORE_EXPORTABLE GetDataExportInfo(uint64_t taskId, DataExportInfo *info);
+void NXCORE_EXPORTABLE MarkDataExportFileDownloaded(uint64_t taskId, int fileType);
 
 /**
  * Functions

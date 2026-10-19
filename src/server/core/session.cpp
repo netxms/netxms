@@ -2121,6 +2121,15 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_FIND_DCI:
          findDci(*request);
          break;
+      case CMD_EXPORT_DCI_DATA:
+         exportDciData(*request);
+         break;
+      case CMD_GET_DCI_DATA_EXPORT_FILE:
+         getDciDataExportFile(*request);
+         break;
+      case CMD_GET_DCI_DATA_EXPORT_METRICS:
+         getDciDataExportMetrics(*request);
+         break;
       case CMD_GET_EVENT_REFERENCES:
          getEventRefences(*request);
          break;
@@ -19970,6 +19979,153 @@ void ClientSession::findDci(const NXCPMessage &request)
    }
 
    sendMessage(response);
+}
+
+/**
+ * Start export of DCI history (tagged DCIs under root object, or explicit DCI list) as background task.
+ *
+ * Called by:
+ * CMD_EXPORT_DCI_DATA
+ */
+void ClientSession::exportDciData(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   DataExportRequest exportRequest(request);
+   shared_ptr<NetObj> rootObject = FindObjectById(exportRequest.rootObjectId);
+   if ((rootObject == nullptr) && exportRequest.dciList.empty())
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+   else if ((rootObject != nullptr) && !rootObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_OBJECTS, false, rootObject->getId(), L"Access denied on DCI data export");
+   }
+   else if ((exportRequest.timeFrom < 0) || (exportRequest.timeTo <= exportRequest.timeFrom) ||
+            ((exportRequest.tier != DCI_TIER_RAW) && (exportRequest.tier != DCI_TIER_HOURLY) && (exportRequest.tier != DCI_TIER_DAILY)) ||
+            (exportRequest.format != DATA_EXPORT_FORMAT_CSV))
+   {
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+   }
+   else
+   {
+      shared_ptr<BackgroundTask> task = StartDataExport(exportRequest, m_userId);
+      if (task != nullptr)
+      {
+         wchar_t timeFrom[64], timeTo[64];
+         wchar_t *patterns = exportRequest.tagPatterns.join(L" ");
+         writeAuditLog(AUDIT_OBJECTS, true, (rootObject != nullptr) ? rootObject->getId() : 0,
+            L"DCI data export started (task " UINT64_FMT L"): root object \"%s\", %d explicit DCIs, tag patterns \"%s\", period %s - %s, tier %d%s",
+            task->getId(), (rootObject != nullptr) ? rootObject->getName() : L"", static_cast<int>(exportRequest.dciList.size()), patterns,
+            FormatTimestampMs(exportRequest.timeFrom, timeFrom), FormatTimestampMs(exportRequest.timeTo, timeTo),
+            static_cast<int>(exportRequest.tier), exportRequest.anonymize ? L", anonymized" : L"");
+         MemFree(patterns);
+         response.setField(VID_TASK_ID, task->getId());
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INTERNAL_ERROR);
+      }
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Resolve metrics that an export request would select (preview before export).
+ *
+ * Called by:
+ * CMD_GET_DCI_DATA_EXPORT_METRICS
+ */
+void ClientSession::getDciDataExportMetrics(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   DataExportRequest exportRequest(request);
+   shared_ptr<NetObj> rootObject = FindObjectById(exportRequest.rootObjectId);
+   if ((rootObject == nullptr) && exportRequest.dciList.empty())
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+   else if ((rootObject != nullptr) && !rootObject->checkAccessRights(m_userId, OBJECT_ACCESS_READ))
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else
+   {
+      std::vector<DataExportMetricInfo> metrics;
+      uint32_t skipped;
+      ResolveDataExportSelection(exportRequest, m_userId, metrics, &skipped);
+      uint32_t fieldId = VID_ITEM_LIST;
+      for(const DataExportMetricInfo& m : metrics)
+      {
+         m.fillMessage(&response, fieldId);
+         fieldId += 10;
+      }
+      response.setField(VID_NUM_ITEMS, static_cast<uint32_t>(metrics.size()));
+      response.setField(VID_NUM_RECORDS, skipped);
+      response.setField(VID_RCC, RCC_SUCCESS);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Send file produced by completed DCI data export to client. Response with RCC and export statistics is sent first,
+ * followed by file data under the same request ID.
+ *
+ * Called by:
+ * CMD_GET_DCI_DATA_EXPORT_FILE
+ */
+void ClientSession::getDciDataExportFile(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   uint64_t taskId = request.getFieldAsUInt64(VID_TASK_ID);
+   int fileType = request.getFieldAsInt16(VID_FILE_TYPE);
+
+   DataExportInfo info;
+   shared_ptr<BackgroundTask> task = GetBackgroundTask(taskId);
+   if ((task == nullptr) || !GetDataExportInfo(taskId, &info))
+   {
+      response.setField(VID_RCC, RCC_INVALID_TASK_ID);
+      sendMessage(response);
+      return;
+   }
+
+   if (info.userId != m_userId)
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_OBJECTS, false, 0, L"Access denied on downloading DCI data export produced by another user (task " UINT64_FMT L")", taskId);
+      sendMessage(response);
+      return;
+   }
+
+   const String& fileName = (fileType == DATA_EXPORT_FILE_MAPPING) ? info.mappingFile : info.archiveFile;
+   if ((task->getState() != BackgroundTaskState::COMPLETED) || fileName.isEmpty() || (_waccess(fileName, 0) != 0))
+   {
+      response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      sendMessage(response);
+      return;
+   }
+
+   response.setField(VID_RCC, RCC_SUCCESS);
+   response.setField(VID_NUM_ITEMS, info.metricCount);
+   response.setField(VID_NUM_RECORDS, info.sampleCount);
+   response.setField(VID_FILE_SIZE, static_cast<uint64_t>(FileSize(fileName)));
+   sendMessage(response);
+
+   if (sendFile(fileName, request.getId(), 0))
+   {
+      debugPrintf(5, L"getDciDataExportFile: file %s sent (task " UINT64_FMT L")", fileName.cstr(), taskId);
+      MarkDataExportFileDownloaded(taskId, fileType);
+   }
+   else
+   {
+      debugPrintf(5, L"getDciDataExportFile: cannot send file %s (task " UINT64_FMT L")", fileName.cstr(), taskId);
+   }
 }
 
 /**
