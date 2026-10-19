@@ -80,6 +80,7 @@ Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion
 Type: files; Name: "{app}\lib\java\*.jar"
 Type: filesandordirs; Name: "{app}\plugins"
 Type: filesandordirs; Name: "{app}\p2"
+Type: filesandordirs; Name: "{app}\jre"; Components: jre
 
 [Icons]
 Name: "{group}\NetXMS Client"; Filename: "{app}\nxmc.exe"; Components: nxmc
@@ -87,4 +88,3 @@ Name: "{group}\NetXMS Client"; Filename: "{app}\nxmc.exe"; Components: nxmc
 [Tasks]
 Name: desktopicon; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: quicklaunchicon; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-

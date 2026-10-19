@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxmc - launcher for main Java application
 ** Copyright (C) 2017-2025 Raden Solutions
 **
@@ -62,6 +62,7 @@ static void ShowErrorMessage(const TCHAR *title, const TCHAR *format, ...)
    va_start(args, format);
    _vsntprintf(message, 1024, format, args);
    va_end(args);
+   message[1023] = 0;
 #ifdef _WIN32
    MessageBox(nullptr, message, title, MB_OK | MB_ICONERROR);
 #else
@@ -235,7 +236,10 @@ static int StartApp(int argc, NXMC_CHAR *argv[], const StringList& jreOptions)
       }
       else if (err != NXJAVA_SUCCESS)
       {
-         ShowErrorMessage(_T("NetXMS Management Console - Startup Error"), _T("Cannot start Java application (%s)"), GetJavaBridgeErrorMessage(err));
+         if (exceptionText.isEmpty())
+            ShowErrorMessage(_T("NetXMS Management Console - Startup Error"), _T("Cannot start Java application (%s)"), GetJavaBridgeErrorMessage(err));
+         else
+            ShowErrorMessage(_T("NetXMS Management Console - Startup Error"), _T("Cannot start Java application (%s: %s)"), GetJavaBridgeErrorMessage(err), exceptionText.cstr());
          rc = 4;
       }
       DestroyJavaVM();

@@ -47,10 +47,11 @@ Type: files; Name: "{app}\jetty-base\lib\logging\logback-classic-1.5.21.jar"
 Type: files; Name: "{app}\jetty-base\lib\logging\logback-core-1.5.21.jar"
 Type: filesandordirs; Name: "{app}\jetty-home\lib\*"
 Type: filesandordirs; Name: "{app}\jetty-home\modules\*"
+Type: filesandordirs; Name: "{app}\jre"; Components: jre
 
 [Files]
 ; Launcher components
-Source: "..\..\..\out\x64\Release\bin\nxjansson.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: webui
+Source: "..\..\..\out\x64\Release\bin\nxjansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
 Source: "..\..\..\out\x64\Release\bin\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
 Source: "..\..\..\out\x64\Release\bin\nxweblauncher.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
 ; MinGW runtime
@@ -111,7 +112,13 @@ Procedure StopAllServices;
 Var
   iResult: Integer;
 Begin
-  Exec('net.exe', 'stop nxWebUI', ExpandConstant('{app}\bin'), 0, ewWaitUntilTerminated, iResult);
+  Exec('net.exe', 'stop nxWebUI', '', 0, ewWaitUntilTerminated, iResult);
+End;
+
+Function PrepareToInstall(var NeedsRestart: Boolean): String;
+Begin
+  StopAllServices;
+  Result := '';
 End;
 
 Procedure CurStepChanged(CurStep: TSetupStep);
