@@ -1860,6 +1860,7 @@ __PACK_END__
 #define VID_NO_VALUE_OBJECT         ((uint32_t)1070)
 #define VID_FILE_TYPE               ((uint32_t)1071)
 #define VID_DATA_FORMAT             ((uint32_t)1072)
+#define VID_REDIRECT_URL            ((uint32_t)1073)
 
 // Base value for additional SNMP agent list (10 fields per entry)
 #define VID_SNMP_AGENT_LIST_BASE    ((uint32_t)0x79000000)

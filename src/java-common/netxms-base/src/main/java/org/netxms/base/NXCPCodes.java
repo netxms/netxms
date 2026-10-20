@@ -1664,6 +1664,7 @@ public class NXCPCodes
    public static final long VID_NO_VALUE_OBJECT = 1070;
    public static final long VID_FILE_TYPE = 1071;
    public static final long VID_DATA_FORMAT = 1072;
+   public static final long VID_REDIRECT_URL = 1073;
 
    public static final long VID_CHAIN_LIST_BASE = 0x48000000L;
    public static final long VID_CHAIN_ACL_LIST_BASE = 0x47000000L;

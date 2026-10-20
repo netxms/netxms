@@ -168,6 +168,7 @@ struct WebServiceCallResult
    uint32_t httpResponseCode;
    wchar_t errorMessage[WEBSVC_ERROR_TEXT_MAX_SIZE];
    wchar_t *document;
+   wchar_t *redirectUrl;   // Target of unfollowed HTTP redirect, nullptr if response was not a redirect
 
    WebServiceCallResult()
    {
@@ -176,6 +177,7 @@ struct WebServiceCallResult
       httpResponseCode = 0;
       errorMessage[0] = 0;
       document = nullptr;
+      redirectUrl = nullptr;
    }
 
    WebServiceCallResult(const WebServiceCallResult& src)
@@ -185,6 +187,7 @@ struct WebServiceCallResult
       httpResponseCode = src.httpResponseCode;
       memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
       document = MemCopyStringW(src.document);
+      redirectUrl = MemCopyStringW(src.redirectUrl);
    }
 
    WebServiceCallResult(WebServiceCallResult&& src)
@@ -195,11 +198,14 @@ struct WebServiceCallResult
       memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
       document = src.document;
       src.document = nullptr;
+      redirectUrl = src.redirectUrl;
+      src.redirectUrl = nullptr;
    }
 
    ~WebServiceCallResult()
    {
       MemFree(document);
+      MemFree(redirectUrl);
    }
 
    WebServiceCallResult& operator=(const WebServiceCallResult& src)
@@ -210,6 +216,8 @@ struct WebServiceCallResult
       memcpy(errorMessage, src.errorMessage, sizeof(errorMessage));
       MemFree(document);
       document = MemCopyStringW(src.document);
+      MemFree(redirectUrl);
+      redirectUrl = MemCopyStringW(src.redirectUrl);
       return *this;
    }
 
@@ -222,6 +230,9 @@ struct WebServiceCallResult
       MemFree(document);
       document = src.document;
       src.document = nullptr;
+      MemFree(redirectUrl);
+      redirectUrl = src.redirectUrl;
+      src.redirectUrl = nullptr;
       return *this;
    }
 };

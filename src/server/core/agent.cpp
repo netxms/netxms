@@ -771,6 +771,7 @@ WebServiceCallResult AgentConnectionEx::webServiceCustomRequest(HttpRequestMetho
          {
             result.httpResponseCode = response->getFieldAsUInt32(VID_WEBSVC_RESPONSE_CODE);
             result.document = response->getFieldAsString(VID_WEBSVC_RESPONSE);
+            result.redirectUrl = response->getFieldAsString(VID_REDIRECT_URL);
             response->getFieldAsString(VID_WEBSVC_ERROR_TEXT, result.errorMessage, WEBSVC_ERROR_TEXT_MAX_SIZE);
             result.success = true;
          }

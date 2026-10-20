@@ -398,6 +398,39 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       executeScript("/webService.nxsl", params);
    }
 
+   @Test
+   public void testNXSLWebServiceRedirect() throws Exception
+   {
+      session = connectAndLogin();
+      AbstractObject managementNode = TestHelper.findManagementServer(session);
+      assertNotNull(managementNode);
+      String webServiceId = "netxms-redirect";
+      String webServiceUrl = "http://www.netxms.org/";
+      String redirectUrl = "https://www.netxms.org/";
+
+      WebServiceDefinition ws = null;
+      for(WebServiceDefinition d : session.getWebServiceDefinitions())
+      {
+         if (d.getName().equals(webServiceId))
+         {
+            ws = d;
+            break;
+         }
+      }
+      if (ws == null)
+         ws = new WebServiceDefinition(webServiceId);
+      ws.setUrl(webServiceUrl);
+      ws.setFollowLocation(false);
+      session.modifyWebServiceDefinition(ws);
+
+      List<String> params = new ArrayList<String>();
+      params.add(Long.toString(managementNode.getObjectId()));
+      params.add(webServiceId);
+      params.add(redirectUrl);
+
+      executeScript("/webServiceRedirect.nxsl", params);
+   }
+
    /**
     * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
     */

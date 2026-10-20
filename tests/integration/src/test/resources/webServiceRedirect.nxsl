@@ -1,0 +1,20 @@
+/*
+* This script requires:
+*     node that can execute web service (management node)
+*     existing web service name pointing to URL that answers with HTTP redirect,
+*     with "follow location" option disabled
+*/
+
+nodeId = $1;
+webServiceName = $2;
+expectedRedirectUrl = $3;
+managementNode = FindObject(nodeId);
+
+webSvc = managementNode.getWebService(webServiceName);
+result = webSvc.get();
+
+assert(result.success); // "false"
+assert(result.errorMessage.isEmpty); // "Malformed response"
+assert(result.agentErrorCode == 0); // "0"
+assert(result.httpResponseCode >= 300 && result.httpResponseCode <= 399); // "0"
+assert(result.redirectUrl == expectedRedirectUrl); // null

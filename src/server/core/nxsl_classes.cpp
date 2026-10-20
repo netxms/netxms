@@ -10463,6 +10463,10 @@ NXSL_Value *NXSL_WebServiceResponseClass::getAttr(NXSL_Object *object, const NXS
    {
       value = vm->createValue(result->httpResponseCode);
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("redirectUrl"))
+   {
+      value = (result->redirectUrl != nullptr) ? vm->createValue(result->redirectUrl) : vm->createValue();
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("statusCode"))
    {
       value = vm->createValue(result->httpResponseCode);

@@ -371,6 +371,8 @@ std::string F_QueryWebService(json_t *arguments, uint32_t userId)
    json_object_set_new(output, "httpRequestMethod", json_string(HttpRequestMethodName(definition->getHttpRequestMethod())));
    json_object_set_new(output, "success", json_boolean(result.success));
    json_object_set_new(output, "httpResponseCode", json_integer(result.httpResponseCode));
+   if (result.redirectUrl != nullptr)
+      json_object_set_new(output, "redirectUrl", json_string_w(result.redirectUrl));
    if (result.success)
    {
       AddDocumentToJson(output, result.document);

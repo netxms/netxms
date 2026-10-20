@@ -45,12 +45,15 @@ class WebServiceRequest : public StructuredDataExtractor
 {
 private:
    uint32_t m_responseCode;
+   char *m_redirectUrl;
    Mutex m_mutex;
 
 public:
    WebServiceRequest();
+   virtual ~WebServiceRequest();
 
    uint32_t getResponseCode() const { return m_responseCode; }
+   const char *getRedirectUrl() const { return m_redirectUrl; }
    uint32_t query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
          WebServiceAuthType authType, struct curl_slist *headers, bool verifyPeer, bool verifyHost, bool followLocation, bool forcePlainTextParser, uint32_t requestTimeout);
 
@@ -73,6 +76,15 @@ SharedStringObjectMap<WebServiceRequest> s_serviceRequestCache;
 WebServiceRequest::WebServiceRequest() : StructuredDataExtractor(DEBUG_TAG)
 {
    m_responseCode = 0;
+   m_redirectUrl = nullptr;
+}
+
+/**
+ * Destructor
+ */
+WebServiceRequest::~WebServiceRequest()
+{
+   MemFree(m_redirectUrl);
 }
 
 /**
@@ -224,6 +236,8 @@ uint32_t WebServiceRequest::query(const TCHAR *url, uint16_t requestMethod, cons
 #endif
 
    int redirectLimit = 10;
+   m_responseCode = 0;
+   MemFreeAndNull(m_redirectUrl);
 
 retry:
    if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
@@ -255,15 +269,15 @@ retry:
 
             updateContent(text, size, forcePlainTextParser, url);
          }
-         else if ((m_responseCode >= 300) && (m_responseCode <= 399))
+         else
          {
-            char *redirectURL = nullptr;
-            curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectURL);
-            if (redirectURL != nullptr)
+            if ((m_responseCode >= 300) && (m_responseCode <= 399))
             {
-               if (followLocation)
+               char *redirectURL = nullptr;
+               curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectURL);
+               if (redirectURL != nullptr)
                {
-                  if (redirectLimit-- > 0)
+                  if (followLocation && (redirectLimit-- > 0))
                   {
                      nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::query(%s): follow redirect to %hs"), url, redirectURL);
                      MemFree(urlUtf8);
@@ -271,21 +285,17 @@ retry:
                      data.clear();
                      goto retry;
                   }
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::query(%s): HTTP redirect to %hs, do not follow (redirect limit reached)"), url, redirectURL);
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::query(%s): HTTP redirect to %hs, do not follow (%s)"), url, redirectURL,
+                        followLocation ? _T("redirect limit reached") : _T("forbidden"));
+                  m_redirectUrl = MemCopyStringA(redirectURL);
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceRequest::query(%s): HTTP redirect to %hs, do not follow (forbidden)"), url, redirectURL);
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): HTTP response %03d but redirect URL not set"), url, m_responseCode);
                }
             }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): HTTP response %03d but redirect URL not set"), url, m_responseCode);
-            }
-            rcc = ERR_MALFORMED_RESPONSE;
-         }
-         else
-         {
+
+            // Unfollowed redirect and error responses are reported with their status code and body
             data.write('\0');
 
             size_t size;
@@ -305,6 +315,7 @@ retry:
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceRequest::query(%s): call to curl_easy_perform failed (%d: %hs)"), url, rc, errbuf);
+         m_responseCode = 0;
          rcc = ERR_MALFORMED_RESPONSE;
       }
    }
@@ -535,6 +546,8 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
    NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
    response.setFieldFromUtf8String(VID_WEBSVC_RESPONSE, serviceRequest->getResponseData());
    response.setField(VID_WEBSVC_RESPONSE_CODE, serviceRequest->getResponseCode());
+   if (serviceRequest->getRedirectUrl() != nullptr)
+      response.setFieldFromUtf8String(VID_REDIRECT_URL, serviceRequest->getRedirectUrl());
    serviceRequest->unlock();
 
    response.setField(VID_RCC, result);
