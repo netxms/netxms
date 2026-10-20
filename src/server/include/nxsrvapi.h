@@ -1568,7 +1568,7 @@ class SSHInteractiveChannel;
 /**
  * Interactive SSH channel with server-side parsing
  */
-class LIBNXSRV_EXPORTABLE SSHInteractiveChannel
+class LIBNXSRV_EXPORTABLE SSHInteractiveChannel : public enable_shared_from_this<SSHInteractiveChannel>
 {
 private:
    shared_ptr<AgentConnection> m_agentConn;
@@ -1609,8 +1609,14 @@ private:
    bool scanForDeviceError(const char *sentCommand, MutableString *errorText);
 
 public:
-   SSHInteractiveChannel(const shared_ptr<AgentConnection>& conn, uint32_t channelId, const SSHDriverHints& hints);
+   SSHInteractiveChannel(const shared_ptr<AgentConnection>& conn, const SSHDriverHints& hints);
    ~SSHInteractiveChannel();
+
+   /**
+    * Open interactive channel to given target through the agent. Object must be owned by shared_ptr.
+    * Returns agent error code.
+    */
+   uint32_t open(const InetAddress& target, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId, int columns, int rows);
 
    /**
     * Callback for incoming data from agent

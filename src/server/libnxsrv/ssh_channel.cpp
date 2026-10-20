@@ -88,17 +88,17 @@ SSHChannelDataCallback SSHChannelCallbackIndex::get(uint32_t id)
 /**
  * SSHInteractiveChannel constructor
  */
-SSHInteractiveChannel::SSHInteractiveChannel(const shared_ptr<AgentConnection>& conn, uint32_t channelId, const SSHDriverHints& hints)
+SSHInteractiveChannel::SSHInteractiveChannel(const shared_ptr<AgentConnection>& conn, const SSHDriverHints& hints)
    : m_agentConn(conn), m_hints(hints), m_buffer(65536), m_dataReceived(true)
 {
-   m_channelId = channelId;
+   m_channelId = 0;
    m_promptRegex = nullptr;
    m_promptRegexW = nullptr;
    m_enabledPromptRegex = nullptr;
    m_enabledPromptRegexW = nullptr;
    m_paginationRegex = nullptr;
    m_errorRegex = nullptr;
-   m_connected = true;
+   m_connected = false;
    m_privileged = false;
    m_lastError = ERR_SUCCESS;
 
@@ -189,15 +189,47 @@ SSHInteractiveChannel::~SSHInteractiveChannel()
 }
 
 /**
- * Callback for incoming data from agent
+ * Open interactive channel to given target through the agent
+ */
+uint32_t SSHInteractiveChannel::open(const InetAddress& target, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId, int columns, int rows)
+{
+   // Data handler is registered before setup request is sent, so output produced by remote side
+   // right after login (banner, first prompt) is not lost
+   weak_ptr<SSHInteractiveChannel> weakThis(shared_from_this());
+   uint32_t rcc = m_agentConn->openSSHChannel(target, port, login, password, keyId, m_hints.terminalType, columns, rows,
+      [weakThis] (const BYTE *data, size_t size, bool errorIndicator)
+      {
+         shared_ptr<SSHInteractiveChannel> ch = weakThis.lock();
+         if (ch != nullptr)
+            ch->onDataReceived(data, size, errorIndicator);
+      }, &m_channelId);
+   if (rcc == ERR_SUCCESS)
+   {
+      if (m_lastError != ERR_SUCCESS)
+      {
+         // Channel was closed by remote side before setup completed; agent has already released it
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("SSHInteractiveChannel %u: closed by remote side during setup"), m_channelId);
+         rcc = m_lastError;
+      }
+      else
+      {
+         m_connected = true;
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("SSHInteractiveChannel %u: opened"), m_channelId);
+      }
+   }
+   return rcc;
+}
+
+/**
+ * Callback for incoming data from agent (size 0 indicates that channel was closed by remote side)
  */
 void SSHInteractiveChannel::onDataReceived(const BYTE *data, size_t size, bool errorIndicator)
 {
-   if (errorIndicator)
+   if (errorIndicator || (size == 0))
    {
       m_connected = false;
       m_lastError = ERR_CONNECTION_BROKEN;
-      m_lastErrorMessage = L"SSH channel closed unexpectedly";
+      m_lastErrorMessage = errorIndicator ? L"SSH channel closed unexpectedly" : L"SSH channel closed by remote side";
       m_dataReceived.set();
       return;
    }
@@ -1042,7 +1074,6 @@ void SSHInteractiveChannel::close()
       return;
 
    m_connected = false;
-   m_agentConn->removeSSHChannelDataHandler(m_channelId);
    m_agentConn->closeSSHChannel(m_channelId);
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("SSHInteractiveChannel %u: closed"), m_channelId);

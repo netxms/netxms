@@ -13937,26 +13937,15 @@ shared_ptr<SSHInteractiveChannel> Node::openInteractiveSSHChannel(const wchar_t 
    }
 
    // Open SSH channel through agent (200 columns so that long output lines are not wrapped before parsing)
-   uint32_t channelId;
-   uint32_t rcc = agentConn->openSSHChannel(m_ipAddress, m_sshPort, (login != nullptr) ? login : m_sshLogin.cstr(),
-            (password != nullptr) ? password : m_sshPassword.cstr(), (keyId != 0) ? keyId : m_sshKeyId, hints.terminalType, 200, 24, nullptr, &channelId);
+   shared_ptr<SSHInteractiveChannel> channel = make_shared<SSHInteractiveChannel>(agentConn, hints);
+   uint32_t rcc = channel->open(m_ipAddress, m_sshPort, (login != nullptr) ? login : m_sshLogin.cstr(),
+            (password != nullptr) ? password : m_sshPassword.cstr(), (keyId != 0) ? keyId : m_sshKeyId, 200, 24);
    if (rcc != ERR_SUCCESS)
    {
       nxlog_debug_tag(L"ssh", 5, L"Node::openSSHInteractiveChannel(%s [%u]): cannot open interactive SSH channel via proxy node %s [%u] (%u: %s)",
                m_name, m_id, proxyNode->getName(), proxyId, rcc, AgentErrorCodeToText(rcc));
-               return shared_ptr<SSHInteractiveChannel>();
+      return shared_ptr<SSHInteractiveChannel>();
    }
-
-   shared_ptr<SSHInteractiveChannel> channel = make_shared<SSHInteractiveChannel>(agentConn, channelId, hints);
-
-   weak_ptr<SSHInteractiveChannel> weakChannel(channel);
-   agentConn->setSSHChannelDataHandler(channelId,
-      [weakChannel] (const BYTE *data, size_t size, bool errorIndicator)
-      {
-         shared_ptr<SSHInteractiveChannel> ch = weakChannel.lock();
-         if (ch != nullptr)
-            ch->onDataReceived(data, size, errorIndicator);
-      });
    return channel;
 }
 

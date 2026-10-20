@@ -295,14 +295,6 @@ ClientSession::~ClientSession() noexcept
 
    delete m_loginInfo;
 
-   // Unregister SSH channel data handlers capturing this session from agent connections that may outlive it
-   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
-   {
-      TcpProxy *p = m_tcpProxyConnections.get(i);
-      if (p->sshChannel)
-         p->agentConnection->closeSSHChannel(p->agentChannelId);
-   }
-
    debugPrintf(5, _T("Session object destroyed"));
 }
 
@@ -607,6 +599,30 @@ void ClientSession::finalize()
       {
          ThreadSleep(1);
       } while(m_refCount > 0);
+   }
+
+   // Close SSH terminal channels. Data handlers registered on agent connections capture this session;
+   // closeSSHChannel() removes the handler before sending close request to the agent. Records are detached
+   // from the list under lock so that onSshTerminalData() cannot queue messages for this session afterwards
+   // (anything queued before that point is covered by reference count check in destructor).
+   ObjectArray<TcpProxy> sshChannels(0, 16, Ownership::True);
+   m_tcpProxyLock.lock();
+   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
+   {
+      TcpProxy *p = m_tcpProxyConnections.get(i);
+      if (p->sshChannel)
+      {
+         sshChannels.add(p);
+         m_tcpProxyConnections.unlink(i);
+         i--;
+      }
+   }
+   m_tcpProxyLock.unlock();
+   for(int i = 0; i < sshChannels.size(); i++)
+   {
+      TcpProxy *p = sshChannels.get(i);
+      p->agentConnection->closeSSHChannel(p->agentChannelId);
+      debugPrintf(5, _T("SSH terminal channel %u closed on session shutdown"), p->clientChannelId);
    }
 
    CloseAllLogsForSession(m_id);
@@ -16908,16 +16924,51 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
       msg.deleteAllFields();
    }
 
-   auto proxy = new TcpProxy(conn, 0, clientChannelId, proxyNode->getId(), true);
+   // Proxy record and agent-side data handler are registered before channel setup so that output produced by
+   // remote side right after login is not lost. Remote side may close the channel before setup completes
+   // (immediate logout, banner-only devices), in which case the record is already removed by onSshTerminalData()
+   // when setup call returns, so it is looked up again by client channel ID instead of being accessed directly.
    m_tcpProxyLock.lock();
-   m_tcpProxyConnections.add(proxy);
+   m_tcpProxyConnections.add(new TcpProxy(conn, 0, clientChannelId, proxyNode->getId(), true));
    m_tcpProxyLock.unlock();
 
+   uint32_t agentChannelId = 0;
    uint32_t rcc = conn->openSSHChannel(node->getIpAddress(), node->getSshPort(), login, password, keyId, terminalType, columns, rows,
       [this, clientChannelId] (const BYTE *data, size_t size, bool errorIndicator)
       {
          onSshTerminalData(clientChannelId, data, size, errorIndicator);
-      }, &proxy->agentChannelId);
+      }, &agentChannelId);
+
+   bool channelLost = false;
+   m_tcpProxyLock.lock();
+   int index = -1;
+   for(int i = 0; i < m_tcpProxyConnections.size(); i++)
+   {
+      TcpProxy *p = m_tcpProxyConnections.get(i);
+      if ((p->clientChannelId == clientChannelId) && p->sshChannel)
+      {
+         index = i;
+         break;
+      }
+   }
+   if (rcc == ERR_SUCCESS)
+   {
+      if (index != -1)
+      {
+         m_tcpProxyConnections.get(index)->agentChannelId = agentChannelId;
+      }
+      else
+      {
+         channelLost = true;
+         rcc = ERR_REMOTE_CONNECT_FAILED;
+      }
+   }
+   else if (index != -1)
+   {
+      m_tcpProxyConnections.remove(index);
+   }
+   m_tcpProxyLock.unlock();
+
    if (rcc == ERR_SUCCESS)
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
@@ -16925,15 +16976,21 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
       writeAuditLog(AUDIT_SYSCFG, true, node->getId(), _T("Created SSH terminal session to %s port %u as user \"%s\" via %s [%u] (client channel %u)"),
             node->getIpAddress().toString().cstr(), node->getSshPort(), login, proxyNode->getName(), proxyNode->getId(), clientChannelId);
       debugPrintf(3, _T("Created SSH terminal session to %s [%u] via node %s [%u] (agent channel = %u, client channel = %u)"),
-            node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId(), proxy->agentChannelId, clientChannelId);
+            node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId(), agentChannelId, clientChannelId);
    }
    else
    {
-      m_tcpProxyLock.lock();
-      m_tcpProxyConnections.remove(proxy);
-      m_tcpProxyLock.unlock();
+      if (channelLost)
+      {
+         // Channel was closed (by remote side or by session shutdown) while setup was in progress
+         conn->closeSSHChannel(agentChannelId);
+         debugPrintf(4, _T("SSH terminal to node %s [%u] via %s [%u] closed before setup completed"), node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId());
+      }
+      else
+      {
+         debugPrintf(4, _T("SSH terminal to node %s [%u] via %s [%u] setup failed (%s)"), node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId(), AgentErrorCodeToText(rcc));
+      }
       msg.setField(VID_RCC, AgentErrorToRCC(rcc));
-      debugPrintf(4, _T("SSH terminal to node %s [%u] via %s [%u] setup failed (%s)"), node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId(), AgentErrorCodeToText(rcc));
    }
    sendMessage(msg);
 }
@@ -17146,26 +17203,25 @@ void ClientSession::onTcpProxyData(AgentConnectionEx *conn, uint32_t agentChanne
  */
 void ClientSession::onSshTerminalData(uint32_t clientChannelId, const void *data, size_t size, bool errorIndicator)
 {
-   bool found = false;
+   // Message to client is queued while holding the lock: session shutdown detaches records under the same lock
+   // and then waits for reference count (incremented by queueing) to drop, so a message cannot be queued for
+   // a session that is already destroyed.
    m_tcpProxyLock.lock();
    for(int i = 0; i < m_tcpProxyConnections.size(); i++)
    {
       TcpProxy *p = m_tcpProxyConnections.get(i);
       if ((p->clientChannelId == clientChannelId) && p->sshChannel)
       {
-         found = true;
-         if (size == 0) // close indicator
+         if (size == 0) // close indicator; agent side has already released the channel
          {
             debugPrintf(5, _T("Received SSH terminal channel %u close notification"), clientChannelId);
             m_tcpProxyConnections.remove(i);
          }
+         sendTcpProxyDataToClient(clientChannelId, data, size, errorIndicator);
          break;
       }
    }
    m_tcpProxyLock.unlock();
-
-   if (found)
-      sendTcpProxyDataToClient(clientChannelId, data, size, errorIndicator);
 }
 
 /**

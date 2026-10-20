@@ -3562,6 +3562,10 @@ uint32_t AgentConnection::resizeSSHChannel(uint32_t channelId, int columns, int 
  */
 uint32_t AgentConnection::closeSSHChannel(uint32_t channelId)
 {
+   // Handler is removed before close request is sent, so that no data is delivered to the owner of the channel
+   // while close is in progress (owner may be in the middle of destruction)
+   removeSSHChannelDataHandler(channelId);
+
    uint32_t requestId = generateRequestId();
    NXCPMessage msg(CMD_CLOSE_SSH_CHANNEL, requestId, m_nProtocolVersion);
    msg.setField(VID_CHANNEL_ID, channelId);
@@ -3583,10 +3587,6 @@ uint32_t AgentConnection::closeSSHChannel(uint32_t channelId)
    {
       rcc = ERR_CONNECTION_BROKEN;
    }
-
-   // Remove handler regardless of result
-   removeSSHChannelDataHandler(channelId);
-
    return rcc;
 }
 
@@ -3617,16 +3617,14 @@ void AgentConnection::processSSHChannelData(uint32_t channelId, const void *data
 {
    m_sshChannelLock.lock();
    SSHChannelDataCallback handler = m_sshChannelHandlers.get(channelId);
+   if (size == 0)
+      m_sshChannelHandlers.remove(channelId);   // close notification is the last message for the channel, agent side has already released it
+   m_sshChannelLock.unlock();
+
    if (handler != nullptr)
-   {
-      m_sshChannelLock.unlock();
       handler(static_cast<const BYTE*>(data), size, errorIndicator);
-   }
    else
-   {
-      m_sshChannelLock.unlock();
       debugPrintf(6, L"SSH channel data received for unknown channel %u", channelId);
-   }
 }
 
 /**

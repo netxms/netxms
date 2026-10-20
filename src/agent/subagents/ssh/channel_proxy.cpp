@@ -41,13 +41,16 @@ void InitializeSSHChannelProxyManager()
  */
 void ShutdownSSHChannelProxyManager()
 {
+   // Proxies are deleted outside the lock: destructor joins the reader thread, which may itself be waiting for the lock
+   ObjectArray<SSHChannelProxy> proxies(0, 16, Ownership::True);
    s_channelProxyLock.lock();
-   for(int i = 0; i < s_channelProxies.size(); i++)
+   while(s_channelProxies.size() > 0)
    {
-      s_channelProxies.get(i)->stop();
+      proxies.add(s_channelProxies.get(0));
+      s_channelProxies.unlink(0);
    }
-   s_channelProxies.clear();
    s_channelProxyLock.unlock();
+   proxies.clear();
    nxlog_debug_tag(DEBUG_TAG, 2, _T("SSH channel proxy manager shut down"));
 }
 
@@ -65,41 +68,47 @@ static void CreateSSHChannelProxy(uint32_t channelId, ssh_channel channel, SSHSe
 }
 
 /**
- * Find SSH channel proxy by ID
+ * Find SSH channel proxy by ID. Caller must hold s_channelProxyLock for the whole time the returned
+ * pointer is in use, because proxy can be deleted by its own reader thread when remote side closes the channel.
  */
 static SSHChannelProxy *FindSSHChannelProxy(uint32_t channelId)
 {
-   SSHChannelProxy *proxy = nullptr;
-   s_channelProxyLock.lock();
    for(int i = 0; i < s_channelProxies.size(); i++)
    {
       if (s_channelProxies.get(i)->getChannelId() == channelId)
-      {
-         proxy = s_channelProxies.get(i);
-         break;
-      }
+         return s_channelProxies.get(i);
    }
-   s_channelProxyLock.unlock();
-   return proxy;
+   return nullptr;
 }
 
 /**
- * Delete SSH channel proxy
+ * Remove SSH channel proxy from the list without deleting it. Returns false if proxy is not in the list.
+ */
+static bool UnlinkSSHChannelProxy(SSHChannelProxy *proxy)
+{
+   s_channelProxyLock.lock();
+   bool unlinked = s_channelProxies.unlink(proxy);
+   s_channelProxyLock.unlock();
+   return unlinked;
+}
+
+/**
+ * Delete SSH channel proxy (server-initiated close)
  */
 static void DeleteSSHChannelProxy(uint32_t channelId)
 {
    s_channelProxyLock.lock();
-   for(int i = 0; i < s_channelProxies.size(); i++)
-   {
-      if (s_channelProxies.get(i)->getChannelId() == channelId)
-      {
-         s_channelProxies.get(i)->stop();
-         s_channelProxies.remove(i);
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("SSH channel proxy %u deleted"), channelId);
-         break;
-      }
-   }
+   SSHChannelProxy *proxy = FindSSHChannelProxy(channelId);
+   if (proxy != nullptr)
+      s_channelProxies.unlink(proxy);
    s_channelProxyLock.unlock();
+
+   // Deleted outside the lock: destructor joins the reader thread, which may itself be waiting for the lock
+   if (proxy != nullptr)
+   {
+      delete proxy;
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("SSH channel proxy %u deleted"), channelId);
+   }
 }
 
 /**
@@ -186,16 +195,28 @@ void SSHChannelProxy::readerThreadInternal()
       // nbytes == 0 without EOF means timeout, continue loop
    }
 
-   // Notify server of channel closure
-   if (m_running)
-   {
-      NXCPMessage msg(CMD_CLOSE_SSH_CHANNEL, 0, m_commSession->getProtocolVersion());
-      msg.setField(VID_CHANNEL_ID, m_channelId);
-      msg.setField(VID_ERROR_INDICATOR, !ssh_channel_is_eof(m_sshChannel));
-      m_commSession->postMessage(&msg);
-   }
-
    nxlog_debug_tag(DEBUG_TAG, 6, _T("SSH channel proxy %u reader thread stopped"), m_channelId);
+
+   if (!m_running)
+      return;  // stopped by server-initiated close or subagent shutdown; owner deletes this object
+
+   // Remote side closed the channel: notify server and dispose of this proxy right away, so that libssh channel
+   // and the session it belongs to are released without waiting for the server. Deletion happens on the reader
+   // thread itself, so the thread handle is detached. If server-initiated close is running concurrently, proxy
+   // is already unlinked by that thread, which will delete it after this thread exits.
+   NXCPMessage msg(CMD_CLOSE_SSH_CHANNEL, 0, m_commSession->getProtocolVersion());
+   msg.setField(VID_CHANNEL_ID, m_channelId);
+   msg.setField(VID_ERROR_INDICATOR, !ssh_channel_is_eof(m_sshChannel));
+   m_commSession->postMessage(&msg);
+
+   if (UnlinkSSHChannelProxy(this))
+   {
+      m_running = false;
+      ThreadDetach(m_readerThread);
+      m_readerThread = INVALID_THREAD_HANDLE;
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("SSH channel proxy %u deleted (channel closed by remote side)"), m_channelId);
+      delete this;
+   }
 }
 
 /**
@@ -333,6 +354,7 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
          {
             // Binary message - response is nullptr
             uint32_t channelId = request->getId();
+            s_channelProxyLock.lock();
             SSHChannelProxy *proxy = FindSSHChannelProxy(channelId);
             if (proxy != nullptr)
             {
@@ -342,6 +364,7 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
             {
                nxlog_debug_tag(DEBUG_TAG, 6, _T("CMD_SSH_CHANNEL_DATA: channel %u not found"), channelId);
             }
+            s_channelProxyLock.unlock();
             return true;
          }
 
@@ -359,6 +382,7 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
                return true;
             }
 
+            s_channelProxyLock.lock();
             SSHChannelProxy *proxy = FindSSHChannelProxy(channelId);
             if (proxy != nullptr)
             {
@@ -370,6 +394,7 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
                nxlog_debug_tag(DEBUG_TAG, 6, _T("CMD_RESIZE_SSH_CHANNEL: channel %u not found"), channelId);
                response->setField(VID_RCC, ERR_INVALID_OBJECT);
             }
+            s_channelProxyLock.unlock();
             return true;
          }
 
