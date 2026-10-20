@@ -88,9 +88,9 @@ tags:
   - name: Traffic Observers
     description: Traffic connector information
   - name: Logs
+    description: Server-side log discovery and querying
   - name: Data Export
     description: Export of tagged DCI history for external analysis
-    description: Server-side log discovery and querying
   - name: Background Tasks
     description: Status of long-running server-side tasks started by other endpoints
   - name: Agent Tunnels
