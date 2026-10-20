@@ -23,6 +23,7 @@
 
 #include "libnetxms.h"
 #include <nxzip.h>
+#include <nxstat.h>
 #include <zlib.h>
 
 #define OUTPUT_BUFFER_SIZE 65536
