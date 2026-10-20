@@ -7983,13 +7983,7 @@ NXSL_METHOD_DEFINITION(Alarm, addComment)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   bool syncWithHelpdesk = true;
-   if (argc > 1)
-   {
-      if (!argv[1]->isInteger())
-         return NXSL_ERR_NOT_INTEGER;
-      syncWithHelpdesk = argv[1]->getValueAsBoolean();
-   }
+   bool syncWithHelpdesk = (argc > 1) ? argv[1]->getValueAsBoolean() : true;
 
    Alarm *alarm = static_cast<Alarm*>(object->getData());
    uint32_t id = 0;
