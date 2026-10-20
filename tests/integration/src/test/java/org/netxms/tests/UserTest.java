@@ -19,7 +19,10 @@
 package org.netxms.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -40,29 +43,39 @@ public class UserTest extends AbstractSessionTest
    }
 
    @Test
-	public void testUserAttributes() throws Exception
-	{
-		final NXCSession session = connectAndLogin();
+   public void testUserVariables() throws Exception
+   {
+      final NXCSession session = connectAndLogin();
+      final String name = "IntegrationTest.UserVariable";
 
-		String value = session.getAttributeForCurrentUser(".testAttribute");
-		assertEquals("", value);
+      session.deleteUserVariable(name);
+      assertNull(session.getUserVariable(name));
 
-		session.setAttributeForCurrentUser(".testAttribute", "test value");
-		value = session.getAttributeForCurrentUser(".testAttribute");
-		assertEquals("test value", value);
+      session.setUserVariable(name, "test value");
+      assertEquals("test value", session.getUserVariable(name));
 
-		session.setAttributeForCurrentUser(".testAttribute", "");
+      session.setUserVariable(name, "updated value");
+      assertEquals("updated value", session.getUserVariable(name));
 
-		boolean accessDenied = false;
-		try
-		{
-			session.setAttributeForCurrentUser("forbidden", "test");
-		}
-		catch(NXCException e)
-		{
-			assertEquals(RCC.ACCESS_DENIED, e.getErrorCode());
-			accessDenied = true;
-		}
-      assertTrue(accessDenied);
-	}
+      Map<String, String> variables = session.getUserVariables();
+      assertEquals("updated value", variables.get(name));
+
+      session.deleteUserVariable(name);
+      assertNull(session.getUserVariable(name));
+      assertFalse(session.getUserVariables().containsKey(name));
+
+      session.deleteUserVariable(name); // deleting non-existent variable is not an error
+
+      boolean invalidName = false;
+      try
+      {
+         session.setUserVariable("invalid name!", "test");
+      }
+      catch(NXCException e)
+      {
+         assertEquals(RCC.INVALID_OBJECT_NAME, e.getErrorCode());
+         invalidName = true;
+      }
+      assertTrue(invalidName);
+   }
 }
