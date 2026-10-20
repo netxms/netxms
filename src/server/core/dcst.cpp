@@ -647,7 +647,7 @@ void SummaryTable::createExportRecord(json_t *array) const
    json_object_set_new(tableObj, "path", json_string_t(m_menuPath));
    json_object_set_new(tableObj, "filter", json_string_t(m_filterSource ? m_filterSource : _T("")));
    json_object_set_new(tableObj, "tableDci", json_string_t(m_tableDciName));
-   
+
    json_t *columnsArray = json_array();
    for(int i = 0; i < m_columns.size(); i++)
    {
@@ -656,7 +656,7 @@ void SummaryTable::createExportRecord(json_t *array) const
          json_array_append_new(columnsArray, columnObj);
    }
    json_object_set_new(tableObj, "columns", columnsArray);
-   
+
    json_array_append_new(array, tableObj);
 }
 
@@ -981,7 +981,7 @@ bool ImportSummaryTable(json_t *config, bool overwrite, ImportContext *context)
    String title = json_object_get_string(config, "title", _T(""));
    String nodeFilter = json_object_get_string(config, "filter", _T(""));
    uint32_t flags = json_object_get_uint32(config, "flags");
-   
+
    // Build column list from JSON
    StringBuffer columnList;
    json_t *columns = json_object_get(config, "columns");
@@ -1134,31 +1134,6 @@ json_t NXCORE_EXPORTABLE *GetSummaryTablesIntoJSON(uint32_t userId)
    DBFreeResult(hResult);
    DBConnectionPoolReleaseConnection(hdb);
    return output;
-}
-
-/**
- * Get list of configured DCI summary tables
- */
-json_t *GetSummaryTablesList()
-{
-   json_t *result = json_array();
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,title FROM dci_summary_tables"));
-   if (hResult != nullptr)
-   {
-      TCHAR buffer[256];
-      int32_t count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         json_t *summatyTableEntry = json_object();
-         json_object_set_new(summatyTableEntry, "id", json_integer(DBGetFieldULong(hResult, i, 0)));
-         json_object_set_new(summatyTableEntry, "name", json_string_t(DBGetField(hResult, i, 1, buffer, 256)));
-         json_array_append_new(result, summatyTableEntry);
-      }
-      DBFreeResult(hResult);
-   }
-   DBConnectionPoolReleaseConnection(hdb);
-   return result;
 }
 
 /**

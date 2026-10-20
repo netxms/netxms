@@ -1826,7 +1826,6 @@ bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *cont
 bool ImportSummaryTable(json_t *config, bool overwrite, ImportContext *context);
 uint32_t GetSummaryTablesIntoMessage(NXCPMessage *msg, uint32_t userId);
 json_t NXCORE_EXPORTABLE *GetSummaryTablesIntoJSON(uint32_t userId);
-json_t NXCORE_EXPORTABLE *GetSummaryTablesList();
 json_t NXCORE_EXPORTABLE *GetSummaryTableDetails(uint32_t id, uint32_t *rcc);
 
 void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg);

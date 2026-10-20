@@ -4268,7 +4268,7 @@ paths:
     get:
       operationId: grafanaGetSummaryTableList
       summary: Get summary table list for Grafana
-      description: Retrieve a list of available DCI summary tables formatted for Grafana.
+      description: Retrieve a list of DCI summary tables available to the user (filtered by summary table access list) formatted for Grafana.
       responses:
         '200':
           description: Summary table list retrieved successfully
@@ -4290,8 +4290,8 @@ paths:
                           description: Summary table name
         '401':
           description: Unauthorized
-        '403':
-          description: User does not have required system access rights
+        '500':
+          description: Database failure
       security:
         - BearerAuth: []
       tags:
@@ -4322,8 +4322,6 @@ paths:
                           description: Query name
         '401':
           description: Unauthorized
-        '403':
-          description: User does not have required system access rights
       security:
         - BearerAuth: []
       tags:

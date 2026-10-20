@@ -359,9 +359,6 @@ int H_GrafanaDciList(Context *context)
  */
 int H_GrafanaObjectQueryList(Context *context)
 {
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES))
-      return 403;
-
    json_t *result = json_object();
    json_object_set_new(result, "objects", GetObjectQueriesList());
    context->setResponseData(result);
@@ -374,11 +371,27 @@ int H_GrafanaObjectQueryList(Context *context)
  */
 int H_GrafanaSummaryTablesList(Context *context)
 {
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS))
-      return 403;
+   json_t *tables = GetSummaryTablesIntoJSON(context->getUserId());
+   if (tables == nullptr)
+   {
+      context->setErrorResponse("Database failure");
+      return 500;
+   }
+
+   json_t *list = json_array();
+   size_t i;
+   json_t *table;
+   json_array_foreach(tables, i, table)
+   {
+      json_t *entry = json_object();
+      json_object_set(entry, "id", json_object_get(table, "id"));
+      json_object_set(entry, "name", json_object_get(table, "title"));
+      json_array_append_new(list, entry);
+   }
+   json_decref(tables);
 
    json_t *result = json_object();
-   json_object_set_new(result, "objects", GetSummaryTablesList());
+   json_object_set_new(result, "objects", list);
    context->setResponseData(result);
    json_decref(result);
    return 200;
@@ -465,4 +478,3 @@ int H_GrafanaObjectList(Context *context)
    json_decref(result);
    return 200;
 }
-
