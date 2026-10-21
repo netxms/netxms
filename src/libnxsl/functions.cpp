@@ -68,7 +68,7 @@ int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    if ((argc < 1) || (argc > 2))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   if ((argc > 1) && !argv[0]->isString())
+   if ((argc > 1) && !argv[1]->isString())
       return NXSL_ERR_NOT_STRING;
 
    if (argv[0]->isFalse())
