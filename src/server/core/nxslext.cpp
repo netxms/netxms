@@ -261,6 +261,9 @@ static int F_GetServerNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXS
       if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_READ, serverNode.get()))
       {
          *result = vm->createValue();
+         nxlog_debug_tag(_T("nxsl.objects"), 5, _T("NXSL::GetServerNode(%s [%u]): access denied for node %s [%u]"),
+                   (currNode != nullptr) ? currNode->getName() : _T("null"), (currNode != nullptr) ? currNode->getId() : 0,
+                   serverNode->getName(), serverNode->getId());
       }
       else if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
       {
@@ -272,9 +275,9 @@ static int F_GetServerNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXS
          {
             // No access, return null
             *result = vm->createValue();
-            nxlog_debug(4, _T("NXSL::GetServerNode(%s [%d]): access denied for node %s [%d]"),
+            nxlog_debug_tag(_T("nxsl.objects"), 5, _T("NXSL::GetServerNode(%s [%u]): access denied for node %s [%u]"),
                       (currNode != nullptr) ? currNode->getName() : _T("null"), (currNode != nullptr) ? currNode->getId() : 0,
-                      argv[1]->getValueAsCString(), serverNode->getName(), serverNode->getId());
+                      serverNode->getName(), serverNode->getId());
          }
       }
       else
