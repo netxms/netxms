@@ -181,7 +181,7 @@ static struct
 /**
  * Upgrade database to new version
  */
-void UpgradeDatabase()
+bool UpgradeDatabase()
 {
    WriteToTerminal(L"Upgrading database...\n");
 
@@ -189,7 +189,7 @@ void UpgradeDatabase()
    if (!ValidateTimescaleDBExtension() && !g_ignoreErrors)
    {
       WriteToTerminal(L"Database upgrade aborted\n");
-      return;
+      return false;
    }
 
    // Get database format version
@@ -197,7 +197,7 @@ void UpgradeDatabase()
 	if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
 	{
 	   WriteToTerminal(L"Unable to determine database schema version\n");
-	   return;
+	   return false;
 	}
 
    if (major == 0)
@@ -206,7 +206,7 @@ void UpgradeDatabase()
          L"Your database has pre-2.1 schema (major version 0), which is no longer supported by this tool.\n"
          L"Install NetXMS 6.1 first, run `nxdbmgr upgrade` there to bring the schema to a supported version,\n"
          L"then upgrade to the current NetXMS version.\n");
-      return;
+      return false;
    }
 
    if ((major == DB_SCHEMA_VERSION_MAJOR) && (minor == DB_SCHEMA_VERSION_MINOR))
@@ -214,7 +214,7 @@ void UpgradeDatabase()
       WriteToTerminal(L"Core database schema is up to date\n");
       bool modSuccess = UpgradeModuleSchemas();
       WriteToTerminalEx(L"Database upgrade %s\n", modSuccess ? L"succeeded" : L"failed");
-      return;
+      return modSuccess;
    }
 
    if ((major > DB_SCHEMA_VERSION_MAJOR) || ((major == DB_SCHEMA_VERSION_MAJOR) && (minor > DB_SCHEMA_VERSION_MINOR)))
@@ -222,7 +222,7 @@ void UpgradeDatabase()
        _tprintf(_T("Your database has core schema version %d.%d, this tool is compiled for version %d.%d.\n")
                    _T("You need to upgrade your server before using this database.\n"),
                 major, minor, DB_SCHEMA_VERSION_MAJOR, DB_SCHEMA_VERSION_MINOR);
-       return;
+       return false;
    }
 
    // Check if database is locked
@@ -240,7 +240,7 @@ void UpgradeDatabase()
    if (locked)
    {
       WriteToTerminal(L"Database is locked\n");
-      return;
+      return false;
    }
 
    while(major < DB_SCHEMA_VERSION_MAJOR)
@@ -283,6 +283,7 @@ void UpgradeDatabase()
       }
    }
 
-   bool modSuccess = UpgradeModuleSchemas();
-   _tprintf(_T("Database upgrade %s\n"), ((major == DB_SCHEMA_VERSION_MAJOR) && (minor == DB_SCHEMA_VERSION_MINOR) && modSuccess) ? _T("succeeded") : _T("failed"));
+   bool success = (major == DB_SCHEMA_VERSION_MAJOR) && (minor == DB_SCHEMA_VERSION_MINOR) && UpgradeModuleSchemas();
+   WriteToTerminalEx(L"Database upgrade %s\n", success ? L"succeeded" : L"failed");
+   return success;
 }
