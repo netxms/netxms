@@ -1069,7 +1069,8 @@ stop_search:
       }
       else if (!strcmp(argv[optind], "upgrade"))
       {
-         UpgradeDatabase();
+         if (!UpgradeDatabase())
+            exitCode = 1;
       }
       else if (!strcmp(argv[optind], "background-upgrade") || !strcmp(argv[optind], "online-upgrade"))
       {
