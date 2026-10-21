@@ -132,8 +132,9 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, thisObject.get()))
    {
       *result = vm->createValue(false);
-      return 0;
+      return NXSL_ERR_SUCCESS;
    }
+
    if ((thisObject->getObjectClass() != OBJECT_CONTAINER) && (thisObject->getObjectClass() != OBJECT_COLLECTOR) &&
        (thisObject->getObjectClass() != OBJECT_FACILITY) && (thisObject->getObjectClass() != OBJECT_POWERDOMAIN) &&
        (thisObject->getObjectClass() != OBJECT_COOLINGZONE) && (thisObject->getObjectClass() != OBJECT_SERVICEROOT))
@@ -156,13 +157,19 @@ NXSL_METHOD_DEFINITION(NetObj, bind)
    if (child->isChild(thisObject->getId())) // prevent loops
       return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-   NetObj::linkObjects(thisObject, child);
-   thisObject->calculateCompoundStatus();
-   vm->writeAuditLog(AUDIT_OBJECTS, true, thisObject->getId(), L"%s %s [%u] bound to %s %s [%u] by script",
-      child->getObjectClassName(), child->getName(), child->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
+   if (NetObj::linkObjects(thisObject, child))
+   {
+      thisObject->calculateCompoundStatus();
+      vm->writeAuditLog(AUDIT_OBJECTS, true, thisObject->getId(), L"%s %s [%u] bound to %s %s [%u] by script",
+         child->getObjectClassName(), child->getName(), child->getId(), thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId());
+      *result = vm->createValue(true);
+   }
+   else
+   {
+      *result = vm->createValue(false);
+   }
 
-   *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -174,7 +181,7 @@ NXSL_METHOD_DEFINITION(NetObj, bindTo)
    if (!vm->validateAccess(NXSL_AC_OBJECT, OBJECT_ACCESS_MODIFY, thisObject.get()))
    {
       *result = vm->createValue(false);
-      return 0;
+      return NXSL_ERR_SUCCESS;
    }
 
    if (!argv[0]->isObject())
@@ -199,13 +206,19 @@ NXSL_METHOD_DEFINITION(NetObj, bindTo)
    if (thisObject->isChild(parent->getId())) // prevent loops
       return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-   NetObj::linkObjects(parent, thisObject);
-   parent->calculateCompoundStatus();
-   vm->writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), L"%s %s [%u] bound to %s %s [%u] by script",
-      thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
+   if (NetObj::linkObjects(parent, thisObject))
+   {
+      parent->calculateCompoundStatus();
+      vm->writeAuditLog(AUDIT_OBJECTS, true, parent->getId(), L"%s %s [%u] bound to %s %s [%u] by script",
+         thisObject->getObjectClassName(), thisObject->getName(), thisObject->getId(), parent->getObjectClassName(), parent->getName(), parent->getId());
+      *result = vm->createValue(true);
+   }
+   else
+   {
+      *result = vm->createValue(false);
+   }
 
-   *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
