@@ -1,44 +1,10 @@
 # WebAPI Component
 
-> Shared guidelines: See [root CLAUDE.md](../../../CLAUDE.md) and [server CLAUDE.md](../CLAUDE.md) for C++ development guidelines, build commands, and contribution workflow.
+> Shared guidelines: see [root CLAUDE.md](../../../CLAUDE.md) and [server CLAUDE.md](../CLAUDE.md).
 
 ## Overview
 
 The WebAPI module (`webapi.nxm`) is a server module that provides REST API endpoints for NetXMS. It is loaded by the server at startup and registers HTTP routes using the `RouteBuilder` API. The module uses `libmicrohttpd` for HTTP handling.
-
-## Build Commands
-
-```bash
-# Build webapi module only (after full configure)
-make -C src/server/webapi
-
-# Full server build (includes webapi)
-make -C src/server
-```
-
-## Key Files
-
-| File | Description |
-|------|-------------|
-| `webapi.h` | Common header, includes `nms_core.h` and `netxms-webapi.h` |
-| `main.cpp` | Module entry point, route registration |
-| `openapi.yaml` | OpenAPI 3.0 specification for all endpoints |
-| `alarms.cpp` | Alarm management endpoints |
-| `datacoll.cpp` | Data collection and history endpoints |
-| `data_export.cpp` | DCI history export (tagged DCIs to CSV-in-ZIP, background task, anonymization) |
-| `dcst.cpp` | DCI summary table endpoints |
-| `epp.cpp` | Event processing policy endpoints |
-| `events.cpp` | Event template endpoints |
-| `find.cpp` | Network search endpoints |
-| `grafana.cpp` | Grafana integration endpoints |
-| `info.cpp` | Server info and status endpoints |
-| `objects.cpp` | Object management endpoints |
-| `objtools.cpp` | Object tool endpoints |
-| `script_execution.cpp` | Ad-hoc script execution (synchronous / WebSocket output streaming) |
-| `scripts.cpp` | Script library endpoints |
-| `server_console.cpp` | Server debug console endpoints (execute / WebSocket session) |
-| `tcpproxy.cpp` | TCP proxy / WebSocket endpoints |
-| `ai.cpp` | AI chat endpoints |
 
 ## Adding New Endpoints
 
@@ -46,7 +12,7 @@ make -C src/server
 2. Implement handler functions with signature `int H_MyHandler(Context *context)`.
 3. Declare the handler in `main.cpp` and register routes using `RouteBuilder`.
 4. Add the source file to `Makefile.am` (alphabetical order in `webapi_la_SOURCES`).
-5. **Update `openapi.yaml`** to document the new or modified endpoints.
+5. **Update `openapi.yaml`** for every added, modified or removed endpoint — it is the authoritative API reference for external consumers.
 
 ### Handler Pattern
 
@@ -93,10 +59,6 @@ The JSON interface is becoming the primary interface to the system; a JSON→NXC
 - **Point-in-time values:** parse string values with `ParseTimestamp()` from libnetxms (`nms_util.h`) at the use site — it accepts ISO 8601, UNIX timestamps as strings, relative offsets (`[+|-]<number>[s|m|h|d]`), and `now`. Detect a parse failure by passing an out-of-band `defaultValue` (`-1`) and testing for it; do not treat a returned 0 as failure, epoch is valid input. Range-check the result where it matters — timestamps are stored in the database as 32 bit values, so a millisecond timestamp or a max-date sentinel from a generated client wraps silently. JSON integers are UNIX timestamps directly. Do not add new shared time-parse helpers to webapi headers.
 - **Content types:** `RouteBuilder` accepts `application/json` on every POST/PUT/PATCH route by default; `.acceptProtobuf()` / `.acceptImage()` only widen the accepted set. A binary-only route (protobuf, raw image body) must call `.acceptJson(false)`, otherwise it silently accepts a JSON-labeled body and the handler parses it blindly. Anything not accepted gets 415.
 
-## API Documentation
-
-When changes are made to API endpoints (adding, modifying, or removing), the OpenAPI specification in `openapi.yaml` must also be updated to reflect those changes. This file serves as the authoritative API reference for external consumers.
-
 ## HTTP Response Conventions
 
 | Code | Usage |
@@ -117,9 +79,3 @@ Use `context->checkSystemAccessRights()` with constants from `nxcldefs.h` (e.g.,
 ## Audit Logging
 
 Use `context->writeAuditLog()` for simple audit entries and `context->writeAuditLogWithValues()` when old/new values should be recorded. Common subsystem: `AUDIT_SYSCFG` for system configuration changes, `AUDIT_OBJECTS` for object operations.
-
-## Related Components
-
-- [Server core](../CLAUDE.md) - Server core that exports functions called by handlers
-- [libnetxms](../../libnetxms/CLAUDE.md) - Core utility library
-- [libnxdb](../../db/CLAUDE.md) - Database abstraction

@@ -1,203 +1,23 @@
 # Core Library (libnetxms)
 
-> Shared guidelines: See [root CLAUDE.md](../../CLAUDE.md) for C++ development guidelines.
+> Shared guidelines: see [root CLAUDE.md](../../CLAUDE.md).
 
-## Overview
-
-`libnetxms` is the core C++ library used by all NetXMS components (server, agent, tools). It provides:
-- String handling and containers
-- Threading and synchronization
-- Cryptography
-- Network utilities
-- Configuration parsing
-- Logging infrastructure
-
-## Directory Structure
-
-This is a flat library with all source files in the root directory.
-
-## Key Components
-
-### String Handling
-
-| Class/File | Description |
-|------------|-------------|
-| `string.cpp` | `String` class - dynamic string |
-| `stringlist.cpp` | `StringList` - list of strings |
-| `strmap.cpp` | `StringMap` - string-to-string map |
-
-**Usage:**
-```cpp
-#include <nxcpapi.h>
-
-String s = _T("Hello");
-s.append(_T(" World"));
-
-StringList list;
-list.add(_T("item1"));
-list.add(_T("item2"));
-
-StringMap map;
-map.set(_T("key"), _T("value"));
-```
+## Strings
 
 **Choosing a string class for a member field:**
 - Set once at construction (ctor arg or move) → `String` (its `operator=` is deleted, so it can't be reassigned later).
 - Reassigned wholesale but never appended/inserted → `MutableString` (lightweight assignable variant; supports `operator=` from `String` / `MutableString` / `const TCHAR*`).
 - Built up incrementally (append/insert/format) → `StringBuffer`.
 
-### Container Classes
-
-| File | Class | Description |
-|------|-------|-------------|
-| `array.cpp` | `ObjectArray<T>` | Dynamic array of object pointers |
-| `array.cpp` | `IntegerArray<T>` | Array of integers |
-| `hashmapbase.cpp` | `HashMap<K,V>` | Hash map with string keys |
-| `hashsetbase.cpp` | `HashSet<T>` | Hash set |
-| `queue.cpp` | `ObjectQueue<T>` | Thread-safe queue |
-| `squeue.cpp` | `SharedObjectQueue<T>` | Shared object queue |
-
-**Ownership:**
-```cpp
-// Container owns objects (will delete them)
-ObjectArray<MyClass> owned(16, 16, Ownership::True);
-owned.add(new MyClass());  // Array will delete
-
-// Container doesn't own objects
-ObjectArray<MyClass> borrowed(16, 16, Ownership::False);
-borrowed.add(existingPtr);  // Caller responsible for deletion
-```
-
-### Threading
-
-| File | Class/Function | Description |
-|------|----------------|-------------|
-| `threads.cpp` | `ThreadCreateEx()` | Create a thread |
-| `threads.cpp` | `Mutex` | Mutex class |
-| `threads.cpp` | `Condition` | Condition variable |
-| `threads.cpp` | `RWLock` | Read-write lock |
-| `threads.cpp` | `LockGuard` | RAII mutex guard |
-| `tp.cpp` | `ThreadPool*` | Thread pool functions |
-
-**Usage:**
-```cpp
-// Mutex with RAII
-Mutex m_lock;
-{
-   LockGuard lock(m_lock);
-   // Protected code
-}
-
-// Thread pool
-ThreadPoolExecute(g_threadPool, MyFunction, arg);
-ThreadPoolScheduleRelative(g_threadPool, 5000, MyFunction, arg);  // 5 sec delay
-```
-
-### Memory Management
-
-| File | Function | Description |
-|------|----------|-------------|
-| (in nms_util.h) | `MemAlloc(size)` | Allocate memory |
-| (in nms_util.h) | `MemFree(ptr)` | Free memory |
-| (in nms_util.h) | `MemAllocStruct<T>()` | Allocate struct |
-| (in nms_util.h) | `MemAllocArray<T>(n)` | Allocate array |
-| `mempool.cpp` | `MemoryPool` | Memory pool class |
-
-**Usage:**
-```cpp
-// Allocate struct
-MyStruct *s = MemAllocStruct<MyStruct>();
-
-// Allocate array
-int *arr = MemAllocArray<int>(100);
-
-// Free
-MemFree(s);
-MemFree(arr);
-```
+## Memory
 
 **Temporary buffers:** for a scratch buffer that should live on the stack when small but fall back to the heap when large, use `Buffer<T, BUFFER_SIZE>` (`nms_util.h`) instead of the hand-rolled `T local[N]; T *p = (len < N) ? local : MemAllocArrayNoInit<T>(len)` + manual `MemFree` pattern — no leak/double-free risk and no size-threshold off-by-one. Its inline storage is `alignas(T)`, so it is also the correct fix for unaligned-access/SIGBUS bugs on strict-alignment CPUs (SPARC, older ARM/MIPS): `memcpy` bytes from an arbitrary stream/wire offset into the `Buffer`, do all `T`-typed work there, and `memcpy` back — never `reinterpret_cast<T*>` into a raw byte stream. Note `BUFFER_SIZE` is in bytes, `reserve()` does not initialize contents, and `operator T*()` makes it a drop-in `T*`.
 
-### Cryptography
-
-| File | Description |
-|------|-------------|
-| `crypto.cpp` | Encryption/decryption utilities |
-| `hash.cpp` | Hash functions |
-| `md5.cpp` | MD5 implementation |
-| `sha1.cpp` | SHA-1 implementation |
-| `sha2.cpp` | SHA-256/512 implementation |
-| `cert.cpp` | Certificate handling |
-
-### Network
-
-| File | Description |
-|------|-------------|
-| `net.cpp` | Network utilities |
-| `inetaddr.cpp` | `InetAddress` class |
-| `macaddr.cpp` | `MacAddress` class |
-| `icmp.cpp` | ICMP (ping) functions |
-| `socket_listener.cpp` | Socket listener |
-| `tls_conn.cpp` | TLS connections |
-
-**Usage:**
-```cpp
-InetAddress addr = InetAddress::resolveHostName(_T("example.com"));
-if (addr.isValid())
-{
-   // Use address
-}
-```
+## Network
 
 For members holding a MAC address or bridge ID, use a `MacAddress` object, not a raw `BYTE[MAC_ADDR_LENGTH]` array — it provides `isValid()`, `equals()`, `parse()`, `toString()`, `toJson()`, and eliminates `memset`/`memcmp`/`BinToStr` boilerplate and zero-MAC sentinels. When persisting to the database, `MacAddressNotation::FLAT_STRING` matches the old `BinToStr` flat-hex format, so on-disk round-trips are preserved when converting existing `BYTE[]` fields.
 
-### NXCP Protocol
-
-| File | Description |
-|------|-------------|
-| `nxcp.cpp` | NXCP message handling |
-| `message.cpp` | `NXCPMessage` class |
-| `msgrecv.cpp` | Message receiver |
-| `msgwq.cpp` | Message wait queue |
-
-### Configuration
-
-| File | Description |
-|------|-------------|
-| `config.cpp` | Configuration file parsing |
-
-### Logging
-
-| File | Description |
-|------|-------------|
-| `log.cpp` | Logging infrastructure |
-| `debug_tag_tree.cpp` | Debug tag management |
-
-**Usage:**
-```cpp
-#define DEBUG_TAG _T("mymodule")
-
-nxlog_debug_tag(DEBUG_TAG, 3, _T("Processing %s"), name);
-nxlog_write(NXLOG_WARNING, _T("Warning message"));
-```
-
-### Utilities
-
-| File | Description |
-|------|-------------|
-| `tools.cpp` | Various utility functions |
-| `uuid.cpp` | UUID handling |
-| `geolocation.cpp` | Geolocation class |
-| `base64.cpp` | Base64 encoding/decoding |
-| `base32.cpp` | Base32 encoding/decoding |
-| `diff.cpp` | Text diff algorithm |
-| `table.cpp` | `Table` class for tabular data |
-| `bytestream.cpp` | `ByteStream` class |
-| `procexec.cpp` | Process execution |
-| `subproc.cpp` | Subprocess management |
-| `vault.cpp` | Secret vault integration |
-
-### JSON (jansson) Helpers
+## JSON (jansson) Helpers
 
 Never `#include <jansson.h>` directly — include `nms_util.h`, which selects the correct (system or bundled) jansson copy and provides `json_t`.
 
@@ -211,24 +31,7 @@ See the full list near `json_object_get` in `include/nms_util.h`. When emitting 
 
 **Helper placement** when adding a new shared JSON/argument helper: trivial single-expression helpers go `static inline` directly in `include/nms_util.h`; anything with a non-trivial body or extra dependencies gets a `LIBNETXMS_EXPORTABLE` declaration in the header and its body in `src/libnetxms/tools.cpp`, next to the existing ones. Don't bloat every TU with a heavy `static inline`.
 
-### Compression
-
-| File | Description |
-|------|-------------|
-| `lz4.c` | LZ4 compression |
-| `streamcomp.cpp` | Stream compression |
-| `ztools.cpp` | Zlib utilities |
-
-### Character Encoding
-
-| File | Description |
-|------|-------------|
-| `unicode.cpp` | Unicode utilities |
-| `cc_utf8.cpp` | UTF-8 conversion |
-| `cc_ucs2.cpp` | UCS-2 conversion |
-| `cc_ucs4.cpp` | UCS-4 conversion |
-| `cc_mb.cpp` | Multibyte conversion |
-| `iconv.cpp` | iconv wrapper |
+## Character Encoding
 
 **Termination gotcha:** `wchar_to_utf8` / `ucs2_to_utf8` / `ucs4_to_utf8` / `mb_to_utf8` / `tchar_to_utf8` do **not** guarantee null termination when the destination buffer is too small — if conversion stops early because a multi-byte UTF-8 sequence doesn't fit, the buffer is left unterminated. Convert into `bufferSize - 1` and terminate via the return value:
 
@@ -237,79 +40,12 @@ size_t bytes = tchar_to_utf8(value, -1, buffer, bufferSize - 1);
 buffer[bytes] = 0;
 ```
 
-### XML
+## Thread Safety
 
-| File | Description |
-|------|-------------|
-| `pugixml.cpp` | PugiXML library (embedded) |
-| `xml.cpp` | XML utilities |
-
-## TCHAR and Unicode
-
-The library uses `TCHAR` for platform-independent character handling:
-- On server: Always Unicode (WCHAR)
-- On agent: Platform-dependent (WCHAR on Windows, char on Unix)
-
-```cpp
-// String literals
-const TCHAR *str = _T("Hello World");
-
-// Format strings
-_sntprintf(buffer, size, _T("Value: %d"), value);
-
-// String comparison
-if (!_tcscmp(str1, str2))
-   // Strings are equal
-```
+For trivial accessors to mutex-guarded members, use the `GetAttributeWithLock(attr, mutex)` / `SetAttributeWithLock` templates (`nms_util.h`) as header one-liners (copy under lock, return by value) instead of hand-written LockGuard getter bodies in the .cpp — established pattern: `DCObject` getters in `nms_dcoll.h`. Give the explicit template argument to convert derived types (`MutableString`/`StringBuffer` → `String`). Caveat: raw array members (`wchar_t[]`, `char[]`) can't go through the template — argument binding would construct the copy *outside* the lock; use a LockGuard one-liner (`{ LockGuard g(m_mutex); return String(m_arr); }`) for those.
 
 ## Compiler Floor and Dead Version Gates
 
 The supported floor is GCC 4.8, Clang 3.3 and Visual Studio 2015 (`_MSC_VER >= 1900`), with C++11 as the language ceiling. Preprocessor gates that can never be false at these minimums (`__GNUC__ < 4`, `__GNUC__ == 4 && __GNUC_MINOR__ < 8`, `_MSC_VER < 1900` and the like) are dead and may be removed during cleanups. Keep fallbacks for C++14+ features (e.g. `HAVE_STD_MAKE_UNIQUE`) since the ceiling is C++11.
 
 Exception: the Windows XP / pre-2003 64-bit atomic block in `include/nxatomic.h` (guarded by `!defined(_WIN64) && (_WIN32_WINNT < 0x0502)`) is intentionally retained even though the default `_WIN32_WINNT` makes it dead today — a WinXP agent build may still be needed. Do not remove it as obsolete code.
-
-## Header Files
-
-Main headers to include:
-
-| Header | Provides |
-|--------|----------|
-| `nms_common.h` | Common definitions |
-| `nms_util.h` | Utility classes and functions |
-| `nxcpapi.h` | NXCP protocol and String class |
-
-## Thread Safety
-
-Most classes are NOT thread-safe by default. Use explicit synchronization:
-
-```cpp
-class MyClass
-{
-private:
-   Mutex m_mutex;
-   ObjectArray<Item> m_items;
-
-public:
-   void addItem(Item *item)
-   {
-      LockGuard lock(m_mutex);
-      m_items.add(item);
-   }
-};
-```
-
-Thread-safe classes:
-- `ObjectQueue<T>` - thread-safe by design
-- `ConditionQueue<T>` - thread-safe by design
-
-For trivial accessors to mutex-guarded members, use the `GetAttributeWithLock(attr, mutex)` / `SetAttributeWithLock` templates (`nms_util.h`) as header one-liners (copy under lock, return by value) instead of hand-written LockGuard getter bodies in the .cpp — established pattern: `DCObject` getters in `nms_dcoll.h`. Give the explicit template argument to convert derived types (`MutableString`/`StringBuffer` → `String`). Caveat: raw array members (`wchar_t[]`, `char[]`) can't go through the template — argument binding would construct the copy *outside* the lock; use a LockGuard one-liner (`{ LockGuard g(m_mutex); return String(m_arr); }`) for those.
-
-## Related Components
-
-This library is used by:
-- [Server](../server/CLAUDE.md)
-- [Agent](../agent/CLAUDE.md)
-- [Client](../client/CLAUDE.md)
-- [NXSL](../libnxsl/CLAUDE.md)
-- [Database](../db/CLAUDE.md)
-- [SNMP](../snmp/CLAUDE.md)

@@ -101,49 +101,6 @@ Maven must run online for `tests/integration` - offline mode (`-o`) cannot resol
 node through `TestHelper.findManagementServer()`, so the server must have a node with the
 `NC_IS_LOCAL_MGMT` capability.
 
-## Architecture
-
-```
-                    ┌─────────────────────────────────────────────────────────┐
-                    │                    Management Console                   │
-                    │              (nxmc - Java SWT/RWT)                      │
-                    │              src/client/nxmc/java/                      │
-                    └───────────────────────┬─────────────────────────────────┘
-                                            │
-                    ┌───────────────────────┴─────────────────────────────────┐
-                    │                     Server (netxmsd)                    │
-                    │                     src/server/                         │
-                    │  ┌─────────────┐ ┌─────────────┐ ┌────────────────────┐ │
-                    │  │   Drivers   │ │   WebAPI    │ │   Event/Alarm      │ │
-                    │  │  (35+ NDD)  │ │   (REST)    │ │   Processing       │ │
-                    │  └─────────────┘ └─────────────┘ └────────────────────┘ │
-                    └───────────────────────┬─────────────────────────────────┘
-                                            │
-         ┌──────────────────────────────────┼──────────────────────────────────┐
-         │                                  │                                  │
-         ▼                                  ▼                                  ▼
-┌─────────────────┐              ┌─────────────────────┐              ┌─────────────────┐
-│ Agent (nxagentd)│              │   Network Devices   │              │   Database      │
-│ src/agent/      │              │   (SNMP/SSH/etc)    │              │ (PostgreSQL/    │
-│ 47+ subagents   │              │                     │              │  MySQL/etc)     │
-└─────────────────┘              └─────────────────────┘              └─────────────────┘
-```
-
-### Core Components
-
-- **netxmsd** (`src/server/`) - Central management server
-- **nxagentd** (`src/agent/`) - Monitoring agent
-- **nxmc** (`src/client/nxmc/java/`) - Management console (desktop SWT/web RWT)
-- **webapi** (`src/server/webapi/`) - REST API
-
-### Key Libraries
-
-- **libnetxms** (`src/libnetxms/`) - Core utility library
-- **libnxagent** (`src/agent/libnxagent/`) - Agent-related tools
-- **libnxsl** (`src/libnxsl/`) - NXSL scripting language interpreter
-- **libnxdb** (`src/db/libnxdb/`) - Database abstraction
-- **libnxsnmp** (`src/snmp/libnxsnmp/`) - SNMP protocol support
-
 ## C++ Development Guidelines
 
 > **Note**: These guidelines apply to all C++ components. See component-specific CLAUDE.md for additional details.
@@ -154,6 +111,7 @@ node through `TestHelper.findManagementServer()`, so the server must have a node
 - Use `nullptr` instead of `NULL`
 - Smart pointers (`shared_ptr`, `unique_ptr`) are available
 - Lambda expressions and move semantics are used in newer code
+- Longer reference: [doc/CPP_DEVELOPER_GUIDE.md](doc/CPP_DEVELOPER_GUIDE.md)
 
 ### String Handling
 
@@ -180,7 +138,7 @@ node through `TestHelper.findManagementServer()`, so the server must have a node
 
 - `ObjectArray<T>` - Dynamic array of object pointers
 - `IntegerArray<T>` - Array of integers
-- `HashMap<T>` - Hash map with string keys
+- `HashMap<K,V>` - Hash map with fixed-size keys; `StringObjectMap<T>` for string keys
 - `StringMap` - String-to-string map
 - `ObjectQueue<T>` - Thread-safe queue
 
@@ -216,14 +174,6 @@ Prefer NetXMS containers for object collections and ownership management. For ma
 - Desktop client uses SWT, web client uses RWT
 - Always add an `import` for any class referenced in code — never write a fully-qualified name inline (e.g. `org.netxms.nxmc.modules.X.Y.method()`). Exceptions: `java.lang.*` and same-package classes.
 
-## Key Documentation
-
-- [Administration Guide](https://www.netxms.org/documentation/adminguide/)
-- [NXSL Scripting](https://www.netxms.org/documentation/nxsl-latest/)
-- [C++ Developer Guide](doc/CPP_DEVELOPER_GUIDE.md)
-- [Java API](https://www.netxms.org/documentation/javadoc/latest/)
-- [Data Dictionary](https://www.netxms.org/documentation/datadictionary-latest/)
-
 ## CI / Static Analysis
 
 - **Semgrep SAST** runs on every PR (diff-aware, blocks on ERROR severity) and nightly (full scan, informational). Workflow: `.github/workflows/semgrep.yaml`
@@ -250,8 +200,6 @@ Console PO files live in `src/client/nxmc/java/src/main/resources/po/`. Use `msg
 
 When translating PO files or doing text transformations, preserve grammatical structure of the target language. Do not do word-by-word substitution. Process in contextual batches and verify grammar, especially noun/adjective ordering and gendered forms. Technical terms (SNMP, SSH, DCI) stay untranslated.
 
-## Contribution Workflow
+## Commits
 
-- Issue-first approach: create GitHub issue before coding
-- All changes require discussion and approval before implementation
-- Pull requests must reference related issues
+Commit subjects reference the tracked issue at the end: `fixed incorrect handling of ... (issue #3781)`.
