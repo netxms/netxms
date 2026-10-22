@@ -289,6 +289,12 @@ NXSL_METHOD_DEFINITION(NetObj, createUserAgentNotification)
    if (!argv[1]->isInteger() || !argv[2]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
 
+   if (!vm->validateAccess(NXSL_AC_SYSTEM, SYSTEM_ACCESS_UA_NOTIFICATIONS))
+   {
+      *result = vm->createValue();
+      return NXSL_ERR_SUCCESS;
+   }
+
    uint32_t len = MAX_USER_AGENT_MESSAGE_SIZE;
    const TCHAR *message = argv[0]->getValueAsString(&len);
    IntegerArray<uint32_t> idList(16,16);
