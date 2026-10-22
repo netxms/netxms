@@ -100,6 +100,8 @@ public class DashboardElementConfigFactory
                return XMLTools.createFromXml(RackDiagramConfig.class, element.getData());
             case DashboardElement.SCRIPTED_BAR_CHART:
                return XMLTools.createFromXml(ScriptedBarChartConfig.class, element.getData());
+            case DashboardElement.SCRIPTED_GAUGE:
+               return XMLTools.createFromXml(ScriptedGaugeConfig.class, element.getData());
             case DashboardElement.SCRIPTED_PIE_CHART:
                return XMLTools.createFromXml(ScriptedPieChartConfig.class, element.getData());
             case DashboardElement.SEPARATOR:
