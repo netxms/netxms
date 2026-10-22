@@ -42,7 +42,9 @@ import com.jcraft.jsch.UserInfo;
  * Terminal transport with SSH client running in the console, connected to the node over TCP proxy channel. SSH session is
  * end-to-end encrypted between console and node; the proxy agent only forwards TCP stream. Host keys are kept in file
  * "known_hosts" in the console state directory: unknown keys are confirmed via host key verifier, changed keys are
- * rejected.
+ * rejected. Location of "known_hosts" is resolved in constructor, so transport must be created on UI thread (web client
+ * resolves state directory through UI session); connect() itself may run on any thread. Private key file is accepted only
+ * in desktop client - in web client path would be resolved on web server host.
  */
 public class DirectSshTransport implements TerminalTransport
 {
@@ -56,6 +58,7 @@ public class DirectSshTransport implements TerminalTransport
    private final String login;
    private final String password;
    private final String keyFile;
+   private final File knownHostsFile;
    private final HostKeyVerifier hostKeyVerifier;
    private TcpProxy proxy = null;
    private Session sshSession = null;
@@ -72,7 +75,7 @@ public class DirectSshTransport implements TerminalTransport
     * @param port SSH port on target node
     * @param login login name
     * @param password password, or passphrase of private key if key file is given
-    * @param keyFile private key file or null/empty for password authentication
+    * @param keyFile private key file or null/empty for password authentication (ignored in web client)
     * @param hostKeyVerifier verifier for unknown host keys
     */
    public DirectSshTransport(NXCSession session, AbstractNode node, int port, String login, String password, String keyFile, HostKeyVerifier hostKeyVerifier)
@@ -82,7 +85,8 @@ public class DirectSshTransport implements TerminalTransport
       this.port = port;
       this.login = (login != null) ? login : "";
       this.password = (password != null) ? password : "";
-      this.keyFile = ((keyFile != null) && !keyFile.trim().isEmpty()) ? keyFile.trim() : null;
+      this.keyFile = (!Registry.IS_WEB_CLIENT && (keyFile != null) && !keyFile.trim().isEmpty()) ? keyFile.trim() : null;
+      this.knownHostsFile = new File(Registry.getStateDir(), "known_hosts");
       this.hostKeyVerifier = hostKeyVerifier;
    }
 
@@ -100,10 +104,9 @@ public class DirectSshTransport implements TerminalTransport
       try
       {
          JSch jsch = new JSch();
-         File knownHosts = new File(Registry.getStateDir(), "known_hosts");
-         if (!knownHosts.exists())
-            knownHosts.createNewFile();
-         jsch.setKnownHosts(knownHosts.getAbsolutePath());
+         if (!knownHostsFile.exists())
+            knownHostsFile.createNewFile();
+         jsch.setKnownHosts(knownHostsFile.getAbsolutePath());
          if (keyFile != null)
             jsch.addIdentity(keyFile, password);
 
@@ -313,8 +316,9 @@ public class DirectSshTransport implements TerminalTransport
       {
          if (message.contains("HAS CHANGED"))
          {
-            hostKeyError = "Host key of " + node.getPrimaryIP().getHostAddress() + " has changed; remove the old key from " +
-                  new File(Registry.getStateDir(), "known_hosts").getAbsolutePath() + " if the change is expected";
+            hostKeyError = "Host key of " + node.getPrimaryIP().getHostAddress() + " has changed; " +
+                  (Registry.IS_WEB_CLIENT ? "ask web console administrator to remove the old key from known_hosts file if the change is expected" :
+                        "remove the old key from " + knownHostsFile.getAbsolutePath() + " if the change is expected");
             logger.warn(hostKeyError);
             return false;
          }

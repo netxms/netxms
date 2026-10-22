@@ -120,7 +120,6 @@ public class SshConnectDialog extends Dialog
       }
       boolean storedCredentials = ps.getBoolean(prefPrefix + "storedCredentials");
       String savedLogin = ps.getString(prefPrefix + "login");
-      String savedKeyFile = ps.getString(prefPrefix + "keyFile");
       int savedPort = ps.getInt(prefPrefix + "port");
       int savedKeyId = ps.getInt(prefPrefix + "keyId");
 
@@ -162,10 +161,14 @@ public class SshConnectDialog extends Dialog
       textPort.setText(Integer.toString((savedPort > 0) ? savedPort : settings.getPort()));
       textPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-      textKeyFile = new LabeledText(dialogArea, SWT.NONE);
-      textKeyFile.setLabel(i18n.tr("Private key file (direct mode)"));
-      textKeyFile.setText(savedKeyFile);
-      textKeyFile.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      // Private key file is read by SSH client running in the console; in web client that would be a file on web server host
+      if (!Registry.IS_WEB_CLIENT)
+      {
+         textKeyFile = new LabeledText(dialogArea, SWT.NONE);
+         textKeyFile.setLabel(i18n.tr("Private key file (direct mode)"));
+         textKeyFile.setText(ps.getString(prefPrefix + "keyFile"));
+         textKeyFile.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      }
 
       SelectionAdapter updateListener = new SelectionAdapter() {
          @Override
@@ -194,7 +197,8 @@ public class SshConnectDialog extends Dialog
       textLogin.setEditable(ownCredentials);
       textPassword.setEditable(ownCredentials);
       comboKey.setEnabled(proxyMode && ownCredentials);
-      textKeyFile.setEditable(!proxyMode);
+      if (textKeyFile != null)
+         textKeyFile.setEditable(!proxyMode);
       textPort.setEditable(!proxyMode);
    }
 
@@ -280,7 +284,7 @@ public class SshConnectDialog extends Dialog
       settings.setLogin(storedCredentials ? null : login);
       settings.setPassword(textPassword.getText());
       settings.setKeyId(keyId);
-      settings.setKeyFile(textKeyFile.getText().trim());
+      settings.setKeyFile((textKeyFile != null) ? textKeyFile.getText().trim() : null);
       settings.setPort(port);
 
       PreferenceStore ps = PreferenceStore.getInstance();
@@ -288,7 +292,8 @@ public class SshConnectDialog extends Dialog
       ps.set(prefPrefix + "storedCredentials", storedCredentials);
       ps.set(prefPrefix + "login", login);
       ps.set(prefPrefix + "keyId", keyId);
-      ps.set(prefPrefix + "keyFile", settings.getKeyFile());
+      if (textKeyFile != null)
+         ps.set(prefPrefix + "keyFile", settings.getKeyFile());
       ps.set(prefPrefix + "port", port);
 
       super.okPressed();
