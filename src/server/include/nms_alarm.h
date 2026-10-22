@@ -176,6 +176,7 @@ public:
    const TCHAR *getDescription() const { return m_description; }
 
    bool checkAccess(uint32_t userId);
+   bool removeUserFromACL(uint32_t userId) { return m_acl.remove(m_acl.indexOf(userId)); }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
    void modifyFromMessage(const NXCPMessage& msg);
@@ -295,6 +296,7 @@ void GetAlarmCategories(NXCPMessage *msg);
 uint32_t UpdateAlarmCategory(const NXCPMessage& request, uint32_t *returnId);
 uint32_t NXCORE_EXPORTABLE DeleteAlarmCategory(uint32_t id);
 bool CheckAlarmCategoryAccess(uint32_t userId, uint32_t categoryId);
+void DeleteUserFromAlarmCategories(uint32_t userId);
 void LoadAlarmCategories();
 AlarmCategory *GetAlarmCategory(uint32_t id);
 bool IsValidAlarmCategoryId(uint32_t id);

@@ -880,6 +880,21 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM auth_tokens WHERE user_id=?"));
 
    if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM trusted_devices WHERE user_id=?"));
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM ai_saved_prompts WHERE user_id=?"));
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM graph_acl WHERE user_id=?"));
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_tools_acl WHERE user_id=?"));
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_summary_table_acl WHERE user_id=?"));
+
+   if (success)
       DBCommit(hdb);
    else
       DBRollback(hdb);
@@ -1540,6 +1555,15 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
 
    if (success)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM two_factor_auth_bindings WHERE user_id=?"));
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM graph_acl WHERE user_id=?"));
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM object_tools_acl WHERE user_id=?"));
+
+   if (success)
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dci_summary_table_acl WHERE user_id=?"));
 
    if (success)
       DBCommit(hdb);

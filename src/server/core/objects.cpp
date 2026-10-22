@@ -1963,7 +1963,7 @@ void StopObjectMaintenanceThreads()
 }
 
 /**
- * Delete user or group from all objects' ACLs
+ * Delete user or group from all objects' ACLs and responsible user lists
  */
 void DeleteUserFromAllObjects(uint32_t userId)
 {
@@ -1971,6 +1971,7 @@ void DeleteUserFromAllObjects(uint32_t userId)
 	   [userId] (NetObj *object) -> EnumerationCallbackResult
 	   {
 	      object->dropUserAccess(userId);
+	      object->deleteResponsibleUser(userId, nullptr);
 	      return _CONTINUE;
 	   });
 }

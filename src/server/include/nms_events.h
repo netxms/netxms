@@ -1001,6 +1001,7 @@ public:
    const SharedObjectArray<EPRule>& getRules() const { return m_rules; }
 
    void addAccessElement(uint32_t userId, uint32_t accessRights);
+   bool removeAccessElement(uint32_t userId);
    void replaceACL(const StructArray<ACL_ELEMENT>& acl);
    const StructArray<ACL_ELEMENT>& getACL() const { return m_acl; }
    uint32_t getUserRights(uint32_t userId) const;
@@ -1098,6 +1099,7 @@ public:
    uint32_t createChain(const wchar_t *name, const wchar_t *description, const StructArray<ACL_ELEMENT>& acl, uint32_t *chainId, uuid *chainGuid);
    uint32_t modifyChain(uint32_t chainId, const wchar_t *name, const wchar_t *description, const StructArray<ACL_ELEMENT> *acl);
    uint32_t deleteChain(uint32_t chainId, StructArray<EPPChainVersion> *updatedChains);
+   void dropUserAccess(uint32_t userId);
    uint32_t fillChainCallers(NXCPMessage *msg, uint32_t chainId) const;
    json_t *getChainCallersAsJson(uint32_t chainId) const;
    json_t *getChainsAsJson(uint32_t userId) const;

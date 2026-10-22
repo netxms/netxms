@@ -2695,6 +2695,22 @@ void EventPolicyChain::addAccessElement(uint32_t userId, uint32_t accessRights)
 }
 
 /**
+ * Remove access control list element for given user or group. Returns true if element was found and removed.
+ */
+bool EventPolicyChain::removeAccessElement(uint32_t userId)
+{
+   for(int i = 0; i < m_acl.size(); i++)
+   {
+      if (m_acl.get(i)->userId == userId)
+      {
+         m_acl.remove(i);
+         return true;
+      }
+   }
+   return false;
+}
+
+/**
  * Replace access control list
  */
 void EventPolicyChain::replaceACL(const StructArray<ACL_ELEMENT>& acl)
@@ -3802,6 +3818,34 @@ uint32_t EventProcessingPolicy::createChain(const wchar_t *name, const wchar_t *
    nxlog_debug_tag(DEBUG_TAG, 4, L"EPP chain \"%s\" [%u] created", name, id);
    NotifyClientSessions(NX_NOTIFY_EPP_CHAIN_UPDATED, id);
    return RCC_SUCCESS;
+}
+
+/**
+ * Remove deleted user or group from access control lists of all chains
+ */
+void EventProcessingPolicy::dropUserAccess(uint32_t userId)
+{
+   IntegerArray<uint32_t> updatedChains;
+   writeLock();
+   m_chains.forEach(
+      [userId, &updatedChains](const uint32_t& chainId, const shared_ptr<EventPolicyChain>& chain) -> EnumerationCallbackResult
+      {
+         if (chain->removeAccessElement(userId))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, L"User [%u] removed from ACL of EPP chain \"%s\" [%u]", userId, chain->getName(), chainId);
+            updatedChains.add(chainId);
+         }
+         return _CONTINUE;
+      });
+   unlock();
+
+   // In-memory lists are updated first so that concurrent policy save cannot re-insert removed element
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   ExecuteQueryOnObject(hdb, userId, L"DELETE FROM policy_chain_acl WHERE user_id=?");
+   DBConnectionPoolReleaseConnection(hdb);
+
+   for(int i = 0; i < updatedChains.size(); i++)
+      NotifyClientSessions(NX_NOTIFY_EPP_CHAIN_UPDATED, updatedChains.get(i));
 }
 
 /**

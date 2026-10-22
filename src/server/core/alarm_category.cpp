@@ -392,6 +392,30 @@ bool CheckAlarmCategoryAccess(uint32_t userId, uint32_t categoryId)
 }
 
 /**
+ * Remove deleted user or group from access lists of all alarm categories
+ */
+void DeleteUserFromAlarmCategories(uint32_t userId)
+{
+   s_lock.writeLock();
+   Iterator<AlarmCategory> it = s_categories.begin();
+   while(it.hasNext())
+   {
+      AlarmCategory *category = it.next();
+      if (category->removeUserFromACL(userId))
+      {
+         category->saveToDatabase();
+
+         NXCPMessage msg;
+         msg.setCode(CMD_ALARM_CATEGORY_UPDATE);
+         msg.setField(VID_NOTIFICATION_CODE, static_cast<uint16_t>(NX_NOTIFY_ALARM_CATEGORY_UPDATED));
+         category->fillMessage(&msg, VID_ELEMENT_LIST_BASE);
+         NotifyClientSessions(msg);
+      }
+   }
+   s_lock.unlock();
+}
+
+/**
  * Load alarm categories
  */
 void LoadAlarmCategories()

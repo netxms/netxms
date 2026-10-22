@@ -846,11 +846,22 @@ static void UpdateGlobalAccessRights()
 }
 
 /**
- * Thread pool wrapper for DeleteUserFromAllObjects
+ * Remove deleted user or group from access lists and responsible user lists
+ * of all objects, alarm categories, and event processing policy chains
  */
-static void DeleteUserFromAllObjectsWrapper(void *uid)
+static void DeleteUserReferences(uint32_t id)
 {
-   DeleteUserFromAllObjects(CAST_FROM_POINTER(uid, uint32_t));
+   DeleteUserFromAllObjects(id);
+   DeleteUserFromAlarmCategories(id);
+   GetEventProcessingPolicy()->dropUserAccess(id);
+}
+
+/**
+ * Thread pool wrapper for DeleteUserReferences
+ */
+static void DeleteUserReferencesWrapper(void *uid)
+{
+   DeleteUserReferences(CAST_FROM_POINTER(uid, uint32_t));
 }
 
 /**
@@ -867,13 +878,13 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
 
    if (alreadyLocked)
    {
-      // Running DeleteUserFromAllObjects with write lock set on user database
+      // Running DeleteUserReferences with write lock set on user database
       // can cause deadlock if access right check is running in parallel
-      ThreadPoolExecute(g_mainThreadPool, DeleteUserFromAllObjectsWrapper, CAST_TO_POINTER(id, void*));
+      ThreadPoolExecute(g_mainThreadPool, DeleteUserReferencesWrapper, CAST_TO_POINTER(id, void*));
    }
    else
    {
-      DeleteUserFromAllObjects(id);
+      DeleteUserReferences(id);
    }
 
    if (!alreadyLocked)
