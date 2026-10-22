@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.views;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -288,6 +289,10 @@ public class SshTerminalView extends AdHocObjectView
       private volatile boolean connected = false;
       private int columns = 80;
       private int rows = 24;
+      private final Object resizeLock = new Object();
+      private int pendingColumns = 0; // guarded by resizeLock
+      private int pendingRows = 0; // guarded by resizeLock
+      private boolean resizeInProgress = false; // guarded by resizeLock
       private final OutputStream remoteStream = new OutputStream() {
          @Override
          public void write(int b) throws IOException
@@ -344,6 +349,10 @@ public class SshTerminalView extends AdHocObjectView
                   out.flush();
                }
             }
+            catch(ClosedChannelException e)
+            {
+               logger.debug("SSH terminal closed locally before connection was established");
+            }
             catch(Exception e)
             {
                String message = (e.getLocalizedMessage() != null) ? e.getLocalizedMessage() : e.getClass().getName();
@@ -394,6 +403,10 @@ public class SshTerminalView extends AdHocObjectView
       }
 
       /**
+       * Called by terminal control on UI thread for every resize event. Remote side is notified from a background thread
+       * because in proxy mode resize is a console-server-agent round trip; events arriving while notification is in
+       * progress are coalesced so that only the most recent size is sent.
+       *
        * @see org.eclipse.terminal.connector.provider.AbstractTerminalConnector#setTerminalSize(int, int)
        */
       @Override
@@ -403,9 +416,44 @@ public class SshTerminalView extends AdHocObjectView
             return;
          columns = newWidth;
          rows = newHeight;
-         TerminalTransport t = transport;
-         if (connected && (t != null))
-            t.resize(newWidth, newHeight);
+         final TerminalTransport t = transport;
+         if (!connected || (t == null))
+            return;
+
+         synchronized(resizeLock)
+         {
+            pendingColumns = newWidth;
+            pendingRows = newHeight;
+            if (resizeInProgress)
+               return;
+            resizeInProgress = true;
+         }
+
+         Thread thread = new Thread(() -> {
+            int c, r;
+            synchronized(resizeLock)
+            {
+               c = pendingColumns;
+               r = pendingRows;
+            }
+            while(true)
+            {
+               if (connected)
+                  t.resize(c, r);
+               synchronized(resizeLock)
+               {
+                  if ((pendingColumns == c) && (pendingRows == r))
+                  {
+                     resizeInProgress = false;
+                     return;
+                  }
+                  c = pendingColumns;
+                  r = pendingRows;
+               }
+            }
+         }, "SshTerminalResize");
+         thread.setDaemon(true);
+         thread.start();
       }
 
       /**

@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.ssh;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.ClosedChannelException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TcpProxy;
 import org.slf4j.Logger;
@@ -27,7 +28,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Terminal transport over interactive SSH channel established by node's SSH proxy agent. Terminal type is fixed to
- * "xterm" because both console terminal implementations emulate xterm.
+ * "xterm" because both console terminal implementations emulate xterm. Transport is single-use: close() called while
+ * connect() is still in progress is remembered, and connect() then releases the channel and throws
+ * ClosedChannelException instead of handing it over.
  */
 public class ProxySshTransport implements TerminalTransport
 {
@@ -38,7 +41,8 @@ public class ProxySshTransport implements TerminalTransport
    private final String login;
    private final String password;
    private final int keyId;
-   private TcpProxy proxy = null;
+   private TcpProxy proxy = null; // guarded by this
+   private boolean closed = false; // guarded by this
 
    /**
     * Create transport.
@@ -64,7 +68,20 @@ public class ProxySshTransport implements TerminalTransport
    @Override
    public void connect(int columns, int rows) throws Exception
    {
-      proxy = session.setupSshTerminal(nodeId, login, password, keyId, "xterm", columns, rows);
+      TcpProxy p = session.setupSshTerminal(nodeId, login, password, keyId, "xterm", columns, rows);
+      synchronized(this)
+      {
+         if (!closed)
+         {
+            proxy = p;
+            p = null;
+         }
+      }
+      if (p != null)
+      {
+         p.close();
+         throw new ClosedChannelException();
+      }
       proxy.setBufferingThresholds(1, 0); // send each keystroke immediately
    }
 
@@ -92,7 +109,11 @@ public class ProxySshTransport implements TerminalTransport
    @Override
    public void resize(int columns, int rows)
    {
-      TcpProxy p = proxy;
+      TcpProxy p;
+      synchronized(this)
+      {
+         p = proxy;
+      }
       if ((p == null) || p.isClosed())
          return;
       try
@@ -111,7 +132,12 @@ public class ProxySshTransport implements TerminalTransport
    @Override
    public void close()
    {
-      TcpProxy p = proxy;
+      TcpProxy p;
+      synchronized(this)
+      {
+         closed = true;
+         p = proxy;
+      }
       if (p != null)
          p.close();
    }

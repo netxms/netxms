@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.channels.ClosedChannelException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TcpProxy;
 import org.netxms.client.objects.AbstractNode;
@@ -44,7 +45,9 @@ import com.jcraft.jsch.UserInfo;
  * "known_hosts" in the console state directory: unknown keys are confirmed via host key verifier, changed keys are
  * rejected. Location of "known_hosts" is resolved in constructor, so transport must be created on UI thread (web client
  * resolves state directory through UI session); connect() itself may run on any thread. Private key file is accepted only
- * in desktop client - in web client path would be resolved on web server host.
+ * in desktop client - in web client path would be resolved on web server host. Transport is single-use: close() called
+ * while connect() is still in progress is remembered, and connect() then releases everything it has established and
+ * throws ClosedChannelException instead of handing the session over.
  */
 public class DirectSshTransport implements TerminalTransport
 {
@@ -60,9 +63,10 @@ public class DirectSshTransport implements TerminalTransport
    private final String keyFile;
    private final File knownHostsFile;
    private final HostKeyVerifier hostKeyVerifier;
-   private TcpProxy proxy = null;
-   private Session sshSession = null;
-   private ChannelShell channel = null;
+   private TcpProxy proxy = null; // guarded by this
+   private Session sshSession = null; // guarded by this
+   private ChannelShell channel = null; // guarded by this
+   private boolean closed = false; // guarded by this
    private InputStream inputStream = null;
    private OutputStream outputStream = null;
    private String hostKeyError = null;
@@ -110,28 +114,47 @@ public class DirectSshTransport implements TerminalTransport
          if (keyFile != null)
             jsch.addIdentity(keyFile, password);
 
-         proxy = session.setupTcpProxy(node.getObjectId(), port);
-         proxy.setBufferingThresholds(1, 0); // SSH layer does its own packetization
-
-         sshSession = jsch.getSession(login, host, port);
-         sshSession.setSocketFactory(new ProxySocketFactory(proxy));
-         sshSession.setConfig("StrictHostKeyChecking", "ask");
-         sshSession.setConfig("PreferredAuthentications", (keyFile != null) ? "publickey,password,keyboard-interactive" : "password,keyboard-interactive,publickey");
+         TcpProxy p = session.setupTcpProxy(node.getObjectId(), port);
+         p.setBufferingThresholds(1, 0); // SSH layer does its own packetization
+         Session s = jsch.getSession(login, host, port);
+         s.setSocketFactory(new ProxySocketFactory(p));
+         s.setConfig("StrictHostKeyChecking", "ask");
+         s.setConfig("PreferredAuthentications", (keyFile != null) ? "publickey,password,keyboard-interactive" : "password,keyboard-interactive,publickey");
          if (keyFile == null)
-            sshSession.setPassword(password);
-         sshSession.setUserInfo(new ConsoleUserInfo());
-         sshSession.connect(CONNECT_TIMEOUT);
+            s.setPassword(password);
+         s.setUserInfo(new ConsoleUserInfo());
+         synchronized(this)
+         {
+            proxy = p;
+            sshSession = s;
+            if (closed)
+               throw new ClosedChannelException(); // released by catch block below
+         }
 
-         channel = (ChannelShell)sshSession.openChannel("shell");
-         channel.setPtyType("xterm", columns, rows, 0, 0);
-         inputStream = channel.getInputStream();
-         outputStream = channel.getOutputStream();
-         channel.connect(CONNECT_TIMEOUT);
+         // close() from another thread past this point closes the proxy, which fails connect() below with JSch exception
+         s.connect(CONNECT_TIMEOUT);
+
+         ChannelShell c = (ChannelShell)s.openChannel("shell");
+         c.setPtyType("xterm", columns, rows, 0, 0);
+         synchronized(this)
+         {
+            channel = c;
+            if (closed)
+               throw new ClosedChannelException();
+         }
+         inputStream = c.getInputStream();
+         outputStream = c.getOutputStream();
+         c.connect(CONNECT_TIMEOUT);
          logger.debug("Direct SSH session established with {}:{} as {}", host, port, login);
       }
       catch(Exception e)
       {
-         close();
+         releaseResources();
+         synchronized(this)
+         {
+            if (closed)
+               throw new ClosedChannelException();
+         }
          if (hostKeyError != null)
             throw new IOException(hostKeyError);
          if (e instanceof JSchException)
@@ -164,7 +187,11 @@ public class DirectSshTransport implements TerminalTransport
    @Override
    public void resize(int columns, int rows)
    {
-      ChannelShell c = channel;
+      ChannelShell c;
+      synchronized(this)
+      {
+         c = channel;
+      }
       if ((c != null) && c.isConnected())
          c.setPtySize(columns, rows, 0, 0);
    }
@@ -175,21 +202,37 @@ public class DirectSshTransport implements TerminalTransport
    @Override
    public void close()
    {
-      if (channel != null)
+      synchronized(this)
       {
-         channel.disconnect();
+         closed = true;
+      }
+      releaseResources();
+   }
+
+   /**
+    * Disconnect SSH channel and session and close TCP proxy (whatever of them is established). Does not mark transport as
+    * closed, so connect() failure path can use it without masking the failure.
+    */
+   private void releaseResources()
+   {
+      ChannelShell c;
+      Session s;
+      TcpProxy p;
+      synchronized(this)
+      {
+         c = channel;
+         s = sshSession;
+         p = proxy;
          channel = null;
-      }
-      if (sshSession != null)
-      {
-         sshSession.disconnect();
          sshSession = null;
-      }
-      if (proxy != null)
-      {
-         proxy.close();
          proxy = null;
       }
+      if (c != null)
+         c.disconnect();
+      if (s != null)
+         s.disconnect();
+      if (p != null)
+         p.close();
    }
 
    /**

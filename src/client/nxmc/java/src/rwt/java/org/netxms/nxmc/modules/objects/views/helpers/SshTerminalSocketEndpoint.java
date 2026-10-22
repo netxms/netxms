@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -321,6 +322,10 @@ public class SshTerminalSocketEndpoint
                sendBinary(buffer, bytes);
             }
             sendControl("{\"type\":\"closed\"}");
+         }
+         catch(ClosedChannelException e)
+         {
+            logger.debug("SSH terminal {} closed before connection was established", id);
          }
          catch(Exception e)
          {
