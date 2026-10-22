@@ -1611,35 +1611,35 @@ bool Group::isMember(uint32_t userId, GroupSearchPath *searchPath) const
 }
 
 /**
- * Add user to group
+ * Add user to group. Returns true if member list was changed.
+ * Caller is responsible for sending user database update notification.
  */
-void Group::addUser(uint32_t userId)
+bool Group::addUser(uint32_t userId)
 {
    if (bsearch(&userId, m_members.getBuffer(), m_members.size(), sizeof(uint32_t), CompareUserId) != nullptr)
-      return;  // already added
+      return false;  // already added
 
    // Not in group, add it
    m_members.add(userId);
    m_members.sort(CompareUserId);
-
-	m_flags |= UF_MODIFIED;
-
-   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
+   m_flags |= UF_MODIFIED;
+   return true;
 }
 
 /**
- * Delete user from group
+ * Delete user from group. Returns true if member list was changed.
+ * Caller is responsible for sending user database update notification.
  */
-void Group::deleteUser(uint32_t userId)
+bool Group::deleteUser(uint32_t userId)
 {
    uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, m_members.getBuffer(), m_members.size(), sizeof(uint32_t), CompareUserId));
    if (e == nullptr)
-      return;  // not a member
+      return false;  // not a member
 
    int index = (int)((char *)e - (char *)m_members.getBuffer()) / sizeof(uint32_t);
    m_members.remove(index);
    m_flags |= UF_MODIFIED;
-   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
+   return true;
 }
 
 /**

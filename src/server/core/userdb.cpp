@@ -773,14 +773,9 @@ void UpdateGroupMembership(uint32_t userId, size_t numGroups, uint32_t *groups)
                break;
             }
          }
-         if (found)
-         {
-            static_cast<Group*>(object)->addUser(userId);
-         }
-         else
-         {
-            static_cast<Group*>(object)->deleteUser(userId);
-         }
+         Group *group = static_cast<Group*>(object);
+         if (found ? group->addUser(userId) : group->deleteUser(userId))
+            SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);
 		}
    }
 }
@@ -900,9 +895,9 @@ static uint32_t DeleteUserDatabaseObjectInternal(uint32_t id, bool alreadyLocked
          while(it.hasNext())
          {
             UserDatabaseObject *group = it.next();
-            if (group->getId() & GROUP_FLAG)
+            if ((group->getId() & GROUP_FLAG) && static_cast<Group*>(group)->deleteUser(id))
             {
-               static_cast<Group*>(group)->deleteUser(id);
+               SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);
             }
          }
       }
@@ -1390,6 +1385,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
 
    const StringSet& newMembers = ldapObject->m_memberList;
    const IntegerArray<uint32_t>& oldMembers = group->getMembers();
+   bool changed = false;
 
    /*
     * Go through existing group member list checking each LDAP user/group by DN
@@ -1405,6 +1401,7 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: Remove LDAP user %s from LDAP group %s"), user->getDN(), group->getDN());
          group->deleteUser(user->getId());   // oldMembers is a reference to actual member list, Group::deleteUser will update it
+         changed = true;
          i--;
       }
    }
@@ -1425,8 +1422,13 @@ void SyncLDAPGroupMembers(const TCHAR *dn, const LDAP_Object *ldapObject)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SyncGroupMembers: LDAP user %s added to LDAP group %s"), user->getDN(), group->getDN());
          group->addUser(user->getId());
+         changed = true;
       }
    }
+
+   // Single notification per group instead of one per member change
+   if (changed)
+      SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);
 
    s_userDatabaseLock.unlock();
 }
