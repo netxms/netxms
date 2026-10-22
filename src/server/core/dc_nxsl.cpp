@@ -576,7 +576,10 @@ NXSL_Value *GetDCItemValuesForNXSL(NXSL_VM *vm, DCObject *dci, DataCollectionTar
    }
    else
    {
-      StringBuffer query(asDataPoints ? L"SELECT idata_timestamp," : L"SELECT ");
+      bool tsdbSingleTable = (g_flags & AF_SINGLE_TABLE_PERF_DATA) && (g_dbSyntax == DB_SYNTAX_TSDB);
+      StringBuffer query(L"SELECT ");
+      if (asDataPoints)
+         query.append(tsdbSingleTable ? L"timestamptz_to_ms(idata_timestamp)," : L"idata_timestamp,");
       query.append(rawValue ? L"raw_value" : L"idata_value");
       if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
       {
@@ -584,7 +587,7 @@ NXSL_Value *GetDCItemValuesForNXSL(NXSL_VM *vm, DCObject *dci, DataCollectionTar
          {
             query.append(L" FROM idata_sc_");
             query.append(DCObject::getStorageClassName(dci->getStorageClass()));
-            query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?)");
+            query.append(L" WHERE item_id=? AND idata_timestamp BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?)");
          }
          else
          {

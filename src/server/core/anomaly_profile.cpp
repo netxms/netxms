@@ -91,26 +91,25 @@ struct OverallStats
 /**
  * Load DCI values for statistics calculation
  */
-static bool LoadDciValuesForStats(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass,
-   time_t timeFrom, time_t timeTo, ObjectArray<std::pair<time_t, double>> *values, bool hasV5Table = false)
+static bool LoadDciValuesForStats(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, time_t timeFrom, time_t timeTo, ObjectArray<std::pair<time_t, double>> *values, bool hasV5Table = false)
 {
-   StringBuffer query(_T("SELECT idata_timestamp,idata_value"));
+   StringBuffer query;
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         query.append(_T(" FROM idata_sc_"));
+         query.append(_T("SELECT timestamptz_to_ms(idata_timestamp),idata_value FROM idata_sc_"));
          query.append(DCObject::getStorageClassName(storageClass));
          query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?)"));
       }
       else
       {
-         query.append(_T(" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
+         query.append(_T("SELECT idata_timestamp,idata_value FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
       }
    }
    else if (hasV5Table)
    {
-      query.append(_T(" FROM (SELECT idata_timestamp,idata_value FROM idata_"));
+      query.append(_T("SELECT idata_timestamp,idata_value FROM (SELECT idata_timestamp,idata_value FROM idata_"));
       query.append(nodeId);
       query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
       query.append(_T(" UNION ALL SELECT "));
@@ -121,7 +120,7 @@ static bool LoadDciValuesForStats(uint32_t nodeId, uint32_t dciId, DCObjectStora
    }
    else
    {
-      query.append(_T(" FROM idata_"));
+      query.append(_T("SELECT idata_timestamp,idata_value FROM idata_"));
       query.append(nodeId);
       query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
    }

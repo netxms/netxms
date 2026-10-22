@@ -236,23 +236,23 @@ static std::vector<double> PredictIsolationForest(const double *data, size_t nro
  */
 static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, uint32_t dciId, DCObjectStorageClass storageClass, const std::pair<Timestamp, Timestamp> *timeRanges, int numTimeRanges, bool hasV5Table = false)
 {
-   StringBuffer query(_T("SELECT idata_timestamp,idata_value"));
+   StringBuffer query;
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
    {
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         query.append(_T(" FROM idata_sc_"));
+         query.append(_T("SELECT timestamptz_to_ms(idata_timestamp),idata_value FROM idata_sc_"));
          query.append(DCObject::getStorageClassName(storageClass));
          query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ms_to_timestamptz(?) AND ms_to_timestamptz(?)"));
       }
       else
       {
-         query.append(_T(" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
+         query.append(_T("SELECT idata_timestamp,idata_value FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
       }
    }
    else if (hasV5Table)
    {
-      query.append(_T(" FROM (SELECT idata_timestamp,idata_value FROM idata_"));
+      query.append(_T("SELECT idata_timestamp,idata_value FROM (SELECT idata_timestamp,idata_value FROM idata_"));
       query.append(nodeId);
       query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
       query.append(_T(" UNION ALL SELECT "));
@@ -263,7 +263,7 @@ static unique_ptr<StructArray<ScoredDciValue>> LoadDciValues(uint32_t nodeId, ui
    }
    else
    {
-      query.append(_T(" FROM idata_"));
+      query.append(_T("SELECT idata_timestamp,idata_value FROM idata_"));
       query.append(nodeId);
       query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
    }
