@@ -49,6 +49,25 @@ bool GetConsoleSession(UserSession *session)
 }
 
 /**
+ * Get groups of given token. Returned structure should be freed by caller with MemFree. Returns nullptr on failure.
+ */
+static TOKEN_GROUPS *GetTokenGroups(HANDLE token)
+{
+   DWORD size;
+   GetTokenInformation(token, TokenGroups, nullptr, 0, &size);
+   if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+      return nullptr;
+
+   TOKEN_GROUPS *groups = static_cast<TOKEN_GROUPS*>(MemAlloc(size));
+   if (!GetTokenInformation(token, TokenGroups, groups, size, &size))
+   {
+      MemFree(groups);
+      return nullptr;
+   }
+   return groups;
+}
+
+/**
  * Check if given process token belongs to interactively logged on user (not to system or service account)
  */
 static bool IsInteractiveUserToken(HANDLE token)
@@ -75,25 +94,83 @@ static bool IsInteractiveUserToken(HANDLE token)
          return false;
    }
 
-   GetTokenInformation(token, TokenGroups, nullptr, 0, &size);
-   if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+   TOKEN_GROUPS *groups = GetTokenGroups(token);
+   if (groups == nullptr)
       return false;
 
-   TOKEN_GROUPS *groups = static_cast<TOKEN_GROUPS*>(MemAlloc(size));
    bool interactive = false;
-   if (GetTokenInformation(token, TokenGroups, groups, size, &size))
+   for (DWORD i = 0; i < groups->GroupCount; i++)
    {
-      for (DWORD i = 0; i < groups->GroupCount; i++)
+      if (IsWellKnownSid(groups->Groups[i].Sid, WinInteractiveSid))
       {
-         if (IsWellKnownSid(groups->Groups[i].Sid, WinInteractiveSid))
+         interactive = true;
+         break;
+      }
+   }
+   MemFree(groups);
+   return interactive;
+}
+
+/**
+ * Get DACL of interactive window station (winsta0) in the session of the agent process. Security descriptor that
+ * holds the DACL is returned in securityDescriptor and should be freed by caller with LocalFree. Returns nullptr
+ * if DACL cannot be retrieved or window station has no DACL.
+ */
+static PACL GetInteractiveWindowStationDacl(PSECURITY_DESCRIPTOR *securityDescriptor)
+{
+   *securityDescriptor = nullptr;
+
+   HWINSTA winsta = OpenWindowStation(_T("winsta0"), FALSE, READ_CONTROL);
+   if (winsta == nullptr)
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("GetInteractiveWindowStationDacl: call to OpenWindowStation failed (%s)"),
+            GetSystemErrorText(GetLastError(), buffer, 1024));
+      return nullptr;
+   }
+
+   PACL dacl = nullptr;
+   DWORD rc = GetSecurityInfo(winsta, SE_WINDOW_OBJECT, DACL_SECURITY_INFORMATION, nullptr, nullptr, &dacl, nullptr, securityDescriptor);
+   CloseWindowStation(winsta);
+   if (rc != ERROR_SUCCESS)
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("GetInteractiveWindowStationDacl: call to GetSecurityInfo failed (%s)"),
+            GetSystemErrorText(rc, buffer, 1024));
+      *securityDescriptor = nullptr;
+      return nullptr;
+   }
+   return dacl;
+}
+
+/**
+ * Check if logon SID of given token is granted access by given DACL
+ */
+static bool IsLogonSidInDacl(HANDLE token, PACL dacl)
+{
+   TOKEN_GROUPS *groups = GetTokenGroups(token);
+   if (groups == nullptr)
+      return false;
+
+   bool found = false;
+   for (DWORD i = 0; (i < groups->GroupCount) && !found; i++)
+   {
+      if ((groups->Groups[i].Attributes & SE_GROUP_LOGON_ID) != SE_GROUP_LOGON_ID)
+         continue;
+
+      for (DWORD j = 0; j < dacl->AceCount; j++)
+      {
+         ACCESS_ALLOWED_ACE *ace;
+         if (GetAce(dacl, j, reinterpret_cast<void**>(&ace)) && (ace->Header.AceType == ACCESS_ALLOWED_ACE_TYPE) &&
+             EqualSid(&ace->SidStart, groups->Groups[i].Sid))
          {
-            interactive = true;
+            found = true;
             break;
          }
       }
    }
    MemFree(groups);
-   return interactive;
+   return found;
 }
 
 /**
@@ -110,6 +187,15 @@ HANDLE FindInteractiveUserToken(DWORD sessionId)
             GetSystemErrorText(GetLastError(), buffer, 1024));
       return nullptr;
    }
+
+   // Logon sequence grants logon SID of console user access to winsta0 and its default desktop, so token with
+   // logon SID not listed in winsta0 DACL cannot start processes there. Window station of another session
+   // cannot be opened from the agent, so this check is only possible when target session is agent's own session.
+   PSECURITY_DESCRIPTOR winstaSecurityDescriptor = nullptr;
+   PACL winstaDacl = nullptr;
+   DWORD agentSessionId;
+   if (ProcessIdToSessionId(GetCurrentProcessId(), &agentSessionId) && (agentSessionId == sessionId))
+      winstaDacl = GetInteractiveWindowStationDacl(&winstaSecurityDescriptor);
 
    // Earliest created process is the one started by logon sequence for console user; processes started later
    // via runas or elevation may have logon SID without access to winsta0\default, so their token is unusable
@@ -132,12 +218,23 @@ HANDLE FindInteractiveUserToken(DWORD sessionId)
          if (hProcess == nullptr)
             continue;
 
+         // Process ID could be reused after session check above, so session is checked again on the token itself
          HANDLE token;
          if (OpenProcessToken(hProcess, TOKEN_QUERY | TOKEN_DUPLICATE, &token))
          {
+            DWORD tokenSessionId, size;
             FILETIME creationTime, exitTime, kernelTime, userTime;
-            if (IsInteractiveUserToken(token) && GetProcessTimes(hProcess, &creationTime, &exitTime, &kernelTime, &userTime) &&
-                ((userToken == nullptr) || (CompareFileTime(&creationTime, &userTokenProcessCreationTime) < 0)))
+            bool candidate = GetTokenInformation(token, TokenSessionId, &tokenSessionId, sizeof(DWORD), &size) && (tokenSessionId == sessionId) &&
+                  IsInteractiveUserToken(token) && GetProcessTimes(hProcess, &creationTime, &exitTime, &kernelTime, &userTime) &&
+                  ((userToken == nullptr) || (CompareFileTime(&creationTime, &userTokenProcessCreationTime) < 0));
+            if (candidate && (winstaDacl != nullptr) && !IsLogonSidInDacl(token, winstaDacl))
+            {
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("FindInteractiveUserToken: token of process %s (PID %u) in session #%u skipped: logon SID has no access to winsta0"),
+                     pe.szExeFile, pe.th32ProcessID, sessionId);
+               candidate = false;
+            }
+
+            if (candidate)
             {
                if (userToken != nullptr)
                   CloseHandle(userToken);
@@ -155,6 +252,8 @@ HANDLE FindInteractiveUserToken(DWORD sessionId)
       } while (Process32Next(snapshot, &pe));
    }
    CloseHandle(snapshot);
+   if (winstaSecurityDescriptor != nullptr)
+      LocalFree(winstaSecurityDescriptor);
 
    if (userToken != nullptr)
       nxlog_debug_tag(DEBUG_TAG, 6, _T("FindInteractiveUserToken: using token of process %s (PID %u) in session #%u"),
