@@ -165,6 +165,29 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.53 to 70.54
+ */
+static bool H_UpgradeFromV53()
+{
+   // Configuration variables read by the server but missing from the initial database setup (issue #3789).
+   // ConnectionHistory.* are created by the 6.1 upgrade chain but databases initialized fresh on 6.1 or later do not have them.
+   CHK_EXEC(CreateConfigParam(L"ThreadPool.MobileDevices.BaseSize", L"4",
+      L"Base size for mobile device connector thread pool.",
+      nullptr, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"ThreadPool.MobileDevices.MaxSize", L"256",
+      L"Maximum size for mobile device connector thread pool.",
+      nullptr, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"ConnectionHistory.RetentionTime", L"90",
+      L"Number of days to keep connection history records.",
+      L"days", 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(L"ConnectionHistory.EnableCollection", L"1",
+      L"Enable or disable collection of MAC address connection history during topology polls.",
+      nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(54));
+   return true;
+}
+
+/**
  * Upgrade from 70.52 to 70.53
  */
 static bool H_UpgradeFromV52()
@@ -1781,6 +1804,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 53, 70, 54, H_UpgradeFromV53 },
    { 52, 70, 53, H_UpgradeFromV52 },
    { 51, 70, 52, H_UpgradeFromV51 },
    { 50, 70, 51, H_UpgradeFromV50 },
