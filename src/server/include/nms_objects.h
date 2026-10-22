@@ -7218,13 +7218,17 @@ extern uint32_t NXCORE_EXPORTABLE g_serverClusterObjectId;
 extern wchar_t NXCORE_EXPORTABLE g_mgmtAgentAddress[];
 
 /**
- * Source object for server-generated events: the server cluster object when
- * running in cluster mode (stable across failovers), the local management
- * node otherwise.
+ * Source object for server-generated events. By default returns the server
+ * cluster object when running in cluster mode (stable across failovers) and
+ * the local management node otherwise. Pass clusterLevel = false for events
+ * that describe the state of this particular server host rather than the
+ * service as a whole (for example, network connectivity loss detected by
+ * the beacon poller) - such events are always sourced from the local
+ * management node, so that node-level correlation applies to them.
  */
-inline uint32_t GetServerEventSourceId()
+inline uint32_t GetServerEventSourceId(bool clusterLevel = true)
 {
-   return (g_serverClusterObjectId != 0) ? g_serverClusterObjectId : g_dwMgmtNode;
+   return (clusterLevel && (g_serverClusterObjectId != 0)) ? g_serverClusterObjectId : g_dwMgmtNode;
 }
 extern bool g_modificationsLocked;
 extern ObjectQueue<TemplateUpdateTask> g_templateUpdateQueue;

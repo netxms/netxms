@@ -781,6 +781,10 @@ unchanged; the cluster itself is represented one level above:
   from `GetServerEventSourceId()`: the cluster object in cluster mode, the
   management node otherwise. One object, one alarm/event stream, regardless
   of which member is active; standalone installs see no behavior change.
+  Events that describe the state of the active host itself rather than the
+  service (`SYS_NETWORK_CONN_LOST` / `SYS_NETWORK_CONN_RESTORED` from the
+  beacon poller) pass `clusterLevel = false` and stay on the management
+  node, where node-level event correlation picks them up.
   Functional uses of the management node (default proxy selection, syslog
   loopback binding, NXSL `GetServerNode()`) keep the per-host semantics.
 - **Redundancy loss is alarmable through standard means**: the standby's
