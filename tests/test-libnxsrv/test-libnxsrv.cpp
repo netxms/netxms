@@ -1436,6 +1436,42 @@ static void TestDriverArpCache()
    AssertTrue(entry->macAddr.equals(MacAddress(mac1, 6)));
    EndTest();
 
+   StartTest(_T("NetworkDeviceDriver - getArpCache from ipNetToPhysicalTable without address length octet"));
+   MockSnmpTransport ciscoTransport;
+   static const BYTE mac3[6] = { 0x00, 0x18, 0xAE, 0x7C, 0x16, 0x53 };
+   static const BYTE mac4[6] = { 0x00, 0x18, 0xAE, 0x7E, 0x59, 0xC5 };
+   static const BYTE mac5[6] = { 0x00, 0x18, 0xAE, 0x7E, 0x59, 0x62 };
+   static const BYTE mac6[6] = { 0x00, 0x18, 0xAE, 0x7E, 0x59, 0xA9 };
+   ciscoTransport.setBytes(_T(".1.3.6.1.2.1.4.35.1.4.17.1.192.168.30.33"), mac3, 6);   // IPv4 as reported by Cisco Firepower
+   ciscoTransport.setBytes(_T(".1.3.6.1.2.1.4.35.1.4.17.2.254.128.0.0.0.0.0.0.2.24.174.255.254.126.89.197"), mac4, 6);   // IPv6 without length octet
+   ciscoTransport.setBytes(_T(".1.3.6.1.2.1.4.35.1.4.17.2.16.32.1.13.184.0.0.0.0.0.0.0.0.0.0.0.1"), mac5, 6);   // IPv6 with length octet
+   ciscoTransport.setBytes(_T(".1.3.6.1.2.1.4.35.1.4.17.3.8.10.1.2.3.0.0.0.17"), mac6, 6);   // ipv4z with zone index
+   ciscoTransport.setBytes(_T(".1.3.6.1.2.1.4.35.1.4.17.1.4.10.9"), mac6, 6);   // truncated IPv4 address, must be ignored
+   ciscoTransport.setBytes(_T(".1.3.6.1.2.1.4.35.1.4.17.1.192.168.30.34.99"), mac6, 6);   // extra index element, must be ignored
+   ciscoTransport.setBytes(_T(".1.3.6.1.2.1.4.35.1.4.17.16.10.9.9.9"), mac6, 6);   // unknown address type (dns), must be ignored
+
+   SnmpDeviceContext ciscoContext(&ciscoTransport);
+   arpCache = driver.getArpCache(&ciscoContext, nullptr);
+   AssertNotNull(arpCache.get());
+   AssertEquals(arpCache->size(), 4);
+   entry = arpCache->findByIP(InetAddress::parse(_T("192.168.30.33")));
+   AssertNotNull(entry);
+   AssertEquals(entry->ifIndex, 17u);
+   AssertTrue(entry->macAddr.equals(MacAddress(mac3, 6)));
+   entry = arpCache->findByIP(InetAddress::parse(_T("fe80::218:aeff:fe7e:59c5")));
+   AssertNotNull(entry);
+   AssertTrue(entry->macAddr.equals(MacAddress(mac4, 6)));
+   entry = arpCache->findByIP(InetAddress::parse(_T("2001:db8::1")));
+   AssertNotNull(entry);
+   AssertTrue(entry->macAddr.equals(MacAddress(mac5, 6)));
+   entry = arpCache->findByIP(InetAddress::parse(_T("10.1.2.3")));
+   AssertNotNull(entry);
+   AssertTrue(entry->macAddr.equals(MacAddress(mac6, 6)));
+   AssertNull(arpCache->findByIP(InetAddress::parse(_T("4.10.9.9"))));
+   AssertNull(arpCache->findByIP(InetAddress::parse(_T("10.9.9.9"))));
+   AssertNull(arpCache->findByIP(InetAddress::parse(_T("192.168.30.34"))));
+   EndTest();
+
    StartTest(_T("NetworkDeviceDriver - getArpCache fallback to ipNetToMediaTable"));
    MockSnmpTransport legacyTransport;
    static const BYTE mac2[6] = { 0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0x02 };

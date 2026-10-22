@@ -1681,7 +1681,10 @@ static uint32_t HandlerArpIpNetToMedia(SNMP_Variable *var, SNMP_Transport *trans
 /**
  * Handler for ARP enumeration via ipNetToPhysicalTable (RFC 4293).
  * OID index: ipNetToPhysicalIfIndex.ipNetToPhysicalNetAddressType.ipNetToPhysicalNetAddress
- * where ipNetToPhysicalNetAddress is a length-prefixed octet string (4 octets for IPv4, 16 for IPv6)
+ * where ipNetToPhysicalNetAddress is an InetAddress octet string. RFC 4293 encodes it with
+ * a length prefix (4 octets for IPv4, 16 for IPv6), but some devices (e.g. Cisco Firepower)
+ * omit the length octet. Both forms are accepted; total OID length tells them apart.
+ * Zone index of ipv4z/ipv6z addresses (4 trailing octets) is ignored.
  */
 static uint32_t HandlerArpIpNetToPhysical(SNMP_Variable *var, SNMP_Transport *transport, ArpCache *arpCache)
 {
@@ -1692,24 +1695,57 @@ static uint32_t HandlerArpIpNetToPhysical(SNMP_Variable *var, SNMP_Transport *tr
    const SNMP_ObjectId& oid = var->getName();
    size_t oidLen = oid.length();
 
-   // Minimum OID length: base(10) + ifIndex(1) + addrType(1) + addrLen(1) + addr(4) = 17
-   if (oidLen < 17)
+   // Minimum OID length: base(10) + ifIndex(1) + addrType(1)
+   if (oidLen < 12)
       return SNMP_ERR_SUCCESS;
 
    uint32_t ifIndex = oid.getElement(10);
    uint32_t addrType = oid.getElement(11);
-   uint32_t addrLen = oid.getElement(12);
 
-   if (addrType == 1 && addrLen == 4 && oidLen >= 17)  // IPv4
+   size_t addrLen;
+   switch(addrType)
    {
-      uint32_t ipAddr = (oid.getElement(13) << 24) | (oid.getElement(14) << 16) | (oid.getElement(15) << 8) | oid.getElement(16);
+      case 1:  // ipv4
+         addrLen = 4;
+         break;
+      case 2:  // ipv6
+         addrLen = 16;
+         break;
+      case 3:  // ipv4z
+         addrLen = 8;
+         break;
+      case 4:  // ipv6z
+         addrLen = 20;
+         break;
+      default:
+         return SNMP_ERR_SUCCESS;
+   }
+
+   size_t addrStart;
+   if (oidLen == 12 + addrLen)
+   {
+      addrStart = 12;   // length octet omitted
+   }
+   else if ((oidLen == 13 + addrLen) && (oid.getElement(12) == addrLen))
+   {
+      addrStart = 13;
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("HandlerArpIpNetToPhysical: unexpected index format in OID %s"), oid.toString().cstr());
+      return SNMP_ERR_SUCCESS;
+   }
+
+   if ((addrType == 1) || (addrType == 3))
+   {
+      uint32_t ipAddr = (oid.getElement(addrStart) << 24) | (oid.getElement(addrStart + 1) << 16) | (oid.getElement(addrStart + 2) << 8) | oid.getElement(addrStart + 3);
       arpCache->addEntry(InetAddress(ipAddr), macAddr, ifIndex);
    }
-   else if (addrType == 2 && addrLen == 16 && oidLen >= 29)  // IPv6
+   else
    {
       BYTE addr[16];
-      for (int i = 0; i < 16; i++)
-         addr[i] = static_cast<BYTE>(oid.getElement(13 + i));
+      for(int i = 0; i < 16; i++)
+         addr[i] = static_cast<BYTE>(oid.getElement(addrStart + i));
       arpCache->addEntry(InetAddress(addr), macAddr, ifIndex);
    }
 
