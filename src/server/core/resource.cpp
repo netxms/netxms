@@ -28,7 +28,7 @@
 Resource::Resource() : super(Pollable::STATUS)
 {
    m_parentId = 0;
-   m_state = 0;
+   m_resourceState = 0;
    m_linkedNodeId = 0;
    m_tags = nullptr;
    m_lastDiscoveryTime = 0;
@@ -71,7 +71,7 @@ bool Resource::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepar
    m_cloudResourceId = DBGetFieldAsSharedString(hResult, 0, 1);
    m_resourceType = DBGetFieldUTF8(hResult, 0, 2, buffer, 256);
    m_region = DBGetFieldUTF8(hResult, 0, 3, buffer, 256);
-   m_state = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 4));
+   m_resourceState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 4));
    m_providerState = DBGetFieldUTF8(hResult, 0, 5, buffer, 256);
    m_linkedNodeId = DBGetFieldULong(hResult, 0, 6);
    m_accountId = DBGetFieldUTF8(hResult, 0, 7, buffer, 256);
@@ -136,7 +136,7 @@ bool Resource::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_cloudResourceId, DB_BIND_TRANSIENT);
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_resourceType.c_str(), DB_BIND_STATIC);
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_region.c_str(), DB_BIND_STATIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_state));
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_resourceState));
          DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_providerState.c_str(), DB_BIND_STATIC);
          DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_linkedNodeId);
          DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_accountId.c_str(), DB_BIND_STATIC);
@@ -221,8 +221,8 @@ json_t *Resource::toJson(uint32_t flags)
    if (domain != nullptr)
       json_object_set_new(root, "connectorName", json_string_t(domain->getConnectorName()));
    json_object_set_new(root, "resourceType", json_string(m_resourceType.c_str()));
-   json_object_set_new(root, "region", json_string(m_region.c_str()));
-   json_object_set_new(root, "state", json_integer(m_state));
+   json_object_set_new(root, "cloudRegion", json_string(m_region.c_str()));
+   json_object_set_new(root, "resourceState", json_integer(m_resourceState));
    json_object_set_new(root, "providerState", json_string(m_providerState.c_str()));
    json_object_set_new(root, "linkedNodeId", json_integer(m_linkedNodeId));
    json_object_set_new(root, "accountId", json_string(m_accountId.c_str()));
@@ -246,7 +246,7 @@ void Resource::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
       msg->setField(VID_CONNECTOR_NAME, domain->getConnectorName());
    msg->setFieldFromUtf8String(VID_RESOURCE_TYPE, m_resourceType.c_str());
    msg->setFieldFromUtf8String(VID_CLOUD_REGION, m_region.c_str());
-   msg->setField(VID_RESOURCE_STATE, m_state);
+   msg->setField(VID_RESOURCE_STATE, m_resourceState);
    msg->setFieldFromUtf8String(VID_PROVIDER_STATE, m_providerState.c_str());
    msg->setField(VID_LINKED_NODE_ID, m_linkedNodeId);
    msg->setFieldFromUtf8String(VID_ACCOUNT_ID, m_accountId.c_str());
@@ -324,7 +324,7 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
          int16_t newState = connector->QueryState(resourceId, providerStateBuf, 256, credentials);
          if (newState >= 0)
          {
-            if (m_state != newState || strcmp(m_providerState.c_str(), providerStateBuf))
+            if (m_resourceState != newState || strcmp(m_providerState.c_str(), providerStateBuf))
             {
                updateState(newState, providerStateBuf);
                sendPollerMsg(L"   Resource state changed to %d (%s)\r\n", newState, providerStateBuf);
@@ -370,7 +370,7 @@ void Resource::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t r
  */
 int Resource::getAdditionalMostCriticalStatus(StringBuffer *explanation)
 {
-   switch(m_state)
+   switch(m_resourceState)
    {
       case RESOURCE_STATE_ACTIVE:
          if (explanation != nullptr)
@@ -418,7 +418,7 @@ void Resource::updateFromDiscovery(const ResourceDescriptor *desc, uint32_t pare
    m_cloudResourceId = wResourceId;
    m_resourceType = desc->type;
    m_region = desc->region;
-   m_state = desc->state;
+   m_resourceState = desc->state;
    m_providerState = desc->providerState;
    m_parentId = parentId;
    m_lastDiscoveryTime = time(nullptr);
@@ -457,9 +457,9 @@ void Resource::setLinkedNodeId(uint32_t nodeId)
 void Resource::updateState(int16_t newState, const char *providerState)
 {
    lockProperties();
-   if (m_state != newState || strcmp(m_providerState.c_str(), providerState))
+   if (m_resourceState != newState || strcmp(m_providerState.c_str(), providerState))
    {
-      m_state = newState;
+      m_resourceState = newState;
       m_providerState = providerState;
       setModified(MODIFY_RESOURCE_PROPERTIES);
    }

@@ -3695,7 +3695,7 @@ protected:
    SharedString m_cloudResourceId;
    std::string m_resourceType;
    std::string m_region;
-   int16_t m_state;
+   int16_t m_resourceState;
    std::string m_providerState;
    uint32_t m_linkedNodeId;
    StringMap *m_tags;
@@ -3732,7 +3732,7 @@ public:
    SharedString getCloudResourceId() const { return GetAttributeWithLock(m_cloudResourceId, m_mutexProperties); }
    std::string getResourceType() const { return GetAttributeWithLock(m_resourceType, m_mutexProperties); }
    std::string getRegion() const { return GetAttributeWithLock(m_region, m_mutexProperties); }
-   int16_t getResourceState() const { return m_state; }
+   int16_t getResourceState() const { return m_resourceState; }
    std::string getProviderState() const { return GetAttributeWithLock(m_providerState, m_mutexProperties); }
    uint32_t getParentDomainOrResourceId() const { return m_parentId; }
    uint32_t getLinkedNodeId() const { return m_linkedNodeId; }
@@ -3857,7 +3857,7 @@ protected:
    int32_t m_zoneUIN;            // -1 = inherit from observer, >= 0 = explicit zone
    uint32_t m_samplingRate;      // 0 = unknown, 1 = unsampled, N = 1:N sampling
    std::string m_localNetworks;  // comma-separated CIDR list as reported by the analyzer
-   int16_t m_state;
+   int16_t m_pointState;
    std::string m_providerState;
    time_t m_lastDiscoveryTime;
 
@@ -3897,7 +3897,7 @@ public:
    int32_t getEffectiveZoneUIN() const;
    uint32_t getSamplingRate() const { return m_samplingRate; }
    std::string getLocalNetworks() const { return GetAttributeWithLock(m_localNetworks, m_mutexProperties); }
-   int16_t getState() const { return m_state; }
+   int16_t getPointState() const { return m_pointState; }
    std::string getProviderState() const { return GetAttributeWithLock(m_providerState, m_mutexProperties); }
    time_t getLastDiscoveryTime() const { return m_lastDiscoveryTime; }
 

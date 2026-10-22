@@ -9068,6 +9068,10 @@ NXSL_Value *NXSL_ResourceClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    {
       value = vm->createValue(resource->getAccountId().c_str());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("cloudRegion"))
+   {
+      value = vm->createValue(resource->getRegion().c_str());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("connectorName"))
    {
       shared_ptr<CloudDomain> domain = resource->getOwnerDomain();
@@ -9093,21 +9097,17 @@ NXSL_Value *NXSL_ResourceClass::getAttr(NXSL_Object *object, const NXSL_Identifi
    {
       value = vm->createValue(resource->getProviderState().c_str());
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("region"))
-   {
-      value = vm->createValue(resource->getRegion().c_str());
-   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("resourceId"))
    {
       value = vm->createValue(resource->getCloudResourceId());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("resourceState"))
+   {
+      value = vm->createValue(resource->getResourceState());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("resourceType"))
    {
       value = vm->createValue(resource->getResourceType().c_str());
-   }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
-   {
-      value = vm->createValue(resource->getResourceState());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("tags"))
    {
@@ -9261,7 +9261,7 @@ NXSL_Value *NXSL_ObservationPointClass::getAttr(NXSL_Object *object, const NXSL_
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("pointState"))
    {
-      value = vm->createValue(point->getState());
+      value = vm->createValue(point->getPointState());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("pointType"))
    {

@@ -311,7 +311,7 @@ static json_t *CreatePointSummary(ObservationPoint *point)
       json_object_set_new(json, "observer_name", json_string_t(observer->getName()));
    json_object_set_new(json, "external_id", json_string(point->getExternalId().c_str()));
    json_object_set_new(json, "type", json_string(point->getPointType().c_str()));
-   json_object_set_new(json, "state", json_string(PointStateToText(point->getState())));
+   json_object_set_new(json, "state", json_string(PointStateToText(point->getPointState())));
    json_object_set_new(json, "provider_state", json_string(point->getProviderState().c_str()));
    json_object_set_new(json, "in_scope", json_boolean(point->isInScope()));
    json_object_set_new(json, "zone_uin", json_integer(point->getEffectiveZoneUIN()));
@@ -660,7 +660,7 @@ static json_t *CreateHostRecordSummary(const ObservationPointHostRecord *r)
    {
       ObservationPoint *point = static_cast<ObservationPoint*>(pobj.get());
       json_object_set_new(json, "point_name", json_string_t(point->getName()));
-      json_object_set_new(json, "point_state", json_string(PointStateToText(point->getState())));
+      json_object_set_new(json, "point_state", json_string(PointStateToText(point->getPointState())));
       json_object_set_new(json, "sampling_rate", json_integer(point->getSamplingRate()));
       shared_ptr<TrafficObserver> observer = point->getOwner();
       if (observer != nullptr)

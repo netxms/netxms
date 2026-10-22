@@ -888,7 +888,7 @@ void TrafficObserver::configurationPoll(PollerInfo *poller, ClientSession *sessi
          {
             POLL_CANCELLATION_CHECKPOINT();
             shared_ptr<ObservationPoint> point = static_pointer_cast<ObservationPoint>(children->getShared(i));
-            if (point->isInScope() && (point->getState() == OBSERVATION_POINT_STATE_ACTIVE))
+            if (point->isInScope() && (point->getPointState() == OBSERVATION_POINT_STATE_ACTIVE))
             {
                sendPollerMsg(L"   Running host matching for observation point %s\r\n", point->getName());
                RunObservationPointHostMatching(point.get());

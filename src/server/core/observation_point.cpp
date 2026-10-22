@@ -31,7 +31,7 @@ ObservationPoint::ObservationPoint() : super(Pollable::STATUS)
    m_inScope = false;
    m_zoneUIN = -1;      // inherit from observer
    m_samplingRate = 0;  // unknown
-   m_state = OBSERVATION_POINT_STATE_UNKNOWN;
+   m_pointState = OBSERVATION_POINT_STATE_UNKNOWN;
    m_lastDiscoveryTime = 0;
    m_status = STATUS_NORMAL;
 }
@@ -80,7 +80,7 @@ bool ObservationPoint::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT
    char *localNetworks = DBGetFieldUTF8(hResult, 0, 6, nullptr, 0);
    m_localNetworks = CHECK_NULL_EX_A(localNetworks);
    MemFree(localNetworks);
-   m_state = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 7));
+   m_pointState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 7));
    char *providerState = DBGetFieldUTF8(hResult, 0, 8, nullptr, 0);
    m_providerState = CHECK_NULL_EX_A(providerState);
    MemFree(providerState);
@@ -122,7 +122,7 @@ bool ObservationPoint::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_zoneUIN);
          DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_samplingRate);
          DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_localNetworks.c_str(), DB_BIND_STATIC);
-         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_state));
+         DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_pointState));
          DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_providerState.c_str(), DB_BIND_STATIC);
          DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastDiscoveryTime));
          DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_id);
@@ -175,7 +175,7 @@ json_t *ObservationPoint::toJson(uint32_t flags)
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "samplingRate", json_integer(m_samplingRate));
    json_object_set_new(root, "localNetworks", json_string(m_localNetworks.c_str()));
-   json_object_set_new(root, "state", json_integer(m_state));
+   json_object_set_new(root, "pointState", json_integer(m_pointState));
    json_object_set_new(root, "providerState", json_string(m_providerState.c_str()));
    json_object_set_new(root, "lastDiscoveryTime", json_integer(m_lastDiscoveryTime));
    unlockProperties();
@@ -196,7 +196,7 @@ void ObservationPoint::fillMessageLocked(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_ZONE_UIN, m_zoneUIN);
    msg->setField(VID_SAMPLING_RATE, m_samplingRate);
    msg->setFieldFromUtf8String(VID_LOCAL_NETWORKS, m_localNetworks.c_str());
-   msg->setField(VID_RESOURCE_STATE, m_state);
+   msg->setField(VID_RESOURCE_STATE, m_pointState);
    msg->setFieldFromUtf8String(VID_PROVIDER_STATE, m_providerState.c_str());
    msg->setField(VID_LAST_DISCOVERY_TIME, static_cast<uint32_t>(m_lastDiscoveryTime));
 }
@@ -277,7 +277,7 @@ void ObservationPoint::calculateCompoundStatus(bool forcedRecalc)
  */
 int ObservationPoint::getAdditionalMostCriticalStatus(StringBuffer *explanation)
 {
-   switch(m_state)
+   switch(m_pointState)
    {
       case OBSERVATION_POINT_STATE_ACTIVE:
          if (explanation != nullptr)
@@ -380,7 +380,7 @@ void ObservationPoint::updateFromDiscovery(const ObservationPointDescriptor *des
    if (firstDiscovery)
    {
       // Initial state of a newly created point is not a transition - set it silently
-      m_state = desc->state;
+      m_pointState = desc->state;
       m_providerState = desc->providerState;
    }
    setModified(MODIFY_OBSERVATION_POINT_PROPERTIES);
@@ -396,11 +396,11 @@ void ObservationPoint::updateFromDiscovery(const ObservationPointDescriptor *des
 void ObservationPoint::updateState(int16_t newState, const char *providerState)
 {
    lockProperties();
-   int16_t oldState = m_state;
-   bool changed = (m_state != newState) || strcmp(m_providerState.c_str(), providerState);
+   int16_t oldState = m_pointState;
+   bool changed = (m_pointState != newState) || strcmp(m_providerState.c_str(), providerState);
    if (changed)
    {
-      m_state = newState;
+      m_pointState = newState;
       m_providerState = providerState;
       setModified(MODIFY_OBSERVATION_POINT_PROPERTIES);
    }
