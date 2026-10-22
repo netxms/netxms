@@ -326,7 +326,7 @@ NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Table, deleteColumn, 1);
    NXSL_REGISTER_METHOD(Table, deleteRow, 1);
    NXSL_REGISTER_METHOD(Table, findRowByInstance, -1);
-   NXSL_REGISTER_METHOD(Table, findRowIndexByInstance, 1);
+   NXSL_REGISTER_METHOD(Table, findRowIndexByInstance, -1);
    NXSL_REGISTER_METHOD(Table, get, 2);
    NXSL_REGISTER_METHOD(Table, getColumnIndex, 1);
    NXSL_REGISTER_METHOD(Table, getColumnName, 1);
