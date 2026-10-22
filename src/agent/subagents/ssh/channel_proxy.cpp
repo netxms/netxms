@@ -65,17 +65,20 @@ static void CreateSSHChannelProxy(uint32_t channelId, ssh_channel channel, SSHSe
 }
 
 /**
- * Find SSH channel proxy by ID
+ * Find SSH channel proxy by owning communication session and channel ID. Channel IDs are allocated by the server
+ * per connection, so the same ID can be in use by channels of different sessions at the same time; a session can
+ * only reach channels it has opened itself.
  */
-static SSHChannelProxy *FindSSHChannelProxy(uint32_t channelId)
+static SSHChannelProxy *FindSSHChannelProxy(AbstractCommSession *session, uint32_t channelId)
 {
    SSHChannelProxy *proxy = nullptr;
    s_channelProxyLock.lock();
    for(int i = 0; i < s_channelProxies.size(); i++)
    {
-      if (s_channelProxies.get(i)->getChannelId() == channelId)
+      SSHChannelProxy *p = s_channelProxies.get(i);
+      if ((p->getChannelId() == channelId) && (p->getCommSession() == session))
       {
-         proxy = s_channelProxies.get(i);
+         proxy = p;
          break;
       }
    }
@@ -86,14 +89,15 @@ static SSHChannelProxy *FindSSHChannelProxy(uint32_t channelId)
 /**
  * Delete SSH channel proxy
  */
-static void DeleteSSHChannelProxy(uint32_t channelId)
+static void DeleteSSHChannelProxy(AbstractCommSession *session, uint32_t channelId)
 {
    s_channelProxyLock.lock();
    for(int i = 0; i < s_channelProxies.size(); i++)
    {
-      if (s_channelProxies.get(i)->getChannelId() == channelId)
+      SSHChannelProxy *proxy = s_channelProxies.get(i);
+      if ((proxy->getChannelId() == channelId) && (proxy->getCommSession() == session))
       {
-         s_channelProxies.get(i)->stop();
+         proxy->stop();
          s_channelProxies.remove(i);
          nxlog_debug_tag(DEBUG_TAG, 5, _T("SSH channel proxy %u deleted"), channelId);
          break;
@@ -305,7 +309,7 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
          {
             // Binary message - response is nullptr
             uint32_t channelId = request->getId();
-            SSHChannelProxy *proxy = FindSSHChannelProxy(channelId);
+            SSHChannelProxy *proxy = FindSSHChannelProxy(session, channelId);
             if (proxy != nullptr)
             {
                proxy->writeToChannel(request->getBinaryData(), request->getBinaryDataSize());
@@ -323,7 +327,7 @@ bool HandleSSHChannelCommand(uint32_t command, NXCPMessage *request, NXCPMessage
                return false;
 
             uint32_t channelId = request->getFieldAsUInt32(VID_CHANNEL_ID);
-            DeleteSSHChannelProxy(channelId);
+            DeleteSSHChannelProxy(session, channelId);
             response->setField(VID_RCC, ERR_SUCCESS);
             return true;
          }

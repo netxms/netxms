@@ -173,6 +173,7 @@ public:
    void stop();
 
    uint32_t getChannelId() const { return m_channelId; }
+   AbstractCommSession *getCommSession() const { return m_commSession.get(); }
 
    void writeToChannel(const BYTE *data, size_t size);
 };
