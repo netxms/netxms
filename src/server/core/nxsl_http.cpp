@@ -645,7 +645,8 @@ bool NXSL_HttpClientClass::setSettingsAttr(HttpClientSettings *settings, const N
 }
 
 /**
- * Get HTTP client settings attribute (common for HttpRequest and HttpSession)
+ * Get HTTP client settings attribute (common for HttpRequest and HttpSession).
+ * Settings can be null during attribute scan - no name matches then and settings are not dereferenced.
  */
 NXSL_Value *NXSL_HttpClientClass::getSettingsAttr(NXSL_VM *vm, const HttpClientSettings *settings, const NXSL_Identifier& attr)
 {
@@ -872,11 +873,9 @@ NXSL_Value *NXSL_HttpRequestClass::getAttr(NXSL_Object *object, const NXSL_Ident
       return value;
 
    NXSL_VM *vm = object->vm();
-   auto request = static_cast<HttpRequestData*>(object->getData());
-   if (request == nullptr)
-      return nullptr;   // Attribute scan
+   auto request = static_cast<HttpRequestData*>(object->getData());   // null during attribute scan, when no name matches and nothing is dereferenced
 
-   value = getSettingsAttr(vm, &request->settings, attr);
+   value = getSettingsAttr(vm, (request != nullptr) ? &request->settings : nullptr, attr);
    if (value != nullptr)
       return value;
 
@@ -1206,11 +1205,9 @@ NXSL_Value *NXSL_HttpSessionClass::getAttr(NXSL_Object *object, const NXSL_Ident
       return value;
 
    NXSL_VM *vm = object->vm();
-   auto session = static_cast<HttpSessionData*>(object->getData());
-   if (session == nullptr)
-      return nullptr;   // Attribute scan
+   auto session = static_cast<HttpSessionData*>(object->getData());   // null during attribute scan, when no name matches and nothing is dereferenced
 
-   value = getSettingsAttr(vm, &session->settings, attr);
+   value = getSettingsAttr(vm, (session != nullptr) ? &session->settings : nullptr, attr);
    if (value != nullptr)
       return value;
 

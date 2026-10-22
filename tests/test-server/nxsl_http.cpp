@@ -464,6 +464,10 @@ static void TestRequestObject()
       assert(r.setAuth("weird") == false, "setAuth with unknown type");
       assert(r.setAuth("basic", "u", "p") == true, "setAuth basic");
       assert(r.setAuth("none") == true, "setAuth none");
+
+      attrs = r.__class.attributes;
+      foreach(a : ["url", "method", "body", "headers", "timeout", "followRedirects", "verifyPeer", "verifyHost", "proxy", "userAgent", "maxResponseSize"])
+         assert(attrs.indexOf(a) != null, "attribute " .. a .. " listed in Class.attributes");
    )NXSL");
    EndTest();
 }
@@ -1002,6 +1006,10 @@ static void TestSession()
       assert(s.cookies.size == 0, "no cookies initially");
       assert(s.timeout == null, "default session timeout");
       assert(s.headers.size == 0, "default session headers");
+
+      attrs = s.__class.attributes;
+      foreach(a : ["cookies", "headers", "timeout", "followRedirects", "verifyPeer", "verifyHost", "proxy", "userAgent", "maxResponseSize"])
+         assert(attrs.indexOf(a) != null, "attribute " .. a .. " listed in Class.attributes");
 
       resp = s.get(BASE .. "/cookie");
       assert(resp.success, "first request");
