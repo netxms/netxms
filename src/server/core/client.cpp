@@ -318,32 +318,39 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(std::function<void(ClientSession*
 }
 
 /**
- * Send user database update notification to all clients
+ * Send user database update notification to all clients. Callers hold the user database lock,
+ * and client notification paths (alarm updates, etc.) call into the user database while holding
+ * the session list lock, so the session list is enumerated from a thread pool worker instead of
+ * taking the session list lock here. Notifications are serialized to preserve ordering.
  */
 void SendUserDBUpdate(uint16_t code, uint32_t id, UserDatabaseObject *object)
 {
-   NXCPMessage msg(CMD_USER_DB_UPDATE, 0);
-   msg.setField(VID_UPDATE_TYPE, code);
+   shared_ptr<NXCPMessage> msg = make_shared<NXCPMessage>(CMD_USER_DB_UPDATE, 0);
+   msg->setField(VID_UPDATE_TYPE, code);
    switch(code)
    {
       case USER_DB_CREATE:
       case USER_DB_MODIFY:
-         object->fillMessage(&msg);
+         object->fillMessage(msg.get());
          break;
       default:
-         msg.setField(VID_USER_ID, id);
+         msg->setField(VID_USER_ID, id);
          break;
    }
 
-   s_sessionListLock.readLock();
-   auto it = s_sessions.begin();
-   while(it.hasNext())
-   {
-      ClientSession *session = it.next();
-      if (session->isAuthenticated() && !session->isTerminated() && session->isSubscribedTo(NXC_CHANNEL_USERDB))
-         session->postMessage(msg);
-   }
-   s_sessionListLock.unlock();
+   ThreadPoolExecuteSerialized(g_clientThreadPool, _T("USERDB-NOTIFY"),
+      [msg] () -> void
+      {
+         s_sessionListLock.readLock();
+         auto it = s_sessions.begin();
+         while(it.hasNext())
+         {
+            ClientSession *session = it.next();
+            if (session->isAuthenticated() && !session->isTerminated() && session->isSubscribedTo(NXC_CHANNEL_USERDB))
+               session->postMessage(*msg);
+         }
+         s_sessionListLock.unlock();
+      });
 }
 
 /**

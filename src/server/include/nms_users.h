@@ -524,8 +524,8 @@ public:
 
    virtual json_t *toJson() const override;
 
-   void addUser(uint32_t userId);
-   void deleteUser(uint32_t userId);
+   bool addUser(uint32_t userId);
+   bool deleteUser(uint32_t userId);
    bool isMember(uint32_t userId, GroupSearchPath *searchPath = nullptr) const;
    const IntegerArray<uint32_t>& getMembers() const { return m_members; }
    int getMemberCount() const { return m_members.size(); }
