@@ -268,6 +268,7 @@ public class DataExportTest extends AbstractSessionTest
             String manifest = readEntry(zip, "manifest.json");
             assertTrue(manifest.contains("\"anonymized\": true"));
             assertTrue(manifest.contains("\"explicitSelection\": true"));
+            assertTrue(manifest.contains("\"serverId\": null"), "anonymized manifest must not contain server ID");
 
             String metricsText = readEntry(zip, "metrics.csv");
             assertFalse(metricsText.contains(node.getObjectName()), "anonymized catalog must not contain object name");
@@ -278,6 +279,7 @@ public class DataExportTest extends AbstractSessionTest
             assertEquals(36, anonymizedId.length());
             assertNotEquals(energyMetricId, anonymizedId);
             assertEquals("eed.eit", metrics.get(1)[1]);
+            assertEquals("", metrics.get(1)[2], "anonymized catalog must not contain owner ID");
             assertTrue(metrics.get(1)[3].startsWith("node-"), "owner name must be class-based pseudonym");
          }
          result.getFile().delete();

@@ -85,14 +85,18 @@ static int ParseExportRequest(Context *context, DataExportRequest *exportRequest
 
    json_t *timeFrom = json_object_get(request, "timeFrom");
    json_t *timeTo = json_object_get(request, "timeTo");
-   exportRequest->timeFrom = json_is_integer(timeFrom) ? json_integer_value(timeFrom) * 1000 : static_cast<int64_t>(ParseTimestamp(json_object_get_string_utf8(request, "timeFrom", ""), 0)) * 1000;
-   exportRequest->timeTo = json_is_integer(timeTo) ? json_integer_value(timeTo) * 1000 : static_cast<int64_t>(ParseTimestamp(json_object_get_string_utf8(request, "timeTo", ""), 0)) * 1000;
-   if ((exportRequest->timeFrom <= 0) || (exportRequest->timeTo <= exportRequest->timeFrom))
+   int64_t periodStart = json_is_integer(timeFrom) ? json_integer_value(timeFrom) : static_cast<int64_t>(ParseTimestamp(json_object_get_string_utf8(request, "timeFrom", ""), 0));
+   int64_t periodEnd = json_is_integer(timeTo) ? json_integer_value(timeTo) : static_cast<int64_t>(ParseTimestamp(json_object_get_string_utf8(request, "timeTo", ""), 0));
+   int64_t now = GetCurrentTimeMs() / 1000;
+   if ((periodStart <= 0) || (periodStart > now) || (periodEnd <= periodStart))
    {
       context->setErrorResponse("Invalid time period");
       return 400;
    }
-   exportRequest->timeTo += 999;  // Period end is inclusive at millisecond resolution
+   if (periodEnd > now)
+      periodEnd = now;   // History cannot extend into the future; bounding here also keeps the conversion below overflow-free
+   exportRequest->timeFrom = periodStart * 1000;
+   exportRequest->timeTo = periodEnd * 1000 + 999;  // Period end is inclusive at millisecond resolution
 
    if (!ParseTierName(json_object_get_string_utf8(request, "tier", nullptr), &exportRequest->tier))
    {

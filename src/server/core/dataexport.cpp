@@ -37,7 +37,9 @@
 #define DDIR_EXPORT              FS_PATH_SEPARATOR L"export"
 #define EXPORT_FORMAT_VERSION    1
 #define RAW_READ_CHUNK_MS        (31LL * 86400LL * 1000LL)     // History is read in one-month chunks to bound memory use
-#define EXPORT_RETENTION_MS      3600000                       // Undownloaded export files are removed one hour after completion
+#define EXPORT_RETENTION_MS      3600000                       // Undownloaded export files and failed export state are forgotten after one hour
+#define MAX_TAG_PATTERNS         1024                          // Upper bound for tag pattern count in NXCP request
+#define MAX_EXPLICIT_DCI_COUNT   65536                         // Upper bound for explicit DCI list size in NXCP request
 
 /**
  * Object classes that form the spatial path of a metric (nearest first when walking up)
@@ -73,8 +75,21 @@ static std::map<uint64_t, DataExportState*> s_exports;
 DataExportRequest::DataExportRequest(const NXCPMessage& msg)
 {
    rootObjectId = msg.getFieldAsUInt32(VID_OBJECT_ID);
-   tagPatterns.addAllFromMessage(msg, VID_TAG_LIST_BASE, VID_NUM_TAGS);
+
+   // List sizes come from the client; bound them so that a malformed count cannot drive unbounded allocation
+   int tagCount = msg.getFieldAsInt32(VID_NUM_TAGS);
+   if (tagCount > MAX_TAG_PATTERNS)
+      tagCount = MAX_TAG_PATTERNS;
+   for(int i = 0; i < tagCount; i++)
+   {
+      wchar_t *pattern = msg.getFieldAsString(VID_TAG_LIST_BASE + i);
+      if (pattern != nullptr)
+         tagPatterns.addPreallocated(pattern);
+   }
+
    int dciCount = msg.getFieldAsInt32(VID_NUM_ITEMS);
+   if (dciCount > MAX_EXPLICIT_DCI_COUNT)
+      dciCount = MAX_EXPLICIT_DCI_COUNT;
    uint32_t fieldId = VID_ITEM_LIST;
    for(int i = 0; i < dciCount; i++, fieldId += 2)
       dciList.push_back(std::make_pair(msg.getFieldAsUInt32(fieldId), msg.getFieldAsUInt32(fieldId + 1)));
@@ -261,6 +276,7 @@ static void AppendCsvField(std::string& line, double value, bool last = false)
 /**
  * Identity replacement for anonymized exports. Metric pseudonyms are HMAC-SHA256(server ID, DCI GUID) and therefore
  * stable across exports from the same server; object pseudonyms are per-export sequence numbers within object class.
+ * Server ID is the HMAC key, so anonymized archives must not carry it (or any other real identifier) anywhere.
  */
 class Anonymizer
 {
@@ -479,9 +495,10 @@ void NXCORE_EXPORTABLE ResolveDataExportSelection(const DataExportRequest& reque
 }
 
 /**
- * Build spatial path of object (facility / room / power domain / cooling zone / rack ancestors, outermost first)
+ * Build spatial path of object (facility / room / power domain / cooling zone / rack ancestors, outermost first).
+ * Path stops at the first ancestor the user cannot read.
  */
-static std::string BuildSpatialPath(const shared_ptr<NetObj>& object, Anonymizer& anonymizer)
+static std::string BuildSpatialPath(const shared_ptr<NetObj>& object, Anonymizer& anonymizer, uint32_t userId)
 {
    std::vector<std::string> elements;
    shared_ptr<NetObj> current = object;
@@ -497,7 +514,7 @@ static std::string BuildSpatialPath(const shared_ptr<NetObj>& object, Anonymizer
             break;
          }
       }
-      if (next == nullptr)
+      if ((next == nullptr) || !next->checkAccessRights(userId, OBJECT_ACCESS_READ))
          break;
       elements.push_back(anonymizer.objectName(*next));
       current = next;
@@ -550,9 +567,10 @@ static const char *QualityName(SampleQuality quality)
 }
 
 /**
- * Write metric catalog (metrics.csv)
+ * Write metric catalog (metrics.csv). Anonymized catalog carries no real object identifiers; related objects and
+ * spatial ancestors are included only when readable by the user.
  */
-static bool WriteMetricCatalog(ZipArchiveWriter& archive, std::vector<ExportedMetric>& metrics, Anonymizer& anonymizer)
+static bool WriteMetricCatalog(ZipArchiveWriter& archive, std::vector<ExportedMetric>& metrics, Anonymizer& anonymizer, uint32_t userId)
 {
    if (!archive.beginEntry("metrics.csv"))
       return false;
@@ -566,14 +584,20 @@ static bool WriteMetricCatalog(ZipArchiveWriter& archive, std::vector<ExportedMe
       std::string line;
       AppendCsvField(line, m.metricId.c_str());
       AppendCsvField(line, m.dci->getSystemTag().cstr());
-      AppendCsvField(line, static_cast<uint64_t>(m.owner->getId()));
+      if (anonymizer.isEnabled())
+         AppendCsvField(line, "");
+      else
+         AppendCsvField(line, static_cast<uint64_t>(m.owner->getId()));
       AppendCsvField(line, anonymizer.objectName(*m.owner).c_str());
       AppendCsvField(line, m.owner->getObjectClassName());
 
       shared_ptr<NetObj> relatedObject = FindObjectById(m.dci->getRelatedObject());
-      if (relatedObject != nullptr)
+      if ((relatedObject != nullptr) && relatedObject->checkAccessRights(userId, OBJECT_ACCESS_READ))
       {
-         AppendCsvField(line, static_cast<uint64_t>(relatedObject->getId()));
+         if (anonymizer.isEnabled())
+            AppendCsvField(line, "");
+         else
+            AppendCsvField(line, static_cast<uint64_t>(relatedObject->getId()));
          AppendCsvField(line, anonymizer.objectName(*relatedObject).c_str());
          AppendCsvField(line, relatedObject->getObjectClassName());
       }
@@ -592,7 +616,7 @@ static bool WriteMetricCatalog(ZipArchiveWriter& archive, std::vector<ExportedMe
       AppendCsvField(line, CodeToText(m.dci->getDataSource(), g_dciOriginNames, L""));
       AppendCsvField(line, static_cast<uint64_t>(m.dci->getEffectivePollingInterval()));
       AppendCsvField(line, TierName(m.tier));
-      AppendCsvField(line, BuildSpatialPath(m.owner, anonymizer).c_str(), true);
+      AppendCsvField(line, BuildSpatialPath(m.owner, anonymizer, userId).c_str(), true);
       archive.write(line);
    }
    return archive.endEntry();
@@ -726,14 +750,22 @@ static bool WriteManifest(ZipArchiveWriter& archive, const DataExportRequest& re
    json_t *manifest = json_object();
    json_object_set_new(manifest, "formatVersion", json_integer(EXPORT_FORMAT_VERSION));
    json_object_set_new(manifest, "generator", json_string_w(L"NetXMS " NETXMS_VERSION_STRING));
-   wchar_t serverId[32];
-   nx_swprintf(serverId, 32, UINT64X_FMT(L"016"), g_serverId);
-   json_object_set_new(manifest, "serverId", json_string_w(serverId));
+   if (request.anonymize)
+   {
+      // Server ID is the key of metric pseudonyms and root object ID is a real identifier; neither may leave the server
+      json_object_set_new(manifest, "serverId", json_null());
+   }
+   else
+   {
+      wchar_t serverId[32];
+      nx_swprintf(serverId, 32, UINT64X_FMT(L"016"), g_serverId);
+      json_object_set_new(manifest, "serverId", json_string_w(serverId));
+   }
    json_object_set_new(manifest, "exportTime", json_time_string_ms(GetCurrentTimeMs()));
    json_object_set_new(manifest, "timeFrom", json_time_string_ms(request.timeFrom));
    json_object_set_new(manifest, "timeTo", json_time_string_ms(request.timeTo));
    json_object_set_new(manifest, "tier", json_string(TierName(request.tier)));
-   json_object_set_new(manifest, "rootObjectId", request.dciList.empty() ? json_integer(request.rootObjectId) : json_null());
+   json_object_set_new(manifest, "rootObjectId", (request.dciList.empty() && !request.anonymize) ? json_integer(request.rootObjectId) : json_null());
    json_object_set_new(manifest, "tagPatterns", request.tagPatterns.toJson());
    json_object_set_new(manifest, "explicitSelection", json_boolean(!request.dciList.empty()));
    json_object_set_new(manifest, "anonymized", json_boolean(request.anonymize));
@@ -790,7 +822,7 @@ static bool RunDataExport(const DataExportRequest& request, DataExportInfo *info
       return task->failure(L"Cannot create export file %s", archiveFile);
 
    Anonymizer anonymizer(request.anonymize);
-   if (!WriteMetricCatalog(archive, metrics, anonymizer))
+   if (!WriteMetricCatalog(archive, metrics, anonymizer, info->userId))
       return task->failure(L"Cannot write metric catalog");
 
    if (!archive.beginEntry("data.csv"))
@@ -860,6 +892,17 @@ shared_ptr<BackgroundTask> NXCORE_EXPORTABLE StartDataExport(const DataExportReq
             return task->failure(L"Internal error: export state not registered");
 
          bool success = RunDataExport(*requestCopy, &info, task);
+         if (!success)
+         {
+            // Partial files are useless; remove them now but keep the export state so that clients can read failure details
+            nxlog_debug_tag(DEBUG_TAG, 4, L"Export task " UINT64_FMT L" failed: %s", taskId, task->getFailureReson().cstr());
+            if (!info.archiveFile.isEmpty())
+               _wremove(info.archiveFile);
+            if (!info.mappingFile.isEmpty())
+               _wremove(info.mappingFile);
+            info.archiveFile = L"";
+            info.mappingFile = L"";
+         }
 
          s_exportLock.lock();
          it = s_exports.find(taskId);
@@ -867,15 +910,7 @@ shared_ptr<BackgroundTask> NXCORE_EXPORTABLE StartDataExport(const DataExportReq
             it->second->info = info;
          s_exportLock.unlock();
 
-         if (success)
-         {
-            ThreadPoolScheduleRelative(g_mainThreadPool, EXPORT_RETENTION_MS, [taskId] () { ReleaseDataExport(taskId); });
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG, 4, L"Export task " UINT64_FMT L" failed: %s", taskId, task->getFailureReson().cstr());
-            ReleaseDataExport(taskId);
-         }
+         ThreadPoolScheduleRelative(g_mainThreadPool, EXPORT_RETENTION_MS, [taskId] () { ReleaseDataExport(taskId); });
          return success;
       }, L"DCI data export");
 

@@ -61,6 +61,7 @@ include_HEADERS = \
 	nxtools.h \
 	nxtux.h \
 	nxvault.h \
+	nxzip.h \
 	pugiconfig.h \
 	pugixml.h \
 	socket_listener.h \

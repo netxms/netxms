@@ -2021,9 +2021,11 @@ paths:
         is a ZIP with metrics.csv (one row per metric, including the classifier tag and a stable metric identifier),
         data.csv (one row per sample, with provenance attributes) and manifest.json. With "anonymize" set, object names
         are replaced with class-based pseudonyms and metric identifiers with HMAC-derived pseudonyms that stay stable across
-        exports from the same server; "keepMapping" additionally produces a pseudonym-to-identity mapping file that is
-        downloaded separately and is never part of the archive. Requires read access to the root object and to every
-        exported DCI. Every export is recorded in the audit log.
+        exports from the same server; numeric object identifiers and the server identifier are omitted from the archive.
+        "keepMapping" additionally produces a pseudonym-to-identity mapping file that is downloaded separately and is never
+        part of the archive. Requires read access to the root object and to every exported DCI; related objects and
+        spatial ancestors are included only when readable. The period end is clamped to the current time. Every export is
+        recorded in the audit log.
       requestBody:
         required: true
         content:

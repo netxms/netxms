@@ -20048,6 +20048,9 @@ void ClientSession::exportDciData(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    DataExportRequest exportRequest(request);
+   int64_t now = GetCurrentTimeMs();
+   if (exportRequest.timeTo > now)
+      exportRequest.timeTo = now;   // History cannot extend into the future; also keeps chunked reading bounded
    shared_ptr<NetObj> rootObject = FindObjectById(exportRequest.rootObjectId);
    if ((rootObject == nullptr) && exportRequest.dciList.empty())
    {
