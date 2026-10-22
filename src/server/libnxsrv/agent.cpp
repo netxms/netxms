@@ -3595,36 +3595,52 @@ uint32_t AgentConnection::closeSSHChannel(uint32_t channelId)
  */
 void AgentConnection::setSSHChannelDataHandler(uint32_t channelId, SSHChannelDataCallback handler)
 {
-   m_sshChannelLock.lock();
+   m_sshChannelLock.writeLock();
    m_sshChannelHandlers.add(channelId, handler);
    m_sshChannelLock.unlock();
 }
 
 /**
- * Remove SSH channel data handler
+ * Remove SSH channel data handler. Returns only after any handler invocation in progress on receiver thread
+ * has completed, so caller can safely destroy objects captured by the handler.
  */
 void AgentConnection::removeSSHChannelDataHandler(uint32_t channelId)
 {
-   m_sshChannelLock.lock();
+   m_sshChannelLock.writeLock();
    m_sshChannelHandlers.remove(channelId);
    m_sshChannelLock.unlock();
 }
 
 /**
- * Process data received from SSH channel
+ * Process data received from SSH channel. Handler is invoked while holding the handler lock, so that
+ * removeSSHChannelDataHandler() cannot return while the handler is still running. Handlers must not
+ * call closeSSHChannel() or removeSSHChannelDataHandler() on this connection.
  */
 void AgentConnection::processSSHChannelData(uint32_t channelId, const void *data, size_t size, bool errorIndicator)
 {
-   m_sshChannelLock.lock();
-   SSHChannelDataCallback handler = m_sshChannelHandlers.get(channelId);
    if (size == 0)
-      m_sshChannelHandlers.remove(channelId);   // close notification is the last message for the channel, agent side has already released it
-   m_sshChannelLock.unlock();
-
-   if (handler != nullptr)
-      handler(static_cast<const BYTE*>(data), size, errorIndicator);
+   {
+      // Close notification is the last message for the channel (agent side has already released it);
+      // entry is removed and handler invoked under write lock as a single step
+      m_sshChannelLock.writeLock();
+      SSHChannelDataCallback handler = m_sshChannelHandlers.get(channelId);
+      m_sshChannelHandlers.remove(channelId);
+      if (handler != nullptr)
+         handler(nullptr, 0, errorIndicator);
+      else
+         debugPrintf(6, L"SSH channel close notification received for unknown channel %u", channelId);
+      m_sshChannelLock.unlock();
+   }
    else
-      debugPrintf(6, L"SSH channel data received for unknown channel %u", channelId);
+   {
+      m_sshChannelLock.readLock();
+      SSHChannelDataCallback handler = m_sshChannelHandlers.get(channelId);
+      if (handler != nullptr)
+         handler(static_cast<const BYTE*>(data), size, errorIndicator);
+      else
+         debugPrintf(6, L"SSH channel data received for unknown channel %u", channelId);
+      m_sshChannelLock.unlock();
+   }
 }
 
 /**

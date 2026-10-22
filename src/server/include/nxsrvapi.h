@@ -1225,7 +1225,7 @@ private:
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
 	SSHChannelCallbackIndex m_sshChannelHandlers;
-   Mutex m_sshChannelLock;
+   RWLock m_sshChannelLock;   // held for read while a handler is being invoked, so removal waits for in-flight calls
 
    uint32_t setupEncryption(RSA_KEY serverKey);
    uint32_t authenticate(BOOL bProxyData);
