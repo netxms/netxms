@@ -1967,7 +1967,7 @@ NXSL_DCTargetClass::NXSL_DCTargetClass() : NXSL_NetObjClass()
 
    NXSL_REGISTER_METHOD(DataCollectionTarget, applyTemplate, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, createDCI, -1);
-   NXSL_REGISTER_METHOD(DataCollectionTarget, deleteDCI, -1);
+   NXSL_REGISTER_METHOD(DataCollectionTarget, deleteDCI, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, enableConfigurationPolling, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, enableDataCollection, 1);
    NXSL_REGISTER_METHOD(DataCollectionTarget, enableStatusPolling, 1);
