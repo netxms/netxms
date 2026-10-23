@@ -3,14 +3,20 @@
 *     node that can execute web service (management node)
 *     existing web service name pointing to URL that answers with HTTP redirect,
 *     with "follow location" option disabled
+*     existing web service name pointing to the same URL with "follow location" option enabled
+*     expected redirect URL
+*     expected document at redirect URL
 */
 
 nodeId = $1;
-webServiceName = $2;
-expectedRedirectUrl = $3;
+webServiceNameNoFollow = $2;
+webServiceNameFollow = $3;
+expectedRedirectUrl = $4;
+expectedDocument = $5;
 managementNode = FindObject(nodeId);
 
-webSvc = managementNode.getWebService(webServiceName);
+// Redirect is not followed: status code and target URL are reported to the caller
+webSvc = managementNode.getWebService(webServiceNameNoFollow);
 result = webSvc.get();
 
 assert(result.success); // "false"
@@ -18,3 +24,14 @@ assert(result.errorMessage.isEmpty); // "Malformed response"
 assert(result.agentErrorCode == 0); // "0"
 assert(result.httpResponseCode >= 300 && result.httpResponseCode <= 399); // "0"
 assert(result.redirectUrl == expectedRedirectUrl); // null
+
+// Redirect is followed: final document is returned
+webSvc = managementNode.getWebService(webServiceNameFollow);
+result = webSvc.get();
+
+assert(result.success); // "false"
+assert(result.errorMessage.isEmpty); // "Malformed response"
+assert(result.agentErrorCode == 0); // "0"
+assert(result.httpResponseCode == 200); // "302"
+assert(result.redirectUrl == null);
+assert(result.document == expectedDocument); // ""

@@ -1,11 +1,15 @@
 /*
 * This script requires:
 *     node that can execute web service (management node)
-*     existing web service name
+*     existing web service name with URL containing %1 placeholder
+*     expected document for request with argument "additional/ult/path"
+*     expected document for request without arguments
 */
 
 nodeId = $1;
 webServiceName = $2;
+expectedDocumentWithArgument = $3;
+expectedDocumentWithoutArgument = $4;
 managementNode = FindObject(nodeId);
 
 result = managementNode.callWebService(webServiceName, "GET", "additional/ult/path");
@@ -13,7 +17,8 @@ assert(result.success); // "false"
 assert(result.errorMessage.isEmpty); // "No connection with agent"
 assert(result.agentErrorCode == 0); // "0"
 assert(result.httpResponseCode == 200); // "0"
-assert(!result.document.isEmpty); // ""
+assert(result.redirectUrl == null);
+assert(result.document == expectedDocumentWithArgument); // ""
 
 webSvc = managementNode.getWebService(webServiceName);
 result = webSvc.get();
@@ -22,4 +27,5 @@ assert(result.success); // "false"
 assert(result.errorMessage.isEmpty); // "No connection with agent"
 assert(result.agentErrorCode == 0); // "0"
 assert(result.httpResponseCode == 200); // "0"
-assert(!result.document.isEmpty); // ""
+assert(result.redirectUrl == null);
+assert(result.document == expectedDocumentWithoutArgument); // ""

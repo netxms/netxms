@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.netxms.base.InetAddressEx;
@@ -54,6 +55,7 @@ import org.netxms.client.mt.MappingTableEntry;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.utilities.TestHelper;
 import org.netxms.utilities.TestHelperForEpp;
+import org.netxms.utilities.TestWebServer;
 
 /**
  * Tests for scripting functions
@@ -368,34 +370,47 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       }
    }
 
+   /**
+    * Create web service definition with unique name pointing to given URL.
+    *
+    * @param url web service URL
+    * @param followLocation "follow location" flag
+    * @return created definition (with ID assigned)
+    */
+   private WebServiceDefinition createWebServiceDefinition(String url, boolean followLocation) throws Exception
+   {
+      WebServiceDefinition ws = new WebServiceDefinition("nxsl-test-" + UUID.randomUUID().toString());
+      ws.setUrl(url);
+      ws.setFollowLocation(followLocation);
+      ws.setId(session.modifyWebServiceDefinition(ws));
+      return ws;
+   }
+
    @Test
    public void testNXSLWebService() throws Exception
    {
       session = connectAndLogin();
       AbstractObject managementNode = TestHelper.findManagementServer(session);
       assertNotNull(managementNode);
-      String webServiceId = "neste";
-      String webServiceUrl = "https://www.neste.lv/privatpersonam/stacijas/degvielas-cenas";
 
-      WebServiceDefinition ws = null;
-      for(WebServiceDefinition d : session.getWebServiceDefinitions())
+      try (TestWebServer webServer = new TestWebServer())
       {
-         if (d.getName().equals(webServiceId))
+         WebServiceDefinition ws = createWebServiceDefinition(webServer.getBaseUrl() + TestWebServer.DOCUMENT_PATH + "%1", true);
+         try
          {
-            ws = d;
-            break;
+            List<String> params = new ArrayList<String>();
+            params.add(Long.toString(managementNode.getObjectId()));
+            params.add(ws.getName());
+            params.add(TestWebServer.documentFor(TestWebServer.DOCUMENT_PATH + "additional/ult/path"));
+            params.add(TestWebServer.documentFor(TestWebServer.DOCUMENT_PATH));
+
+            executeScript("/webService.nxsl", params);
+         }
+         finally
+         {
+            session.deleteWebServiceDefinition(ws.getId());
          }
       }
-      if (ws == null)
-         ws = new WebServiceDefinition(webServiceId);
-      ws.setUrl(webServiceUrl);
-      session.modifyWebServiceDefinition(ws);
-
-      List<String> params = new ArrayList<String>();
-      params.add(Long.toString(managementNode.getObjectId()));
-      params.add(webServiceId);
-
-      executeScript("/webService.nxsl", params);
    }
 
    @Test
@@ -404,31 +419,32 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
       session = connectAndLogin();
       AbstractObject managementNode = TestHelper.findManagementServer(session);
       assertNotNull(managementNode);
-      String webServiceId = "netxms-redirect";
-      String webServiceUrl = "http://www.netxms.org/";
-      String redirectUrl = "https://www.netxms.org/";
 
-      WebServiceDefinition ws = null;
-      for(WebServiceDefinition d : session.getWebServiceDefinitions())
+      try (TestWebServer webServer = new TestWebServer())
       {
-         if (d.getName().equals(webServiceId))
+         String redirectUrl = webServer.getBaseUrl() + TestWebServer.REDIRECT_PATH;
+         WebServiceDefinition wsNoFollow = createWebServiceDefinition(redirectUrl, false);
+         WebServiceDefinition wsFollow = null;
+         try
          {
-            ws = d;
-            break;
+            wsFollow = createWebServiceDefinition(redirectUrl, true);
+
+            List<String> params = new ArrayList<String>();
+            params.add(Long.toString(managementNode.getObjectId()));
+            params.add(wsNoFollow.getName());
+            params.add(wsFollow.getName());
+            params.add(webServer.getBaseUrl() + TestWebServer.REDIRECT_TARGET_PATH);
+            params.add(TestWebServer.documentFor(TestWebServer.REDIRECT_TARGET_PATH));
+
+            executeScript("/webServiceRedirect.nxsl", params);
+         }
+         finally
+         {
+            session.deleteWebServiceDefinition(wsNoFollow.getId());
+            if (wsFollow != null)
+               session.deleteWebServiceDefinition(wsFollow.getId());
          }
       }
-      if (ws == null)
-         ws = new WebServiceDefinition(webServiceId);
-      ws.setUrl(webServiceUrl);
-      ws.setFollowLocation(false);
-      session.modifyWebServiceDefinition(ws);
-
-      List<String> params = new ArrayList<String>();
-      params.add(Long.toString(managementNode.getObjectId()));
-      params.add(webServiceId);
-      params.add(redirectUrl);
-
-      executeScript("/webServiceRedirect.nxsl", params);
    }
 
    /**
