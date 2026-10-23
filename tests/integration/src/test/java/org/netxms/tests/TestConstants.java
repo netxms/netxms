@@ -46,6 +46,8 @@ public class TestConstants
    public static String IMAGE_CATEGORY = "Network Objects";
    public static String MOBILE_DEVICE_IMEI = "0000000000";
    public static int AGENT_PORT = 5019; /* remote test node */
+   public static String SSH_LOGIN = ""; /* SSH credentials for management server node; empty disables SSH terminal data flow test */
+   public static String SSH_PASSWORD = "";
 
    // Reinitialize variables from properties file
    public static TestConstants testConstants = new TestConstants();
@@ -85,5 +87,7 @@ public class TestConstants
       CONNECTION_POOL = Integer.parseInt(properties.getProperty("connection.pull", "100"));
       USER_ID = Integer.parseInt(properties.getProperty("user.id", "1"));
       AGENT_PORT = Integer.parseInt(properties.getProperty("agent.port", "5019"));
+      SSH_LOGIN = properties.getProperty("ssh.login", "");
+      SSH_PASSWORD = properties.getProperty("ssh.password", "");
    }
 }

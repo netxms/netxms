@@ -16831,7 +16831,7 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
    if (!(m_systemAccessRights & SYSTEM_ACCESS_SETUP_TCP_PROXY))
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting up SSH terminal"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, L"Access denied on setting up SSH terminal");
       sendMessage(msg);
       return;
    }
@@ -16847,7 +16847,7 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
    if (!node->checkAccessRights(m_userId, OBJECT_ACCESS_CONTROL))
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, node->getId(), _T("Access denied on setting up SSH terminal"));
+      writeAuditLog(AUDIT_SYSCFG, false, node->getId(), L"Access denied on setting up SSH terminal");
       sendMessage(msg);
       return;
    }
@@ -16865,14 +16865,14 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
    shared_ptr<Node> proxyNode = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
    if (proxyNode == nullptr)
    {
-      debugPrintf(4, _T("Requested SSH terminal to node %s [%u] but its SSH proxy [%u] is not available"), node->getName(), node->getId(), proxyId);
+      debugPrintf(4, L"Requested SSH terminal to node %s [%u] but its SSH proxy [%u] is not available", node->getName(), node->getId(), proxyId);
       msg.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
       sendMessage(msg);
       return;
    }
 
    // Credentials: provided by client, or stored node credentials if login is not provided
-   TCHAR login[256], password[256];
+   wchar_t login[256], password[256];
    uint32_t keyId;
    if (request.isFieldExist(VID_USER_NAME))
    {
@@ -16882,8 +16882,8 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
    }
    else
    {
-      _tcslcpy(login, node->getSshLogin(), 256);
-      _tcslcpy(password, node->getSshPassword(), 256);
+      wcslcpy(login, node->getSshLogin(), 256);
+      wcslcpy(password, node->getSshPassword(), 256);
       keyId = node->getSshKeyId();
    }
 
@@ -16900,7 +16900,7 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
    shared_ptr<AgentConnectionEx> conn = proxyNode->createAgentConnection();
    if (conn == nullptr)
    {
-      debugPrintf(4, _T("SSH terminal to node %s [%u] via %s [%u] setup failed (no connection to agent)"), node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId());
+      debugPrintf(4, L"SSH terminal to node %s [%u] via %s [%u] setup failed (no connection to agent)", node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId());
       msg.setField(VID_RCC, RCC_COMM_FAILURE);
       sendMessage(msg);
       return;
@@ -16911,7 +16911,7 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
    if (clientChannelId == 0)
       clientChannelId = InterlockedIncrement(&m_tcpProxyChannelId);
 
-   debugPrintf(4, _T("Setting up SSH terminal to %s [%u] (%s:%u, user \"%s\", key %u, term %hs, size %dx%d) via node %s [%u]"),
+   debugPrintf(4, L"Setting up SSH terminal to %s [%u] (%s:%u, user \"%s\", key %u, term %hs, size %dx%d) via node %s [%u]",
          node->getName(), node->getId(), node->getIpAddress().toString().cstr(), node->getSshPort(), login, keyId, terminalType, columns, rows, proxyNode->getName(), proxyNode->getId());
 
    if (request.getFieldAsBoolean(VID_ENABLE_TWO_PHASE_SETUP))
@@ -16973,9 +16973,9 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
       msg.setField(VID_CHANNEL_ID, clientChannelId);
-      writeAuditLog(AUDIT_SYSCFG, true, node->getId(), _T("Created SSH terminal session to %s port %u as user \"%s\" via %s [%u] (client channel %u)"),
+      writeAuditLog(AUDIT_SYSCFG, true, node->getId(), L"Created SSH terminal session to %s port %u as user \"%s\" via %s [%u] (client channel %u)",
             node->getIpAddress().toString().cstr(), node->getSshPort(), login, proxyNode->getName(), proxyNode->getId(), clientChannelId);
-      debugPrintf(3, _T("Created SSH terminal session to %s [%u] via node %s [%u] (agent channel = %u, client channel = %u)"),
+      debugPrintf(3, L"Created SSH terminal session to %s [%u] via node %s [%u] (agent channel = %u, client channel = %u)",
             node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId(), agentChannelId, clientChannelId);
    }
    else
@@ -16984,11 +16984,11 @@ void ClientSession::setupSshTerminal(const NXCPMessage& request)
       {
          // Channel was closed (by remote side or by session shutdown) while setup was in progress
          conn->closeSSHChannel(agentChannelId);
-         debugPrintf(4, _T("SSH terminal to node %s [%u] via %s [%u] closed before setup completed"), node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId());
+         debugPrintf(4, L"SSH terminal to node %s [%u] via %s [%u] closed before setup completed", node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId());
       }
       else
       {
-         debugPrintf(4, _T("SSH terminal to node %s [%u] via %s [%u] setup failed (%s)"), node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId(), AgentErrorCodeToText(rcc));
+         debugPrintf(4, L"SSH terminal to node %s [%u] via %s [%u] setup failed (%s)", node->getName(), node->getId(), proxyNode->getName(), proxyNode->getId(), AgentErrorCodeToText(rcc));
       }
       msg.setField(VID_RCC, AgentErrorToRCC(rcc));
    }
@@ -17030,12 +17030,12 @@ void ClientSession::resizeSshTerminal(const NXCPMessage& request)
    if (conn != nullptr)
    {
       uint32_t rcc = conn->resizeSSHChannel(agentChannelId, columns, rows);
-      debugPrintf(6, _T("SSH terminal channel %u resized to %dx%d (%s)"), clientChannelId, columns, rows, AgentErrorCodeToText(rcc));
+      debugPrintf(6, L"SSH terminal channel %u resized to %dx%d (%s)", clientChannelId, columns, rows, AgentErrorCodeToText(rcc));
       response.setField(VID_RCC, AgentErrorToRCC(rcc));
    }
    else
    {
-      debugPrintf(5, _T("Resize request for unknown SSH terminal channel %u"), clientChannelId);
+      debugPrintf(5, L"Resize request for unknown SSH terminal channel %u", clientChannelId);
       response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
    }
    sendMessage(response);
@@ -17074,12 +17074,12 @@ void ClientSession::closeTcpProxy(const NXCPMessage& request)
       if (sshChannel)
       {
          conn->closeSSHChannel(agentChannelId);
-         writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Closed SSH terminal session (client channel %u)"), clientChannelId);
+         writeAuditLog(AUDIT_SYSCFG, true, nodeId, L"Closed SSH terminal session (client channel %u)", clientChannelId);
       }
       else
       {
          conn->closeTcpProxy(agentChannelId);
-         writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Closed TCP proxy channel %u"), clientChannelId);
+         writeAuditLog(AUDIT_SYSCFG, true, nodeId, L"Closed TCP proxy channel %u", clientChannelId);
       }
    }
 
@@ -17186,7 +17186,7 @@ void ClientSession::onTcpProxyData(AgentConnectionEx *conn, uint32_t agentChanne
          clientChannelId = p->clientChannelId;
          if (size == 0) // close indicator
          {
-            debugPrintf(5, _T("Received TCP proxy channel %u close notification"), clientChannelId);
+            debugPrintf(5, L"Received TCP proxy channel %u close notification", clientChannelId);
             m_tcpProxyConnections.remove(i);
          }
          break;
@@ -17214,7 +17214,7 @@ void ClientSession::onSshTerminalData(uint32_t clientChannelId, const void *data
       {
          if (size == 0) // close indicator; agent side has already released the channel
          {
-            debugPrintf(5, _T("Received SSH terminal channel %u close notification"), clientChannelId);
+            debugPrintf(5, L"Received SSH terminal channel %u close notification", clientChannelId);
             m_tcpProxyConnections.remove(i);
          }
          sendTcpProxyDataToClient(clientChannelId, data, size, errorIndicator);
