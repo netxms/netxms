@@ -109,27 +109,6 @@ static inline void ConvertPathToHost(TCHAR *path, bool allowPathExpansion, bool 
 
 #endif
 
-#ifdef _WIN32
-
-/**
- * Convert path from local to UNIX format
- */
-static void ConvertPathToNetwork(TCHAR *path)
-{
-   for(int i = 0; path[i] != 0; i++)
-      if (path[i] == _T('\\'))
-         path[i] = _T('/');
-}
-
-#else
-
-/**
- * Convert path from local to UNIX format
- */
-#define ConvertPathToNetwork(x)
-
-#endif
-
 /**
  * Subagent initialization
  */
