@@ -332,7 +332,7 @@ public class AclReport extends AbstractAclReport
                groupRow = sheet.createRow(rowNum.getAndIncrement());
             }
             AbstractUserObject group = session.findUserDBObjectById(groupId, null);
-            groupRow.createCell(UsersSheetCells.GROUPS.ordinal()).setCellValue(group.getName());
+            groupRow.createCell(UsersSheetCells.GROUPS.ordinal()).setCellValue((group != null) ? group.getName() : String.format(i18n.tr("DELETED [%d]"), groupId));
          }
 
          int aclColumnIndex = UsersSheetCells.ACL_START_COLUMN.ordinal();
