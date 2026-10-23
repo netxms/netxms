@@ -1449,6 +1449,8 @@ DB_STATEMENT NXCORE_EXPORTABLE PrepareAggregatedDataSelect(DB_HANDLE hdb, uint32
 #define SAMPLE_ATTR_FLAG_BOUNDED    0x0001   // dci_sample_attributes.flags: lower_bound and upper_bound are valid
 
 uint32_t NXCORE_EXPORTABLE RegisterComputationMethod(const MethodDescriptor& method);
+bool NXCORE_EXPORTABLE RegisterComputationProvider(const shared_ptr<ComputationProvider>& provider);
+shared_ptr<ComputationProvider> NXCORE_EXPORTABLE FindComputationProvider(const wchar_t *id, uint32_t *methodId = nullptr);
 bool NXCORE_EXPORTABLE ReadAttributedSamples(const DCItem& dci, Timestamp from, Timestamp to, std::vector<AttributedSample>& samples);
 DB_STATEMENT NXCORE_EXPORTABLE PrepareTieredDataSelect(DB_HANDLE hdb, uint32_t nodeId, DciTier tier,
          DciAggregationFunction function, uint32_t maxRows, const wchar_t *condition);

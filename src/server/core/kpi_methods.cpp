@@ -25,9 +25,23 @@
 #define DEBUG_TAG L"kpi"
 
 /**
- * Lock for method registration
+ * Lock for method and provider registration
  */
 static Mutex s_registrationLock;
+
+/**
+ * Registered computation provider with its method registry ID
+ */
+struct RegisteredProvider
+{
+   shared_ptr<ComputationProvider> provider;
+   uint32_t methodId;
+};
+
+/**
+ * Registered computation providers by method ID
+ */
+static StringObjectMap<RegisteredProvider> s_providers(Ownership::True);
 
 /**
  * Find registered computation method by method ID and version. Returns 0 if method is not registered.
@@ -103,4 +117,55 @@ uint32_t NXCORE_EXPORTABLE RegisterComputationMethod(const MethodDescriptor& met
 
    DBConnectionPoolReleaseConnection(hdb);
    return id;
+}
+
+/**
+ * Register computation provider. Registers provider's method in method registry and makes provider available
+ * for selection by Facility.provider_id. Second registration under same ID is rejected.
+ *
+ * @return true on success
+ */
+bool NXCORE_EXPORTABLE RegisterComputationProvider(const shared_ptr<ComputationProvider>& provider)
+{
+   MethodDescriptor method;
+   method.methodId = provider->id();
+   method.version = provider->version();
+   method.engine = L"kpi";
+   method.displayName = provider->displayName();
+   method.tier = provider->isCommercial() ? MethodTier::COMMERCIAL : MethodTier::OPEN;
+   method.coverageLevel = provider->coverageLevel();
+
+   uint32_t methodId = RegisterComputationMethod(method);
+   if (methodId == 0)
+      return false;
+
+   LockGuard lockGuard(s_registrationLock);
+   if (s_providers.contains(provider->id()))
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, L"Computation provider %s is already registered", provider->id());
+      return false;
+   }
+
+   auto rp = new RegisteredProvider();
+   rp->provider = provider;
+   rp->methodId = methodId;
+   s_providers.set(provider->id(), rp);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"Computation provider %s version %s registered", provider->id(), provider->version());
+   return true;
+}
+
+/**
+ * Find registered computation provider by ID. Method registry ID of the provider is returned via methodId if provided.
+ *
+ * @return provider or null pointer if provider with given ID is not registered
+ */
+shared_ptr<ComputationProvider> NXCORE_EXPORTABLE FindComputationProvider(const wchar_t *id, uint32_t *methodId)
+{
+   LockGuard lockGuard(s_registrationLock);
+   RegisteredProvider *rp = s_providers.get(id);
+   if (rp == nullptr)
+      return shared_ptr<ComputationProvider>();
+   if (methodId != nullptr)
+      *methodId = rp->methodId;
+   return rp->provider;
 }
