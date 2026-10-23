@@ -28,9 +28,9 @@
 #include <nxtask.h>
 #include <nxzip.h>
 #include <nxcrypto.h>
+#include <nxstat.h>
 #include <cmath>
 #include <algorithm>
-#include <map>
 
 #define DEBUG_TAG L"dataexport"
 

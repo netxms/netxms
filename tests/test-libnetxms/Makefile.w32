@@ -26,6 +26,6 @@ SOURCES = \
 TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include
 # RAND_bytes() is called directly by the hash map and crypto tests, so OpenSSL
 # is linked in addition to libnetxms itself.
-TOOL_LIBS = -lnetxms -lnxjansson $(SSL_LIBS)
+TOOL_LIBS = -lnetxms -lnxjansson -lz $(SSL_LIBS)
 
 include $(TOPDIR)/build/tool-common.mk
