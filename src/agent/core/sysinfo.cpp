@@ -815,10 +815,12 @@ LONG H_FileLineCount(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstra
 
    uint32_t lineCount = 0;
    char buffer[8192];
+   bool hasData = false;
    bool lastCharIsNL = false;
    int bytes;
    while((bytes = _read(fd, buffer, sizeof(buffer))) > 0)
    {
+      hasData = true;
       for(int i = 0; i < bytes; i++)
          if (buffer[i] == '\n')
             lineCount++;
@@ -826,8 +828,8 @@ LONG H_FileLineCount(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstra
    }
    _close(fd);
 
-   if (!lastCharIsNL)
-      lineCount++; // Last line without '\n' char
+   if (hasData && !lastCharIsNL)
+      lineCount++; // Last line without '\n' char (an empty file has no lines)
 
    ret_uint(value, lineCount);
    return SYSINFO_RC_SUCCESS;
