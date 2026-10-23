@@ -107,6 +107,14 @@ static void C_SysNodeUnreachable(Node *node, Event *event)
             event->setRootId(static_cast<const Node&>(*object).getLastEventId(LAST_EVENT_AGENT_DOWN));
          }
          break;
+      case NetworkPathFailureReason::AGENT_TUNNEL_DOWN:
+         // Check for NetXMS server network connectivity (tunnel-only nodes have no
+         // intermediate path objects, so the beacon check is the only correlation source)
+         if (g_flags & AF_NO_NETWORK_CONNECTIVITY)
+         {
+            event->setRootId(m_networkLostEventId);
+         }
+         break;
       default:
          break;
    }
