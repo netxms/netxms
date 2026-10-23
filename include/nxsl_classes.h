@@ -564,7 +564,7 @@ public:
 	NXSL_HashMap(const NXSL_HashMap& src);
 	virtual ~NXSL_HashMap();
 
-   void set(const TCHAR *key, NXSL_Value *value);
+   inline void set(const TCHAR *key, NXSL_Value *value);
    NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
    NXSL_Value *getKeys() const;
    NXSL_Value *getValues() const;
@@ -1108,8 +1108,8 @@ public:
    const NXSL_Identifier& getName() const { return m_name; }
    NXSL_Value *getValue() { return m_value; }
 	bool isConstant() const { return m_constant; }
-   void setValue(NXSL_Value *value);
-   NXSL_Value *unshareValue();
+   inline void setValue(NXSL_Value *value);
+   inline NXSL_Value *unshareValue();
 };
 
 /**
