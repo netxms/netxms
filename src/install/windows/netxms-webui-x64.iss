@@ -31,7 +31,6 @@ ArchitecturesAllowed=x64
 
 [Components]
 Name: "webui"; Description: "Web Interface"; Types: full compact custom; Flags: fixed
-Name: "api"; Description: "Web API"; Types: full
 Name: "jre"; Description: "Java Runtime Environment"; Types: full
 
 [Dirs]
@@ -42,6 +41,10 @@ Name: "{app}\jetty-base\work"; Flags: uninsalwaysuninstall
 Name: "{app}\logs"; Flags: uninsalwaysuninstall
 
 [InstallDelete]
+Type: files; Name: "{app}\jetty-base\webapps\api.war"
+Type: files; Name: "{app}\jetty-base\webapps\api.properties"
+Type: files; Name: "{app}\jetty-base\start.d\ee8-deploy.ini"
+Type: files; Name: "{app}\jetty-base\resources\nxapisrv.properties"
 Type: files; Name: "{app}\jetty-base\webapps\ROOT\nxmc-*.jar"
 Type: files; Name: "{app}\jetty-base\lib\logging\logback-classic-1.5.21.jar"
 Type: files; Name: "{app}\jetty-base\lib\logging\logback-core-1.5.21.jar"
@@ -71,9 +74,8 @@ Source: "..\files\windows\x64\CRT\*"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\files\java\jetty-home\*"; Excludes: "webdefault.xml"; DestDir: "{app}\jetty-home"; Flags: ignoreversion recursesubdirs; Components: webui
 Source: "web\webdefault.xml"; DestDir: "{app}\jetty-home\etc"; Flags: ignoreversion; Components: webui
 ; Web applications and configuration
-Source: "web\api.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: api
-Source: "web\api.properties"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: api
-Source: "web\frontpage\*"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion recursesubdirs; Components: webui
+Source: "web\frontpage\*"; Excludes: "index.html"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion recursesubdirs; Components: webui
+Source: "{#file "web\frontpage\index.html"}"; DestName: "index.html"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion; Components: webui
 Source: "web\jetty-base\*"; DestDir: "{app}\jetty-base"; Flags: onlyifdoesntexist recursesubdirs; Components: webui
 Source: "web\launcher.conf"; DestDir: "{app}\etc"; Flags: onlyifdoesntexist; Components: webui
 Source: "web\lib\*"; DestDir: "{app}\jetty-base\lib"; Flags: ignoreversion recursesubdirs; Components: webui

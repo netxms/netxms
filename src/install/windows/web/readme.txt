@@ -1,7 +1,7 @@
 # Introduction
 
-This package provides web interface for NetXMS, both legacy and new one, as well as API module.
-It's build on top of Jetty10.
+This package provides web interface for NetXMS.
+It's built on top of Jetty 12.
 
 Default setup have both HTTP and HTTPS connectors enabled, with self-signed certificate.
 
@@ -25,31 +25,30 @@ in file `jetty-base/start.d/http.ini`.
 
 ## Changing certificate
 
-You can replace certificate in file `jetty-base/etc/keystore.jks` with your own.
+You can replace certificate in file `jetty-base/etc/keystore.p12` with your own.
 Change password in file `jetty-base/start.d/ssl.ini` (property `jetty.sslContext.keyStorePassword`) if required.
 
 It's highly recommended to use certificate issued by trusted CA like LetsEncrypt, your internal CA,
 or any commecial CA instead of self-signed.
 
-To simplify inital setup, SNI check is disabled. It's recommended to renable it by setting
-property `jetty.sslContext.sniHostCheck` in file `jetty-base/start.d/ssl.ini` to `true`.
+To simplify initial setup, SNI check is disabled. It's recommended to re-enable it by setting
+properties `jetty.ssl.sniHostCheck` and `jetty.ssl.sniRequired` in file `jetty-base/start.d/ssl.ini` to `true`.
 
 
 ## Changing IP address of the NetXMS server
 
-Both management console and API module are configured to connect to the NetXMS server at `127.0.0.1:4701`. If you want to change this, modify property `server` in files `jetty-base/resources/nxmc.properties` (management console) and `jetty-base/resources/nxapisrv.properties` (API).
+Management console is configured to connect to the NetXMS server at `127.0.0.1:4701`. If you want to change this, modify property `server` in file `jetty-base/resources/nxmc.properties`.
 
 
 # Configuration files
 
 jetty-base/etc/keystore.p12 - keystore for HTTPS connector
-jetty-base/etc/launcher.conf - configuration file for Jetty service launcher (e.g. memory limits)
+etc/launcher.conf - configuration file for Jetty service launcher (e.g. memory limits)
 jetty-base/start.d/http.ini - http connector configuration
 jetty-base/start.d/ssl.ini - https connector configuration
-jetty-base/resources/nxmc.properties - management console configuration (both legacy and new one)
-jetty-base/resources/nxapisrv.properties - API configuration
+jetty-base/resources/nxmc.properties - management console configuration
 
 # Additional information:
 
 NetXMS administrator guide: https://netxms.org/documentation/adminguide/
-Jetty10 operations guide: https://www.eclipse.org/jetty/documentation/jetty-10/operations-guide/
+Jetty 12 operations guide: https://jetty.org/docs/jetty/12/operations-guide/index.html
