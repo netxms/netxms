@@ -232,7 +232,7 @@ NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    NXSL_FileHandle *f = static_cast<NXSL_FileHandle*>(object->getData());
 	if (compareAttributeName(attr, "eof"))
 	{
-		value = object->vm()->createValue((INT32)feof(f->handle));
+		value = object->vm()->createValue(f->closed || feof(f->handle));
 	}
 	else if (compareAttributeName(attr, "name"))
    {
