@@ -40,7 +40,10 @@ CaptureGroupsStore::CaptureGroupsStore(const TCHAR *line, int *offsets, int cgco
    for(int i = 1; i < cgcount; i++)
    {
       if (offsets[i * 2] == -1)
+      {
+         m_values[i - 1] = nullptr;
          continue;
+      }
 
       int len = offsets[i * 2 + 1] - offsets[i * 2];
       TCHAR *s = m_pool.allocateString(len + 1);
