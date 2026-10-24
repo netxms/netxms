@@ -134,7 +134,8 @@ NXSL_Value *NXSL_RangeClass::getNext(NXSL_Object *object, NXSL_Value *currValue)
    }
 
    double v = (currValue != nullptr) ? currValue->getValueAsReal() + range->step.d : range->start.d;
-   bool inRange = (range->step.d > 0) ? (v < range->end.d - range->margin) : ((range->step.d < 0) && (v > range->end.d + range->margin));
+   double margin = (currValue != nullptr) ? range->margin : 0;
+   bool inRange = (range->step.d > 0) ? (v < range->end.d - margin) : ((range->step.d < 0) && (v > range->end.d + margin));
    return inRange ? vm->createValue(v) : nullptr;
 }
 
