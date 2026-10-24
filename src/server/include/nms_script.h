@@ -120,7 +120,7 @@ public:
 /**
  * NXSL "WirelessStation" class
  */
-class NXSL_WirelessStationClass : public NXSL_NetObjClass
+class NXSL_WirelessStationClass : public NXSL_Class
 {
 public:
    NXSL_WirelessStationClass();
