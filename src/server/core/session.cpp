@@ -2388,7 +2388,7 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
    msg.setField(VID_TIMEZONE, szBuffer);
    debugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
-   ConfigReadStr(_T("Client.TileServerURL"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("http://tile.netxms.org/osm/"));
+   ConfigReadStr(_T("Client.TileServerURL"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("https://tile.netxms.org/osm/"));
    msg.setField(VID_TILE_SERVER_URL, szBuffer);
 
    ConfigReadStr(_T("Client.DefaultConsoleDateFormat"), szBuffer, MAX_CONFIG_VALUE_LENGTH, _T("dd.MM.yyyy"));

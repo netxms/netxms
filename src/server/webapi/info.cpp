@@ -65,7 +65,7 @@ int H_ServerInfo(Context *context)
    json_object_set_new(options, "helpdeskLinkActive", json_boolean((g_flags & AF_HELPDESK_LINK_ACTIVE) != 0));
    json_object_set_new(options, "dciAggregationEnabled", json_boolean(ConfigReadBoolean(L"DataCollection.Aggregation.Enabled", false)));
 
-   ConfigReadStr(L"Client.TileServerURL", buffer, MAX_CONFIG_VALUE_LENGTH, L"http://tile.netxms.org/osm/");
+   ConfigReadStr(L"Client.TileServerURL", buffer, MAX_CONFIG_VALUE_LENGTH, L"https://tile.netxms.org/osm/");
    json_object_set_new(options, "tileServerURL", json_string_w(buffer));
 
    json_object_set_new(response, "options", options);
