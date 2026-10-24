@@ -328,8 +328,9 @@ public class DataExportView extends View
    private static Set<String> getTagGroupPrefixes()
    {
       Set<String> prefixes = new LinkedHashSet<>();
-      for(String tag : OtherOptions.TAGS)
+      for(String[] entry : OtherOptions.TAGS)
       {
+         String tag = entry[0];
          int index = tag.indexOf('.');
          prefixes.add((index > 0) ? tag.substring(0, index) : tag);
       }

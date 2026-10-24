@@ -19,6 +19,8 @@
 package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -40,13 +42,47 @@ import org.xnap.commons.i18n.I18n;
  */
 public class OtherOptions extends AbstractDCIPropertyPage
 {
-   public static final String[] TAGS = {
-      "iface.inbound.bits", "iface.inbound.bytes", "iface.inbound.util", "iface.outbound.bits", "iface.outbound.bytes", "iface.outbound.util", "iface.speed",
-      "eed.edc", "eed.eit", "eed.win", "eed.reuse", "eed.ren",
-      "power.feed", "power.in", "power.out", "power.gen",
-      "cooling.energy", "cooling.power", "cooling.load", "cooling.temp.supply", "cooling.temp.return", "cooling.flow",
-      "env.temp.outdoor", "env.temp.ambient", "env.temp.supply", "env.temp.return", "env.temp.inlet", "env.temp.outlet", "env.humidity.outdoor", "env.humidity.ambient",
-      "water.flow", "heat.export"
+   /**
+    * System tags offered by the interpretation selector, in display order, as pairs of tag and display label. Labels are marked
+    * for translation here and translated when shown. Tags not in this list (retired tags such as "eed.ren", or tags set via API)
+    * are still shown and preserved as entered.
+    */
+   public static final String[][] TAGS = {
+      { "iface.inbound.bits", I18n.marktr("Interface traffic - Inbound - bits/sec") },
+      { "iface.inbound.bytes", I18n.marktr("Interface traffic - Inbound - bytes/sec") },
+      { "iface.inbound.util", I18n.marktr("Interface traffic - Inbound - Utilization %") },
+      { "iface.outbound.bits", I18n.marktr("Interface traffic - Outbound - bits/sec") },
+      { "iface.outbound.bytes", I18n.marktr("Interface traffic - Outbound - bytes/sec") },
+      { "iface.outbound.util", I18n.marktr("Interface traffic - Outbound - Utilization %") },
+      { "iface.speed", I18n.marktr("Interface speed") },
+      { "eed.edc", I18n.marktr("EED - Total facility energy (EDC)") },
+      { "eed.edc_bg", I18n.marktr("EED - Back-up generator energy (EDC_BG)") },
+      { "eed.res_os", I18n.marktr("EED - On-site renewable energy (RES_OS)") },
+      { "eed.eit", I18n.marktr("EED - IT equipment energy (EIT)") },
+      { "eed.win", I18n.marktr("EED - Water intake (WIN)") },
+      { "eed.win_fre", I18n.marktr("EED - Freshwater intake (WIN_FRE)") },
+      { "eed.reuse", I18n.marktr("EED - Reused energy (REUSE)") },
+      { "eed.reuse_upgrade", I18n.marktr("EED - Heat upgrade energy (HU)") },
+      { "power.feed", I18n.marktr("Power - Feed power") },
+      { "power.in", I18n.marktr("Power - Input side power") },
+      { "power.out", I18n.marktr("Power - Output side power") },
+      { "power.gen", I18n.marktr("Power - On-site generation") },
+      { "cooling.energy", I18n.marktr("Cooling - Energy consumption") },
+      { "cooling.power", I18n.marktr("Cooling - Power consumption") },
+      { "cooling.load", I18n.marktr("Cooling - Thermal load") },
+      { "cooling.temp.supply", I18n.marktr("Cooling - Supply temperature") },
+      { "cooling.temp.return", I18n.marktr("Cooling - Return temperature") },
+      { "cooling.flow", I18n.marktr("Cooling - Coolant flow rate") },
+      { "env.temp.outdoor", I18n.marktr("Environment - Outdoor temperature") },
+      { "env.temp.ambient", I18n.marktr("Environment - Ambient temperature") },
+      { "env.temp.supply", I18n.marktr("Environment - Supply air temperature") },
+      { "env.temp.return", I18n.marktr("Environment - Return air temperature") },
+      { "env.temp.inlet", I18n.marktr("Environment - Rack inlet temperature") },
+      { "env.temp.outlet", I18n.marktr("Environment - Rack outlet temperature") },
+      { "env.humidity.outdoor", I18n.marktr("Environment - Outdoor humidity") },
+      { "env.humidity.ambient", I18n.marktr("Environment - Ambient humidity") },
+      { "water.flow", I18n.marktr("Water - Intake flow rate") },
+      { "heat.export", I18n.marktr("Heat - Exported heat flow") }
    };
 
    private final I18n i18n = LocalizationHelper.getI18n(OtherOptions.class);
@@ -60,6 +96,8 @@ public class OtherOptions extends AbstractDCIPropertyPage
    private LabeledCombo multiplierDegree;
    private LabeledCombo agentCacheMode;
    private LabeledCombo interpretation;
+   private LabeledText feedQualifier;
+   private String unlistedTag = null; // base tag of the DCI if it is not in TAGS; preserved on save
    private LabeledText userTag;
    private ObjectSelector relatedObject;
    private LabeledText aiHint;
@@ -166,47 +204,56 @@ public class OtherOptions extends AbstractDCIPropertyPage
       gd.horizontalSpan = 2;
       relatedObject.setLayoutData(gd);
 
-      interpretation = new LabeledCombo(dialogArea, SWT.NONE);
-      interpretation.setLabel(i18n.tr("Interpretation"));
-      interpretation.add(i18n.tr("Other"));
-      interpretation.add(i18n.tr("Interface traffic - Inbound - bits/sec"));
-      interpretation.add(i18n.tr("Interface traffic - Inbound - bytes/sec"));
-      interpretation.add(i18n.tr("Interface traffic - Inbound - Utilization %"));
-      interpretation.add(i18n.tr("Interface traffic - Outbound - bits/sec"));
-      interpretation.add(i18n.tr("Interface traffic - Outbound - bytes/sec"));
-      interpretation.add(i18n.tr("Interface traffic - Outbound - Utilization %"));
-      interpretation.add(i18n.tr("Interface speed"));
-      interpretation.add(i18n.tr("EED - Total facility energy (EDC)"));
-      interpretation.add(i18n.tr("EED - IT equipment energy (EIT)"));
-      interpretation.add(i18n.tr("EED - Water intake (WIN)"));
-      interpretation.add(i18n.tr("EED - Reused energy (REUSE)"));
-      interpretation.add(i18n.tr("EED - Renewable energy (REN)"));
-      interpretation.add(i18n.tr("Power - Feed power"));
-      interpretation.add(i18n.tr("Power - Input side power"));
-      interpretation.add(i18n.tr("Power - Output side power"));
-      interpretation.add(i18n.tr("Power - On-site generation"));
-      interpretation.add(i18n.tr("Cooling - Energy consumption"));
-      interpretation.add(i18n.tr("Cooling - Power consumption"));
-      interpretation.add(i18n.tr("Cooling - Thermal load"));
-      interpretation.add(i18n.tr("Cooling - Supply temperature"));
-      interpretation.add(i18n.tr("Cooling - Return temperature"));
-      interpretation.add(i18n.tr("Cooling - Coolant flow rate"));
-      interpretation.add(i18n.tr("Environment - Outdoor temperature"));
-      interpretation.add(i18n.tr("Environment - Ambient temperature"));
-      interpretation.add(i18n.tr("Environment - Supply air temperature"));
-      interpretation.add(i18n.tr("Environment - Return air temperature"));
-      interpretation.add(i18n.tr("Environment - Rack inlet temperature"));
-      interpretation.add(i18n.tr("Environment - Rack outlet temperature"));
-      interpretation.add(i18n.tr("Environment - Outdoor humidity"));
-      interpretation.add(i18n.tr("Environment - Ambient humidity"));
-      interpretation.add(i18n.tr("Water - Intake flow rate"));
-      interpretation.add(i18n.tr("Heat - Exported heat flow"));
-      interpretation.select(interpretationFromTag(dci.getSystemTag()));
+      String systemTag = (dci.getSystemTag() != null) ? dci.getSystemTag() : "";
+      int separator = systemTag.indexOf('/');
+      String baseTag = (separator >= 0) ? systemTag.substring(0, separator) : systemTag;
+      int tagIndex = interpretationFromTag(baseTag);
+      if ((tagIndex == 0) && !baseTag.isEmpty())
+      {
+         unlistedTag = baseTag;
+         tagIndex = TAGS.length + 1;
+      }
+
+      Composite interpretationArea = new Composite(dialogArea, SWT.NONE);
+      GridLayout interpretationAreaLayout = new GridLayout();
+      interpretationAreaLayout.numColumns = 2;
+      interpretationAreaLayout.marginHeight = 0;
+      interpretationAreaLayout.marginWidth = 0;
+      interpretationArea.setLayout(interpretationAreaLayout);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 2;
+      interpretationArea.setLayoutData(gd);
+
+      interpretation = new LabeledCombo(interpretationArea, SWT.NONE);
+      interpretation.setLabel(i18n.tr("Interpretation"));
+      interpretation.add(i18n.tr("Other"));
+      for(String[] entry : TAGS)
+         interpretation.add(i18n.tr(entry[1]));
+      if (unlistedTag != null)
+         interpretation.add(unlistedTag);
+      interpretation.select(tagIndex);
+      interpretation.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            feedQualifier.setEnabled(interpretation.getSelectionIndex() > 0);
+         }
+      });
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
       interpretation.setLayoutData(gd);
+
+      feedQualifier = new LabeledText(interpretationArea, SWT.NONE);
+      feedQualifier.setLabel(i18n.tr("Feed qualifier"));
+      feedQualifier.getTextControl().setTextLimit(15);
+      feedQualifier.setText((separator >= 0) ? systemTag.substring(separator + 1) : "");
+      feedQualifier.setEnabled(tagIndex > 0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      feedQualifier.setLayoutData(gd);
 
       userTag = new LabeledText(dialogArea, SWT.NONE);
       userTag.setLabel(i18n.tr("Tag"));
@@ -244,7 +291,9 @@ public class OtherOptions extends AbstractDCIPropertyPage
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
       dci.setMultiplier(5 - multiplierDegree.getSelectionIndex());
       dci.setRelatedObject(relatedObject.getObjectId());
-      dci.setSystemTag(tagFromInterpretation(interpretation.getSelectionIndex()));
+      String tag = tagFromInterpretation(interpretation.getSelectionIndex());
+      String qualifier = feedQualifier.getText().trim();
+      dci.setSystemTag((tag.isEmpty() || qualifier.isEmpty()) ? tag : tag + "/" + qualifier);
       dci.setUserTag(userTag.getText().trim());
       dci.setAiHint(aiHint.getText().trim());
       editor.modify();
@@ -267,34 +316,38 @@ public class OtherOptions extends AbstractDCIPropertyPage
 		multiplierDegree.select(0);
 		relatedObject.setObjectId(0);
       interpretation.select(0);
+      feedQualifier.setText("");
+      feedQualifier.setEnabled(false);
       userTag.setText("");
       aiHint.setText("");
 	}
 
    /**
-    * Get interpretation code from DCI tag.
+    * Get interpretation selector index from base DCI tag (without qualifier).
     *
-    * @param tag DCI tag
-    * @return interpretation code
+    * @param tag base DCI tag
+    * @return index in selector, or 0 if tag is not in TAGS
     */
    private static int interpretationFromTag(String tag)
    {
-      if ((tag == null) || tag.isEmpty())
-         return 0;
       for(int i = 0; i < TAGS.length; i++)
-         if (tag.equalsIgnoreCase(TAGS[i]))
+         if (tag.equalsIgnoreCase(TAGS[i][0]))
             return i + 1;
       return 0;
    }
 
    /**
-    * Get tag from interpretation code.
+    * Get base DCI tag from interpretation selector index.
     *
-    * @param index interpretation code
+    * @param index index in selector
     * @return tag or empty string
     */
-   private static String tagFromInterpretation(int index)
+   private String tagFromInterpretation(int index)
    {
-      return ((index > 0) && (index <= TAGS.length)) ? TAGS[index - 1] : "";
+      if ((index > 0) && (index <= TAGS.length))
+         return TAGS[index - 1][0];
+      if ((index == TAGS.length + 1) && (unlistedTag != null))
+         return unlistedTag;
+      return "";
    }
 }
