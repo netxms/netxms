@@ -165,6 +165,16 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.56 to 70.57
+ */
+static bool H_UpgradeFromV56()
+{
+   CHK_EXEC(SQLQuery(L"UPDATE config SET units='bytes' WHERE var_name='AIOperator.Instructions.MaxSize'"));
+   CHK_EXEC(SetMinorSchemaVersion(57));
+   return true;
+}
+
+/**
  * Upgrade from 70.55 to 70.56
  */
 static bool H_UpgradeFromV55()
@@ -1889,6 +1899,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 56, 70, 57, H_UpgradeFromV56 },
    { 55, 70, 56, H_UpgradeFromV55 },
    { 54, 70, 55, H_UpgradeFromV54 },
    { 53, 70, 54, H_UpgradeFromV53 },

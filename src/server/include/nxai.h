@@ -383,7 +383,7 @@ private:
    void logExecution(wchar_t status, uint32_t durationMs, int64_t inputTokens, int64_t outputTokens, const wchar_t *explanation);
    void clearExecutingState();
    bool saveToDatabase() const;   // must be called with instance lock held
-   size_t setInstructions(const char *text, time_t now);  // must be called with instance lock held; returns number of characters kept if text was truncated, 0 otherwise
+   size_t setInstructions(const char *text, time_t now);  // must be called with instance lock held; returns number of bytes kept if text was truncated, 0 otherwise
    int findCheckIndex(uint32_t checkId) const;   // must be called with instance lock held
    void appendChecksToPrompt(std::string& prompt) const;   // must be called with instance lock held
 

@@ -349,7 +349,7 @@ bool AIOperatorInstance::processResponse(const char *response, time_t now)
       {
          size_t truncatedTo = setInstructions(json_string_value(instructions), now);
          if (truncatedTo > 0)
-            m_lastExplanation.appendFormattedString(L"\n[standing instructions truncated to %u characters]", static_cast<uint32_t>(truncatedTo));
+            m_lastExplanation.appendFormattedString(L"\n[standing instructions truncated to %u bytes]", static_cast<uint32_t>(truncatedTo));
       }
    }
 
@@ -1760,7 +1760,7 @@ void AIOperatorCheck::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 
 /**
  * Update standing instructions. Previous text is written to history, new text is truncated to configured
- * maximum size. Returns number of characters kept if the text was truncated, 0 otherwise.
+ * maximum size. Returns number of bytes kept if the text was truncated, 0 otherwise.
  * Must be called with instance lock held.
  */
 size_t AIOperatorInstance::setInstructions(const char *text, time_t now)
