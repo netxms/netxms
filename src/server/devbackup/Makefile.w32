@@ -7,5 +7,6 @@
 
 MODULE = devbackup
 SOURCES = $(wildcard *.cpp)
+MOD_LIBS = -lnxdb
 
 include $(TOPDIR)/src/server/module-common.mk
