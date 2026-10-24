@@ -27,11 +27,26 @@
 #include <openssl/x509.h>
 
 /**
- * Upgrade from 62.46 to 70.0
+ * Upgrade from 62.47 to 70.0
+ */
+static bool H_UpgradeFromV47()
+{
+   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 62.46 to 62.47
  */
 static bool H_UpgradeFromV46()
 {
-   CHK_EXEC(SetMajorSchemaVersion(70, 0));
+   CHK_EXEC(CreateConfigParam(L"Jira.VerifyPeer", L"1", L"Enable/disable peer certificate verification.", nullptr, 'B', true, false, false));
+   CHK_EXEC(SQLQuery(L"UPDATE config SET default_value='https://tile.netxms.org/osm/' WHERE var_name='Client.TileServerURL'"));
+   CHK_EXEC(SQLQuery(L"DELETE FROM config_values WHERE var_name='XMPP.Port'"));
+   CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='SNMP.Agent.AllowedVersions'"));
+   CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name LIKE 'SNMP.Agent.V3.%'"));
+   CHK_EXEC(SQLQuery(L"DELETE FROM config_values WHERE var_name LIKE 'SNMP.Agent.V3.%'"));
+   CHK_EXEC(SetMinorSchemaVersion(47));
    return true;
 }
 
@@ -1533,7 +1548,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 46, 70,  0, H_UpgradeFromV46 },
+   { 47, 70,  0, H_UpgradeFromV47 },
+   { 46, 62, 47, H_UpgradeFromV46 },
    { 45, 62, 46, H_UpgradeFromV45 },
    { 44, 62, 45, H_UpgradeFromV44 },
    { 43, 62, 44, H_UpgradeFromV43 },
