@@ -771,7 +771,7 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    else
    {
       // mapping table not found, return original value
-      *result = vm->createValue(argv[0]);
+      *result = vm->createValue(argv[1]);
       for(int i = 0; i < count; i++)
          MemFree(strings[i]);
    }
