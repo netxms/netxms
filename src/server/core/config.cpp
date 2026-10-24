@@ -182,7 +182,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { L"TunnelCertificatePassword", CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_tunnelCertificatePassword, nullptr },
    { L"WriteLogAsJson", CT_BOOLEAN_FLAG_64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, (void*)&g_flags, nullptr },
    /* deprecated parameters */
-   { L"DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr }, 
+   { L"DBDrvParams", CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr },
    { L"ServerCACertificate", CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr },
    { L"", CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
@@ -918,10 +918,6 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!wcscmp(name, L"NetworkDiscovery.DisableProtocolProbe.SSH"))
    {
       UpdateServerFlag(AF_DISABLE_SSH_PROBE, value);
-   }
-   else if (!wcscmp(name, L"NetworkDiscovery.EnableParallelProcessing"))
-   {
-      UpdateServerFlag(AF_PARALLEL_NETWORK_DISCOVERY, value);
    }
    else if (!wcscmp(name, L"NetworkDiscovery.MergeDuplicateNodes"))
    {

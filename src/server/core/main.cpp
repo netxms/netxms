@@ -684,8 +684,6 @@ static void LoadGlobalConfig()
       g_flags |= AF_CHECK_TRUSTED_OBJECTS;
    if (ConfigReadBoolean(_T("Objects.AutobindOnConfigurationPoll"), true))
       g_flags |= AF_AUTOBIND_ON_CONF_POLL;
-   if (ConfigReadBoolean(_T("NetworkDiscovery.EnableParallelProcessing"), false))
-      g_flags |= AF_PARALLEL_NETWORK_DISCOVERY;
    if (ConfigReadBoolean(_T("NetworkDiscovery.MergeDuplicateNodes"), false))
       g_flags |= AF_MERGE_DUPLICATE_NODES;
    if (ConfigReadBoolean(_T("NXSL.EnableContainerFunctions"), true))
