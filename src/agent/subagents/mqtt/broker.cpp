@@ -186,12 +186,18 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
    broker->m_hostname = MemCopyStringA(config->getSubEntryValue("Hostname", 0, "127.0.0.1"));
 #endif
    broker->m_port = static_cast<uint16_t>(config->getSubEntryValueAsUInt(_T("Port"), 0, 1883));
+
+   const TCHAR *login = config->getSubEntryValue(_T("Login"));
+   const TCHAR *password = config->getSubEntryValue(_T("Password"));
+   TCHAR decryptedPassword[64];
+   if ((login != nullptr) && (password != nullptr) && DecryptPassword(login, password, decryptedPassword, 64))
+      password = decryptedPassword;
 #ifdef UNICODE
-   broker->m_login = UTF8StringFromWideString(config->getSubEntryValue(_T("Login")));
-   broker->m_password = UTF8StringFromWideString(config->getSubEntryValue(_T("Password")));
+   broker->m_login = UTF8StringFromWideString(login);
+   broker->m_password = UTF8StringFromWideString(password);
 #else
-   broker->m_login = MemCopyStringA(config->getSubEntryValue(_T("Login")));
-   broker->m_password = MemCopyStringA(config->getSubEntryValue(_T("Password")));
+   broker->m_login = MemCopyStringA(login);
+   broker->m_password = MemCopyStringA(password);
 #endif
 
    const ConfigEntry *metricRoot = config->findEntry(_T("Metrics"));
