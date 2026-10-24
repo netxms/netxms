@@ -316,6 +316,7 @@ unique_ptr<StructArray<ScoredDciValue>> DetectAnomalies(const DataCollectionTarg
    if ((dci == nullptr) || (dci->getType() != DCO_TYPE_ITEM))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("DetectAnomalies: invalid DCI ID [%u] on object %s [%u]"), dciId, dcTarget.getName(), dcTarget.getId());
+      return unique_ptr<StructArray<ScoredDciValue>>();
    }
 
    std::pair<Timestamp, Timestamp> timeRange(Timestamp::fromTime(timeFrom), Timestamp::fromTime(timeTo));
