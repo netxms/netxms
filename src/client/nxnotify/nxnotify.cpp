@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** nxnotify - send notification via NetXMS server
 ** Copyright (C) 2003-2024 Raden Solutions
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
       }
    }
 
-   if (argc - optind < 3)
+   if (argc - optind < 4)
    {
       _tprintf(_T("Required arguments missing. Use nxnotify -h for help.\n"));
       return 1;
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 #else
    char *channel = argv[optind + 1];
    char *rcpt = argv[optind + 2];
-   if ((argc - optind) > 3)
+   if ((argc - optind) > 4)
    {
       subject = argv[optind + 3];
       text = argv[optind + 4];
