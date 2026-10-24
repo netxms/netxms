@@ -327,7 +327,7 @@ NXSL_Array *Circuit::getInterfacesForNXSL(NXSL_VM *vm)
    int index = 0;
 
    readLockChildList();
-   for(int i = 0; i < getParentList().size(); i++)
+   for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *object = getChildList().get(i);
       if (object->getObjectClass() == OBJECT_INTERFACE)
