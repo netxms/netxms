@@ -1632,7 +1632,7 @@ NXSL_Value *NXSL_NetworkMapClass::getAttr(NXSL_Object *object, const NXSL_Identi
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("backgroundLongitude"))
    {
-      value = vm->createValue(netmap->getBackgroundLatitude());
+      value = vm->createValue(netmap->getBackgroundLongitude());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("backgroundZoom"))
    {
