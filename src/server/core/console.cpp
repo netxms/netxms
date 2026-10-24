@@ -1476,7 +1476,6 @@ int ProcessConsoleCommand(const wchar_t *command, ServerConsole *console)
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_CACHE_DB_ON_STARTUP));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_FILE_IO_FUNCTIONS));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_DB_SUPPORTS_MERGE));
-         ConsolePrintf(console, SHOW_FLAG_VALUE(AF_PARALLEL_NETWORK_DISCOVERY));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SINGLE_TABLE_PERF_DATA));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_MERGE_DUPLICATE_NODES));
          ConsolePrintf(console, SHOW_FLAG_VALUE(AF_SYSTEMD_DAEMON));
