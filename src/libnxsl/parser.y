@@ -524,6 +524,11 @@ Expression:
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_DIV);
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
 }
+|	StorageItem T_ASSIGN_IDIV { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_IDIV);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_WRITE);
+}
 |	StorageItem T_ASSIGN_REM { builder->addInstruction(lexer->getCurrLine(), OPCODE_STORAGE_READ, static_cast<int16_t>(1)); } Expression
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_REM);
@@ -571,6 +576,16 @@ Expression:
 |	Expression '[' Expression ']' T_ASSIGN_DIV { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_DIV);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
+}
+|	Expression '[' Expression ']' T_ASSIGN_IDIV { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_IDIV);
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
+}
+|	Expression '[' Expression ']' T_ASSIGN_REM { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression
+{
+	builder->addInstruction(lexer->getCurrLine(), OPCODE_REM);
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_SET_ELEMENT);
 }
 |	Expression '[' Expression ']' T_ASSIGN_CONCAT { builder->addInstruction(lexer->getCurrLine(), OPCODE_PEEK_ELEMENT); } Expression

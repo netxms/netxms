@@ -180,6 +180,7 @@ int main(int argc, char *argv[])
    RunTestScript(_T("boolean.nxsl"));
    RunTestScript(_T("bytestream.nxsl"));
    RunTestScript(_T("concat.nxsl"));
+   RunTestScript(_T("compound-assign.nxsl"));
    RunTestScript(_T("control.nxsl"));
    RunTestScript(_T("do-first.nxsl"));
    RunTestScript(_T("gethost.nxsl"));

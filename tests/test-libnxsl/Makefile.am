@@ -18,6 +18,7 @@ nxsltest_DATA = \
 	boolean.nxsl \
 	bytestream.nxsl \
 	concat.nxsl \
+	compound-assign.nxsl \
 	control.nxsl \
 	do-first.nxsl \
 	gethost.nxsl \
