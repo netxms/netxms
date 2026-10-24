@@ -31,7 +31,6 @@ void BeaconPoller()
 {
 	uint32_t interval = ConfigReadULong(_T("Beacon.PollingInterval"), 1000);
 	uint32_t timeout = ConfigReadULong(_T("Beacon.Timeout"), 1000);
-	uint32_t packetSize = ConfigReadULong(_T("IcmpPingSize"), 46);
 
 	wchar_t hosts[MAX_CONFIG_VALUE_LENGTH];
 	ConfigReadStr(L"Beacon.Hosts", hosts, MAX_CONFIG_VALUE_LENGTH, _T(""));
@@ -77,7 +76,7 @@ void BeaconPoller()
       for(i = 0; i < hostList.size(); i++)
 		{
          nxlog_debug_tag(DEBUG_TAG, 7, L"Beacon poller: checking host %s", hostList.get(i).toString(hosts));
-         if (IcmpPing(hostList.get(i), 1, timeout, NULL, packetSize, false) == ICMP_SUCCESS)
+         if (IcmpPing(hostList.get(i), 1, timeout, nullptr, g_icmpPingSize, false) == ICMP_SUCCESS)
 				break;	// At least one beacon responds, no need to check others
 		}
       if ((i == hostList.size()) && (!(g_flags & AF_NO_NETWORK_CONNECTIVITY)))
