@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxsnmpset - command line tool used to set parameters on SNMP agent
 ** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
@@ -78,7 +78,15 @@ static int SetVariables(int argc, TCHAR *argv[])
             {
                _tprintf(_T("Invalid data type: %s\n"), p);
                exitCode = 5;
+               continue;
             }
+         }
+         // libnxsnmp encodes these types with bare tags, but agents expect them wrapped into Opaque
+         if ((type == ASN_FLOAT) || (type == ASN_DOUBLE) || (type == ASN_INTEGER64) || (type == ASN_UINTEGER64))
+         {
+            _tprintf(_T("Data type 0x%02X of %s is not supported in SET request\n"), type, argv[i]);
+            exitCode = 5;
+            continue;
          }
          if (SnmpIsCorrectOID(argv[i]))
          {
@@ -103,6 +111,11 @@ static int SetVariables(int argc, TCHAR *argv[])
                {
                   varbind->setValueFromByteArray(type, reinterpret_cast<BYTE*>(out), olen);
                }
+               else
+               {
+                  _tprintf(_T("Invalid base64 value for %s\n"), argv[i]);
+                  exitCode = 5;
+               }
                MemFree(out);
 #ifdef UNICODE
                MemFree(in);
@@ -111,6 +124,11 @@ static int SetVariables(int argc, TCHAR *argv[])
             else
             {
                varbind->setValueFromString(type, argv[i + 1]);
+               if (varbind->getType() == ASN_NULL)
+               {
+                  _tprintf(_T("Value of %s cannot be converted to data type 0x%02X from string, use -H or -B\n"), argv[i], type);
+                  exitCode = 5;
+               }
             }
             request->bindVariable(varbind);
          }
@@ -130,6 +148,7 @@ static int SetVariables(int argc, TCHAR *argv[])
             if (response->getErrorCode() != 0)
             {
                _tprintf(_T("SET operation failed (%s)\n"), SnmpGetProtocolErrorText(response->getErrorCode()));
+               exitCode = 6;
             }
             delete response;
          }
