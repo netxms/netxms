@@ -1917,6 +1917,8 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
    if (success)
       success = executeQueryOnObject(hdb, L"DELETE FROM agent_config_cache WHERE node_id=?");
    if (success)
+      success = executeQueryOnObject(hdb, L"DELETE FROM device_configs WHERE node_id=?");
+   if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM radios WHERE owner_id=?"));
    return success;
 }

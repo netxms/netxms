@@ -165,6 +165,56 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.55 to 70.56
+ */
+static bool H_UpgradeFromV55()
+{
+   // Native device configuration backup module moved from private extensions into the core distribution.
+   // Its table is now part of the main schema. Databases that already ran the module have the table
+   // (at module schema version 1 or 2, tracked by metadata variable DevbackupSchemaVersion).
+   if (DBIsTableExist(g_dbHandle, L"device_configs") == DBIsTableExist_Found)
+   {
+      if (DBMgrMetaDataReadInt32(L"DevbackupSchemaVersion", 0) < 2)
+      {
+         CHK_EXEC(SQLQuery(L"ALTER TABLE device_configs ADD last_check_time integer"));
+         CHK_EXEC(SQLQuery(L"UPDATE device_configs SET last_check_time=backup_time"));
+      }
+      // Module's own upgrade created last_check_time without NOT NULL constraint
+      CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, L"device_configs", L"last_check_time"));
+      CHK_EXEC(SQLQuery(L"DELETE FROM metadata WHERE var_name='DevbackupSchemaVersion'"));
+   }
+   else
+   {
+      CHK_EXEC(CreateTable(
+         L"CREATE TABLE device_configs ("
+         L"   id $SQL:INT64 not null,"
+         L"   node_id integer not null,"
+         L"   backup_time integer not null,"
+         L"   last_check_time integer not null,"
+         L"   running_config $SQL:TEXT null,"
+         L"   running_config_hash varchar(64) null,"
+         L"   startup_config $SQL:TEXT null,"
+         L"   startup_config_hash varchar(64) null,"
+         L"   PRIMARY KEY(id))"));
+      CHK_EXEC(SQLQuery(L"CREATE INDEX idx_device_configs_node ON device_configs(node_id)"));
+      CHK_EXEC(SQLQuery(L"CREATE INDEX idx_device_configs_time ON device_configs(backup_time)"));
+   }
+
+   CHK_EXEC(CreateConfigParam(L"DeviceConfigBackup.Interval", L"86400",
+      L"Default interval between device configuration backups performed by the native device backup module. Can be overridden per node with custom attribute SysConfig:DeviceConfigBackup.Interval.",
+      L"seconds", 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"DeviceConfigBackup.MaxJobs", L"10",
+      L"Maximum number of concurrent device configuration backup jobs run by the native device backup module.",
+      nullptr, 'I', true, true, false, false));
+   CHK_EXEC(CreateConfigParam(L"DeviceConfigBackup.RetentionDays", L"90",
+      L"Retention time for stored device configuration backups. Backups not re-confirmed within this period are deleted by the housekeeper.",
+      L"days", 'I', true, true, false, false));
+
+   CHK_EXEC(SetMinorSchemaVersion(56));
+   return true;
+}
+
+/**
  * Upgrade from 70.54 to 70.55
  */
 static bool H_UpgradeFromV54()
@@ -1839,6 +1889,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 55, 70, 56, H_UpgradeFromV55 },
    { 54, 70, 55, H_UpgradeFromV54 },
    { 53, 70, 54, H_UpgradeFromV53 },
    { 52, 70, 53, H_UpgradeFromV52 },

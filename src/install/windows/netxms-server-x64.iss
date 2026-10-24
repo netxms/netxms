@@ -60,6 +60,7 @@ Source: "..\..\..\out\x64\Release\bin\nxscript.exe"; DestDir: "{app}\bin"; Flags
 Source: "..\..\..\out\x64\Release\bin\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ; Modules
 Source: "..\..\..\out\x64\Release\bin\aitools.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\out\x64\Release\bin\devbackup.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\docker.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\leef.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\out\x64\Release\bin\mcp.nxm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server

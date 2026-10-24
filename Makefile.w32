@@ -138,6 +138,7 @@ SERVER_DIRS = \
     src/server/tools \
     src/server/webapi \
     src/server/aitools \
+    src/server/devbackup \
     src/server/wcc \
     src/server/wlcbridge \
     src/server/leef \

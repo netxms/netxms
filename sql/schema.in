@@ -569,6 +569,25 @@ CREATE TABLE agent_config_cache
 ) TABLE_TYPE;
 
 /**
+ * Device configuration backups (native device backup module)
+ */
+CREATE TABLE device_configs
+(
+  id SQL_INT64 not null,
+  node_id integer not null,
+  backup_time integer not null,
+  last_check_time integer not null,
+  running_config SQL_TEXT null,
+  running_config_hash varchar(64) null,
+  startup_config SQL_TEXT null,
+  startup_config_hash varchar(64) null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+CREATE INDEX idx_device_configs_node ON device_configs(node_id);
+CREATE INDEX idx_device_configs_time ON device_configs(backup_time);
+
+/**
  * Node hardware inventory
  */
 CREATE TABLE hardware_inventory

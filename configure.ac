@@ -4809,6 +4809,7 @@ AC_CONFIG_FILES([
 	src/server/redmine/Makefile
 	src/server/ntcb/Makefile
 	src/server/otlp/Makefile
+	src/server/devbackup/Makefile
 	src/server/oxidized/Makefile
 	src/server/nxreportd/Makefile
 	src/server/nxreportd/java/Makefile
