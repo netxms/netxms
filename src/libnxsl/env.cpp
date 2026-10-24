@@ -292,7 +292,7 @@ static NXSL_ExtFunction s_netFunctions[] =
 {
    { "GetLocalHostName", F_NetGetLocalHostName, -1 },
    { "ResolveAddress", F_NetResolveAddress, 1 },
-   { "ResolveHostname", F_NetResolveHostname, 1 }
+   { "ResolveHostname", F_NetResolveHostname, -1 }
 };
 
 /**
