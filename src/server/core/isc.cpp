@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
@@ -43,7 +43,7 @@ bool EF_ProcessMessage(ISCSession*, NXCPMessage*, NXCPMessage*);
 /**
  * Well-known service list
  */
-static ISC_SERVICE m_serviceList[] = 
+static ISC_SERVICE m_serviceList[] =
 {
 	{ ISC_SERVICE_EVENT_FORWARDER, _T("EventForwarder"),
 	  _T("Events.ReceiveForwardedEvents"), EF_SetupSession, EF_CloseSession, EF_ProcessMessage },
@@ -85,15 +85,15 @@ static void ProcessingThread(ISCSession *session)
          nxlog_debug_tag(DEBUG_TAG, 5, _T("%s received control message %s"), dbgPrefix, NXCPMessageCodeName(pRequest->getCode(), buffer));
          if (pRequest->getCode() == CMD_GET_NXCP_CAPS)
          {
-            NXCP_MESSAGE *pRawMsgOut = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
-            pRawMsgOut->id = htonl(pRequest->getId());
-            pRawMsgOut->code = htons((uint16_t)CMD_NXCP_CAPS);
-            pRawMsgOut->flags = htons(MF_CONTROL);
-            pRawMsgOut->numFields = htonl(NXCP_VERSION << 24);
-            pRawMsgOut->size = htonl(NXCP_HEADER_SIZE);
-				if (SendEx(sock, pRawMsgOut, NXCP_HEADER_SIZE, 0, nullptr) != NXCP_HEADER_SIZE)
-					nxlog_debug_tag(DEBUG_TAG, 5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, GetLastSocketErrorText(buffer, 256));
-				MemFree(pRawMsgOut);
+            BYTE rawMsgOut[NXCP_HEADER_SIZE];
+            NXCP_MESSAGE *msgOut = reinterpret_cast<NXCP_MESSAGE*>(rawMsgOut);
+            msgOut->id = htonl(pRequest->getId());
+            msgOut->code = htons((uint16_t)CMD_NXCP_CAPS);
+            msgOut->flags = htons(MF_CONTROL);
+            msgOut->numFields = htonl(NXCP_VERSION << 24);
+            msgOut->size = htonl(NXCP_HEADER_SIZE);
+            if (SendEx(sock, msgOut, NXCP_HEADER_SIZE, 0, nullptr) != NXCP_HEADER_SIZE)
+               nxlog_debug_tag(DEBUG_TAG, 5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, GetLastSocketErrorText(buffer, 256));
          }
       }
 		else
@@ -163,7 +163,7 @@ static void ProcessingThread(ISCSession *session)
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.getCode(), buffer));
 			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->size), 0, NULL) != (int)ntohl(pRawMsgOut->size))
 				nxlog_debug_tag(DEBUG_TAG, 5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
-      
+
 			response.deleteAllFields();
 			MemFree(pRawMsgOut);
 		}
