@@ -152,6 +152,17 @@ void TestScheduleSeconds()
    CheckMatchWithSeconds(_T("0 12 * * * 30"), "2026-08-20 13:00:30", false, false);
    EndTest();
 
+   // Time zone offsets are multiples of 15 minutes, so UNIX time divisibility by 45 does not depend on time zone
+   StartTest(_T("Schedule matching - seconds field with step against absolute time"));
+   CheckMatchWithSeconds(_T("* 12 * * * *%45"), "2026-08-20 12:00:00", true, true);
+   CheckMatchWithSeconds(_T("* 12 * * * *%45"), "2026-08-20 12:00:45", true, true);
+   CheckMatchWithSeconds(_T("* 12 * * * *%45"), "2026-08-20 12:01:30", true, true);
+   CheckMatchWithSeconds(_T("* 12 * * * *%45"), "2026-08-20 12:00:30", false, true);
+   CheckMatchWithSeconds(_T("* 12 * * * *%45"), "2026-08-20 12:01:00", false, true);
+   CheckMatchWithSeconds(_T("* 12 * * * *%45"), "2026-08-20 12:01:45", false, true);
+   CheckMatchWithSeconds(_T("* 12 * * * %45"), "2026-08-20 12:01:30", true, true);
+   EndTest();
+
    StartTest(_T("Schedule matching - schedule without seconds field"));
    CheckMatchWithSeconds(_T("0 12 * * *"), "2026-08-20 12:00:37", true, false);
    CheckMatchWithSeconds(_T("0 12 * * *"), "2026-08-20 13:00:37", false, false);

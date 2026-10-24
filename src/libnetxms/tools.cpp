@@ -2802,7 +2802,7 @@ bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, in
 	// Check if time() step was specified (% - special syntax)
 	ptr = _tcschr(pszPattern, _T('%'));
 	if (checkSeconds && ptr != nullptr)
-		return (currTime % GetStepSize(ptr)) != 0;
+		return (currTime % GetStepSize(ptr)) == 0;
 
    // Check if step was specified
    ptr = _tcschr(pszPattern, _T('/'));
