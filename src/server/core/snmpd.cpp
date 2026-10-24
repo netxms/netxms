@@ -76,11 +76,6 @@ static ObjectArray<MIBSubTree> s_mib(0, 16, Ownership::True);
 static RWLock s_mibLock;
 
 /**
- * Allowed SNMP versions (bit mask)
- */
-static uint32_t s_allowedVersions = 7;
-
-/**
  * Community string
  */
 static char s_community[64] = "public";
@@ -109,24 +104,6 @@ static bool CheckAccess(SNMP_PDU *pdu)
       return !strcmp(pdu->getCommunity(), s_community);
 
    return false;
-}
-
-/**
- * Check if given SNMP version is allowed by agent
- */
-static inline bool IsVersionAllowed(SNMP_Version v)
-{
-   switch(v)
-   {
-      case SNMP_VERSION_1:
-         return (s_allowedVersions & 1) != 0;
-      case SNMP_VERSION_2C:
-         return (s_allowedVersions & 2) != 0;
-      case SNMP_VERSION_3:
-         return (s_allowedVersions & 4) != 0;
-      default:
-         return false;
-   }
 }
 
 /**
@@ -348,42 +325,35 @@ static void SNMPAgentReceiver()
             InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP agent received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
 
-            if (IsVersionAllowed(pdu->getVersion()))
+            if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
             {
-               if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
-               {
-                  // Engine ID discovery
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP EngineId discovery"));
+               // Engine ID discovery
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP EngineId discovery"));
 
-                  SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
-                  response->setReportable(false);
-                  response->setMessageId(pdu->getMessageId());
-                  response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
+               SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
+               response->setReportable(false);
+               response->setMessageId(pdu->getMessageId());
+               response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
 
-                  SNMP_Variable *var = new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 });
-                  var->setValueFromUInt32(ASN_INTEGER, 2);
-                  response->bindVariable(var);
+               SNMP_Variable *var = new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 });
+               var->setValueFromUInt32(ASN_INTEGER, 2);
+               response->bindVariable(var);
 
-                  SNMP_SecurityContext context;
-                  localEngine.setTime((int)time(nullptr));
-                  context.setAuthoritativeEngine(localEngine);
-                  context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
-                  context.setAuthMethod(SNMP_AUTH_NONE);
-                  context.setPrivMethod(SNMP_ENCRYPT_NONE);
-                  transport->setSecurityContext(std::move(context));
+               SNMP_SecurityContext context;
+               localEngine.setTime((int)time(nullptr));
+               context.setAuthoritativeEngine(localEngine);
+               context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+               context.setAuthMethod(SNMP_AUTH_NONE);
+               context.setPrivMethod(SNMP_ENCRYPT_NONE);
+               transport->setSecurityContext(std::move(context));
 
-                  transport->sendMessage(response, 0);
-                  delete response;
-               }
-               else if (((pdu->getCommand() == SNMP_GET_REQUEST) || (pdu->getCommand() == SNMP_GET_NEXT_REQUEST)) && CheckAccess(pdu))
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("Request passed validation"));
-                  ProcessRequest(transport, pdu);
-               }
+               transport->sendMessage(response, 0);
+               delete response;
             }
-            else
+            else if (((pdu->getCommand() == SNMP_GET_REQUEST) || (pdu->getCommand() == SNMP_GET_NEXT_REQUEST)) && CheckAccess(pdu))
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("Requested SNMP version is not allowed"));
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("Request passed validation"));
+               ProcessRequest(transport, pdu);
             }
             delete pdu;
          }
