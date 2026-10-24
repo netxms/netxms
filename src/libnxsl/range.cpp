@@ -126,19 +126,16 @@ NXSL_Value *NXSL_RangeClass::getNext(NXSL_Object *object, NXSL_Value *currValue)
    Range *range = static_cast<Range*>(object->getData());
    NXSL_VM *vm = object->vm();
 
-   if (currValue == nullptr)
-      return range->integer ? vm->createValue(range->start.i) : vm->createValue(range->start.d);
-
    if (range->integer)
    {
-      int64_t v = currValue->getValueAsInt64();
-      v += range->step.i;
-      return (range->end.i > 0) ? (v < range->end.i ? vm->createValue(v) : nullptr) : (v > range->end.i ? vm->createValue(v) : nullptr);
+      int64_t v = (currValue != nullptr) ? currValue->getValueAsInt64() + range->step.i : range->start.i;
+      bool inRange = (range->step.i > 0) ? (v < range->end.i) : ((range->step.i < 0) && (v > range->end.i));
+      return inRange ? vm->createValue(v) : nullptr;
    }
 
-   double v = currValue->getValueAsReal();
-   v += range->step.d;
-   return (range->end.d > 0) ? (v < range->end.d - range->margin ? vm->createValue(v) : nullptr) : (v > range->end.d + range->margin ? vm->createValue(v) : nullptr);
+   double v = (currValue != nullptr) ? currValue->getValueAsReal() + range->step.d : range->start.d;
+   bool inRange = (range->step.d > 0) ? (v < range->end.d - range->margin) : ((range->step.d < 0) && (v > range->end.d + range->margin));
+   return inRange ? vm->createValue(v) : nullptr;
 }
 
 /**
