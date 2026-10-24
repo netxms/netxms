@@ -882,7 +882,7 @@ LONG H_WgIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCom
       return SYSINFO_RC_ERROR;
    }
 
-   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
    value->addColumn(_T("PUBLIC_KEY"), DCI_DT_STRING, _T("Public key"));
    value->addColumn(_T("LISTEN_PORT"), DCI_DT_UINT, _T("Listen port"));
 
@@ -929,8 +929,8 @@ LONG H_WgPeersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
       return SYSINFO_RC_ERROR;
    }
 
-   value->addColumn(_T("INTERFACE"), DCI_DT_STRING, _T("Interface"));
-   value->addColumn(_T("PEER_PUBLIC_KEY"), DCI_DT_STRING, _T("Public key"));
+   value->addColumn(_T("INTERFACE"), DCI_DT_STRING, _T("Interface"), true);
+   value->addColumn(_T("PEER_PUBLIC_KEY"), DCI_DT_STRING, _T("Public key"), true);
    value->addColumn(_T("ENDPOINT"), DCI_DT_STRING, _T("Endpoint"));
    value->addColumn(_T("ALLOWED_IPS"), DCI_DT_STRING, _T("Allowed IP addresses"));
    value->addColumn(_T("HANDSHAKE_TIMESTAMP"), DCI_DT_UINT64, _T("Last handshake"));
