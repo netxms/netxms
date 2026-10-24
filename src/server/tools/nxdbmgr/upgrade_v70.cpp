@@ -170,27 +170,31 @@ static bool MigrateObjectAIData()
 static bool H_UpgradeFromV54()
 {
    // Configuration variables read by the server but missing from the initial database setup (issue #3831)
-   CHK_EXEC(CreateConfigParam(L"AgentTunnels.MaxTunnelsPerPoller", L"256",
-      L"Maximum number of agent tunnels served by single socket poller thread.",
-      nullptr, 'I', true, true, false, false));
-   CHK_EXEC(CreateConfigParam(L"AI.MessageCleanupInterval", L"60",
-      L"Interval in minutes between checks for expired AI assistant messages.",
-      L"minutes", 'I', true, true, false, false));
-   CHK_EXEC(CreateConfigParam(L"ClientConnector.MaxSessionsPerPoller", L"256",
-      L"Maximum number of client sessions served by single socket poller thread.",
-      nullptr, 'I', true, true, false, false));
-   CHK_EXEC(CreateConfigParam(L"EventForwarders.MaxQueueSize", L"1000",
-      L"Maximum number of events waiting in the queue of a single event forwarder. New events are dropped when the queue is full. Set to 0 for unlimited queue size.",
-      L"events", 'I', true, false, false, false));
-   CHK_EXEC(CreateConfigParam(L"ThreadPool.Global.Responsiveness", L"12",
-      L"Number of 5 second maintenance cycles between thread pool resize decisions (1 to 24).",
-      nullptr, 'I', true, true, false, false));
-   CHK_EXEC(CreateConfigParam(L"ThreadPool.Global.WaitTimeHighWatermark", L"100",
-      L"Average task wait time in thread pool queue above which pool size is increased.",
-      L"milliseconds", 'I', true, true, false, false));
-   CHK_EXEC(CreateConfigParam(L"ThreadPool.Global.WaitTimeLowWatermark", L"50",
-      L"Average task wait time in thread pool queue below which pool size can be decreased.",
-      L"milliseconds", 'I', true, true, false, false));
+   if (GetSchemaLevelForMajorVersion(62) < 46)
+   {
+      CHK_EXEC(CreateConfigParam(L"AgentTunnels.MaxTunnelsPerPoller", L"256",
+         L"Maximum number of agent tunnels served by single socket poller thread.",
+         nullptr, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(L"AI.MessageCleanupInterval", L"60",
+         L"Interval in minutes between checks for expired AI assistant messages.",
+         L"minutes", 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(L"ClientConnector.MaxSessionsPerPoller", L"256",
+         L"Maximum number of client sessions served by single socket poller thread.",
+         nullptr, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(L"EventForwarders.MaxQueueSize", L"1000",
+         L"Maximum number of events waiting in the queue of a single event forwarder. New events are dropped when the queue is full. Set to 0 for unlimited queue size.",
+         L"events", 'I', true, false, false, false));
+      CHK_EXEC(CreateConfigParam(L"ThreadPool.Global.Responsiveness", L"12",
+         L"Number of 5 second maintenance cycles between thread pool resize decisions (1 to 24).",
+         nullptr, 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(L"ThreadPool.Global.WaitTimeHighWatermark", L"100",
+         L"Average task wait time in thread pool queue above which pool size is increased.",
+         L"milliseconds", 'I', true, true, false, false));
+      CHK_EXEC(CreateConfigParam(L"ThreadPool.Global.WaitTimeLowWatermark", L"50",
+         L"Average task wait time in thread pool queue below which pool size can be decreased.",
+         L"milliseconds", 'I', true, true, false, false));
+      CHK_EXEC(SetSchemaLevelForMajorVersion(62, 46));
+   }
    CHK_EXEC(SetMinorSchemaVersion(55));
    return true;
 }
