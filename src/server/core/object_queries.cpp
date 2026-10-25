@@ -572,8 +572,6 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
          return ((rootObjectId == 0) || object->isParent(rootObjectId)) && object->checkAccessRights(userId, OBJECT_ACCESS_READ);
       });
    auto resultSet = new ObjectArray<ObjectQueryResult>(64, 64, Ownership::True);
-   StringMap displayNameMapping;
-   bool firstResult = true;
    int total = objects->size();
    int completed = 0;
    for(int i = 0; i < total; i++)
@@ -644,7 +642,7 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
             if (readAllComputedFields)
             {
                globals->forEach(
-                  [vm, objectData, firstResult, &displayNameMapping] (const NXSL_Identifier& name, NXSL_Value *value) -> void
+                  [vm, objectData] (const NXSL_Identifier& name, NXSL_Value *value) -> void
                   {
                      if (name.value[0] == '$')  // Ignore global variables set by system
                         return;
@@ -661,12 +659,6 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
                      if (displayName != nullptr)
                      {
                         objectData->set(displayName, value->getValueAsCString());
-                        if (firstResult)
-                        {
-                           wchar_t wname[MAX_IDENTIFIER_LENGTH];
-                           utf8_to_wchar(name.value, -1, wname, MAX_IDENTIFIER_LENGTH);
-                           displayNameMapping.set(displayName, wname);
-                        }
                      }
                      else
                      {
@@ -681,41 +673,63 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
          }
 
          resultSet->add(new ObjectQueryResult(curr, objectData));
-         firstResult = false;
       }
       delete globals;
    }
 
-   // Sort result set, apply limit, remove hidden columns
+   // Sort result set, apply limit, remove hidden columns. Column sets are derived from script metadata
+   // (variable.order / variable.visible / variable.name) rather than from result rows, because a variable
+   // assigned conditionally may be missing from some rows, including the first one.
    if (readFields && (resultSet != nullptr) && !resultSet->isEmpty())
    {
       StringList realOrderBy;
       if (orderBy != nullptr)
          realOrderBy.addAll(orderBy);
 
-      StringList columns = resultSet->get(0)->values->keys();
-      for(int i = 0; i < columns.size(); i++)
-      {
-         const wchar_t *columnName = columns.get(i);
-         const wchar_t *originalName = displayNameMapping.get(columnName);
-         wchar_t key[256];
-         _sntprintf(key, 256, _T("%s.order"), (originalName != nullptr) ? originalName : columnName);
-         const wchar_t *order = vm->getMetadataEntry(key);
-         if (order != nullptr)
+      StringList hiddenColumns;
+      vm->getMetadata().forEach(
+         [vm, &realOrderBy, &hiddenColumns] (const wchar_t *key, const void *value) -> EnumerationCallbackResult
          {
-            if (!_tcsicmp(order, _T("asc")) || !_tcsicmp(order, _T("ascending")))
+            size_t l = wcslen(key);
+            if ((l > 6) && (l < 256) && !wcscmp(&key[l - 6], L".order"))
             {
-               realOrderBy.add(columnName);
+               const wchar_t *order = static_cast<const wchar_t*>(value);
+               bool ascending = !wcsicmp(order, L"asc") || !wcsicmp(order, L"ascending");
+               if (!ascending && wcsicmp(order, L"desc") && wcsicmp(order, L"descending"))
+                  return _CONTINUE;
+
+               wchar_t name[256];
+               wcslcpy(name, key, l - 5);
+
+               // Visible variable with display name is stored in result rows under that name
+               wchar_t metadataKey[320];
+               nx_swprintf(metadataKey, 320, L"%s.visible", name);
+               const wchar_t *visible = vm->getMetadataEntry(metadataKey);
+               bool hidden = (visible != nullptr) && (!wcsicmp(visible, L"false") || !wcscmp(visible, L"0"));
+               const wchar_t *displayName = nullptr;
+               if (!hidden)
+               {
+                  nx_swprintf(metadataKey, 320, L"%s.name", name);
+                  displayName = vm->getMetadataEntry(metadataKey);
+               }
+
+               wchar_t column[512];
+               column[0] = L'-';
+               wcslcpy(&column[1], (displayName != nullptr) ? displayName : name, 511);
+               realOrderBy.add(ascending ? &column[1] : column);
             }
-            else if (!_tcsicmp(order, _T("desc")) || !_tcsicmp(order, _T("descending")))
+            else if ((l > 8) && (l < 256) && !wcscmp(&key[l - 8], L".visible"))
             {
-               wchar_t c[256];
-               c[0] = L'-';
-               wcscpy(&c[1], columnName);
-               realOrderBy.add(c);
+               const wchar_t *visible = static_cast<const wchar_t*>(value);
+               if (!wcsicmp(visible, L"false") || !wcscmp(visible, L"0"))
+               {
+                  wchar_t name[256];
+                  wcslcpy(name, key, l - 7);
+                  hiddenColumns.add(name);
+               }
             }
-         }
-      }
+            return _CONTINUE;
+         });
 
       if (!realOrderBy.isEmpty())
       {
@@ -726,17 +740,10 @@ unique_ptr<ObjectArray<ObjectQueryResult>> NXCORE_EXPORTABLE QueryObjects(const 
          resultSet->shrinkTo((int)limit);
       }
 
-      for(int i = 0; i < columns.size(); i++)
+      for(int i = 0; i < hiddenColumns.size(); i++)
       {
-         wchar_t key[256];
-         _sntprintf(key, 256, _T("%s.visible"), columns.get(i));
-         const wchar_t *visible = vm->getMetadataEntry(key);
-         if ((visible != nullptr) && (!wcscmp(visible, L"false") || !wcscmp(visible, L"0")))
-         {
-            for(int j = 0; j < resultSet->size(); j++)
-               resultSet->get(j)->values->remove(columns.get(i));
-            continue;
-         }
+         for(int j = 0; j < resultSet->size(); j++)
+            resultSet->get(j)->values->remove(hiddenColumns.get(i));
       }
    }
 
