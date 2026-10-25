@@ -82,7 +82,7 @@ static void SchedulerThread()
                if (nodePtr != nullptr)
                {
                   nxlog_debug_tag(DEBUG_TAG, 5, L"Scheduler: submitting backup job for %s [%u]", node->getName(), node->getId());
-                  ThreadPoolExecute(g_mainThreadPool, ExecuteBackupJob, nodePtr);
+                  SubmitBackupJob(nodePtr);   // Node whose previous job is still running stays due until that job completes
                }
             }
             else

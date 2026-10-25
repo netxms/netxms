@@ -43,7 +43,8 @@ const TCHAR *GetDeviceBackupApiErrorMessage(DeviceBackupApiStatus status)
       _T("Service provider unavailable"),
       _T("Function not implemented"),
       _T("External API error"),
-      _T("Device not registered for backups")
+      _T("Device not registered for backups"),
+      _T("Backup job already in progress")
    };
    return messages[static_cast<int>(status)];
 }

@@ -22208,6 +22208,8 @@ static uint32_t DeviceBackupApiStatusToRCC(DeviceBackupApiStatus status)
          return RCC_SUCCESS;
       case DeviceBackupApiStatus::NOT_IMPLEMENTED:
          return RCC_NOT_IMPLEMENTED;
+      case DeviceBackupApiStatus::JOB_IN_PROGRESS:
+         return RCC_OPERATION_IN_PROGRESS;
       default:
          return RCC_INTERNAL_ERROR;
    }

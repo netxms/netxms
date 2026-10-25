@@ -33,6 +33,12 @@ static VolatileCounter64 s_nextId = 0;
 VolatileCounter g_activeBackupJobs = 0;
 
 /**
+ * Nodes with submitted or running backup job
+ */
+static HashSet<uint32_t> s_nodesWithActiveJob;
+static Mutex s_activeJobLock;
+
+/**
  * Initialize backup ID counter from database
  */
 static void InitializeIdCounter()
@@ -68,11 +74,35 @@ static void HashToString(const BYTE *hash, WCHAR *str)
 }
 
 /**
- * Execute backup job for a single node
+ * Load single configuration column from stored backup record. Returns nullptr if not available.
  */
-void ExecuteBackupJob(const shared_ptr<Node>& node)
+static wchar_t *LoadStoredConfig(DB_HANDLE hdb, int64_t backupId, const wchar_t *column)
 {
-   InterlockedIncrement(&g_activeBackupJobs);
+   wchar_t query[128];
+   nx_swprintf(query, 128, L"SELECT %s FROM device_configs WHERE id=?", column);
+
+   wchar_t *config = nullptr;
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, backupId);
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != nullptr)
+      {
+         if (DBGetNumRows(hResult) > 0)
+            config = DBGetField(hResult, 0, 0, nullptr, 0);
+         DBFreeResult(hResult);
+      }
+      DBFreeStatement(hStmt);
+   }
+   return config;
+}
+
+/**
+ * Run backup job for a single node
+ */
+static void RunBackupJob(const shared_ptr<Node>& node)
+{
    nxlog_debug_tag(DEBUG_TAG, 5, L"ExecuteBackupJob(%s [%u]): started", node->getName(), node->getId());
 
    NetworkDeviceDriver *driver = node->getDriver();
@@ -83,8 +113,6 @@ void ExecuteBackupJob(const shared_ptr<Node>& node)
       node->setCustomAttribute(L"$devbackup.lastJobStatus", static_cast<int32_t>(DeviceBackupJobStatus::FAILED));
       node->setCustomAttribute(L"$devbackup.lastJobMessage", L"Device driver does not support configuration backup");
       node->updateConfigBackupStatus();
-      InterlockedDecrement(&g_activeBackupJobs);
-      SignalScheduler();
       return;
    }
 
@@ -138,8 +166,6 @@ void ExecuteBackupJob(const shared_ptr<Node>& node)
       node->setCustomAttribute(L"$devbackup.lastJobStatus", static_cast<int32_t>(DeviceBackupJobStatus::FAILED));
       node->setCustomAttribute(L"$devbackup.lastJobMessage", L"No configuration data could be retrieved from device");
       node->updateConfigBackupStatus();
-      InterlockedDecrement(&g_activeBackupJobs);
-      SignalScheduler();
       return;
    }
 
@@ -168,6 +194,7 @@ void ExecuteBackupJob(const shared_ptr<Node>& node)
          DBFreeResult(hResult);
          DBFreeStatement(hStmt);
 
+         // Configuration not retrieved in this run is never considered changed
          bool runningChanged = (runningConfig != nullptr) && wcscmp(runningHash, oldRunningHash);
          bool startupChanged = (startupConfig != nullptr) && wcscmp(startupHash, oldStartupHash);
 
@@ -187,6 +214,29 @@ void ExecuteBackupJob(const shared_ptr<Node>& node)
          }
          else
          {
+            // Carry forward previously stored configuration for the side not retrieved in this run,
+            // so the new record stays complete and does not reset change detection for that side
+            if ((runningConfig == nullptr) && (oldRunningHash[0] != 0))
+            {
+               runningConfig = LoadStoredConfig(hdb, existingId, L"running_config");
+               if (runningConfig != nullptr)
+               {
+                  wcscpy(runningHash, oldRunningHash);
+                  nxlog_debug_tag(DEBUG_TAG, 6, L"ExecuteBackupJob(%s [%u]): running config carried forward from backup " INT64_FMT,
+                     node->getName(), node->getId(), existingId);
+               }
+            }
+            if ((startupConfig == nullptr) && (oldStartupHash[0] != 0))
+            {
+               startupConfig = LoadStoredConfig(hdb, existingId, L"startup_config");
+               if (startupConfig != nullptr)
+               {
+                  wcscpy(startupHash, oldStartupHash);
+                  nxlog_debug_tag(DEBUG_TAG, 6, L"ExecuteBackupJob(%s [%u]): startup config carried forward from backup " INT64_FMT,
+                     node->getName(), node->getId(), existingId);
+               }
+            }
+
             // Insert new backup record
             int64_t newId = static_cast<int64_t>(InterlockedIncrement64(&s_nextId));
             hStmt = DBPrepare(hdb, L"INSERT INTO device_configs (id,node_id,backup_time,last_check_time,running_config,running_config_hash,startup_config,startup_config_hash) VALUES (?,?,?,?,?,?,?,?)");
@@ -210,15 +260,15 @@ void ExecuteBackupJob(const shared_ptr<Node>& node)
                nxlog_debug_tag(DEBUG_TAG, 4, L"ExecuteBackupJob(%s [%u]): new backup stored (id=" INT64_FMT L", runningChanged=%s, startupChanged=%s)",
                   node->getName(), node->getId(), newId, runningChanged ? L"yes" : L"no", startupChanged ? L"yes" : L"no");
 
-               // Fire change events
-               if (runningChanged)
+               // Fire change events only when there is a previous configuration to compare against
+               if (runningChanged && (oldRunningHash[0] != 0))
                {
                   EventBuilder(EVENT_RUNNING_CONFIG_CHANGED, *node)
                      .param(L"previousHash", oldRunningHash)
                      .param(L"newHash", runningHash)
                      .post();
                }
-               if (startupChanged)
+               if (startupChanged && (oldStartupHash[0] != 0))
                {
                   EventBuilder(EVENT_STARTUP_CONFIG_CHANGED, *node)
                      .param(L"previousHash", oldStartupHash)
@@ -248,8 +298,40 @@ void ExecuteBackupJob(const shared_ptr<Node>& node)
    node->updateConfigBackupStatus();
 
    nxlog_debug_tag(DEBUG_TAG, 5, L"ExecuteBackupJob(%s [%u]): completed (success=%s)", node->getName(), node->getId(), success ? L"yes" : L"no");
+}
+
+/**
+ * Thread pool entry point: run backup job and release node for subsequent jobs
+ */
+static void ExecuteBackupJob(const shared_ptr<Node>& node)
+{
+   RunBackupJob(node);
+
+   s_activeJobLock.lock();
+   s_nodesWithActiveJob.remove(node->getId());
+   s_activeJobLock.unlock();
    InterlockedDecrement(&g_activeBackupJobs);
    SignalScheduler();
+}
+
+/**
+ * Submit backup job for a node. Returns false if job for this node is already submitted or running.
+ */
+bool SubmitBackupJob(const shared_ptr<Node>& node)
+{
+   s_activeJobLock.lock();
+   if (s_nodesWithActiveJob.contains(node->getId()))
+   {
+      s_activeJobLock.unlock();
+      nxlog_debug_tag(DEBUG_TAG, 6, L"SubmitBackupJob(%s [%u]): backup job already active", node->getName(), node->getId());
+      return false;
+   }
+   s_nodesWithActiveJob.put(node->getId());
+   InterlockedIncrement(&g_activeBackupJobs);
+   s_activeJobLock.unlock();
+
+   ThreadPoolExecute(g_mainThreadPool, ExecuteBackupJob, node);
+   return true;
 }
 
 /**
@@ -261,8 +343,7 @@ DeviceBackupApiStatus NxDevBackupStartJob(const Node& node)
    if (nodePtr == nullptr)
       return DeviceBackupApiStatus::DEVICE_NOT_REGISTERED;
 
-   ThreadPoolExecute(g_mainThreadPool, ExecuteBackupJob, nodePtr);
-   return DeviceBackupApiStatus::SUCCESS;
+   return SubmitBackupJob(nodePtr) ? DeviceBackupApiStatus::SUCCESS : DeviceBackupApiStatus::JOB_IN_PROGRESS;
 }
 
 /**
@@ -380,11 +461,17 @@ std::pair<DeviceBackupApiStatus, std::vector<BackupData>> NxDevBackupGetBackupLi
 {
    std::vector<BackupData> backups;
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb,
+   // SQL Server has no length() function; datalength() returns byte count for varchar(max)
+   const wchar_t *query = (g_dbSyntax == DB_SYNTAX_MSSQL) ?
+      L"SELECT id,backup_time,last_check_time,running_config_hash,startup_config_hash,"
+      L"coalesce(datalength(running_config),0),coalesce(datalength(startup_config),0)"
+      L" FROM device_configs WHERE node_id=? ORDER BY backup_time DESC" :
       L"SELECT id,backup_time,last_check_time,running_config_hash,startup_config_hash,"
       L"coalesce(length(running_config),0),coalesce(length(startup_config),0)"
-      L" FROM device_configs WHERE node_id=? ORDER BY backup_time DESC");
+      L" FROM device_configs WHERE node_id=? ORDER BY backup_time DESC";
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, node.getId());

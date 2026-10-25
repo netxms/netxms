@@ -43,7 +43,7 @@ void SignalScheduler();
 
 // Backup execution
 void InitializeBackupSubsystem();
-void ExecuteBackupJob(const shared_ptr<Node>& node);
+bool SubmitBackupJob(const shared_ptr<Node>& node);
 
 extern VolatileCounter g_activeBackupJobs;
 
