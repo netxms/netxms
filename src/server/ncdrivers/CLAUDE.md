@@ -1,7 +1,5 @@
 # Notification Channel Drivers (ncdrivers)
 
-> Shared guidelines: see [root CLAUDE.md](../../../CLAUDE.md).
-
 ## Driver Interface
 
 All notification channel drivers implement the `NCDriver` interface defined in `src/server/include/ncdrv.h` (`NCDRV_API_VERSION` is checked at load time; a driver built against another version is rejected with a clear log message).
@@ -57,49 +55,8 @@ Debug tags: `ncd.<driver>` for driver code, `nc` for the notification channel fr
 
 ## Generic Webhook Driver
 
-`webhook/` is a generic, templated HTTP driver (`ncdrv/webhook.ncd`). Instead of hard-coding a vendor's payload it sends a user-supplied body template as an HTTP request, so most REST/JSON notification gateways can be onboarded via config alone. Pure helpers (JSON-context placeholder substitution and integer-list parsing) live in `webhook_helpers.{cpp,h}` and are unit-tested by `tests/test-ncd-webhook/` (libcurl-free by design). URL percent-encoding uses `curl_easy_escape` and response JSON traversal uses `json_object_get_by_path_a` — both inline in `webhook.cpp`.
-
-**Placeholders:** `${recipient}`, `${subject}`, `${body}` are substituted in the URL and template body. Unknown tokens are left literal so typos stay visible.
-
-**Escaping rules:** in the URL, values are percent-encoded via `curl_easy_escape` (inline in `webhook.cpp`); in the template body, values are JSON-escaped via `EscapeStringForJSON()` (libcurl-free helper). Headers carry literal config values (no substitution).
-
-**Success-detection model:**
-
-| Condition | Return |
-|---|---|
-| HTTP in `SuccessHttpCodes` AND (no `SuccessJsonPath` OR path value == `SuccessValue`) | `0` (success) |
-| HTTP in `SuccessHttpCodes`, `SuccessJsonPath` set, value mismatch | `10` (retry) |
-| HTTP in `RetryHttpCodes` | `10` (retry) |
-| Any other HTTP status / transport error / malformed response | `-1` (hard fail) |
-| Missing `URL`/`TemplateFile`, unreadable template, bad `Method` | driver fails to load |
-
-**Non-goals (v1):** header-value placeholder substitution; per-recipient URL aliasing; mtime/stat-based template-reload short-circuit; multi-endpoint per channel; GET/DELETE methods; HMAC/signing helpers; response-body capture beyond debug tracing. (Mirrored in the `webhook.cpp` header comment.)
+`webhook/` is a generic, templated HTTP driver: it sends a user-supplied body template, so most REST/JSON gateways can be onboarded via config alone. Keep `webhook_helpers.{cpp,h}` libcurl-free — they are compiled into `tests/test-ncd-webhook/`. Its non-goals are listed in the `webhook.cpp` header comment.
 
 ## Built-in NXSL Driver
 
-The NXSL notification channel driver (`NXSLDriver` in `src/server/core/notification_channel.cpp`) is a regular `NCDriver` implementation registered as built-in driver `NXSL` by `LoadNotificationChannelDrivers()`; it is compiled into the server core rather than loaded as a module because it needs `libnxsl` and server objects.
-
-### Configuration
-- Configuration is raw NXSL script text (not XML) — the driver is registered with `xmlConfiguration = false`, so the channel code passes the text unparsed as `/Configuration`
-- Script has access to `NXSL_ServerEnv` with all server functions
-- Compilation errors are logged with line number under tag `nc`; the channel then reports "Unable to create instance of driver NXSL"
-
-### Script Variables
-| Variable | Availability |
-|----------|--------------|
-| `$RECIPIENT` | Always |
-| `$SUBJECT` | Always |
-| `$MESSAGE` | Always |
-| `$event` | When triggered from EPP action |
-| `$object` / `$node` | When triggered from EPP with source object |
-| `$dci` | When the triggering event is bound to a DCI (`$event.dciId != 0`) |
-
-### Return Values
-| Return | Result |
-|--------|--------|
-| `null` (no return) | Success |
-| `true` | Success |
-| `false` | Failure |
-| integer > 0 | Retry in N seconds |
-
-Note `NXSL_Value::isFalse()` is also true for `null` — check `isNull()` first (see [libnxsl](../../libnxsl/CLAUDE.md)).
+The NXSL driver (`NXSLDriver` in `src/server/core/notification_channel.cpp`) is a regular `NCDriver` registered as built-in driver `NXSL` by `LoadNotificationChannelDrivers()`; it lives in server core rather than a module because it needs `libnxsl` and server objects. It is registered with `xmlConfiguration = false`, so its configuration is raw NXSL script text passed unparsed as `/Configuration`.

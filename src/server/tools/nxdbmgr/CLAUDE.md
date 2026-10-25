@@ -1,32 +1,10 @@
 # nxdbmgr — NetXMS database manager
 
-Command line tool that initializes, checks, upgrades, migrates, exports and imports the NetXMS server database.
+A database schema change is almost never a single-branch edit. NetXMS maintains several release branches, each with its own schema major version, and a change committed to one branch normally has to be replicated into every newer branch under a version guard — otherwise upgrades from the older branch either fail ("Unable to find upgrade procedure for version X.Y") or apply the change twice.
 
-> **STOP — read this before editing any `upgrade_v*.cpp`.**
->
-> A database schema change is almost never a single-branch edit. NetXMS maintains several release branches at once, each with its own schema major version, and a change committed to one branch normally has to be replicated into every newer branch with a version guard — otherwise upgrades from the older branch either fail outright ("Unable to find upgrade procedure for version X.Y") or apply the same change twice.
->
-> If the `netxms-db-backport` skill is available, use it — it is the authoritative procedure. **This file is a condensed fallback for when that skill is not installed.**
->
-> Before writing an upgrade procedure, confirm with the user which branches the change must land on (master only? a stable branch and everything newer?). Do not guess. If the user asks for "just master", say explicitly that stable branches will not get the fix and let them confirm that is intended.
+Before writing an upgrade procedure, confirm with the user which branches the change must land on. If they ask for master only, point out that stable branches will not get the change.
 
-## Layout
-
-| File | Purpose |
-|---|---|
-| `nxdbmgr.cpp` | Command line parsing, DB connect, command dispatch |
-| `upgrade.cpp` | Upgrade driver; version checks; `SetMajorSchemaVersion` / `SetMinorSchemaVersion` / `Get`/`SetSchemaLevelForMajorVersion` |
-| `upgrade_v<major>.cpp` | One file per schema major version — the upgrade procedures for that chain |
-| `upgrade_online.cpp` | Background ("online") upgrades that run in the server after schema upgrade |
-| `check.cpp` | `nxdbmgr check` — consistency checks and repairs |
-| `init.cpp` | `nxdbmgr init` — fresh install from `sql/*.in` baselines |
-| `export.cpp`, `migrate.cpp`, `convert.cpp`, `tdata_convert.cpp` | Export/import, cross-DB migration, TimescaleDB conversion |
-| `../libnxdbmgr/` | Shared helpers (`CreateTable`, `CreateConfigParam`, `SQLQuery`, …), exported to nxdbmgr and the server |
-| `../../include/nxdbmgr_tools.h` | Declarations of those helpers and the `CHK_EXEC` macros |
-| `include/netxmsdb.h` (repo root) | Compiled-in target schema version |
-| `sql/*.in` (repo root) | Fresh-install schema baseline |
-
-Commands: `init`, `upgrade`, `check`, `check-data-tables`, `export`, `import`, `migrate`, `convert`, `background-upgrade`, `background-convert`, `batch`, `get`, `set`, `set-user-password`, `unlock`, `unlock-user`, `reset-monitoring`, `reset-system-account`. Run `nxdbmgr -h` for the full option list.
+The `netxms-db-backport` skill, when installed, is the authoritative procedure; this file is the condensed version. Schema editing rules are in [sql/CLAUDE.md](../../../../sql/CLAUDE.md).
 
 ## Schema versioning model
 
@@ -142,7 +120,7 @@ One commit per branch. Branches are independent — never merge stable branches 
 
 ## Upgrade conventions
 
-- **Backfill instead of DEFAULT.** Since columns have no `DEFAULT` (see [src/db/CLAUDE.md](../../../db/CLAUDE.md)), add a new column as nullable, `UPDATE` it to backfill, then apply `NOT NULL` via the upgrade helpers — don't rely on a default value.
+- **Backfill instead of DEFAULT.** Since columns have no `DEFAULT`, add a new column as nullable, `UPDATE` it to backfill, then apply `NOT NULL` via the upgrade helpers — don't rely on a default value.
 - **Fail hard on a missing external prerequisite.** When a step depends on something outside the SQL (TimescaleDB extension/version, an OS feature, an optional runtime), log a clear error and `return false` *before* `SetMinorSchemaVersion(...)`. Never warn-and-continue: bumping the version while leaving CAGGs/hypertables/etc. uncreated leaves the database in an inconsistent state. The `MajorSchemaUpgrade_VNN` driver rolls back the transaction so re-runs work after the admin fixes the dependency.
 - **Freeze helpers used by historical upgrades.** A historical upgrade must always emit the exact schema it emitted the day it was written. When refactoring a helper that older `upgrade_v*.cpp` procedures call (DDL emitters like `CreateIDataTable`/`CreateTDataTable`, metadata writers, anything schema-sensitive), fork a file-local `*_V<major>` copy preserving the old behavior and point the historical call sites at it. Precedent: `CreateTDataTable_preV281`.
 - **Adding EPP rules needs no existence check.** Upgrades run from a known prior version, so a rule being added is guaranteed not to exist — just call `NextFreeEPPruleID()` and insert; don't `SELECT` by GUID first.

@@ -1,45 +1,15 @@
 # CLAUDE.md — Tests
 
-Guidance for the NetXMS test tree. See the root [CLAUDE.md](../CLAUDE.md) for project-wide rules.
+## Build Gating
 
-## Overview
-
-`tests/` holds the C++ unit-test suite, agent subagent unit tests, the HA lease
-test harness, Java integration tests, and standalone helper tools.
-
-**Nothing in this tree is built by a default `make`.** `tests` is added to
+Nothing in this tree is built by a default `make`. `tests` is added to
 `TOP_LEVEL_MODULES` (in `configure.ac` and the top-level `Makefile`) only when
-the tree is configured `--with-tests`; without that switch the whole directory
-is never entered. A **second** level of gating then applies *within* the
-enabled tests tree via `@TEST_MODULES@` / `@AGENT_UNIT_TESTS@` — see the "Build"
-column below.
-
-## Layout
-
-| Directory | What it is | Built when `--with-tests` |
-|-----------|-----------|-----------|
-| `include/` | `testtools.h` — shared assertion/`StartTest`/`EndTest` macros. No sources, header only. | always (EXTRA_DIST) |
-| `config/` | `netxmsd.conf` / `nxagentd.conf` templates used when running tests | always |
-| `suite/` | `netxms-test-suite` runner script (generated from `.in`) | always |
-| `test-libnetxms/` | Core library unit tests (containers, threading, crypto, NXCP, geolocation, …) | always |
-| `test-libnxdb/` | libnxdb tests (incl. Oracle CLOB handling) | always |
-| `test-libethernetip/` | EtherNet/IP library tests (paths, attribute decoding, CPF messages, `EIP_ListIdentity` against a loopback test server) | via `@TEST_MODULES@` |
-| `test-libnxsnmp/` | SNMP library tests | via `@TEST_MODULES@` |
-| `test-libnxsl/` | NXSL interpreter tests | via `@TEST_MODULES@` |
-| `test-libnxsrv/` | Server library tests (NObject hierarchy, drivers, mock SNMP transport, …) | via `@TEST_MODULES@` |
-| `test-libnxcore/` | Server core library tests — links `libnxcore`; only utility / supplemental functions and classes that do not need an initialized server (AI check decision logic, physical placement property group) | via `@TEST_MODULES@` |
-| `test-server/` | Test launcher that takes the place of `netxmsd`: prepares a SQLite database in a scratch directory, runs the regular `Initialize()`, executes server-dependent tests (authentication tokens, NXSL HTTP classes) inside the running server, then `Shutdown()` | via `@TEST_MODULES@` |
-| `test-ncd-webhook/` | Webhook notification-channel driver tests | via `@TEST_MODULES@` |
-| `agent/unit/*` | Per-subagent unit tests: `entsoe`, `extcheck`, `weather`, `linux-cpu-usage-collector` | via `@AGENT_UNIT_TESTS@` |
-| `ha/` | `ha-node-sim` + Python `harness.py` — adversarial HA lease-manager harness (issue #3364). Compiles the real `src/server/core/halease.cpp` against a shared DB. | via `@TEST_MODULES@` |
-| `integration/` | Java/Maven integration tests (`EppScriptTest`, `SingleUseTokenTest`, NXSL resource scripts) against a running server | Maven (separate) |
-| `nx-2488/` | Manual web-service caching repro (SQL patch, NXSL scripts, trivial web server) | manual (not in build) |
-| `tools/` | Standalone Python helpers: `otlp-log-sender`, `otlp-mock-collector` (for OTLP ingestion testing, issue #3292) | manual (not in build) |
-
-Inside the enabled tests tree, `include`, `config`, `suite`, `test-libnetxms`,
-and `test-libnxdb` are unconditional `SUBDIRS` in `tests/Makefile.am`; the rest
-come in through `@TEST_MODULES@` / `@AGENT_UNIT_TESTS@` (in `tests/Makefile.am`
-and `tests/agent/unit/Makefile.am`), populated by `configure.ac`.
+the tree is configured `--with-tests`. Within it, `include`, `config`, `suite`,
+`test-libnetxms` and `test-libnxdb` are unconditional `SUBDIRS` in
+`tests/Makefile.am`; everything else comes in through `@TEST_MODULES@` /
+`@AGENT_UNIT_TESTS@` (in `tests/Makefile.am` and `tests/agent/unit/Makefile.am`),
+populated by `configure.ac`. `integration/` is built by Maven separately;
+`nx-2488/` and `tools/` are manual helpers outside the build.
 
 ## Windows build
 
@@ -89,20 +59,8 @@ There is **no external framework** (no GoogleTest/Catch). Tests are hand-rolled:
 
 ## Building and running
 
-```bash
-# Configure with tests, then build the whole tree
-./configure --prefix=/opt/netxms --with-server --with-agent --with-tests --enable-debug
-make -j$(nproc) && make install
-
-# Run the full suite (each binary is installed to $BINDIR)
-./tests/suite/netxms-test-suite         # from build tree
-# or, when installed:
-/opt/netxms/bin/netxms-test-suite
-
-# Run a single test binary directly
-/opt/netxms/bin/test-libnetxms
-```
-
+Configure with `--with-tests` (see root Quick Start). Each test binary is
+installed to `$BINDIR` and can be run directly (`/opt/netxms/bin/test-libnetxms`).
 The suite runner (`suite/netxms-test-suite.in`) invokes each test binary in
 turn and `exit 1`s on the first non-zero exit. Optional binaries are guarded
 with `[ -x ... ]` so a suite built without a given module still runs.
@@ -172,9 +130,6 @@ built subagent — keep the `_SOURCES` list current when the subagent gains file
 
 ## Conventions
 
-- Follow the root C++ guidelines (C++11 max, 3-space indent, brace on new line).
-- Keep tests deterministic and self-contained; tests that need a live server or
-  database (integration, HA harness, Oracle CLOB) are separated out and gated.
 - Any test that links objects into parent/child relations must unlink or delete
   them (`deleteObject()`) before returning. Parent/child lists are
   `SharedObjectArray` on both sides, so every linked pair is a `shared_ptr`
@@ -182,6 +137,5 @@ built subagent — keep the `_SOURCES` list current when the subagent gains file
   leaks and break the `--enable-sanitizer` build (issue #3732). `CleanupObjects()`
   does not break these cycles, and LSan suppressions cannot target them without
   also masking real object leaks.
-- When fixing a library bug, prefer adding/extending a case in the matching
-  `test-lib*` binary — recent history shows this is the expected pattern
-  (e.g. thread-pool stalled-expansion test for #3436, libnxsrv suite for #3442).
+- When fixing a library bug, add or extend a case in the matching `test-lib*`
+  binary.

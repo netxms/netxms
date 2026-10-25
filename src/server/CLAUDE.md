@@ -1,17 +1,8 @@
 # Server Component (netxmsd)
 
-> Shared guidelines: see [root CLAUDE.md](../../CLAUDE.md).
-
 ## Exporting Functions for Modules
 
-Server core is a shared library. External modules (e.g., `webapi/`, `jira/`, `ntcb/`) link against it. Any function or class defined in `core/` that needs to be called from a module **must** be marked with `NXCORE_EXPORTABLE` in its declaration (in the header under `include/`). For exported variables, use `NXCORE_EXPORTABLE_VAR(v)`. Without this, the symbol will not be visible to modules and linking will fail at runtime.
-
-```cpp
-// In include/nms_core.h or other server header
-void NXCORE_EXPORTABLE MyFunction();
-class NXCORE_EXPORTABLE MyClass { ... };
-extern NXCORE_EXPORTABLE_VAR(int) g_myGlobal;
-```
+Server core is a shared library. External modules (e.g., `webapi/`, `jira/`, `ntcb/`) link against it. Any function or class defined in `core/` that needs to be called from a module must be marked with `NXCORE_EXPORTABLE` in its declaration (in the header under `include/`); exported variables use `NXCORE_EXPORTABLE_VAR(v)`. Without this, the symbol is not visible to modules and linking fails at runtime.
 
 When exporting a function for module use, also export the sibling functions declared alongside it in the same header group (unless clearly internal) — a module rarely calls exactly one function from a subsystem, and exporting the whole family up front avoids a churn of one-symbol export edits and rebuild/reinstall cycles later.
 
@@ -55,7 +46,23 @@ For formatting into a `wchar_t *` buffer, use `nx_swprintf(buffer, size, L"...",
 
 - **Object tool input fields only where they are consumed.** Only `TOOL_TYPE_ACTION`, `SERVER_COMMAND`, `SERVER_SCRIPT`, `SSH_COMMAND`, `URL` and library-script execution expand input fields (via `expandText()` or NXSL `$INPUT`). `TOOL_TYPE_SNMP_TABLE`, `AGENT_TABLE` and `AGENT_LIST` never do, so do not read, log or forward input fields on those paths.
 
+- **Buffers mirroring a column.** Size a C/C++ buffer that mirrors a `varchar(N)` column to exactly `N + 1`. The column is the canonical constraint; don't add speculative headroom (propose a schema change instead if the column is too narrow).
+
 - **Use NetXMS utilities in module helper headers.** Server modules include `nms_common.h` / `nms_util.h` / `nms_core.h` through their main header, so a helper header included after them may use `IntegerToString`, `String`, containers etc. freely. The clangd LSP analyzing such a header in isolation reports `undeclared identifier` (the same false positive recurs in `nms_events.h` / `nms_core.h`); ignore it rather than rewriting to raw libc to make the header self-contained.
+
+## NXSL Bindings
+
+When an NXSL method accepts an argument that may be either an NXSL object or an integer ID, cast the object's data straight to the `shared_ptr` — don't extract the ID and re-resolve it via `FindObjectById`. The round-trip risks a spurious `nullptr` if the object becomes unreachable by ID while the script still holds it. Use `FindObjectById` only for the integer-ID branch:
+
+```cpp
+shared_ptr<Interface> peer;
+if (argv[0]->isObject(L"Interface"))
+   peer = *static_cast<shared_ptr<Interface>*>(argv[0]->getValueAsObject()->getData());
+else if (argv[0]->isInteger())
+   peer = static_pointer_cast<Interface>(FindObjectById(argv[0]->getValueAsUInt32(), OBJECT_INTERFACE));
+```
+
+`NXSL_Value::isFalse()` returns `true` for both `false` and `null`. To distinguish an explicit `false` from "no return value", check `isNull()` first.
 
 ## Network Device Drivers
 
@@ -65,7 +72,7 @@ Do **not** override `getHardwareInformation()` in a new driver when the device s
 
 ## Database Changes
 
-Schema rules are in [src/db/CLAUDE.md](../db/CLAUDE.md); upgrade procedures and the multi-branch backport procedure are in [tools/nxdbmgr/CLAUDE.md](tools/nxdbmgr/CLAUDE.md).
+Schema rules are in [sql/CLAUDE.md](../../sql/CLAUDE.md); upgrade procedures and the multi-branch backport procedure are in [tools/nxdbmgr/CLAUDE.md](tools/nxdbmgr/CLAUDE.md).
 
 ## Design Documentation
 

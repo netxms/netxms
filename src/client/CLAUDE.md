@@ -1,7 +1,5 @@
 # Client Components
 
-> Shared guidelines: see [root CLAUDE.md](../../CLAUDE.md).
-
 ## Management Console (nxmc)
 
 ### Tools vs Configuration Perspective

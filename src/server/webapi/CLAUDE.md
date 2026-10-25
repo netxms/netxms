@@ -1,58 +1,19 @@
 # WebAPI Component
 
-> Shared guidelines: see [root CLAUDE.md](../../../CLAUDE.md) and [server CLAUDE.md](../CLAUDE.md).
-
-## Overview
-
-The WebAPI module (`webapi.nxm`) is a server module that provides REST API endpoints for NetXMS. It is loaded by the server at startup and registers HTTP routes using the `RouteBuilder` API. The module uses `libmicrohttpd` for HTTP handling.
+The WebAPI module (`webapi.nxm`) is a server module that provides REST API endpoints on top of `libmicrohttpd`, with routes registered through `RouteBuilder` in `main.cpp`.
 
 ## Adding New Endpoints
 
-1. Create or edit a handler source file (e.g., `myresource.cpp`).
-2. Implement handler functions with signature `int H_MyHandler(Context *context)`.
-3. Declare the handler in `main.cpp` and register routes using `RouteBuilder`.
-4. Add the source file to `Makefile.am` (alphabetical order in `webapi_la_SOURCES`).
-5. **Update `openapi.yaml`** for every added, modified or removed endpoint — it is the authoritative API reference for external consumers.
-
-### Handler Pattern
-
-```cpp
-#include "webapi.h"
-
-int H_MyHandler(Context *context)
-{
-   if (!context->checkSystemAccessRights(SYSTEM_ACCESS_...))
-      return 403;
-
-   // ... implementation ...
-
-   json_t *output = json_object();
-   // ... populate JSON ...
-   context->setResponseData(output);
-   json_decref(output);
-   return 200;
-}
-```
-
-### Route Registration (in `main.cpp`)
-
-```cpp
-RouteBuilder("v1/my-resource")
-   .GET(H_MyResourceList)
-   .POST(H_MyResourceCreate)
-   .build();
-RouteBuilder("v1/my-resource/:resource-id")
-   .GET(H_MyResourceDetails)
-   .PUT(H_MyResourceUpdate)
-   .DELETE(H_MyResourceDelete)
-   .build();
-```
+1. Implement handlers as `int H_MyHandler(Context *context)` in a resource source file.
+2. Declare the handler in `main.cpp` and register its routes with `RouteBuilder`.
+3. Add a new source file to `webapi_la_SOURCES` in `Makefile.am` (alphabetical).
+4. Update `openapi.yaml` for every added, modified or removed endpoint — it is the authoritative API reference for external consumers.
 
 ## Modifying Objects — Use `modifyFromJSON`, Not NXCP Translation
 
 Do **not** translate incoming JSON into an `NXCPMessage` just to reuse `modifyFromMessage()` / `updateFromMessage()`. Instead, extend the affected class with a parallel `modifyFromJSON()` / `updateFromJSON()` method that operates on `json_t*` directly (same virtual dispatch, per-class overrides, stage1/stage2 split where applicable). The webapi handler stays thin: load → ACL check → call the JSON method → return the updated representation. No `NXCPMessage` construction belongs in `webapi/` source files.
 
-The JSON interface is becoming the primary interface to the system; a JSON→NXCP shim would tie the REST API to NXCP encoding permanently. Most of `modifyFromMessageInternal` is "is field X present? apply it" — trivially preserved under JSON via `json_object_get(body, key) != nullptr` plus the jansson helpers (see [libnetxms](../../libnetxms/CLAUDE.md)). When emitting a GUID, use `guid.toJson()`.
+The JSON interface is becoming the primary interface to the system; a JSON→NXCP shim would tie the REST API to NXCP encoding permanently. Most of `modifyFromMessageInternal` is "is field X present? apply it" — trivially preserved under JSON via `json_object_get(body, key) != nullptr` plus the jansson helpers listed in the root CLAUDE.md.
 
 ## Request Parsing Conventions
 
@@ -71,11 +32,3 @@ The JSON interface is becoming the primary interface to the system; a JSON→NXC
 | 404 | Resource not found |
 | 409 | Conflict (e.g., duplicate name) |
 | 500 | Internal server error / database failure |
-
-## Access Control
-
-Use `context->checkSystemAccessRights()` with constants from `nxcldefs.h` (e.g., `SYSTEM_ACCESS_VIEW_EVENT_DB`, `SYSTEM_ACCESS_EDIT_EVENT_DB`). Return 403 if the check fails.
-
-## Audit Logging
-
-Use `context->writeAuditLog()` for simple audit entries and `context->writeAuditLogWithValues()` when old/new values should be recorded. Common subsystem: `AUDIT_SYSCFG` for system configuration changes, `AUDIT_OBJECTS` for object operations.

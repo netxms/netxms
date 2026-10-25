@@ -6,13 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 NetXMS is an enterprise-grade, open-source network and infrastructure monitoring solution. It's a distributed client-server system written primarily in C++ (server, agent, libraries) and Java (management console, client libraries).
 
-## Scope
-
-Do not go beyond the scope of the request. If you notice a bug or improvement opportunity outside the current task, mention it in a comment but do NOT start fixing it unless explicitly asked.
-
-## Project Architecture
-
-This is a large multi-language project (Java, C/C++, JavaScript, Python). The primary codebase is Java and C++. When implementing full-stack features, always check for impacts across: server-side C++, Java client library, SWT UI, RWT (web) UI, NXSL scripting bindings, WebAPI layer, and database schema.
+A full-stack feature can touch server-side C++, the Java client library, the SWT UI, the RWT (web) UI, NXSL scripting bindings, the WebAPI layer and the database schema — check each.
 
 ## Design Principles
 
@@ -27,24 +21,6 @@ When replacing an in-tree mechanism (loader, registration scheme, plugin format)
 When a shared helper performs a lookup that can fail (e.g. resolving an imported object reference), make the helper emit the diagnostic itself — give it the context and descriptor parameters it needs — rather than having every caller wrap it with its own logging. Duplicated wrappers drift.
 
 When hardening ingestion of an NXCP or JSON field, keep the existing `getFieldAs*` / `json_object_get_*` accessor and add the range or sanity check after it. Change the accessor type only when the current one actually loses information the code needs; the out-of-range value is the bug, not the narrow read.
-
-## Component Documentation
-
-This monorepo has component-specific CLAUDE.md files:
-
-| Component | Location | Description |
-|-----------|----------|-------------|
-| Server | [src/server/CLAUDE.md](src/server/CLAUDE.md) | Central management server (netxmsd), device drivers, WebAPI |
-| Agent | [src/agent/CLAUDE.md](src/agent/CLAUDE.md) | Monitoring agent (nxagentd), 47+ subagents |
-| Client | [src/client/CLAUDE.md](src/client/CLAUDE.md) | Management console (nxmc), client libraries |
-| Core Library | [src/libnetxms/CLAUDE.md](src/libnetxms/CLAUDE.md) | Core C++ utilities, threading, containers |
-| NXSL | [src/libnxsl/CLAUDE.md](src/libnxsl/CLAUDE.md) | NetXMS Scripting Language interpreter |
-| Database | [src/db/CLAUDE.md](src/db/CLAUDE.md) | Database abstraction layer (libnxdb) |
-| SNMP | [src/snmp/CLAUDE.md](src/snmp/CLAUDE.md) | SNMP protocol library and tools |
-| Notification Channels | [src/server/ncdrivers/CLAUDE.md](src/server/ncdrivers/CLAUDE.md) | Notification channel drivers |
-| WebAPI | [src/server/webapi/CLAUDE.md](src/server/webapi/CLAUDE.md) | REST API endpoints |
-| nxdbmgr | [src/server/tools/nxdbmgr/CLAUDE.md](src/server/tools/nxdbmgr/CLAUDE.md) | Database schema upgrades, multi-branch backport procedure |
-| Tests | [tests/CLAUDE.md](tests/CLAUDE.md) | C++ unit tests, agent subagent tests, Java integration tests |
 
 ## Quick Start
 
@@ -68,6 +44,9 @@ make install
 # Run server/agent in debug mode (not as daemon)
 /opt/netxms/bin/netxmsd -D6
 /opt/netxms/bin/nxagentd -D6
+
+# Run an NXSL script outside the server
+/opt/netxms/bin/nxscript script.nxsl
 ```
 
 ### Java Components (Management Console)
@@ -103,46 +82,59 @@ node through `TestHelper.findManagementServer()`, so the server must have a node
 
 ## C++ Development Guidelines
 
-> **Note**: These guidelines apply to all C++ components. See component-specific CLAUDE.md for additional details.
+Longer reference: [doc/CPP_DEVELOPER_GUIDE.md](doc/CPP_DEVELOPER_GUIDE.md).
 
-### Language Version
+### Language Version and Compiler Floor
 
-- **Maximum C++11** - Must compile with GCC 4.8+, Clang 3.3+, Visual Studio 2015+
+- **Maximum C++11** — must compile with GCC 4.8+, Clang 3.3+, Visual Studio 2015+ (`_MSC_VER >= 1900`)
 - Use `nullptr` instead of `NULL`
-- Smart pointers (`shared_ptr`, `unique_ptr`) are available
-- Lambda expressions and move semantics are used in newer code
-- Longer reference: [doc/CPP_DEVELOPER_GUIDE.md](doc/CPP_DEVELOPER_GUIDE.md)
+- Preprocessor gates that can never be false at these minimums (`__GNUC__ < 4`, `_MSC_VER < 1900` and the like) are dead and may be removed during cleanups. Keep fallbacks for C++14+ features (e.g. `HAVE_STD_MAKE_UNIQUE`).
+- Exception: the Windows XP / pre-2003 64-bit atomic block in `include/nxatomic.h` (`!defined(_WIN64) && (_WIN32_WINNT < 0x0502)`) stays — a WinXP agent build may still be needed.
 
-### String Handling
+### Strings
 
-- Use `String` class for dynamic strings, `TCHAR` for platform-independent chars
-- Use `_T("text")` macro for string literals (becomes `L"text"` in Unicode builds)
-- Server-side code is always Unicode; agent code uses TCHAR abstraction
-- Key classes: `String`, `StringList`, `StringMap`, `StringBuffer`
+- Server code is always Unicode and uses `L"..."` literals directly (see `src/server/CLAUDE.md`). Agent code and shared libraries that may be built in either mode use `TCHAR` and `_T("...")`.
+- Choosing a class for a string member:
+  - Set once at construction (ctor arg or move) → `String` (its `operator=` is deleted).
+  - Reassigned wholesale but never appended/inserted → `MutableString` (assignable from `String` / `MutableString` / `const TCHAR*`).
+  - Built up incrementally (append/insert/format) → `StringBuffer`.
+- Other key classes: `StringList`, `StringMap`.
+- `wchar_to_utf8` / `ucs2_to_utf8` / `ucs4_to_utf8` / `mb_to_utf8` / `tchar_to_utf8` do not null-terminate when the destination is too small for the next multi-byte sequence. Convert into `bufferSize - 1` and terminate via the return value:
+
+  ```cpp
+  size_t bytes = tchar_to_utf8(value, -1, buffer, bufferSize - 1);
+  buffer[bytes] = 0;
+  ```
 
 ### Memory Management
 
 - Use `MemAlloc`, `MemFree`, `MemAllocStruct<T>()`, `MemAllocArray<T>()` instead of malloc/free
 - Use `MemCopyStringA` / `MemCopyStringW` / `MemCopyString` (in `nms_common.h`) instead of `strdup` / `wcsdup` / `_tcsdup` — they are nullptr-safe and their results are interchangeable with `MemFree`
-- Use smart pointers for complex ownership
 - Container classes (ObjectArray, HashMap) manage object ownership via `Ownership::True/False`
+- For a scratch buffer that should live on the stack when small and on the heap when large, use `Buffer<T, BUFFER_SIZE>` (`nms_util.h`) instead of the hand-rolled `T local[N]; T *p = (len < N) ? local : MemAllocArrayNoInit<T>(len)` + `MemFree` pattern. `BUFFER_SIZE` is in bytes, `reserve()` does not initialize contents, and `operator T*()` makes it a drop-in `T*`. Its inline storage is `alignas(T)`, which makes it the fix for unaligned-access/SIGBUS bugs on strict-alignment CPUs (SPARC, older ARM/MIPS): `memcpy` bytes from an arbitrary wire/stream offset into the `Buffer`, do the `T`-typed work there, `memcpy` back — never `reinterpret_cast<T*>` into a raw byte stream.
 
 ### Threading
 
-- Use thread pools: `ThreadPoolExecute()`, `ThreadPoolScheduleRelative()`
-- Use `LockGuard` for RAII mutex locking
-- Classes: `Mutex`, `Condition`, `RWLock`
-- Create threads with `ThreadCreateEx()`
+- Thread pools (`ThreadPoolExecute()`, `ThreadPoolScheduleRelative()`) and `ThreadCreateEx()` for threads; `Mutex`, `Condition`, `RWLock` with `LockGuard` for RAII locking.
+- For trivial accessors to mutex-guarded members, use the `GetAttributeWithLock(attr, mutex)` / `SetAttributeWithLock` templates (`nms_util.h`) as header one-liners instead of hand-written LockGuard getter bodies in the .cpp (pattern: `DCObject` getters in `nms_dcoll.h`). Give the explicit template argument to convert derived types (`MutableString`/`StringBuffer` → `String`). Raw array members (`wchar_t[]`, `char[]`) can't go through the template — argument binding would copy outside the lock; use `{ LockGuard g(m_mutex); return String(m_arr); }` for those.
 
 ### Container Classes
 
-- `ObjectArray<T>` - Dynamic array of object pointers
-- `IntegerArray<T>` - Array of integers
-- `HashMap<K,V>` - Hash map with fixed-size keys; `StringObjectMap<T>` for string keys
-- `StringMap` - String-to-string map
-- `ObjectQueue<T>` - Thread-safe queue
+`ObjectArray<T>`, `SharedObjectArray<T>`, `IntegerArray<T>`, `HashMap<K,V>` (fixed-size keys), `StringObjectMap<T>`, `StringMap`, `ObjectQueue<T>` (thread-safe).
 
 Prefer NetXMS containers for object collections and ownership management. For maps of plain scalar values (e.g. `nodeId → double`), `std::map` is acceptable and preferred — `HashMap` stores heap-allocated pointers, which forces a pointless per-entry allocation for scalars. `#include <map>` explicitly; it is not pulled in by `nms_util.h`.
+
+### Network and SNMP
+
+- For a MAC address or bridge ID member, use `MacAddress`, not a raw `BYTE[MAC_ADDR_LENGTH]` — it provides `isValid()`, `equals()`, `parse()`, `toString()`, `toJson()`. When persisting, `MacAddressNotation::FLAT_STRING` matches the old `BinToStr` flat-hex format, so converting an existing `BYTE[]` field keeps on-disk values compatible.
+- Pass OIDs to `SnmpGet`, `SNMP_Variable`, `CheckSNMPIntegerValue` etc. in binary form — a `uint32_t oid[N]` array, an `SNMP_ObjectId`, or the `{1, 3, 6, ...}` initializer-list overload. Do not build a text OID with `_sntprintf` to splice in a row index; that re-parses the string on every call. For a per-row OID: `uint32_t oid[N] = { ..., 0 }; oid[N-1] = ifIndex;` (example: `getInterfaceState` in `src/server/libnxsrv/ndd.cpp`).
+
+### JSON (jansson)
+
+- Never `#include <jansson.h>` directly — include `nms_util.h`, which selects the system or bundled copy.
+- Prefer the typed helpers over manual `json_object_get` + `json_is_*` + `json_*_value` chains: `json_object_get_string_t` (allocated `TCHAR*`) / `json_object_get_string_utf8` (no-alloc view) / `json_object_get_string` (`String`), `json_object_get_int32` / `int64` / `uint32` / `uint64` / `boolean` / `time` / `uuid`, and the lenient `json_object_get_array_ex` / `json_object_get_object_ex` for LLM tool arguments that may arrive stringified. Full list near `json_object_get` in `include/nms_util.h`.
+- Emit a `uuid` with `guid.toJson()` (`include/uuid.h`).
+- New shared helper placement: trivial single-expression helpers go `static inline` in `include/nms_util.h`; anything with a non-trivial body or extra dependencies gets a `LIBNETXMS_EXPORTABLE` declaration there and its body in `src/libnetxms/tools.cpp`.
 
 ### Build System
 
@@ -152,7 +144,6 @@ Prefer NetXMS containers for object collections and ownership management. For ma
 
 - Use `nxlog_debug_tag(tag, level, format, ...)` for debug output
 - Add new debug tags to `doc/internal/debug_tags.txt`
-- Log levels: `NXLOG_DEBUG`, `NXLOG_INFO`, `NXLOG_WARNING`, `NXLOG_ERROR`
 
 ### Code Style
 
@@ -169,36 +160,24 @@ Prefer NetXMS containers for object collections and ownership management. For ma
 
 - 3-space indentation
 - Opening brace on new line (except for anonymous class opening bracket)
-- Follow standard Java conventions
 - Minimize external dependencies
 - Desktop client uses SWT, web client uses RWT
 - Always add an `import` for any class referenced in code — never write a fully-qualified name inline (e.g. `org.netxms.nxmc.modules.X.Y.method()`). Exceptions: `java.lang.*` and same-package classes.
 
 ## CI / Static Analysis
 
-- **Semgrep SAST** runs on every PR (diff-aware, blocks on ERROR severity) and nightly (full scan, informational). Workflow: `.github/workflows/semgrep.yaml`
-- **cppcheck** runs nightly for C++ code quality. Workflow: `.github/workflows/cppcheck.yaml`
+- **Semgrep SAST** runs on every PR (diff-aware, blocks on ERROR severity). Workflow: `.github/workflows/semgrep.yaml`. Custom rules go in `.semgrep.yml`, exclusions in `.semgrepignore`. Inline suppression: `// nosemgrep: <rule-id>` (C/C++, Java) or `# nosemgrep: <rule-id>` (Python), always with the rule-id.
 - **Function pointer cast check** blocks on every push and PR. The build runs with GCC's `-Wcast-function-type` and fails if any warning appears. Workflow: `.github/workflows/build_and_test.yaml`
-- Custom semgrep rules go in `.semgrep.yml`; exclusions in `.semgrepignore`
-- Inline suppression: `// nosemgrep: <rule-id>` (C/C++, Java) or `# nosemgrep: <rule-id>` (Python). Always specify the rule-id
 
-## Code Changes
-
-When implementing changes, ensure ALL call sites and consumers are updated. After making a rename or API change, run a project-wide grep for the old name to catch missed references before attempting a build.
+## NXCP Protocol Changes
 
 When adding a new NXCP command code or renaming an existing one, update the `NXCPMessageCodeName()` function in `src/libnetxms/nxcp.cpp` to include the corresponding command code to name mapping. Also mirror the new `CMD_*` constant into `src/java-common/netxms-base/src/main/java/org/netxms/base/NXCPCodes.java` — the Java enum tracks the full command-code namespace even for codes the Java client does not yet use, so fill any adjacent gaps you notice while in the file.
 
-When adding an NXCP field that semantically matches an existing `VID_*` constant (e.g. "ID of a mapping table" → `VID_MAPPING_TABLE_ID`), reuse the existing constant rather than minting a new one. NXCP fields are not typed by ID, so a duplicate just bloats the constant table. Grep for an existing `VID_*` for the concept before adding one.
-
-## Implementation Discipline
-
-When implementing a plan that spans multiple files, do NOT skip any files listed in the plan. If a file seems less critical, flag it explicitly rather than silently omitting it. Cross-check your completed changes against the plan before declaring done.
+When adding an NXCP field that semantically matches an existing `VID_*` constant (e.g. "ID of a mapping table" → `VID_MAPPING_TABLE_ID`), reuse the existing constant rather than minting a new one. NXCP fields are not typed by ID, so a duplicate just bloats the constant table.
 
 ## Translations
 
-Console PO files live in `src/client/nxmc/java/src/main/resources/po/`. Use `msgfmt --statistics` to check completeness and `msgfmt -c` to validate format specifiers.
-
-When translating PO files or doing text transformations, preserve grammatical structure of the target language. Do not do word-by-word substitution. Process in contextual batches and verify grammar, especially noun/adjective ordering and gendered forms. Technical terms (SNMP, SSH, DCI) stay untranslated.
+Console PO files live in `src/client/nxmc/java/src/main/resources/po/`. Use `msgfmt --statistics` to check completeness and `msgfmt -c` to validate format specifiers. Technical terms (SNMP, SSH, DCI) stay untranslated.
 
 ## Commits
 
