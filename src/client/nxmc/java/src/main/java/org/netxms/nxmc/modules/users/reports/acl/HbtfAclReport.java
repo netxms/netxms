@@ -22,6 +22,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import org.apache.poi.ss.SpreadsheetVersion;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -42,6 +45,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class HbtfAclReport extends AbstractAclReport
 {
+   private static final int MAX_CELL_TEXT_LENGTH = SpreadsheetVersion.EXCEL2007.getMaxTextLength();
+
    private final I18n i18n = LocalizationHelper.getI18n(HbtfAclReport.class);
 
    /**
@@ -596,11 +601,14 @@ public class HbtfAclReport extends AbstractAclReport
       sheet.setColumnWidth(GroupsSheetCells.ID.ordinal(), 3072);
       sheet.setColumnWidth(GroupsSheetCells.NAME.ordinal(), 6144);
       sheet.setColumnWidth(GroupsSheetCells.DESCRIPTION.ordinal(), 6144);
-      sheet.setColumnWidth(GroupsSheetCells.MEMBERS.ordinal(), 4096);
+      sheet.setColumnWidth(GroupsSheetCells.MEMBERS.ordinal(), 6144);
 
       sheet.setColumnHidden(GroupsSheetCells.DESCRIPTION.ordinal(), true);
       sheet.setColumnHidden(GroupsSheetCells.ID.ordinal(), true);
-      sheet.setColumnHidden(GroupsSheetCells.MEMBERS.ordinal(), true);
+
+      XSSFCellStyle membersStyle = wb.createCellStyle();
+      membersStyle.setWrapText(true);
+      membersStyle.setVerticalAlignment(VerticalAlignment.TOP);
 
       Arrays.stream(session.getUserDatabaseObjects()).filter(p -> p instanceof UserGroup).sorted(Comparator.comparing(AbstractUserObject::getName)).forEach(element -> {
          UserGroup group = (UserGroup)element;
@@ -610,34 +618,12 @@ public class HbtfAclReport extends AbstractAclReport
          row.createCell(GroupsSheetCells.NAME.ordinal()).setCellValue(group.getName());
          row.createCell(GroupsSheetCells.DESCRIPTION.ordinal()).setCellValue(group.getDescription());
 
-         boolean firstRow = true;
-         for(int memberId : group.getMembers())
-         {
-            final XSSFRow memberRow;
-            if (firstRow)
-            {
-               memberRow = row;
-               firstRow = false;
-            }
-            else
-            {
-               memberRow = sheet.createRow(rowNum.getAndIncrement());
-            }
-            AbstractUserObject member = session.findUserDBObjectById(memberId, null);
-            if (member != null)
-            {
-               final String name;
-               if (member instanceof User)
-               {
-                  name = member.getName();
-               }
-               else
-               {
-                  name = member.getName() + " (group)";
-               }
-               memberRow.createCell(GroupsSheetCells.MEMBERS.ordinal()).setCellValue(name);
-            }
-         }
+         String members = Arrays.stream(group.getMembers()).mapToObj(this::getMemberName).sorted().collect(Collectors.joining("\n"));
+         if (members.length() > MAX_CELL_TEXT_LENGTH)
+            members = members.substring(0, members.lastIndexOf('\n', MAX_CELL_TEXT_LENGTH - 4)) + "\n...";
+         XSSFCell membersCell = row.createCell(GroupsSheetCells.MEMBERS.ordinal());
+         membersCell.setCellStyle(membersStyle);
+         membersCell.setCellValue(members);
 
          int aclColumnIndex = GroupsSheetCells.ACL_START_COLUMN.ordinal();
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, group);
@@ -688,6 +674,20 @@ public class HbtfAclReport extends AbstractAclReport
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, group);
          createPermissionCell(row, aclColumnIndex++, UserAccessRights.SYSTEM_ACCESS_WEB_SERVICE_DEFINITIONS, group);
       });
+   }
+
+   /**
+    * Get display name of group member.
+    *
+    * @param memberId member ID
+    * @return member display name
+    */
+   private String getMemberName(int memberId)
+   {
+      AbstractUserObject member = session.findUserDBObjectById(memberId, null);
+      if (member == null)
+         return String.format(i18n.tr("DELETED [%d]"), memberId);
+      return (member instanceof User) ? member.getName() : member.getName() + " (group)";
    }
 
    /**

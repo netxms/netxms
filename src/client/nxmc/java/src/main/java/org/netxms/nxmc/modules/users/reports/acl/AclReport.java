@@ -650,19 +650,20 @@ public class AclReport extends AbstractAclReport
                memberRow = sheet.createRow(rowNum.getAndIncrement());
             }
             AbstractUserObject member = session.findUserDBObjectById(memberId, null);
-            if (member != null)
+            final String name;
+            if (member == null)
             {
-               final String name;
-               if (member instanceof User)
-               {
-                  name = member.getName();
-               }
-               else
-               {
-                  name = member.getName() + " (group)";
-               }
-               memberRow.createCell(GroupsSheetCells.MEMBERS.ordinal()).setCellValue(name);
+               name = String.format(i18n.tr("DELETED [%d]"), memberId);
             }
+            else if (member instanceof User)
+            {
+               name = member.getName();
+            }
+            else
+            {
+               name = member.getName() + " (group)";
+            }
+            memberRow.createCell(GroupsSheetCells.MEMBERS.ordinal()).setCellValue(name);
          }
 
          int aclColumnIndex = GroupsSheetCells.ACL_START_COLUMN.ordinal();
