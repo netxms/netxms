@@ -119,6 +119,22 @@ void NXSL_RangeClass::toString(StringBuffer *sb, NXSL_Object *object)
 }
 
 /**
+ * Check if given value is within range bounds (according to step direction)
+ */
+static inline bool IsInRange(const Range *range, int64_t v)
+{
+   return (range->step.i > 0) ? (v < range->end.i) : ((range->step.i < 0) && (v > range->end.i));
+}
+
+/**
+ * Check if given value is within range bounds (according to step direction)
+ */
+static inline bool IsInRange(const Range *range, double v)
+{
+   return (range->step.d > 0) ? (v < range->end.d - range->margin) : ((range->step.d < 0) && (v > range->end.d + range->margin));
+}
+
+/**
  * Get next value for iteration
  */
 NXSL_Value *NXSL_RangeClass::getNext(NXSL_Object *object, NXSL_Value *currValue)
@@ -129,14 +145,11 @@ NXSL_Value *NXSL_RangeClass::getNext(NXSL_Object *object, NXSL_Value *currValue)
    if (range->integer)
    {
       int64_t v = (currValue != nullptr) ? currValue->getValueAsInt64() + range->step.i : range->start.i;
-      bool inRange = (range->step.i > 0) ? (v < range->end.i) : ((range->step.i < 0) && (v > range->end.i));
-      return inRange ? vm->createValue(v) : nullptr;
+      return IsInRange(range, v) ? vm->createValue(v) : nullptr;
    }
 
    double v = (currValue != nullptr) ? currValue->getValueAsReal() + range->step.d : range->start.d;
-   double margin = (currValue != nullptr) ? range->margin : 0;
-   bool inRange = (range->step.d > 0) ? (v < range->end.d - margin) : ((range->step.d < 0) && (v > range->end.d + margin));
-   return inRange ? vm->createValue(v) : nullptr;
+   return IsInRange(range, v) ? vm->createValue(v) : nullptr;
 }
 
 /**
