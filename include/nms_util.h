@@ -853,10 +853,9 @@ public:
       if (m_elementSize % 8 != 0)
          m_elementSize += 8 - m_elementSize % 8;
       m_regionSize = m_headerSize + regionCapacity * m_elementSize;
-      m_currentRegion = MemAlloc(m_regionSize);
-      *((void **)m_currentRegion) = nullptr; // pointer to previous region
+      m_currentRegion = nullptr;
       m_firstDeleted = nullptr;
-      m_allocated = m_headerSize;
+      m_allocated = m_regionSize;   // will cause new region allocation on first object allocation
       m_elements = 0;
    }
 
@@ -879,6 +878,9 @@ public:
     */
    void reset()
    {
+      if (m_currentRegion == nullptr)
+         return;
+
       void *r = *((void **)m_currentRegion);
       while(r != nullptr)
       {
