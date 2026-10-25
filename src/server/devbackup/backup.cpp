@@ -417,10 +417,11 @@ std::pair<DeviceBackupApiStatus, BackupData> NxDevBackupGetBackupById(const Node
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb,
       L"SELECT id,backup_time,last_check_time,running_config,running_config_hash,startup_config,startup_config_hash"
-      L" FROM device_configs WHERE id=?");
+      L" FROM device_configs WHERE id=? AND node_id=?");
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, id);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, node.getId());
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
