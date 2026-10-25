@@ -4936,10 +4936,17 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("inboundUtilization"))
    {
-      uint32_t util = iface->getInboundUtilization();
-      TCHAR buffer[32];
-      _sntprintf(buffer, 32, _T("%d.%d"), util / 10,util % 10);
-      value = vm->createValue(buffer);
+      int32_t util = iface->getInboundUtilization();
+      if (util >= 0)
+      {
+         TCHAR buffer[32];
+         _sntprintf(buffer, 32, _T("%d.%d"), util / 10, util % 10);
+         value = vm->createValue(buffer);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddressList"))
    {
@@ -5027,10 +5034,17 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("outboundUtilization"))
    {
-      uint32_t util = iface->getOutboundUtilization();
-      TCHAR buffer[32];
-      _sntprintf(buffer, 32, _T("%d.%d"), util / 10,util % 10);
-      value = vm->createValue(buffer);
+      int32_t util = iface->getOutboundUtilization();
+      if (util >= 0)
+      {
+         TCHAR buffer[32];
+         _sntprintf(buffer, 32, _T("%d.%d"), util / 10, util % 10);
+         value = vm->createValue(buffer);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerInterface"))
    {
