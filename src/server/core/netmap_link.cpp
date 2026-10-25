@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2025 Raden Solutions
+** Copyright (C) 2003-2026 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -478,8 +478,7 @@ void NetworkMapLinkContainer::updateDataSource(const shared_ptr<DCObjectInfo> &d
       {
          if (!dataSource.getFormat().equals(format))
          {
-            json_t *formatString = json_object_get(m, "formatString");
-            json_object_update_new(formatString, json_string_t(format));
+            json_object_set_new(m, "formatString", json_string_t(format));
             setModified();
          }
          if (dataSource.getLocation() != location)
