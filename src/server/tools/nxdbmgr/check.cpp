@@ -536,6 +536,8 @@ static void CheckNodes()
                   success = success && SQLQuery(StringBuffer(_T("DELETE FROM ospf_neighbors WHERE node_id=")).append(nodeId));
                   success = success && SQLQuery(StringBuffer(_T("DELETE FROM node_snmp_agents WHERE node_id=")).append(nodeId));
                   success = success && SQLQuery(StringBuffer(_T("DELETE FROM agent_config_cache WHERE node_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM device_configs WHERE node_id=")).append(nodeId));
+                  success = success && SQLQuery(StringBuffer(_T("DELETE FROM radios WHERE owner_id=")).append(nodeId));
                   if (success && SQLQuery(StringBuffer(_T("DELETE FROM object_properties WHERE object_id=")).append(nodeId)))
                      g_dbCheckFixes++;
                }
