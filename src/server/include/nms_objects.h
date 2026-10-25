@@ -2177,7 +2177,6 @@ protected:
    RWLock m_dciAccessLock;
    bool m_dciListModified;
    bool m_instanceDiscoveryChanges;
-   TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 
    virtual void prepareForDeletion() override;
 
