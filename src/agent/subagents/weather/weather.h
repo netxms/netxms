@@ -219,7 +219,8 @@ public:
 
 /**
  * Bright Sky adapter (brightsky.cpp): free JSON API over DWD open data (MOSMIX
- * forecasts plus station observations), Germany only, no key. Provides global
+ * forecasts plus station observations), no key. Observations mainly from Germany,
+ * forecasts worldwide; sources within 50 km of the location only. Provides global
  * irradiance but no direct radiation and no ensemble spread.
  */
 class BrightSkyProvider : public WeatherProvider

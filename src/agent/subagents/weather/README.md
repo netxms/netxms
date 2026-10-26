@@ -14,11 +14,11 @@ Tracked by issues #3408 and #3570.
 |------|---------|-------|
 | `openmeteo` | [Open-Meteo](https://open-meteo.com) | Default. Solar irradiance and ensemble spread. Keyless tier is non-commercial only; set `ApiKey` for a commercial subscription. |
 | `metno` | [MET Norway Locationforecast 2.0](https://api.met.no/weatherapi/locationforecast/2.0/documentation) | Open data, no key. Authoritative for Nordic locations. **No solar radiation and no ensemble spread.** Requires an identifying `UserAgent`. |
-| `brightsky` | [Bright Sky](https://brightsky.dev) | Free JSON API over DWD open data (MOSMIX forecasts + station observations). **Germany only**, no key. Global irradiance, **no direct radiation and no ensemble spread.** Current conditions are real station observations. |
+| `brightsky` | [Bright Sky](https://brightsky.dev) | Free JSON API over DWD open data (MOSMIX forecasts + station observations), no key. Observations mainly from Germany; MOSMIX forecasts are worldwide but much sparser outside Germany. Only stations within 50 km of the location are used. Global irradiance, **no direct radiation and no ensemble spread.** Current conditions are station observations where an observing station is in range. |
 
 The provider is selected **per location**, because their capabilities differ:
-locations feeding irradiance-driven decisions must use `openmeteo` or (in
-Germany) `brightsky`, while Nordic locations that only need
+locations feeding irradiance-driven decisions must use `openmeteo` or (where
+DWD stations are in range, mainly Germany) `brightsky`, while Nordic locations that only need
 temperature/wind/cloud/humidity/precipitation can use `metno`.
 
 MET Norway data is licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/);
@@ -134,16 +134,18 @@ to 00:00 UTC of the current day so the URL itself is stable within a day.
 - **Deterministic forecast by default.** Forecast uncertainty is available only
   through the optional ensemble table; consumers doing stochastic optimization
   should enable it and use an Open-Meteo location.
-- **Grid-snapped coordinates.** Open-Meteo and MET Norway resolve each request
-  to their nearest model grid cell, so nearby coordinates may return identical
-  data. Bright Sky resolves to the nearest MOSMIX station and nearest observing
-  stations within 50 km, and returns an error for coordinates outside Germany.
+- **Grid-snapped coordinates.** Open-Meteo and MET Norway map each request
+  to a cell of their model grid (Open-Meteo prefers a land cell of similar
+  elevation, not necessarily the nearest), so nearby coordinates may return
+  identical data. Bright Sky uses the nearest MOSMIX station and observing
+  stations within 50 km (its `max_dist` default) and returns no data when none
+  is in range; this is distance-based, not limited to Germany.
   Coordinates are sent with four decimals, MET Norway's documented maximum.
 - **Observations only from Bright Sky.** Open-Meteo and MET Norway serve
-  forecasts, so their "current" snapshot is the forecast value for the present
-  hour. Bright Sky fills past hours from DWD station measurements once DWD
+  forecasts, so their "current" snapshot is model data: Open-Meteo's 15-minute
+  current block, MET Norway's forecast entry for the current hour. Bright Sky fills past hours from DWD station measurements once DWD
   has published them (the current hour is usually still the MOSMIX value until
   its observation lands), so the snapshot is an observation for all but the
-  most recent hour. Forecast records carry no relative humidity, so
+  most recent hour where an observing station is in range. Forecast records carry no relative humidity, so
   `Weather.RelativeHumidity` on a `brightsky` location errors whenever the
   snapshot is still a forecast value.
