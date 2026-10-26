@@ -1,6 +1,6 @@
 /* 
 ** DB2 Database Driver
-** Copyright (C) 2010-2022 Raden Solutinos
+** Copyright (C) 2010-2025 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,71 +25,86 @@
 #include "db2drv.h"
 
 /**
+ * Check CLI return code for success
+ */
+static inline bool IsSuccess(SQLRETURN rc)
+{
+   return (rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO);
+}
+
+/**
+ * Convert UCS-2 string returned by CLI to driver's wide string (new allocation)
+ */
+static inline NETXMS_WCHAR *WideStringFromSQLWCHAR(const SQLWCHAR *s)
+{
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+   return MemCopyStringW(reinterpret_cast<const WCHAR*>(s));
+#else
+   return UCS4StringFromUCS2String(reinterpret_cast<const UCS2CHAR*>(s));
+#endif
+}
+
+/**
+ * Convert driver's wide string to UCS-2 string for CLI. On UCS-2 platforms returns
+ * input pointer without allocation, otherwise returns new allocation (caller must free).
+ */
+static inline SQLWCHAR *SQLWCHARFromWideString(const NETXMS_WCHAR *s, bool *allocated)
+{
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+   *allocated = false;
+   return reinterpret_cast<SQLWCHAR*>(const_cast<NETXMS_WCHAR*>(s));
+#else
+   *allocated = true;
+   return reinterpret_cast<SQLWCHAR*>(UCS2StringFromUCS4String(s));
+#endif
+}
+
+/**
  * Convert DB2 state to NetXMS database error code and get error text
  */
-static uint32_t GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_WCHAR *errorText)
+static uint32_t GetSQLErrorInfo(SQLSMALLINT handleType, SQLHANDLE handle, NETXMS_WCHAR *errorText)
 {
-   uint32_t dwError;
-   SQLSMALLINT nChars;
-	SQLWCHAR buffer[DBDRV_MAX_ERROR_TEXT];
+   uint32_t error = DBERR_OTHER_ERROR;
+   SQLSMALLINT chars;
+   SQLWCHAR buffer[DBDRV_MAX_ERROR_TEXT];
 
-	// Get state information and convert it to NetXMS database error code
-   SQLRETURN nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_SQLSTATE, buffer, 16, &nChars);
-	if (nRet == SQL_SUCCESS)
-	{
-#if UNICODE_UCS2
-		if (
-			(!wcscmp((WCHAR *)buffer, L"08003")) ||	// Connection does not exist
-			(!wcscmp((WCHAR *)buffer, L"08S01")) ||	// Communication link failure
-			(!wcscmp((WCHAR *)buffer, L"HYT00")) ||	// Timeout expired
-			(!wcscmp((WCHAR *)buffer, L"HYT01")) ||	// Connection timeout expired
-			(!wcscmp((WCHAR *)buffer, L"08506")))	// SQL30108N: A connection failed but has been re-established.
+   // Get state information and convert it to NetXMS database error code
+   SQLRETURN rc = SQLGetDiagFieldW(handleType, handle, 1, SQL_DIAG_SQLSTATE, buffer, 16, &chars);
+   if (rc == SQL_SUCCESS)
+   {
+      char state[16];
+      ucs2_to_mb(reinterpret_cast<UCS2CHAR*>(buffer), -1, state, 16);
+      if (!strcmp(state, "08003") ||   // Connection does not exist
+          !strcmp(state, "08S01") ||   // Communication link failure
+          !strcmp(state, "HYT00") ||   // Timeout expired
+          !strcmp(state, "HYT01") ||   // Connection timeout expired
+          !strcmp(state, "08506"))     // SQL30108N: A connection failed but has been re-established.
+      {
+         error = DBERR_CONNECTION_LOST;
+      }
+   }
+
+   // Get error message
+   if (errorText != nullptr)
+   {
+      rc = SQLGetDiagFieldW(handleType, handle, 1, SQL_DIAG_MESSAGE_TEXT, buffer, sizeof(buffer), &chars);
+      if (rc == SQL_SUCCESS)
+      {
+         buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+         wcslcpy(errorText, reinterpret_cast<WCHAR*>(buffer), DBDRV_MAX_ERROR_TEXT);
 #else
-		char state[16];
-		ucs2_to_mb(buffer, -1, state, 16);
-		if (
-			(!strcmp(state, "08003")) ||	// Connection does not exist
-			(!strcmp(state, "08S01")) ||	// Communication link failure
-			(!strcmp(state, "HYT00")) ||	// Timeout expired
-			(!strcmp(state, "HYT01")) ||	// Connection timeout expired
-			(!strcmp(state, "08506")))	// SQL30108N: A connection failed but has been re-established.
+         ucs2_to_ucs4(reinterpret_cast<UCS2CHAR*>(buffer), -1, errorText, DBDRV_MAX_ERROR_TEXT);
 #endif
-		{
-			dwError = DBERR_CONNECTION_LOST;
-		}
-		else
-		{
-			dwError = DBERR_OTHER_ERROR;
-		}
-	}
-	else
-	{
-		dwError = DBERR_OTHER_ERROR;
-	}
+         RemoveTrailingCRLFW(errorText);
+      }
+      else
+      {
+         wcscpy(errorText, L"Unable to obtain description for this error");
+      }
+   }
 
-	// Get error message
-	if (errorText != NULL)
-	{
-#if UNICODE_UCS2
-		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, errorText, DBDRV_MAX_ERROR_TEXT, &nChars);
-#else
-		nRet = SQLGetDiagFieldW(nHandleType, hHandle, 1, SQL_DIAG_MESSAGE_TEXT, buffer, DBDRV_MAX_ERROR_TEXT, &nChars);
-#endif
-		if (nRet == SQL_SUCCESS)
-		{
-#if UNICODE_UCS4
-			buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
-			ucs2_to_ucs4(buffer, -1, errorText, DBDRV_MAX_ERROR_TEXT);
-#endif
-			RemoveTrailingCRLFW(errorText);
-		}
-		else
-		{
-			wcscpy(errorText, L"Unable to obtain description for this error");
-		}
-	}
-
-	return dwError;
+   return error;
 }
 
 /**
@@ -97,12 +112,21 @@ static uint32_t GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETX
  */
 static void ClearPendingResults(SQLHSTMT statement)
 {
-	while(1)
-	{
-		SQLRETURN rc = SQLMoreResults(statement);
-		if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
-			break;
-	}
+   while(IsSuccess(SQLMoreResults(statement)))
+      ;
+}
+
+/**
+ * Execute query text on statement handle (wraps UCS-2 conversion on UCS-4 platforms)
+ */
+static SQLRETURN ExecDirect(SQLHSTMT statement, const NETXMS_WCHAR *query)
+{
+   bool allocated;
+   SQLWCHAR *text = SQLWCHARFromWideString(query, &allocated);
+   SQLRETURN rc = SQLExecDirectW(statement, text, SQL_NTS);
+   if (allocated)
+      MemFree(text);
+   return rc;
 }
 
 /**
@@ -140,93 +164,96 @@ static void Unload()
 
 /**
  * Connect to database
- * pszHost should be set to DB2 source name, and pszDatabase is ignored
+ * host should be set to DB2 catalog alias, database name is ignored
  */
-static DBDRV_CONNECTION Connect(const char *pszHost, const char *pszLogin, const char *pszPassword, const char *pszDatabase, const char *schema, NETXMS_WCHAR *errorText)
+static DBDRV_CONNECTION Connect(const char *host, const char *login, const char *password, const char *database, const char *schema, NETXMS_WCHAR *errorText)
 {
-	long iResult;
-   SQLHSTMT sqlStatement;
-
-	// Allocate our connection structure
+   // Allocate our connection structure
    auto pConn = MemAllocStruct<DB2DRV_CONN>();
 
    // Allocate environment
-   iResult = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
-	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
-	{
-		wcscpy(errorText, L"Cannot allocate environment handle");
-		goto connect_failure_0;
-	}
+   SQLRETURN rc = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &pConn->sqlEnv);
+   if (!IsSuccess(rc))
+   {
+      wcscpy(errorText, L"Cannot allocate environment handle");
+      goto connect_failure_0;
+   }
 
-	// Set required DB2 version
-	iResult = SQLSetEnvAttr(pConn->sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
-	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
-	{
-		wcscpy(errorText, L"Call to SQLSetEnvAttr failed");
+   // Set required DB2 version
+   rc = SQLSetEnvAttr(pConn->sqlEnv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0);
+   if (!IsSuccess(rc))
+   {
+      wcscpy(errorText, L"Call to SQLSetEnvAttr failed");
       goto connect_failure_1;
-	}
+   }
 
-	// Allocate connection handle, set timeout
-	iResult = SQLAllocHandle(SQL_HANDLE_DBC, pConn->sqlEnv, &pConn->sqlConn); 
-	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
-	{
-		wcscpy(errorText, L"Cannot allocate connection handle");
+   // Allocate connection handle, set timeout
+   rc = SQLAllocHandle(SQL_HANDLE_DBC, pConn->sqlEnv, &pConn->sqlConn); 
+   if (!IsSuccess(rc))
+   {
+      wcscpy(errorText, L"Cannot allocate connection handle");
       goto connect_failure_1;
-	}
-	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_LOGIN_TIMEOUT, (SQLPOINTER *)15, 0);
-	SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER *)30, 0);
+   }
+   SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_LOGIN_TIMEOUT, (SQLPOINTER)15, 0);
+   SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_CONNECTION_TIMEOUT, (SQLPOINTER)30, 0);
 
-	// Connect to the datasource 
-	iResult = SQLConnect(pConn->sqlConn, (SQLCHAR *)pszHost, SQL_NTS, (SQLCHAR *)pszLogin, SQL_NTS, (SQLCHAR *)pszPassword, SQL_NTS);
-	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
-	{
-		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
-		goto connect_failure_2;
-	}
+   // Connect to the datasource 
+   rc = SQLConnect(pConn->sqlConn, (SQLCHAR *)host, SQL_NTS, (SQLCHAR *)login, SQL_NTS, (SQLCHAR *)password, SQL_NTS);
+   if (!IsSuccess(rc))
+   {
+      GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+      goto connect_failure_2;
+   }
 
    // Explicitly set autocommit mode
    SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
 
-	// Set current schema
-	if ((schema != NULL) && (schema[0] != 0))
-	{
-		char query[256];
-		snprintf(query, 256, "SET CURRENT SCHEMA = '%s'", schema);
+   // Set current schema
+   if ((schema != nullptr) && (schema[0] != 0))
+   {
+      SQLHSTMT sqlStatement;
+      rc = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &sqlStatement);
+      if (!IsSuccess(rc))
+      {
+         GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
+         goto connect_failure_3;
+      }
 
-		iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &sqlStatement);
-		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-		{
-			// Execute statement
-			SQLWCHAR *temp = (SQLWCHAR *)UCS2StringFromMBString(query);
-			iResult = SQLExecDirectW(sqlStatement, temp, SQL_NTS);
-			free(temp);
-			if ((iResult != SQL_SUCCESS) && 
-				 (iResult != SQL_SUCCESS_WITH_INFO) && 
-				 (iResult != SQL_NO_DATA))
-			{
-				GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
-				goto connect_failure_3;
-			}
-			SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
-		}
-		else
-		{
-			GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);
-			goto connect_failure_2;
-		}
-	}
+      // Build "SET CURRENT SCHEMA = 'name'" with quotes in name doubled
+      WCHAR *schemaW = WideStringFromUTF8String(schema);
+      WCHAR *query = MemAllocStringW(wcslen(schemaW) * 2 + 32);
+      wcscpy(query, L"SET CURRENT SCHEMA = '");
+      WCHAR *p = query + wcslen(query);
+      for(const WCHAR *s = schemaW; *s != 0; s++)
+      {
+         if (*s == L'\'')
+            *p++ = L'\'';
+         *p++ = *s;
+      }
+      *p++ = L'\'';
+      *p = 0;
+      MemFree(schemaW);
+      rc = ExecDirect(sqlStatement, query);
+      MemFree(query);
+      if (!IsSuccess(rc) && (rc != SQL_NO_DATA))
+      {
+         GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
+         SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
+         goto connect_failure_3;
+      }
+      SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
+   }
 
-	// Create mutex
-	pConn->mutexQuery = new Mutex(MutexType::NORMAL);
+   // Create mutex
+   pConn->mutexQuery = new Mutex(MutexType::NORMAL);
 
-	// Success
-	return pConn;
-
-	// Handle failures
-connect_failure_3:
-	SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
+   // Success
+   return pConn;
 
    // Handle failures
+connect_failure_3:
+   SQLDisconnect(pConn->sqlConn);
+
 connect_failure_2:
    SQLFreeHandle(SQL_HANDLE_DBC, pConn->sqlConn);
 
@@ -256,50 +283,45 @@ static void Disconnect(DBDRV_CONNECTION connection)
 /**
  * Prepare statement
  */
-static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const NETXMS_WCHAR *pwszQuery, bool optimizeForReuse, uint32_t *pdwError, NETXMS_WCHAR *errorText)
+static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const NETXMS_WCHAR *query, bool optimizeForReuse, uint32_t *errorCode, NETXMS_WCHAR *errorText)
 {
-	long iResult;
-	SQLHSTMT statement;
-	DB2DRV_STATEMENT *result;
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   DB2DRV_STATEMENT *result = nullptr;
 
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
+   c->mutexQuery->lock();
 
-	// Allocate statement handle
-	iResult = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<DB2DRV_CONN*>(connection)->sqlConn, &statement);
-	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-	{
-		// Prepare statement
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-		iResult = SQLPrepareW(statement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-#else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-		iResult = SQLPrepareW(statement, temp, SQL_NTS);
-		MemFree(temp);
-#endif
-		if ((iResult == SQL_SUCCESS) ||
-				(iResult == SQL_SUCCESS_WITH_INFO))
-		{
+   // Allocate statement handle
+   SQLHSTMT statement;
+   SQLRETURN rc = SQLAllocHandle(SQL_HANDLE_STMT, c->sqlConn, &statement);
+   if (IsSuccess(rc))
+   {
+      // Prepare statement
+      bool allocated;
+      SQLWCHAR *text = SQLWCHARFromWideString(query, &allocated);
+      rc = SQLPrepareW(statement, text, SQL_NTS);
+      if (allocated)
+         MemFree(text);
+      if (IsSuccess(rc))
+      {
          result = MemAllocStruct<DB2DRV_STATEMENT>();
-			result->handle = statement;
-			result->buffers = new Array(0, 16, Ownership::True);
-			result->connection = static_cast<DB2DRV_CONN*>(connection);
-			*pdwError = DBERR_SUCCESS;
-		}
-		else
-		{
-			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, statement, errorText);
-			SQLFreeHandle(SQL_HANDLE_STMT, statement);
-			result = nullptr;
-		}
-	}
-	else
-	{
-		*pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<DB2DRV_CONN*>(connection)->sqlConn, errorText);
-		result = nullptr;
-	}
+         result->handle = statement;
+         result->buffers = new Array(0, 16, Ownership::True);
+         result->connection = c;
+         *errorCode = DBERR_SUCCESS;
+      }
+      else
+      {
+         *errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, statement, errorText);
+         SQLFreeHandle(SQL_HANDLE_STMT, statement);
+      }
+   }
+   else
+   {
+      *errorCode = GetSQLErrorInfo(SQL_HANDLE_DBC, c->sqlConn, errorText);
+   }
 
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	return result;
+   c->mutexQuery->unlock();
+   return result;
 }
 
 /**
@@ -307,110 +329,73 @@ static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const NETXMS_WCHAR *
  */
 static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
-	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
-	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_WCHAR };
-	static size_t bufferSize[] = { 0, sizeof(int32_t), sizeof(uint32_t), sizeof(int64_t), sizeof(uint64_t), sizeof(double), 0 };
+   static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
+   static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_WCHAR };
+   static size_t bufferSize[] = { 0, sizeof(int32_t), sizeof(uint32_t), sizeof(int64_t), sizeof(uint64_t), sizeof(double), 0 };
 
    auto statement = static_cast<DB2DRV_STATEMENT*>(hStmt);
-   int length = (cType == DB_CTYPE_STRING) ? (int)wcslen((WCHAR *)buffer) + 1 : 0;
+   int length = 0;   // string length in characters including terminator (for CLI ColumnSize)
+   SQLPOINTER sqlBuffer;
+   bool owned;       // true if sqlBuffer should be freed with statement
 
-	SQLPOINTER sqlBuffer;
-	switch(allocType)
-	{
-		case DB_BIND_STATIC:
+   if (cType == DB_CTYPE_UTF8_STRING)
+   {
+      // CLI always needs UCS-2 string, so conversion is unavoidable
+      sqlBuffer = UCS2StringFromUTF8String(static_cast<char*>(buffer));
+      length = static_cast<int>(ucs2_strlen(static_cast<UCS2CHAR*>(sqlBuffer))) + 1;
+      owned = true;
+      if (allocType == DB_BIND_DYNAMIC)
+         MemFree(buffer);
+   }
+   else if (cType == DB_CTYPE_STRING)
+   {
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-         if (cType == DB_CTYPE_UTF8_STRING)
-         {
-            sqlBuffer = WideStringFromUTF8String((char *)buffer);
-            statement->buffers->add(sqlBuffer);
-            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
-         }
-         else
-         {
+      length = static_cast<int>(wcslen(static_cast<WCHAR*>(buffer))) + 1;
+      switch(allocType)
+      {
+         case DB_BIND_STATIC:
             sqlBuffer = buffer;
-         }
-#else
-			if (cType == DB_CTYPE_STRING)
-			{
-				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
-				statement->buffers->add(sqlBuffer);
-			}
-			else if (cType == DB_CTYPE_UTF8_STRING)
-         {
-            sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
-            statement->buffers->add(sqlBuffer);
-            length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
-         }
-			else
-			{
-				sqlBuffer = buffer;
-			}
-#endif
-			break;
-		case DB_BIND_DYNAMIC:
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-         if (cType == DB_CTYPE_UTF8_STRING)
-         {
-            sqlBuffer = WideStringFromUTF8String((char *)buffer);
-            free(buffer);
-            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
-         }
-         else
-         {
+            owned = false;
+            break;
+         case DB_BIND_DYNAMIC:
             sqlBuffer = buffer;
-         }
+            owned = true;
+            break;
+         default:   // DB_BIND_TRANSIENT
+            sqlBuffer = MemCopyBlock(buffer, length * sizeof(WCHAR));
+            owned = true;
+            break;
+      }
 #else
-			if (cType == DB_CTYPE_STRING)
-			{
-				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
-				free(buffer);
-			}
-			else if (cType == DB_CTYPE_UTF8_STRING)
-         {
-            sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
-            free(buffer);
-            length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
-         }
-			else
-			{
-				sqlBuffer = buffer;
-			}
+      sqlBuffer = UCS2StringFromUCS4String(static_cast<WCHAR*>(buffer));
+      length = static_cast<int>(ucs2_strlen(static_cast<UCS2CHAR*>(sqlBuffer))) + 1;
+      owned = true;
+      if (allocType == DB_BIND_DYNAMIC)
+         MemFree(buffer);
 #endif
-			statement->buffers->add(sqlBuffer);
-			break;
-		case DB_BIND_TRANSIENT:
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-         if (cType == DB_CTYPE_UTF8_STRING)
-         {
-            sqlBuffer = WideStringFromUTF8String((char *)buffer);
-            length = (int)wcslen((WCHAR *)sqlBuffer) + 1;
-         }
-         else
-         {
-            sqlBuffer = MemCopyBlock(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
-         }
-#else
-			if (cType == DB_CTYPE_STRING)
-			{
-				sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
-			}
-			else if (cType == DB_CTYPE_UTF8_STRING)
-         {
-            sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
-            length = (int)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1;
-         }
-			else
-			{
-				sqlBuffer = MemCopyBlock(buffer, bufferSize[cType]);
-			}
-#endif
-			statement->buffers->add(sqlBuffer);
-			break;
-		default:
-			return;	// Invalid call
-	}
-	SQLBindParameter(statement->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType],
-	                 ((cType == DB_CTYPE_STRING) || (cType == DB_CTYPE_UTF8_STRING)) ? length : 0, 0, sqlBuffer, 0, nullptr);
+   }
+   else
+   {
+      switch(allocType)
+      {
+         case DB_BIND_STATIC:
+            sqlBuffer = buffer;
+            owned = false;
+            break;
+         case DB_BIND_DYNAMIC:
+            sqlBuffer = buffer;
+            owned = true;
+            break;
+         default:   // DB_BIND_TRANSIENT
+            sqlBuffer = MemCopyBlock(buffer, bufferSize[cType]);
+            owned = true;
+            break;
+      }
+   }
+
+   if (owned)
+      statement->buffers->add(sqlBuffer);
+   SQLBindParameter(statement->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType], length, 0, sqlBuffer, 0, nullptr);
 }
 
 /**
@@ -418,25 +403,23 @@ static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *b
  */
 static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, NETXMS_WCHAR *errorText)
 {
-	uint32_t dwResult;
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   uint32_t result;
 
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
+   c->mutexQuery->lock();
    SQLHSTMT handle = static_cast<DB2DRV_STATEMENT*>(hStmt)->handle;
-   long rc = SQLExecute(handle);
-	if (
-		(rc == SQL_SUCCESS) ||
-		(rc == SQL_SUCCESS_WITH_INFO) ||
-		(rc == SQL_NO_DATA))
-	{
-		ClearPendingResults(handle);
-		dwResult = DBERR_SUCCESS;
-	}
-	else
-	{
-		dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, handle, errorText);
-	}
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	return dwResult;
+   SQLRETURN rc = SQLExecute(handle);
+   if (IsSuccess(rc) || (rc == SQL_NO_DATA))
+   {
+      ClearPendingResults(handle);
+      result = DBERR_SUCCESS;
+   }
+   else
+   {
+      result = GetSQLErrorInfo(SQL_HANDLE_STMT, handle, errorText);
+   }
+   c->mutexQuery->unlock();
+   return result;
 }
 
 /**
@@ -446,165 +429,116 @@ static void FreeStatement(DBDRV_STATEMENT hStmt)
 {
    auto statement = static_cast<DB2DRV_STATEMENT*>(hStmt);
    statement->connection->mutexQuery->lock();
-	SQLFreeHandle(SQL_HANDLE_STMT, statement->handle);
-	statement->connection->mutexQuery->unlock();
-	delete statement->buffers;
-	MemFree(statement);
+   SQLFreeHandle(SQL_HANDLE_STMT, statement->handle);
+   statement->connection->mutexQuery->unlock();
+   delete statement->buffers;
+   MemFree(statement);
 }
 
 /**
  * Perform non-SELECT query
  */
-static uint32_t Query(DBDRV_CONNECTION connection, const NETXMS_WCHAR *pwszQuery, NETXMS_WCHAR *errorText)
+static uint32_t Query(DBDRV_CONNECTION connection, const NETXMS_WCHAR *query, NETXMS_WCHAR *errorText)
 {
-	long iResult;
-	uint32_t dwResult;
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   uint32_t result;
 
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
+   c->mutexQuery->lock();
 
-	// Allocate statement handle
+   // Allocate statement handle
    SQLHSTMT sqlStatement;
-	iResult = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<DB2DRV_CONN*>(connection)->sqlConn, &sqlStatement);
-	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-	{
-		// Execute statement
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-#else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-		iResult = SQLExecDirectW(sqlStatement, temp, SQL_NTS);
-		MemFree(temp);
-#endif      
-		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO) || (iResult == SQL_NO_DATA))
-		{
-			dwResult = DBERR_SUCCESS;
-		}
-		else
-		{
-			dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
-		}
-		SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
-	}
-	else
-	{
-		dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<DB2DRV_CONN*>(connection)->sqlConn, errorText);
-	}
+   SQLRETURN rc = SQLAllocHandle(SQL_HANDLE_STMT, c->sqlConn, &sqlStatement);
+   if (IsSuccess(rc))
+   {
+      rc = ExecDirect(sqlStatement, query);
+      if (IsSuccess(rc) || (rc == SQL_NO_DATA))
+      {
+         result = DBERR_SUCCESS;
+      }
+      else
+      {
+         result = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
+      }
+      SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
+   }
+   else
+   {
+      result = GetSQLErrorInfo(SQL_HANDLE_DBC, c->sqlConn, errorText);
+   }
 
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	return dwResult;
+   c->mutexQuery->unlock();
+   return result;
 }
 
 /**
- * Get complete field data
+ * Get complete field data from current row. Never returns nullptr (NULL and errors are returned as empty string).
  */
 static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
 {
-   NETXMS_WCHAR *result = NULL;
-   SQLINTEGER dataSize;
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-   WCHAR buffer[256];
+   SQLWCHAR buffer[256];
+   SQLLEN dataSize;
    SQLRETURN rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
-   if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize >= 0) && (dataSize <= (SQLLEN)(sizeof(buffer) - sizeof(WCHAR))))) && (dataSize != SQL_NULL_DATA))
+   if (!IsSuccess(rc) || (dataSize == SQL_NULL_DATA))
+      return MemCopyStringW(L"");
+
+   // Complete value fits into buffer (SQL_SUCCESS_WITH_INFO can be a non-truncation warning)
+   if ((rc == SQL_SUCCESS) || ((dataSize != SQL_NO_TOTAL) && (dataSize <= static_cast<SQLLEN>(sizeof(buffer) - sizeof(SQLWCHAR)))))
+      return WideStringFromSQLWCHAR(buffer);
+
+   // Value truncated: first call returned 255 characters, read the rest in a growing buffer.
+   // On truncation CLI reports in dataSize total number of bytes that was available before the call,
+   // so required capacity (in characters, with terminator) is used + dataSize / 2 + 1.
+   size_t used = sizeof(buffer) / sizeof(SQLWCHAR) - 1;    // characters already received (without terminator)
+   size_t capacity = (dataSize != SQL_NO_TOTAL) ? dataSize / sizeof(SQLWCHAR) + 1 : used + 4096;
+   SQLWCHAR *temp = MemAllocArrayNoInit<SQLWCHAR>(capacity);
+   memcpy(temp, buffer, used * sizeof(SQLWCHAR));
+   while(true)
    {
-      result = MemCopyStringW(buffer);
-   }
-   else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
-   {
-      if (dataSize > (SQLLEN)(sizeof(buffer) - sizeof(WCHAR)))
+      SQLLEN readSize = static_cast<SQLLEN>((capacity - used) * sizeof(SQLWCHAR));
+      rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[used], readSize, &dataSize);
+      if (rc == SQL_SUCCESS)
+         break;   // remaining data with terminator placed at &temp[used]
+      if (rc != SQL_SUCCESS_WITH_INFO)
       {
-         WCHAR *temp = (WCHAR *)malloc(dataSize + sizeof(WCHAR));
-         memcpy(temp, buffer, sizeof(buffer));
-         rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(WCHAR), &dataSize);
-         if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-         {
-            result = temp;
-         }
-         else
-         {
-            free(temp);
-         }
+         // SQL_NO_DATA (nothing left after warning on previous call) or error
+         temp[used] = 0;
+         break;
       }
-      else if (dataSize == SQL_NO_TOTAL)
-      {
-         size_t tempSize = sizeof(buffer) * 4;   // temporary buffer size in bytes
-         WCHAR *temp = (WCHAR *)malloc(tempSize);
-         memcpy(temp, buffer, sizeof(buffer));
-         size_t offset = sizeof(buffer) - sizeof(WCHAR); // offset in buffer in bytes
-         while(true)
-         {
-            SQLINTEGER readSize = (SQLINTEGER)(tempSize - offset);
-            rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, (char *)temp + offset, readSize, &dataSize);
-            if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
-               break;
-            if (dataSize == SQL_NO_TOTAL)
-            {
-               tempSize += sizeof(buffer) * 4;
-            }
-            else
-            {
-               tempSize += dataSize - readSize;
-            }
-            temp = (WCHAR *)realloc(temp, tempSize);
-            offset += readSize - sizeof(WCHAR);
-         }
-         result = temp;
-      }
+      size_t received = used;
+      used = capacity - 1;
+      capacity = (dataSize != SQL_NO_TOTAL) ? received + dataSize / sizeof(SQLWCHAR) + 1 : capacity + 4096;
+      temp = MemReallocArray<SQLWCHAR>(temp, capacity);
    }
-#else
-   UCS2CHAR buffer[256];
-   SQLRETURN rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
-   if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize >= 0) && (dataSize <= (SQLLEN)(sizeof(buffer) - sizeof(UCS2CHAR))))) && (dataSize != SQL_NULL_DATA))
+   NETXMS_WCHAR *result = WideStringFromSQLWCHAR(temp);
+   MemFree(temp);
+   return result;
+}
+
+/**
+ * Get column names for result set
+ */
+static char **GetColumnNames(SQLHSTMT statement, int numColumns)
+{
+   char **names = MemAllocArray<char*>(numColumns);
+   for(int i = 0; i < numColumns; i++)
    {
-      int len = ucs2_strlen(buffer);
-      result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
-      ucs2_to_ucs4(buffer, -1, result, len + 1);
-   }
-   else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
-   {
-      if (dataSize > (SQLLEN)(sizeof(buffer) - sizeof(UCS2CHAR)))
+      SQLWCHAR name[256];
+      SQLSMALLINT len;   // in bytes
+      SQLRETURN rc = SQLColAttributeW(statement, static_cast<SQLSMALLINT>(i + 1), SQL_DESC_NAME, name, sizeof(name), &len, nullptr); 
+      if (IsSuccess(rc))
       {
-         UCS2CHAR *temp = (UCS2CHAR *)malloc(dataSize + sizeof(UCS2CHAR));
-         memcpy(temp, buffer, sizeof(buffer));
-         rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(UCS2CHAR), &dataSize);
-         if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-         {
-            int len = ucs2_strlen(temp);
-            result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
-            ucs2_to_ucs4(temp, -1, result, len + 1);
-         }
-         free(temp);
+         size_t chars = static_cast<size_t>(len) / sizeof(SQLWCHAR);   // reported length is in bytes and may exceed buffer
+         if (chars > sizeof(name) / sizeof(SQLWCHAR) - 1)
+            chars = sizeof(name) / sizeof(SQLWCHAR) - 1;
+         name[chars] = 0;
+         names[i] = MBStringFromUCS2String(reinterpret_cast<UCS2CHAR*>(name));
       }
-      else if (dataSize == SQL_NO_TOTAL)
+      else
       {
-         size_t tempSize = sizeof(buffer) * 4;
-         UCS2CHAR *temp = (UCS2CHAR *)malloc(tempSize);
-         memcpy(temp, buffer, sizeof(buffer));
-         size_t offset = sizeof(buffer) - sizeof(UCS2CHAR);
-         while(true)
-         {
-            SQLLEN readSize = tempSize - offset;
-            rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, (char *)temp + offset, readSize, &dataSize);
-            if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
-               break;
-            if (dataSize == SQL_NO_TOTAL)
-            {
-               tempSize += sizeof(buffer) * 4;
-            }
-            else
-            {
-               tempSize += dataSize - readSize;
-            }
-            temp = (UCS2CHAR *)realloc(temp, tempSize);
-            offset += readSize - sizeof(UCS2CHAR);
-         }
-         int len = ucs2_strlen(temp);
-         result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
-         ucs2_to_ucs4(temp, -1, result, len + 1);
-         free(temp);
+         names[i] = MemCopyStringA("");
       }
    }
-#endif
-   return (result != nullptr) ? result : MemCopyStringW(L"");
+   return names;
 }
 
 /**
@@ -612,87 +546,67 @@ static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
  */
 static DB2DRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 {
-	// Allocate result buffer and determine column info
+   // Allocate result buffer and determine column info
    DB2DRV_QUERY_RESULT *pResult = MemAllocStruct<DB2DRV_QUERY_RESULT>();
-	short wNumCols;
-	SQLNumResultCols(statement, &wNumCols);
-	pResult->numColumns = wNumCols;
+   short numColumns;
+   SQLNumResultCols(statement, &numColumns);
+   pResult->numColumns = numColumns;
+   pResult->columnNames = GetColumnNames(statement, numColumns);
 
-	// Get column names
-	pResult->columnNames = MemAllocArray<char*>(pResult->numColumns);
-	for(int i = 0; i < (int)pResult->numColumns; i++)
-	{
-		UCS2CHAR name[256];
-		SQLSMALLINT len;
+   // Fetch all data
+   long allocated = 0;
+   long currValue = 0;
+   while(IsSuccess(SQLFetch(statement)))
+   {
+      pResult->numRows++;
+      if (pResult->numRows * pResult->numColumns > allocated)
+      {
+         allocated += pResult->numColumns * 256;
+         pResult->values = MemReallocArray<NETXMS_WCHAR*>(pResult->values, allocated);
+      }
+      for(int i = 1; i <= numColumns; i++)
+      {
+         pResult->values[currValue++] = GetFieldData(statement, static_cast<short>(i));
+      }
+   }
 
-		SQLRETURN iResult = SQLColAttributeW(statement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, (SQLPOINTER)name, 256, &len, NULL); 
-		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-		{
-			name[len] = 0;
-			pResult->columnNames[i] = MBStringFromUCS2String(name);
-		}
-		else
-		{
-			pResult->columnNames[i] = MemCopyStringA("");
-		}
-	}
-
-	// Fetch all data
-	long iCurrValue = 0;
-	SQLRETURN iResult;
-	while(iResult = SQLFetch(statement), (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-	{
-		pResult->numRows++;
-		pResult->values = (NETXMS_WCHAR **)MemRealloc(pResult->values, sizeof(NETXMS_WCHAR *) * (pResult->numRows * pResult->numColumns));
-		for(int i = 1; i <= (int)pResult->numColumns; i++)
-		{
-			pResult->values[iCurrValue++] = GetFieldData(statement, (short)i);
-		}
-	}
-
-	return pResult;
+   return pResult;
 }
 
 /**
  * Perform SELECT query
  */
-static DBDRV_RESULT Select(DBDRV_CONNECTION connection, const NETXMS_WCHAR *pwszQuery, uint32_t *errorCode, NETXMS_WCHAR *errorText)
+static DBDRV_RESULT Select(DBDRV_CONNECTION connection, const NETXMS_WCHAR *query, uint32_t *errorCode, NETXMS_WCHAR *errorText)
 {
-	DB2DRV_QUERY_RESULT *pResult = nullptr;
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   DB2DRV_QUERY_RESULT *pResult = nullptr;
 
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
+   c->mutexQuery->lock();
 
-	// Allocate statement handle
+   // Allocate statement handle
    SQLHSTMT sqlStatement;
-	long iResult = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<DB2DRV_CONN*>(connection)->sqlConn, &sqlStatement);
-	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-	{
-		// Execute statement
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-#else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-		iResult = SQLExecDirectW(sqlStatement, temp, SQL_NTS);
-		MemFree(temp);
-#endif
-		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-		{
-			pResult = ProcessSelectResults(sqlStatement);
-			*errorCode = DBERR_SUCCESS;
-		}
-		else
-		{
-			*errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
-		}
-		SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
-	}
-	else
-	{
-		*errorCode = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<DB2DRV_CONN*>(connection)->sqlConn, errorText);
-	}
+   SQLRETURN rc = SQLAllocHandle(SQL_HANDLE_STMT, c->sqlConn, &sqlStatement);
+   if (IsSuccess(rc))
+   {
+      rc = ExecDirect(sqlStatement, query);
+      if (IsSuccess(rc))
+      {
+         pResult = ProcessSelectResults(sqlStatement);
+         *errorCode = DBERR_SUCCESS;
+      }
+      else
+      {
+         *errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
+      }
+      SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
+   }
+   else
+   {
+      *errorCode = GetSQLErrorInfo(SQL_HANDLE_DBC, c->sqlConn, errorText);
+   }
 
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	return pResult;
+   c->mutexQuery->unlock();
+   return pResult;
 }
 
 /**
@@ -700,57 +614,46 @@ static DBDRV_RESULT Select(DBDRV_CONNECTION connection, const NETXMS_WCHAR *pwsz
  */
 static DBDRV_RESULT SelectPrepared(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, uint32_t *errorCode, NETXMS_WCHAR *errorText)
 {
-	DB2DRV_QUERY_RESULT *pResult = nullptr;
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   DB2DRV_QUERY_RESULT *pResult = nullptr;
+
+   c->mutexQuery->lock();
    SQLHSTMT handle = static_cast<DB2DRV_STATEMENT*>(hStmt)->handle;
-	long rc = SQLExecute(handle);
-	if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-	{
-		pResult = ProcessSelectResults(handle);
-		*errorCode = DBERR_SUCCESS;
-	}
-	else
-	{
-		*errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, handle, errorText);
-	}
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	return pResult;
+   SQLRETURN rc = SQLExecute(handle);
+   if (IsSuccess(rc))
+   {
+      pResult = ProcessSelectResults(handle);
+      *errorCode = DBERR_SUCCESS;
+   }
+   else
+   {
+      *errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, handle, errorText);
+   }
+   c->mutexQuery->unlock();
+   return pResult;
 }
 
 /**
  * Get field length from result
  */
-static int32_t GetFieldLength(DBDRV_RESULT hResult, int iRow, int iColumn)
+static int32_t GetFieldLength(DBDRV_RESULT hResult, int row, int column)
 {
    auto result = static_cast<DB2DRV_QUERY_RESULT*>(hResult);
-	int32_t nLen = -1;
-	if ((iRow < result->numRows) && (iRow >= 0) &&
-			(iColumn < result->numColumns) && (iColumn >= 0))
-	{
-		nLen =static_cast<int32_t>(wcslen(result->values[iRow * result->numColumns + iColumn]));
-	}
-	return nLen;
+   if ((row < 0) || (row >= result->numRows) || (column < 0) || (column >= result->numColumns))
+      return -1;
+   return static_cast<int32_t>(wcslen(result->values[row * result->numColumns + column]));
 }
 
 /**
  * Get field value from result
  */
-static NETXMS_WCHAR *GetField(DBDRV_RESULT hResult, int iRow, int iColumn, NETXMS_WCHAR *pBuffer, int nBufSize)
+static NETXMS_WCHAR *GetField(DBDRV_RESULT hResult, int row, int column, NETXMS_WCHAR *buffer, int bufferSize)
 {
    auto result = static_cast<DB2DRV_QUERY_RESULT*>(hResult);
-	NETXMS_WCHAR *pValue = nullptr;
-	if ((iRow < result->numRows) && (iRow >= 0) &&
-			(iColumn < result->numColumns) && (iColumn >= 0))
-	{
-#ifdef _WIN32
-		wcsncpy_s(pBuffer, nBufSize, result->values[iRow * result->numColumns + iColumn], _TRUNCATE);
-#else
-		wcsncpy(pBuffer, result->values[iRow * result->numColumns + iColumn], nBufSize);
-		pBuffer[nBufSize - 1] = 0;
-#endif
-		pValue = pBuffer;
-	}
-	return pValue;
+   if ((row < 0) || (row >= result->numRows) || (column < 0) || (column >= result->numColumns))
+      return nullptr;
+   wcslcpy(buffer, result->values[row * result->numColumns + column], bufferSize);
+   return buffer;
 }
 
 /**
@@ -758,7 +661,7 @@ static NETXMS_WCHAR *GetField(DBDRV_RESULT hResult, int iRow, int iColumn, NETXM
  */
 static int GetNumRows(DBDRV_RESULT hResult)
 {
-	return static_cast<DB2DRV_QUERY_RESULT*>(hResult)->numRows;
+   return static_cast<DB2DRV_QUERY_RESULT*>(hResult)->numRows;
 }
 
 /**
@@ -766,7 +669,7 @@ static int GetNumRows(DBDRV_RESULT hResult)
  */
 static int GetColumnCount(DBDRV_RESULT hResult)
 {
-	return static_cast<DB2DRV_QUERY_RESULT*>(hResult)->numColumns;
+   return static_cast<DB2DRV_QUERY_RESULT*>(hResult)->numColumns;
 }
 
 /**
@@ -774,7 +677,8 @@ static int GetColumnCount(DBDRV_RESULT hResult)
  */
 static const char *GetColumnName(DBDRV_RESULT hResult, int column)
 {
-	return ((column >= 0) && (column < static_cast<DB2DRV_QUERY_RESULT*>(hResult)->numColumns)) ? static_cast<DB2DRV_QUERY_RESULT*>(hResult)->columnNames[column] : nullptr;
+   auto result = static_cast<DB2DRV_QUERY_RESULT*>(hResult);
+   return ((column >= 0) && (column < result->numColumns)) ? result->columnNames[column] : nullptr;
 }
 
 /**
@@ -784,163 +688,118 @@ static void FreeResult(DBDRV_RESULT hResult)
 {
    auto result = static_cast<DB2DRV_QUERY_RESULT*>(hResult);
 
-	int count = result->numColumns * result->numRows;
-	for(int i = 0; i < count; i++)
-	{
-		MemFree(result->values[i]);
-	}
-	MemFree(result->values);
+   long count = result->numColumns * result->numRows;
+   for(long i = 0; i < count; i++)
+      MemFree(result->values[i]);
+   MemFree(result->values);
 
-	for(int i = 0; i < result->numColumns; i++)
-	{
-		MemFree(result->columnNames[i]);
-	}
-	MemFree(result->columnNames);
-	MemFree(result);
+   for(int i = 0; i < result->numColumns; i++)
+      MemFree(result->columnNames[i]);
+   MemFree(result->columnNames);
+
+   MemFree(result);
+}
+
+/**
+ * Create unbuffered result object for successfully executed statement
+ */
+static DB2DRV_UNBUFFERED_QUERY_RESULT *CreateUnbufferedResult(DB2DRV_CONN *connection, SQLHSTMT statement, bool isPrepared)
+{
+   auto result = MemAllocStruct<DB2DRV_UNBUFFERED_QUERY_RESULT>();
+   result->sqlStatement = statement;
+   result->isPrepared = isPrepared;
+   result->connection = connection;
+
+   short numColumns;
+   SQLNumResultCols(statement, &numColumns);
+   result->numColumns = numColumns;
+   result->columnNames = GetColumnNames(statement, numColumns);
+   result->values = MemAllocArray<NETXMS_WCHAR*>(numColumns);
+   return result;
 }
 
 /**
  * Perform unbuffered SELECT query
  */
-static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, const NETXMS_WCHAR *pwszQuery, uint32_t *pdwError, NETXMS_WCHAR *errorText)
+static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, const NETXMS_WCHAR *query, uint32_t *errorCode, NETXMS_WCHAR *errorText)
 {
-	DB2DRV_UNBUFFERED_QUERY_RESULT *pResult = nullptr;
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   DB2DRV_UNBUFFERED_QUERY_RESULT *pResult = nullptr;
 
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
+   c->mutexQuery->lock();
 
-	// Allocate statement handle
+   // Allocate statement handle
    SQLHSTMT sqlStatement;
-	SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, static_cast<DB2DRV_CONN*>(connection)->sqlConn, &sqlStatement);
-	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-	{
-		// Execute statement
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-#else
-		SQLWCHAR *temp = UCS2StringFromUCS4String(pwszQuery);
-		iResult = SQLExecDirectW(sqlStatement, temp, SQL_NTS);
-		MemFree(temp);
-#endif
-		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-		{
-			// Allocate result buffer and determine column info
-			pResult = MemAllocStruct<DB2DRV_UNBUFFERED_QUERY_RESULT>();
-         pResult->sqlStatement = sqlStatement;
-         pResult->isPrepared = false;
-      	
-         short wNumCols;
-			SQLNumResultCols(sqlStatement, &wNumCols);
-			pResult->numColumns = wNumCols;
-			pResult->pConn = static_cast<DB2DRV_CONN*>(connection);
-			pResult->noMoreRows = false;
+   SQLRETURN rc = SQLAllocHandle(SQL_HANDLE_STMT, c->sqlConn, &sqlStatement);
+   if (IsSuccess(rc))
+   {
+      rc = ExecDirect(sqlStatement, query);
+      if (IsSuccess(rc))
+      {
+         pResult = CreateUnbufferedResult(c, sqlStatement, false);
+         *errorCode = DBERR_SUCCESS;
+      }
+      else
+      {
+         *errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
+         SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
+      }
+   }
+   else
+   {
+      *errorCode = GetSQLErrorInfo(SQL_HANDLE_DBC, c->sqlConn, errorText);
+   }
 
-			// Get column names
-			pResult->columnNames = MemAllocArray<char*>(pResult->numColumns);
-			for(int i = 0; i < pResult->numColumns; i++)
-			{
-				SQLWCHAR name[256];
-				SQLSMALLINT len;
-
-				iResult = SQLColAttributeW(sqlStatement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, name, 256, &len, NULL); 
-				if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
-				{
-					name[len] = 0;
-					pResult->columnNames[i] = MBStringFromUCS2String((UCS2CHAR *)name);
-				}
-				else
-				{
-					pResult->columnNames[i] = MemCopyStringA("");
-				}
-			}
-
-			*pdwError = DBERR_SUCCESS;
-		}
-		else
-		{
-			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
-			// Free statement handle if query failed
-			SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
-		}
-	}
-	else
-	{
-		*pdwError = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<DB2DRV_CONN*>(connection)->sqlConn, errorText);
-	}
-
-	if (pResult == nullptr) // Unlock mutex if query has failed
-	{
-      static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	}
-	return pResult;
+   if (pResult == nullptr) // Unlock mutex if query has failed
+      c->mutexQuery->unlock();
+   return pResult;
 }
 
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-static DBDRV_UNBUFFERED_RESULT SelectPreparedUnbuffered(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, uint32_t *errorCode, WCHAR *errorText)
+static DBDRV_UNBUFFERED_RESULT SelectPreparedUnbuffered(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, uint32_t *errorCode, NETXMS_WCHAR *errorText)
 {
-   DB2DRV_UNBUFFERED_QUERY_RESULT *pResult = NULL;
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   DB2DRV_UNBUFFERED_QUERY_RESULT *pResult = nullptr;
 
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
+   c->mutexQuery->lock();
    SQLHSTMT handle = static_cast<DB2DRV_STATEMENT*>(hStmt)->handle;
    SQLRETURN rc = SQLExecute(handle);
-   if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+   if (IsSuccess(rc))
    {
-      // Allocate result buffer and determine column info
-      pResult = MemAllocStruct<DB2DRV_UNBUFFERED_QUERY_RESULT>();
-      pResult->sqlStatement = handle;
-      pResult->isPrepared = true;
-      
-      short wNumCols;
-      SQLNumResultCols(pResult->sqlStatement, &wNumCols);
-      pResult->numColumns = wNumCols;
-      pResult->pConn = static_cast<DB2DRV_CONN*>(connection);
-      pResult->noMoreRows = false;
-
-		// Get column names
-		pResult->columnNames = MemAllocArray<char*>(pResult->numColumns);
-		for(int i = 0; i < pResult->numColumns; i++)
-		{
-			SQLWCHAR name[256];
-			SQLSMALLINT len;
-
-			rc = SQLColAttributeW(pResult->sqlStatement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, name, 256, &len, NULL); 
-			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-			{
-				name[len] = 0;
-				pResult->columnNames[i] = MBStringFromUCS2String((UCS2CHAR *)name);
-			}
-			else
-			{
-				pResult->columnNames[i] = MemCopyStringA("");
-			}
-		}
-
+      pResult = CreateUnbufferedResult(c, handle, true);
       *errorCode = DBERR_SUCCESS;
    }
    else
    {
-		*errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, handle, errorText);
+      *errorCode = GetSQLErrorInfo(SQL_HANDLE_STMT, handle, errorText);
    }
 
    if (pResult == nullptr) // Unlock mutex if query has failed
-      static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	return pResult;
+      c->mutexQuery->unlock();
+   return pResult;
 }
 
 /**
- * Fetch next result line from unbuffered SELECT results
+ * Fetch next result line from unbuffered SELECT results. All column values are read
+ * immediately because CLI allows SQLGetData for each column only once per row.
  */
 static bool Fetch(DBDRV_UNBUFFERED_RESULT hResult)
 {
-	bool bResult = false;
-	long iResult = SQLFetch(static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult)->sqlStatement);
-	bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
-	if (!bResult)
-	{
-      static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult)->noMoreRows = true;
-	}
-	return bResult;
+   auto result = static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult);
+   for(int i = 0; i < result->numColumns; i++)
+   {
+      MemFree(result->values[i]);
+      result->values[i] = nullptr;
+   }
+
+   if (!IsSuccess(SQLFetch(result->sqlStatement)))
+      return false;
+
+   for(int i = 0; i < result->numColumns; i++)
+      result->values[i] = GetFieldData(result->sqlStatement, static_cast<short>(i + 1));
+   return true;
 }
 
 /**
@@ -948,57 +807,22 @@ static bool Fetch(DBDRV_UNBUFFERED_RESULT hResult)
  */
 static int32_t GetFieldLengthUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column)
 {
-	int32_t nLen = -1;
-	if ((column < static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult)->numColumns) && (column >= 0))
-	{
-		SQLLEN dataSize;
-		char temp[1];
-		long rc = SQLGetData(static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult)->sqlStatement, (short)column + 1, SQL_C_CHAR, temp, 0, &dataSize);
-		if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-		{
-			nLen = static_cast<int32_t>(dataSize);
-		}
-	}
-	return nLen;
+   auto result = static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult);
+   if ((column < 0) || (column >= result->numColumns) || (result->values[column] == nullptr))
+      return -1;
+   return static_cast<int32_t>(wcslen(result->values[column]));
 }
 
 /**
  * Get field from current row in unbuffered query result
  */
-static NETXMS_WCHAR *GetFieldUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int iColumn, NETXMS_WCHAR *pBuffer, int iBufSize)
+static NETXMS_WCHAR *GetFieldUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column, NETXMS_WCHAR *buffer, int bufferSize)
 {
    auto result = static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult);
-
-   // Check if there are valid fetched row
-   if (result->noMoreRows)
+   if ((column < 0) || (column >= result->numColumns) || (result->values[column] == nullptr))
       return nullptr;
-
-   SQLLEN iDataSize;
-	long iResult;
-
-	if ((iColumn >= 0) && (iColumn < result->numColumns))
-	{
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-		iResult = SQLGetData(result->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
-				pBuffer, iBufSize * sizeof(WCHAR), &iDataSize);
-#else
-		SQLWCHAR *tempBuff = (SQLWCHAR *)malloc(iBufSize * sizeof(SQLWCHAR));
-		iResult = SQLGetData(result->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
-				tempBuff, iBufSize * sizeof(SQLWCHAR), &iDataSize);
-		ucs2_to_ucs4(tempBuff, -1, pBuffer, iBufSize);
-		pBuffer[iBufSize - 1] = 0;
-		free(tempBuff);
-#endif
-		if (((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO)) || (iDataSize == SQL_NULL_DATA))
-		{
-			pBuffer[0] = 0;
-		}
-	}
-	else
-	{
-		pBuffer[0] = 0;
-	}
-	return pBuffer;
+   wcslcpy(buffer, result->values[column], bufferSize);
+   return buffer;
 }
 
 /**
@@ -1006,7 +830,7 @@ static NETXMS_WCHAR *GetFieldUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int iCo
  */
 static int GetColumnCountUnbuffered(DBDRV_UNBUFFERED_RESULT hResult)
 {
-	return static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult)->numColumns;
+   return static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult)->numColumns;
 }
 
 /**
@@ -1014,7 +838,8 @@ static int GetColumnCountUnbuffered(DBDRV_UNBUFFERED_RESULT hResult)
  */
 static const char *GetColumnNameUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column)
 {
-	return ((column >= 0) && (column < static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult)->numColumns)) ? static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult)->columnNames[column] : nullptr;
+   auto result = static_cast<DB2DRV_UNBUFFERED_QUERY_RESULT*>(hResult);
+   return ((column >= 0) && (column < result->numColumns)) ? result->columnNames[column] : nullptr;
 }
 
 /**
@@ -1028,13 +853,15 @@ static void FreeUnbufferedResult(DBDRV_UNBUFFERED_RESULT hResult)
       SQLCloseCursor(result->sqlStatement);
    else
       SQLFreeHandle(SQL_HANDLE_STMT, result->sqlStatement);
-   result->pConn->mutexQuery->unlock();
+   result->connection->mutexQuery->unlock();
 
    for(int i = 0; i < result->numColumns; i++)
-	{
-		MemFree(result->columnNames[i]);
-	}
-	MemFree(result->columnNames);
+   {
+      MemFree(result->columnNames[i]);
+      MemFree(result->values[i]);
+   }
+   MemFree(result->columnNames);
+   MemFree(result->values);
 
    MemFree(result);
 }
@@ -1044,19 +871,20 @@ static void FreeUnbufferedResult(DBDRV_UNBUFFERED_RESULT hResult)
  */
 static uint32_t Begin(DBDRV_CONNECTION connection)
 {
-	uint32_t dwResult;
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
-   SQLRETURN nRet = SQLSetConnectAttr(static_cast<DB2DRV_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
-	if ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO))
-	{
-		dwResult = DBERR_SUCCESS;
-	}
-	else
-	{
-		dwResult = GetSQLErrorInfo(SQL_HANDLE_DBC, static_cast<DB2DRV_CONN*>(connection)->sqlConn, nullptr);
-	}
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	return dwResult;
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   uint32_t result;
+   c->mutexQuery->lock();
+   SQLRETURN rc = SQLSetConnectAttr(c->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_OFF, 0);
+   if (IsSuccess(rc))
+   {
+      result = DBERR_SUCCESS;
+   }
+   else
+   {
+      result = GetSQLErrorInfo(SQL_HANDLE_DBC, c->sqlConn, nullptr);
+   }
+   c->mutexQuery->unlock();
+   return result;
 }
 
 /**
@@ -1064,11 +892,12 @@ static uint32_t Begin(DBDRV_CONNECTION connection)
  */
 static uint32_t Commit(DBDRV_CONNECTION connection)
 {
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
-   SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, static_cast<DB2DRV_CONN*>(connection)->sqlConn, SQL_COMMIT);
-	SQLSetConnectAttr(static_cast<DB2DRV_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   c->mutexQuery->lock();
+   SQLRETURN rc = SQLEndTran(SQL_HANDLE_DBC, c->sqlConn, SQL_COMMIT);
+   SQLSetConnectAttr(c->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+   c->mutexQuery->unlock();
+   return IsSuccess(rc) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
@@ -1076,11 +905,12 @@ static uint32_t Commit(DBDRV_CONNECTION connection)
  */
 static uint32_t Rollback(DBDRV_CONNECTION connection)
 {
-	static_cast<DB2DRV_CONN*>(connection)->mutexQuery->lock();
-   SQLRETURN nRet = SQLEndTran(SQL_HANDLE_DBC, static_cast<DB2DRV_CONN*>(connection)->sqlConn, SQL_ROLLBACK);
-	SQLSetConnectAttr(static_cast<DB2DRV_CONN*>(connection)->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
-   static_cast<DB2DRV_CONN*>(connection)->mutexQuery->unlock();
-	return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+   auto c = static_cast<DB2DRV_CONN*>(connection);
+   c->mutexQuery->lock();
+   SQLRETURN rc = SQLEndTran(SQL_HANDLE_DBC, c->sqlConn, SQL_ROLLBACK);
+   SQLSetConnectAttr(c->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
+   c->mutexQuery->unlock();
+   return IsSuccess(rc) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
 /**
@@ -1155,11 +985,9 @@ DB_DRIVER_ENTRY_POINT("DB2", s_callTable)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
-	{
-		DisableThreadLibraryCalls(hInstance);
-	}
-	return TRUE;
+   if (dwReason == DLL_PROCESS_ATTACH)
+      DisableThreadLibraryCalls(hInstance);
+   return TRUE;
 }
 
 #endif

@@ -50,6 +50,7 @@ crypto.crl	CRL
 
 darwin		MacOS platform subagent messages
 dataexport	DCI history export (tagged DCI export tool)
+db2		DB2 monitoring subagent messages
 dbquery		DBquery subagent messages
 devbackup	Native device configuration backup module
 dload			DLL/shared library load unload information

@@ -41,11 +41,11 @@
 
 #ifndef _WIN32
 
-#define NETXMS_WCHAR		wchar_t
+#define NETXMS_WCHAR      wchar_t
 #undef WCHAR
 
-#else		/* _WIN32 */
-#define NETXMS_WCHAR		WCHAR
+#else    /* _WIN32 */
+#define NETXMS_WCHAR      WCHAR
 #endif
 
 #define __BOOL // disable BOOL typedef
@@ -91,16 +91,16 @@ struct DB2DRV_QUERY_RESULT
 };
 
 /**
- * Async result buffer structure
+ * Unbuffered result structure (values of current row are read on fetch)
  */
 struct DB2DRV_UNBUFFERED_QUERY_RESULT
 {
    SQLHSTMT sqlStatement;
    bool isPrepared;
    long numColumns;
-   DB2DRV_CONN *pConn;
-   bool noMoreRows;
+   DB2DRV_CONN *connection;
    char **columnNames;
+   NETXMS_WCHAR **values;
 };
 
 #endif   /* _db2drv_h_ */

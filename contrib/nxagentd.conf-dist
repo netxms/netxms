@@ -286,6 +286,34 @@
 # ConnectionTTL = 3600
 
 #
+# DB2 monitoring subagent (db2.nsm)
+#
+# Reads table statistics from SYSIBMADM.ADMINTABINFO and MON_GET_TABLE and
+# connects through the DB2 CLI (db2.ddr driver, requires IBM Data Server
+# Client). Endpoint is the database alias from the local DB2 catalog;
+# the agent user must be able to run "db2 connect to <alias>".
+#
+# Single database (simple form):
+# SubAgent = db2.nsm
+# *DB2
+# Id = sample
+# Endpoint = SAMPLE
+# Login = netxms
+# Password = secret
+# ConnectionTTL = 3600
+#
+# Multiple databases (subsection name is used as connection Id and, if
+# Endpoint is omitted, as database alias):
+# *db2/connections/SAMPLE
+# Login = netxms
+# Password = secret
+#
+# *db2/connections/prod
+# Endpoint = PRODDB
+# Login = netxms
+# Password = secret
+
+#
 # ExternalParameter
 #
 # Add parameter handled by external command. To add multiple parameters, you

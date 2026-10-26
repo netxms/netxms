@@ -4,7 +4,7 @@
 #
 
 SUBAGENT = db2
-SOURCES = db2dci.cpp db2_subagent.cpp
+SOURCES = db2_subagent.cpp
 SA_LIBS = -lnxdb
 
 include $(TOPDIR)/src/agent/subagents/subagent-common.mk

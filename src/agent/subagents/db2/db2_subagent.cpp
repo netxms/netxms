@@ -23,7 +23,7 @@
 /**
  * Driver handle
  */
-DB_DRIVER g_db2Driver = nullptr;
+static DB_DRIVER s_driver = nullptr;
 
 /**
  * Configured database connections
@@ -48,390 +48,400 @@ static bool DB2Init(Config *config);
 static void DB2Shutdown();
 static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
-static NETXMS_SUBAGENT_PARAM m_agentParams[] =
+/**
+ * Supported parameters
+ */
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
    {
-      _T("DB2.Instance.Version(*)"), GetParameter, _D(DCI_DBMS_VERSION),
+      _T("DB2.Instance.Version(*)"), GetParameter, CAST_TO_POINTER(DCI_DBMS_VERSION, const TCHAR *),
       DCI_DT_STRING, _T("DB2/Instance: DBMS Version")
    },
    {
-      _T("DB2.Table.Available(*)"), GetParameter, _D(DCI_NUM_AVAILABLE),
+      _T("DB2.Table.Available(*)"), GetParameter, CAST_TO_POINTER(DCI_NUM_AVAILABLE, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table: Number of available tables")
    },
    {
-      _T("DB2.Table.Unavailable(*)"), GetParameter, _D(DCI_NUM_UNAVAILABLE),
+      _T("DB2.Table.Unavailable(*)"), GetParameter, CAST_TO_POINTER(DCI_NUM_UNAVAILABLE, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table: Number of unavailable tables")
    },
    {
-      _T("DB2.Table.Data.LogicalSize(*)"), GetParameter, _D(DCI_DATA_L_SIZE),
+      _T("DB2.Table.Data.LogicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_L_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data: Data object logical size in kilobytes")
    },
    {
-      _T("DB2.Table.Data.PhysicalSize(*)"), GetParameter, _D(DCI_DATA_P_SIZE),
+      _T("DB2.Table.Data.PhysicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_P_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data: Data object physical size in kilobytes")
    },
    {
-      _T("DB2.Table.Index.LogicalSize(*)"), GetParameter, _D(DCI_INDEX_L_SIZE),
+      _T("DB2.Table.Index.LogicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_INDEX_L_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Index: Index object logical size in kilobytes")
    },
    {
-      _T("DB2.Table.Index.PhysicalSize(*)"), GetParameter, _D(DCI_INDEX_P_SIZE),
+      _T("DB2.Table.Index.PhysicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_INDEX_P_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Index: Index object physical size in kilobytes")
    },
    {
-      _T("DB2.Table.Long.LogicalSize(*)"), GetParameter, _D(DCI_LONG_L_SIZE),
+      _T("DB2.Table.Long.LogicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_LONG_L_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Long: Long object logical size in kilobytes")
    },
    {
-      _T("DB2.Table.Long.PhysicalSize(*)"), GetParameter, _D(DCI_LONG_P_SIZE),
+      _T("DB2.Table.Long.PhysicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_LONG_P_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Long: Long object physical size in kilobytes")
    },
    {
-      _T("DB2.Table.Lob.LogicalSize(*)"), GetParameter, _D(DCI_LOB_L_SIZE),
+      _T("DB2.Table.Lob.LogicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_LOB_L_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Lob: LOB object logical size in kilobytes")
    },
    {
-      _T("DB2.Table.Lob.PhysicalSize(*)"), GetParameter, _D(DCI_LOB_P_SIZE),
+      _T("DB2.Table.Lob.PhysicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_LOB_P_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Lob: LOB object physical size in kilobytes")
    },
    {
-      _T("DB2.Table.Xml.LogicalSize(*)"), GetParameter, _D(DCI_XML_L_SIZE),
+      _T("DB2.Table.Xml.LogicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_XML_L_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Xml: XML object logical size in kilobytes")
    },
    {
-      _T("DB2.Table.Xml.PhysicalSize(*)"), GetParameter, _D(DCI_XML_P_SIZE),
+      _T("DB2.Table.Xml.PhysicalSize(*)"), GetParameter, CAST_TO_POINTER(DCI_XML_P_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Xml: XML object physical size in kilobytes")
    },
    {
-      _T("DB2.Table.Index.Type1(*)"), GetParameter, _D(DCI_INDEX_TYPE1),
+      _T("DB2.Table.Index.Type1(*)"), GetParameter, CAST_TO_POINTER(DCI_INDEX_TYPE1, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Index: Number of tables using type-1 indexes")
    },
    {
-      _T("DB2.Table.Index.Type2(*)"), GetParameter, _D(DCI_INDEX_TYPE2),
+      _T("DB2.Table.Index.Type2(*)"), GetParameter, CAST_TO_POINTER(DCI_INDEX_TYPE2, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Index: Number of tables using type-2 indexes")
    },
    {
-      _T("DB2.Table.Reorg.Pending(*)"), GetParameter, _D(DCI_REORG_PENDING),
+      _T("DB2.Table.Reorg.Pending(*)"), GetParameter, CAST_TO_POINTER(DCI_REORG_PENDING, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables pending reorganization")
    },
    {
-      _T("DB2.Table.Reorg.Aborted(*)"), GetParameter, _D(DCI_REORG_ABORTED),
+      _T("DB2.Table.Reorg.Aborted(*)"), GetParameter, CAST_TO_POINTER(DCI_REORG_ABORTED, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables in aborted reorganization state")
    },
    {
-      _T("DB2.Table.Reorg.Executing(*)"), GetParameter, _D(DCI_REORG_EXECUTING),
+      _T("DB2.Table.Reorg.Executing(*)"), GetParameter, CAST_TO_POINTER(DCI_REORG_EXECUTING, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables in executing reorganization state")
    },
    {
-      _T("DB2.Table.Reorg.Null(*)"), GetParameter, _D(DCI_REORG_NULL),
+      _T("DB2.Table.Reorg.Null(*)"), GetParameter, CAST_TO_POINTER(DCI_REORG_NULL, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables in null reorganization state")
    },
    {
-      _T("DB2.Table.Reorg.Paused(*)"), GetParameter, _D(DCI_REORG_PAUSED),
+      _T("DB2.Table.Reorg.Paused(*)"), GetParameter, CAST_TO_POINTER(DCI_REORG_PAUSED, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Reorg: Number of tables in paused reorganization state")
    },
    {
-      _T("DB2.Table.Reorg.Alters(*)"), GetParameter, _D(DCI_NUM_REORG_REC_ALTERS),
+      _T("DB2.Table.Reorg.Alters(*)"), GetParameter, CAST_TO_POINTER(DCI_NUM_REORG_REC_ALTERS, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Reorg: Number of reorg recommend alter operations")
    },
    {
-      _T("DB2.Table.Load.InProgress(*)"), GetParameter, _D(DCI_LOAD_IN_PROGRESS),
+      _T("DB2.Table.Load.InProgress(*)"), GetParameter, CAST_TO_POINTER(DCI_LOAD_IN_PROGRESS, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Load: Number of tables with load in progress status")
    },
    {
-      _T("DB2.Table.Load.Pending(*)"), GetParameter, _D(DCI_LOAD_PENDING),
+      _T("DB2.Table.Load.Pending(*)"), GetParameter, CAST_TO_POINTER(DCI_LOAD_PENDING, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Load: Number of tables with load pending status")
    },
    {
-      _T("DB2.Table.Load.Null(*)"), GetParameter, _D(DCI_LOAD_NULL),
+      _T("DB2.Table.Load.Null(*)"), GetParameter, CAST_TO_POINTER(DCI_LOAD_NULL, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Load: Number of tables with load status neither in progress nor pending")
    },
    {
-      _T("DB2.Table.Readonly(*)"), GetParameter, _D(DCI_ACCESS_RO),
+      _T("DB2.Table.Readonly(*)"), GetParameter, CAST_TO_POINTER(DCI_ACCESS_RO, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table: Number of tables in Read Access Only state")
    },
    {
-      _T("DB2.Table.NoLoadRestart(*)"), GetParameter, _D(DCI_NO_LOAD_RESTART),
+      _T("DB2.Table.NoLoadRestart(*)"), GetParameter, CAST_TO_POINTER(DCI_NO_LOAD_RESTART, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table: Number of tables in a state that won't allow a load restart")
    },
    {
-      _T("DB2.Table.Index.Rebuild(*)"), GetParameter, _D(DCI_INDEX_REQUIRE_REBUILD),
+      _T("DB2.Table.Index.Rebuild(*)"), GetParameter, CAST_TO_POINTER(DCI_INDEX_REQUIRE_REBUILD, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Index: Number of tables with indexes that require rebuild")
    },
    {
-      _T("DB2.Table.Rid.Large(*)"), GetParameter, _D(DCI_LARGE_RIDS),
+      _T("DB2.Table.Rid.Large(*)"), GetParameter, CAST_TO_POINTER(DCI_LARGE_RIDS, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Rid: Number of tables that use large row IDs")
    },
    {
-      _T("DB2.Table.Rid.Usual(*)"), GetParameter, _D(DCI_NO_LARGE_RIDS),
+      _T("DB2.Table.Rid.Usual(*)"), GetParameter, CAST_TO_POINTER(DCI_NO_LARGE_RIDS, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Rid: Number of tables that don't use large row IDs")
    },
    {
-      _T("DB2.Table.Rid.Pending(*)"), GetParameter, _D(DCI_LARGE_RIDS_PENDING),
+      _T("DB2.Table.Rid.Pending(*)"), GetParameter, CAST_TO_POINTER(DCI_LARGE_RIDS_PENDING, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Rid: Number of tables that use large row Ids but not all indexes have been rebuilt yet")
    },
    {
-      _T("DB2.Table.Slot.Large(*)"), GetParameter, _D(DCI_LARGE_SLOTS),
+      _T("DB2.Table.Slot.Large(*)"), GetParameter, CAST_TO_POINTER(DCI_LARGE_SLOTS, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Slot: Number of tables that use large slots")
    },
    {
-      _T("DB2.Table.Slot.Usual(*)"), GetParameter, _D(DCI_NO_LARGE_SLOTS),
+      _T("DB2.Table.Slot.Usual(*)"), GetParameter, CAST_TO_POINTER(DCI_NO_LARGE_SLOTS, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Slot: Number of tables that don't use large slots")
    },
    {
-      _T("DB2.Table.Slot.Pending(*)"), GetParameter, _D(DCI_LARGE_SLOTS_PENDING),
+      _T("DB2.Table.Slot.Pending(*)"), GetParameter, CAST_TO_POINTER(DCI_LARGE_SLOTS_PENDING, const TCHAR *),
       DCI_DT_INT,
       _T("DB2/Table/Slot: Number of tables that use large slots but there has not yet been an offline table reorganization")
       _T(" or table truncation operation")
    },
    {
-      _T("DB2.Table.DictSize(*)"), GetParameter, _D(DCI_DICTIONARY_SIZE),
+      _T("DB2.Table.DictSize(*)"), GetParameter, CAST_TO_POINTER(DCI_DICTIONARY_SIZE, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table: Size of the dictionary in bytes")
    },
    {
-      _T("DB2.Table.Scans(*)"), GetParameter, _D(DCI_TABLE_SCANS),
+      _T("DB2.Table.Scans(*)"), GetParameter, CAST_TO_POINTER(DCI_TABLE_SCANS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table: The number of scans on all tables")
    },
    {
-      _T("DB2.Table.Row.Read(*)"), GetParameter, _D(DCI_ROWS_READ),
+      _T("DB2.Table.Row.Read(*)"), GetParameter, CAST_TO_POINTER(DCI_ROWS_READ, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Row: The number of reads on all tables")
    },
    {
-      _T("DB2.Table.Row.Inserted(*)"), GetParameter, _D(DCI_ROWS_INSERTED),
+      _T("DB2.Table.Row.Inserted(*)"), GetParameter, CAST_TO_POINTER(DCI_ROWS_INSERTED, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Row: The number of insertions attempted on all tables")
    },
    {
-      _T("DB2.Table.Row.Updated(*)"), GetParameter, _D(DCI_ROWS_UPDATED),
+      _T("DB2.Table.Row.Updated(*)"), GetParameter, CAST_TO_POINTER(DCI_ROWS_UPDATED, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Row: The number of updates attempted on all tables")
    },
    {
-      _T("DB2.Table.Row.Deleted(*)"), GetParameter, _D(DCI_ROWS_DELETED),
+      _T("DB2.Table.Row.Deleted(*)"), GetParameter, CAST_TO_POINTER(DCI_ROWS_DELETED, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Row: The number of deletes attempted on all tables")
    },
    {
-      _T("DB2.Table.Overflow.Accesses(*)"), GetParameter, _D(DCI_OVERFLOW_ACCESSES),
+      _T("DB2.Table.Overflow.Accesses(*)"), GetParameter, CAST_TO_POINTER(DCI_OVERFLOW_ACCESSES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Overflow: The number of r/w operations on overflowed rows of all tables")
    },
    {
-      _T("DB2.Table.Overflow.Creates(*)"), GetParameter, _D(DCI_OVERFLOW_CREATES),
+      _T("DB2.Table.Overflow.Creates(*)"), GetParameter, CAST_TO_POINTER(DCI_OVERFLOW_CREATES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Overflow: The number of overflowed rows created on all tables")
    },
    {
-      _T("DB2.Table.Reorg.Page(*)"), GetParameter, _D(DCI_PAGE_REORGS),
+      _T("DB2.Table.Reorg.Page(*)"), GetParameter, CAST_TO_POINTER(DCI_PAGE_REORGS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Reorg: The number of page reorganizations executed for all tables")
    },
    {
-      _T("DB2.Table.Data.LogicalPages(*)"), GetParameter, _D(DCI_DATA_L_PAGES),
+      _T("DB2.Table.Data.LogicalPages(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_L_PAGES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data: The number of logical pages used on disk by data")
    },
    {
-      _T("DB2.Table.Lob.LogicalPages(*)"), GetParameter, _D(DCI_LOB_L_PAGES),
+      _T("DB2.Table.Lob.LogicalPages(*)"), GetParameter, CAST_TO_POINTER(DCI_LOB_L_PAGES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Lob: The number of logical pages used on disk by LOBs")
    },
    {
-      _T("DB2.Table.Long.LogicalPages(*)"), GetParameter, _D(DCI_LONG_L_PAGES),
+      _T("DB2.Table.Long.LogicalPages(*)"), GetParameter, CAST_TO_POINTER(DCI_LONG_L_PAGES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Long: The number of logical pages used on disk by long data")
    },
    {
-      _T("DB2.Table.Index.LogicalPages(*)"), GetParameter, _D(DCI_INDEX_L_PAGES),
+      _T("DB2.Table.Index.LogicalPages(*)"), GetParameter, CAST_TO_POINTER(DCI_INDEX_L_PAGES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Index: The number of logical pages used on disk by indexes")
    },
    {
-      _T("DB2.Table.Xda.LogicalPages(*)"), GetParameter, _D(DCI_XDA_L_PAGES),
+      _T("DB2.Table.Xda.LogicalPages(*)"), GetParameter, CAST_TO_POINTER(DCI_XDA_L_PAGES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Xda: The number of logical pages used on disk by XDA (XML storage object)")
    },
    {
-      _T("DB2.Table.Row.NoChange(*)"), GetParameter, _D(DCI_NO_CHANGE_UPDATES),
+      _T("DB2.Table.Row.NoChange(*)"), GetParameter, CAST_TO_POINTER(DCI_NO_CHANGE_UPDATES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Row: The number of row updates that yielded no changes")
    },
    {
-      _T("DB2.Table.Lock.WaitTime(*)"), GetParameter, _D(DCI_LOCK_WAIT_TIME),
+      _T("DB2.Table.Lock.WaitTime(*)"), GetParameter, CAST_TO_POINTER(DCI_LOCK_WAIT_TIME, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Lock: The total elapsed time spent waiting for locks (ms)")
    },
    {
-      _T("DB2.Table.Lock.WaitTimeGlob(*)"), GetParameter, _D(DCI_LOCK_WAIT_TIME_GLOBAL),
+      _T("DB2.Table.Lock.WaitTimeGlob(*)"), GetParameter, CAST_TO_POINTER(DCI_LOCK_WAIT_TIME_GLOBAL, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Lock: The total elapsed time spent on global lock waits (ms)")
    },
    {
-      _T("DB2.Table.Lock.Waits(*)"), GetParameter, _D(DCI_LOCK_WAITS),
+      _T("DB2.Table.Lock.Waits(*)"), GetParameter, CAST_TO_POINTER(DCI_LOCK_WAITS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Lock: The total amount of locks occurred")
    },
    {
-      _T("DB2.Table.Lock.WaitsGlob(*)"), GetParameter, _D(DCI_LOCK_WAITS_GLOBAL),
+      _T("DB2.Table.Lock.WaitsGlob(*)"), GetParameter, CAST_TO_POINTER(DCI_LOCK_WAITS_GLOBAL, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Lock: The total amount of global locks occurred")
    },
    {
-      _T("DB2.Table.Lock.EscalsGlob(*)"), GetParameter, _D(DCI_LOCK_ESCALS_GLOBAL),
+      _T("DB2.Table.Lock.Escals(*)"), GetParameter, CAST_TO_POINTER(DCI_LOCK_ESCALS, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table/Lock: The number of lock escalations")
+   },
+   {
+      _T("DB2.Table.Lock.EscalsGlob(*)"), GetParameter, CAST_TO_POINTER(DCI_LOCK_ESCALS_GLOBAL, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Lock: The number of lock escalations on a global lock")
    },
    {
-      _T("DB2.Table.Data.Sharing.Shared(*)"), GetParameter, _D(DCI_STATE_SHARED),
+      _T("DB2.Table.Data.Sharing.Shared(*)"), GetParameter, CAST_TO_POINTER(DCI_STATE_SHARED, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Data/Sharing: The number of fully shared tables")
    },
    {
-      _T("DB2.Table.Data.Sharing.BecomingShared(*)"), GetParameter, _D(DCI_STATE_SHARED_BECOMING),
+      _T("DB2.Table.Data.Sharing.BecomingShared(*)"), GetParameter, CAST_TO_POINTER(DCI_STATE_SHARED_BECOMING, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Data/Sharing: The number of tables being in the process of becoming shared")
    },
    {
-      _T("DB2.Table.Data.Sharing.NotShared(*)"), GetParameter, _D(DCI_STATE_NOT_SHARED),
+      _T("DB2.Table.Data.Sharing.NotShared(*)"), GetParameter, CAST_TO_POINTER(DCI_STATE_NOT_SHARED, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Data/Sharing: The number of tables not being shared")
    },
    {
-      _T("DB2.Table.Data.Sharing.BecomingNotShared(*)"), GetParameter, _D(DCI_STATE_NOT_SHARED_BECOMING),
+      _T("DB2.Table.Data.Sharing.BecomingNotShared(*)"), GetParameter, CAST_TO_POINTER(DCI_STATE_NOT_SHARED_BECOMING, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Data/Sharing: The number of tables being in the process of becoming not shared")
    },
    {
-      _T("DB2.Table.Data.Sharing.RemoteLockWaitCount(*)"), GetParameter, _D(DCI_SHARING_LOCKWAIT_COUNT),
+      _T("DB2.Table.Data.Sharing.RemoteLockWaitCount(*)"), GetParameter, CAST_TO_POINTER(DCI_SHARING_LOCKWAIT_COUNT, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data/Sharing: The number of exits from the NOT_SHARED data sharing state")
    },
    {
-      _T("DB2.Table.Data.Sharing.RemoteLockWaitTime(*)"), GetParameter, _D(DCI_SHARING_LOCKWAIT_TIME),
+      _T("DB2.Table.Data.Sharing.RemoteLockWaitTime(*)"), GetParameter, CAST_TO_POINTER(DCI_SHARING_LOCKWAIT_TIME, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data/Sharing: The time spent on waiting for a table to become shared")
    },
    {
-      _T("DB2.Table.DirectWrites(*)"), GetParameter, _D(DCI_DIRECT_WRITES),
+      _T("DB2.Table.DirectWrites(*)"), GetParameter, CAST_TO_POINTER(DCI_DIRECT_WRITES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table: The number of write operations that don't use the buffer pool")
    },
    {
-      _T("DB2.Table.DirectWriteReqs(*)"), GetParameter, _D(DCI_DIRECT_WRITE_REQS),
+      _T("DB2.Table.DirectWriteReqs(*)"), GetParameter, CAST_TO_POINTER(DCI_DIRECT_WRITE_REQS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table: The number of request to perform a direct write operation")
    },
    {
-      _T("DB2.Table.DirectRead(*)"), GetParameter, _D(DCI_DIRECT_READS),
+      _T("DB2.Table.DirectRead(*)"), GetParameter, CAST_TO_POINTER(DCI_DIRECT_READS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table: The number of read operations that don't use the buffer pool")
    },
    {
-      _T("DB2.Table.DirectReadReqs(*)"), GetParameter, _D(DCI_DIRECT_READ_REQS),
+      _T("DB2.Table.DirectReadReqs(*)"), GetParameter, CAST_TO_POINTER(DCI_DIRECT_READ_REQS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table: The number of request to perform a direct read operation")
    },
    {
-      _T("DB2.Table.Data.LogicalReads(*)"), GetParameter, _D(DCI_DATA_L_READS),
+      _T("DB2.Table.Data.LogicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_L_READS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data: The number of data pages that are logically read from the buffer pool")
    },
    {
-      _T("DB2.Table.Data.PhysicalReads(*)"), GetParameter, _D(DCI_DATA_P_READS),
+      _T("DB2.Table.Data.PhysicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_P_READS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data: The number of data pages that are physically read")
    },
    {
-      _T("DB2.Table.Data.Gbp.LogicalReads(*)"), GetParameter, _D(DCI_DATA_GBP_L_READS),
+      _T("DB2.Table.Data.Gbp.LogicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_GBP_L_READS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data/Gbp: The number of times that a group buffer pool (GBP) page is requested from the GBP")
    },
    {
-      _T("DB2.Table.Data.Gbp.PhysicalReads(*)"), GetParameter, _D(DCI_DATA_GBP_P_READS),
+      _T("DB2.Table.Data.Gbp.PhysicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_GBP_P_READS, const TCHAR *),
       DCI_DT_INT64,
       _T("DB2/Table/Data/Gbp: The number of times that a group buffer pool (GBP) page is read into the local buffer pool (LBP)")
    },
    {
-      _T("DB2.Table.Data.Gbp.InvalidPages(*)"), GetParameter, _D(DCI_DATA_GBP_INVALID_PAGES),
+      _T("DB2.Table.Data.Gbp.InvalidPages(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_GBP_INVALID_PAGES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data/Gbp: The number of times that a group buffer pool (GBP) page is requested from the GBP")
       _T(" when the version stored in the local buffer pool (LBP) is invalid")
    },
    {
-      _T("DB2.Table.Data.Lbp.PagesFound(*)"), GetParameter, _D(DCI_DATA_LBP_PAGES_FOUND),
+      _T("DB2.Table.Data.Lbp.PagesFound(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_LBP_PAGES_FOUND, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Data/Lbp: The number of times that a data page is present in the local buffer pool (LBP)")
    },
    {
-      _T("DB2.Table.Data.Lbp.IndepPagesFound(*)"), GetParameter, _D(DCI_DATA_GBP_INDEP_PAGES_FOUND_IN_LBP),
+      _T("DB2.Table.Data.Lbp.IndepPagesFound(*)"), GetParameter, CAST_TO_POINTER(DCI_DATA_GBP_INDEP_PAGES_FOUND_IN_LBP, const TCHAR *),
       DCI_DT_INT64,
       _T("DB2/Table/Data/Lbp: The number of group buffer pool (GBP) independent pages found in a local buffer pool (LBP)")
    },
    {
-      _T("DB2.Table.Xda.LogicalReads(*)"), GetParameter, _D(DCI_XDA_L_READS),
+      _T("DB2.Table.Xda.LogicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_XDA_L_READS, const TCHAR *),
       DCI_DT_INT64,
       _T("DB2/Table/Xda: The number of data pages for XML storage objects (XDA) that are logically read from the buffer pool")
    },
    {
-      _T("DB2.Table.Xda.PhysicalReads(*)"), GetParameter, _D(DCI_XDA_P_READS),
+      _T("DB2.Table.Xda.PhysicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_XDA_P_READS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Xda: The number of data pages for XML storage objects (XDA) that are physically read")
    },
    {
-      _T("DB2.Table.Xda.Gbp.LogicalReads(*)"), GetParameter, _D(DCI_XDA_GBP_L_READS),
+      _T("DB2.Table.Xda.Gbp.LogicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_XDA_GBP_L_READS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Xda/Gbp: The number of times that a data page for an XML storage object (XDA) is requested")
       _T(" from the group buffer pool (GBP)")
    },
    {
-      _T("DB2.Table.Xda.Gbp.PhysicalReads(*)"), GetParameter, _D(DCI_XDA_GBP_P_READS),
+      _T("DB2.Table.Xda.Gbp.PhysicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_XDA_GBP_P_READS, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Xda/Gbp: The number of times that a group buffer pool (GBP) dependent data page for an XML")
       _T(" storage object (XDA) is read into the local buffer pool (LBP)")
    },
    {
-      _T("DB2.Table.Xda.Gbp.InvalidPages(*)"), GetParameter, _D(DCI_XDA_GBP_INVALID_PAGES),
+      _T("DB2.Table.Xda.Gbp.InvalidPages(*)"), GetParameter, CAST_TO_POINTER(DCI_XDA_GBP_INVALID_PAGES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Xda/Gbp: The number of times that a page for an XML storage objects (XDA) is requested from the")
       _T(" group buffer pool (GBP) because the version in the local buffer pool (LBP) is invalid")
    },
    {
-      _T("DB2.Table.Xda.Lbp.PagesFound(*)"), GetParameter, _D(DCI_XDA_LBP_PAGES_FOUND),
+      _T("DB2.Table.Xda.Lbp.PagesFound(*)"), GetParameter, CAST_TO_POINTER(DCI_XDA_LBP_PAGES_FOUND, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Xda/Lbp: The number of times that an XML storage objects (XDA) page is present in the local")
       _T(" buffer pool (LBP)")
    },
    {
-      _T("DB2.Table.Xda.Gbp.IndepPagesFound(*)"), GetParameter, _D(DCI_XDA_GBP_INDEP_PAGES_FOUND_IN_LBP),
+      _T("DB2.Table.Xda.Gbp.IndepPagesFound(*)"), GetParameter, CAST_TO_POINTER(DCI_XDA_GBP_INDEP_PAGES_FOUND_IN_LBP, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table/Xda/Gbp: The number of group buffer pool (GBP) independent XML storage object (XDA) pages found")
       _T(" in the local buffer pool (LBP)")
    },
    {
-      _T("DB2.Table.DictNum(*)"), GetParameter, _D(DCI_NUM_PAGE_DICT_BUILT),
+      _T("DB2.Table.DictNum(*)"), GetParameter, CAST_TO_POINTER(DCI_NUM_PAGE_DICT_BUILT, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table: The number of page-level compression dictionaries created or recreated")
    },
    {
-      _T("DB2.Table.StatsRowsModified(*)"), GetParameter, _D(DCI_STATS_ROWS_MODIFIED),
+      _T("DB2.Table.StatsRowsModified(*)"), GetParameter, CAST_TO_POINTER(DCI_STATS_ROWS_MODIFIED, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table: The number of rows modified since the last RUNSTATS")
    },
    {
-      _T("DB2.Table.ColObjectLogicalPages(*)"), GetParameter, _D(DCI_COL_OBJECT_L_PAGES),
+      _T("DB2.Table.RtsRowsModified(*)"), GetParameter, CAST_TO_POINTER(DCI_RTS_ROWS_MODIFIED, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table: The number of rows modified since the last real-time statistics collection")
+   },
+   {
+      _T("DB2.Table.ColObjectLogicalPages(*)"), GetParameter, CAST_TO_POINTER(DCI_COL_OBJECT_L_PAGES, const TCHAR *),
       DCI_DT_INT64, _T("DB2/Table: The number of logical pages used on disk by column-organized data")
    },
    {
-      _T("DB2.Table.Organization.Rows(*)"), GetParameter, _D(DCI_ORGANIZATION_ROWS),
+      _T("DB2.Table.Organization.Rows(*)"), GetParameter, CAST_TO_POINTER(DCI_ORGANIZATION_ROWS, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Organization: The number of tables with row-organized data")
    },
    {
-      _T("DB2.Table.Organization.Cols(*)"), GetParameter, _D(DCI_ORGANIZATION_COLS),
+      _T("DB2.Table.Organization.Cols(*)"), GetParameter, CAST_TO_POINTER(DCI_ORGANIZATION_COLS, const TCHAR *),
       DCI_DT_INT, _T("DB2/Table/Organization: The number of tables with column-organized data")
    },
    {
-      _T("DB2.Table.Col.LogicalReads(*)"), GetParameter, _D(DCI_COL_L_READS),
-      DCI_DT_INT, _T("DB2/Table/Col: The number of column-organized pages that are logically read from the buffer pool")
+      _T("DB2.Table.Col.LogicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_COL_L_READS, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table/Col: The number of column-organized pages that are logically read from the buffer pool")
    },
    {
-      _T("DB2.Table.Col.PhysicalReads(*)"), GetParameter, _D(DCI_COL_P_READS),
-      DCI_DT_INT, _T("DB2/Table/Col: The number of column-organized pages that are physically read")
+      _T("DB2.Table.Col.PhysicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_COL_P_READS, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table/Col: The number of column-organized pages that are physically read")
    },
    {
-      _T("DB2.Table.Col.Gbp.LogicalReads(*)"), GetParameter, _D(DCI_COL_GBP_L_READS),
-      DCI_DT_INT, _T("DB2/Table/Col/Gbp: The number of times that a group buffer pool (GBP) dependent column-organized page")
+      _T("DB2.Table.Col.Gbp.LogicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_COL_GBP_L_READS, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table/Col/Gbp: The number of times that a group buffer pool (GBP) dependent column-organized page")
       _T(" is requested from the GBP")
    },
    {
-      _T("DB2.Table.Col.Gbp.PhysicalReads(*)"), GetParameter, _D(DCI_COL_GBP_P_READS),
-      DCI_DT_INT, _T("DB2/Table/Col/Gbp: The number of times that a group buffer pool (GBP) dependent column-organized page")
+      _T("DB2.Table.Col.Gbp.PhysicalReads(*)"), GetParameter, CAST_TO_POINTER(DCI_COL_GBP_P_READS, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table/Col/Gbp: The number of times that a group buffer pool (GBP) dependent column-organized page")
       _T(" is read into the local buffer pool (LBP) from disk")
    },
    {
-      _T("DB2.Table.Col.Gbp.InvalidPages(*)"), GetParameter, _D(DCI_COL_GBP_INVALID_PAGES),
-      DCI_DT_INT, _T("DB2/Table/Col/Gbp: The number of times that a column-organized page is requested from the group buffer pool")
+      _T("DB2.Table.Col.Gbp.InvalidPages(*)"), GetParameter, CAST_TO_POINTER(DCI_COL_GBP_INVALID_PAGES, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table/Col/Gbp: The number of times that a column-organized page is requested from the group buffer pool")
       _T(" (GBP) when the page in the local buffer pool (LBP) is invalid")
    },
    {
-      _T("DB2.Table.Col.Lbp.PagesFound(*)"), GetParameter, _D(DCI_COL_LBP_PAGES_FOUND),
-      DCI_DT_INT, _T("DB2/Table/Col/Lbp: The number of times that a column-organized page is present in")
+      _T("DB2.Table.Col.Lbp.PagesFound(*)"), GetParameter, CAST_TO_POINTER(DCI_COL_LBP_PAGES_FOUND, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table/Col/Lbp: The number of times that a column-organized page is present in")
       _T(" the local buffer pool (LBP)")
    },
    {
-      _T("DB2.Table.Col.Gbp.IndepPagesFound(*)"), GetParameter, _D(DCI_COL_GBP_INDEP_PAGES_FOUND_IN_LBP),
-      DCI_DT_INT, _T("DB2/Table/Col/Gbp: The number of group buffer pool (GBP) independent column-organized pages found in")
+      _T("DB2.Table.Col.Gbp.IndepPagesFound(*)"), GetParameter, CAST_TO_POINTER(DCI_COL_GBP_INDEP_PAGES_FOUND_IN_LBP, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table/Col/Gbp: The number of group buffer pool (GBP) independent column-organized pages found in")
       _T(" the local buffer pool (LBP)")
    },
    {
-      _T("DB2.Table.ColsReferenced(*)"), GetParameter, _D(DCI_NUM_COL_REFS),
-      DCI_DT_INT, _T("DB2/Table: The number of columns referenced during the execution of a section for an SQL statement")
+      _T("DB2.Table.ColsReferenced(*)"), GetParameter, CAST_TO_POINTER(DCI_NUM_COL_REFS, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table: The number of columns referenced during the execution of a section for an SQL statement")
    },
    {
-      _T("DB2.Table.SectionExecutions(*)"), GetParameter, _D(DCI_SECTION_EXEC_WITH_COL_REFS),
-      DCI_DT_INT, _T("DB2/Table: The number of section executions that referenced columns in tables using a scan")
+      _T("DB2.Table.SectionExecutions(*)"), GetParameter, CAST_TO_POINTER(DCI_SECTION_EXEC_WITH_COL_REFS, const TCHAR *),
+      DCI_DT_INT64, _T("DB2/Table: The number of section executions that referenced columns in tables using a scan")
    }
 };
-
 /**
  * Handler for DB2.Connections list
  */
@@ -445,25 +455,25 @@ static LONG H_ConnectionsList(const TCHAR *param, const TCHAR *arg, StringList *
 /**
  * Supported lists
  */
-static NETXMS_SUBAGENT_LIST m_agentLists[] =
+static NETXMS_SUBAGENT_LIST s_lists[] =
 {
    { _T("DB2.Connections"), H_ConnectionsList, nullptr, _T("DB2: configured database connections") }
 };
 
-static NETXMS_SUBAGENT_INFO m_agentInfo =
+static NETXMS_SUBAGENT_INFO s_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    SUBAGENT_NAME,
    NETXMS_VERSION_STRING,
    DB2Init, DB2Shutdown, nullptr, nullptr, nullptr,
-   (sizeof(m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
-   (sizeof(m_agentLists) / sizeof(NETXMS_SUBAGENT_LIST)), m_agentLists,
+   (sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM)), s_parameters,
+   (sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST)), s_lists,
    0, nullptr,
    0, nullptr,
    0, nullptr
 };
 
-QUERY g_queries[] =
+static const QUERY s_queries[] =
 {
    { { DCI_DBMS_VERSION }, _T("SELECT service_level FROM TABLE (sysproc.env_get_inst_info())") },
    { { DCI_NUM_AVAILABLE }, _T("SELECT count(available) FROM sysibmadm.admintabinfo WHERE available = 'Y'") },
@@ -494,11 +504,11 @@ QUERY g_queries[] =
    },
    {
       { DCI_REORG_NULL },
-      _T("SELECT count(inplace_reorg_status) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status = 'NULL'")
+      _T("SELECT count(*) FROM sysibmadm.admintabinfo WHERE inplace_reorg_status IS NULL OR inplace_reorg_status = 'NULL'")
    },
    { { DCI_LOAD_IN_PROGRESS }, _T("SELECT count(load_status) FROM sysibmadm.admintabinfo WHERE load_status = 'IN_PROGRESS'") },
    { { DCI_LOAD_PENDING }, _T("SELECT count(load_status) FROM sysibmadm.admintabinfo WHERE load_status = 'PENDING'") },
-   { { DCI_LOAD_NULL }, _T("SELECT count(load_status) FROM sysibmadm.admintabinfo WHERE load_status = 'NULL'") },
+   { { DCI_LOAD_NULL }, _T("SELECT count(*) FROM sysibmadm.admintabinfo WHERE load_status IS NULL OR load_status = 'NULL'") },
    { { DCI_ACCESS_RO }, _T("SELECT count(read_access_only) FROM sysibmadm.admintabinfo WHERE read_access_only = 'Y'") },
    { { DCI_NO_LOAD_RESTART }, _T("SELECT count(no_load_restart) FROM sysibmadm.admintabinfo WHERE no_load_restart = 'Y'") },
    {
@@ -555,20 +565,19 @@ QUERY g_queries[] =
    },
    { { DCI_ORGANIZATION_ROWS }, _T("SELECT count(*) FROM TABLE (mon_get_table('', '', -2)) WHERE tab_organization = 'R'") },
    { { DCI_ORGANIZATION_COLS }, _T("SELECT count(*) FROM TABLE (mon_get_table('', '', -2)) WHERE tab_organization = 'C'") },
-   { { DCI_NULL }, _T("\0") }
+   { { DCI_NULL }, nullptr }
 };
 
 /**
  * Create new database connection object
  */
-DatabaseConnection::DatabaseConnection(ConnectionInfo *info) : m_dataLock(MutexType::FAST), m_sessionLock(MutexType::NORMAL), m_stopCondition(true)
+DatabaseConnection::DatabaseConnection(const ConnectionInfo *info) : m_dataLock(MutexType::FAST), m_stopCondition(true)
 {
    memcpy(&m_info, info, sizeof(ConnectionInfo));
    m_pollerThread = INVALID_THREAD_HANDLE;
    m_session = nullptr;
-   m_connected = false;
-   m_dataValid = false;
    memset(m_data, 0, sizeof(m_data));
+   memset(m_dataValid, 0, sizeof(m_dataValid));
 }
 
 /**
@@ -595,114 +604,129 @@ void DatabaseConnection::stop()
    m_stopCondition.set();
    ThreadJoin(m_pollerThread);
    m_pollerThread = INVALID_THREAD_HANDLE;
-   if (m_session != nullptr)
-   {
-      DBDisconnect(m_session);
-      m_session = nullptr;
-   }
 }
 
 /**
- * Poller thread
+ * Poller thread. Session handle is used by this thread only.
  */
 void DatabaseConnection::pollerThread()
 {
    nxlog_debug_tag(DEBUG_TAG_DB2, 3, _T("Poller thread for connection %s started"), m_info.id);
    int64_t connectionTTL = static_cast<int64_t>(m_info.connectionTTL) * _LL(1000);
-   do
+   while(true)
    {
-reconnect:
-      m_sessionLock.lock();
-
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      m_session = DBConnect(g_db2Driver, m_info.endpoint, m_info.database, m_info.username, m_info.password, nullptr, errorText);
+      m_session = DBConnect(s_driver, m_info.endpoint, _T(""), m_info.username, m_info.password, nullptr, errorText);
       if (m_session == nullptr)
       {
-         m_sessionLock.unlock();
          nxlog_debug_tag(DEBUG_TAG_DB2, 6, _T("Cannot connect to database %s: %s"), m_info.id, errorText);
+         if (m_stopCondition.wait(60000))
+            break;
          continue;
       }
 
-      m_connected = true;
       DBEnableReconnect(m_session, false);
       DBSetLongRunningThreshold(m_session, 5000);  // Override global long running query threshold
-      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DB2, _T("Connection with database %s restored (connection TTL %u)"), m_info.id, m_info.connectionTTL);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_DB2, _T("Connection with database %s established (connection TTL %u)"), m_info.id, m_info.connectionTTL);
 
-      m_sessionLock.unlock();
-
-      int64_t pollerLoopStartTime = GetCurrentTimeMs();
-      uint32_t sleepTime;
-      do
+      int64_t sessionStartTime = GetCurrentTimeMs();
+      bool connectionLost = false;
+      bool stopRequested = false;
+      while(true)
       {
          int64_t startTime = GetCurrentTimeMs();
          if (!poll())
          {
             nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DB2, _T("Connection with database %s lost"), m_info.id);
+            connectionLost = true;
             break;
          }
          int64_t currTime = GetCurrentTimeMs();
-         if (currTime - pollerLoopStartTime > connectionTTL)
+         if (currTime - sessionStartTime > connectionTTL)
          {
-            nxlog_debug_tag(DEBUG_TAG_DB2, 4, _T("Planned connection reset"));
-            m_sessionLock.lock();
-            m_connected = false;
-            DBDisconnect(m_session);
-            m_session = nullptr;
-            m_sessionLock.unlock();
-            goto reconnect;
+            nxlog_debug_tag(DEBUG_TAG_DB2, 4, _T("Planned connection reset for database %s"), m_info.id);
+            break;
          }
          int64_t elapsedTime = currTime - startTime;
-         sleepTime = static_cast<uint32_t>((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
+         uint32_t sleepTime = static_cast<uint32_t>((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
+         if (m_stopCondition.wait(sleepTime))
+         {
+            stopRequested = true;
+            break;
+         }
       }
-      while(!m_stopCondition.wait(sleepTime));
 
-      m_sessionLock.lock();
-      m_connected = false;
       DBDisconnect(m_session);
       m_session = nullptr;
-      m_sessionLock.unlock();
+
+      if (stopRequested)
+         break;
+
+      if (connectionLost)
+      {
+         invalidateData();
+         if (m_stopCondition.wait(60000))   // reconnect after 60 seconds
+            break;
+      }
    }
-   while(!m_stopCondition.wait(60000));   // reconnect every 60 seconds
    nxlog_debug_tag(DEBUG_TAG_DB2, 3, _T("Poller thread for connection %s stopped"), m_info.id);
 }
 
 /**
- * Do actual database polling. Should return false if connection is broken.
+ * Do actual database polling. Should return false if connection is broken (all queries failed).
+ * Values of queries that failed are marked invalid instead of being reported as empty.
  */
 bool DatabaseConnection::poll()
 {
-   TCHAR data[NUM_OF_DCI][STR_MAX];
+   TCHAR data[DCI_NULL][STR_MAX];
+   bool valid[DCI_NULL];
    memset(data, 0, sizeof(data));
+   memset(valid, 0, sizeof(valid));
 
    int count = 0;
    int failures = 0;
 
-   for(int queryId = 0; g_queries[queryId].dciList[0] != DCI_NULL; queryId++)
+   for(int queryId = 0; s_queries[queryId].query != nullptr; queryId++)
    {
       count++;
-      DB_RESULT hResult = DBSelect(m_session, g_queries[queryId].query);
+      DB_RESULT hResult = DBSelect(m_session, s_queries[queryId].query);
       if (hResult == nullptr)
       {
-         nxlog_debug_tag(DEBUG_TAG_DB2, 7, _T("Query \"%s\" failed"), g_queries[queryId].query);
+         nxlog_debug_tag(DEBUG_TAG_DB2, 7, _T("Query \"%s\" failed"), s_queries[queryId].query);
          failures++;
          continue;
       }
 
-      const Dci *dciList = g_queries[queryId].dciList;
-      int numCols = DBGetColumnCount(hResult);
-      for(int i = 0; i < numCols; i++)
-         DBGetField(hResult, 0, i, data[dciList[i]], STR_MAX);
-
+      if (DBGetNumRows(hResult) > 0)
+      {
+         const Dci *dciList = s_queries[queryId].dciList;
+         int numCols = std::min(DBGetColumnCount(hResult), DCI_LIST_SIZE);
+         for(int i = 0; i < numCols; i++)
+         {
+            DBGetField(hResult, 0, i, data[dciList[i]], STR_MAX);
+            valid[dciList[i]] = true;
+         }
+      }
       DBFreeResult(hResult);
    }
 
    // update cached data
    m_dataLock.lock();
    memcpy(m_data, data, sizeof(m_data));
-   m_dataValid = true;
+   memcpy(m_dataValid, valid, sizeof(m_dataValid));
    m_dataLock.unlock();
 
    return failures < count;
+}
+
+/**
+ * Mark all collected data as invalid (connection lost)
+ */
+void DatabaseConnection::invalidateData()
+{
+   m_dataLock.lock();
+   memset(m_dataValid, 0, sizeof(m_dataValid));
+   m_dataLock.unlock();
 }
 
 /**
@@ -712,7 +736,7 @@ bool DatabaseConnection::getData(Dci dci, TCHAR *value)
 {
    bool success = false;
    m_dataLock.lock();
-   if (m_dataValid)
+   if (m_dataValid[dci])
    {
       ret_string(value, m_data[dci]);
       success = true;
@@ -727,17 +751,17 @@ bool DatabaseConnection::getData(Dci dci, TCHAR *value)
 static ConnectionInfo s_connInfo;
 static NX_CFG_TEMPLATE s_configTemplate[] =
 {
-   { _T("ConnectionTTL"),     CT_LONG,        0, 0, 0,                 0, &s_connInfo.connectionTTL },
-   { _T("Database"),          CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.database },
-   { _T("DBName"),            CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.database },    // deprecated alias for Database
-   { _T("Endpoint"),          CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.endpoint },
-   { _T("DBAlias"),           CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.endpoint },    // deprecated alias for Endpoint
-   { _T("Id"),                CT_STRING,      0, 0, STR_MAX,           0, s_connInfo.id },
-   { _T("Login"),             CT_STRING,      0, 0, DB2_MAX_USER_NAME, 0, s_connInfo.username },
-   { _T("UserName"),          CT_STRING,      0, 0, DB2_MAX_USER_NAME, 0, s_connInfo.username },    // deprecated alias for Login
-   { _T("Password"),          CT_STRING,      0, 0, MAX_PASSWORD,      0, s_connInfo.password },
-   { _T("EncryptedPassword"), CT_STRING,      0, 0, MAX_PASSWORD,      0, s_connInfo.password },
-   { _T(""),                  CT_END_OF_LIST, 0, 0, 0,                 0, nullptr }
+   { _T("ConnectionTTL"),     CT_LONG,        0, 0, 0,            0, &s_connInfo.connectionTTL },
+   { _T("Database"),          CT_STRING,      0, 0, STR_MAX,      0, s_connInfo.database },
+   { _T("DBName"),            CT_STRING,      0, 0, STR_MAX,      0, s_connInfo.database },    // deprecated alias for Database
+   { _T("Endpoint"),          CT_STRING,      0, 0, STR_MAX,      0, s_connInfo.endpoint },
+   { _T("DBAlias"),           CT_STRING,      0, 0, STR_MAX,      0, s_connInfo.endpoint },    // deprecated alias for Endpoint
+   { _T("Id"),                CT_STRING,      0, 0, STR_MAX,      0, s_connInfo.id },
+   { _T("Login"),             CT_STRING,      0, 0, STR_MAX,      0, s_connInfo.username },
+   { _T("UserName"),          CT_STRING,      0, 0, STR_MAX,      0, s_connInfo.username },    // deprecated alias for Login
+   { _T("Password"),          CT_STRING,      0, 0, MAX_PASSWORD, 0, s_connInfo.password },
+   { _T("EncryptedPassword"), CT_STRING,      0, 0, MAX_PASSWORD, 0, s_connInfo.password },
+   { _T(""),                  CT_END_OF_LIST, 0, 0, 0,            0, nullptr }
 };
 
 /**
@@ -756,12 +780,52 @@ static void CheckDeprecatedKeys(Config *config, const TCHAR *section)
 }
 
 /**
+ * Validate parsed connection configuration and add connection to the list.
+ * DB2 CLI connects by catalog alias only, so "Database" is accepted as an alias of "Endpoint"
+ * but ignored if both are set. Section name is used for diagnostic messages.
+ */
+static void AddConnection(Config *config, const TCHAR *section)
+{
+   if (s_connInfo.endpoint[0] == 0)
+   {
+      if (s_connInfo.database[0] != 0)
+         _tcslcpy(s_connInfo.endpoint, s_connInfo.database, STR_MAX);
+      else if (s_connInfo.id[0] != 0)
+         _tcslcpy(s_connInfo.endpoint, s_connInfo.id, STR_MAX);
+   }
+   else if ((s_connInfo.database[0] != 0) && _tcsicmp(s_connInfo.database, s_connInfo.endpoint))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DB2, _T("Database name \"%s\" in section [%s] is ignored, connection is made to catalog alias \"%s\""),
+         s_connInfo.database, section, s_connInfo.endpoint);
+   }
+
+   if (s_connInfo.endpoint[0] == 0)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DB2, _T("Section [%s] does not define Endpoint, connection ignored"), section);
+      return;
+   }
+
+   if (s_connInfo.id[0] == 0)
+      _tcslcpy(s_connInfo.id, s_connInfo.endpoint, STR_MAX);
+
+   if (FindConnection(s_connInfo.id) != nullptr)
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DB2, _T("Duplicate connection ID \"%s\" in section [%s], connection ignored"), s_connInfo.id, section);
+      return;
+   }
+
+   CheckDeprecatedKeys(config, section);
+   DecryptPassword(s_connInfo.username, s_connInfo.password, s_connInfo.password, MAX_PASSWORD);
+   s_connections->add(new DatabaseConnection(&s_connInfo));
+}
+
+/**
  * Subagent initialization
  */
 static bool DB2Init(Config *config)
 {
-   g_db2Driver = DBLoadDriver(_T("db2.ddr"), nullptr, nullptr, nullptr);
-   if (g_db2Driver == nullptr)
+   s_driver = DBLoadDriver(_T("db2.ddr"), nullptr, nullptr, nullptr);
+   if (s_driver == nullptr)
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DB2, _T("Cannot load DB2 database driver"));
       return false;
@@ -772,18 +836,8 @@ static bool DB2Init(Config *config)
    // Load configuration from "db2" section to allow simple configuration of one connection
    memset(&s_connInfo, 0, sizeof(s_connInfo));
    s_connInfo.connectionTTL = 3600;
-   if (config->parseTemplate(_T("DB2"), s_configTemplate))
-   {
-      if (s_connInfo.endpoint[0] != 0)
-      {
-         if (s_connInfo.id[0] == 0)
-            _tcslcpy(s_connInfo.id, s_connInfo.endpoint, STR_MAX);
-
-         CheckDeprecatedKeys(config, _T("DB2"));
-         DecryptPassword(s_connInfo.username, s_connInfo.password, s_connInfo.password, MAX_PASSWORD);
-         s_connections->add(new DatabaseConnection(&s_connInfo));
-      }
-   }
+   if (config->parseTemplate(_T("DB2"), s_configTemplate) && ((s_connInfo.endpoint[0] != 0) || (s_connInfo.database[0] != 0)))
+      AddConnection(config, _T("DB2"));
 
    // Load named connection subsections (db2/connections/<id>)
    ConfigEntry *connectionsRoot = config->getEntry(_T("/db2/connections"));
@@ -805,12 +859,7 @@ static bool DB2Init(Config *config)
             continue;
          }
 
-         if (s_connInfo.id[0] == 0)
-            continue;
-
-         CheckDeprecatedKeys(config, section);
-         DecryptPassword(s_connInfo.username, s_connInfo.password, s_connInfo.password, MAX_PASSWORD);
-         s_connections->add(new DatabaseConnection(&s_connInfo));
+         AddConnection(config, section);
       }
    }
 
@@ -820,8 +869,8 @@ static bool DB2Init(Config *config)
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_DB2, _T("No DB2 databases to monitor"));
       delete s_connections;
       s_connections = nullptr;
-      DBUnloadDriver(g_db2Driver);
-      g_db2Driver = nullptr;
+      DBUnloadDriver(s_driver);
+      s_driver = nullptr;
       return false;
    }
 
@@ -843,8 +892,8 @@ static void DB2Shutdown()
       s_connections->get(i)->stop();
    delete s_connections;
    s_connections = nullptr;
-   DBUnloadDriver(g_db2Driver);
-   g_db2Driver = nullptr;
+   DBUnloadDriver(s_driver);
+   s_driver = nullptr;
    nxlog_debug_tag(DEBUG_TAG_DB2, 1, _T("DB2 subagent stopped"));
 }
 
@@ -853,10 +902,6 @@ static void DB2Shutdown()
  */
 static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   Dci dci = StringToDci(arg);
-   if (dci == DCI_NULL)
-      return SYSINFO_RC_UNSUPPORTED;
-
    TCHAR id[STR_MAX];
    if (!AgentGetParameterArg(parameter, 1, id, STR_MAX))
       return SYSINFO_RC_UNSUPPORTED;
@@ -865,7 +910,7 @@ static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value,
    if (db == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   return db->getData(dci, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+   return db->getData(CAST_FROM_POINTER(arg, Dci), value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**
@@ -873,7 +918,7 @@ static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value,
  */
 DECLARE_SUBAGENT_ENTRY_POINT(DB2)
 {
-   *ppInfo = &m_agentInfo;
+   *ppInfo = &s_info;
    return true;
 }
 
