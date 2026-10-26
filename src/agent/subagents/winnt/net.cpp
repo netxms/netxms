@@ -151,9 +151,9 @@ static DWORD AdapterNameToIndex(const TCHAR *name)
       for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
       {
 #ifdef UNICODE
-         if (!_wcsicmp(iface->FriendlyName, name) || !stricmp(iface->AdapterName, mbname))
+         if (!wcsicmp(iface->FriendlyName, name) || !stricmp(iface->AdapterName, mbname))
 #else
-         if (!_wcsicmp(iface->FriendlyName, wname) || !stricmp(iface->AdapterName, name))
+         if (!wcsicmp(iface->FriendlyName, wname) || !stricmp(iface->AdapterName, name))
 #endif
          {
             ifIndex = iface->IfIndex;
