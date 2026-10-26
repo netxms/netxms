@@ -144,7 +144,21 @@ NXSL_Value *NXSL_RangeClass::getNext(NXSL_Object *object, NXSL_Value *currValue)
 
    if (range->integer)
    {
-      int64_t v = (currValue != nullptr) ? currValue->getValueAsInt64() + range->step.i : range->start.i;
+      int64_t v;
+      if (currValue != nullptr)
+      {
+         int64_t curr = currValue->getValueAsInt64();
+         // Add in unsigned arithmetic so that overflow wraps instead of being undefined behavior,
+         // then detect it: a step that moves the value in the direction opposite to its sign
+         // has crossed the int64 limit, so the next value is beyond any representable end bound
+         v = static_cast<int64_t>(static_cast<uint64_t>(curr) + static_cast<uint64_t>(range->step.i));
+         if ((range->step.i > 0) ? (v < curr) : (v > curr))
+            return nullptr;
+      }
+      else
+      {
+         v = range->start.i;
+      }
       return IsInRange(range, v) ? vm->createValue(v) : nullptr;
    }
 
