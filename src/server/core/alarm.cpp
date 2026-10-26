@@ -553,7 +553,9 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row) : m_relatedEvents(16, 16
 /**
  * Copy constructor
  */
-Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_relatedEvents(16, 16), m_alarmCategoryList(src->m_alarmCategoryList), m_subordinateAlarms(src->m_subordinateAlarms)
+Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) :
+         m_relatedEvents(copyEvents ? src->m_relatedEvents.size() : 0, 16),
+         m_alarmCategoryList(src->m_alarmCategoryList), m_subordinateAlarms(src->m_subordinateAlarms)
 {
    m_sourceEventId = src->m_sourceEventId;
    m_alarmId = src->m_alarmId;
