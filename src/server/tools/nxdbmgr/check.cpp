@@ -1849,7 +1849,7 @@ static void CheckAssetNodeLinks()
 {
    TCHAR name[256], query[512];
    StartStage(_T("Asset to node links"));
-   DB_RESULT hResult = SQLSelect(_T("SELECT id,linked_object_id FROM assets WHERE linked_object_id!=0"));
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,linked_object_id,component_serial FROM assets WHERE linked_object_id!=0"));
    if (hResult != nullptr)
    {
       int numRows = DBGetNumRows(hResult);
@@ -1858,27 +1858,48 @@ static void CheckAssetNodeLinks()
       {
          uint32_t assetId = DBGetFieldULong(hResult, i, 0);
          uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
+         TCHAR componentSerial[64];
+         DBGetField(hResult, i, 2, componentSerial, 64);
+         bool isComponent = (componentSerial[0] != 0);
 
          // Check node existence
          if (IsDatabaseRecordExist(g_dbHandle, _T("object_properties"), _T("object_id"), nodeId))
          {
-            _sntprintf(query, 512, _T("SELECT object_id FROM object_properties WHERE asset_id=%u and object_id=%u"), assetId, nodeId);
-            DB_RESULT checkResult = SQLSelect(query);
-            if (checkResult != nullptr)
+            if (isComponent)
             {
-               if (DBGetNumRows(checkResult) == 0)
+               // Asset represents component of a node: linked object must be a node, node's own asset_id does not reference component asset
+               if (!IsDatabaseRecordExist(g_dbHandle, _T("nodes"), _T("id"), nodeId))
                {
                   g_dbCheckErrors++;
-                  if (GetYesNoEx(_T("Found possibly misplaced asset linking %u to object %u. Fix it?"), assetId, nodeId))
+                  DBMgrGetObjectName(assetId, name);
+                  if (GetYesNoEx(_T("Asset %u [%s] linked to component \"%s\" of object %u which is not a node. Fix it?"), assetId, name, componentSerial, nodeId))
                   {
-                     _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0 WHERE id=%u"), assetId);
+                     _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0,component_serial=NULL WHERE id=%u"), assetId);
                      if (SQLQuery(query))
-                     {
                         g_dbCheckFixes++;
-                     }
                   }
                }
-               DBFreeResult(checkResult);
+            }
+            else
+            {
+               _sntprintf(query, 512, _T("SELECT object_id FROM object_properties WHERE asset_id=%u and object_id=%u"), assetId, nodeId);
+               DB_RESULT checkResult = SQLSelect(query);
+               if (checkResult != nullptr)
+               {
+                  if (DBGetNumRows(checkResult) == 0)
+                  {
+                     g_dbCheckErrors++;
+                     if (GetYesNoEx(_T("Found possibly misplaced asset linking %u to object %u. Fix it?"), assetId, nodeId))
+                     {
+                        _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0,component_serial=NULL WHERE id=%u"), assetId);
+                        if (SQLQuery(query))
+                        {
+                           g_dbCheckFixes++;
+                        }
+                     }
+                  }
+                  DBFreeResult(checkResult);
+               }
             }
          }
          else
@@ -1887,7 +1908,7 @@ static void CheckAssetNodeLinks()
             DBMgrGetObjectName(assetId, name);
             if (GetYesNoEx(_T("Asset %u [%s] linked to non-existent node %d. Delete this mapping?"), assetId, name, nodeId))
             {
-               _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0 WHERE id=%u"), assetId);
+               _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0,component_serial=NULL WHERE id=%u"), assetId);
                if (SQLQuery(query))
                   g_dbCheckFixes++;
             }
