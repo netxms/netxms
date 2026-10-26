@@ -1095,13 +1095,13 @@ class NXCORE_EXPORTABLE PollState
 private:
    VolatileCounter m_pollerCount;
    time_t m_lastCompleted;
-   ManualGauge64 m_timer;
+   GaugeData<int64_t> m_timer;
    Mutex m_lock;
    bool m_saveNeeded;
    const TCHAR *m_name;
 
 public:
-   PollState(const TCHAR *name, bool saveNeeded = false) : m_timer(name, 1, 1000), m_lock(MutexType::FAST)
+   PollState(const TCHAR *name, bool saveNeeded = false) : m_timer(1, 1000), m_lock(MutexType::FAST)
    {
       m_name = name;
       m_pollerCount = 0;
