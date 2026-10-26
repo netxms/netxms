@@ -32,6 +32,7 @@ import org.netxms.nxmc.modules.objects.ssh.SshConnectionSettings;
 import org.netxms.nxmc.modules.objects.ssh.TerminalTransport;
 import org.netxms.nxmc.modules.objects.views.helpers.SshTerminalSocketEndpoint;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * SSH terminal view (web): xterm.js in browser widget connected to terminal transport through websocket endpoint. Unknown host
@@ -86,18 +87,8 @@ public class SshTerminalView extends AdHocObjectView
       TerminalTransport transport = settings.createTransport(Registry.getSession(), node, (message) -> true);
       terminalId = SshTerminalSocketEndpoint.registerTransport(transport, RWT.getUISession().getHttpSession().getId());
 
-      StringBuilder url = new StringBuilder();
-      url.append(RWT.getResourceManager().getLocation("terminal/terminal.html"));
-      url.append("?path=");
-      String cp = RWT.getRequest().getContextPath();
-      if (!cp.isEmpty())
-      {
-         url.append(cp.substring(1)); // without leading /
-         url.append('/');
-      }
-      url.append("sshterminal/");
-      url.append(terminalId);
-      browser.setUrl(url.toString());
+      String pageLocation = RWT.getResourceManager().getLocation("terminal/terminal.html");
+      browser.setUrl(pageLocation + "?path=" + WidgetHelper.getPageRelativeUrl(pageLocation, "sshterminal/" + terminalId));
    }
 
    /**

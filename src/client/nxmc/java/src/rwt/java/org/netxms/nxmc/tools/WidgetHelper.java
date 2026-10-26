@@ -144,6 +144,28 @@ public class WidgetHelper
    }
 
    /**
+    * Build URL of a context-root relative endpoint (for example WebSocket endpoint registered as /sshterminal/{id}) as a path
+    * relative to a page served from RWT resource directory. Relative URL is resolved by the browser against the public URL
+    * the page was loaded from, so it works when web console is published by reverse proxy under a different path than the
+    * servlet context path.
+    *
+    * @param pageLocation page location as returned by <code>RWT.getResourceManager().getLocation()</code>
+    * @param endpointPath endpoint path relative to servlet context root, without leading slash
+    * @return endpoint URL relative to given page
+    */
+   public static String getPageRelativeUrl(String pageLocation, String endpointPath)
+   {
+      StringBuilder sb = new StringBuilder();
+      for(int i = 0; i < pageLocation.length(); i++)
+      {
+         if (pageLocation.charAt(i) == '/')
+            sb.append("../");
+      }
+      sb.append(endpointPath);
+      return sb.toString();
+   }
+
+   /**
     * Mask password. Will not mask encrypted passwords.
     *
     * @param password password to mask

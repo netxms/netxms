@@ -23,7 +23,10 @@
          fitAddon.fit();
          term.focus();
 
-         var ws = new WebSocket(((window.location.protocol === "https:") ? "wss://" : "ws://") + window.location.host + "/" + path);
+         // Path is relative to this page, so resolved URL follows the public path the page was loaded from (reverse proxy friendly)
+         var wsUrl = new URL(path, window.location.href);
+         wsUrl.protocol = (window.location.protocol === "https:") ? "wss:" : "ws:";
+         var ws = new WebSocket(wsUrl.href);
          ws.binaryType = "arraybuffer";
          var encoder = new TextEncoder();
          var closed = false;
