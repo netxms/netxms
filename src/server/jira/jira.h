@@ -86,7 +86,6 @@ private:
    char m_login[JIRA_MAX_LOGIN_LEN];
    char m_password[JIRA_MAX_PASSWORD_LEN];
    ObjectArray<Comment> m_recentComments;
-   bool m_verifyPeer;
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }

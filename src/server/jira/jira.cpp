@@ -35,7 +35,6 @@ JiraLink::JiraLink() : HelpDeskLink(), m_recentComments(0, 16, Ownership::True)
 {
    m_curl = nullptr;
    m_headers = nullptr;
-   m_verifyPeer = false;
 }
 
 /**
@@ -72,16 +71,16 @@ bool JiraLink::init()
 }
 
 /**
- * Set credentials for connection
+ * Set credentials and peer verification mode for connection
  */
 void JiraLink::setCredentials()
 {
    ConfigReadStrUTF8(L"Jira.Login", m_login, JIRA_MAX_LOGIN_LEN, "netxms");
    ConfigReadStrUTF8(L"Jira.Password", m_password, JIRA_MAX_PASSWORD_LEN, "");
-   m_verifyPeer = ConfigReadBoolean(L"Jira.VerifyPeer", true);
    DecryptPasswordA(m_login, m_password, m_password, JIRA_MAX_PASSWORD_LEN);
    curl_easy_setopt(m_curl, CURLOPT_USERNAME, m_login);
    curl_easy_setopt(m_curl, CURLOPT_PASSWORD, m_password);
+   curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, ConfigReadBoolean(L"Jira.VerifyPeer", true) ? 1L : 0L);
 }
 
 /**
@@ -104,7 +103,6 @@ uint32_t JiraLink::connect()
    curl_easy_setopt(m_curl, CURLOPT_ERRORBUFFER, m_errorBuffer);
    curl_easy_setopt(m_curl, CURLOPT_HEADER, (long)0); // do not include header in data
    curl_easy_setopt(m_curl, CURLOPT_COOKIEFILE, "");  // enable cookies in memory
-   curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(m_verifyPeer ? 1 : 0));
 
    setCredentials();
 
