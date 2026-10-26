@@ -284,6 +284,34 @@ static void TestVariableClass()
    v12.getValueAsString(buffer, 256);
    AssertEquals(static_cast<int32_t>(buffer[0]), 0);  // v12 should be in "empty" state after move
    EndTest();
+
+   StartTest(_T("SNMP_Variable opaque-wrapped float"));
+   // Opaque { 9F 78 04 <IEEE 754 single, network byte order> } = 2.5
+   static const BYTE opaqueFloat[] = { 0x9F, 0x78, 0x04, 0x40, 0x20, 0x00, 0x00 };
+   SNMP_Variable v13(s_oidSysLocation);
+   v13.setValueFromByteArray(ASN_OPAQUE, opaqueFloat, sizeof(opaqueFloat));
+   SNMP_Variable *inner = v13.decodeOpaque();
+   AssertNotNull(inner);
+   AssertEquals(inner->getType(), static_cast<uint32_t>(ASN_FLOAT));
+   AssertTrue(inner->getValueAsDouble() == 2.5);
+   delete inner;
+   v13.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("2.500000"));
+   EndTest();
+
+   StartTest(_T("SNMP_Variable opaque-wrapped double"));
+   // Opaque { 9F 79 08 <IEEE 754 double, network byte order> } = -1234.5
+   static const BYTE opaqueDouble[] = { 0x9F, 0x79, 0x08, 0xC0, 0x93, 0x4A, 0x00, 0x00, 0x00, 0x00, 0x00 };
+   SNMP_Variable v14(s_oidSysLocation);
+   v14.setValueFromByteArray(ASN_OPAQUE, opaqueDouble, sizeof(opaqueDouble));
+   inner = v14.decodeOpaque();
+   AssertNotNull(inner);
+   AssertEquals(inner->getType(), static_cast<uint32_t>(ASN_DOUBLE));
+   AssertTrue(inner->getValueAsDouble() == -1234.5);
+   delete inner;
+   v14.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("-1234.500000"));
+   EndTest();
 }
 
 /**
