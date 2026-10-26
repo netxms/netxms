@@ -14199,7 +14199,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    }
 
    sendPollerMsg(_T("Starting topology poll of node %s\r\n"), m_name);
-   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Started topology poll of node %s [%d]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Started topology poll of node %s [%d]"), m_name, m_id);
 
    if (isSNMPSupported())
    {
@@ -14216,13 +14216,13 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
          {
             resolveVlanPorts(vlanList);
             sendPollerMsg(POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("VLAN list retrieved from node %s [%d]"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("VLAN list retrieved from node %s [%d]"), m_name, m_id);
             m_vlans = shared_ptr<VlanList>(vlanList);
          }
          else
          {
             sendPollerMsg(POLLER_WARNING _T("Cannot get VLAN list\r\n"));
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Cannot retrieve VLAN list from node %s [%d]"), m_name, m_id);
             m_vlans.reset();
          }
          m_topologyMutex.unlock();
@@ -14272,12 +14272,12 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
 
          if (fdb != nullptr)
          {
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Switch forwarding database retrieved for node %s [%u]"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Switch forwarding database retrieved for node %s [%u]"), m_name, m_id);
             sendPollerMsg(POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Failed to get switch forwarding database from node %s [%u]"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Failed to get switch forwarding database from node %s [%u]"), m_name, m_id);
             sendPollerMsg(POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
          }
 
@@ -14296,7 +14296,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
    if (nbs != nullptr)
    {
       sendPollerMsg(POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->size());
-      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_name, (int)m_id, nbs->size());
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_name, (int)m_id, nbs->size());
 
       m_topologyMutex.lock();
       m_linkLayerNeighbors = nbs;
@@ -14420,7 +14420,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
       unlockChildList();
 
       sendPollerMsg(_T("Link layer topology processed\r\n"));
-      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Link layer topology processed for node %s [%d]"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Link layer topology processed for node %s [%d]"), m_name, m_id);
    }
    else
    {
@@ -14658,7 +14658,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
 
    pollerUnlock();
 
-   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 4, _T("Finished topology poll of node %s [%d]"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Finished topology poll of node %s [%d]"), m_name, m_id);
 }
 
 /**
