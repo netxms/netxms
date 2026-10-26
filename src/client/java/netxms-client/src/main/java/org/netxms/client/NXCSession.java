@@ -11406,7 +11406,6 @@ public class NXCSession
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, nodeId);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
-      System.out.println(response);
       return new AgentConfigurationFile(response);
    }
 
