@@ -34,6 +34,7 @@ void TestSubProcess(const char *procname, bool debug);
 void TestGeoLocation();
 void TestRSA();
 void TestMD4();
+void TestDecryptPassword();
 void TestScheduleFields();
 void TestScheduleDayOfWeek();
 void TestScheduleSeconds();
@@ -3896,6 +3897,7 @@ int main(int argc, char *argv[])
    TestGeoLocation();
    TestRSA();
    TestMD4();
+   TestDecryptPassword();
    TestScheduleFields();
    TestScheduleDayOfWeek();
    TestScheduleSeconds();

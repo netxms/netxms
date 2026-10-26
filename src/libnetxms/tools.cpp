@@ -2981,7 +2981,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encr
 {
    //check that length is correct
    size_t plen = wcslen(encryptedPasswd);
-	if ((plen != 44) && (plen != 88))
+   if ((plen != 44) && (plen != 88))
       return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
    // check that password contains only allowed symbols
@@ -2989,26 +2989,27 @@ bool LIBNETXMS_EXPORTABLE DecryptPasswordW(const WCHAR *login, const WCHAR *encr
    if ((invalidSymbolIndex < plen - 2) || ((invalidSymbolIndex != plen) && ((encryptedPasswd[invalidSymbolIndex] != L'=') || ((invalidSymbolIndex == plen - 2) && (encryptedPasswd[plen - 1] != L'=')))))
       return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
-	char *mbencrypted = MBStringFromWideStringSysLocale(encryptedPasswd);
-	char *mblogin = MBStringFromWideStringSysLocale(login);
+   // Encrypted password is validated above to contain only ASCII base64 characters, so plain narrowing is sufficient
+   char mbencrypted[89];
+   for(size_t i = 0; i <= plen; i++)
+      mbencrypted[i] = static_cast<char>(encryptedPasswd[i]);
 
-	BYTE encrypted[64], decrypted[64], key[16];
-	size_t encSize = ((plen == 44) ? 32 : 64);
-	base64_decode(mbencrypted, strlen(mbencrypted), (char *)encrypted, &encSize);
-	if (encSize != ((plen == 44) ? 32 : 64))
+   BYTE encrypted[64], decrypted[64], key[16];
+   size_t encSize = ((plen == 44) ? 32 : 64);
+   base64_decode(mbencrypted, plen, (char *)encrypted, &encSize);
+   if (encSize != ((plen == 44) ? 32 : 64))
       return DecryptPasswordFailW(encryptedPasswd, decryptedPasswd, bufferLenght);
 
-	CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
-	ICEDecryptData(encrypted, encSize, decrypted, key);
-	decrypted[encSize - 1] = 0;
+   char *mblogin = MBStringFromWideStringSysLocale(login);
+   CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
+   MemFree(mblogin);
+   ICEDecryptData(encrypted, encSize, decrypted, key);
+   decrypted[encSize - 1] = 0;
 
-	MultiByteToWideCharSysLocale((char *)decrypted, decryptedPasswd, bufferLenght);
-	decryptedPasswd[bufferLenght - 1] = 0;
-	MemFree(mbencrypted);
-	MemFree(mblogin);
-	SecureZeroMemory(decrypted, sizeof(decrypted));
-
-	return true;
+   MultiByteToWideCharSysLocale((char *)decrypted, decryptedPasswd, bufferLenght);
+   decryptedPasswd[bufferLenght - 1] = 0;
+   SecureZeroMemory(decrypted, sizeof(decrypted));
+   return true;
 }
 
 /**
