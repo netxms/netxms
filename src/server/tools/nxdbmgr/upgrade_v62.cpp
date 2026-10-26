@@ -43,9 +43,6 @@ static bool H_UpgradeFromV46()
    CHK_EXEC(CreateConfigParam(L"Jira.VerifyPeer", L"1", L"Enable/disable peer certificate verification.", nullptr, 'B', true, false, false));
    CHK_EXEC(SQLQuery(L"UPDATE config SET default_value='https://tile.netxms.org/osm/' WHERE var_name='Client.TileServerURL'"));
    CHK_EXEC(SQLQuery(L"DELETE FROM config_values WHERE var_name='XMPP.Port'"));
-   CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name='SNMP.Agent.AllowedVersions'"));
-   CHK_EXEC(SQLQuery(L"DELETE FROM config WHERE var_name LIKE 'SNMP.Agent.V3.%'"));
-   CHK_EXEC(SQLQuery(L"DELETE FROM config_values WHERE var_name LIKE 'SNMP.Agent.V3.%'"));
    CHK_EXEC(SetMinorSchemaVersion(47));
    return true;
 }
