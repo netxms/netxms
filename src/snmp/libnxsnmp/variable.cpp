@@ -272,6 +272,11 @@ bool SNMP_Variable::decodeContent(const BYTE *data, size_t dataLength, bool encl
          m_value = m_valueBuffer;
          success = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
          break;
+      case ASN_DOUBLE:
+         m_valueLength = sizeof(double);
+         m_value = m_valueBuffer;
+         success = BER_DecodeContent(m_type, pbCurrPos, length, m_value);
+         break;
       default:
          m_valueLength = length;
          if (length <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE)
