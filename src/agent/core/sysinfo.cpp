@@ -828,6 +828,9 @@ LONG H_FileLineCount(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstra
    }
    _close(fd);
 
+   if (bytes < 0)
+      return SYSINFO_RC_ERROR;   // read failure (e.g. EISDIR) must not be reported as a valid count
+
    if (hasData && !lastCharIsNL)
       lineCount++; // Last line without '\n' char (an empty file has no lines)
 
