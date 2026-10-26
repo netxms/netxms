@@ -133,6 +133,7 @@ job.manager	Job manager
 housekeeper	Housekeeper messages
 
 kpi		KPI engine (computation methods, sample attributes)
+kpi.direct	Direct KPI computation provider (kpidirect module)
 
 leef
 

@@ -1,0 +1,9 @@
+#
+# Makefile.w32 - kpidirect (direct KPI computation provider module) for Windows/MinGW
+# Part of NetXMS project
+#
+
+MODULE = kpidirect
+SOURCES = $(wildcard *.cpp)
+
+include $(TOPDIR)/src/server/module-common.mk
