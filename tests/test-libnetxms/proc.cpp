@@ -135,6 +135,15 @@ void TestProcessExecutor(const char *procname)
    AssertEquals(e8.getOutput(), "a b||c\"d|d'd|c'c|other '\"|e f\\|\\\"f|g\th|plain|");
    EndTest();
 
+   StartTest(_T("Process executor - [] command line with trailing comma"));
+   _sntprintf(cmdLine, MAX_PATH, _T("['%hs', '@args', 'a', ]"), procname);
+   OutputCapturingProcessExecutor e9(cmdLine);
+   AssertTrue(e9.execute());
+   AssertTrue(e9.waitForCompletion(5000));
+   AssertEquals(e9.getExitCode(), 0u);
+   AssertEquals(e9.getOutput(), "a|");
+   EndTest();
+
    // Element with unbalanced quotes never terminates, so it and everything after it is dropped
    StartTest(_T("Process executor - [] command line with unbalanced quotes"));
    static const TCHAR *unbalancedTemplates[] = { _T("['%hs', '@args', 'c'd']"), _T("['%hs', '@args', ''']") };

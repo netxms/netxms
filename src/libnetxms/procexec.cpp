@@ -229,7 +229,7 @@ static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuff
    const TCHAR *appName;
    if (cmd[0] == _T('['))
    {
-      bool squotes = false, dquotes = false, firstElement = true;
+      bool squotes = false, dquotes = false, firstElement = true, hasElement = false;
       StringBuffer element;
       for (const TCHAR *p = cmd + 1; *p != 0; p++)
       {
@@ -237,27 +237,33 @@ static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuff
          {
             if ((*p == ']') || (*p == ','))
             {
-               if (firstElement)
+               if (hasElement)
                {
-                  appNameBuffer = element;
-                  firstElement = false;
+                  if (firstElement)
+                  {
+                     appNameBuffer = element;
+                     firstElement = false;
+                  }
+                  else
+                  {
+                     cmdLine.append(_T(' '));
+                  }
+                  AppendQuotedArgument(cmdLine, element);
+                  element.clear();
+                  hasElement = false;
                }
-               else
-               {
-                  cmdLine.append(_T(' '));
-               }
-               AppendQuotedArgument(cmdLine, element);
-               element.clear();
                if (*p == ']')
                   break;
             }
             else if (*p == '\'')
             {
                squotes = true;
+               hasElement = true;
             }
             else if (*p == '"')
             {
                dquotes = true;
+               hasElement = true;
             }
             continue;
          }
