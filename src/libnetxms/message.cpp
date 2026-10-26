@@ -88,15 +88,17 @@ static size_t CalculateFieldSize(const NXCP_MESSAGE_FIELD *field, bool networkBy
 }
 
 /**
- * Field hash map entry
+ * Field hash map entry. Hash key is data.fieldId (host byte order); it is the first member of the packed
+ * NXCP_MESSAGE_FIELD structure, so &data is used as key pointer to avoid taking address of packed member.
  */
 struct MessageField
 {
    UT_hash_handle hh;
-   uint32_t id;
    size_t size;
    NXCP_MESSAGE_FIELD data;
 };
+
+#define ADD_FIELD_TO_HASH(head, entry) HASH_ADD_KEYPTR(hh, head, &(entry)->data, sizeof(uint32_t), entry)
 
 /**
  * Create new hash entry with given field size
@@ -166,7 +168,7 @@ NXCPMessage::NXCPMessage(const NXCPMessage& msg) : m_pool(msg.m_pool.regionSize(
       HASH_ITER(hh, msg.m_fields, entry, tmp)
       {
          MessageField *f = m_pool.copyMemoryBlock(entry, entry->size);
-         HASH_ADD_INT(m_fields, id, f);
+         ADD_FIELD_TO_HASH(m_fields, f);
       }
    }
 }
@@ -368,7 +370,6 @@ NXCPMessage::NXCPMessage(const NXCP_MESSAGE *msg, int version) : m_pool(SizeHint
 
          // Create new entry
          MessageField *entry = CreateMessageField(m_pool, fieldSize);
-         entry->id = ntohl(field->fieldId);
          memcpy(&entry->data, field, fieldSize);
 
          // Convert values to host format
@@ -409,7 +410,7 @@ SUPPRESS_WARNING_PACKED_POP
                break;
          }
 
-         HASH_ADD_INT(m_fields, id, entry);
+         ADD_FIELD_TO_HASH(m_fields, entry);
 
          // Starting from version 2, all variables should be 8-byte aligned
          if (m_version >= 2)
@@ -567,7 +568,6 @@ void *NXCPMessage::set(uint32_t fieldId, BYTE type, const void *value, bool isSi
       default:
          return nullptr;  // Invalid data type, unable to handle
    }
-   entry->id = fieldId;
    entry->data.fieldId = fieldId;
    entry->data.type = type;
    if (isSigned)
@@ -580,7 +580,7 @@ void *NXCPMessage::set(uint32_t fieldId, BYTE type, const void *value, bool isSi
    {
       HASH_DEL(m_fields, curr);
    }
-   HASH_ADD_INT(m_fields, id, entry);
+   ADD_FIELD_TO_HASH(m_fields, entry);
 
    return (type == NXCP_DT_INT16) ? ((void *)((BYTE *)&entry->data + 6)) : ((void *)((BYTE *)&entry->data + 8));
 }
@@ -1864,7 +1864,7 @@ void NXCPMessage::setProtocolVersion(int version)
       HASH_ITER(hh, m_fields, entry, tmp)
       {
          if (entry->data.type == NXCP_DT_UTF8_STRING)
-            stringFields.add(entry->id);
+            stringFields.add(entry->data.fieldId);
       }
 
       char localBuffer[4096];
