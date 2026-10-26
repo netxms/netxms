@@ -34,6 +34,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.VncSocketEndpoint;
 import org.netxms.nxmc.modules.objecttools.TcpPortForwarder;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -97,17 +98,10 @@ public class RemoteControlView extends AdHocObjectView
 
             VncSocketEndpoint.registerForwarder(tcpPortForwarder);
             runInUIThread(() -> {
-               StringBuilder url = new StringBuilder();
-               url.append(RWT.getResourceManager().getLocation("vncviewer/vnc.html"));
+               String pageLocation = RWT.getResourceManager().getLocation("vncviewer/vnc.html");
+               StringBuilder url = new StringBuilder(pageLocation);
                url.append("?autoconnect=true&path=");
-               String cp = RWT.getRequest().getContextPath();
-               if (!cp.isEmpty())
-               {
-                  url.append(cp.substring(1)); // without leading /
-                  url.append('/');
-               }
-               url.append("vncviewer/");
-               url.append(tcpPortForwarder.getId());
+               url.append(WidgetHelper.getPageRelativeUrl(pageLocation, "vncviewer/" + tcpPortForwarder.getId()));
                if ((node.getVncPassword() != null) && !node.getVncPassword().isEmpty())
                {
                   try

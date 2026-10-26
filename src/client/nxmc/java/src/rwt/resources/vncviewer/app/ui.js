@@ -1039,7 +1039,15 @@ const UI = {
         if (port) {
             url += ':' + port;
         }
-        url += '/' + path;
+        if (path.startsWith('./') || path.startsWith('../')) {
+            // NetXMS: path relative to this page, resolve it against page URL
+            // so that it follows the public path the page was loaded from
+            // (web console behind reverse proxy with path rewriting)
+            const resolved = new URL(path, window.location.href);
+            url += resolved.pathname + resolved.search;
+        } else {
+            url += '/' + path;
+        }
 
         try {
             UI.rfb = new RFB(document.getElementById('noVNC_container'), url,
