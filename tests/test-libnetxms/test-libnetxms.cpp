@@ -41,6 +41,7 @@ void TestRSA();
 void TestMD4();
 void TestDES();
 void TestDESCBC();
+void TestDecryptPassword();
 void TestMarkdown();
 void TestScheduleFields();
 void TestScheduleDayOfWeek();
@@ -3993,6 +3994,7 @@ int main(int argc, char *argv[])
    TestMD4();
    TestDES();
    TestDESCBC();
+   TestDecryptPassword();
    TestMarkdown();
    TestScheduleFields();
    TestScheduleDayOfWeek();
