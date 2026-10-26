@@ -277,7 +277,7 @@ def compose(vec):
       ignored = [dg('PROXY_IGNORED_STATE', component=CINDEX[comp], detail=p['id']) for p in px]
 
       if state not in STATES or (state == 'NOT_APPLICABLE' and comp in NOT_APPLICABLE_FORBIDDEN) or \
-            (state == 'METERED' and not isinstance(pe.get('expected'), int)):
+            (state == 'METERED' and not (isinstance(pe.get('expected'), int) and pe['expected'] > 0)):
          r = missing(comp, 'PROFILE_INVALID')
       elif state == 'NOT_APPLICABLE':
          r = {'quality': 'MEASURED', 'value': 0.0, 'bounded': True, 'lower': 0.0, 'upper': 0.0,
@@ -308,8 +308,6 @@ def compose(vec):
       if n != pe['expected']:
          compl = min([integ[s['dciId']]['coverage'] for s in prim], default=0.0)
          return missing(comp, 'BINDING_COUNT_MISMATCH', compl, detail=n)
-      if n == 0:
-         return missing(comp, 'NO_PRIMARY_BINDINGS')
       total = 0.0
       compl = 1.0
       refused = False

@@ -55,7 +55,7 @@ Only PRIMARY series (those at the slot's summing level) are summed, in ascending
 | `ABSENT`, `LEVEL_AMBIGUOUS` | `MISSING` (`SLOT_ABSENT`, `SLOT_LEVEL_AMBIGUOUS`) |
 | `PROXIED` | sum of ADD proxies, `PROXY`; a DEDUCT proxy or no ADD proxy gives `MISSING` |
 | `METERED` | below |
-| anything else, or `METERED` without an expected binding count | `MISSING` (`PROFILE_INVALID`) |
+| anything else, or `METERED` without an expected binding count (zero means unspecified) | `MISSING` (`PROFILE_INVALID`) |
 
 A metered component is `MISSING` if the number of PRIMARY series differs from the profile's
 expected count (`BINDING_COUNT_MISMATCH`), if any PRIMARY series is not accepted

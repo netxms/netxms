@@ -8,6 +8,10 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+kpidirecttestdir=$(pkgdatadir)/kpidirect-test
+
+kpidirecttest_DATA = kpidirect_vectors.json
+
 bin_PROGRAMS = test-kpidirect
 test_kpidirect_SOURCES = test-kpidirect.cpp \
 	../../src/server/kpidirect/integrate.cpp \
@@ -24,6 +28,6 @@ test_kpidirect_LDADD += -ljansson
 endif
 
 EXTRA_DIST = \
-	kpidirect_vectors.json \
+	$(kpidirecttest_DATA) \
 	kpidirect_ref.py \
 	make_vectors.py

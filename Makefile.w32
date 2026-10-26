@@ -170,6 +170,7 @@ TESTS_DIRS = \
     tests/test-libnxnetconf \
     tests/test-libnxsnmp \
     tests/test-libnxsl \
+    tests/test-kpidirect \
     tests/test-ncd-webhook \
     tests/test-nxshell \
     tests/agent/unit/entsoe \

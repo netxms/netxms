@@ -51,7 +51,6 @@ const wchar_t *DiagnosticCodeName(ComputationDiagnosticCode code)
       case ComputationDiagnosticCode::SLOT_ABSENT: return L"SLOT_ABSENT";
       case ComputationDiagnosticCode::SLOT_LEVEL_AMBIGUOUS: return L"SLOT_LEVEL_AMBIGUOUS";
       case ComputationDiagnosticCode::BINDING_COUNT_MISMATCH: return L"BINDING_COUNT_MISMATCH";
-      case ComputationDiagnosticCode::NO_PRIMARY_BINDINGS: return L"NO_PRIMARY_BINDINGS";
       case ComputationDiagnosticCode::INPUT_REFUSED: return L"INPUT_REFUSED";
       case ComputationDiagnosticCode::SUBSET_UNRESOLVED: return L"SUBSET_UNRESOLVED";
       case ComputationDiagnosticCode::NEGATIVE_RESULT: return L"NEGATIVE_RESULT";

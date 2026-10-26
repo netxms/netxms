@@ -165,6 +165,8 @@ add('V30', 'eed.win PROXIED with only a DEDUCT proxy of 0', DAY, {'eed.win': {'s
 add('V31', 'Power series in W, 15 min polling, input newest first', DAY, eit_profile(),
     [series(101, 'eed.eit', 'W', list(reversed(rate(DAY, 900, lambda t: 80000.0))), poll=900)])
 add('V32', 'eed.eit declared NOT_APPLICABLE (invalid profile)', DAY, {'eed.eit': NA}, [])
+add('V33', 'eed.eit METERED with expected count 0 (unspecified; invalid profile)', DAY, eit_profile(0),
+    [series(101, 'eed.eit', 'kW', rate(DAY, 300, flat))])
 
 CLASSIFICATION = []
 for unit, delta, slot in [

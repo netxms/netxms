@@ -192,7 +192,7 @@ struct MeteringProfileEntry
    wchar_t slotTag[MAX_DCI_TAG_LENGTH];
    EnergyComponent component;
    SlotState state;
-   int32_t expectedBindings;   // PRIMARY bindings expected at the summing level; 0 = unspecified
+   int32_t expectedBindings;   // PRIMARY bindings expected at the summing level; 0 = unspecified (invalid for METERED)
    int32_t summingClass;       // object class of the summing level; 0 = unspecified
    int32_t summingDomainType;  // PowerDomainType when summingClass is power domain; -1 otherwise
    int16_t measurementBasis;   // eed.eit only: basis of the summing level; -1 otherwise
@@ -274,14 +274,13 @@ enum class ComputationDiagnosticCode : int16_t
    SLOT_ABSENT = 102,
    SLOT_LEVEL_AMBIGUOUS = 103,
    BINDING_COUNT_MISMATCH = 104,
-   NO_PRIMARY_BINDINGS = 105,
-   INPUT_REFUSED = 106,
-   SUBSET_UNRESOLVED = 107,
-   NEGATIVE_RESULT = 108,
-   NO_VALID_PROXY = 109,
-   DEDUCTION_WITHOUT_MEASUREMENT = 110,
-   PROXY_IGNORED_STATE = 111,
-   PROXY_USED = 112
+   INPUT_REFUSED = 105,
+   SUBSET_UNRESOLVED = 106,
+   NEGATIVE_RESULT = 107,
+   NO_VALID_PROXY = 108,
+   DEDUCTION_WITHOUT_MEASUREMENT = 109,
+   PROXY_IGNORED_STATE = 110,
+   PROXY_USED = 111
 };
 
 /**

@@ -23,6 +23,9 @@
 ** reference implementation (kpidirect_ref.py). Each vector is run three times: samples, series and
 ** proxies as listed, fully reversed, and with samples sorted newest first as the server supplies them.
 ** All three must agree with the expected output within tolerance and with each other exactly.
+**
+** The vectors file is taken from the first argument, or from kpidirect-test/kpidirect_vectors.json
+** under the NetXMS share directory where the build installs it.
 **/
 
 #include <nms_common.h>
@@ -83,7 +86,7 @@ static int CodeFromName(const char *name)
       ComputationDiagnosticCode::IMPLAUSIBLE_INCREMENT, ComputationDiagnosticCode::UNRESOLVED_BOUNDARY, ComputationDiagnosticCode::INTERVAL_WITHOUT_START,
       ComputationDiagnosticCode::INTERVAL_AFTER_GAP, ComputationDiagnosticCode::UNCOVERED_TIME, ComputationDiagnosticCode::INSUFFICIENT_COVERAGE,
       ComputationDiagnosticCode::PROFILE_INVALID, ComputationDiagnosticCode::SLOT_ABSENT, ComputationDiagnosticCode::SLOT_LEVEL_AMBIGUOUS,
-      ComputationDiagnosticCode::BINDING_COUNT_MISMATCH, ComputationDiagnosticCode::NO_PRIMARY_BINDINGS, ComputationDiagnosticCode::INPUT_REFUSED,
+      ComputationDiagnosticCode::BINDING_COUNT_MISMATCH, ComputationDiagnosticCode::INPUT_REFUSED,
       ComputationDiagnosticCode::SUBSET_UNRESOLVED, ComputationDiagnosticCode::NEGATIVE_RESULT, ComputationDiagnosticCode::NO_VALID_PROXY,
       ComputationDiagnosticCode::DEDUCTION_WITHOUT_MEASUREMENT, ComputationDiagnosticCode::PROXY_IGNORED_STATE, ComputationDiagnosticCode::PROXY_USED
    };
@@ -461,7 +464,22 @@ int main(int argc, char *argv[])
 {
    InitNetXMSProcess(true);
 
-   const char *path = (argc > 1) ? argv[1] : "kpidirect_vectors.json";
+   char path[MAX_PATH];
+   if (argc > 1)
+   {
+      strlcpy(path, argv[1], MAX_PATH);
+   }
+   else
+   {
+      TCHAR shared[MAX_PATH];
+      GetNetXMSDirectory(nxDirShare, shared);
+      _tcslcat(shared, FS_PATH_SEPARATOR _T("kpidirect-test") FS_PATH_SEPARATOR _T("kpidirect_vectors.json"), MAX_PATH);
+#ifdef UNICODE
+      wchar_to_mb(shared, -1, path, MAX_PATH);
+#else
+      strlcpy(path, shared, MAX_PATH);
+#endif
+   }
    json_error_t error;
    json_t *root = json_load_file(path, 0, &error);
    if (root == nullptr)

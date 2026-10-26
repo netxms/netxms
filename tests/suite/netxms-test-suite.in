@@ -44,6 +44,12 @@ if [ -x $BINDIR/test-libnxsl ]; then
 	$BINDIR/test-libnxsl || exit 1
 fi
 
+if [ -x $BINDIR/test-kpidirect ]; then
+	echo ""
+	echo "********** test-kpidirect **********"
+	$BINDIR/test-kpidirect || exit 1
+fi
+
 if [ -x $BINDIR/test-libnxsrv ]; then
 	echo ""
 	echo "********** test-libnxsrv **********"
