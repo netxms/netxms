@@ -182,9 +182,16 @@ uint32_t Component::updateFromSnmp(SNMP_Transport *snmp)
 
 	oid[11] = 11;	// entPhysicalSerialNum
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	   m_serial = MemCopyString(buffer);
+   {
+      // ENTITY-MIB limits serial number to 32 octets; cut non-conformant values to width of serial_number column
+      // in node_components table (63 characters) so that in-memory and persisted inventory hold the same value
+      buffer[63] = 0;
+      m_serial = MemCopyString(buffer);
+   }
 	else
+   {
       m_serial = MemCopyString(_T(""));
+   }
 
 	oid[11] = 12;	// entPhysicalMfgName
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, nullptr, oid, 13, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
