@@ -231,6 +231,19 @@ static const TCHAR *s_dbInitQueries[] =
    _T("  last_alert_time integer not null,")
    _T("  PRIMARY KEY(parser_type,rule_guid,object_id))"),
 
+   _T("CREATE TABLE appx_user_cache (")
+   _T("  sid varchar(255) not null,")
+   _T("  user_name varchar(511) not null,")
+   _T("  PRIMARY KEY(sid))"),
+
+   _T("CREATE TABLE appx_package_cache (")
+   _T("  sid varchar(255) not null,")
+   _T("  package varchar(255) not null,")
+   _T("  name varchar(511) not null,")
+   _T("  version varchar(63) not null,")
+   _T("  vendor varchar(511) not null,")
+   _T("  PRIMARY KEY(sid,package))"),
+
    nullptr
 };
 
@@ -252,6 +265,8 @@ static bool InitDatabase()
 static const TCHAR *s_dbTables[] =
 {
    _T("agent_policy"),
+   _T("appx_package_cache"),
+   _T("appx_user_cache"),
    _T("dc_config"),
    _T("dc_queue"),
    _T("dc_proxy"),

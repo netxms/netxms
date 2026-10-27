@@ -38,6 +38,28 @@ bool g_ignoreAgentDbErrors = FALSE;
 static DB_HANDLE s_db = NULL;
 
 /**
+ * Upgrade from V20 to V21
+ */
+static BOOL H_UpgradeFromV20(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(
+      _T("CREATE TABLE appx_user_cache (")
+      _T("  sid varchar(255) not null,")
+      _T("  user_name varchar(511) not null,")
+      _T("  PRIMARY KEY(sid))")));
+   CHK_EXEC(Query(
+      _T("CREATE TABLE appx_package_cache (")
+      _T("  sid varchar(255) not null,")
+      _T("  package varchar(255) not null,")
+      _T("  name varchar(511) not null,")
+      _T("  version varchar(63) not null,")
+      _T("  vendor varchar(511) not null,")
+      _T("  PRIMARY KEY(sid,package))")));
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 21));
+   return TRUE;
+}
+
+/**
  * Upgrade from V19 to V20
  */
 static BOOL H_UpgradeFromV19(int currVersion, int newVersion)
@@ -593,6 +615,7 @@ static struct
    { 17, 18, H_UpgradeFromV17 },
    { 18, 19, H_UpgradeFromV18 },
    { 19, 20, H_UpgradeFromV19 },
+   { 20, 21, H_UpgradeFromV20 },
    { 0, 0, nullptr }
 };
 

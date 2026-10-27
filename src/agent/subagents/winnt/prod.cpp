@@ -25,58 +25,6 @@
 #include <shlwapi.h>
 
 /**
- * Resolve indirect string (e.g., @{PackageFullName?ms-resource://...})
- */
-static void ResolveIndirectString(TCHAR *str, size_t strSize)
-{
-   if (str[0] != _T('@'))
-      return;
-
-   TCHAR resolved[512];
-   if (SHLoadIndirectString(str, resolved, 512, nullptr) == S_OK)
-   {
-      _tcslcpy(str, resolved, strSize);
-      return;
-   }
-
-   // Cannot resolve, try to cut at first underscore - in many cases it will produce usable name
-   wchar_t *p = wcschr(str + 2, L'_');
-   if (p != nullptr)
-   {
-      *p = 0;
-      memmove(str, str + 2, (wcslen(str) - 1) * sizeof(wchar_t));
-   }
-}
-
-/**
- * Resolve SID string to username
- */
-static bool ResolveSidToUsername(const wchar_t *sidString, wchar_t *userName, size_t userNameSize)
-{
-   PSID pSid = nullptr;
-   if (!ConvertStringSidToSidW(sidString, &pSid))
-      return false;
-
-   wchar_t name[256] = L"";
-   wchar_t domain[256] = L"";
-   DWORD nameSize = 256;
-   DWORD domainSize = 256;
-   SID_NAME_USE sidType;
-
-   bool success = LookupAccountSid(nullptr, pSid, name, &nameSize, domain, &domainSize, &sidType) != 0;
-   LocalFree(pSid);
-
-   if (success)
-   {
-      if (domain[0] != 0)
-         _sntprintf(userName, userNameSize, _T("%s\\%s"), domain, name);
-      else
-         _tcslcpy(userName, name, userNameSize);
-   }
-   return success;
-}
-
-/**
  * Read product property
  */
 static void ReadProductProperty(HKEY hKey, const TCHAR *propName, Table *table, int column)
@@ -140,289 +88,694 @@ static void ReadProductInfo(HKEY hKey, const TCHAR *keyName, Table *table)
       table->set(6, keyName);
 }
 
+
 /**
- * Read Store package information from registry
+ * Location of Store package repository within user's classes hive (UsrClass.dat)
  */
-static void ReadStorePackageInfo(HKEY hKey, const TCHAR *packageFullName, const TCHAR *userName, Table *table)
+#define STORE_PACKAGES_PATH   L"Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages"
+
+/**
+ * Store package information
+ */
+struct StorePackage
 {
-   TCHAR displayName[512];
-   DWORD type, size = sizeof(displayName);
-   if (RegQueryValueEx(hKey, _T("DisplayName"), nullptr, &type, reinterpret_cast<BYTE*>(displayName), &size) != ERROR_SUCCESS)
-      return;  // Skip packages without display name
+   String fullName;
+   String name;
+   String version;
+   String vendor;
 
-   // Resolve indirect string references (e.g., @{PackageFullName?ms-resource://...})
-   ResolveIndirectString(displayName, 512);
-
-   // Extract version from PackageID (format: Name_Version_Arch__PublisherId)
-   TCHAR packageId[512] = _T("");
-   TCHAR version[128] = _T("");
-   size = sizeof(packageId);
-   if (RegQueryValueEx(hKey, _T("PackageID"), nullptr, &type, reinterpret_cast<BYTE*>(packageId), &size) == ERROR_SUCCESS)
+   StorePackage(const wchar_t *_fullName, const wchar_t *_name, const wchar_t *_version, const wchar_t *_vendor) :
+      fullName(_fullName), name(_name), version(_version), vendor(_vendor)
    {
-      TCHAR *p = _tcschr(packageId, _T('_'));
-      if (p != nullptr)
-      {
-         p++;
-         TCHAR *v = _tcschr(p, _T('_'));
-         if (v != nullptr)
-            *v = 0;
-         _tcslcpy(version, p, 128);
-      }
    }
 
-   // Check if package already known (duplicate detection - same name, version, and user)
-   for(int i = 0; i < table->getNumRows(); i++)
-      if (!_tcsicmp(table->getAsString(i, 0), displayName) &&
-          !_tcsicmp(table->getAsString(i, 1), version) &&
-          !_tcsicmp(table->getAsString(i, 7, L""), CHECK_NULL_EX(userName)))
-         return;
+   bool equals(const StorePackage *p) const
+   {
+      return fullName.equals(p->fullName) && name.equals(p->name) && version.equals(p->version) && vendor.equals(p->vendor);
+   }
+};
 
-   table->addRow();
-   table->set(0, displayName);   // NAME
-   table->set(1, version);       // VERSION
+/**
+ * Last successfully read list of Store packages for user profile. Reported in place of live data when
+ * profile's classes hive is not available (user logged off with roaming profile, FSLogix, UPD, etc.),
+ * so that package list does not change with user's logon state.
+ */
+struct StoreProfileCacheEntry
+{
+   MutableString userName;
+   ObjectArray<StorePackage> packages;
 
-   wchar_t publisher[256] = L"";
-   size = sizeof(publisher);
-   if (RegQueryValueExW(hKey, L"Publisher", nullptr, &type, reinterpret_cast<BYTE*>(publisher), &size) == ERROR_SUCCESS)
-      ResolveIndirectString(publisher, 256);
-   table->set(2, publisher);     // VENDOR
+   StoreProfileCacheEntry(const wchar_t *_userName) : userName(_userName), packages(64, 64, Ownership::True)
+   {
+   }
 
-   // DATE, URL, DESCRIPTION - not available in registry
+   StoreProfileCacheEntry(const wchar_t *_userName, ObjectArray<StorePackage>&& _packages) : userName(_userName), packages(std::move(_packages))
+   {
+   }
 
-   // Use APPX: prefix to identify Store apps
-   StringBuffer uninstallKey(_T("APPX:"));
-   uninstallKey.append(packageFullName);
-   table->set(6, uninstallKey);  // UNINSTALL_KEY
+   bool matches(const wchar_t *_userName, const ObjectArray<StorePackage>& _packages) const
+   {
+      if (wcscmp(userName, _userName) || (packages.size() != _packages.size()))
+         return false;
+      for(int i = 0; i < _packages.size(); i++)
+      {
+         const StorePackage *p = _packages.get(i);
+         bool found = false;
+         for(int j = 0; j < packages.size(); j++)
+         {
+            if (packages.get(j)->equals(p))
+            {
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+            return false;
+      }
+      return true;
+   }
+};
 
-   // Set user name for user-specific packages
-   if (userName != nullptr)
-      table->set(7, userName);   // USER
+/**
+ * Store package cache (profile SID -> last known package list)
+ */
+static StringObjectMap<StoreProfileCacheEntry> s_storeCache(Ownership::True);
+static bool s_storeCacheLoaded = false;
+static Mutex s_storeCacheLock;
+
+/**
+ * Load Store package cache from local database
+ */
+static void LoadStorePackageCache()
+{
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb == nullptr)
+      return;
+
+   DB_RESULT hResult = DBSelect(hdb, L"SELECT sid,user_name FROM appx_user_cache");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         wchar_t sid[256], userName[512];
+         DBGetField(hResult, i, 0, sid, 256);
+         s_storeCache.set(sid, new StoreProfileCacheEntry(DBGetField(hResult, i, 1, userName, 512)));
+      }
+      DBFreeResult(hResult);
+   }
+
+   hResult = DBSelect(hdb, L"SELECT sid,package,name,version,vendor FROM appx_package_cache");
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         wchar_t sid[256];
+         StoreProfileCacheEntry *entry = s_storeCache.get(DBGetField(hResult, i, 0, sid, 256));
+         if (entry == nullptr)
+            continue;
+
+         wchar_t fullName[256], name[512], version[64], vendor[512];
+         entry->packages.add(new StorePackage(DBGetField(hResult, i, 1, fullName, 256), DBGetField(hResult, i, 2, name, 512),
+            DBGetField(hResult, i, 3, version, 64), DBGetField(hResult, i, 4, vendor, 512)));
+      }
+      DBFreeResult(hResult);
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 5, L"Store package cache loaded (%d user profiles)", s_storeCache.size());
 }
 
 /**
- * Read Windows Store packages from a specific registry root
+ * Execute query with profile SID as the only parameter
  */
-static void ReadStorePackagesFromRegistryPath(HKEY hRootKey, const TCHAR *basePath, const TCHAR *userName, Table *table)
+static bool ExecuteQueryForProfile(DB_HANDLE hdb, const wchar_t *query, const wchar_t *sid)
+{
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt == nullptr)
+      return false;
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, sid, DB_BIND_STATIC);
+   bool success = DBExecute(hStmt);
+   DBFreeStatement(hStmt);
+   return success;
+}
+
+/**
+ * Delete Store package cache entry from local database
+ */
+static void DeleteStorePackageCacheEntry(const wchar_t *sid)
+{
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb == nullptr)
+      return;
+
+   DBBegin(hdb);
+   if (ExecuteQueryForProfile(hdb, L"DELETE FROM appx_package_cache WHERE sid=?", sid) &&
+       ExecuteQueryForProfile(hdb, L"DELETE FROM appx_user_cache WHERE sid=?", sid))
+      DBCommit(hdb);
+   else
+      DBRollback(hdb);
+}
+
+/**
+ * Save Store package cache entry to local database
+ */
+static void SaveStorePackageCacheEntry(const wchar_t *sid, const StoreProfileCacheEntry *entry)
+{
+   DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
+   if (hdb == nullptr)
+      return;
+
+   DBBegin(hdb);
+   bool success = ExecuteQueryForProfile(hdb, L"DELETE FROM appx_package_cache WHERE sid=?", sid) &&
+                  ExecuteQueryForProfile(hdb, L"DELETE FROM appx_user_cache WHERE sid=?", sid);
+
+   if (success)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO appx_user_cache (sid,user_name) VALUES (?,?)");
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, sid, DB_BIND_STATIC);
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, entry->userName, DB_BIND_STATIC);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   if (success && !entry->packages.isEmpty())
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, L"INSERT INTO appx_package_cache (sid,package,name,version,vendor) VALUES (?,?,?,?,?)", entry->packages.size() > 1);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, sid, DB_BIND_STATIC);
+         for(int i = 0; success && (i < entry->packages.size()); i++)
+         {
+            const StorePackage *p = entry->packages.get(i);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, p->fullName, DB_BIND_STATIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, p->name, DB_BIND_STATIC);
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, p->version, DB_BIND_STATIC);
+            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, p->vendor, DB_BIND_STATIC);
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
+   if (success)
+   {
+      DBCommit(hdb);
+      nxlog_debug_tag(DEBUG_TAG, 6, L"Store package cache entry for profile %s saved (%d packages)", sid, entry->packages.size());
+   }
+   else
+   {
+      DBRollback(hdb);
+   }
+}
+
+/**
+ * Read string value from registry. Unlike plain RegQueryValueEx, guarantees null termination of the result.
+ */
+static bool ReadRegistryString(HKEY hKey, const wchar_t *valueName, wchar_t *buffer, size_t bufferSize)
+{
+   DWORD type, size = static_cast<DWORD>((bufferSize - 1) * sizeof(wchar_t));
+   if ((RegQueryValueExW(hKey, valueName, nullptr, &type, reinterpret_cast<BYTE*>(buffer), &size) != ERROR_SUCCESS) ||
+       ((type != REG_SZ) && (type != REG_EXPAND_SZ)))
+      return false;
+   buffer[size / sizeof(wchar_t)] = 0;
+   return true;
+}
+
+/**
+ * Resolve indirect string (e.g., @{PackageFullName?ms-resource://...}). Strings that are not indirect are left as is.
+ * Returns false if indirect string cannot be resolved or resolves to empty string.
+ */
+static bool ResolveIndirectString(wchar_t *str, size_t size)
+{
+   if (str[0] != L'@')
+      return true;
+
+   wchar_t resolved[512];
+   if ((SHLoadIndirectString(str, resolved, 512, nullptr) != S_OK) || (resolved[0] == 0))
+      return false;
+
+   wcslcpy(str, resolved, size);
+   return true;
+}
+
+/**
+ * Extract name and version from package full name (format: Name_Version_Architecture_ResourceId_PublisherId)
+ */
+static void ParsePackageFullName(const wchar_t *fullName, wchar_t *name, size_t nameSize, wchar_t *version, size_t versionSize)
+{
+   wcslcpy(name, fullName, nameSize);
+   version[0] = 0;
+
+   wchar_t *p = wcschr(name, L'_');
+   if (p != nullptr)
+   {
+      *p++ = 0;
+      wchar_t *v = wcschr(p, L'_');
+      if (v != nullptr)
+         *v = 0;
+      wcslcpy(version, p, versionSize);
+   }
+}
+
+/**
+ * Check if two package full names refer to the same package name (version, architecture, and publisher may differ)
+ */
+static bool IsSamePackageName(const wchar_t *fullName1, const wchar_t *fullName2)
+{
+   const wchar_t *p = wcschr(fullName1, L'_');
+   size_t len = (p != nullptr) ? p - fullName1 : wcslen(fullName1);
+   return !wcsnicmp(fullName1, fullName2, len) && ((fullName2[len] == L'_') || (fullName2[len] == 0));
+}
+
+/**
+ * Find display name previously reported for given package. Exact package match is preferred over other version of
+ * the same package (several versions can be registered at once, and only some of them may be resolvable), and given
+ * user profile is preferred over other profiles.
+ */
+static bool FindCachedDisplayName(const wchar_t *fullName, const StoreProfileCacheEntry *profileCacheEntry, wchar_t *displayName, size_t size)
+{
+   const wchar_t *cachedName = nullptr;
+   for(int pass = 0; (pass < 2) && (cachedName == nullptr); pass++)
+   {
+      auto finder =
+         [fullName, pass, &cachedName] (const wchar_t *sid, const StoreProfileCacheEntry *entry) -> EnumerationCallbackResult
+         {
+            for(int i = 0; i < entry->packages.size(); i++)
+            {
+               const StorePackage *p = entry->packages.get(i);
+               if ((pass == 0) ? !wcsicmp(fullName, p->fullName) : IsSamePackageName(fullName, p->fullName))
+               {
+                  cachedName = p->name;
+                  return _STOP;
+               }
+            }
+            return _CONTINUE;
+         };
+
+      if (profileCacheEntry != nullptr)
+         finder(nullptr, profileCacheEntry);
+      if (cachedName == nullptr)
+         s_storeCache.forEach(finder);
+   }
+   if (cachedName == nullptr)
+      return false;
+
+   wcslcpy(displayName, cachedName, size);
+   return true;
+}
+
+/**
+ * Get display name for Store package. When display name cannot be resolved or is empty, use name previously reported
+ * for the same package, or name part of package full name if package was not seen before. This keeps package identity
+ * on server (name and user) stable between polls when resource resolution fails intermittently.
+ */
+static bool GetStorePackageDisplayName(HKEY hKey, const wchar_t *fullName, const StoreProfileCacheEntry *profileCacheEntry, wchar_t *displayName, size_t size)
+{
+   if (!ReadRegistryString(hKey, L"DisplayName", displayName, size))
+      return false;  // Skip packages without display name
+
+   if ((displayName[0] != 0) && ResolveIndirectString(displayName, size))
+      return true;
+
+   nxlog_debug_tag(DEBUG_TAG, 6, L"Cannot resolve display name \"%s\" for Store package %s", displayName, fullName);
+   if (!FindCachedDisplayName(fullName, profileCacheEntry, displayName, size))
+   {
+      wchar_t version[64];
+      ParsePackageFullName(fullName, displayName, size, version, 64);
+   }
+   return true;
+}
+
+/**
+ * Read Store package information from registry
+ */
+static void ReadStorePackageInfo(HKEY hKey, const wchar_t *fullName, const StoreProfileCacheEntry *profileCacheEntry, ObjectArray<StorePackage> *packages)
+{
+   wchar_t displayName[512];
+   if (!GetStorePackageDisplayName(hKey, fullName, profileCacheEntry, displayName, 512))
+      return;
+
+   wchar_t name[256], version[64];
+   ParsePackageFullName(fullName, name, 256, version, 64);
+
+   // Skip duplicates (same package for different architectures)
+   for(int i = 0; i < packages->size(); i++)
+   {
+      const StorePackage *p = packages->get(i);
+      if (!wcsicmp(p->name, displayName) && !wcsicmp(p->version, version))
+         return;
+   }
+
+   wchar_t vendor[512];
+   if (!ReadRegistryString(hKey, L"Publisher", vendor, 512) || !ResolveIndirectString(vendor, 512))
+      vendor[0] = 0;
+
+   packages->add(new StorePackage(fullName, displayName, version, vendor));
+}
+
+/**
+ * Read Store packages from user's classes hive. Returns ERROR_SUCCESS if package list was read completely.
+ */
+static LSTATUS ReadStorePackagesFromHive(HKEY hHive, const StoreProfileCacheEntry *profileCacheEntry, ObjectArray<StorePackage> *packages)
 {
    HKEY hRoot;
-   if (RegOpenKeyEx(hRootKey, basePath, 0, KEY_READ, &hRoot) != ERROR_SUCCESS)
-      return;
+   LSTATUS status = RegOpenKeyExW(hHive, STORE_PACKAGES_PATH, 0, KEY_READ, &hRoot);
+   if (status != ERROR_SUCCESS)
+      return (status == ERROR_FILE_NOT_FOUND) ? ERROR_SUCCESS : status;  // No package repository means no Store packages for this user
 
    DWORD index = 0;
    while(true)
    {
-      TCHAR packageName[512];
-      DWORD packageNameLen = 512;
-      if (RegEnumKeyEx(hRoot, index++, packageName, &packageNameLen, nullptr, nullptr, nullptr, nullptr) != ERROR_SUCCESS)
+      wchar_t fullName[256];
+      DWORD fullNameLen = 256;
+      status = RegEnumKeyExW(hRoot, index++, fullName, &fullNameLen, nullptr, nullptr, nullptr, nullptr);
+      if (status != ERROR_SUCCESS)
          break;
 
       HKEY hKey;
-      if (RegOpenKeyEx(hRoot, packageName, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+      if (RegOpenKeyExW(hRoot, fullName, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
       {
-         ReadStorePackageInfo(hKey, packageName, userName, table);
+         ReadStorePackageInfo(hKey, fullName, profileCacheEntry, packages);
          RegCloseKey(hKey);
       }
    }
    RegCloseKey(hRoot);
+   return (status == ERROR_NO_MORE_ITEMS) ? ERROR_SUCCESS : status;
 }
 
 /**
- * Check if a user's registry hive is already loaded in HKEY_USERS
+ * Read Store packages for given user profile. Returns ERROR_SUCCESS if package list was read completely,
+ * or error code if profile's classes hive is not available or cannot be read.
  */
-static bool IsHiveLoaded(const TCHAR *sidString)
+static LSTATUS ReadProfileStorePackages(HKEY hProfileList, const wchar_t *sid, const StoreProfileCacheEntry *profileCacheEntry, ObjectArray<StorePackage> *packages)
 {
-   HKEY hKey;
-   if (RegOpenKeyEx(HKEY_USERS, sidString, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+   // Windows Store package data lives in the UsrClass.dat hive (Software\Classes subtree),
+   // not in NTUSER.DAT. When a user is logged in, Windows mounts UsrClass.dat automatically
+   // as HKEY_USERS\<SID>_Classes - we read directly from there. For logged-out users we
+   // load UsrClass.dat manually via RegLoadAppKey, which uses a process-private namespace
+   // and shared file access. RegLoadKey would have taken an exclusive file lock and
+   // prevented Windows from attaching UsrClass.dat during a concurrent user logon,
+   // causing Store apps to fail to launch (issue #3240). Hive root key is held open while
+   // reading, so hive mounted by Windows cannot disappear in the middle of enumeration.
+   StringBuffer classesKeyName(sid);
+   classesKeyName.append(L"_Classes");
+
+   HKEY hHive;
+   if (RegOpenKeyExW(HKEY_USERS, classesKeyName, 0, KEY_READ, &hHive) == ERROR_SUCCESS)
    {
-      RegCloseKey(hKey);
-      return true;
+      nxlog_debug_tag(DEBUG_TAG, 6, L"Reading Store packages for profile %s from mounted classes hive", sid);
    }
-   return false;
+   else
+   {
+#if (_WIN32_WINNT >= 0x0600)
+      // Locate UsrClass.dat for this profile
+      wchar_t usrClassDat[MAX_PATH] = L"";
+      HKEY hProfileKey;
+      if (RegOpenKeyExW(hProfileList, sid, 0, KEY_READ, &hProfileKey) == ERROR_SUCCESS)
+      {
+         wchar_t profilePath[MAX_PATH];
+         if (ReadRegistryString(hProfileKey, L"ProfileImagePath", profilePath, MAX_PATH))
+         {
+            wchar_t expandedPath[MAX_PATH];
+            ExpandEnvironmentStringsW(profilePath, expandedPath, MAX_PATH);
+            _sntprintf(usrClassDat, MAX_PATH, L"%s\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat", expandedPath);
+         }
+         RegCloseKey(hProfileKey);
+      }
+
+      if (usrClassDat[0] == 0)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot determine UsrClass.dat path for profile %s", sid);
+         return ERROR_BAD_PATHNAME;
+      }
+
+      LSTATUS status = RegLoadAppKeyW(usrClassDat, &hHive, KEY_READ, 0, 0);
+      if (status != ERROR_SUCCESS)
+         return status;
+
+      nxlog_debug_tag(DEBUG_TAG, 6, L"Reading Store packages for profile %s from classes hive %s loaded via RegLoadAppKey", sid, usrClassDat);
+#else
+      // RegLoadAppKey and per-user Windows Store package hives are Vista+/Win8+;
+      // Windows XP has no Store data, so there is nothing to collect for this user.
+      return ERROR_FILE_NOT_FOUND;
+#endif
+   }
+
+   LSTATUS status = ReadStorePackagesFromHive(hHive, profileCacheEntry, packages);
+   RegCloseKey(hHive);
+   return status;
 }
 
 /**
- * Read Windows Store packages from all user profiles.
- * Returns false if any profile's UsrClass.dat was inaccessible - in that case the snapshot
- * is incomplete and the caller should signal a collection error so the server preserves
- * the previous snapshot rather than treating missing packages as removals.
+ * Convert profile list key name to SID. Returns nullptr if key name is not a canonical SID string
+ * (for example, "<SID>.bak" entries left by Windows after temporary profile incidents).
+ * Returned SID should be freed with LocalFree.
+ */
+static PSID ParseProfileSid(const wchar_t *keyName)
+{
+   PSID sid;
+   if (!ConvertStringSidToSidW(keyName, &sid))
+      return nullptr;
+
+   bool valid = false;
+   wchar_t *canonicalForm;
+   if (ConvertSidToStringSidW(sid, &canonicalForm))
+   {
+      valid = (wcsicmp(canonicalForm, keyName) == 0);
+      LocalFree(canonicalForm);
+   }
+   if (!valid)
+   {
+      LocalFree(sid);
+      return nullptr;
+   }
+   return sid;
+}
+
+/**
+ * Resolve SID to user name
+ */
+static bool ResolveSidToUsername(PSID sid, const wchar_t *sidString, wchar_t *userName, size_t userNameSize)
+{
+   wchar_t name[256] = L"";
+   wchar_t domain[256] = L"";
+   DWORD nameSize = 256;
+   DWORD domainSize = 256;
+   SID_NAME_USE sidType;
+   if (!LookupAccountSidW(nullptr, sid, name, &nameSize, domain, &domainSize, &sidType))
+   {
+      uint32_t error = GetLastError();
+      wchar_t errorText[256];
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot resolve SID %s to user name (error %u: %s)", sidString, error, GetSystemErrorText(error, errorText, 256));
+      return false;
+   }
+
+   if (domain[0] != 0)
+      _sntprintf(userName, userNameSize, L"%s\\%s", domain, name);
+   else
+      wcslcpy(userName, name, userNameSize);
+   return true;
+}
+
+/**
+ * Add Store packages to result table
+ */
+static void AddStorePackagesToTable(const ObjectArray<StorePackage>& packages, const wchar_t *userName, Table *table)
+{
+   for(int i = 0; i < packages.size(); i++)
+   {
+      const StorePackage *p = packages.get(i);
+      table->addRow();
+      table->set(0, p->name);       // NAME
+      table->set(1, p->version);    // VERSION
+      table->set(2, p->vendor);     // VENDOR
+
+      // DATE, URL, DESCRIPTION - not available in registry
+
+      // Use APPX: prefix to identify Store apps
+      StringBuffer uninstallKey(L"APPX:");
+      uninstallKey.append(p->fullName);
+      table->set(6, uninstallKey);  // UNINSTALL_KEY
+      table->set(7, userName);      // USER
+   }
+}
+
+/**
+ * Read Windows Store packages from all user profiles. Profiles whose classes hive is not available are
+ * reported from cache of last successful read. Returns false if snapshot is incomplete - in that case
+ * the caller should signal a collection error so the server preserves the previous snapshot rather
+ * than treating missing packages as removals.
  */
 static bool ReadStorePackagesFromAllUsers(Table *table)
 {
    // Enumerate all user profiles from ProfileList (includes logged-off users)
    HKEY hProfileList;
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-       _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList"),
-       0, KEY_READ, &hProfileList) != ERROR_SUCCESS)
-      return true;
+   LSTATUS status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList", 0, KEY_READ, &hProfileList);
+   if (status != ERROR_SUCCESS)
+   {
+      wchar_t errorText[256];
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot open profile list (error %u: %s) - marking snapshot incomplete", static_cast<uint32_t>(status), GetSystemErrorText(status, errorText, 256));
+      return false;
+   }
+
+   LockGuard lockGuard(s_storeCacheLock);
+   if (!s_storeCacheLoaded)
+   {
+      LoadStorePackageCache();
+      s_storeCacheLoaded = true;
+   }
 
    bool complete = true;
+   StringSet profiles;
    DWORD index = 0;
    while(true)
    {
-      wchar_t sidName[256];
-      DWORD sidNameLen = 256;
-      if (RegEnumKeyExW(hProfileList, index++, sidName, &sidNameLen, nullptr, nullptr, nullptr, nullptr) != ERROR_SUCCESS)
+      wchar_t sid[256];
+      DWORD sidLen = 256;
+      status = RegEnumKeyExW(hProfileList, index++, sid, &sidLen, nullptr, nullptr, nullptr, nullptr);
+      if (status != ERROR_SUCCESS)
          break;
 
       // Skip well-known short SIDs (e.g., S-1-5-18, S-1-5-19, S-1-5-20)
-      if (_tcslen(sidName) < 20)
+      if (wcslen(sid) < 20)
          continue;
 
-      // Resolve SID to username
-      wchar_t userName[512];
-      const wchar_t *userNamePtr = nullptr;
-      if (ResolveSidToUsername(sidName, userName, 512))
-         userNamePtr = userName;
-
-      // Windows Store package data lives in the UsrClass.dat hive (Software\Classes subtree),
-      // not in NTUSER.DAT. When a user is logged in, Windows mounts UsrClass.dat automatically
-      // as HKEY_USERS\<SID>_Classes - we read directly from there. For logged-out users we
-      // load UsrClass.dat manually via RegLoadAppKey, which uses a process-private namespace
-      // and shared file access. RegLoadKey would have taken an exclusive file lock and
-      // prevented Windows from attaching UsrClass.dat during a concurrent user logon,
-      // causing Store apps to fail to launch (issue #3240).
-      StringBuffer classesKeyName(sidName);
-      classesKeyName.append(_T("_Classes"));
-
-      HKEY rootKey;
-      HKEY hAppKey = nullptr;
-      StringBuffer path;
-      if (IsHiveLoaded(classesKeyName))
+      PSID pSid = ParseProfileSid(sid);
+      if (pSid == nullptr)
       {
-         rootKey = HKEY_USERS;
-         path.append(classesKeyName);
-         path.append(L"\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages");
+         nxlog_debug_tag(DEBUG_TAG, 6, L"Profile list entry %s skipped (not a valid SID)", sid);
+         continue;
+      }
+      profiles.add(sid);
+
+      StoreProfileCacheEntry *cacheEntry = s_storeCache.get(sid);
+
+      // Use last known user name (or SID if user name was never resolved) when lookup fails,
+      // so that failed lookup does not change package identity on server
+      wchar_t userName[512];
+      if (!ResolveSidToUsername(pSid, sid, userName, 512))
+         wcslcpy(userName, (cacheEntry != nullptr) ? cacheEntry->userName.cstr() : sid, 512);
+      LocalFree(pSid);
+
+      ObjectArray<StorePackage> packages(64, 64, Ownership::True);
+      LSTATUS readStatus = ReadProfileStorePackages(hProfileList, sid, cacheEntry, &packages);
+      if (readStatus == ERROR_SUCCESS)
+      {
+         AddStorePackagesToTable(packages, userName, table);
+         if ((cacheEntry == nullptr) || !cacheEntry->matches(userName, packages))
+         {
+            cacheEntry = new StoreProfileCacheEntry(userName, std::move(packages));
+            s_storeCache.set(sid, cacheEntry);
+            SaveStorePackageCacheEntry(sid, cacheEntry);
+         }
+         continue;
+      }
+
+      wchar_t errorText[256];
+      GetSystemErrorText(readStatus, errorText, 256);
+      if (cacheEntry != nullptr)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Store package data for user %s (%s) not available (error %u: %s) - reporting %d cached packages",
+            userName, sid, static_cast<uint32_t>(readStatus), errorText, cacheEntry->packages.size());
+         AddStorePackagesToTable(cacheEntry->packages, userName, table);
+         if (wcscmp(cacheEntry->userName, userName))
+         {
+            cacheEntry->userName = userName;
+            SaveStorePackageCacheEntry(sid, cacheEntry);
+         }
+      }
+      else if ((readStatus == ERROR_FILE_NOT_FOUND) || (readStatus == ERROR_PATH_NOT_FOUND))
+      {
+         // No cached data and no hive on disk (e.g. profile was never used for Store apps) - nothing to report
+         nxlog_debug_tag(DEBUG_TAG, 6, L"UsrClass.dat not present for user %s (%s)", userName, sid);
       }
       else
       {
-         // Locate UsrClass.dat for this profile
-         wchar_t usrClassDat[MAX_PATH] = L"";
-         HKEY hProfileKey;
-         if (RegOpenKeyExW(hProfileList, sidName, 0, KEY_READ, &hProfileKey) == ERROR_SUCCESS)
-         {
-            wchar_t profilePath[MAX_PATH];
-            DWORD type, size = sizeof(profilePath);
-            if (RegQueryValueExW(hProfileKey, L"ProfileImagePath", nullptr, &type, reinterpret_cast<BYTE*>(profilePath), &size) == ERROR_SUCCESS)
-            {
-               wchar_t expandedPath[MAX_PATH];
-               ExpandEnvironmentStringsW(profilePath, expandedPath, MAX_PATH);
-               _sntprintf(usrClassDat, MAX_PATH, L"%s\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat", expandedPath);
-            }
-            RegCloseKey(hProfileKey);
-         }
-
-         if (usrClassDat[0] == 0)
-         {
-            nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot determine UsrClass.dat path for user %s (%s) - marking snapshot incomplete",
-               (userNamePtr != nullptr) ? userNamePtr : L"unknown", sidName);
-            complete = false;
-            continue;
-         }
-
-#if (_WIN32_WINNT >= 0x0600)
-         LSTATUS status = RegLoadAppKeyW(usrClassDat, &hAppKey, KEY_READ, 0, 0);
-         if (status != ERROR_SUCCESS)
-         {
-            // ERROR_FILE_NOT_FOUND / ERROR_PATH_NOT_FOUND means there is genuinely no
-            // per-user Store data on disk (e.g. profile was never used for Store apps),
-            // which is not a collection error. Any other failure means the hive exists
-            // but we could not read it (sharing violation, access denied, etc.) - signal
-            // the collection error so missing packages are not reported as removals.
-            if (status != ERROR_FILE_NOT_FOUND && status != ERROR_PATH_NOT_FOUND)
-            {
-               nxlog_debug_tag(DEBUG_TAG, 5, L"RegLoadAppKey failed for %s (status=0x%08X) - marking snapshot incomplete",
-                  usrClassDat, status);
-               complete = false;
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG, 6, L"UsrClass.dat not present for user %s (%s)",
-                  (userNamePtr != nullptr) ? userNamePtr : L"unknown", sidName);
-            }
-            continue;
-         }
-
-         nxlog_debug_tag(DEBUG_TAG, 6, L"Loaded classes registry hive via RegLoadAppKey for user %s (%s)",
-            (userNamePtr != nullptr) ? userNamePtr : L"unknown", sidName);
-
-         rootKey = hAppKey;
-         path.append(L"Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages");
-#else
-         // RegLoadAppKey and per-user Windows Store package hives are Vista+/Win8+;
-         // Windows XP has no Store data, so there is nothing to collect for this user.
-         continue;
-#endif
+         // Hive exists but cannot be read (sharing violation, access denied, etc.) and there is no
+         // cached data - signal collection error so missing packages are not reported as removals
+         nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot read Store package data for user %s (%s) (error %u: %s) - marking snapshot incomplete",
+            userName, sid, static_cast<uint32_t>(readStatus), errorText);
+         complete = false;
       }
+   }
+   RegCloseKey(hProfileList);
 
-      ReadStorePackagesFromRegistryPath(rootKey, path, userNamePtr, table);
-
-      if (hAppKey != nullptr)
-         RegCloseKey(hAppKey);
+   if (status == ERROR_NO_MORE_ITEMS)
+   {
+      // Drop cached data for profiles that were removed from the system
+      StringList cachedProfiles = s_storeCache.keys();
+      for(int i = 0; i < cachedProfiles.size(); i++)
+      {
+         const wchar_t *sid = cachedProfiles.get(i);
+         if (!profiles.contains(sid))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, L"Profile %s no longer exists, removing it from Store package cache", sid);
+            s_storeCache.remove(sid);
+            DeleteStorePackageCacheEntry(sid);
+         }
+      }
+   }
+   else
+   {
+      wchar_t errorText[256];
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Profile list enumeration failed (error %u: %s) - marking snapshot incomplete", static_cast<uint32_t>(status), GetSystemErrorText(status, errorText, 256));
+      complete = false;
    }
 
-   RegCloseKey(hProfileList);
    return complete;
 }
 
 /**
- * Read provisioned (system-wide) Windows Store packages
+ * Read provisioned (system-wide) Windows Store packages. They are always reported as separate rows without user name,
+ * independently of per-user packages, so that their presence does not depend on availability of user profiles.
  */
 static void ReadProvisionedStorePackages(Table *table)
 {
    HKEY hRoot;
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-       _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Appx\\AppxAllUserStore\\Applications"),
-       0, KEY_READ, &hRoot) != ERROR_SUCCESS)
+   if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Appx\\AppxAllUserStore\\Applications", 0, KEY_READ, &hRoot) != ERROR_SUCCESS)
       return;
 
+   StringSet knownPackages;
    DWORD index = 0;
    while(true)
    {
-      TCHAR packageName[512];
-      DWORD packageNameLen = 512;
-      if (RegEnumKeyEx(hRoot, index++, packageName, &packageNameLen, nullptr, nullptr, nullptr, nullptr) != ERROR_SUCCESS)
+      wchar_t fullName[256];
+      DWORD fullNameLen = 256;
+      if (RegEnumKeyExW(hRoot, index++, fullName, &fullNameLen, nullptr, nullptr, nullptr, nullptr) != ERROR_SUCCESS)
          break;
 
-      // Provisioned packages use package name as key, extract name and version from it
-      // Format: PackageFamilyName_version_arch__publisherId
-      // Check for duplicate by package name
-      bool duplicate = false;
-      for(int i = 0; i < table->getNumRows(); i++)
-      {
-         const TCHAR *uninstallKey = table->getAsString(i, 6);
-         if (uninstallKey != nullptr && _tcsstr(uninstallKey, packageName) != nullptr)
-         {
-            duplicate = true;
-            break;
-         }
-      }
-      if (duplicate)
-         continue;
-
-      // Parse package name to extract display name and version
+      // Provisioned packages use package full name as key, extract name and version from it
       // Example: Microsoft.WindowsCalculator_11.2210.0.0_x64__8wekyb3d8bbwe
-      TCHAR displayName[256];
-      TCHAR version[64] = _T("");
-      _tcslcpy(displayName, packageName, 256);
+      wchar_t name[256], version[64];
+      ParsePackageFullName(fullName, name, 256, version, 64);
 
-      TCHAR *p = _tcschr(displayName, _T('_'));
-      if (p != nullptr)
-      {
-         *p = 0;
-         p++;
-         TCHAR *v = _tcschr(p, _T('_'));
-         if (v != nullptr)
-            *v = 0;
-         _tcslcpy(version, p, 64);
-      }
+      // Skip duplicates (same package for different architectures)
+      StringBuffer packageKey(name);
+      packageKey.append(L'_');
+      packageKey.append(version);
+      if (knownPackages.contains(packageKey))
+         continue;
+      knownPackages.add(packageKey);
 
       table->addRow();
-      table->set(0, displayName);  // NAME
-      table->set(1, version);      // VERSION
+      table->set(0, name);       // NAME
+      table->set(1, version);    // VERSION
       // VENDOR not available in provisioned package registry
 
-      StringBuffer uninstallKey(_T("APPX:"));
-      uninstallKey.append(packageName);
+      StringBuffer uninstallKey(L"APPX:");
+      uninstallKey.append(fullName);
       table->set(6, uninstallKey);  // UNINSTALL_KEY
    }
    RegCloseKey(hRoot);
@@ -430,11 +783,11 @@ static void ReadProvisionedStorePackages(Table *table)
 
 /**
  * Read Windows Store packages from registry (all sources).
- * Returns false if the per-user enumeration was incomplete due to a session in transition.
+ * Returns false if the per-user enumeration was incomplete.
  */
 static bool ReadStorePackagesFromRegistry(Table *table)
 {
-   // Read from all user profiles (HKEY_USERS\<SID>\...)
+   // Read from all user profiles
    bool complete = ReadStorePackagesFromAllUsers(table);
 
    // Read provisioned (system-wide) packages

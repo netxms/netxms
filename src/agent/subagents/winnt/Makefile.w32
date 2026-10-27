@@ -5,6 +5,6 @@
 
 SUBAGENT = winnt
 SOURCES = cpu.cpp disk.cpp fs.cpp hypervisor.cpp iostat.cpp main.cpp net.cpp procinfo.cpp prod.cpp registry.cpp system.cpp usb.cpp
-SA_LIBS = -lntdll
+SA_LIBS = -lnxdb -lntdll
 
 include $(TOPDIR)/src/agent/subagents/subagent-common.mk
