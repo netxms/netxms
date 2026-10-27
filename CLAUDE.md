@@ -45,6 +45,11 @@ make install
 /opt/netxms/bin/netxmsd -D6
 /opt/netxms/bin/nxagentd -D6
 
+# Add -q when netxmsd is started without an interactive terminal (background task,
+# script): without it the server reads console commands from stdin and shuts down
+# as soon as stdin closes
+/opt/netxms/bin/netxmsd -q -D6
+
 # Run an NXSL script outside the server
 /opt/netxms/bin/nxscript script.nxsl
 ```
@@ -76,8 +81,9 @@ mvn -f tests/integration/pom.xml test -Dtest=ScriptTest#testNXSLDataCollectionFu
 
 Maven must run online for `tests/integration` - offline mode (`-o`) cannot resolve the
 `nexus-staging-maven-plugin` build extension. Server address and credentials default to
-`127.0.0.1` and `admin`/`netxms` (see `TestConstants.java`), and the tests locate their target
-node through `TestHelper.findManagementServer()`, so the server must have a node with the
+`127.0.0.1` and `admin`/`netxms` (see `TestConstants.java`); override them with
+`-DConfigFile=<properties file>` containing `server.address`, `server.login` and `server.password`.
+The tests locate their target node through `TestHelper.findManagementServer()`, so the server must have a node with the
 `NC_IS_LOCAL_MGMT` capability.
 
 ## C++ Development Guidelines
@@ -175,6 +181,8 @@ When adding a new NXCP command code or renaming an existing one, update the `NXC
 
 When adding an NXCP field that semantically matches an existing `VID_*` constant (e.g. "ID of a mapping table" → `VID_MAPPING_TABLE_ID`), reuse the existing constant rather than minting a new one. NXCP fields are not typed by ID, so a duplicate just bloats the constant table.
 
+Do not insert a new field into the middle of an existing NXCP record layout (for example the fixed-stride DCI last-value summary entry). Shifting subsequent fields breaks every released client, and compensating with a `CLIENT_PROTOCOL_VERSION_*` bump is a product version change that is not acceptable in a maintenance release. Prefer a dedicated command that returns exactly what the new feature needs; if a shared record really must grow, use a fixed unused trailing offset and leave the protocol version alone.
+
 ## Translations
 
 Console PO files live in `src/client/nxmc/java/src/main/resources/po/`. Use `msgfmt --statistics` to check completeness and `msgfmt -c` to validate format specifiers. Technical terms (SNMP, SSH, DCI) stay untranslated.
@@ -182,3 +190,7 @@ Console PO files live in `src/client/nxmc/java/src/main/resources/po/`. Use `msg
 ## Commits
 
 Commit subjects reference the tracked issue at the end: `fixed incorrect handling of ... (issue #3781)`.
+
+Commit on the currently checked-out branch, including `master` — do not create a branch first unless asked to.
+
+`private/` is gitignored and holds separate nested git checkouts (enterprise modules). `git status` in this repository does not show changes under it; commit those inside the nested repository.
