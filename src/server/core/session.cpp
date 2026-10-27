@@ -16654,12 +16654,21 @@ void ClientSession::bindAgentTunnel(const NXCPMessage& request)
    {
       uint32_t nodeId = request.getFieldAsUInt32(VID_NODE_ID);
       uint32_t tunnelId = request.getFieldAsUInt32(VID_TUNNEL_ID);
-      uint32_t rcc = BindAgentTunnel(tunnelId, nodeId, m_userId);
-      response.setField(VID_RCC, rcc);
-      if (rcc == RCC_SUCCESS)
+      int16_t mappingMethod = request.isFieldExist(VID_CERT_MAPPING_METHOD) ? request.getFieldAsInt16(VID_CERT_MAPPING_METHOD) : MAP_CERTIFICATE_BY_SUBJECT;
+      uint32_t rcc;
+      if ((mappingMethod >= MAP_CERTIFICATE_BY_SUBJECT) && (mappingMethod <= MAP_CERTIFICATE_BY_TEMPLATE_ID))
       {
-         writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Agent tunnel bound to node"));
+         rcc = BindAgentTunnel(tunnelId, nodeId, m_userId, static_cast<CertificateMappingMethod>(mappingMethod));
+         if (rcc == RCC_SUCCESS)
+         {
+            writeAuditLog(AUDIT_SYSCFG, true, nodeId, _T("Agent tunnel bound to node"));
+         }
       }
+      else
+      {
+         rcc = RCC_INVALID_ARGUMENT;
+      }
+      response.setField(VID_RCC, rcc);
    }
    else
    {

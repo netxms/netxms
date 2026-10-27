@@ -110,6 +110,9 @@ protected:
    int32_t m_zoneUIN;
    TCHAR *m_certificateSubject;
    TCHAR *m_certificateIssuer;
+   TCHAR *m_certificateCN;
+   TCHAR *m_certificateTemplateId;
+   TCHAR *m_certificatePublicKeyFingerprint;
    time_t m_certificateExpirationTime;
    time_t m_certificateIssueTime;
    AgentTunnelState m_state;
@@ -188,6 +191,10 @@ public:
    uint32_t getNodeId() const { return m_nodeId; }
    time_t getCertificateExpirationTime() const { return m_certificateExpirationTime; }
    time_t getCertificateIssueTime() const { return m_certificateIssueTime; }
+   const TCHAR *getCertificateSubject() const { return CHECK_NULL_EX(m_certificateSubject); }
+   const TCHAR *getCertificateCN() const { return CHECK_NULL_EX(m_certificateCN); }
+   const TCHAR *getCertificateTemplateId() const { return CHECK_NULL_EX(m_certificateTemplateId); }
+   const TCHAR *getCertificatePublicKeyFingerprint() const { return CHECK_NULL_EX(m_certificatePublicKeyFingerprint); }
    const StructArray<MacAddress>& getMacAddressList() const { return m_macAddressList; }
    AgentTunnelState getState() const { return m_state; }
    time_t getStartTime() const { return m_startTime; }

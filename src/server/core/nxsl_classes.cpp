@@ -7391,7 +7391,7 @@ NXSL_METHOD_DEFINITION(Tunnel, bind)
 
    shared_ptr<AgentTunnel> tunnel = *static_cast<shared_ptr<AgentTunnel>*>(object->getData());
    uint32_t nodeId = (*static_cast<shared_ptr<Node>*>(node->getData()))->getId();
-   uint32_t rcc = tunnel->isInbound() ? static_cast<InboundAgentTunnel&>(*tunnel).bind(nodeId, vm->getUserId()) : RCC_OUT_OF_STATE_REQUEST;
+   uint32_t rcc = tunnel->isInbound() ? static_cast<InboundAgentTunnel&>(*tunnel).bind(nodeId, vm->getUserId(), MAP_CERTIFICATE_BY_SUBJECT) : RCC_OUT_OF_STATE_REQUEST;
    if (rcc != RCC_SUCCESS)
       nxlog_debug_tag(L"nxsl.tunnel", 5, L"Tunnel::bind() failed for tunnel [%u] and node [%u] (RCC = %u)", tunnel->getId(), nodeId, rcc);
    else

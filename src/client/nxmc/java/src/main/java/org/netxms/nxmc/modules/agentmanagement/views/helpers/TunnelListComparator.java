@@ -96,6 +96,9 @@ public class TunnelListComparator extends ViewerComparator
          case TunnelManager.COL_DIRECTION:
             result = Boolean.compare(t1.isInbound(), t2.isInbound());
             break;
+         case TunnelManager.COL_CERTIFICATE:
+            result = Boolean.compare(t1.isExternallyProvisionedCertificate(), t2.isExternallyProvisionedCertificate());
+            break;
          case TunnelManager.COL_SYSINFO:
             result = t1.getSystemInformation().compareToIgnoreCase(t2.getSystemInformation());
             break;

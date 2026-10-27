@@ -37,6 +37,7 @@ import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.CertificateMappingMethod;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
@@ -45,6 +46,7 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.agentmanagement.dialogs.BindExternalTunnelDialog;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.TunnelListComparator;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.TunnelListLabelProvider;
 import org.netxms.nxmc.modules.agentmanagement.views.helpers.TunnelManagerFilter;
@@ -86,6 +88,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
    public static final int COL_CERTIFICATE_EXPIRATION = 18;
    public static final int COL_CONNECTION_TIME = 19;
    public static final int COL_DIRECTION = 20;
+   public static final int COL_CERTIFICATE = 21;
 
    private NXCSession session = Registry.getSession();
    private Map<Integer, AgentTunnel> tunnels = new HashMap<>();
@@ -117,8 +120,8 @@ public class TunnelManager extends ConfigurationView implements SessionListener
          { i18n.tr("ID"), i18n.tr("State"), i18n.tr("Node"), i18n.tr("IP address"), i18n.tr("Channels"), i18n.tr("System name"), i18n.tr("Hostname"),
            i18n.tr("Platform"), i18n.tr("System information"), i18n.tr("Hardware ID"), i18n.tr("Serial number"), i18n.tr("Agent version"),
            i18n.tr("Agent ID"), i18n.tr("Agent proxy"), i18n.tr("SNMP proxy"), i18n.tr("SNMP trap proxy"), i18n.tr("Syslog proxy"), i18n.tr("User agent"),
-           i18n.tr("Certificate expiration"), i18n.tr("Connection time"), i18n.tr("Direction") };
-      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 180, 150, 150, 150, 80, 80, 80, 80, 80, 130, 130, 80 };
+           i18n.tr("Certificate expiration"), i18n.tr("Connection time"), i18n.tr("Direction"), i18n.tr("Certificate") };
+      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 180, 150, 150, 150, 80, 80, 80, 80, 80, 130, 130, 80, 110 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI, ID);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new TunnelListLabelProvider());
@@ -363,6 +366,19 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       if (dlg.open() != Window.OK)
          return;
 
+      final CertificateMappingMethod mappingMethod;
+      if (tunnel.isExternallyProvisionedCertificate())
+      {
+         BindExternalTunnelDialog bindDlg = new BindExternalTunnelDialog(getWindow().getShell(), tunnel, false);
+         if (bindDlg.open() != Window.OK)
+            return;
+         mappingMethod = bindDlg.getMappingMethod();
+      }
+      else
+      {
+         mappingMethod = CertificateMappingMethod.SUBJECT;
+      }
+
       final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), 2);
       cd.setCreationFlags(dlg.getCreationFlags());
       cd.setPrimaryName(dlg.getHostName());
@@ -394,7 +410,7 @@ public class TunnelManager extends ConfigurationView implements SessionListener
             cd.setCreationFlags(cd.getCreationFlags() | NXCObjectCreationData.CF_CREATE_UNMANAGED);
 
             long nodeId = session.createObject(cd);
-            session.bindAgentTunnel(tunnel.getId(), nodeId);
+            session.bindAgentTunnel(tunnel.getId(), nodeId, mappingMethod);
 
             if (!stayUnmanaged)
             {
@@ -425,16 +441,30 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       if (tunnel.isBound())
          return;
 
-      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
-      if (dlg.open() != Window.OK)
-         return;
-      final long nodeId = dlg.getSelectedObjects().get(0).getObjectId();
+      final long nodeId;
+      final CertificateMappingMethod mappingMethod;
+      if (tunnel.isExternallyProvisionedCertificate())
+      {
+         BindExternalTunnelDialog dlg = new BindExternalTunnelDialog(getWindow().getShell(), tunnel, true);
+         if (dlg.open() != Window.OK)
+            return;
+         nodeId = dlg.getNodeId();
+         mappingMethod = dlg.getMappingMethod();
+      }
+      else
+      {
+         ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
+         if (dlg.open() != Window.OK)
+            return;
+         nodeId = dlg.getSelectedObjects().get(0).getObjectId();
+         mappingMethod = CertificateMappingMethod.SUBJECT;
+      }
 
       new Job(i18n.tr("Bind tunnels"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.bindAgentTunnel(tunnel.getId(), nodeId);
+            session.bindAgentTunnel(tunnel.getId(), nodeId, mappingMethod);
          }
 
          @Override

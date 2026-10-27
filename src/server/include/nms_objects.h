@@ -4517,6 +4517,7 @@ protected:
    virtual uint32_t modifyFromJSONInternal(json_t *json, GenericClientSession *session) override;
    uint32_t modifyJsonSnmpConfig(json_t *snmp);
    uint32_t modifyJsonAgentConfig(json_t *agent);
+   uint32_t updateAgentCertificateMapping(CertificateMappingMethod method, const wchar_t *data);
    json_t *chassisPlacementToJsonLocked() const;
    virtual void updateFlags(uint32_t flags, uint32_t mask) override;
 
@@ -4852,6 +4853,7 @@ public:
    void changeIPAddress(const InetAddress& ipAddr);
    void changeZone(UINT32 newZone);
    void setTunnelId(const uuid& tunnelId, const TCHAR *certSubject);
+   uint32_t setAgentCertificateMapping(CertificateMappingMethod method, const wchar_t *data);
    bool setFileUpdateConnection(const shared_ptr<AgentConnection>& connection);
    void clearFileUpdateConnection();
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);

@@ -96,6 +96,7 @@ import org.netxms.client.constants.AiMessageStatus;
 import org.netxms.client.constants.AiObservationState;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.BackgroundTaskState;
+import org.netxms.client.constants.CertificateMappingMethod;
 import org.netxms.client.constants.DataCollectionObjectStatus;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
@@ -15498,9 +15499,26 @@ public class NXCSession
     */
    public void bindAgentTunnel(int tunnelId, long nodeId) throws IOException, NXCException
    {
+      bindAgentTunnel(tunnelId, nodeId, CertificateMappingMethod.SUBJECT);
+   }
+
+   /**
+    * Bind agent tunnel to node. For tunnels with externally provisioned certificate server does not issue a certificate; instead it
+    * sets certificate mapping on the target node using given mapping method and data taken from the certificate presented by the
+    * agent. Mapping method is ignored for tunnels with server-issued certificates.
+    *
+    * @param tunnelId tunnel ID
+    * @param nodeId node ID
+    * @param mappingMethod certificate mapping method to use for tunnels with externally provisioned certificate
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void bindAgentTunnel(int tunnelId, long nodeId, CertificateMappingMethod mappingMethod) throws IOException, NXCException
+   {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_BIND_AGENT_TUNNEL);
       msg.setFieldInt32(NXCPCodes.VID_TUNNEL_ID, tunnelId);
       msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, mappingMethod.getValue());
       sendMessage(msg);
       // Bind operation can take significant time on slow links and/or slow devices
       waitForRCC(msg.getMessageId(), Math.max(60000, msgWaitQueue.getDefaultTimeout()));

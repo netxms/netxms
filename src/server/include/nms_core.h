@@ -1886,8 +1886,10 @@ void ReportConfigurationError(const wchar_t *subsystem, const wchar_t *tag, cons
 X509 *CertificateFromLoginMessage(const NXCPMessage& msg);
 bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature,
       size_t sigLen, CertificateMappingMethod mappingMethod, const TCHAR *mappingData);
-bool GetPublicKeyFingerprint(EVP_PKEY *key, wchar_t *buffer);
-bool NormalizeCertificateMappingData(CertificateMappingMethod method, const wchar_t *data, wchar_t **normalizedData);
+bool NXCORE_EXPORTABLE GetPublicKeyFingerprint(EVP_PKEY *key, wchar_t *buffer);
+bool NXCORE_EXPORTABLE NormalizeCertificateMappingData(CertificateMappingMethod method, const wchar_t *data, wchar_t **normalizedData);
+const char NXCORE_EXPORTABLE *CertificateMappingMethodToName(CertificateMappingMethod method);
+bool NXCORE_EXPORTABLE CertificateMappingMethodFromName(const char *name, CertificateMappingMethod *method);
 void ReloadCertificates();
 bool GetServerCertificateCountry(TCHAR *buffer, size_t size);
 bool GetServerCertificateOrganization(TCHAR *buffer, size_t size);

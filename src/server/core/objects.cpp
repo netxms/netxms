@@ -353,7 +353,8 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
                }
             }
             if (static_cast<Node&>(*object).getAgentCertificateMappingData() != nullptr)
-               UpdateAgentCertificateMappingIndex(static_pointer_cast<Node>(object), nullptr, static_cast<Node&>(*object).getAgentCertificateMappingData());
+               UpdateAgentCertificateMappingIndex(static_pointer_cast<Node>(object), MAP_CERTIFICATE_BY_SUBJECT, nullptr,
+                  static_cast<Node&>(*object).getAgentCertificateMappingMethod(), static_cast<Node&>(*object).getAgentCertificateMappingData());
             break;
          case OBJECT_BUSINESSSERVICE:
          case OBJECT_BUSINESSSERVICEPROTO:
@@ -558,7 +559,8 @@ void NetObjDeleteFromIndexes(const NetObj& object)
             }
          }
          if (static_cast<const Node&>(object).getAgentCertificateMappingData() != nullptr)
-            UpdateAgentCertificateMappingIndex(const_cast<Node&>(static_cast<const Node&>(object)).self(), static_cast<const Node&>(object).getAgentCertificateMappingData(), nullptr);
+            UpdateAgentCertificateMappingIndex(const_cast<Node&>(static_cast<const Node&>(object)).self(), static_cast<const Node&>(object).getAgentCertificateMappingMethod(),
+               static_cast<const Node&>(object).getAgentCertificateMappingData(), MAP_CERTIFICATE_BY_SUBJECT, nullptr);
          break;
 		case OBJECT_BUSINESSSERVICE:
       case OBJECT_BUSINESSSERVICEPROTO:

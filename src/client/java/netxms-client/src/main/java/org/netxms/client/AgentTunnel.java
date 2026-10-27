@@ -51,6 +51,12 @@ public class AgentTunnel
    private boolean userAgentInstalled;
    private boolean syslogProxy;
    private boolean inbound;
+   private boolean externallyProvisionedCertificate;
+   private String certificateIssuer;
+   private String certificateSubject;
+   private String certificateCommonName;
+   private String certificateTemplateId;
+   private String certificatePublicKeyFingerprint;
 
    /**
     * Create from NXCP message
@@ -79,9 +85,15 @@ public class AgentTunnel
       certificateExpirationTime = msg.getFieldAsDate(baseId + 16);
       hardwareId = msg.getFieldAsBinary(baseId + 17);
       syslogProxy = msg.getFieldAsBoolean(baseId + 18);
+      externallyProvisionedCertificate = msg.getFieldAsBoolean(baseId + 19);
+      certificateIssuer = msg.getFieldAsString(baseId + 20);
+      certificateSubject = msg.getFieldAsString(baseId + 21);
       connectionTime = msg.getFieldAsDate(baseId + 22);
       serialNumber = msg.getFieldAsString(baseId + 23);
       inbound = (msg.findField(baseId + 24) != null) ? msg.getFieldAsBoolean(baseId + 24) : true;
+      certificateCommonName = msg.getFieldAsString(baseId + 25);
+      certificateTemplateId = msg.getFieldAsString(baseId + 26);
+      certificatePublicKeyFingerprint = msg.getFieldAsString(baseId + 27);
    }
 
    /**
@@ -194,6 +206,57 @@ public class AgentTunnel
    public Date getCertificateExpirationTime()
    {
       return certificateExpirationTime;
+   }
+
+   /**
+    * Check if agent uses externally provisioned certificate (certificate not issued by this server). Such tunnels are attached to
+    * nodes via certificate mapping; binding sets the mapping on the target node instead of issuing a new certificate.
+    *
+    * @return true if agent certificate is externally provisioned
+    */
+   public boolean isExternallyProvisionedCertificate()
+   {
+      return externallyProvisionedCertificate;
+   }
+
+   /**
+    * @return agent certificate issuer (empty string if certificate was not provided)
+    */
+   public String getCertificateIssuer()
+   {
+      return certificateIssuer;
+   }
+
+   /**
+    * @return agent certificate subject (empty string if certificate was not provided)
+    */
+   public String getCertificateSubject()
+   {
+      return certificateSubject;
+   }
+
+   /**
+    * @return agent certificate common name (empty string if certificate has no CN)
+    */
+   public String getCertificateCommonName()
+   {
+      return certificateCommonName;
+   }
+
+   /**
+    * @return agent certificate template ID (empty string if certificate has no template ID extension)
+    */
+   public String getCertificateTemplateId()
+   {
+      return certificateTemplateId;
+   }
+
+   /**
+    * @return SHA-256 fingerprint of agent certificate public key, as upper case hex string (empty string if not available)
+    */
+   public String getCertificatePublicKeyFingerprint()
+   {
+      return certificatePublicKeyFingerprint;
    }
 
    /**

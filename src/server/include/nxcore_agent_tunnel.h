@@ -32,6 +32,22 @@
  * Inbound (agent to server) tunnel with bind/unbind workflow and certificate issuance.
  * Session core is implemented by AgentTunnel base class in libnxsrv.
  */
+/**
+ * Agent certificate information collected during tunnel setup
+ */
+struct AgentCertificateInfo
+{
+   StringBuffer subject;
+   StringBuffer issuer;
+   StringBuffer commonName;
+   StringBuffer templateId;
+   StringBuffer publicKeyFingerprint;
+   time_t expirationTime;
+   time_t issueTime;
+
+   AgentCertificateInfo() : expirationTime(0), issueTime(0) { }
+};
+
 class InboundAgentTunnel : public AgentTunnel
 {
 protected:
@@ -44,6 +60,7 @@ protected:
    void processCertificateRequest(NXCPMessage *request);
 
    uint32_t initiateCertificateRequest(const uuid& nodeGuid, uint32_t userId);
+   uint32_t bindWithCertificateMapping(Node& node, uint32_t userId, CertificateMappingMethod mappingMethod);
 
    virtual bool processCustomMessage(NXCPMessage *msg) override;
    virtual void onSetupComplete() override;
@@ -51,18 +68,16 @@ protected:
 
 public:
    static shared_ptr<InboundAgentTunnel> create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
-            int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
-            time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller);
+            int32_t zoneUIN, const AgentCertificateInfo& certificate, BackgroundSocketPollerHandle *socketPoller);
 
    InboundAgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId, int32_t zoneUIN,
-            const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
-            time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller);
+            const AgentCertificateInfo& certificate, BackgroundSocketPollerHandle *socketPoller);
 
    shared_ptr<InboundAgentTunnel> self() { return static_pointer_cast<InboundAgentTunnel>(m_self.lock()); }
 
    virtual bool isInbound() const override { return true; }
 
-   uint32_t bind(uint32_t nodeId, uint32_t userId);
+   uint32_t bind(uint32_t nodeId, uint32_t userId, CertificateMappingMethod mappingMethod);
    uint32_t renewCertificate();
    void setReplacedTunnel(const shared_ptr<AgentTunnel>& tunnel) { m_replacedTunnel = tunnel; }
 
@@ -78,7 +93,7 @@ json_t NXCORE_EXPORTABLE *GetAgentTunnelsAsJson();
 /**
  * Bind unbound agent tunnel to node
  */
-uint32_t NXCORE_EXPORTABLE BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId);
+uint32_t NXCORE_EXPORTABLE BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId, CertificateMappingMethod mappingMethod = MAP_CERTIFICATE_BY_SUBJECT);
 
 /**
  * Unbind agent tunnel from node
@@ -127,6 +142,6 @@ int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels);
 /**
  * Update agent certificate mapping index for externally provisioned certificates
  */
-void UpdateAgentCertificateMappingIndex(const shared_ptr<Node>& node, const TCHAR *oldValue, const TCHAR *newValue);
+void UpdateAgentCertificateMappingIndex(const shared_ptr<Node>& node, CertificateMappingMethod oldMethod, const TCHAR *oldValue, CertificateMappingMethod newMethod, const TCHAR *newValue);
 
 #endif

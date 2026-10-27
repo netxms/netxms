@@ -67,7 +67,16 @@ int H_AgentTunnelBind(Context *context)
       return 400;
    }
 
-   uint32_t rcc = BindAgentTunnel(tunnelId, nodeId, context->getUserId());
+   // Certificate mapping method is used only for tunnels with externally provisioned certificates
+   CertificateMappingMethod mappingMethod = MAP_CERTIFICATE_BY_SUBJECT;
+   const char *mappingMethodName = json_object_get_string_utf8(request, "certificateMappingMethod", nullptr);
+   if ((mappingMethodName != nullptr) && !CertificateMappingMethodFromName(mappingMethodName, &mappingMethod))
+   {
+      context->setErrorResponse("Invalid certificate mapping method");
+      return 400;
+   }
+
+   uint32_t rcc = BindAgentTunnel(tunnelId, nodeId, context->getUserId(), mappingMethod);
    switch(rcc)
    {
       case RCC_SUCCESS:
@@ -80,8 +89,14 @@ int H_AgentTunnelBind(Context *context)
          context->setErrorResponse("Invalid node ID");
          return 400;
       case RCC_OUT_OF_STATE_REQUEST:
-         context->setErrorResponse("Tunnel cannot be bound in its current state (bind already in progress or certificate is externally provisioned)");
+         context->setErrorResponse("Tunnel cannot be bound in its current state (bind already in progress)");
          return 409;
+      case RCC_CERT_MAPPING_CONFLICT:
+         context->setErrorResponse("Certificate mapping data is already used by another node");
+         return 409;
+      case RCC_INVALID_ARGUMENT:
+         context->setErrorResponse("Agent certificate does not provide data for selected mapping method");
+         return 400;
       case RCC_TIMEOUT:
          context->setErrorResponse("Timeout waiting for certificate request completion by agent");
          return 504;

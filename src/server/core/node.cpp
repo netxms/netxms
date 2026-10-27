@@ -11137,16 +11137,10 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg, ClientSession *
    {
       auto method = static_cast<CertificateMappingMethod>(msg.getFieldAsInt16(VID_CERT_MAPPING_METHOD));
       wchar_t *data = msg.getFieldAsString(VID_CERT_MAPPING_DATA);
-      wchar_t *mappingData;
-      bool valid = NormalizeCertificateMappingData(method, data, &mappingData);
+      uint32_t rcc = updateAgentCertificateMapping(method, data);
       MemFree(data);
-      if (!valid)
-         return RCC_INVALID_ARGUMENT;
-
-      m_agentCertMappingMethod = method;
-      UpdateAgentCertificateMappingIndex(self(), m_agentCertMappingData, mappingData);
-      MemFree(m_agentCertMappingData);
-      m_agentCertMappingData = mappingData;
+      if (rcc != RCC_SUCCESS)
+         return rcc;
    }
 
    if (msg.isFieldExist(VID_SYSLOG_CODEPAGE))
@@ -11246,7 +11240,10 @@ static bool AgentCompressionModeFromName(const char *name, int16_t *mode)
    return true;
 }
 
-static const char *CertificateMappingMethodToName(CertificateMappingMethod method)
+/**
+ * Get certificate mapping method name for JSON representation
+ */
+const char *CertificateMappingMethodToName(CertificateMappingMethod method)
 {
    switch(method)
    {
@@ -11261,7 +11258,10 @@ static const char *CertificateMappingMethodToName(CertificateMappingMethod metho
    }
 }
 
-static bool CertificateMappingMethodFromName(const char *name, CertificateMappingMethod *method)
+/**
+ * Parse certificate mapping method name from JSON representation
+ */
+bool CertificateMappingMethodFromName(const char *name, CertificateMappingMethod *method)
 {
    if (!stricmp(name, "subject"))
       *method = MAP_CERTIFICATE_BY_SUBJECT;
@@ -11569,25 +11569,19 @@ uint32_t Node::modifyJsonAgentConfig(json_t *agent)
       if ((certMappingData != nullptr) && !json_is_string(certMappingData) && !json_is_null(certMappingData))
          return RCC_INVALID_ARGUMENT;
 
-      wchar_t *mappingData;
-      bool valid;
+      uint32_t rcc;
       if (certMappingData != nullptr)
       {
          wchar_t *data = json_is_string(certMappingData) ? WideStringFromUTF8String(json_string_value(certMappingData)) : nullptr;
-         valid = NormalizeCertificateMappingData(method, data, &mappingData);
+         rcc = updateAgentCertificateMapping(method, data);
          MemFree(data);
       }
       else
       {
-         valid = NormalizeCertificateMappingData(method, m_agentCertMappingData, &mappingData);
+         rcc = updateAgentCertificateMapping(method, m_agentCertMappingData);
       }
-      if (!valid)
-         return RCC_INVALID_ARGUMENT;
-
-      m_agentCertMappingMethod = method;
-      UpdateAgentCertificateMappingIndex(self(), m_agentCertMappingData, mappingData);
-      MemFree(m_agentCertMappingData);
-      m_agentCertMappingData = mappingData;
+      if (rcc != RCC_SUCCESS)
+         return rcc;
    }
 
    value = json_object_get(agent, "tlsMode");
@@ -16677,6 +16671,39 @@ void Node::setRoutingLoopEvent(const InetAddress& address, uint32_t nodeId, uint
 
 /**
  * Set tunnel ID
+ */
+/**
+ * Update agent certificate mapping and mapping index. Properties must be locked by caller.
+ * Mapping data is normalized according to given method; returns RCC_INVALID_ARGUMENT if data is not valid for the method.
+ */
+uint32_t Node::updateAgentCertificateMapping(CertificateMappingMethod method, const wchar_t *data)
+{
+   wchar_t *mappingData;
+   if (!NormalizeCertificateMappingData(method, data, &mappingData))
+      return RCC_INVALID_ARGUMENT;
+
+   UpdateAgentCertificateMappingIndex(self(), m_agentCertMappingMethod, m_agentCertMappingData, method, mappingData);
+   m_agentCertMappingMethod = method;
+   MemFree(m_agentCertMappingData);
+   m_agentCertMappingData = mappingData;
+   return RCC_SUCCESS;
+}
+
+/**
+ * Set agent certificate mapping (used when binding tunnel with externally provisioned certificate)
+ */
+uint32_t Node::setAgentCertificateMapping(CertificateMappingMethod method, const wchar_t *data)
+{
+   lockProperties();
+   uint32_t rcc = updateAgentCertificateMapping(method, data);
+   if (rcc == RCC_SUCCESS)
+      setModified(MODIFY_NODE_PROPERTIES);
+   unlockProperties();
+   return rcc;
+}
+
+/**
+ * Set tunnel ID and agent certificate subject
  */
 void Node::setTunnelId(const uuid& tunnelId, const TCHAR *certSubject)
 {

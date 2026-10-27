@@ -714,9 +714,19 @@ paths:
         - Agent Tunnels
       summary: Bind agent tunnel to node
       description: |
-        Bind unbound agent tunnel to given node. Server issues certificate for the agent and waits
-        (up to 60 seconds) for the agent to confirm it; after that the agent reconnects the tunnel,
-        which then appears as bound to the node. Requires MANAGE_AGENT_TUNNELS system access right.
+        Bind unbound agent tunnel to given node. For agents with server-issued certificates the server
+        issues a certificate for the agent and waits (up to 60 seconds) for the agent to confirm it;
+        after that the agent reconnects the tunnel, which then appears as bound to the node.
+
+        For agents with externally provisioned certificates (`externallyProvisionedCertificate` is
+        true in the tunnel record) the server cannot issue a certificate. Instead it sets the agent
+        certificate mapping on the target node from the certificate presented by the agent, using
+        the method given in `certificateMappingMethod` (default `subject`), and resets the tunnel;
+        on reconnect the tunnel attaches to the node through the mapping. If the node already has a
+        bound tunnel, that binding is released first. The request is rejected with 409 if the same
+        mapping data is already assigned to another node, and with 400 if the certificate does not
+        provide data for the selected method (for example, no template ID extension).
+        Requires MANAGE_AGENT_TUNNELS system access right.
       parameters:
         - name: tunnel-id
           in: path
@@ -736,11 +746,22 @@ paths:
                 nodeId:
                   type: integer
                   description: ID of the node to bind tunnel to
+                certificateMappingMethod:
+                  type: string
+                  enum:
+                    - subject
+                    - commonName
+                    - templateId
+                    - publicKey
+                  default: subject
+                  description: |
+                    Certificate mapping method to set on the node when the tunnel uses an externally
+                    provisioned certificate. Ignored for tunnels with server-issued certificates.
       responses:
         '204':
           description: Tunnel bound.
         '400':
-          description: Invalid request body or node ID.
+          description: Invalid request body, node ID or certificate mapping method, or agent certificate does not provide data for the selected mapping method.
         '401':
           description: Unauthorized.
         '403':
@@ -748,7 +769,7 @@ paths:
         '404':
           description: Unbound tunnel with given ID not found.
         '409':
-          description: Tunnel cannot be bound in its current state (bind already in progress or certificate is externally provisioned).
+          description: Tunnel cannot be bound in its current state (bind already in progress), or certificate mapping data is already used by another node.
         '500':
           description: Agent failed to complete certificate request.
         '504':
@@ -8151,8 +8172,10 @@ paths:
       operationId: unbindAgentTunnel
       summary: Unbind agent tunnel from node
       description: >-
-        Remove tunnel binding from the node, revoke the agent certificate issued on bind, and shut down
-        the node's active tunnel if there is one. Succeeds also when the node has no bound tunnel.
+        Remove tunnel binding from the node, revoke the agent certificate issued on bind, clear the
+        node's agent certificate mapping (so a tunnel with an externally provisioned certificate does
+        not re-attach on reconnect), and shut down the node's active tunnel if there is one. Succeeds
+        also when the node has no bound tunnel.
         Requires MANAGE_AGENT_TUNNELS system access right.
       parameters:
         - name: object-id
@@ -14127,6 +14150,18 @@ components:
         certificateSubject:
           type: string
           nullable: true
+        certificateCommonName:
+          type: string
+          nullable: true
+          description: Common name (CN) of the agent certificate, usable as mapping data for the `commonName` mapping method.
+        certificateTemplateId:
+          type: string
+          nullable: true
+          description: Certificate template ID extension value, usable as mapping data for the `templateId` mapping method (null if the certificate has no such extension).
+        certificatePublicKeyFingerprint:
+          type: string
+          nullable: true
+          description: SHA-256 fingerprint of the agent certificate public key (SPKI DER, upper case hex), usable as mapping data for the `publicKey` mapping method.
         certificateExpirationTime:
           type: string
           format: date-time

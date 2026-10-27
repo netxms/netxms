@@ -56,6 +56,9 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_zoneUIN = zoneUIN;
    m_certificateSubject = nullptr;
    m_certificateIssuer = nullptr;
+   m_certificateCN = nullptr;
+   m_certificateTemplateId = nullptr;
+   m_certificatePublicKeyFingerprint = nullptr;
    m_certificateExpirationTime = 0;
    m_certificateIssueTime = 0;
    m_state = AGENT_TUNNEL_INIT;
@@ -92,6 +95,9 @@ AgentTunnel::~AgentTunnel()
    MemFree(m_agentBuildTag);
    MemFree(m_certificateIssuer);
    MemFree(m_certificateSubject);
+   MemFree(m_certificateCN);
+   MemFree(m_certificateTemplateId);
+   MemFree(m_certificatePublicKeyFingerprint);
    delete m_messageReceiver;
    InterlockedDecrement(&m_socketPoller->usageCount);
    debugPrintf(4, _T("Tunnel destroyed"));
@@ -568,6 +574,9 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, uint32_t baseId) const
    msg->setFieldFromTime(baseId + 22, m_startTime);
    msg->setField(baseId + 23, m_serialNumber);
    msg->setField(baseId + 24, isInbound());
+   msg->setField(baseId + 25, m_certificateCN);
+   msg->setField(baseId + 26, m_certificateTemplateId);
+   msg->setField(baseId + 27, m_certificatePublicKeyFingerprint);
 }
 
 /**
@@ -610,6 +619,9 @@ json_t *AgentTunnel::toJson() const
    json_object_set_new(root, "syslogProxy", json_boolean(m_syslogProxy));
    json_object_set_new(root, "certificateIssuer", json_string_t(m_certificateIssuer));
    json_object_set_new(root, "certificateSubject", json_string_t(m_certificateSubject));
+   json_object_set_new(root, "certificateCommonName", json_string_t(m_certificateCN));
+   json_object_set_new(root, "certificateTemplateId", json_string_t(m_certificateTemplateId));
+   json_object_set_new(root, "certificatePublicKeyFingerprint", json_string_t(m_certificatePublicKeyFingerprint));
    json_object_set_new(root, "certificateExpirationTime", json_time_string(m_certificateExpirationTime));
    json_object_set_new(root, "externallyProvisionedCertificate", json_boolean(m_extProvCertificate));
    json_object_set_new(root, "connectionTime", json_time_string(m_startTime));

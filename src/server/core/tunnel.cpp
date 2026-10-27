@@ -29,10 +29,18 @@
 #define DEBUG_TAG       _T("agent.tunnel")
 
 /**
- * Externally provisioned certificate mapping
+ * Externally provisioned certificate mappings, indexed by mapping method (array index) and mapping data (map key)
  */
-static SharedStringObjectMap<Node> s_certificateMappings;
+static SharedStringObjectMap<Node> s_certificateMappings[4];
 static Mutex s_certificateMappingsLock;
+
+/**
+ * Check that certificate mapping method is within range of known methods
+ */
+static inline bool IsValidCertificateMappingMethod(CertificateMappingMethod method)
+{
+   return (method >= MAP_CERTIFICATE_BY_SUBJECT) && (method <= MAP_CERTIFICATE_BY_TEMPLATE_ID);
+}
 
 /**
  * Tunnel registration
@@ -229,7 +237,7 @@ shared_ptr<AgentTunnel> RegisterOutboundTunnel(const shared_ptr<OutboundAgentTun
 /**
  * Bind agent tunnel
  */
-uint32_t NXCORE_EXPORTABLE BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId)
+uint32_t NXCORE_EXPORTABLE BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, uint32_t userId, CertificateMappingMethod mappingMethod)
 {
    shared_ptr<InboundAgentTunnel> tunnel;
    s_tunnelListLock.lock();
@@ -252,8 +260,7 @@ uint32_t NXCORE_EXPORTABLE BindAgentTunnel(uint32_t tunnelId, uint32_t nodeId, u
    TCHAR userName[MAX_USER_NAME];
    nxlog_debug_tag(DEBUG_TAG, 4, _T("BindAgentTunnel: processing bind request %u -> %u by user %s"),
             tunnelId, nodeId, ResolveUserId(userId, userName, true));
-   uint32_t rcc = tunnel->bind(nodeId, userId);
-   return rcc;
+   return tunnel->bind(nodeId, userId, mappingMethod);
 }
 
 /**
@@ -268,6 +275,13 @@ uint32_t NXCORE_EXPORTABLE UnbindAgentTunnel(uint32_t nodeId, uint32_t userId)
    wchar_t userName[MAX_USER_NAME];
    nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel: processing unbind request for node %s [%u] by user %s",
             node->getName(), nodeId, ResolveUserId(userId, userName, true));
+
+   // Clear certificate mapping, otherwise tunnel with externally provisioned certificate will re-attach to the node on reconnect
+   if (static_cast<Node&>(*node).getAgentCertificateMappingData() != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"UnbindAgentTunnel(%s): clearing agent certificate mapping", node->getName());
+      static_cast<Node&>(*node).setAgentCertificateMapping(static_cast<Node&>(*node).getAgentCertificateMappingMethod(), nullptr);
+   }
 
    if (static_cast<Node&>(*node).getTunnelId().isNull())
    {
@@ -377,11 +391,9 @@ void ShowAgentTunnels(CONSOLE_CTX console)
  * Create shared tunnel object
  */
 shared_ptr<InboundAgentTunnel> InboundAgentTunnel::create(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr, uint32_t nodeId,
-         int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer, time_t certificateExpirationTime,
-         time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller)
+         int32_t zoneUIN, const AgentCertificateInfo& certificate, BackgroundSocketPollerHandle *socketPoller)
 {
-   shared_ptr<InboundAgentTunnel> tunnel = make_shared<InboundAgentTunnel>(context, ssl, sock, addr, nodeId, zoneUIN, certificateSubject,
-            certificateIssuer, certificateExpirationTime, certificateIssueTime, socketPoller);
+   shared_ptr<InboundAgentTunnel> tunnel = make_shared<InboundAgentTunnel>(context, ssl, sock, addr, nodeId, zoneUIN, certificate, socketPoller);
    tunnel->m_self = tunnel;
    return tunnel;
 }
@@ -390,14 +402,16 @@ shared_ptr<InboundAgentTunnel> InboundAgentTunnel::create(SSL_CTX *context, SSL 
  * Inbound agent tunnel constructor
  */
 InboundAgentTunnel::InboundAgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddress& addr,
-         uint32_t nodeId, int32_t zoneUIN, const TCHAR *certificateSubject, const TCHAR *certificateIssuer,
-         time_t certificateExpirationTime, time_t certificateIssueTime, BackgroundSocketPollerHandle *socketPoller)
+         uint32_t nodeId, int32_t zoneUIN, const AgentCertificateInfo& certificate, BackgroundSocketPollerHandle *socketPoller)
          : AgentTunnel(context, ssl, sock, addr, nodeId, zoneUIN, socketPoller)
 {
-   m_certificateSubject = MemCopyString(certificateSubject);
-   m_certificateIssuer = MemCopyString(certificateIssuer);
-   m_certificateExpirationTime = certificateExpirationTime;
-   m_certificateIssueTime = certificateIssueTime;
+   m_certificateSubject = certificate.subject.isEmpty() ? nullptr : MemCopyString(certificate.subject.cstr());
+   m_certificateIssuer = certificate.issuer.isEmpty() ? nullptr : MemCopyString(certificate.issuer.cstr());
+   m_certificateCN = certificate.commonName.isEmpty() ? nullptr : MemCopyString(certificate.commonName.cstr());
+   m_certificateTemplateId = certificate.templateId.isEmpty() ? nullptr : MemCopyString(certificate.templateId.cstr());
+   m_certificatePublicKeyFingerprint = certificate.publicKeyFingerprint.isEmpty() ? nullptr : MemCopyString(certificate.publicKeyFingerprint.cstr());
+   m_certificateExpirationTime = certificate.expirationTime;
+   m_certificateIssueTime = certificate.issueTime;
    m_bindRequestId = 0;
    m_bindUserId = 0;
    m_resetPending = false;
@@ -518,14 +532,25 @@ void InboundAgentTunnel::onSetupComplete()
 /**
  * Bind tunnel to node
  */
-uint32_t InboundAgentTunnel::bind(uint32_t nodeId, uint32_t userId)
+uint32_t InboundAgentTunnel::bind(uint32_t nodeId, uint32_t userId, CertificateMappingMethod mappingMethod)
 {
-   if ((m_state != AGENT_TUNNEL_UNBOUND) || (m_bindRequestId != 0) || m_extProvCertificate)
+   if (m_state != AGENT_TUNNEL_UNBOUND)
+   {
+      debugPrintf(4, _T("Bind request rejected: tunnel is not in unbound state"));
       return RCC_OUT_OF_STATE_REQUEST;
+   }
+   if (m_bindRequestId != 0)
+   {
+      debugPrintf(4, _T("Bind request rejected: another bind request is in progress"));
+      return RCC_OUT_OF_STATE_REQUEST;
+   }
 
    shared_ptr<NetObj> node = FindObjectById(nodeId, OBJECT_NODE);
    if (node == nullptr)
+   {
+      debugPrintf(4, _T("Bind request rejected: node [%u] not found"), nodeId);
       return RCC_INVALID_OBJECT_ID;
+   }
 
    if (!static_cast<Node&>(*node).getAgentId().isNull() && !static_cast<Node&>(*node).getAgentId().equals(m_agentId))
    {
@@ -544,6 +569,9 @@ uint32_t InboundAgentTunnel::bind(uint32_t nodeId, uint32_t userId)
          .post();
    }
 
+   if (m_extProvCertificate)
+      return bindWithCertificateMapping(static_cast<Node&>(*node), userId, mappingMethod);
+
    uint32_t rcc = initiateCertificateRequest(node->getGuid(), userId);
    if (rcc == RCC_SUCCESS)
    {
@@ -554,6 +582,65 @@ uint32_t InboundAgentTunnel::bind(uint32_t nodeId, uint32_t userId)
       sendMessage(msg);
    }
    return rcc;
+}
+
+/**
+ * Bind tunnel with externally provisioned certificate to node by setting certificate mapping on the node.
+ * Agent cannot be issued a new certificate in this case, so the tunnel is reset and expected to re-attach
+ * to the node through the certificate mapping lookup on reconnect.
+ */
+uint32_t InboundAgentTunnel::bindWithCertificateMapping(Node& node, uint32_t userId, CertificateMappingMethod mappingMethod)
+{
+   const TCHAR *mappingData;
+   switch(mappingMethod)
+   {
+      case MAP_CERTIFICATE_BY_CN:
+         mappingData = m_certificateCN;
+         break;
+      case MAP_CERTIFICATE_BY_SUBJECT:
+         mappingData = m_certificateSubject;
+         break;
+      case MAP_CERTIFICATE_BY_TEMPLATE_ID:
+         mappingData = m_certificateTemplateId;
+         break;
+      case MAP_CERTIFICATE_BY_PUBKEY:
+         mappingData = m_certificatePublicKeyFingerprint;
+         break;
+      default:
+         debugPrintf(4, _T("Bind request rejected: invalid certificate mapping method %d"), static_cast<int>(mappingMethod));
+         return RCC_INVALID_ARGUMENT;
+   }
+   if ((mappingData == nullptr) || (*mappingData == 0))
+   {
+      debugPrintf(4, _T("Bind request rejected: agent certificate does not provide data for mapping method %d"), static_cast<int>(mappingMethod));
+      return RCC_INVALID_ARGUMENT;
+   }
+
+   s_certificateMappingsLock.lock();
+   shared_ptr<Node> mappedNode = s_certificateMappings[mappingMethod].getShared(mappingData);
+   s_certificateMappingsLock.unlock();
+   if ((mappedNode != nullptr) && (mappedNode->getId() != node.getId()))
+   {
+      debugPrintf(4, _T("Bind request rejected: certificate mapping data \"%s\" already used by node %s [%u]"), mappingData, mappedNode->getName(), mappedNode->getId());
+      return RCC_CERT_MAPPING_CONFLICT;
+   }
+
+   // Release node from existing tunnel binding (server-issued certificate, previous certificate mapping, or tunnel attached by IP address), if any
+   UnbindAgentTunnel(node.getId(), userId);
+
+   uint32_t rcc = node.setAgentCertificateMapping(mappingMethod, mappingData);
+   if (rcc != RCC_SUCCESS)
+   {
+      debugPrintf(4, _T("Bind request rejected: cannot set certificate mapping on node %s [%u] (RCC = %u)"), node.getName(), node.getId(), rcc);
+      return rcc;
+   }
+
+   debugPrintf(4, _T("Certificate mapping (method %d, data \"%s\") set on node %s [%u], resetting tunnel"), static_cast<int>(mappingMethod), mappingData, node.getName(), node.getId());
+   m_resetPending = true;
+   node.setNewTunnelBindFlag();
+   NXCPMessage msg(CMD_RESET_TUNNEL, InterlockedIncrement(&m_requestId));
+   sendMessage(msg);
+   return RCC_SUCCESS;
 }
 
 /**
@@ -784,9 +871,7 @@ static void SetupTunnel(ConnectionRequest *request)
    uint32_t nodeId = 0;
    int32_t zoneUIN = 0;
    X509 *cert = nullptr;
-   time_t certExpTime = 0;
-   time_t certIssueTime = 0;
-   StringBuffer certSubject, certIssuer;
+   AgentCertificateInfo certInfo;
    int version;
 
    //Debugging variables
@@ -908,12 +993,32 @@ retry:
       nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): CRL check is not implemented for this OpenSSL version"), debugPrefix);
 #endif
 
-      certExpTime = GetCertificateExpirationTime(cert);
-      certIssueTime = GetCertificateIssueTime(cert);
-      certSubject = GetCertificateSubjectString(cert);
-      certIssuer = GetCertificateIssuerString(cert);
+      certInfo.expirationTime = GetCertificateExpirationTime(cert);
+      certInfo.issueTime = GetCertificateIssueTime(cert);
+      certInfo.subject = GetCertificateSubjectString(cert);
+      certInfo.issuer = GetCertificateIssuerString(cert);
+      certInfo.templateId = GetCertificateTemplateId(cert);
+
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+      EVP_PKEY *pkey = X509_get0_pubkey(cert);
+#else
+      EVP_PKEY *pkey = X509_get_pubkey(cert);
+#endif
+      if (pkey != nullptr)
+      {
+         wchar_t fingerprint[SHA256_DIGEST_SIZE * 2 + 1];
+         if (GetPublicKeyFingerprint(pkey, fingerprint))
+            certInfo.publicKeyFingerprint = fingerprint;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+         EVP_PKEY_free(pkey);
+#endif
+      }
+
       TCHAR ou[256], cn[256];
-      if (GetCertificateOU(cert, ou, 256) && GetCertificateCN(cert, cn, 256))
+      if (!GetCertificateCN(cert, cn, 256))
+         cn[0] = 0;
+      certInfo.commonName = cn;
+      if ((cn[0] != 0) && GetCertificateOU(cert, ou, 256))
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): certificate OU=%s CN=%s"), debugPrefix, ou, cn);
          uuid nodeGuid = uuid::parse(ou);
@@ -957,48 +1062,24 @@ retry:
       else
       {
          ReportError(debugPrefix, request->addr,  _T("Cannot get certificate OU and CN"));
-         cn[0] = 0;
       }
 
       // Attempt to lookup externally provisioned certificates
-      if (!nodeFound && ((cn[0] != 0) || GetCertificateCN(cert, cn, 256)))
+      if (!nodeFound)
       {
          s_certificateMappingsLock.lock();
 
-         CertificateMappingMethod method = MAP_CERTIFICATE_BY_CN;
-         shared_ptr<Node> node = s_certificateMappings.getShared(cn);
+         shared_ptr<Node> node = (cn[0] != 0) ? s_certificateMappings[MAP_CERTIFICATE_BY_CN].getShared(cn) : shared_ptr<Node>();
          if (node == nullptr)
-         {
-            method = MAP_CERTIFICATE_BY_SUBJECT;
-            node = s_certificateMappings.getShared(certSubject);
-         }
-         if (node == nullptr)
-         {
-            method = MAP_CERTIFICATE_BY_TEMPLATE_ID;
-            node = s_certificateMappings.getShared(GetCertificateTemplateId(cert));
-         }
-         if (node == nullptr)
-         {
-            method = MAP_CERTIFICATE_BY_PUBKEY;
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-            EVP_PKEY *pkey = X509_get0_pubkey(cert);
-#else
-            EVP_PKEY *pkey = X509_get_pubkey(cert);
-#endif
-            if (pkey != nullptr)
-            {
-               wchar_t fingerprint[SHA256_DIGEST_SIZE * 2 + 1];
-               if (GetPublicKeyFingerprint(pkey, fingerprint))
-                  node = s_certificateMappings.getShared(fingerprint);
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-               EVP_PKEY_free(pkey);
-#endif
-            }
-         }
+            node = s_certificateMappings[MAP_CERTIFICATE_BY_SUBJECT].getShared(certInfo.subject);
+         if ((node == nullptr) && !certInfo.templateId.isEmpty())
+            node = s_certificateMappings[MAP_CERTIFICATE_BY_TEMPLATE_ID].getShared(certInfo.templateId);
+         if ((node == nullptr) && !certInfo.publicKeyFingerprint.isEmpty())
+            node = s_certificateMappings[MAP_CERTIFICATE_BY_PUBKEY].getShared(certInfo.publicKeyFingerprint);
 
          s_certificateMappingsLock.unlock();
 
-         if ((node != nullptr) && (node->getAgentCertificateMappingMethod() == method))
+         if (node != nullptr)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): Tunnel attached to node %s [%u] using externally provisioned certificate"),
                   debugPrefix, node->getName(), node->getId());
@@ -1010,7 +1091,7 @@ retry:
             }
             nodeId = node->getId();
             zoneUIN = node->getZoneUIN();
-            static_cast<Node&>(*node).setTunnelId(uuid::NULL_UUID, certSubject);
+            static_cast<Node&>(*node).setTunnelId(uuid::NULL_UUID, certInfo.subject);
          }
       }
 
@@ -1058,9 +1139,7 @@ retry:
    }
    s_pollerListLock.unlock();
 
-   tunnel = InboundAgentTunnel::create(context, ssl, request->sock, request->addr, nodeId, zoneUIN,
-         !certSubject.isEmpty() ? certSubject.cstr() : nullptr, !certIssuer.isEmpty() ? certIssuer.cstr() : nullptr,
-         certExpTime, certIssueTime, sp);
+   tunnel = InboundAgentTunnel::create(context, ssl, request->sock, request->addr, nodeId, zoneUIN, certInfo, sp);
    RegisterTunnel(tunnel);
    tunnel->start();
 
@@ -1415,11 +1494,6 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
             break;
          case BIND_NODE:
          case BIND_OR_CREATE_NODE:
-            if (t->isExtProvCertificate())
-            {
-               t->shutdown();
-               break;
-            }
             shared_ptr<Node> node = FindMatchingNode(t);
             if (node != nullptr)
             {
@@ -1570,12 +1644,12 @@ int GetTunnelCount(TunnelCapabilityFilter filter, bool boundTunnels)
 /**
  * Update agent certificate mapping index for externally provisioned certificates
  */
-void UpdateAgentCertificateMappingIndex(const shared_ptr<Node>& node, const TCHAR *oldValue, const TCHAR *newValue)
+void UpdateAgentCertificateMappingIndex(const shared_ptr<Node>& node, CertificateMappingMethod oldMethod, const TCHAR *oldValue, CertificateMappingMethod newMethod, const TCHAR *newValue)
 {
    s_certificateMappingsLock.lock();
-   if (oldValue != nullptr)
-      s_certificateMappings.remove(oldValue);
-   if (newValue != nullptr)
-      s_certificateMappings.set(newValue, node);
+   if ((oldValue != nullptr) && IsValidCertificateMappingMethod(oldMethod))
+      s_certificateMappings[oldMethod].remove(oldValue);
+   if ((newValue != nullptr) && IsValidCertificateMappingMethod(newMethod))
+      s_certificateMappings[newMethod].set(newValue, node);
    s_certificateMappingsLock.unlock();
 }
