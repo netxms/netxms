@@ -6531,7 +6531,7 @@ int GetTotalPollerCount();
 int GetPollerCount(PollerType type);
 
 void InitUserAgentNotifications();
-void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
+void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb, uint32_t retentionTime);
 void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node);
 UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<uint32_t>& objects, time_t startTime, time_t endTime, bool onStartup, uint32_t userId);
 
