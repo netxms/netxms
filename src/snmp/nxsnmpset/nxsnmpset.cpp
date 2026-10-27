@@ -188,8 +188,10 @@ int main(int argc, char *argv[])
                      _T("   -w <seconds> : Request timeout (default is 3 seconds)\n")
                      _T("Note: You can specify data type either as number or in symbolic form.\n")
                      _T("      Valid symbolic representations are following:\n")
-                     _T("         INTEGER, STRING, OID, IPADDR, COUNTER32, GAUGE32,\n")
-                     _T("         TIMETICKS, COUNTER64, UINT32.\n")
+                     _T("         INTEGER, STRING, OID, IPADDR, COUNTER32, GAUGE32, TIMETICKS,\n")
+                     _T("         COUNTER64, UINT32, INTEGER64, UINTEGER64, FLOAT, DOUBLE, OPAQUE.\n")
+                     _T("      INTEGER64, UINTEGER64, FLOAT, and DOUBLE are sent wrapped into Opaque.\n")
+                     _T("      Value for OPAQUE is raw content as hexadecimal string.\n")
                      _T("\n"));
             exitCode = 0;
             start = false;

@@ -377,9 +377,32 @@ static size_t EncodeContent(uint32_t type, const BYTE *data, size_t dataLength, 
 }
 
 /**
+ * Get base type for Opaque-wrapped type tag (second byte of two-byte tag 9F xx), or type itself for all other types
+ */
+static inline uint32_t OpaqueBaseType(uint32_t type)
+{
+   switch(type)
+   {
+      case ASN_OPAQUE_COUNTER64:
+         return ASN_COUNTER64;
+      case ASN_OPAQUE_DOUBLE:
+         return ASN_DOUBLE;
+      case ASN_OPAQUE_FLOAT:
+         return ASN_FLOAT;
+      case ASN_OPAQUE_INTEGER64:
+         return ASN_INTEGER64;
+      case ASN_OPAQUE_UINTEGER64:
+         return ASN_UINTEGER64;
+      default:
+         return type;
+   }
+}
+
+/**
  * Encode identifier and content
  * Return value is size of encoded identifier and content in buffer
  * or 0 if there are not enough place in buffer or type is unknown
+ * Opaque-wrapped types (ASN_OPAQUE_FLOAT etc.) are encoded with two-byte identifier 9F xx and content of the base type.
  */
 size_t BER_Encode(uint32_t type, const BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize)
 {
@@ -389,12 +412,20 @@ size_t BER_Encode(uint32_t type, const BYTE *data, size_t dataLength, BYTE *buff
    size_t bytes = 0;
    BYTE *pbCurrPos = buffer;
 
+   uint32_t contentType = OpaqueBaseType(type);
+   if (contentType != type)
+   {
+      if (bufferSize < 3)
+         return 0;
+      *pbCurrPos++ = ASN_OPAQUE_TAG1;
+      bytes++;
+   }
    *pbCurrPos++ = (BYTE)type;
    bytes++;
 
-   // Encode content
-   BYTE *pEncodedData = static_cast<BYTE*>(SNMP_MemAlloc(dataLength));
-   size_t nDataBytes = EncodeContent(type, data, dataLength, pEncodedData);
+   // Encode content (unsigned integer with high bit set needs one extra byte for leading zero)
+   BYTE *pEncodedData = static_cast<BYTE*>(SNMP_MemAlloc(dataLength + 1));
+   size_t nDataBytes = EncodeContent(contentType, data, dataLength, pEncodedData);
 
    // Encode length
    if (nDataBytes < 128)
@@ -416,7 +447,7 @@ size_t BER_Encode(uint32_t type, const BYTE *data, size_t dataLength, BYTE *buff
       // Check for available buffer size
       if (bufferSize < (uint32_t)nHdrBytes + bytes + 1)
       {
-         SNMP_MemFree(pEncodedData, dataLength);
+         SNMP_MemFree(pEncodedData, dataLength + 1);
          return 0;
       }
 
@@ -438,6 +469,6 @@ size_t BER_Encode(uint32_t type, const BYTE *data, size_t dataLength, BYTE *buff
       bytes = 0;   // Buffer is too small
    }
 
-   SNMP_MemFree(pEncodedData, dataLength);
+   SNMP_MemFree(pEncodedData, dataLength + 1);
    return bytes;
 }
