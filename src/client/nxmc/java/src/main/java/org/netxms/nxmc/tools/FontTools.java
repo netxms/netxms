@@ -88,7 +88,7 @@ public class FontTools
       if (f != null)
          return f;
 
-      f = new Font(Display.getCurrent(), name, JFaceResources.getDefaultFont().getFontData()[0].getHeight() + heightAdjustment, style);
+      f = new Font(Display.getCurrent(), name, Math.max(1, JFaceResources.getDefaultFont().getFontData()[0].getHeight() + heightAdjustment), style);
       fontCache.put(key, f);
       return f;
    }
@@ -139,7 +139,7 @@ public class FontTools
       String name = findFirstAvailableFont(names);
       if (name == null)
          return null;
-      return new Font(Display.getCurrent(), name, baseFont.getFontData()[0].getHeight() + heightAdjustment, style);
+      return new Font(Display.getCurrent(), name, Math.max(1, baseFont.getFontData()[0].getHeight() + heightAdjustment), style);
    }
 
    /**
@@ -197,7 +197,7 @@ public class FontTools
    public static Font createAdjustedFont(Font font, int heightAdjustment)
    {
       FontData fd = font.getFontData()[0];
-      return new Font(Display.getCurrent(), fd.getName(), fd.getHeight() + heightAdjustment, fd.getStyle());
+      return new Font(Display.getCurrent(), fd.getName(), Math.max(1, fd.getHeight() + heightAdjustment), fd.getStyle());
    }
 
    /**
@@ -211,6 +211,6 @@ public class FontTools
    public static Font createAdjustedFont(Font font, int heightAdjustment, int style)
    {
       FontData fd = font.getFontData()[0];
-      return new Font(Display.getCurrent(), fd.getName(), fd.getHeight() + heightAdjustment, style);
+      return new Font(Display.getCurrent(), fd.getName(), Math.max(1, fd.getHeight() + heightAdjustment), style);
    }
 }
