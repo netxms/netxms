@@ -299,10 +299,12 @@ LONG H_SysProcCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
 }
 
 /**
- * Read private (anonymous) resident set size of a process from /proc/<pid>/xmap.
- * Anonymous pages are the ones not shared with other processes, so unlike the
- * resident set size reported by psinfo they can be summed across processes
- * without counting shared mappings once per process.
+ * Read private resident set size of a process from /proc/<pid>/xmap: resident
+ * anonymous pages of mappings that are not shared with other processes. Unlike
+ * the resident set size reported by psinfo this can be summed across processes
+ * without counting shared mappings once per process. Shared anonymous mappings
+ * (System V shared memory, MAP_SHARED|MAP_ANON areas) also report resident pages
+ * in pr_anon but are mapped by every process using them, so they are skipped.
  */
 static bool ReadPrivateRSS(const char *pidAsChar, uint64_t *privateRss)
 {
@@ -333,7 +335,10 @@ static bool ReadPrivateRSS(const char *pidAsChar, uint64_t *privateRss)
    uint64_t pageSize = getpagesize();
    uint64_t value = 0;
    for(size_t i = 0; i < static_cast<size_t>(bytes) / sizeof(prxmap_t); i++)
-      value += static_cast<uint64_t>(maps[i].pr_anon) * pageSize;
+   {
+      if (!(maps[i].pr_mflags & MA_SHARED))
+         value += static_cast<uint64_t>(maps[i].pr_anon) * pageSize;
+   }
    MemFree(maps);
 
    *privateRss = value;
