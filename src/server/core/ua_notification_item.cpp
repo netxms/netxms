@@ -51,29 +51,30 @@ void InitUserAgentNotifications()
 /**
  * Delete expired user support application notifications
  */
-void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb, UINT32 retentionTime)
+void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb, uint32_t retentionTime)
 {
-   g_userAgentNotificationListMutex.lock();
    time_t now = time(nullptr);
+   time_t threshold = now - static_cast<time_t>(retentionTime);
+
+   // Instant notifications have no end time and expire by creation time
+   g_userAgentNotificationListMutex.lock();
    Iterator<UserAgentNotificationItem> it = g_userAgentNotificationList.begin();
    while (it.hasNext())
    {
       UserAgentNotificationItem *uan = it.next();
-      if((now - uan->getEndTime()) >= retentionTime && uan->hasNoRef())
-      {
+      time_t expirationTime = (uan->getEndTime() != 0) ? uan->getEndTime() : uan->getCreationTime();
+      if ((expirationTime < threshold) && uan->hasNoRef())
          it.remove();
-         break;
-      }
    }
    g_userAgentNotificationListMutex.unlock();
 
    TCHAR query[256];
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_notifications WHERE end_time>=") INT64_FMT,
-         static_cast<INT64>(now - retentionTime));
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_notifications WHERE end_time<>0 AND end_time<") INT64_FMT,
+         static_cast<int64_t>(threshold));
    DBQuery(hdb, query);
 
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_notifications WHERE creation_time>=") INT64_FMT _T(" AND end_time=0"),
-         static_cast<INT64>(now - retentionTime));
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM user_agent_notifications WHERE end_time=0 AND creation_time<") INT64_FMT,
+         static_cast<int64_t>(threshold));
    DBQuery(hdb, query);
 }
 
@@ -293,7 +294,7 @@ json_t *UserAgentNotificationItem::toJson() const
    json_object_set_new(root, "startTime", json_integer(m_startTime));
    json_object_set_new(root, "endTime", json_integer(m_endTime));
    json_object_set_new(root, "recalled", json_boolean(m_recall));
-   json_object_set_new(root, "creationTime", json_boolean(m_creationTime));
-   json_object_set_new(root, "createdBy", json_boolean(m_creatorId));
+   json_object_set_new(root, "creationTime", json_integer(m_creationTime));
+   json_object_set_new(root, "createdBy", json_integer(m_creatorId));
    return root;
 }
