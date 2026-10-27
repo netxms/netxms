@@ -183,113 +183,123 @@ public class DashboardControl extends Composite
     */
 	private ElementWidget createElementWidget(DashboardElement e)
 	{
-		ElementWidget w;
-		switch(e.getType())
-		{   
-         case DashboardElement.ALARM_VIEWER:
-            w = new AlarmViewerElement(this, e, view);
-            break;
-         case DashboardElement.AVAILABLITY_CHART:
-            w = new AvailabilityChartElement(this, e, view);
-            break;
-         case DashboardElement.BAR_CHART:
-         case DashboardElement.TUBE_CHART:
-            w = new BarChartElement(this, e, view);
-         	break;
-         case DashboardElement.DASHBOARD:
-            w = new EmbeddedDashboardElement(this, e, view);
-         	break;
-         case DashboardElement.DCI_SUMMARY_TABLE:
-            w = new DciSummaryTableElement(this, e, view);
-            break;
-         case DashboardElement.DIAL_CHART:
-            w = new GaugeElement(this, e, view);
-         	break;
-         case DashboardElement.AI_OBSERVATION_MONITOR:
-            w = new AiObservationMonitorElement(this, e, view);
-            break;
-         case DashboardElement.EVENT_MONITOR:
-            w = new EventMonitorElement(this, e, view);
-            break;
-         case DashboardElement.FILE_MONITOR:
-            w = new FileMonitorElement(this, e, view);
-            break;
-         case DashboardElement.GEO_MAP:
-            w = new GeoMapElement(this, e, view);
-         	break;
-         case DashboardElement.LABEL:
-            w = new LabelElement(this, e, view);
-         	break;
-         case DashboardElement.LINE_CHART:
-            w = new LineChartElement(this, e, view);
-         	break;
-         case DashboardElement.NETWORK_MAP:
-            w = new NetworkMapElement(this, e, view);
-         	break;
-         case DashboardElement.OBJECT_QUERY:
-            w = new ObjectQuery(this, e, view);
-            break;
-         case DashboardElement.OBJECT_TOOLS:
-            w = new ObjectTools(this, e, view);
-            break;
-         case DashboardElement.PIE_CHART:
-            w = new PieChartElement(this, e, view);
-            break;
-         case DashboardElement.PORT_VIEW:
-            w = new PortViewElement(this, e, view);
-            break;
-         case DashboardElement.RACK_DIAGRAM:
-            w = new RackDiagramElement(this, e, view);
-            break;
-         case DashboardElement.SCRIPTED_BAR_CHART:
-            w = new ScriptedBarChartElement(this, e, view);
-            break;
-         case DashboardElement.SCRIPTED_PIE_CHART:
-            w = new ScriptedPieChartElement(this, e, view);
-            break;
-         case DashboardElement.SCRIPTED_GAUGE:
-            w = new ScriptedGaugeElement(this, e, view);
-            break;
-         case DashboardElement.SEPARATOR:
-            w = new SeparatorElement(this, e, view);
-            break;
-         case DashboardElement.SERVICE_COMPONENTS:
-            w = new ServiceComponentsElement(this, e, view);
-            break;
-         case DashboardElement.SNMP_TRAP_MONITOR:
-            w = new SnmpTrapMonitorElement(this, e, view);
-            break;
-         case DashboardElement.STATUS_CHART:
-            w = new ObjectStatusChartElement(this, e, view);
-            break;
-         case DashboardElement.STATUS_INDICATOR:
-            w = new StatusIndicatorElement(this, e, view);
-            break;
-         case DashboardElement.STATUS_MAP:
-            w = new StatusMapElement(this, e, view);
-            break;
-         case DashboardElement.SYSLOG_MONITOR:
-            w = new SyslogMonitorElement(this, e, view);
-            break;
-         case DashboardElement.TABLE_BAR_CHART:
-         case DashboardElement.TABLE_TUBE_CHART:
-            w = new TableBarChartElement(this, e, view);
-            break;
-         case DashboardElement.TABLE_PIE_CHART:
-            w = new TablePieChartElement(this, e, view);
-            break;
-         case DashboardElement.TABLE_VALUE:
-            w = new TableValueElement(this, e, view);
-            break;
-         case DashboardElement.WEB_PAGE:
-            w = new WebPageElement(this, e, view);
-            break;
-         default:
-            w = new ElementWidget(this, e, view);
-            break;
-		}
-		
-		final DashboardElementLayout el = w.getElementLayout();
+      ElementWidget w;
+      try
+      {
+         switch(e.getType())
+         {
+            case DashboardElement.ALARM_VIEWER:
+               w = new AlarmViewerElement(this, e, view);
+               break;
+            case DashboardElement.AVAILABLITY_CHART:
+               w = new AvailabilityChartElement(this, e, view);
+               break;
+            case DashboardElement.BAR_CHART:
+            case DashboardElement.TUBE_CHART:
+               w = new BarChartElement(this, e, view);
+            	break;
+            case DashboardElement.DASHBOARD:
+               w = new EmbeddedDashboardElement(this, e, view);
+            	break;
+            case DashboardElement.DCI_SUMMARY_TABLE:
+               w = new DciSummaryTableElement(this, e, view);
+               break;
+            case DashboardElement.DIAL_CHART:
+               w = new GaugeElement(this, e, view);
+            	break;
+            case DashboardElement.AI_OBSERVATION_MONITOR:
+               w = new AiObservationMonitorElement(this, e, view);
+               break;
+            case DashboardElement.EVENT_MONITOR:
+               w = new EventMonitorElement(this, e, view);
+               break;
+            case DashboardElement.FILE_MONITOR:
+               w = new FileMonitorElement(this, e, view);
+               break;
+            case DashboardElement.GEO_MAP:
+               w = new GeoMapElement(this, e, view);
+            	break;
+            case DashboardElement.LABEL:
+               w = new LabelElement(this, e, view);
+            	break;
+            case DashboardElement.LINE_CHART:
+               w = new LineChartElement(this, e, view);
+            	break;
+            case DashboardElement.NETWORK_MAP:
+               w = new NetworkMapElement(this, e, view);
+            	break;
+            case DashboardElement.OBJECT_QUERY:
+               w = new ObjectQuery(this, e, view);
+               break;
+            case DashboardElement.OBJECT_TOOLS:
+               w = new ObjectTools(this, e, view);
+               break;
+            case DashboardElement.PIE_CHART:
+               w = new PieChartElement(this, e, view);
+               break;
+            case DashboardElement.PORT_VIEW:
+               w = new PortViewElement(this, e, view);
+               break;
+            case DashboardElement.RACK_DIAGRAM:
+               w = new RackDiagramElement(this, e, view);
+               break;
+            case DashboardElement.SCRIPTED_BAR_CHART:
+               w = new ScriptedBarChartElement(this, e, view);
+               break;
+            case DashboardElement.SCRIPTED_PIE_CHART:
+               w = new ScriptedPieChartElement(this, e, view);
+               break;
+            case DashboardElement.SCRIPTED_GAUGE:
+               w = new ScriptedGaugeElement(this, e, view);
+               break;
+            case DashboardElement.SEPARATOR:
+               w = new SeparatorElement(this, e, view);
+               break;
+            case DashboardElement.SERVICE_COMPONENTS:
+               w = new ServiceComponentsElement(this, e, view);
+               break;
+            case DashboardElement.SNMP_TRAP_MONITOR:
+               w = new SnmpTrapMonitorElement(this, e, view);
+               break;
+            case DashboardElement.STATUS_CHART:
+               w = new ObjectStatusChartElement(this, e, view);
+               break;
+            case DashboardElement.STATUS_INDICATOR:
+               w = new StatusIndicatorElement(this, e, view);
+               break;
+            case DashboardElement.STATUS_MAP:
+               w = new StatusMapElement(this, e, view);
+               break;
+            case DashboardElement.SYSLOG_MONITOR:
+               w = new SyslogMonitorElement(this, e, view);
+               break;
+            case DashboardElement.TABLE_BAR_CHART:
+            case DashboardElement.TABLE_TUBE_CHART:
+               w = new TableBarChartElement(this, e, view);
+               break;
+            case DashboardElement.TABLE_PIE_CHART:
+               w = new TablePieChartElement(this, e, view);
+               break;
+            case DashboardElement.TABLE_VALUE:
+               w = new TableValueElement(this, e, view);
+               break;
+            case DashboardElement.WEB_PAGE:
+               w = new WebPageElement(this, e, view);
+               break;
+            default:
+               w = new ElementWidget(this, e, view);
+               break;
+         }
+      }
+      catch(Exception ex)
+      {
+         // Broken element must not prevent creation of the whole dashboard
+         logger.error("Cannot create widget for dashboard element of type " + e.getType(), ex);
+         w = new ElementWidget(this, e, view);
+         w.addMessage(MessageArea.ERROR, i18n.tr("Cannot create dashboard element (internal error)"), true);
+      }
+
+      final DashboardElementLayout el = w.getElementLayout();
       if (narrowScreenMode)
       {
          GridData gd = new GridData();
