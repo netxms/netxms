@@ -138,7 +138,7 @@ $(MSG_BIN): $(MSG_HEADER) ;
 # Agent sources #include messages.h; the resource embeds MSG00001.bin.
 $(OBJECTS): $(MSG_HEADER)
 
-$(RC_OBJECT): $(RC_SOURCE) $(MSG_BIN)
+$(RC_OBJECT): $(RC_SOURCE) $(MSG_BIN) nxagentd.manifest
 	@mkdir -p $(dir $@)
 	@echo "  RC      $<"
 	$(Q)$(WINDRES) -I. -I$(TOPDIR)/include -I$(TOPDIR)/build $< -o $@

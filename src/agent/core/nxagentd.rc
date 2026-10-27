@@ -29,6 +29,14 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 1                       11      DISCARDABLE     "MSG00001.bin"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Application manifest (declares Windows versions supported by the agent;
+// without it GetVersionEx reports Windows 8 on Windows 8.1 and later)
+//
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "nxagentd.manifest"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

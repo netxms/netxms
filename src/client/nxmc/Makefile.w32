@@ -39,7 +39,7 @@ $(OBJDIR)/%.o: %.cpp
 
 # nxmc.rc is stored as UTF-16LE (for the MSVC toolchain). llvm-rc cannot
 # preprocess UTF-16, so transcode to a BOM-less UTF-8 copy before compiling.
-$(RC_OBJECT): nxmc.rc
+$(RC_OBJECT): nxmc.rc swt.manifest
 	@mkdir -p $(dir $@)
 	@echo "  RC      $<"
 	$(Q)iconv -f UTF-16 -t UTF-8 nxmc.rc > nxmc.utf8.rc
