@@ -81,13 +81,6 @@ static int SetVariables(int argc, TCHAR *argv[])
                continue;
             }
          }
-         // libnxsnmp encodes these types with bare tags, but agents expect them wrapped into Opaque
-         if ((type == ASN_FLOAT) || (type == ASN_DOUBLE) || (type == ASN_INTEGER64) || (type == ASN_UINTEGER64))
-         {
-            _tprintf(_T("Data type 0x%02X of %s is not supported in SET request\n"), type, argv[i]);
-            exitCode = 5;
-            continue;
-         }
          if (SnmpIsCorrectOID(argv[i]))
          {
             auto varbind = new SNMP_Variable(argv[i]);
@@ -207,8 +200,10 @@ int main(int argc, char *argv[])
                      _T("   -w <seconds> : Request timeout (default is 3 seconds)\n")
                      _T("Note: You can specify data type either as number or in symbolic form.\n")
                      _T("      Valid symbolic representations are following:\n")
-                     _T("         INTEGER, STRING, OID, IPADDR, COUNTER32, GAUGE32,\n")
-                     _T("         TIMETICKS, COUNTER64, UINT32.\n")
+                     _T("         INTEGER, STRING, OID, IPADDR, COUNTER32, GAUGE32, TIMETICKS,\n")
+                     _T("         COUNTER64, UINT32, INTEGER64, UINTEGER64, FLOAT, DOUBLE, OPAQUE.\n")
+                     _T("      INTEGER64, UINTEGER64, FLOAT, and DOUBLE are sent wrapped into Opaque.\n")
+                     _T("      Value for OPAQUE is raw content as hexadecimal string.\n")
                      _T("\n"));
             exitCode = 0;
             start = false;

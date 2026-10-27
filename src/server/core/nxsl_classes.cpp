@@ -9505,30 +9505,34 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
    bool success;
    if (SnmpIsCorrectOID(argv[0]->getValueAsCString()))
    {
-      SNMP_Variable *var = new SNMP_Variable(argv[0]->getValueAsCString());
-      if (argc == 2)
+      uint32_t dataType = ASN_OCTET_STRING;
+      if (argc == 3)
       {
-         if (argv[1]->isObject())
-            var->setValueFromByteStream(ASN_OCTET_STRING, *static_cast<ByteStream*>(argv[1]->getValueAsObject()->getData()));
-         else
-            var->setValueFromString(ASN_OCTET_STRING, argv[1]->getValueAsCString());
-      }
-      else
-      {
-         uint32_t dataType = SnmpResolveDataType(argv[2]->getValueAsCString());
+         dataType = SnmpResolveDataType(argv[2]->getValueAsCString());
          if (dataType == ASN_NULL)
          {
-            nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: failed to resolve data type '%s', assume string"),
+            nxlog_debug_tag(L"snmp.nxsl", 6, L"SNMPTransport::set: failed to resolve data type '%s', assume string",
                argv[2]->getValueAsCString());
             dataType = ASN_OCTET_STRING;
          }
-         if (argv[1]->isObject())
-            var->setValueFromByteStream(dataType, *static_cast<ByteStream*>(argv[1]->getValueAsObject()->getData()));
-         else
-            var->setValueFromString(dataType, argv[1]->getValueAsCString());
       }
-      request.bindVariable(var);
-      success = true;
+      SNMP_Variable *var = new SNMP_Variable(argv[0]->getValueAsCString());
+      if (argv[1]->isObject())
+         var->setValueFromByteStream(dataType, *static_cast<ByteStream*>(argv[1]->getValueAsObject()->getData()));
+      else
+         var->setValueFromString(dataType, argv[1]->getValueAsCString());
+      if (var->getType() == ASN_NULL)
+      {
+         wchar_t typeName[32];
+         nxlog_debug_tag(L"snmp.nxsl", 6, L"SNMPTransport::set: value cannot be converted to data type %s from string", SnmpDataTypeName(dataType, typeName, 32));
+         delete var;
+         success = false;
+      }
+      else
+      {
+         request.bindVariable(var);
+         success = true;
+      }
    }
    else
    {

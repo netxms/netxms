@@ -752,10 +752,11 @@ private:
       }
       else if (m_value == m_valueBuffer)
       {
-         if (length <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE)
-            return;
-         m_value = MemAllocArrayNoInit<BYTE>(length);
-         memcpy(m_value, m_valueBuffer, SNMP_VARBIND_INTERNAL_BUFFER_SIZE);
+         if (length > SNMP_VARBIND_INTERNAL_BUFFER_SIZE)
+         {
+            m_value = MemAllocArrayNoInit<BYTE>(length);
+            memcpy(m_value, m_valueBuffer, SNMP_VARBIND_INTERNAL_BUFFER_SIZE);
+         }
       }
       else if (length > m_valueLength)
       {

@@ -182,6 +182,23 @@ static void TestOidClass()
 }
 
 /**
+ * BER-encode varbind and decode it back into new variable
+ */
+static SNMP_Variable *EncodeDecodeVarbind(const SNMP_Variable& v)
+{
+   BYTE encoded[256];
+   size_t bytes = v.encode(encoded, sizeof(encoded));
+   // encode() produces SEQUENCE { OID, value }, decode() expects content of that sequence
+   AssertTrue(bytes > 2);
+   AssertEquals(static_cast<uint32_t>(encoded[0]), static_cast<uint32_t>(ASN_SEQUENCE));
+   AssertEquals(static_cast<size_t>(encoded[1]), static_cast<int>(bytes - 2));
+   auto decoded = new SNMP_Variable();
+   AssertTrue(decoded->decode(encoded + 2, bytes - 2));
+   AssertEquals(decoded->getName().compare(v.getName()), OID_EQUAL);
+   return decoded;
+}
+
+/**
  * Test SNMP_Variable class
  */
 static void TestVariableClass()
@@ -311,6 +328,113 @@ static void TestVariableClass()
    delete inner;
    v14.getValueAsString(buffer, 256);
    AssertEquals(buffer, _T("-1234.500000"));
+   EndTest();
+
+   StartTest(_T("SNMP_Variable value buffer reuse"));
+   SNMP_Variable v15(s_oidSysLocation);
+   v15.setValueFromString(ASN_OCTET_STRING, _T("1.3.6.1"));   // 7 bytes in internal buffer
+   v15.setValueFromString(ASN_OBJECT_ID, _T("1.3.6.1"));      // 16 bytes, still in internal buffer
+   AssertEquals(v15.getValueLength(), 16);
+   v15.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("1.3.6.1"));
+   v15.setValueFromString(ASN_COUNTER32, _T("7"));
+   AssertEquals(v15.getValueLength(), 4);
+   EndTest();
+
+   StartTest(_T("SNMP_Variable::setValueFromString for unconvertible type"));
+   v15.setValueFromString(ASN_BIT_STRING, _T("1"));
+   AssertEquals(v15.getType(), static_cast<uint32_t>(ASN_NULL));
+   AssertEquals(v15.getValueLength(), 0);
+   EndTest();
+
+   StartTest(_T("SNMP_Variable::setValueFromString for OPAQUE"));
+   v15.setValueFromString(ASN_OPAQUE, _T("9F780440200000"));
+   AssertEquals(v15.getType(), static_cast<uint32_t>(ASN_OPAQUE));
+   AssertEquals(v15.getValueLength(), static_cast<int>(sizeof(opaqueFloat)));
+   AssertTrue(!memcmp(v15.getValue(), opaqueFloat, sizeof(opaqueFloat)));
+   v15.getValueAsString(buffer, 256);
+   AssertEquals(buffer, _T("2.500000"));
+   EndTest();
+
+   StartTest(_T("SNMP_Variable encode/decode of Opaque-wrapped float"));
+   SNMP_Variable v16(s_oidSysLocation);
+   v16.setValueFromString(ASN_FLOAT, _T("2.5"));
+   AssertEquals(v16.getType(), static_cast<uint32_t>(ASN_FLOAT));
+   AssertTrue(v16.getValueAsDouble() == 2.5);
+   SNMP_Variable *decoded = EncodeDecodeVarbind(v16);
+   AssertEquals(decoded->getType(), static_cast<uint32_t>(ASN_OPAQUE));
+   AssertEquals(decoded->getValueLength(), static_cast<int>(sizeof(opaqueFloat)));
+   AssertTrue(!memcmp(decoded->getValue(), opaqueFloat, sizeof(opaqueFloat)));
+   inner = decoded->decodeOpaque();
+   AssertNotNull(inner);
+   AssertEquals(inner->getType(), static_cast<uint32_t>(ASN_FLOAT));
+   AssertTrue(inner->getValueAsDouble() == 2.5);
+   delete inner;
+   delete decoded;
+   EndTest();
+
+   StartTest(_T("SNMP_Variable encode/decode of Opaque-wrapped double"));
+   v16.setValueFromString(ASN_DOUBLE, _T("-1234.5"));
+   AssertEquals(v16.getType(), static_cast<uint32_t>(ASN_DOUBLE));
+   decoded = EncodeDecodeVarbind(v16);
+   AssertEquals(decoded->getType(), static_cast<uint32_t>(ASN_OPAQUE));
+   AssertEquals(decoded->getValueLength(), static_cast<int>(sizeof(opaqueDouble)));
+   AssertTrue(!memcmp(decoded->getValue(), opaqueDouble, sizeof(opaqueDouble)));
+   inner = decoded->decodeOpaque();
+   AssertNotNull(inner);
+   AssertEquals(inner->getType(), static_cast<uint32_t>(ASN_DOUBLE));
+   AssertTrue(inner->getValueAsDouble() == -1234.5);
+   delete inner;
+   delete decoded;
+   EndTest();
+
+   StartTest(_T("SNMP_Variable encode/decode of Opaque-wrapped integer64"));
+   // Opaque { 9F 7A 06 FE E0 8E 04 FB 35 } = -1234567890123
+   static const BYTE opaqueInt64[] = { 0x9F, 0x7A, 0x06, 0xFE, 0xE0, 0x8E, 0x04, 0xFB, 0x35 };
+   v16.setValueFromString(ASN_INTEGER64, _T("-1234567890123"));
+   AssertEquals(v16.getType(), static_cast<uint32_t>(ASN_INTEGER64));
+   AssertEquals(v16.getValueAsInt64(), static_cast<int64_t>(-1234567890123LL));
+   decoded = EncodeDecodeVarbind(v16);
+   AssertEquals(decoded->getType(), static_cast<uint32_t>(ASN_OPAQUE));
+   AssertEquals(decoded->getValueLength(), static_cast<int>(sizeof(opaqueInt64)));
+   AssertTrue(!memcmp(decoded->getValue(), opaqueInt64, sizeof(opaqueInt64)));
+   inner = decoded->decodeOpaque();
+   AssertNotNull(inner);
+   AssertEquals(inner->getType(), static_cast<uint32_t>(ASN_INTEGER64));
+   AssertEquals(inner->getValueAsInt64(), static_cast<int64_t>(-1234567890123LL));
+   delete inner;
+   delete decoded;
+   EndTest();
+
+   StartTest(_T("SNMP_Variable encode/decode of Opaque-wrapped unsigned integer64"));
+   // Opaque { 9F 7B 09 00 FF FF FF FF FF FF FF FF } = 18446744073709551615
+   static const BYTE opaqueUInt64[] = { 0x9F, 0x7B, 0x09, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+   v16.setValueFromString(ASN_UINTEGER64, _T("18446744073709551615"));
+   AssertEquals(v16.getType(), static_cast<uint32_t>(ASN_UINTEGER64));
+   AssertEquals(v16.getValueAsUInt64(), _ULL(0xFFFFFFFFFFFFFFFF));
+   decoded = EncodeDecodeVarbind(v16);
+   AssertEquals(decoded->getType(), static_cast<uint32_t>(ASN_OPAQUE));
+   AssertEquals(decoded->getValueLength(), static_cast<int>(sizeof(opaqueUInt64)));
+   AssertTrue(!memcmp(decoded->getValue(), opaqueUInt64, sizeof(opaqueUInt64)));
+   inner = decoded->decodeOpaque();
+   AssertNotNull(inner);
+   AssertEquals(inner->getType(), static_cast<uint32_t>(ASN_UINTEGER64));
+   AssertEquals(inner->getValueAsUInt64(), _ULL(0xFFFFFFFFFFFFFFFF));
+   delete inner;
+   delete decoded;
+   EndTest();
+
+   StartTest(_T("SNMP_Variable encode/decode of standard types"));
+   v16.setValueFromString(ASN_COUNTER64, _T("18446744073709551615"));
+   decoded = EncodeDecodeVarbind(v16);
+   AssertEquals(decoded->getType(), static_cast<uint32_t>(ASN_COUNTER64));
+   AssertEquals(decoded->getValueAsUInt64(), _ULL(0xFFFFFFFFFFFFFFFF));
+   delete decoded;
+   v16.setValueFromString(ASN_INTEGER, _T("-5"));
+   decoded = EncodeDecodeVarbind(v16);
+   AssertEquals(decoded->getType(), static_cast<uint32_t>(ASN_INTEGER));
+   AssertEquals(decoded->getValueAsInt(), -5);
+   delete decoded;
    EndTest();
 }
 

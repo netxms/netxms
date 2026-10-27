@@ -894,7 +894,17 @@ size_t SNMP_Variable::encode(BYTE *pBuffer, size_t bufferSize) const
    dwWorkBufSize = (UINT32)(m_valueLength + m_name.length() * 4 + 16);
    pWorkBuf = static_cast<BYTE*>(SNMP_MemAlloc(dwWorkBufSize));
    bytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_name.value(), m_name.length() * sizeof(uint32_t), pWorkBuf, dwWorkBufSize);
-   bytes += BER_Encode(m_type, m_value, m_valueLength, pWorkBuf + bytes, dwWorkBufSize - bytes);
+   if ((m_type == ASN_FLOAT) || (m_type == ASN_DOUBLE) || (m_type == ASN_INTEGER64) || (m_type == ASN_UINTEGER64))
+   {
+      // Not a standard SNMP type - send as Opaque { 9F <30+type> <length> <content> }, the form accepted by decodeOpaque()
+      BYTE inner[16];   // two-byte tag, length, and up to 9 content bytes
+      size_t innerBytes = BER_Encode(ASN_OPAQUE_TAG2 + m_type, m_value, m_valueLength, inner, sizeof(inner));
+      bytes += BER_Encode(ASN_OPAQUE, inner, innerBytes, pWorkBuf + bytes, dwWorkBufSize - bytes);
+   }
+   else
+   {
+      bytes += BER_Encode(m_type, m_value, m_valueLength, pWorkBuf + bytes, dwWorkBufSize - bytes);
+   }
    bytes = BER_Encode(ASN_SEQUENCE, pWorkBuf, bytes, pBuffer, bufferSize);
    SNMP_MemFree(pWorkBuf, dwWorkBufSize);
    return bytes;
@@ -922,8 +932,26 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
          *reinterpret_cast<uint32_t*>(m_value) = _tcstoul(value, nullptr, 0);
          break;
       case ASN_COUNTER64:
+      case ASN_UINTEGER64:
          reallocValueBuffer(sizeof(uint64_t));
          *reinterpret_cast<uint64_t*>(m_value) = _tcstoull(value, nullptr, 0);
+         break;
+      case ASN_INTEGER64:
+         reallocValueBuffer(sizeof(int64_t));
+         *reinterpret_cast<int64_t*>(m_value) = _tcstoll(value, nullptr, 0);
+         break;
+      case ASN_FLOAT:
+         reallocValueBuffer(sizeof(float));
+         *reinterpret_cast<float*>(m_value) = static_cast<float>(_tcstod(value, nullptr));
+         break;
+      case ASN_DOUBLE:
+         reallocValueBuffer(sizeof(double));
+         *reinterpret_cast<double*>(m_value) = _tcstod(value, nullptr);
+         break;
+      case ASN_OPAQUE:
+         // Raw Opaque content given as hexadecimal string
+         reallocValueBuffer((_tcslen(value) + 1) / 2);
+         m_valueLength = StrToBin(value, m_value, m_valueLength);
          break;
       case ASN_IP_ADDR:
          reallocValueBuffer(sizeof(uint32_t));
