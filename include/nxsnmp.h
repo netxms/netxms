@@ -999,6 +999,7 @@ private:
 	SNMP_SecurityModel m_securityModel;
 	BYTE m_signature[48];
 	size_t m_signatureOffset;
+	uint32_t m_securityError;  // SNMP_ERR_AUTH_FAILURE or SNMP_ERR_DECRYPTION if parsing stopped at USM check, SNMP_ERR_SUCCESS otherwise
 
    bool parseVariable(const BYTE *data, size_t varLength);
    bool parseVarBinds(const BYTE *pduData, size_t pduLength);
@@ -1031,6 +1032,14 @@ public:
    SNMP_Variable *getVariable(int index) { return m_variables.get(index); }
    SNMP_Version getVersion() const { return m_version; }
    SNMP_ErrorCode getErrorCode() const { return static_cast<SNMP_ErrorCode>(m_errorCode); }
+   void setErrorCode(SNMP_ErrorCode errorCode, uint32_t errorIndex = 0) { m_errorCode = static_cast<uint32_t>(errorCode); m_errorIndex = errorIndex; }
+
+   /**
+    * USM check that stopped parsing of received message: SNMP_ERR_AUTH_FAILURE (message signature does not match),
+    * SNMP_ERR_DECRYPTION (scoped PDU cannot be decrypted) or SNMP_ERR_SUCCESS. Only message header fields
+    * (version, message ID, flags, security model, authoritative engine, user name) are valid when non-zero.
+    */
+   uint32_t getSecurityError() const { return m_securityError; }
 
    void setTrapId(const SNMP_ObjectId& id) { setTrapId(id.value(), id.length()); }
    void setTrapId(const uint32_t *value, size_t length);
@@ -1081,6 +1090,7 @@ protected:
 	SNMP_Engine *m_contextEngine;
 	bool m_enableEngineIdAutoupdate;
 	bool m_updatePeerOnRecv;
+	bool m_deliverPduOnSecurityFailure;
 	bool m_reliable;
 	SNMP_Version m_snmpVersion;
 	SNMP_Codepage m_codepage;
@@ -1094,6 +1104,7 @@ public:
 	   m_contextEngine = nullptr;
 	   m_enableEngineIdAutoupdate = false;
 	   m_updatePeerOnRecv = false;
+	   m_deliverPduOnSecurityFailure = false;
 	   m_reliable = false;
 	   m_snmpVersion = SNMP_VERSION_2C;
 	}
@@ -1122,6 +1133,14 @@ public:
 
 	void setPeerUpdatedOnRecv(bool enabled) { m_updatePeerOnRecv = enabled; }
 	bool isPeerUpdatedOnRecv() const { return m_updatePeerOnRecv; }
+
+	/**
+	 * When enabled, readMessage() on UDP transport returns SNMPv3 message that failed USM authentication or decryption
+	 * instead of discarding it, so that authoritative engine (agent) can answer with REPORT PDU. Such PDU has non-zero
+	 * SNMP_PDU::getSecurityError() and carries message header fields only.
+	 */
+	void setDeliverPduOnSecurityFailure(bool enabled) { m_deliverPduOnSecurityFailure = enabled; }
+	bool isPduDeliveredOnSecurityFailure() const { return m_deliverPduOnSecurityFailure; }
 
 	void setSnmpVersion(SNMP_Version version) { m_snmpVersion = version; }
 	SNMP_Version getSnmpVersion() const { return m_snmpVersion; }

@@ -532,7 +532,8 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sock
 
    // Create new PDU object and remove parsed data from buffer
    *pdu = new SNMP_PDU;
-   if (!(*pdu)->parse(m_buffer, pduLength, &m_securityContext, m_enableEngineIdAutoupdate))
+   if (!(*pdu)->parse(m_buffer, pduLength, &m_securityContext, m_enableEngineIdAutoupdate) &&
+       (!m_deliverPduOnSecurityFailure || ((*pdu)->getSecurityError() == SNMP_ERR_SUCCESS)))
    {
       delete *pdu;
       *pdu = nullptr;

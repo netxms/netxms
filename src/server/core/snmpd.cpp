@@ -81,9 +81,83 @@ static RWLock s_mibLock;
 static uint32_t s_allowedVersions = 7;
 
 /**
+ * Local SNMP engine (authoritative engine for requests to built-in agent)
+ */
+static SNMP_Engine s_localEngine;
+
+/**
+ * Credentials lock (guards s_community and s_usmContext)
+ */
+static Mutex s_credentialsLock(MutexType::FAST);
+
+/**
  * Community string
  */
 static char s_community[64] = "public";
+
+/**
+ * SNMPv3 user (keys localized with local engine ID)
+ */
+static SNMP_SecurityContext s_usmContext;
+
+/**
+ * usmStats counters reported to manager (RFC 3414 section 3.2)
+ */
+static const SNMP_ObjectId s_usmStatsUnsupportedSecLevels { 1, 3, 6, 1, 6, 3, 15, 1, 1, 1, 0 };
+static const SNMP_ObjectId s_usmStatsNotInTimeWindows { 1, 3, 6, 1, 6, 3, 15, 1, 1, 2, 0 };
+static const SNMP_ObjectId s_usmStatsUnknownUserNames { 1, 3, 6, 1, 6, 3, 15, 1, 1, 3, 0 };
+static const SNMP_ObjectId s_usmStatsUnknownEngineIDs { 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 };
+static const SNMP_ObjectId s_usmStatsWrongDigests { 1, 3, 6, 1, 6, 3, 15, 1, 1, 5, 0 };
+static const SNMP_ObjectId s_usmStatsDecryptionErrors { 1, 3, 6, 1, 6, 3, 15, 1, 1, 6, 0 };
+
+/**
+ * Maximum difference between engine time in request and local engine time (RFC 3414 section 2.2.3)
+ */
+#define USM_TIME_WINDOW 150
+
+/**
+ * Load SNMPv3 user from configuration variables SNMP.Agent.V3.*
+ */
+static void LoadUsmUser()
+{
+   char userName[128], authPassword[MAX_PASSWORD], privPassword[MAX_PASSWORD];
+   ConfigReadStrUTF8(L"SNMP.Agent.V3.UserName", userName, sizeof(userName), "netxms");
+   ConfigReadStrUTF8(L"SNMP.Agent.V3.AuthenticationPassword", authPassword, sizeof(authPassword), "");
+   ConfigReadStrUTF8(L"SNMP.Agent.V3.EncryptionPassword", privPassword, sizeof(privPassword), "");
+   DecryptPasswordA(userName, authPassword, authPassword, sizeof(authPassword));
+   DecryptPasswordA(userName, privPassword, privPassword, sizeof(privPassword));
+
+   int32_t authMethod = ConfigReadInt(L"SNMP.Agent.V3.AuthenticationMethod", SNMP_AUTH_NONE);
+   if ((authMethod < SNMP_AUTH_NONE) || (authMethod > SNMP_AUTH_SHA512))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Invalid SNMPv3 authentication method %d in built-in SNMP agent configuration, authentication disabled", authMethod);
+      authMethod = SNMP_AUTH_NONE;
+   }
+   int32_t privMethod = ConfigReadInt(L"SNMP.Agent.V3.EncryptionMethod", SNMP_ENCRYPT_NONE);
+   if ((privMethod < SNMP_ENCRYPT_NONE) || (privMethod > SNMP_ENCRYPT_AES_256))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Invalid SNMPv3 encryption method %d in built-in SNMP agent configuration, encryption disabled", privMethod);
+      privMethod = SNMP_ENCRYPT_NONE;
+   }
+   if ((privMethod != SNMP_ENCRYPT_NONE) && (authMethod == SNMP_AUTH_NONE))
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"SNMPv3 encryption without authentication is not allowed, encryption disabled for built-in SNMP agent");
+      privMethod = SNMP_ENCRYPT_NONE;
+   }
+
+   SNMP_SecurityContext context(userName, authPassword, privPassword, static_cast<SNMP_AuthMethod>(authMethod), static_cast<SNMP_EncryptionMethod>(privMethod));
+   context.setAuthoritativeEngine(s_localEngine);
+   context.recalculateKeys();   // Key localization is expensive, do it once here instead of on first request
+   SecureZeroMemory(authPassword, sizeof(authPassword));
+   SecureZeroMemory(privPassword, sizeof(privPassword));
+
+   s_credentialsLock.lock();
+   s_usmContext = std::move(context);
+   s_credentialsLock.unlock();
+
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, L"SNMPv3 user for built-in SNMP agent set to \"%hs\" (authentication: %hs, encryption: %hs)",
+      userName, SnmpAuthMethodToName(static_cast<SNMP_AuthMethod>(authMethod)), SnmpPrivMethodToName(static_cast<SNMP_EncryptionMethod>(privMethod)));
+}
 
 /**
  * Create SNMP transport for receiver
@@ -94,21 +168,9 @@ static SNMP_Transport *CreateTransport(SOCKET hSocket)
       return nullptr;
 
    SNMP_Transport *t = new SNMP_UDPTransport(hSocket);
-   t->enableEngineIdAutoupdate(true);
    t->setPeerUpdatedOnRecv(true);
-   t->setSecurityContext(SNMP_SecurityContext(s_community));
+   t->setDeliverPduOnSecurityFailure(true);
    return t;
-}
-
-/**
- * Check access for incoming PDU
- */
-static bool CheckAccess(SNMP_PDU *pdu)
-{
-   if (pdu->getVersion() < SNMP_VERSION_3)
-      return !strcmp(pdu->getCommunity(), s_community);
-
-   return false;
 }
 
 /**
@@ -130,11 +192,39 @@ static inline bool IsVersionAllowed(SNMP_Version v)
 }
 
 /**
- * Process incoming request
+ * Create response PDU for given request (SNMPv3 message ID, context engine ID and context name are echoed from request as required by RFC 3412 section 7.1)
+ */
+static inline void InitResponse(SNMP_PDU *response, SNMP_PDU *request)
+{
+   response->setReportable(false);
+   response->setMessageId(request->getMessageId());
+   response->setContextEngineId(request->getContextEngineId(), request->getContextEngineIdLength());
+   response->setContextName(request->getContextName());
+}
+
+/**
+ * Send REPORT PDU with given usmStats counter. Transport security context should be set by caller.
+ */
+static void SendReport(SNMP_Transport *transport, SNMP_PDU *request, const SNMP_ObjectId& counterOid)
+{
+   SNMP_PDU report(SNMP_REPORT, request->getRequestId(), request->getVersion());
+   InitResponse(&report, request);
+   report.setContextEngineId(s_localEngine.getId(), s_localEngine.getIdLen());
+
+   SNMP_Variable *var = new SNMP_Variable(counterOid);
+   var->setValueFromUInt32(ASN_COUNTER32, 1);
+   report.bindVariable(var);
+
+   transport->sendMessage(&report, 1000);
+}
+
+/**
+ * Process GET or GET-NEXT request and send response. Transport security context should be set by caller.
  */
 static void ProcessRequest(SNMP_Transport *transport, SNMP_PDU *request)
 {
    SNMP_PDU response(SNMP_RESPONSE, request->getRequestId(), request->getVersion());
+   InitResponse(&response, request);
    bool getNext = (request->getCommand() == SNMP_GET_NEXT_REQUEST);
 
    s_mibLock.readLock();
@@ -155,33 +245,175 @@ static void ProcessRequest(SNMP_Transport *transport, SNMP_PDU *request)
 }
 
 /**
+ * Process SNMPv1/v2c request
+ */
+static void ProcessCommunityRequest(SNMP_Transport *transport, SNMP_PDU *request, const InetAddress& sourceAddr)
+{
+   s_credentialsLock.lock();
+   bool communityMatch = !strcmp(request->getCommunity(), s_community);
+   s_credentialsLock.unlock();
+   if (!communityMatch)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv%hs request from %s rejected: invalid community string", SnmpVersionToName(request->getVersion()), sourceAddr.toString().cstr());
+      return;
+   }
+
+   if ((request->getCommand() != SNMP_GET_REQUEST) && (request->getCommand() != SNMP_GET_NEXT_REQUEST))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv%hs request from %s ignored: unsupported PDU type %d", SnmpVersionToName(request->getVersion()), sourceAddr.toString().cstr(), request->getCommand());
+      return;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPv%hs request from %s passed validation", SnmpVersionToName(request->getVersion()), sourceAddr.toString().cstr());
+   transport->setSecurityContext(SNMP_SecurityContext(request->getCommunity()));
+   ProcessRequest(transport, request);
+}
+
+/**
+ * Process SNMPv3 request. Checks follow RFC 3414 section 3.2; security context of the transport holds
+ * the configured USM user (it was used to authenticate and decrypt the message) and is adjusted here
+ * to the security level each report or response has to be sent with.
+ */
+static void ProcessUsmRequest(SNMP_Transport *transport, SNMP_PDU *request, const InetAddress& sourceAddr)
+{
+   SNMP_SecurityContext& user = transport->getSecurityContext();
+   int flags = request->getFlags();
+
+   if (request->getSecurityModel() != SNMP_SECURITY_MODEL_USM)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv3 request from %s dropped: unsupported security model %d", sourceAddr.toString().cstr(), request->getSecurityModel());
+      return;
+   }
+
+   if ((flags & SNMP_PRIV_FLAG) && !(flags & SNMP_AUTH_FLAG))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv3 request from %s dropped: privacy without authentication requested", sourceAddr.toString().cstr());
+      return;
+   }
+
+   // Reports are generated only for requests that ask for them (RFC 3412 section 7.2 step 7)
+   bool reportable = request->isReportable();
+
+   const SNMP_Engine& requestEngine = request->getAuthoritativeEngine();
+   if (!requestEngine.equals(s_localEngine))
+   {
+      // Engine ID discovery (empty engine ID) or request localized to some other engine - answer with local engine ID, boots and time
+      nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPv3 request from %s: engine ID discovery (engine ID in request: %s)", sourceAddr.toString().cstr(),
+         (requestEngine.getIdLen() > 0) ? requestEngine.toString().cstr() : L"none");
+      if (reportable)
+      {
+         SNMP_SecurityContext context;
+         context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+         context.setAuthoritativeEngine(s_localEngine);
+         transport->setSecurityContext(std::move(context));
+         SendReport(transport, request, s_usmStatsUnknownEngineIDs);
+      }
+      return;
+   }
+
+   if (strcmp(request->getUser(), user.getUserName()))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv3 request from %s rejected: unknown user \"%hs\"", sourceAddr.toString().cstr(), request->getUser());
+      if (reportable)
+      {
+         user.setAuthMethod(SNMP_AUTH_NONE);
+         user.setPrivMethod(SNMP_ENCRYPT_NONE);
+         user.setUserName(request->getUser());
+         SendReport(transport, request, s_usmStatsUnknownUserNames);
+      }
+      return;
+   }
+
+   if (((flags & SNMP_AUTH_FLAG) && (user.getAuthMethod() == SNMP_AUTH_NONE)) || ((flags & SNMP_PRIV_FLAG) && (user.getPrivMethod() == SNMP_ENCRYPT_NONE)))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv3 request from %s rejected: requested security level is not supported by user \"%hs\"", sourceAddr.toString().cstr(), request->getUser());
+      if (reportable)
+      {
+         user.setAuthMethod(SNMP_AUTH_NONE);
+         user.setPrivMethod(SNMP_ENCRYPT_NONE);
+         SendReport(transport, request, s_usmStatsUnsupportedSecLevels);
+      }
+      return;
+   }
+
+   if (flags & SNMP_AUTH_FLAG)
+   {
+      if (request->getSecurityError() == SNMP_ERR_AUTH_FAILURE)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv3 request from %s rejected: authentication failure", sourceAddr.toString().cstr());
+         if (reportable)
+         {
+            user.setAuthMethod(SNMP_AUTH_NONE);
+            user.setPrivMethod(SNMP_ENCRYPT_NONE);
+            SendReport(transport, request, s_usmStatsWrongDigests);
+         }
+         return;
+      }
+
+      // Time window is checked only for authenticated messages, and the report is sent authenticated (RFC 3414 section 3.2 step 7)
+      uint32_t localTime = s_localEngine.getAdjustedTime();
+      uint32_t timeDiff = (requestEngine.getTime() > localTime) ? requestEngine.getTime() - localTime : localTime - requestEngine.getTime();
+      if ((requestEngine.getBoots() != s_localEngine.getBoots()) || (timeDiff > USM_TIME_WINDOW))
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv3 request from %s rejected: not in time window (request: boots=%u time=%u, local: boots=%u time=%u)",
+            sourceAddr.toString().cstr(), requestEngine.getBoots(), requestEngine.getTime(), s_localEngine.getBoots(), localTime);
+         if (reportable)
+         {
+            user.setPrivMethod(SNMP_ENCRYPT_NONE);
+            SendReport(transport, request, s_usmStatsNotInTimeWindows);
+         }
+         return;
+      }
+   }
+
+   if (request->getSecurityError() != SNMP_ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv3 request from %s rejected: %s", sourceAddr.toString().cstr(),
+         (request->getSecurityError() == SNMP_ERR_DECRYPTION) ? L"decryption error" : L"security check failure");
+      if (reportable && (request->getSecurityError() == SNMP_ERR_DECRYPTION))
+      {
+         user.setAuthMethod(SNMP_AUTH_NONE);
+         user.setPrivMethod(SNMP_ENCRYPT_NONE);
+         SendReport(transport, request, s_usmStatsDecryptionErrors);
+      }
+      return;
+   }
+
+   if ((request->getCommand() != SNMP_GET_REQUEST) && (request->getCommand() != SNMP_GET_NEXT_REQUEST))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv3 request from %s ignored: unsupported PDU type %d", sourceAddr.toString().cstr(), request->getCommand());
+      return;
+   }
+
+   // Request below configured security level passes USM but is denied by access control; response goes
+   // at the request's security level (RFC 3412 section 7.1 step 7, error-status authorizationError)
+   if ((!(flags & SNMP_AUTH_FLAG) && (user.getAuthMethod() != SNMP_AUTH_NONE)) || (!(flags & SNMP_PRIV_FLAG) && (user.getPrivMethod() != SNMP_ENCRYPT_NONE)))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv3 request from %s rejected: security level below configured for user \"%hs\"", sourceAddr.toString().cstr(), request->getUser());
+      if (!(flags & SNMP_AUTH_FLAG))
+         user.setAuthMethod(SNMP_AUTH_NONE);
+      user.setPrivMethod(SNMP_ENCRYPT_NONE);
+
+      SNMP_PDU response(SNMP_RESPONSE, request->getRequestId(), request->getVersion());
+      InitResponse(&response, request);
+      response.setErrorCode(SNMP_PDU_ERR_AUTHORIZATION_ERROR);
+      for(int i = 0; i < request->getNumVariables(); i++)
+         response.bindVariable(new SNMP_Variable(*request->getVariable(i)));
+      transport->sendMessage(&response, 1000);
+      return;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 6, L"SNMPv3 request from %s passed validation (user \"%hs\", %hs)", sourceAddr.toString().cstr(), request->getUser(),
+      (flags & SNMP_PRIV_FLAG) ? "authPriv" : ((flags & SNMP_AUTH_FLAG) ? "authNoPriv" : "noAuthNoPriv"));
+   ProcessRequest(transport, request);
+}
+
+/**
  * SNMP request receiver thread
  */
 static void SNMPAgentReceiver()
 {
    ThreadSetName("SNMPD");
-
-   static BYTE defaultEngineId[] = { 0x80, 0x00, 0xDF, 0x4B, 0x05, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
-   BYTE engineId[32];
-   size_t engineIdLen;
-   TCHAR engineIdText[96];
-   if (ConfigReadStr(_T("SNMP.EngineId"), engineIdText, 96, _T("")))
-   {
-      TranslateStr(engineIdText, _T(":"), _T(""));
-      engineIdLen = StrToBin(engineIdText, engineId, sizeof(engineId));
-      if (engineIdLen < 1)
-      {
-         memcpy(engineId, defaultEngineId, 12);
-         engineIdLen = 12;
-      }
-   }
-   else
-   {
-      memcpy(engineId, defaultEngineId, 12);
-      engineIdLen = 12;
-   }
-   SNMP_Engine localEngine(engineId, engineIdLen);
-   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Local SNMP engine ID set to %s"), localEngine.toString().cstr());
 
    uint16_t snmpdPort = static_cast<uint16_t>(ConfigReadULong(_T("SNMP.Agent.ListenerPort"), 161));
 
@@ -342,48 +574,28 @@ static void SNMPAgentReceiver()
 #else
          SNMP_Transport *transport = snmp;
 #endif
+         // Message is authenticated and decrypted while being read, so configured SNMPv3 user has to be in place before that
+         s_credentialsLock.lock();
+         transport->setSecurityContext(s_usmContext);
+         s_credentialsLock.unlock();
+
          int bytes = transport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen);
          if ((bytes > 0) && (pdu != nullptr))
          {
             InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP agent received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
+            nxlog_debug_tag(DEBUG_TAG, 6, L"SNMP agent received PDU of type %d from %s", pdu->getCommand(), sourceAddr.toString().cstr());
 
-            if (IsVersionAllowed(pdu->getVersion()))
+            if (!IsVersionAllowed(pdu->getVersion()))
             {
-               if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
-               {
-                  // Engine ID discovery
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP EngineId discovery"));
-
-                  SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
-                  response->setReportable(false);
-                  response->setMessageId(pdu->getMessageId());
-                  response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
-
-                  SNMP_Variable *var = new SNMP_Variable({ 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 });
-                  var->setValueFromUInt32(ASN_INTEGER, 2);
-                  response->bindVariable(var);
-
-                  SNMP_SecurityContext context;
-                  localEngine.setTime((int)time(nullptr));
-                  context.setAuthoritativeEngine(localEngine);
-                  context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
-                  context.setAuthMethod(SNMP_AUTH_NONE);
-                  context.setPrivMethod(SNMP_ENCRYPT_NONE);
-                  transport->setSecurityContext(std::move(context));
-
-                  transport->sendMessage(response, 0);
-                  delete response;
-               }
-               else if (((pdu->getCommand() == SNMP_GET_REQUEST) || (pdu->getCommand() == SNMP_GET_NEXT_REQUEST)) && CheckAccess(pdu))
-               {
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("Request passed validation"));
-                  ProcessRequest(transport, pdu);
-               }
+               nxlog_debug_tag(DEBUG_TAG, 5, L"SNMPv%hs request from %s rejected: version not allowed", SnmpVersionToName(pdu->getVersion()), sourceAddr.toString().cstr());
+            }
+            else if (pdu->getVersion() == SNMP_VERSION_3)
+            {
+               ProcessUsmRequest(transport, pdu, sourceAddr);
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("Requested SNMP version is not allowed"));
+               ProcessCommunityRequest(transport, pdu, sourceAddr);
             }
             delete pdu;
          }
@@ -423,7 +635,34 @@ void StartSNMPAgent()
       return;
    }
 
-   ConfigReadStrA(_T("SNMP.Agent.CommunityString"), s_community, sizeof(s_community), "public");
+   static BYTE defaultEngineId[] = { 0x80, 0x00, 0xDF, 0x4B, 0x05, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
+   BYTE engineId[32];
+   size_t engineIdLen;
+   TCHAR engineIdText[96];
+   if (ConfigReadStr(_T("SNMP.EngineId"), engineIdText, 96, _T("")))
+   {
+      TranslateStr(engineIdText, _T(":"), _T(""));
+      engineIdLen = StrToBin(engineIdText, engineId, sizeof(engineId));
+      if (engineIdLen < 1)
+      {
+         memcpy(engineId, defaultEngineId, 12);
+         engineIdLen = 12;
+      }
+   }
+   else
+   {
+      memcpy(engineId, defaultEngineId, 12);
+      engineIdLen = 12;
+   }
+   s_localEngine = SNMP_Engine(engineId, engineIdLen);
+   // Engine time is wall clock time, so it never goes backwards across server restarts and managers
+   // that cache it never see our boot counter (always 0) as stale
+   s_localEngine.setTime(static_cast<uint32_t>(time(nullptr)));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Local SNMP engine ID set to %s"), s_localEngine.toString().cstr());
+
+   s_allowedVersions = ConfigReadULong(L"SNMP.Agent.AllowedVersions", 7);
+   ConfigReadStrUTF8(L"SNMP.Agent.CommunityString", s_community, sizeof(s_community), "public");
+   LoadUsmUser();
 
    // Setup MIB tree
    s_mib.add(new SingleValueMIBSubTree(SNMP_ObjectId::parse(_T(".1.3.6.1.2.1.1.1")),
@@ -466,7 +705,18 @@ void OnSNMPAgentConfigurationChange(const wchar_t *name, const wchar_t *value)
 {
    if (!wcscmp(name, L"SNMP.Agent.CommunityString"))
    {
+      s_credentialsLock.lock();
       memset(s_community, 0, sizeof(s_community));
       wchar_to_utf8(value, -1, s_community, sizeof(s_community) - 1);
+      s_credentialsLock.unlock();
+   }
+   else if (!wcscmp(name, L"SNMP.Agent.AllowedVersions"))
+   {
+      s_allowedVersions = wcstoul(value, nullptr, 10);
+      nxlog_debug_tag(DEBUG_TAG, 3, L"Allowed SNMP versions for built-in SNMP agent set to 0x%X", s_allowedVersions);
+   }
+   else if (!wcsncmp(name, L"SNMP.Agent.V3.", 14) && (s_receiverThread != INVALID_THREAD_HANDLE))
+   {
+      LoadUsmUser();
    }
 }

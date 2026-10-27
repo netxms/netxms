@@ -283,6 +283,7 @@ smartctl		SMARTCTL related messages
 smbios		SMBIOS related messages
 
 snmp.*		SNMP related messages
+snmp.agent	Built-in SNMP agent
 snmp.discovery	SNMP discovery related
 snmp.entity	Entity MIB processing
 snmp.lib	SNMP library low-level diagnostic

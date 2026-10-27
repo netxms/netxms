@@ -86,6 +86,7 @@ SNMP_PDU::SNMP_PDU() : m_variables(0, 16, Ownership::True)
 	m_dwAgentAddr = 0;
 	m_timestamp = 0;
 	m_signatureOffset = 0;
+	m_securityError = SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -111,6 +112,7 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, uint32_t requestId, SNMP_Version versio
    m_dwAgentAddr = 0;
    m_timestamp = 0;
    m_signatureOffset = 0;
+   m_securityError = SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -134,6 +136,7 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_Object
    m_dwAgentAddr = 0;
    m_timestamp = sysUpTime;   // Used by V1 TRAP PDU header, V2 carries uptime as first varbind
    m_signatureOffset = 0;
+   m_securityError = SNMP_ERR_SUCCESS;
 
    setTrapId(trapId);
    if (version != SNMP_VERSION_1)
@@ -173,6 +176,7 @@ SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 1
    m_dwAgentAddr = src.m_dwAgentAddr;
    m_timestamp = src.m_timestamp;
    m_signatureOffset = src.m_signatureOffset;
+   m_securityError = src.m_securityError;
 
    for(int i = 0; i < src.m_variables.size(); i++)
       m_variables.add(new SNMP_Variable(*src.m_variables.get(i)));
@@ -826,7 +830,10 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 			if (m_flags & SNMP_AUTH_FLAG)
 			{
 				if (!validateSignedMessage(rawData, rawLength, securityContext))
+				{
+					m_securityError = SNMP_ERR_AUTH_FAILURE;
 					return false;
+				}
 			}
 		}
 
@@ -848,24 +855,24 @@ bool SNMP_PDU::parse(const BYTE *rawData, size_t rawLength, SNMP_SecurityContext
 			if (!decryptData(pbCurrPos, dwLength, decryptedPdu, securityContext))
 			{
 				SNMP_MemFree(decryptedPdu, decryptedPduLength);
+				m_securityError = SNMP_ERR_DECRYPTION;
 				return false;
 			}
 
 			pbCurrPos = decryptedPdu;
 		}
 
-		// Scoped PDU
-		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &type, &dwLength, &pbCurrPos, &idLength))
+		// Scoped PDU (wrong privacy key produces garbage that fails here, so for encrypted message any failure is a decryption error)
+		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &type, &dwLength, &pbCurrPos, &idLength) || (type != ASN_SEQUENCE))
 		{
          SNMP_MemFree(decryptedPdu, decryptedPduLength);
+         if (decryptedPdu != nullptr)
+            m_securityError = SNMP_ERR_DECRYPTION;
 			return false;
 		}
-		if (type != ASN_SEQUENCE)
-		{
-         SNMP_MemFree(decryptedPdu, decryptedPduLength);
-			return false;   // Should be sequence
-		}
 		bResult = parseV3ScopedPdu(pbCurrPos, dwLength);
+		if (!bResult && (decryptedPdu != nullptr))
+		   m_securityError = SNMP_ERR_DECRYPTION;
       SNMP_MemFree(decryptedPdu, decryptedPduLength);
 	}
 	else
