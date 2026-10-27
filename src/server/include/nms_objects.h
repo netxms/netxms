@@ -3288,6 +3288,7 @@ public:
    const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
    std::vector<MacAddress> getRadioBSSID() const;
    NXSL_Value *getRadioInterfacesForNXSL(NXSL_VM *vm) const;
+   json_t *getRadioInterfacesAsJson() const;
    time_t getGracePeriodStartTime() const { return m_gracePeriodStartTime; }
    uint32_t getPeerNodeId() const { return m_peerNodeId; }
    uint32_t getPeerInterfaceId() const { return m_peerInterfaceId; }
@@ -4900,6 +4901,7 @@ public:
 
    ObjectArray<WirelessStationInfo> *getWirelessStations(uint32_t apId = 0) const;
    NXSL_Value *getWirelessStationsForNXSL(NXSL_VM *vm, uint32_t apId = 0) const;
+   json_t *getRadioInterfacesAsJson() const;
    void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const;
 
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
@@ -5903,6 +5905,9 @@ public:
    shared_ptr<AccessPoint> findAccessPointByBSSID(const BYTE *bssid) const;
    shared_ptr<AccessPoint> findAccessPointByRadioId(uint32_t rfIndex) const;
    shared_ptr<AccessPoint> findAccessPointBySerial(const TCHAR *serial) const;
+   shared_ptr<AccessPoint> findAccessPointForStation(const WirelessStationInfo& ws) const;
+
+   ObjectArray<WirelessStationInfo> *getWirelessStations();
 
    int getApCountUp() const { return m_apCount[AP_UP]; }
    int getApCountDown() const { return m_apCount[AP_DOWN]; }

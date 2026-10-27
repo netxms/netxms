@@ -8749,6 +8749,88 @@ paths:
           description: Object with given ID does not exist
       security:
         - BearerAuth: []
+  /v1/objects/{object-id}/wireless/radios:
+    get:
+      operationId: getWirelessRadios
+      summary: Get wireless radio interfaces
+      description: >-
+        List radio interfaces of the given node, access point, or wireless domain. For a wireless domain, radios of
+        all wireless controller nodes and access points in the domain that the caller has read access to are
+        returned. Each entry carries the ID and name of the node or access point owning the radio.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node, access point, or wireless domain object ID
+      responses:
+        '200':
+          description: Radio interfaces retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WirelessRadioInterface'
+        '400':
+          description: Invalid object ID or object is not a node, access point, or wireless domain
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
+  /v1/objects/{object-id}/wireless/stations:
+    get:
+      operationId: getWirelessStations
+      summary: Get wireless stations
+      description: >-
+        List wireless stations (clients) associated with the given node, access point, or wireless domain.
+        For a node, stations last collected from the node acting as wireless controller or standalone access point
+        are returned (empty list for other nodes). For an access point, stations are taken from its controller node
+        or read from the domain's controller bridge. For a wireless domain, stations reported by the controller bridge
+        (if configured) and by all wireless controller nodes in the domain are returned, excluding stations associated
+        with access points the caller has no read access to. Bridge-backed requests query the external controller
+        and may take noticeable time.
+      tags:
+        - Objects
+      parameters:
+        - name: object-id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Node, access point, or wireless domain object ID
+      responses:
+        '200':
+          description: Wireless stations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WirelessStation'
+        '400':
+          description: Invalid object ID or object is not a node, access point, or wireless domain
+        '401':
+          description: Unauthorized
+        '403':
+          description: User does not have read access to given object
+        '404':
+          description: Object with given ID does not exist
+      security:
+        - BearerAuth: []
   /v1/objects/{object-id}/status-explanation:
     get:
       operationId: getObjectStatusExplanation
@@ -19385,6 +19467,105 @@ components:
         typeText:
           type: string
           description: Textual representation of the entry type
+    WirelessRadioInterface:
+      type: object
+      description: Radio interface of a wireless access point or controller
+      properties:
+        index:
+          type: integer
+          description: Radio index
+        ifIndex:
+          type: integer
+          description: Index of corresponding interface in ifTable (0 if not available)
+        name:
+          type: string
+          description: Radio name
+        bssid:
+          type: string
+          description: BSSID as 12 hexadecimal digits without separators
+        ssid:
+          type: string
+          description: SSID
+        band:
+          type: integer
+          description: "Radio band (0=unknown, 1=2.4 GHz, 2=3.65 GHz, 3=5 GHz, 4=6 GHz)"
+        channel:
+          type: integer
+          description: Channel number
+        frequency:
+          type: integer
+          description: Frequency in MHz
+        powerDBm:
+          type: integer
+          description: Transmit power in dBm
+        powerMW:
+          type: integer
+          description: Transmit power in milliwatts
+        ownerId:
+          type: integer
+          description: ID of the node or access point object owning this radio
+        ownerName:
+          type: string
+          description: Name of the node or access point object owning this radio
+    WirelessStation:
+      type: object
+      description: Wireless station (client) associated with an access point
+      properties:
+        macAddress:
+          type: string
+          description: Station MAC address in colon-separated notation
+        vendor:
+          type: string
+          nullable: true
+          description: NIC vendor resolved from the OUI database. Null when the prefix is not known.
+        ipAddress:
+          allOf:
+            - $ref: '#/components/schemas/InetAddress'
+          nullable: true
+          description: Station IP address. Null when not known.
+        ssid:
+          type: string
+          description: SSID the station is connected to
+        bssid:
+          type: string
+          description: BSSID in colon-separated notation (all zeroes if not reported)
+        vlan:
+          type: integer
+          description: VLAN ID
+        rssi:
+          type: integer
+          description: Received signal strength in dBm
+        txRate:
+          type: integer
+          description: Transmit rate in bits per second (0 if not reported)
+        rxRate:
+          type: integer
+          description: Receive rate in bits per second (0 if not reported)
+        radioIndex:
+          type: integer
+          description: Index of the radio interface the station is associated with
+        radioName:
+          type: string
+          nullable: true
+          description: Name of the radio interface. Null when the radio could not be resolved.
+        accessPointId:
+          type: integer
+          description: >-
+            ID of the access point object (or node acting as standalone access point) the station is associated
+            with, or 0 when it could not be resolved or the caller has no read access to it.
+        accessPointName:
+          type: string
+          nullable: true
+          description: Name of the access point. Null when accessPointId is 0.
+        nodeId:
+          type: integer
+          description: >-
+            ID of the node matching the station's MAC address, or 0 when no node matches or the caller has no read
+            access to it.
+        nodeName:
+          type: string
+          nullable: true
+          description: Name of the matching node. Null when nodeId is 0.
     ObjectQueryResult:
       type: object
       properties:

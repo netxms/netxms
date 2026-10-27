@@ -14444,23 +14444,8 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
 
                if (m_capabilities & NC_IS_WIFI_CONTROLLER)
                {
-                  shared_ptr<AccessPoint> ap;
                   shared_ptr<WirelessDomain> wirelessDomain = getWirelessDomain();
-                  if (wirelessDomain != nullptr)
-                  {
-                     switch(ws->apMatchPolicy)
-                     {
-                        case AP_MATCH_BY_BSSID:
-                           ap = wirelessDomain->findAccessPointByBSSID(ws->bssid);
-                           break;
-                        case AP_MATCH_BY_RFINDEX:
-                           ap = wirelessDomain->findAccessPointByRadioId(ws->rfIndex);
-                           break;
-                        case AP_MATCH_BY_SERIAL:
-                           ap = wirelessDomain->findAccessPointBySerial(ws->apSerial);
-                           break;
-                     }
-                  }
+                  shared_ptr<AccessPoint> ap = (wirelessDomain != nullptr) ? wirelessDomain->findAccessPointForStation(*ws) : shared_ptr<AccessPoint>();
                   if (ap != nullptr)
                   {
                      ws->apObjectId = ap->getId();
@@ -16005,6 +15990,17 @@ void Node::getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize) const
 }
 
 /**
+ * Get radio interfaces as JSON array
+ */
+json_t *Node::getRadioInterfacesAsJson() const
+{
+   lockProperties();
+   json_t *radios = json_struct_array(m_radioInterfaces);
+   unlockProperties();
+   return radios;
+}
+
+/**
  * Synchronize data collection settings with agent
  */
 void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
@@ -17097,6 +17093,7 @@ json_t *Node::toJson(uint32_t flags)
       json_object_set_new(root, "vncPassword", json_string_t(m_vncPassword));
    json_object_set_new(root, "vncPort", json_integer(m_vncPort));
    json_object_set_new(root, "vncProxy", json_integer(m_vncProxy));
+   json_object_set_new(root, "radioInterfaces", json_struct_array(m_radioInterfaces));
    unlockProperties();
 
    json_object_set_new(root, "polling", pollingConfigToJson());

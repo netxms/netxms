@@ -491,3 +491,161 @@ int H_SwitchForwardingDatabase(Context *context)
    json_decref(output);
    return 200;
 }
+
+/**
+ * Load node, access point, or wireless domain for wireless information request
+ */
+static shared_ptr<NetObj> LoadWirelessObject(Context *context, int *httpCode)
+{
+   uint32_t objectId = context->getPlaceholderValueAsUInt32(_T("object-id"));
+   if (objectId == 0)
+   {
+      *httpCode = 400;
+      return shared_ptr<NetObj>();
+   }
+
+   shared_ptr<NetObj> object = FindObjectById(objectId);
+   if (object == nullptr)
+   {
+      *httpCode = 404;
+      return shared_ptr<NetObj>();
+   }
+
+   if (!object->checkAccessRights(context->getUserId(), OBJECT_ACCESS_READ))
+   {
+      *httpCode = 403;
+      return shared_ptr<NetObj>();
+   }
+
+   int objectClass = object->getObjectClass();
+   if ((objectClass != OBJECT_NODE) && (objectClass != OBJECT_ACCESSPOINT) && (objectClass != OBJECT_WIRELESSDOMAIN))
+   {
+      context->setErrorResponse("Object is not a node, access point, or wireless domain");
+      *httpCode = 400;
+      return shared_ptr<NetObj>();
+   }
+
+   return object;
+}
+
+/**
+ * Add radio interfaces of given node or access point to output array, tagging each with owning object
+ */
+static void AddRadioInterfaces(json_t *entries, const NetObj& owner)
+{
+   json_t *radios = (owner.getObjectClass() == OBJECT_NODE) ?
+            static_cast<const Node&>(owner).getRadioInterfacesAsJson() : static_cast<const AccessPoint&>(owner).getRadioInterfacesAsJson();
+   size_t index;
+   json_t *radio;
+   json_array_foreach(radios, index, radio)
+   {
+      json_object_set_new(radio, "ownerId", json_integer(owner.getId()));
+      json_object_set_new(radio, "ownerName", json_string_t(owner.getName()));
+   }
+   json_array_extend(entries, radios);
+   json_decref(radios);
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/wireless/radios
+ */
+int H_WirelessRadios(Context *context)
+{
+   int httpCode;
+   shared_ptr<NetObj> object = LoadWirelessObject(context, &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   json_t *entries = json_array();
+   if (object->getObjectClass() == OBJECT_WIRELESSDOMAIN)
+   {
+      uint32_t userId = context->getUserId();
+      unique_ptr<SharedObjectArray<Node>> controllers = static_cast<WirelessDomain&>(*object).getControllers();
+      for(int i = 0; i < controllers->size(); i++)
+      {
+         Node *controller = controllers->get(i);
+         if (controller->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            AddRadioInterfaces(entries, *controller);
+      }
+      unique_ptr<SharedObjectArray<AccessPoint>> accessPoints = static_cast<WirelessDomain&>(*object).getAccessPoints();
+      for(int i = 0; i < accessPoints->size(); i++)
+      {
+         AccessPoint *ap = accessPoints->get(i);
+         if (ap->checkAccessRights(userId, OBJECT_ACCESS_READ))
+            AddRadioInterfaces(entries, *ap);
+      }
+   }
+   else
+   {
+      AddRadioInterfaces(entries, *object);
+   }
+
+   json_t *output = json_object();
+   json_object_set_new(output, "entries", entries);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}
+
+/**
+ * Handler for GET /v1/objects/:object-id/wireless/stations
+ */
+int H_WirelessStations(Context *context)
+{
+   int httpCode;
+   shared_ptr<NetObj> object = LoadWirelessObject(context, &httpCode);
+   if (object == nullptr)
+      return httpCode;
+
+   ObjectArray<WirelessStationInfo> *stations;
+   switch(object->getObjectClass())
+   {
+      case OBJECT_NODE:
+         stations = static_cast<Node&>(*object).getWirelessStations();
+         break;
+      case OBJECT_ACCESSPOINT:
+         stations = static_cast<AccessPoint&>(*object).getWirelessStations();
+         break;
+      default:
+         stations = static_cast<WirelessDomain&>(*object).getWirelessStations();
+         break;
+   }
+
+   uint32_t userId = context->getUserId();
+   json_t *entries = json_array();
+   for(int i = 0; (stations != nullptr) && (i < stations->size()); i++)
+   {
+      const WirelessStationInfo *ws = stations->get(i);
+
+      // Access point can be either access point object or node acting as standalone access point
+      shared_ptr<NetObj> ap = (ws->apObjectId != 0) ? FindObjectById(ws->apObjectId) : shared_ptr<NetObj>();
+      bool apAccessible = (ap != nullptr) && ap->checkAccessRights(userId, OBJECT_ACCESS_READ);
+      if ((ap != nullptr) && !apAccessible && (object->getObjectClass() == OBJECT_WIRELESSDOMAIN))
+         continue;   // Do not expose stations of access points the caller cannot read
+
+      MacAddress macAddr(ws->macAddr, MAC_ADDR_LENGTH);
+      json_t *entry = json_object();
+      json_object_set_new(entry, "macAddress", json_string_t(macAddr.toString()));
+      json_object_set_new(entry, "vendor", VendorToJson(macAddr));
+      json_object_set_new(entry, "ipAddress", ws->ipAddr.isValid() ? ws->ipAddr.toJson() : json_null());
+      json_object_set_new(entry, "ssid", json_string_t(ws->ssid));
+      json_object_set_new(entry, "bssid", json_string_t(MacAddress(ws->bssid, MAC_ADDR_LENGTH).toString()));
+      json_object_set_new(entry, "vlan", json_integer(ws->vlan));
+      json_object_set_new(entry, "rssi", json_integer(ws->rssi));
+      json_object_set_new(entry, "txRate", json_integer(ws->txRate));
+      json_object_set_new(entry, "rxRate", json_integer(ws->rxRate));
+      json_object_set_new(entry, "radioIndex", json_integer(ws->rfIndex));
+      json_object_set_new(entry, "radioName", (ws->rfName[0] != 0) ? json_string_t(ws->rfName) : json_null());
+      json_object_set_new(entry, "accessPointId", json_integer(apAccessible ? ap->getId() : 0));
+      json_object_set_new(entry, "accessPointName", apAccessible ? json_string_t(ap->getName()) : json_null());
+      SetNodeReference(entry, (ws->nodeId != 0) ? static_pointer_cast<Node>(FindObjectById(ws->nodeId, OBJECT_NODE)) : FindNodeByMAC(macAddr), userId);
+      json_array_append_new(entries, entry);
+   }
+   delete stations;
+
+   json_t *output = json_object();
+   json_object_set_new(output, "entries", entries);
+   context->setResponseData(output);
+   json_decref(output);
+   return 200;
+}

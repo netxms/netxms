@@ -531,6 +531,73 @@ shared_ptr<AccessPoint> WirelessDomain::findAccessPointBySerial(const TCHAR *ser
 }
 
 /**
+ * Find access point a wireless station is associated with, using station's AP match policy
+ */
+shared_ptr<AccessPoint> WirelessDomain::findAccessPointForStation(const WirelessStationInfo& ws) const
+{
+   switch(ws.apMatchPolicy)
+   {
+      case AP_MATCH_BY_BSSID:
+         return findAccessPointByBSSID(ws.bssid);
+      case AP_MATCH_BY_RFINDEX:
+         return findAccessPointByRadioId(ws.rfIndex);
+      case AP_MATCH_BY_SERIAL:
+         return findAccessPointBySerial(ws.apSerial);
+   }
+   return shared_ptr<AccessPoint>();
+}
+
+/**
+ * Get all wireless stations in this domain - stations reported by controller bridge (if configured)
+ * and stations registered on wireless controller nodes. Returned array is owned by caller.
+ */
+ObjectArray<WirelessStationInfo> *WirelessDomain::getWirelessStations()
+{
+   ObjectArray<WirelessStationInfo> *stations = nullptr;
+
+   WirelessControllerBridge *bridge = getBridgeInterface();
+   if (bridge != nullptr)
+   {
+      stations = bridge->getWirelessStations(this);
+      if (stations != nullptr)
+      {
+         for(int i = 0; i < stations->size(); i++)
+         {
+            WirelessStationInfo *ws = stations->get(i);
+            shared_ptr<AccessPoint> ap = findAccessPointForStation(*ws);
+            if (ap != nullptr)
+            {
+               ws->apObjectId = ap->getId();
+               ap->getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
+            }
+            else
+            {
+               ws->apObjectId = 0;
+               ws->rfName[0] = 0;
+            }
+         }
+      }
+   }
+   if (stations == nullptr)
+      stations = new ObjectArray<WirelessStationInfo>(0, 64, Ownership::True);
+
+   unique_ptr<SharedObjectArray<Node>> controllers = getControllers();
+   for(int i = 0; i < controllers->size(); i++)
+   {
+      ObjectArray<WirelessStationInfo> *controllerStations = controllers->get(i)->getWirelessStations();
+      if (controllerStations != nullptr)
+      {
+         for(int j = 0; j < controllerStations->size(); j++)
+            stations->add(controllerStations->get(j));
+         controllerStations->setOwner(Ownership::False);
+         delete controllerStations;
+      }
+   }
+
+   return stations;
+}
+
+/**
  * Create NXSL object for this object
  */
 NXSL_Value *WirelessDomain::createNXSLObject(NXSL_VM *vm)

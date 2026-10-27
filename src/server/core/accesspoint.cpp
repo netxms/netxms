@@ -728,6 +728,17 @@ NXSL_Value *AccessPoint::getRadioInterfacesForNXSL(NXSL_VM *vm) const
 }
 
 /**
+ * Get radio interfaces as JSON array
+ */
+json_t *AccessPoint::getRadioInterfacesAsJson() const
+{
+   lockProperties();
+   json_t *radios = json_struct_array(m_radioInterfaces);
+   unlockProperties();
+   return radios;
+}
+
+/**
  * Get BSSIDs of all radios
  */
 std::vector<MacAddress> AccessPoint::getRadioBSSID() const
