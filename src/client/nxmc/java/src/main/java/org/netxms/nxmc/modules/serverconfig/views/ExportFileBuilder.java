@@ -57,6 +57,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
 import org.netxms.client.asset.AssetAttribute;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -113,6 +114,7 @@ import org.netxms.nxmc.modules.serverconfig.views.helpers.ToolLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ElementLabelComparator;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -1649,11 +1651,13 @@ public class ExportFileBuilder extends ConfigurationView
    }
 
 	/**
-	 * Do export operation and call completion handler when done
+	 * Do export operation and call completion handler when done. If some agent policy files cannot be exported, ask user
+	 * whether to export without them.
 	 *
-	 * @param completionHandler
+	 * @param completionHandler completion handler
+	 * @param flags export flags (combination of NXCSession.CFG_EXPORT_xxx constants)
 	 */
-	private void doExport(final ExportCompletionHandler completionHandler)
+	private void doExport(final ExportCompletionHandler completionHandler, final int flags)
 	{
       final long[] eventList = new long[events.size()];
       int i = 0;
@@ -1736,8 +1740,23 @@ public class ExportFileBuilder extends ConfigurationView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final File json = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList,
-                  netconfQueryList, assetAttributesList, syslogList, windowsEventList, otelLogList, mappingTableList);
+            final File json;
+            try
+            {
+               json = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList,
+                     netconfQueryList, assetAttributesList, syslogList, windowsEventList, otelLogList, mappingTableList, flags);
+            }
+            catch(NXCException e)
+            {
+               if ((e.getErrorCode() != RCC.POLICY_FILES_NOT_EXPORTABLE) || ((flags & NXCSession.CFG_EXPORT_SKIP_UNEXPORTABLE_FILES) != 0))
+                  throw e;
+               runInUIThread(() -> {
+                  if (MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Export Configuration"),
+                        i18n.tr("The following agent policy files cannot be exported:\n\n{0}\n\nExport configuration without these files?", e.getAdditionalInfo())))
+                     doExport(completionHandler, flags | NXCSession.CFG_EXPORT_SKIP_UNEXPORTABLE_FILES);
+               });
+               return;
+            }
             runInUIThread(() -> completionHandler.exportCompleted(json));
          }
 
@@ -1762,7 +1781,7 @@ public class ExportFileBuilder extends ConfigurationView
             WidgetHelper.saveTemporaryFile(ExportFileBuilder.this, "export.json", new String[] { "*.json", "*.*" }, new String[] { i18n.tr("JSON files"), i18n.tr("All files") }, json, "application/json");
             modified = false;
          }
-      });
+      }, 0);
 	}
 
 	/**

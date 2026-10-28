@@ -896,6 +896,7 @@ enum SessionState
 #define RCC_AI_ASSISTANT_NOT_AVAILABLE    ((uint32_t)199)
 #define RCC_INVALID_TIME_ZONE             ((uint32_t)200)
 #define RCC_CERT_MAPPING_CONFLICT         ((uint32_t)201)
+#define RCC_POLICY_FILES_NOT_EXPORTABLE   ((uint32_t)202)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -1574,6 +1575,11 @@ enum class MapInitialViewMode
 #define CFG_IMPORT_REPLACE_EVERYTHING                 0x0003FFFF
 #define CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS         0x00100000
 #define CFG_IMPORT_IGNORE_MISSING_EPP_EVENTS          0x00200000
+
+/**
+ * Configuration export flags
+ */
+#define CFG_EXPORT_SKIP_UNEXPORTABLE_FILES            0x00000001
 
 /**
 * Alarm category flags

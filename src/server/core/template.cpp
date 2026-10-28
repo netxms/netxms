@@ -326,9 +326,9 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, uint32_t id, DB_STATEMENT *prepar
 }
 
 /**
- * Create template JSON export record
+ * Create template JSON export record. Problems that prevent export of template parts are added to errors.
  */
-void Template::createExportRecord(json_t *array)
+void Template::createExportRecord(json_t *array, StringList *errors)
 {
    json_t *templateObj = json_object();
    
@@ -388,7 +388,7 @@ void Template::createExportRecord(json_t *array)
    lockProperties();
    for (int i = 0; i < m_policyList.size(); i++)
    {
-      json_t *policyObj = m_policyList.get(i)->createExportRecord();
+      json_t *policyObj = m_policyList.get(i)->createExportRecord(errors);
       if (policyObj != nullptr)
       {
          json_object_set_new(policyObj, "id", json_integer(i + 1));

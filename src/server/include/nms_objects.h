@@ -2325,7 +2325,7 @@ protected:
    virtual bool createDeploymentMessage(NXCPMessage *msg, char *content, bool newTypeFormatSupported);
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context);
    virtual void importAdditionalData(json_t *data, ImportContext *context);
-   virtual void exportAdditionalData(json_t *root) const;
+   virtual void exportAdditionalData(json_t *root, StringList *errors) const;
 
 public:
    GenericAgentPolicy(const uuid& guid, const TCHAR *type, uint32_t ownerId);
@@ -2352,7 +2352,7 @@ public:
    virtual void getEventList(HashSet<uint32_t> *eventList) const {}
    virtual bool isUsingEvent(uint32_t eventCode) const { return false; }
 
-   virtual json_t *createExportRecord() const;
+   virtual json_t *createExportRecord(StringList *errors) const;
    virtual json_t *toJson() const;
 
    virtual void deploy(shared_ptr<AgentPolicyDeploymentData> data);
@@ -2367,7 +2367,7 @@ class NXCORE_EXPORTABLE FileDeliveryPolicy : public GenericAgentPolicy
 protected:
    virtual void importAdditionalData(const ConfigEntry *config, ImportContext *context) override;
    virtual void importAdditionalData(json_t *data, ImportContext *context) override;
-   virtual void exportAdditionalData(json_t *root) const override;
+   virtual void exportAdditionalData(json_t *root, StringList *errors) const override;
 
 public:
    FileDeliveryPolicy(const uuid& guid, uint32_t ownerId) : GenericAgentPolicy(guid, _T("FileDelivery"), ownerId) { }
@@ -2450,7 +2450,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
 
-   void createExportRecord(json_t *array);
+   void createExportRecord(json_t *array, StringList *errors);
    virtual HashSet<uint32_t> *getRelatedEventsList() const override;
 
    bool hasPolicy(const uuid& guid) const;

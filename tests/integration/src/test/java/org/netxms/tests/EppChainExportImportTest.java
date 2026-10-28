@@ -105,7 +105,7 @@ public class EppChainExportImportTest extends AbstractSessionTest
    {
       File file = session.exportConfiguration("EppChainExportImportTest", new long[0], new long[0], new long[0],
             new UUID[] { callerRuleGuid, calledRuleGuid }, new long[0], new long[0], new long[0], new long[0], new long[0], new long[0],
-            new String[0], new UUID[0], new UUID[0], new UUID[0], new long[0]);
+            new String[0], new UUID[0], new UUID[0], new UUID[0], new long[0], 0);
       String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
       file.delete();
       return JsonParser.parseString(content).getAsJsonObject();
@@ -165,7 +165,7 @@ public class EppChainExportImportTest extends AbstractSessionTest
          UUID mainRuleGuid = main.getRules().get(0).getGuid();
          File file = session.exportConfiguration("EppChainExportImportTest", new long[0], new long[0], new long[0],
                new UUID[] { mainRuleGuid }, new long[0], new long[0], new long[0], new long[0], new long[0], new long[0],
-               new String[0], new UUID[0], new UUID[0], new UUID[0], new long[0]);
+               new String[0], new UUID[0], new UUID[0], new UUID[0], new long[0], 0);
          JsonObject mainRoot = JsonParser.parseString(FileUtils.readFileToString(file, StandardCharsets.UTF_8)).getAsJsonObject();
          file.delete();
          assertFalse(findByGuid(mainRoot.getAsJsonArray("rules"), mainRuleGuid).has("chain"));

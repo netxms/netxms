@@ -12018,12 +12018,13 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
 
             // Export templates
             json_t *templates = json_array();
+            StringList exportErrors;
             for(int i = 0; i < templateList.size(); i++)
             {
                shared_ptr<NetObj> object = FindObjectById(templateList.get(i));
                if ((object != nullptr) && (object->getObjectClass() == OBJECT_TEMPLATE))
                {
-                  static_cast<Template*>(object.get())->createExportRecord(templates);
+                  static_cast<Template*>(object.get())->createExportRecord(templates, &exportErrors);
                }
             }
             json_object_set_new(root, "templates", templates);
@@ -12174,21 +12175,33 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
             ExportOtelLogParserRulesJSON(request, VID_OTEL_LOG_NUM_RECORDS, VID_OTEL_LOG_RULES_LIST_BASE, opentelemetry);
             json_object_set_new(root, "opentelemetry", opentelemetry);
 
-            // Write JSON to file
-            char *jsonString = json_dumps(root, JSON_INDENT(2) | JSON_PRESERVE_ORDER);
-            if (jsonString != nullptr)
+            // Write JSON to file unless some parts could not be exported and caller did not allow to skip them
+            if (!exportErrors.isEmpty() && !(request.getFieldAsUInt32(VID_FLAGS) & CFG_EXPORT_SKIP_UNEXPORTABLE_FILES))
             {
-               fputs(jsonString, out);
-               MemFree(jsonString);
-               response.setField(VID_RCC, RCC_SUCCESS);
-               success = true;
+               response.setField(VID_RCC, RCC_POLICY_FILES_NOT_EXPORTABLE);
+               wchar_t *errorText = exportErrors.join(L"\n");
+               response.setField(VID_ERROR_TEXT, errorText);
+               MemFree(errorText);
             }
             else
             {
-               response.setField(VID_RCC, RCC_INTERNAL_ERROR);
+               char *jsonString = json_dumps(root, JSON_INDENT(2) | JSON_PRESERVE_ORDER);
+               if (jsonString != nullptr)
+               {
+                  fputs(jsonString, out);
+                  MemFree(jsonString);
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  success = true;
+               }
+               else
+               {
+                  response.setField(VID_RCC, RCC_INTERNAL_ERROR);
+               }
             }
             json_decref(root);
             fclose(out);
+            if (!success)
+               _wremove(exportFileName);
          }
          else
          {

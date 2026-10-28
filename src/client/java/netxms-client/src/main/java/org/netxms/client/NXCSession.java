@@ -323,6 +323,9 @@ public class NXCSession
    public static final int CFG_IMPORT_IGNORE_MISSING_EPP_ACTIONS        = 0x00100000;
    public static final int CFG_IMPORT_IGNORE_MISSING_EPP_EVENTS         = 0x00200000;
 
+   // Configuration export options
+   public static final int CFG_EXPORT_SKIP_UNEXPORTABLE_FILES = 0x00000001;
+
    // Address list IDs
    public static final int ADDRESS_LIST_DISCOVERY_TARGETS = 1;
    public static final int ADDRESS_LIST_DISCOVERY_FILTER = 2;
@@ -11728,16 +11731,20 @@ public class NXCSession
     * @param windowsEventList List of Windows Event Log processing rule GUIDs
     * @param otelLogList List of OpenTelemetry log processing rule GUIDs
     * @param mappingTables List of mapping table identifiers
-    * @return file with resulting XML document
+    * @param flags export flags (combination of CFG_EXPORT_xxx constants)
+    * @return file with resulting JSON document
     * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws NXCException if NetXMS server returns an error or operation was timed out. If some agent policy files cannot be
+    *            exported and CFG_EXPORT_SKIP_UNEXPORTABLE_FILES is not set, error code is RCC.POLICY_FILES_NOT_EXPORTABLE and
+    *            additional info contains list of such files, one per line.
     */
    public File exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
          long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webServices, long[] netconfQueries,
-         String[] assetAttributes, UUID[] syslogList, UUID[] windowsEventList, UUID[] otelLogList, long[] mappingTables) throws IOException, NXCException
+         String[] assetAttributes, UUID[] syslogList, UUID[] windowsEventList, UUID[] otelLogList, long[] mappingTables, int flags) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+      msg.setFieldUInt32(NXCPCodes.VID_FLAGS, flags);
       msg.setFieldInt32(NXCPCodes.VID_NUM_EVENTS, events.length);
       msg.setField(NXCPCodes.VID_EVENT_LIST, events);
       msg.setFieldInt32(NXCPCodes.VID_NUM_OBJECTS, templates.length);

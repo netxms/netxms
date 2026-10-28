@@ -312,12 +312,12 @@ json_t *GenericAgentPolicy::toJson() const
 }
 
 /**
- * Create configuration export record
+ * Create configuration export record. Problems that prevent export of policy parts are added to errors.
  */
-json_t *GenericAgentPolicy::createExportRecord() const
+json_t *GenericAgentPolicy::createExportRecord(StringList *errors) const
 {
    json_t *root = toJson();
-   exportAdditionalData(root);
+   exportAdditionalData(root, errors);
    return root;
 }
 
@@ -372,7 +372,7 @@ void GenericAgentPolicy::importAdditionalData(json_t *data, ImportContext *conte
 /**
  * Export additional data to JSON.
  */
-void GenericAgentPolicy::exportAdditionalData(json_t *root) const
+void GenericAgentPolicy::exportAdditionalData(json_t *root, StringList *errors) const
 {
 }
 
@@ -589,112 +589,122 @@ void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config, ImportC
 }
 
 /**
- * Export additional data for FileDeliveryPolicy (files)
+ * Report file of file delivery policy that cannot be exported
  */
-void FileDeliveryPolicy::exportAdditionalData(json_t *root) const
+static void ReportFileExportError(StringList *errors, uint32_t templateId, const wchar_t *policyName, const wchar_t *filePath, const wchar_t *reason)
 {
-   unique_ptr<ObjectArray<FileInfo>> configFiles = GetFilesFromConfig(m_content);
-   if ((configFiles != nullptr) && (configFiles->size() > 0))
+   StringBuffer message(L"File \"");
+   message.append(filePath);
+   message.append(L"\" in policy \"");
+   message.append(policyName);
+   message.append(L"\" of template \"");
+   message.append(GetObjectName(templateId, L"Unknown"));
+   message.append(L"\" [");
+   message.append(templateId);
+   message.append(L"]: ");
+   message.append(reason);
+   nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, L"Configuration export: %s", message.cstr());
+   errors->add(message);
+}
+
+/**
+ * Export additional data for FileDeliveryPolicy (files). Files that cannot be exported are skipped and reported in errors.
+ */
+void FileDeliveryPolicy::exportAdditionalData(json_t *root, StringList *errors) const
+{
+   unique_ptr<ObjectArray<FileInfo>> configFiles = GetFilesFromConfig(m_content, false);
+   if (configFiles->isEmpty())
+      return;
+
+   uint64_t maxFileSize = ConfigReadULong(L"AgentPolicy.MaxFileSize", 128 * 1024 * 1024);
+   json_t *files = json_array();
+   for (int i = 0; i < configFiles->size(); i++)
    {
-      json_t *files = json_array();
-      
-      for (int i = 0; i < configFiles->size(); i++)
+      FileInfo *file = configFiles->get(i);
+
+      StringBuffer fileName(L"FileDelivery-");
+      fileName.append(file->guid.toString());
+
+      StringBuffer fullPath(g_netxmsdDataDir);
+      fullPath.append(DDIR_FILES FS_PATH_SEPARATOR);
+      fullPath.append(fileName);
+
+      int fd = _topen(fullPath.cstr(), O_RDONLY | O_BINARY);
+      if (fd == -1)
       {
-         FileInfo *file = configFiles->get(i);
-         
-         StringBuffer fileName = _T("FileDelivery-");
-         fileName.append(file->guid.toString());
-         
-         StringBuffer fullPath = g_netxmsdDataDir;
-         fullPath.append(DDIR_FILES FS_PATH_SEPARATOR);
-         fullPath.append(fileName.cstr());
-         
-         uint64_t fileSize = FileSize(fullPath.cstr());
-         if (fileSize != 0)
+         if (errno == ENOENT)
+            ReportFileExportError(errors, m_ownerId, m_name, file->path, L"file is missing from server file store");
+         else
+            ReportFileExportError(errors, m_ownerId, m_name, file->path, StringBuffer(L"cannot open file (").append(_wcserror(errno)).append(L")"));
+         continue;
+      }
+
+      NX_STAT_STRUCT st;
+      if (NX_FSTAT(fd, &st) != 0)
+      {
+         ReportFileExportError(errors, m_ownerId, m_name, file->path, StringBuffer(L"cannot get file size (").append(_wcserror(errno)).append(L")"));
+         _close(fd);
+         continue;
+      }
+
+      uint64_t fileSize = static_cast<uint64_t>(st.st_size);
+      if (fileSize >= maxFileSize)
+      {
+         StringBuffer reason(L"file is too large (");
+         reason.append(fileSize);
+         reason.append(L" bytes, limit is ");
+         reason.append(maxFileSize);
+         reason.append(L" bytes)");
+         ReportFileExportError(errors, m_ownerId, m_name, file->path, reason);
+         _close(fd);
+         continue;
+      }
+
+      BYTE *content = MemAllocArrayNoInit<BYTE>(static_cast<size_t>(fileSize));
+      ssize_t bytesRead = (fileSize > 0) ? _read(fd, content, static_cast<unsigned int>(fileSize)) : 0;
+      int readError = errno;
+      _close(fd);
+      if (bytesRead != static_cast<ssize_t>(fileSize))
+      {
+         ReportFileExportError(errors, m_ownerId, m_name, file->path,
+            (bytesRead < 0) ? StringBuffer(L"cannot read file (").append(_wcserror(readError)).append(L")") : StringBuffer(L"file was truncated while reading"));
+         MemFree(content);
+         continue;
+      }
+
+      json_t *fileData = json_object();
+      json_object_set_new(fileData, "name", json_string_t(fileName));
+      json_object_set_new(fileData, "size", json_integer(fileSize));
+
+      const BYTE *data = content;
+      size_t dataSize = static_cast<size_t>(fileSize);
+      BYTE *compressedContent = nullptr;
+      if (fileSize > 0)
+      {
+         uLongf compressedSize = compressBound(static_cast<uLong>(fileSize));
+         compressedContent = MemAllocArrayNoInit<BYTE>(compressedSize);
+         if ((compress(compressedContent, &compressedSize, content, static_cast<uLong>(fileSize)) == Z_OK) && (compressedSize < fileSize))
          {
-            uint64_t maxFileSize = ConfigReadULong(_T("AgentPolicy.MaxFileSize"), 128 * 1024 * 1024);
-            if (fileSize < maxFileSize)
-            {               
-               // Read file content
-               int fd = _topen(fullPath.cstr(), O_RDONLY | O_BINARY);
-               if (fd != -1)
-               {
-                  BYTE *fileContent = MemAllocArrayNoInit<BYTE>(fileSize);
-                  if (_read(fd, fileContent, static_cast<unsigned int>(fileSize)) == static_cast<ssize_t>(fileSize))
-                  {
-                     json_t *fileData = json_object();               
-                     json_object_set_new(fileData, "name", json_string_t(fileName.cstr()));
-                     json_object_set_new(fileData, "size", json_integer(fileSize));
-
-                     uLong compressedFileSize = compressBound(static_cast<uLong>(fileSize));
-                     auto compressedFileContent = MemAllocArrayNoInit<BYTE>(compressedFileSize);
-                     BYTE *encodedInput;
-                     uint64_t encodedInputSize;
-
-                     if (compress(compressedFileContent, &compressedFileSize, fileContent, static_cast<uLong>(fileSize)) == Z_OK)
-                     {
-                        if (compressedFileSize < fileSize) 
-                        {
-                           json_object_set_new(fileData, "compression", json_true());
-                           encodedInput = compressedFileContent;
-                           encodedInputSize = compressedFileSize;
-                           MemFree(fileContent);
-                        }
-                        else
-                        {
-                           encodedInput = fileContent;
-                           encodedInputSize = fileSize;
-                           MemFree(compressedFileContent);
-                        }
-                     }
-                     else
-                     {
-                        encodedInput = fileContent;
-                        encodedInputSize = fileSize;
-                        MemFree(compressedFileContent);
-                     }
-
-                     json_object_set_new(fileData, "data", json_base64_string(encodedInput, encodedInputSize));                    
-                     // Add MD5 hash
-                     BYTE hash[MD5_DIGEST_SIZE];
-                     CalculateFileMD5Hash(fullPath, hash);
-                     json_object_set_new(fileData, "hash", json_base64_string(hash, MD5_DIGEST_SIZE));
-                        
-                     json_array_append_new(files, fileData);                     
-                     MemFree(encodedInput);
-                  }
-                  else
-                  {
-                     nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot read file %s for export of policy %s in template %s [%u] (%s)"),
-                        fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
-                     MemFree(fileContent);
-                  }                 
-                  _close(fd);
-               }
-               else
-               {
-                  nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot open file %s for export of policy %s in template %s [%u] (%s)"),
-                     fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
-               }
-            }
-            else
-            {
-               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("File %s in policy %s in template %s [%u] is too big (%llu bytes with limit %llu bytes) and will not be exported"),
-                  fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, 
-                  static_cast<unsigned long long>(fileSize), static_cast<unsigned long long>(maxFileSize));
-            }
+            json_object_set_new(fileData, "compression", json_true());
+            data = compressedContent;
+            dataSize = compressedSize;
          }
       }
-      
-      if (json_array_size(files) > 0)
-      {
-         json_object_set_new(root, "files", files);
-      }
-      else
-      {
-         json_decref(files);
-      }
+      json_object_set_new(fileData, "data", json_base64_string(data, dataSize));
+
+      BYTE hash[MD5_DIGEST_SIZE];
+      CalculateMD5Hash(content, static_cast<size_t>(fileSize), hash);
+      json_object_set_new(fileData, "hash", json_base64_string(hash, MD5_DIGEST_SIZE));
+
+      json_array_append_new(files, fileData);
+      MemFree(compressedContent);
+      MemFree(content);
    }
+
+   if (json_array_size(files) > 0)
+      json_object_set_new(root, "files", files);
+   else
+      json_decref(files);
 }
 
 /**
