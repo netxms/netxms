@@ -16,10 +16,12 @@ src/server/webapi/openapi.yaml:
   # The router matches each path segment against literals first and only falls back to a
   # placeholder (RouteRequest() in src/server/core/webapi_router.cpp), so "configuration" and
   # "output" always win over the sibling placeholder. Object tool and DCI identifiers are
-  # numeric, so they can never collide with those literals.
+  # numeric, so they can never collide with those literals. Script execution identifiers are
+  # numeric as well.
   no-ambiguous-paths:
     - '#/paths/~1v1~1objects~1{object-id}~1data-collection~1configuration~1{dci-id}'
     - '#/paths/~1v1~1object-tools~1output~1{token}'
+    - '#/paths/~1v1~1script-executions~1{execution-id}~1stop'
 
   # Unauthenticated root endpoint returning static server information (H_Root() in
   # src/server/core/webapi.cpp). It has no failure path.
@@ -32,3 +34,5 @@ src/server/webapi/openapi.yaml:
   operation-2xx-response:
     - '#/paths/~1v1~1tcp-proxy~1{token}/get/responses'
     - '#/paths/~1v1~1object-tools~1output~1{token}/get/responses'
+    - '#/paths/~1v1~1server-console~1session~1{token}/get/responses'
+    - '#/paths/~1v1~1script-executions~1output~1{token}/get/responses'

@@ -19521,6 +19521,7 @@ components:
         ipAddress:
           allOf:
             - $ref: '#/components/schemas/InetAddress'
+          type: object
           nullable: true
           description: Station IP address. Null when not known.
         ssid:
