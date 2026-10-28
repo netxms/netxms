@@ -129,6 +129,13 @@ practice against Open-Meteo as well. Bright Sky sends neither header, so every
 poll of a `brightsky` location is a full request; its request window is pinned
 to 00:00 UTC of the current day so the URL itself is stable within a day.
 
+A cached forecast can stay valid for hours (MET Norway republishes roughly
+every six hours outside the Nordic area), so the current snapshot is not tied
+to the download: on every poll it is re-selected as the hourly entry at or
+before the current time, and `Weather.DataAge` stays within the hour plus
+`PollInterval`. A provider's own current-conditions block (Open-Meteo) is used
+as long as it is not older than that hourly entry.
+
 ## Assumptions and limitations
 
 - **Deterministic forecast by default.** Forecast uncertainty is available only

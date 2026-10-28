@@ -163,6 +163,11 @@ public:
  * Provider adapter: builds request URLs and parses provider-specific responses
  * into the neutral data model. Adapters hold only immutable configuration and
  * are shared by all locations, so all methods must be thread-safe.
+ *
+ * parseForecastResponse() fills the current snapshot only from a dedicated
+ * current-conditions block of the response. Providers whose documents are a
+ * single hourly series leave it null; the location then derives the snapshot
+ * from the forecast curve on every poll (see SelectCurrentPoint()).
  */
 class WeatherProvider
 {
@@ -288,5 +293,12 @@ bool ParseLatLon(const TCHAR *str, double *latitude, double *longitude);
  * Returns 0 if the string does not have that shape.
  */
 time_t ParseIsoTimestamp(const char *str);
+
+/**
+ * Select the forecast point that stands for the present moment: the last point
+ * at or before now in a curve sorted by target time (util.cpp). Returns nullptr
+ * when the curve is empty or starts in the future.
+ */
+const ForecastPoint *SelectCurrentPoint(const ForecastCurve *curve, time_t now);
 
 #endif   /* _weather_h_ */

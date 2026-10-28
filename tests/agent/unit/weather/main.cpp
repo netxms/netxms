@@ -377,10 +377,10 @@ static void TestMetNoParsing()
    MetNoProvider provider;
    WeatherSnapshot *current = nullptr;
    ForecastCurve *forecast = nullptr;
-   // The document is dated in the past, so its horizon filter keeps every point
-   // and the last entry at or before "now" becomes the current snapshot.
+   // The document is dated in the past, so its horizon filter keeps every point.
+   // Locationforecast has no current-conditions block, so no snapshot is produced.
    AssertTrue(provider.parseForecastResponse(s_docMetNo, strlen(s_docMetNo), 2, &current, &forecast));
-   AssertNotNull(current);
+   AssertNull(current);
    AssertNotNull(forecast);
    AssertTrue(forecast->points.size() == 2);
 
@@ -399,11 +399,6 @@ static void TestMetNoParsing()
    AssertTrue(FLOAT_EQ(p1->windSpeed, 36.0));            // 10 m/s -> 36 km/h
    AssertTrue(isnan(p1->precipitation));                 // no next_1_hours block
 
-   // Current snapshot is the last entry at or before now
-   AssertTrue(current->observationTime == 1577840400);
-   AssertTrue(FLOAT_EQ(current->temperature, 17.1));
-
-   MemFree(current);
    delete forecast;
    EndTest();
 }
@@ -461,9 +456,9 @@ static void TestBrightSkyParsing()
    BrightSkyProvider provider;
    WeatherSnapshot *current = nullptr;
    ForecastCurve *forecast = nullptr;
-   // The document is dated in the past, so the last record becomes the current snapshot.
+   // Bright Sky has no current-conditions block, so no snapshot is produced.
    AssertTrue(provider.parseForecastResponse(s_docBrightSky, strlen(s_docBrightSky), 2, &current, &forecast));
-   AssertNotNull(current);
+   AssertNull(current);
    AssertNotNull(forecast);
    AssertTrue(forecast->points.size() == 2);
 
@@ -482,11 +477,52 @@ static void TestBrightSkyParsing()
    AssertTrue(isnan(p1->relativeHumidity));              // null in document
    AssertTrue(FLOAT_EQ(p1->shortwaveRadiation, 428.0));
 
-   AssertTrue(current->observationTime == 1577840400);
-   AssertTrue(FLOAT_EQ(current->temperature, 19.3));
-
-   MemFree(current);
    delete forecast;
+   EndTest();
+}
+
+/**
+ * Test selection of the current point from an hourly curve (issue #3845): the
+ * selected entry must follow "now" along the cached curve instead of staying on
+ * the entry chosen when the document was downloaded.
+ */
+static void TestCurrentPointSelection()
+{
+   StartTest(_T("Current point selection from hourly curve"));
+   MetNoProvider provider;
+   WeatherSnapshot *current = nullptr;
+   ForecastCurve *forecast = nullptr;
+   AssertTrue(provider.parseForecastResponse(s_docMetNo, strlen(s_docMetNo), 2, &current, &forecast));
+   AssertNotNull(forecast);
+   AssertTrue(forecast->points.size() == 2);
+
+   // Before the first point: nothing stands for "now" yet
+   AssertNull(SelectCurrentPoint(forecast, 1577836799));
+
+   // Exactly at the first point and anywhere within its hour
+   const ForecastPoint *p = SelectCurrentPoint(forecast, 1577836800);
+   AssertNotNull(p);
+   AssertTrue(p->targetTime == 1577836800);
+   p = SelectCurrentPoint(forecast, 1577840399);
+   AssertNotNull(p);
+   AssertTrue(p->targetTime == 1577836800);
+   AssertTrue(FLOAT_EQ(p->temperature, 16.0));
+
+   // Time moved into the next hour: selection advances without a new download
+   p = SelectCurrentPoint(forecast, 1577840400);
+   AssertNotNull(p);
+   AssertTrue(p->targetTime == 1577840400);
+   AssertTrue(FLOAT_EQ(p->temperature, 17.1));
+
+   // Far past the end of the curve: the last point is kept
+   p = SelectCurrentPoint(forecast, 1577840400 + 6 * 3600);
+   AssertNotNull(p);
+   AssertTrue(p->targetTime == 1577840400);
+
+   delete forecast;
+
+   ForecastCurve empty;
+   AssertNull(SelectCurrentPoint(&empty, 1577840400));
    EndTest();
 }
 
@@ -529,6 +565,7 @@ int main(int argc, char *argv[])
    TestBrightSkyUrl();
    TestBrightSkyParsing();
    TestBrightSkyErrorDocument();
+   TestCurrentPointSelection();
 
    return 0;
 }

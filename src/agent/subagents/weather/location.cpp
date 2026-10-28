@@ -60,10 +60,34 @@ WeatherLocation::~WeatherLocation()
 }
 
 /**
+ * Build a current-conditions snapshot from a forecast point.
+ */
+static WeatherSnapshot *SnapshotFromPoint(const ForecastPoint *p)
+{
+   WeatherSnapshot *s = MemAllocStruct<WeatherSnapshot>();
+   s->observationTime = p->targetTime;
+   s->temperature = p->temperature;
+   s->cloudCover = p->cloudCover;
+   s->shortwaveRadiation = p->shortwaveRadiation;
+   s->directRadiation = p->directRadiation;
+   s->windSpeed = p->windSpeed;
+   s->relativeHumidity = p->relativeHumidity;
+   s->precipitation = p->precipitation;
+   return s;
+}
+
+/**
  * Poll provider data for this location and update cached state. Each request is
  * applied independently: a failed request leaves the previous value in place. A
  * response that is still within its Expires window is not re-requested at all,
  * and a refresh past that window is conditional on the stored Last-Modified.
+ *
+ * The current snapshot is advanced along the cached hourly curve on every poll,
+ * whether or not a request was made: a cached forecast stays valid for hours
+ * (MET Norway republishes roughly every six hours outside the Nordic area), and
+ * the entry that stands for "now" moves on while it is cached. A provider's own
+ * current-conditions block wins over the curve as long as it is not older than
+ * the curve's entry for the present hour.
  */
 void WeatherLocation::poll(const HttpClient& client, int forecastDays, bool ensemble)
 {
@@ -110,6 +134,21 @@ void WeatherLocation::poll(const HttpClient& client, int forecastDays, bool ense
          nxlog_debug_tag(DEBUG_TAG, 6, _T("Location %s (%hs): forecast not modified"), m_name, m_key);
       }
    }
+
+   // Re-select the current snapshot from the cached hourly curve
+   m_lock.lock();
+   if (m_forecast != nullptr)
+   {
+      const ForecastPoint *p = SelectCurrentPoint(m_forecast, now);
+      if ((p != nullptr) && ((m_current == nullptr) || (p->targetTime > m_current->observationTime)))
+      {
+         MemFree(m_current);
+         m_current = SnapshotFromPoint(p);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Location %s (%hs): current snapshot advanced to forecast point at ") INT64_FMT,
+            m_name, m_key, static_cast<int64_t>(p->targetTime));
+      }
+   }
+   m_lock.unlock();
 
    // Ensemble spread (optional; separate endpoint, not offered by every provider)
    if (!ensemble || !m_provider->supportsEnsemble())
