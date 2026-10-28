@@ -1075,6 +1075,240 @@ static void TestGetResponseHandling()
 }
 
 /**
+ * Scripted SNMPv3 fake transport for testing recovery of engine boots/time
+ * synchronization on request timeout. Script is a sequence of readMessage
+ * results: timeout (readMessage returns 0), unknownEngineID report, or
+ * normal response.
+ */
+class FakeV3Transport : public SNMP_Transport
+{
+public:
+   enum Action { TIMEOUT, REPORT_UNKNOWN_ENGINE_ID, RESPONSE };
+
+   static const BYTE s_engineId[];
+   static const size_t s_engineIdLength;
+   static const BYTE s_unknownEngineIdOid[];   // 1.3.6.1.6.3.15.1.1.4.0
+   static const size_t s_unknownEngineIdOidLength;
+   static const BYTE s_sysUpTimeOid[];         // 1.3.6.1.2.1.1.3.0
+   static const size_t s_sysUpTimeOidLength;
+
+private:
+
+   const Action *m_script;
+   size_t m_scriptLength;
+   size_t m_step;
+   uint32_t m_requestId;
+   uint32_t m_msgId;
+   int m_sendCount;
+   int m_probeCount;
+   uint32_t m_engineTimeAtLastSend;
+
+   static void appendTLV(ByteStream *out, BYTE type, const BYTE *data, size_t length)
+   {
+      out->write(type);
+      out->write(static_cast<BYTE>(length));   // Short form length is sufficient for test messages
+      if (length > 0)
+         out->write(data, length);
+   }
+
+   static void appendInt32(ByteStream *out, BYTE type, uint32_t value)
+   {
+      BYTE data[4] = { static_cast<BYTE>(value >> 24), static_cast<BYTE>(value >> 16),
+                       static_cast<BYTE>(value >> 8), static_cast<BYTE>(value) };
+      appendTLV(out, type, data, 4);
+   }
+
+   /**
+    * Build SNMPv3 message with given varbind list in scoped PDU
+    */
+   void buildMessage(ByteStream *message, BYTE pduType, const ByteStream& varbinds)
+   {
+      // PDU content: request id, error status, error index, varbind list
+      ByteStream pduContent;
+      appendInt32(&pduContent, ASN_INTEGER, m_requestId);
+      appendInt32(&pduContent, ASN_INTEGER, 0);
+      appendInt32(&pduContent, ASN_INTEGER, 0);
+      appendTLV(&pduContent, ASN_SEQUENCE, varbinds.buffer(), varbinds.size());
+
+      // Scoped PDU
+      ByteStream scopedPduContent;
+      appendTLV(&scopedPduContent, ASN_OCTET_STRING, s_engineId, s_engineIdLength);
+      appendTLV(&scopedPduContent, ASN_OCTET_STRING, nullptr, 0);   // context name
+      appendTLV(&scopedPduContent, pduType, pduContent.buffer(), pduContent.size());
+      ByteStream scopedPdu;
+      appendTLV(&scopedPdu, ASN_SEQUENCE, scopedPduContent.buffer(), scopedPduContent.size());
+
+      // USM security parameters
+      ByteStream usm;
+      appendTLV(&usm, ASN_OCTET_STRING, s_engineId, s_engineIdLength);
+      appendInt32(&usm, ASN_INTEGER, 1);         // engine boots
+      appendInt32(&usm, ASN_INTEGER, 12345);     // engine time
+      appendTLV(&usm, ASN_OCTET_STRING, nullptr, 0);   // user name
+      appendTLV(&usm, ASN_OCTET_STRING, nullptr, 0);   // signature
+      appendTLV(&usm, ASN_OCTET_STRING, nullptr, 0);   // salt
+      ByteStream usmSeq;
+      appendTLV(&usmSeq, ASN_SEQUENCE, usm.buffer(), usm.size());
+
+      // Message header
+      ByteStream header;
+      appendInt32(&header, ASN_INTEGER, m_msgId);
+      appendInt32(&header, ASN_INTEGER, 1500);   // max message size
+      BYTE flags = 0;   // noAuthNoPriv
+      appendTLV(&header, ASN_OCTET_STRING, &flags, 1);
+      appendInt32(&header, ASN_INTEGER, SNMP_SECURITY_MODEL_USM);
+      ByteStream headerSeq;
+      appendTLV(&headerSeq, ASN_SEQUENCE, header.buffer(), header.size());
+
+      // Message
+      ByteStream content;
+      BYTE version = SNMP_VERSION_3;
+      appendTLV(&content, ASN_INTEGER, &version, 1);
+      content.write(headerSeq.buffer(), headerSeq.size());
+      appendTLV(&content, ASN_OCTET_STRING, usmSeq.buffer(), usmSeq.size());
+      content.write(scopedPdu.buffer(), scopedPdu.size());
+      appendTLV(message, ASN_SEQUENCE, content.buffer(), content.size());
+   }
+
+   /**
+    * Build varbind list with single varbind
+    */
+   static void buildVarbinds(ByteStream *varbinds, const BYTE *oid, size_t oidLength, BYTE valueType, const BYTE *value, size_t valueLength)
+   {
+      ByteStream varbind;
+      appendTLV(&varbind, ASN_OBJECT_ID, oid, oidLength);
+      appendTLV(&varbind, valueType, value, valueLength);
+      appendTLV(varbinds, ASN_SEQUENCE, varbind.buffer(), varbind.size());
+   }
+
+   int buildResponse(SNMP_PDU **pdu, BYTE pduType, const BYTE *oid, size_t oidLength, BYTE valueType, const BYTE *value, size_t valueLength)
+   {
+      ByteStream varbinds;
+      buildVarbinds(&varbinds, oid, oidLength, valueType, value, valueLength);
+      ByteStream message;
+      buildMessage(&message, pduType, varbinds);
+      *pdu = new SNMP_PDU();
+      if (!(*pdu)->parse(message.buffer(), message.size(), &m_securityContext, false))
+      {
+         delete_and_null(*pdu);
+         return 0;
+      }
+      return static_cast<int>(message.size());
+   }
+
+public:
+   FakeV3Transport(const Action *script, size_t scriptLength)
+   {
+      m_script = script;
+      m_scriptLength = scriptLength;
+      m_step = 0;
+      m_requestId = 0;
+      m_msgId = 0;
+      m_sendCount = 0;
+      m_probeCount = 0;
+      m_engineTimeAtLastSend = 0;
+      m_reliable = false;
+   }
+
+   virtual int readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender, socklen_t *addrSize, SNMP_SecurityContext (*contextFinder)(struct sockaddr *, socklen_t)) override
+   {
+      if (m_step >= m_scriptLength)
+         return 0;
+
+      Action action = m_script[m_step++];
+      if (action == TIMEOUT)
+         return 0;
+
+      if (action == REPORT_UNKNOWN_ENGINE_ID)
+         return buildResponse(pdu, ASN_REPORT_PDU, s_unknownEngineIdOid, s_unknownEngineIdOidLength, ASN_NULL, nullptr, 0);
+
+      static const BYTE timeTicks[] = { 0x01, 0x02, 0x03 };
+      return buildResponse(pdu, ASN_RESPONSE_PDU, s_sysUpTimeOid, s_sysUpTimeOidLength, ASN_TIMETICKS, timeTicks, sizeof(timeTicks));
+   }
+
+   virtual int sendMessage(SNMP_PDU *pdu, uint32_t timeout) override
+   {
+      m_requestId = pdu->getRequestId();
+      m_msgId = pdu->getMessageId();
+      m_sendCount++;
+      if (m_securityContext.getAuthoritativeEngine().getIdLen() == 0)
+         m_probeCount++;   // engine ID discovery probe (empty authoritative engine ID)
+      m_engineTimeAtLastSend = m_securityContext.getAuthoritativeEngine().getTime();
+      return 1;
+   }
+
+   virtual InetAddress getPeerIpAddress() override { return InetAddress::LOOPBACK; }
+   virtual uint16_t getPort() override { return 161; }
+   virtual bool isProxyTransport() override { return false; }
+
+   int sendCount() const { return m_sendCount; }
+   int probeCount() const { return m_probeCount; }
+   uint32_t engineTimeAtLastSend() const { return m_engineTimeAtLastSend; }
+};
+
+const BYTE FakeV3Transport::s_engineId[] = { 0x80, 0x00, 0x1F, 0x88, 0x80, 0x12, 0x34, 0x56, 0x78 };
+const size_t FakeV3Transport::s_engineIdLength = 9;
+const BYTE FakeV3Transport::s_unknownEngineIdOid[] = { 0x2B, 0x06, 0x01, 0x06, 0x03, 0x0F, 0x01, 0x01, 0x04, 0x00 };
+const size_t FakeV3Transport::s_unknownEngineIdOidLength = 10;
+const BYTE FakeV3Transport::s_sysUpTimeOid[] = { 0x2B, 0x06, 0x01, 0x02, 0x01, 0x01, 0x03, 0x00 };
+const size_t FakeV3Transport::s_sysUpTimeOidLength = 8;
+
+/**
+ * Create SNMPv3 request and transport with engine ID known but boots/time never synchronized
+ * (security context restored from database after server restart)
+ */
+static SNMP_PDU *CreateV3RequestWithUnsyncedEngine(FakeV3Transport *transport)
+{
+   SNMP_SecurityContext context("testuser");
+   context.setSecurityModel(SNMP_SECURITY_MODEL_USM);
+   SNMP_Engine engine(FakeV3Transport::s_engineId, FakeV3Transport::s_engineIdLength, 0, 0);
+   context.setAuthoritativeEngine(engine);
+   context.setContextEngine(engine);
+   transport->setSecurityContext(context);
+   return new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), SNMP_VERSION_3);
+}
+
+/**
+ * Test recovery of SNMPv3 engine boots/time synchronization for agents that silently drop
+ * requests with unsynchronized engine time instead of sending notInTimeWindows report
+ */
+static void TestV3EngineTimeRecovery()
+{
+   StartTest(_T("SNMPv3 engine boots/time recovery on timeout - silent-drop agent"));
+   {
+      const FakeV3Transport::Action script[] = { FakeV3Transport::TIMEOUT, FakeV3Transport::REPORT_UNKNOWN_ENGINE_ID, FakeV3Transport::RESPONSE };
+      FakeV3Transport transport(script, 3);
+      SNMP_PDU *request = CreateV3RequestWithUnsyncedEngine(&transport);
+      SNMP_PDU *response = nullptr;
+      AssertEquals(transport.doRequest(request, &response, 1000, 1, false), static_cast<uint32_t>(SNMP_ERR_SUCCESS));
+      AssertNotNull(response);
+      AssertEquals(response->getCommand(), SNMP_RESPONSE);
+      AssertEquals(transport.probeCount(), 1);
+      AssertTrue(transport.engineTimeAtLastSend() != 0);
+      delete response;
+      delete request;
+   }
+   EndTest();
+
+   StartTest(_T("SNMPv3 engine boots/time recovery on timeout - discovery probe timeout"));
+   {
+      const FakeV3Transport::Action script[] = { FakeV3Transport::TIMEOUT, FakeV3Transport::TIMEOUT };
+      FakeV3Transport transport(script, 2);
+      SNMP_PDU *request = CreateV3RequestWithUnsyncedEngine(&transport);
+      SNMP_PDU *response = nullptr;
+      AssertEquals(transport.doRequest(request, &response, 1000, 1, false), static_cast<uint32_t>(SNMP_ERR_TIMEOUT));
+      AssertNull(response);
+      AssertEquals(transport.probeCount(), 1);
+      // Cached engine information must be restored when discovery probe fails
+      SNMP_Engine engine(FakeV3Transport::s_engineId, FakeV3Transport::s_engineIdLength, 0, 0);
+      AssertTrue(transport.getSecurityContext().getAuthoritativeEngine().equals(engine));
+      AssertNotNull(transport.getContextEngine());
+      AssertTrue(transport.getContextEngine()->equals(engine));
+      delete request;
+   }
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -1089,6 +1323,7 @@ int main(int argc, char *argv[])
    TestPDUEncoding();
    TestV1TrapEncoding();
    TestGetResponseHandling();
+   TestV3EngineTimeRecovery();
    TestPDUPrivacy(SNMP_ENCRYPT_DES, _T("SNMPv3 privacy (DES)"));
    TestPDUPrivacy(SNMP_ENCRYPT_AES_128, _T("SNMPv3 privacy (AES-128)"));
    return 0;

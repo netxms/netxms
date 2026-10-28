@@ -145,6 +145,7 @@ uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, uint3
 		}
 	}
 
+   bool engineResetDone = false;
    uint32_t rc;
 	if (m_reliable)
 	   numRetries = 1;   // Don't do retry on reliable transport
@@ -305,6 +306,41 @@ retry_wait:
       else
       {
          rc = (bytes == 0) ? SNMP_ERR_TIMEOUT : SNMP_ERR_COMM;
+
+         if (!m_reliable && (rc == SNMP_ERR_TIMEOUT) && (request->getVersion() == SNMP_VERSION_3) && !engineResetDone &&
+             (m_securityContext.getAuthoritativeEngine().getIdLen() != 0) &&
+             (m_securityContext.getAuthoritativeEngine().getTime() == 0))
+         {
+            /* Authoritative engine ID is known but engine boots/time were never synchronized (e.g. security
+             * context was restored from database after server restart). Some SNMP agents silently drop such
+             * messages instead of sending notInTimeWindows report, so the usual time window resynchronization
+             * never happens and the agent stays unreachable. Reset cached engine information and redo engine
+             * ID discovery with empty engine ID - the agent will respond with authoritative engine data
+             * including current boots and time. Not done on reliable (proxy) transports where a timeout
+             * already means that the agent retried several times. */
+            engineResetDone = true;
+            SNMP_Engine savedAuthoritativeEngine = m_securityContext.getAuthoritativeEngine();
+            SNMP_Engine savedContextEngine = m_securityContext.getContextEngine();
+            m_securityContext.setAuthoritativeEngine(SNMP_Engine());
+            m_securityContext.setContextEngine(SNMP_Engine());
+            delete_and_null(m_authoritativeEngine);
+            delete_and_null(m_contextEngine);
+            uint32_t discoveryRc = doEngineIdDiscovery(request, timeout, 1);
+            if (discoveryRc == SNMP_ERR_SUCCESS)
+            {
+               if (!engineIdDiscoveryOnly)
+                  goto retry;
+            }
+            else
+            {
+               /* Engine ID discovery failed - restore cached engine information so that remaining
+                * retries are authenticated retransmissions of the original request */
+               m_securityContext.setAuthoritativeEngine(savedAuthoritativeEngine);
+               m_securityContext.setContextEngine(savedContextEngine);
+               m_authoritativeEngine = (savedAuthoritativeEngine.getIdLen() > 0) ? new SNMP_Engine(savedAuthoritativeEngine) : nullptr;
+               m_contextEngine = (savedContextEngine.getIdLen() > 0) ? new SNMP_Engine(savedContextEngine) : nullptr;
+            }
+         }
       }
    }
 
