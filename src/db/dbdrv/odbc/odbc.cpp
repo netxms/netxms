@@ -818,6 +818,7 @@ static DBDRV_RESULT SelectPrepared(DBDRV_CONNECTION connection, DBDRV_STATEMENT 
    if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
    {
 		result = ProcessSelectResults(handle);
+		SQLFreeStmt(handle, SQL_CLOSE);
 	   *errorCode = DBERR_SUCCESS;
    }
    else
