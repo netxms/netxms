@@ -511,81 +511,170 @@ static StringList GetFilesToDeleteFromConfig(const char *content)
 }
 
 /**
+ * Restore file of file delivery policy from imported configuration. File is accepted only if its name is in
+ * "FileDelivery-<GUID>" form, GUID is referenced by policy content (accepted file is removed from configFiles),
+ * and decoded content matches declared size and MD5 hash (expectedHash is null if hash is missing or malformed).
+ * Problems are reported to import context.
+ */
+static void ImportPolicyFile(const wchar_t *fileName, const char *base64Data, uint64_t size, bool compressed, const BYTE *expectedHash,
+   uint64_t maxFileSize, ObjectArray<FileInfo> *configFiles, ImportContext *context, const wchar_t *policyName)
+{
+   uuid guid = (wcsncmp(fileName, L"FileDelivery-", 13) == 0) ? uuid::parse(&fileName[13]) : uuid::NULL_UUID;
+   if (guid.isNull())
+   {
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"Invalid file name \"%s\" while importing policy %s", fileName, policyName);
+      return;
+   }
+
+   int index = -1;
+   for(int i = 0; i < configFiles->size(); i++)
+   {
+      if (configFiles->get(i)->guid.equals(guid))
+      {
+         index = i;
+         break;
+      }
+   }
+   if (index == -1)
+   {
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"File %s is not referenced by policy %s", fileName, policyName);
+      return;
+   }
+   configFiles->remove(index);
+
+   if (expectedHash == nullptr)
+   {
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"Missing or invalid hash for file %s while importing policy %s", fileName, policyName);
+      return;
+   }
+
+   if (size > maxFileSize)
+   {
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"File %s is too large (" UINT64_FMT L" bytes, limit is " UINT64_FMT L" bytes) while importing policy %s",
+         fileName, size, maxFileSize, policyName);
+      return;
+   }
+
+   char *content;
+   size_t contentSize;
+   if (!base64_decode_alloc(base64Data, strlen(base64Data), &content, &contentSize) || (content == nullptr))
+   {
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"Cannot decode base64 data for file %s while importing policy %s", fileName, policyName);
+      return;
+   }
+
+   if (compressed)
+   {
+      char *buffer = MemAllocArrayNoInit<char>(static_cast<size_t>(size));
+      uLongf uncompressedSize = static_cast<uLongf>(size);
+      int rc = uncompress(reinterpret_cast<BYTE*>(buffer), &uncompressedSize, reinterpret_cast<BYTE*>(content), static_cast<uLong>(contentSize));
+      MemFree(content);
+      if (rc != Z_OK)
+      {
+         MemFree(buffer);
+         context->log(NXLOG_WARNING, L"ImportFileData()", L"Cannot decompress file %s while importing policy %s", fileName, policyName);
+         return;
+      }
+      content = buffer;
+      contentSize = uncompressedSize;
+   }
+
+   if (contentSize != size)
+   {
+      MemFree(content);
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"Size mismatch for file %s while importing policy %s", fileName, policyName);
+      return;
+   }
+
+   BYTE hash[MD5_DIGEST_SIZE];
+   CalculateMD5Hash(content, contentSize, hash);
+   if (memcmp(hash, expectedHash, MD5_DIGEST_SIZE))
+   {
+      MemFree(content);
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"Hash mismatch for file %s while importing policy %s", fileName, policyName);
+      return;
+   }
+
+   StringBuffer fullPath(g_netxmsdDataDir);
+   fullPath.append(DDIR_FILES FS_PATH_SEPARATOR L"FileDelivery-");
+   fullPath.append(guid.toString());
+   int fd = _wopen(fullPath, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+   if (fd != -1)
+   {
+      bool success = (_write(fd, content, static_cast<unsigned int>(contentSize)) == static_cast<ssize_t>(contentSize));
+      int writeError = errno;
+      _close(fd);
+      if (!success)
+      {
+         context->log(NXLOG_WARNING, L"ImportFileData()", L"Cannot write to file %s while importing policy %s (%s)", fileName, policyName, _wcserror(writeError));
+         _wremove(fullPath);
+      }
+   }
+   else
+   {
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"Cannot create file %s while importing policy %s (%s)", fileName, policyName, _wcserror(errno));
+   }
+   MemFree(content);
+}
+
+/**
  * Loads files in base64 coding from imported config
  */
 void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config, ImportContext *context)
 {
-   unique_ptr<ObjectArray<FileInfo>> configFiles = GetFilesFromConfig(m_content);
-   ConfigEntry *fileRoot = config->findEntry(_T("files"));
+   unique_ptr<ObjectArray<FileInfo>> configFiles = GetFilesFromConfig(m_content, false);
+   ConfigEntry *fileRoot = config->findEntry(L"files");
    if (fileRoot != nullptr)
    {
-      unique_ptr<ObjectArray<ConfigEntry>> files = fileRoot->getSubEntries(_T("file"));
-      for (int i = 0; i < files->size(); i++)
+      uint64_t maxFileSize = ConfigReadULong(L"AgentPolicy.MaxFileSize", 128 * 1024 * 1024);
+      unique_ptr<ObjectArray<ConfigEntry>> files = fileRoot->getSubEntries(L"file");
+      for(int i = 0; i < files->size(); i++)
       {
-         ConfigEntry* file = files->get(i);
-         String fileName(file->getSubEntryValue(_T("name")));
-         StringBuffer fullPath = g_netxmsdDataDir;
-         fullPath.append(DDIR_FILES FS_PATH_SEPARATOR);
-         fullPath.append(fileName);
-         int fd = _topen(fullPath.cstr(), O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
-         if (fd != -1)
-         {
-            char *base64Data = MBStringFromWideString(file->getSubEntryValue(L"data"));
-            uLongf fileSize = static_cast<uLongf>(file->getSubEntryValueAsUInt64(L"size"));
-            char* fileContent;
-            size_t decodedFileSize;
-            base64_decode_alloc(base64Data, strlen(base64Data), &fileContent, &decodedFileSize);
-            MemFree(base64Data);
+         ConfigEntry *file = files->get(i);
 
-            if (file->getSubEntryValueAsBoolean(_T("compression")))
-            {
-               auto buffer = MemAllocArrayNoInit<char>(fileSize);
-               uncompress(reinterpret_cast<BYTE*>(buffer), &fileSize, (BYTE *)fileContent, static_cast<uLong>(decodedFileSize));
-               MemFree(fileContent);
-               fileContent = buffer;
-            }
+         const wchar_t *hashText = file->getSubEntryValue(L"hash", 0, L"");
+         BYTE hash[MD5_DIGEST_SIZE];
+         bool validHash = (wcslen(hashText) == MD5_DIGEST_SIZE * 2) && (StrToBin(hashText, hash, MD5_DIGEST_SIZE) == MD5_DIGEST_SIZE);
 
-            bool success = (_write(fd, fileContent, fileSize) == static_cast<ssize_t>(fileSize));
-            _close(fd);
-            MemFree(fileContent);
-
-            if (success)
-            {
-               BYTE originalHash[MD5_DIGEST_SIZE];
-               memset(originalHash, 0, sizeof(originalHash));
-               StrToBin(file->getSubEntryValue(_T("hash"), 0, _T("")), originalHash, MD5_DIGEST_SIZE);
-               BYTE calculatedHash[MD5_DIGEST_SIZE];
-               CalculateFileMD5Hash(fullPath, calculatedHash);
-               if (memcmp(originalHash, calculatedHash, MD5_DIGEST_SIZE))
-               {
-                  context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Hash mismatch for file %s while importing policy %s in template %s [%u]"),
-                     fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId);
-                  _tremove(fullPath.cstr());
-               }
-            }
-            else
-            {
-               context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Cannot write to file %s while importing policy %s in template %s [%u] (%s)"),
-                  fileName.cstr(), m_name, GetObjectName(m_ownerId, _T("Unknown")), m_ownerId, _tcserror(errno));
-               _tremove(fullPath.cstr());
-            }
-         }
-         String guid = fileName.substring(13, -1);
-         for (int i = 0; i < configFiles->size(); i++)
-         {
-            if (configFiles->get(i)->guid.equals(uuid::parse(guid)))
-            {
-               configFiles->remove(i);
-               break;
-            }
-         }
+         char *base64Data = MBStringFromWideString(file->getSubEntryValue(L"data", 0, L""));
+         ImportPolicyFile(file->getSubEntryValue(L"name", 0, L""), base64Data, file->getSubEntryValueAsUInt64(L"size"),
+            file->getSubEntryValueAsBoolean(L"compression"), validHash ? hash : nullptr, maxFileSize, configFiles.get(), context, m_name);
+         MemFree(base64Data);
       }
    }
+   for(int i = 0; i < configFiles->size(); i++)
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"File with GUID %s missing from policy %s", configFiles->get(i)->guid.toString().cstr(), m_name);
+}
 
-   for (int i = 0; i < configFiles->size(); i++)
+/**
+ * Loads files in base64 coding from imported config
+ */
+void FileDeliveryPolicy::importAdditionalData(json_t *data, ImportContext *context)
+{
+   json_t *files = json_object_get(data, "files");
+   if (!json_is_array(files))
+      return;
+
+   unique_ptr<ObjectArray<FileInfo>> configFiles = GetFilesFromConfig(m_content, false);
+   uint64_t maxFileSize = ConfigReadULong(L"AgentPolicy.MaxFileSize", 128 * 1024 * 1024);
+   size_t index;
+   json_t *file;
+   json_array_foreach(files, index, file)
    {
-      context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("File with GUID %s missing from policy %s"), configFiles->get(i)->guid.toString().cstr(), m_name);
+      if (!json_is_object(file))
+         continue;
+
+      // Hash is exported as base64 encoded MD5 digest (24 characters)
+      const char *hashText = json_object_get_string_utf8(file, "hash", "");
+      char hash[MD5_DIGEST_SIZE + 2];
+      size_t hashSize = sizeof(hash);
+      bool validHash = (strlen(hashText) == 24) && base64_decode(hashText, 24, hash, &hashSize) && (hashSize == MD5_DIGEST_SIZE);
+
+      ImportPolicyFile(json_object_get_string(file, "name", L""), json_object_get_string_utf8(file, "data", ""), json_object_get_uint64(file, "size", 0),
+         json_object_get_boolean(file, "compression", false), validHash ? reinterpret_cast<BYTE*>(hash) : nullptr, maxFileSize, configFiles.get(), context, m_name);
    }
+   for(int i = 0; i < configFiles->size(); i++)
+      context->log(NXLOG_WARNING, L"ImportFileData()", L"File with GUID %s missing from policy %s", configFiles->get(i)->guid.toString().cstr(), m_name);
 }
 
 /**
@@ -705,128 +794,6 @@ void FileDeliveryPolicy::exportAdditionalData(json_t *root, StringList *errors) 
       json_object_set_new(root, "files", files);
    else
       json_decref(files);
-}
-
-/**
- * Loads files in base64 coding from imported config
- */
-void FileDeliveryPolicy::importAdditionalData(json_t *data, ImportContext *context)
-{
-   json_t *files = json_object_get(data, "files");
-   if (json_is_array(files))
-   {
-      unique_ptr<ObjectArray<FileInfo>> configFiles = GetFilesFromConfig(m_content);
-      
-      size_t arraySize = json_array_size(files);
-      for (size_t i = 0; i < arraySize; i++)
-      {
-         json_t *file = json_array_get(files, i);
-         if (!json_is_object(file))
-            continue;
-            
-         const char *fileName = json_object_get_string_utf8(file, "name", "");
-         if (*fileName == 0)
-            continue;
-            
-         StringBuffer fullPath = g_netxmsdDataDir;
-         fullPath.append(DDIR_FILES FS_PATH_SEPARATOR);
-         fullPath.append(fileName);
-         
-         int fd = _topen(fullPath.cstr(), O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
-         if (fd != -1)
-         {
-            const char *base64Data = json_object_get_string_utf8(file, "data", "");
-            uint64_t fileSize = json_object_get_uint64(file, "size", 0);
-            bool compressed = json_object_get_boolean(file, "compression", false);
-            
-            char* fileContent;
-            size_t decodedFileSize;
-            if (base64_decode_alloc(base64Data, strlen(base64Data), &fileContent, &decodedFileSize) == 0)
-            {
-               if (compressed && fileSize > 0)
-               {
-                  auto buffer = MemAllocArrayNoInit<char>(fileSize);
-                  uLongf uncompressedSize = static_cast<uLongf>(fileSize);
-                  if (uncompress(reinterpret_cast<BYTE*>(buffer), &uncompressedSize, reinterpret_cast<BYTE*>(fileContent), static_cast<uLong>(decodedFileSize)) == Z_OK)
-                  {
-                     MemFree(fileContent);
-                     fileContent = buffer;
-                     decodedFileSize = uncompressedSize;
-                  }
-                  else
-                  {
-                     MemFree(buffer);
-                     MemFree(fileContent);
-                     context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Failed to decompress file %hs while importing policy %s"), fileName, m_name);
-                     continue;  // Skip to next file since this one failed
-                  }
-               }
-               
-               bool success = (_write(fd, fileContent, static_cast<unsigned int>(decodedFileSize)) == static_cast<ssize_t>(decodedFileSize));
-               _close(fd);
-               
-               if (success)
-               {
-                  // Verify hash if provided
-                  const char *expectedHash = json_object_get_string_utf8(file, "hash", nullptr);
-                  if (expectedHash != nullptr && strlen(expectedHash) == MD5_DIGEST_SIZE * 2)
-                  {
-                     BYTE originalHash[MD5_DIGEST_SIZE];
-                     TCHAR *hashString = TStringFromUTF8String(expectedHash);
-                     StrToBin(hashString, originalHash, MD5_DIGEST_SIZE);
-                     MemFree(hashString);
-                     BYTE calculatedHash[MD5_DIGEST_SIZE];
-                     CalculateFileMD5Hash(fullPath, calculatedHash);
-                     if (memcmp(originalHash, calculatedHash, MD5_DIGEST_SIZE))
-                     {
-                        context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Hash mismatch for file %hs while importing policy %s"), fileName, m_name);
-                        _tremove(fullPath.cstr());
-                     }
-                  }
-               }
-               else
-               {
-                  context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Cannot write to file %hs while importing policy %s (%s)"), fileName, m_name, _tcserror(errno));
-                  _tremove(fullPath.cstr());
-               }
-               
-               MemFree(fileContent);
-            }
-            else
-            {
-               context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Cannot decode base64 data for file %hs while importing policy %s"), fileName, m_name);
-               if (fileContent != nullptr)
-                  MemFree(fileContent);
-               _close(fd);
-               _tremove(fullPath.cstr());
-            }
-         }
-         else
-         {
-            context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("Cannot create file %hs while importing policy %s (%s)"), fileName, m_name, _tcserror(errno));
-         }
-         
-         // Remove from expected files list
-         if (strlen(fileName) > 13) // "FileDelivery-" prefix
-         {
-            String guid(&fileName[13], "utf8");
-            for (int j = 0; j < configFiles->size(); j++)
-            {
-               if (configFiles->get(j)->guid.equals(uuid::parse(guid)))
-               {
-                  configFiles->remove(j);
-                  break;
-               }
-            }
-         }
-      }
-      
-      // Warn about missing files
-      for (int i = 0; i < configFiles->size(); i++)
-      {
-         context->log(NXLOG_WARNING, _T("ImportFileData()"), _T("File with GUID %s missing from policy %s"), configFiles->get(i)->guid.toString().cstr(), m_name);
-      }
-   }
 }
 
 /**
