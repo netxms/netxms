@@ -86,9 +86,10 @@ static void FillPoint(ForecastPoint *p, json_t *data)
 }
 
 /**
- * Parse a Locationforecast 2.0 response. The document is a single timeseries;
- * the entry covering the present moment becomes the current snapshot and the
- * whole series (trimmed to the configured horizon) becomes the forecast curve.
+ * Parse a Locationforecast 2.0 response. The document is a single timeseries
+ * which becomes the forecast curve, trimmed to the configured horizon. It has
+ * no separate current-conditions block, so the current snapshot is left null
+ * and the location derives it from the curve.
  */
 bool MetNoProvider::parseForecastResponse(const char *data, size_t len, int forecastDays, WeatherSnapshot **current, ForecastCurve **forecast) const
 {
@@ -112,12 +113,9 @@ bool MetNoProvider::parseForecastResponse(const char *data, size_t len, int fore
       return false;
    }
 
-   time_t now = time(nullptr);
-   time_t horizon = now + static_cast<time_t>(forecastDays) * 86400;
+   time_t horizon = time(nullptr) + static_cast<time_t>(forecastDays) * 86400;
 
    ForecastCurve *curve = new ForecastCurve();
-   ForecastPoint currentPoint;
-   bool currentValid = false;
    size_t count = json_array_size(timeseries);
    for(size_t i = 0; i < count; i++)
    {
@@ -131,42 +129,22 @@ bool MetNoProvider::parseForecastResponse(const char *data, size_t len, int fore
       if (!json_is_object(entryData))
          continue;
 
+      if (targetTime > horizon)
+         continue;
+
       ForecastPoint p;
       p.targetTime = targetTime;
       FillPoint(&p, entryData);
-
-      // The last entry at or before now is the closest thing to an observation;
-      // if the series starts in the future, its first entry is used instead.
-      if ((targetTime <= now) || !currentValid)
-      {
-         currentPoint = p;
-         currentValid = true;
-      }
-
-      if (targetTime <= horizon)
-         curve->points.add(&p);
+      curve->points.add(&p);
    }
 
    json_decref(root);
 
-   if (currentValid)
+   if (curve->points.size() == 0)
    {
-      WeatherSnapshot *s = MemAllocStruct<WeatherSnapshot>();
-      s->observationTime = currentPoint.targetTime;
-      s->temperature = currentPoint.temperature;
-      s->cloudCover = currentPoint.cloudCover;
-      s->shortwaveRadiation = currentPoint.shortwaveRadiation;
-      s->directRadiation = currentPoint.directRadiation;
-      s->windSpeed = currentPoint.windSpeed;
-      s->relativeHumidity = currentPoint.relativeHumidity;
-      s->precipitation = currentPoint.precipitation;
-      *current = s;
-   }
-
-   if (curve->points.size() > 0)
-      *forecast = curve;
-   else
       delete curve;
-
-   return (*current != nullptr) || (*forecast != nullptr);
+      return false;
+   }
+   *forecast = curve;
+   return true;
 }

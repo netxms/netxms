@@ -110,3 +110,21 @@ time_t ParseIsoTimestamp(const char *str)
    t.tm_isdst = 0;
    return timegm(&t) - offset;
 }
+
+/**
+ * Select the forecast point that stands for the present moment: the last point
+ * at or before now. The curve is sorted by target time, so the scan stops at the
+ * first point in the future.
+ */
+const ForecastPoint *SelectCurrentPoint(const ForecastCurve *curve, time_t now)
+{
+   const ForecastPoint *selected = nullptr;
+   for(int i = 0; i < curve->points.size(); i++)
+   {
+      const ForecastPoint *p = curve->points.get(i);
+      if (p->targetTime > now)
+         break;
+      selected = p;
+   }
+   return selected;
+}
