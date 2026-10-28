@@ -50,12 +50,16 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.ai.AiChatResponse;
+import org.netxms.client.ai.AiContextUsage;
 import org.netxms.client.ai.AiFunctionCall;
 import org.netxms.client.ai.AiQuestion;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -66,6 +70,7 @@ import org.netxms.nxmc.modules.ai.AiChatContext;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.ImageCache;
@@ -96,6 +101,8 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
    private Browser chatBrowser;
    private CLabel contextName;
    private Text chatInput;
+   private Label contextUsageLabel;
+   private ProgressBar contextUsageGauge;
    private StringBuilder chatContent;
    private AiQuestion pendingQuestion;
    private String currentMessageId;
@@ -320,6 +327,23 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       commandArea.setLayout(layout);
       commandArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
+      Composite contextUsageArea = new Composite(commandArea, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.numColumns = 2;
+      contextUsageArea.setLayout(layout);
+      contextUsageArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
+      contextUsageGauge = new ProgressBar(contextUsageArea, SWT.NONE);
+      contextUsageGauge.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      contextUsageGauge.setMinimum(0);
+      contextUsageGauge.setMaximum(100);
+      contextUsageGauge.setSelection(0);
+
+      contextUsageLabel = new Label(contextUsageArea, SWT.RIGHT);
+      contextUsageLabel.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, false, false));
+
       chatInput = new Text(commandArea, SWT.NONE);
       chatInput.setMessage(i18n.tr("Write a message..."));
       chatInput.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -337,7 +361,11 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
                sendQuery();
          }
       });
+
       commandArea.setBackground(chatInput.getBackground());
+      contextUsageArea.setBackground(commandArea.getBackground());
+      contextUsageGauge.setBackground(contextUsageArea.getBackground());
+      contextUsageLabel.setBackground(contextUsageArea.getBackground());
 
       if (withContext)
       {
@@ -349,7 +377,7 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
          layout.numColumns = 2;
          contextArea.setLayout(layout);
          contextArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-         contextArea.moveAbove(chatInput);
+         contextArea.moveAbove(contextUsageArea);
 
          Label contextLabel = new Label(contextArea, SWT.NONE);
          contextLabel.setBackground(commandArea.getBackground());
@@ -423,7 +451,12 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       }
       else if (n.getCode() == SessionNotification.AI_FUNCTION_CALL)
       {
-         getDisplay().asyncExec(() -> updateFunctionStatus((AiFunctionCall)n.getObject()));
+         getDisplay().asyncExec(() -> {
+            AiFunctionCall functionCall = (AiFunctionCall)n.getObject();
+            if (functionCall.getContextUsage() != null)
+               updateContextUsage(functionCall.getContextUsage());
+            updateFunctionStatus(functionCall);
+         });
       }
    }
 
@@ -492,10 +525,11 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
          {
             try
             {
-               final String answer = session.updateAiAssistantChat(chatId, message, contextString);
+               final AiChatResponse response = session.updateAiAssistantChat(chatId, message, contextString);
                runInUIThread(() -> {
-                  updateMessage(currentMessageId, answer);
+                  updateMessage(currentMessageId, response.getText());
                   currentMessageId = null;
+                  updateContextUsage(response.getContextUsage());
                });
             }
             catch(Exception e)
@@ -760,6 +794,62 @@ public class AiAssistantChatWidget extends Composite implements SessionListener
       initializeHtmlTemplate();
       addAssistantMessage("Hello! I can help you with setting up your monitoring environment, day-to-day operations, and analyzing problems. Feel free to ask any questions!");
       lastSentContext = null; // Force context resend on next query
+      updateContextUsage(null);
+   }
+
+   /**
+    * Update context window usage indicator.
+    *
+    * @param usage context window usage (null to clear indicator)
+    */
+   private void updateContextUsage(AiContextUsage usage)
+   {
+      if (contextUsageLabel.isDisposed())
+         return;
+
+      if (usage == null)
+      {
+         contextUsageLabel.setText("");
+         contextUsageLabel.setToolTipText(null);
+         contextUsageLabel.setForeground(null);
+         contextUsageGauge.setSelection(0);
+      }
+      else if (usage.isWindowKnown())
+      {
+         int percentage = usage.getUsagePercentage();
+         contextUsageLabel.setText(Integer.toString(percentage) + "%");
+         contextUsageLabel.setToolTipText(i18n.tr("Context window usage: {0} of {1} tokens", formatTokenCount(usage.getTokens()), formatTokenCount(usage.getWindow())));
+         if (percentage >= 90)
+            contextUsageLabel.setForeground(StatusDisplayInfo.getStatusTextColor(ObjectStatus.CRITICAL));
+         else if (percentage >= 75)
+            contextUsageLabel.setForeground(StatusDisplayInfo.getStatusTextColor(ObjectStatus.MAJOR));
+         else
+            contextUsageLabel.setForeground(null);
+         contextUsageGauge.setSelection(percentage);
+      }
+      else
+      {
+         contextUsageLabel.setText(formatTokenCount(usage.getTokens()));
+         contextUsageLabel.setToolTipText(i18n.tr("Context window usage: {0} tokens (context window size of the model is unknown)", formatTokenCount(usage.getTokens())));
+         contextUsageLabel.setForeground(null);
+         contextUsageGauge.setSelection(0);
+      }
+      contextUsageLabel.getParent().layout(true, true);
+   }
+
+   /**
+    * Format token count in compact form (1234 -> 1.2k, 1234567 -> 1.2M).
+    *
+    * @param tokens token count
+    * @return formatted token count
+    */
+   private static String formatTokenCount(long tokens)
+   {
+      if (tokens < 1000)
+         return Long.toString(tokens);
+      if (tokens < 1000000)
+         return String.format("%.1fk", tokens / 1000.0);
+      return String.format("%.1fM", tokens / 1000000.0);
    }
 
    /**

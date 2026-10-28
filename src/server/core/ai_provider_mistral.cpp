@@ -46,8 +46,10 @@ MistralProvider::~MistralProvider()
  * "Authorization: Bearer <token>" header. Mistral returns:
  *   { "choices": [{ "message": { "role": ..., "content": ... } }] }
  */
-json_t *MistralProvider::chat(const char *systemPrompt, json_t *messages, json_t *tools)
+json_t *MistralProvider::chat(const char *systemPrompt, json_t *messages, json_t *tools, LLMTokenUsage *callUsage)
 {
+   updateModelLimits();
+
    json_t *request = buildBaseRequest();
 
    // Build messages array with system prompt prepended
@@ -72,7 +74,7 @@ json_t *MistralProvider::chat(const char *systemPrompt, json_t *messages, json_t
       json_object_set(request, "tools", tools);
    }
 
-   json_t *response = doHttpRequest(request);
+   json_t *response = doHttpRequest(m_config.url, request);
    json_decref(request);
 
    if (response == nullptr)
@@ -87,11 +89,11 @@ json_t *MistralProvider::chat(const char *systemPrompt, json_t *messages, json_t
    {
       int64_t inputTokens = json_integer_value(json_object_get(usage, "prompt_tokens"));
       int64_t outputTokens = json_integer_value(json_object_get(usage, "completion_tokens"));
-      recordUsage(inputTokens, outputTokens);
+      recordUsage(inputTokens, outputTokens, callUsage);
    }
    else
    {
-      recordUsage(0, 0);
+      recordUsage(0, 0, callUsage);
    }
 
    // OpenAI format: choices[0].message
@@ -115,4 +117,27 @@ json_t *MistralProvider::chat(const char *systemPrompt, json_t *messages, json_t
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Property \"choices[0].message\" is missing in Mistral response"));
    json_decref(response);
    return nullptr;
+}
+
+/**
+ * Retrieve model limits using /models/{model} endpoint (context window is reported as max_context_length)
+ */
+bool MistralProvider::fetchModelLimits(int *contextWindow, int *maxOutputTokens)
+{
+   std::string path("/models/");
+   path.append(m_config.model);
+   std::string url = buildEndpointUrl("/chat/completions", path.c_str());
+   if (url.empty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot derive model information URL from chat URL %hs", m_config.url);
+      return true;
+   }
+
+   json_t *response = doHttpRequest(url.c_str(), nullptr);
+   if (response == nullptr)
+      return false;
+
+   *contextWindow = getContextWindowFromModelInfo(response);
+   json_decref(response);
+   return true;
 }

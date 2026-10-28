@@ -28,6 +28,7 @@ public class AiFunctionCall
 {
    private long chatId;
    private String functionName;
+   private AiContextUsage contextUsage;
 
    /**
     * Create function call object from NXCP message.
@@ -38,6 +39,7 @@ public class AiFunctionCall
    {
       chatId = msg.getFieldAsInt64(NXCPCodes.VID_CHAT_ID);
       functionName = msg.getFieldAsString(NXCPCodes.VID_AI_FUNCTION_NAME);
+      contextUsage = AiContextUsage.createFromMessage(msg);
    }
 
    /**
@@ -48,6 +50,16 @@ public class AiFunctionCall
    public long getChatId()
    {
       return chatId;
+   }
+
+   /**
+    * Get context window usage at the moment of this function call.
+    *
+    * @return context window usage or null if not provided by server
+    */
+   public AiContextUsage getContextUsage()
+   {
+      return contextUsage;
    }
 
    /**

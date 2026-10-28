@@ -540,6 +540,24 @@ static const TCHAR *GetProviderTypeName(LLMProviderType type)
 }
 
 /**
+ * Get name of context window size source
+ */
+static const char *GetContextWindowSourceName(LLMContextWindowSource source)
+{
+   switch(source)
+   {
+      case LLMContextWindowSource::CONFIGURATION:
+         return "configuration";
+      case LLMContextWindowSource::PROVIDER_API:
+         return "provider API";
+      case LLMContextWindowSource::DEFAULT:
+         return "default";
+      default:
+         return "unknown";
+   }
+}
+
+/**
  * Fill table with AI provider information
  */
 void GetAIProviderTable(Table *table)
@@ -1620,6 +1638,8 @@ void Chat::clear()
    json_decref(m_messages);
    m_messages = json_array();
    m_lastUpdateTime = time(nullptr);
+
+   SetAttributeWithLock(m_contextUsage, AIContextUsage(), m_asyncMutex);
 }
 
 /**
@@ -1703,7 +1723,7 @@ AIGuardCheckResult RunAIGuardClassifier(const char *classifierPrompt, const char
    json_array_append_new(messages, userMessage);
 
    // Call guard provider with no tools
-   json_t *response = guardProvider->chat(classifierPrompt, messages, nullptr);
+   json_t *response = guardProvider->chat(classifierPrompt, messages, nullptr, nullptr);
    json_decref(messages);
 
    if (response == nullptr)
@@ -1780,11 +1800,12 @@ static AIGuardCheckResult CheckPromptInjection(const char *prompt)
 /**
  * Send function call notification to user
  */
-static void SendFunctionCallNotification(uint32_t userId, uint32_t chatId, const char *functionName)
+static void SendFunctionCallNotification(uint32_t userId, uint32_t chatId, const char *functionName, const AIContextUsage& contextUsage)
 {
    NXCPMessage msg(CMD_AI_FUNCTION_CALL, 0);
    msg.setField(VID_CHAT_ID, chatId);
    msg.setFieldFromUtf8String(VID_AI_FUNCTION_NAME, functionName);
+   contextUsage.fillMessage(&msg);
 
    EnumerateClientSessions(
       [userId, &msg](ClientSession *session) -> void
@@ -1856,7 +1877,8 @@ char *Chat::sendRequest(const char *prompt, const char *context)
    while(iterations-- > 0)
    {
       // Provider handles request building and response parsing
-      json_t *message = provider->chat(systemPrompt.c_str(), m_messages, m_functionDeclarations);
+      LLMTokenUsage callUsage;
+      json_t *message = provider->chat(systemPrompt.c_str(), m_messages, m_functionDeclarations, &callUsage);
       m_lastUpdateTime = time(nullptr);
 
       if (message == nullptr)
@@ -1864,6 +1886,15 @@ char *Chat::sendRequest(const char *prompt, const char *context)
          m_lastError = "LLM request failed";
          s_currentChat = nullptr;
          return nullptr;
+      }
+
+      // Whole conversation is sent on each call, so input and output of the last call is what occupies the context window
+      if (callUsage.inputTokens > 0)
+      {
+         AIContextUsage contextUsage;
+         contextUsage.tokens = callUsage.inputTokens + callUsage.outputTokens;
+         contextUsage.window = provider->getContextWindow();
+         SetAttributeWithLock(m_contextUsage, contextUsage, m_asyncMutex);
       }
 
       if (json_is_object(message))
@@ -1893,7 +1924,7 @@ char *Chat::sendRequest(const char *prompt, const char *context)
                   nxlog_debug_tag(DEBUG_TAG, 5, L"LLM function call requested: %hs", name);
                   if (m_isInteractive)
                   {
-                     SendFunctionCallNotification(m_userId, m_id, name);
+                     SendFunctionCallNotification(m_userId, m_id, name, getContextUsage());
                   }
                   std::string functionResult = callFunction(name, json_object_get(function, "arguments"));
                   if (!functionResult.empty())
@@ -2767,6 +2798,15 @@ void ShowAIProviders(ServerConsole *console)
       ConsolePrintf(console, L"URL             : %hs\n", p->getUrl());
       ConsolePrintf(console, L"Verify SSL      : %s\n", p->isSSLVerificationEnabled() ? L"yes" : L"no");
 
+      LLMContextWindowSource contextWindowSource;
+      int contextWindow = p->getContextWindow(&contextWindowSource);
+      if (contextWindow > 0)
+         ConsolePrintf(console, L"Context window  : %d (%hs)\n", contextWindow, GetContextWindowSourceName(contextWindowSource));
+      else
+         ConsolePrintf(console, L"Context window  : unknown%s\n", p->isModelLimitsRequested() ? L"" : L" (model limits not requested yet)");
+      if (p->getModelMaxOutputTokens() > 0)
+         ConsolePrintf(console, L"Max output      : %d\n", p->getModelMaxOutputTokens());
+
       StringList *slots = providerSlots[p];
       StringBuffer slotList;
       for (int j = 0; j < slots->size(); j++)
@@ -2841,6 +2881,10 @@ static std::string F_GetAIProviderStats(json_t *arguments, uint32_t userId)
       wchar_to_utf8(GetProviderTypeName(provider->getType()), -1, typeName, sizeof(typeName));
       json_object_set_new(entry, "type", json_string(typeName));
       json_object_set_new(entry, "model", json_string(provider->getModelName()));
+      LLMContextWindowSource contextWindowSource;
+      int contextWindow = provider->getContextWindow(&contextWindowSource);
+      json_object_set_new(entry, "contextWindow", (contextWindow > 0) ? json_integer(contextWindow) : json_null());
+      json_object_set_new(entry, "contextWindowSource", json_string(GetContextWindowSourceName(contextWindowSource)));
       json_object_set_new(entry, "totalRequests", json_integer(provider->getTotalRequests()));
       json_object_set_new(entry, "inputTokens", json_integer(provider->getTotalInputTokens()));
       json_object_set_new(entry, "outputTokens", json_integer(provider->getTotalOutputTokens()));
@@ -2969,7 +3013,12 @@ bool InitAIAssistant()
 
          config.temperature = entry->getSubEntryValueAsDouble(_T("Temperature"), 0, -1);
          config.topP = entry->getSubEntryValueAsDouble(_T("TopP"), 0, -1);
-         config.contextSize = entry->getSubEntryValueAsInt(_T("ContextSize"), 0, 32768);
+         config.contextSize = entry->getSubEntryValueAsInt(_T("ContextSize"), 0, 0);
+         if (config.contextSize < 0)
+            config.contextSize = 0;
+         config.maxOutputTokens = entry->getSubEntryValueAsInt(_T("MaxOutputTokens"), 0, 32768);
+         if (config.maxOutputTokens < 1)
+            config.maxOutputTokens = 32768;
          config.timeout = entry->getSubEntryValueAsInt(_T("Timeout"), 0, 180);
          config.verifySSL = entry->getSubEntryValueAsBoolean(_T("VerifySSL"), true);
 
@@ -3106,7 +3155,7 @@ bool InitAIAssistant()
 
    RegisterAIAssistantFunction(
       "get-ai-provider-stats",
-      "Get list of configured AI/LLM providers with their real-time usage statistics (requests, input/output tokens, failures). "
+      "Get list of configured AI/LLM providers with their context window size and real-time usage statistics (requests, input/output tokens, failures). "
       "Counters are cumulative since server start and change with every API call. "
       "Always call this function again when the user asks for current or updated numbers - never reuse previous results.",
       {},

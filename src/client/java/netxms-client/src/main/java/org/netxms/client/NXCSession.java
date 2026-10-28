@@ -80,6 +80,7 @@ import org.netxms.client.agent.config.AgentConfigurationHandle;
 import org.netxms.client.ai.AiAgentTask;
 import org.netxms.client.ai.AiAssistantFunction;
 import org.netxms.client.ai.AiAssistantSkill;
+import org.netxms.client.ai.AiChatResponse;
 import org.netxms.client.ai.AiDisabledItem;
 import org.netxms.client.ai.AiFunctionCall;
 import org.netxms.client.ai.AiMessage;
@@ -17756,11 +17757,11 @@ public class NXCSession
     * @param chatId chat ID
     * @param message new user message
     * @param context additional context information
-    * @return assistant response
+    * @return assistant response (response text and context window usage)
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String updateAiAssistantChat(long chatId, String message, String context) throws IOException, NXCException
+   public AiChatResponse updateAiAssistantChat(long chatId, String message, String context) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_AI_ASSISTANT);
       msg.setFieldUInt32(NXCPCodes.VID_CHAT_ID, chatId);
@@ -17768,7 +17769,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_AI_QUESTION_CONTEXT, context);
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId(), AI_CHAT_RESPONSE_TIMEOUT);
-      return response.getFieldAsString(NXCPCodes.VID_MESSAGE);
+      return new AiChatResponse(response);
    }
 
    /**

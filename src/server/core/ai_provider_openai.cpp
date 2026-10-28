@@ -44,8 +44,10 @@ OpenAIProvider::~OpenAIProvider()
  * Send chat request to OpenAI-compatible API
  * OpenAI API returns: { "choices": [{ "message": { "role": ..., "content": ... } }] }
  */
-json_t *OpenAIProvider::chat(const char *systemPrompt, json_t *messages, json_t *tools)
+json_t *OpenAIProvider::chat(const char *systemPrompt, json_t *messages, json_t *tools, LLMTokenUsage *callUsage)
 {
+   updateModelLimits();
+
    json_t *request = buildBaseRequest();
 
    // Build messages array with system prompt prepended
@@ -70,7 +72,7 @@ json_t *OpenAIProvider::chat(const char *systemPrompt, json_t *messages, json_t 
       json_object_set(request, "tools", tools);
    }
 
-   json_t *response = doHttpRequest(request);
+   json_t *response = doHttpRequest(m_config.url, request);
    json_decref(request);
 
    if (response == nullptr)
@@ -85,11 +87,11 @@ json_t *OpenAIProvider::chat(const char *systemPrompt, json_t *messages, json_t 
    {
       int64_t inputTokens = json_integer_value(json_object_get(usage, "prompt_tokens"));
       int64_t outputTokens = json_integer_value(json_object_get(usage, "completion_tokens"));
-      recordUsage(inputTokens, outputTokens);
+      recordUsage(inputTokens, outputTokens, callUsage);
    }
    else
    {
-      recordUsage(0, 0);
+      recordUsage(0, 0, callUsage);
    }
 
    // OpenAI format: choices[0].message
@@ -113,4 +115,39 @@ json_t *OpenAIProvider::chat(const char *systemPrompt, json_t *messages, json_t 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Property \"choices[0].message\" is missing in OpenAI response"));
    json_decref(response);
    return nullptr;
+}
+
+/**
+ * Retrieve model limits from model list (/models endpoint). OpenAI API itself does not report
+ * context window size, but many OpenAI-compatible servers (vLLM, llama.cpp, OpenRouter, LM Studio) do.
+ * Model list is used instead of /models/{model} because not all compatible servers implement the latter.
+ */
+bool OpenAIProvider::fetchModelLimits(int *contextWindow, int *maxOutputTokens)
+{
+   std::string url = buildEndpointUrl("/chat/completions", "/models");
+   if (url.empty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot derive model list URL from chat URL %hs", m_config.url);
+      return true;
+   }
+
+   json_t *response = doHttpRequest(url.c_str(), nullptr);
+   if (response == nullptr)
+      return false;
+
+   json_t *models = json_object_get(response, "data");
+   size_t i;
+   json_t *model;
+   json_array_foreach(models, i, model)
+   {
+      const char *id = json_object_get_string_utf8(model, "id", "");
+      if (!strcmp(id, m_config.model))
+      {
+         *contextWindow = getContextWindowFromModelInfo(model);
+         break;
+      }
+   }
+
+   json_decref(response);
+   return true;
 }

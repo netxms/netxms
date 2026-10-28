@@ -49,7 +49,8 @@ struct NXCORE_EXPORTABLE LLMProviderConfig
    char authToken[256];
    double temperature;    // -1 = not set
    double topP;           // -1 = not set
-   int contextSize;
+   int contextSize;       // context window size in tokens (0 = detect from provider API)
+   int maxOutputTokens;   // maximum number of tokens in response for providers that require explicit limit
    int timeout;           // seconds
    bool verifySSL;        // verify peer certificate for HTTPS connections
 
@@ -61,10 +62,22 @@ struct NXCORE_EXPORTABLE LLMProviderConfig
       authToken[0] = 0;
       temperature = -1.0;
       topP = -1.0;
-      contextSize = 32768;
+      contextSize = 0;
+      maxOutputTokens = 32768;
       timeout = 180;
       verifySSL = true;
    }
+};
+
+/**
+ * Source of LLM provider context window size
+ */
+enum class LLMContextWindowSource
+{
+   UNKNOWN = 0,         // context window size is not known
+   CONFIGURATION = 1,   // set explicitly in provider configuration
+   PROVIDER_API = 2,    // reported by provider API for configured model
+   DEFAULT = 3          // provider-specific default applied by NetXMS
 };
 
 /**
@@ -103,8 +116,31 @@ protected:
    VolatileCounter64 m_totalOutputTokens;
    VolatileCounter64 m_failedRequests;
 
-   // Shared HTTP handling
-   json_t *doHttpRequest(json_t *requestData);
+   // Model limits reported by provider API
+   Mutex m_modelLimitsMutex;
+   time_t m_modelLimitsRequestTime;   // time of last retrieval attempt (0 = never attempted)
+   bool m_modelLimitsRetrieved;
+   int m_modelContextWindow;          // 0 if not reported
+   int m_modelMaxOutputTokens;        // 0 if not reported
+
+   // Shared HTTP handling - sends POST request with given JSON document or GET request if document is null
+   json_t *doHttpRequest(const char *url, json_t *requestData);
+
+   // Build URL of another API endpoint by replacing given suffix of configured chat endpoint URL
+   std::string buildEndpointUrl(const char *chatPathSuffix, const char *path) const;
+
+   // Retrieve model limits from provider API. Returns false if API request failed (will be retried later).
+   // Output values should be left as 0 if not reported by provider.
+   virtual bool fetchModelLimits(int *contextWindow, int *maxOutputTokens);
+
+   // Context window size used when it is neither configured nor reported by provider API (0 = unknown)
+   virtual int getDefaultContextWindow() const { return 0; }
+
+   // Retrieve model limits from provider API if not retrieved yet
+   void updateModelLimits();
+
+   // Get context window size from model description object (checks fields used by different OpenAI-compatible servers)
+   static int getContextWindowFromModelInfo(json_t *model);
 
    // Build base request with model and options
    json_t *buildBaseRequest();
@@ -112,8 +148,8 @@ protected:
    // Build HTTP headers for the request (can be overridden by subclasses)
    virtual struct curl_slist *buildHttpHeaders();
 
-   // Record token usage from a successful API call
-   void recordUsage(int64_t inputTokens, int64_t outputTokens);
+   // Record token usage from a successful API call (also stored into callUsage if it is not null)
+   void recordUsage(int64_t inputTokens, int64_t outputTokens, LLMTokenUsage *callUsage);
 
    // Record a failed API call
    void recordFailure();
@@ -122,8 +158,8 @@ public:
    LLMProvider(const LLMProviderConfig& config);
    virtual ~LLMProvider();
 
-   // Core API - subclasses implement request/response formatting
-   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) = 0;
+   // Core API - subclasses implement request/response formatting. Token usage of this call is stored into usage if it is not null.
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools, LLMTokenUsage *usage) = 0;
 
    // Capabilities
    virtual bool supportsToolCalling() const { return true; }
@@ -132,7 +168,9 @@ public:
    const TCHAR *getName() const { return m_config.name.cstr(); }
    const char *getModelName() const { return m_config.model; }
    const char *getUrl() const { return m_config.url; }
-   int getContextSize() const { return m_config.contextSize; }
+   int getContextWindow(LLMContextWindowSource *source = nullptr) const;
+   int getModelMaxOutputTokens() const { return m_modelMaxOutputTokens; }
+   bool isModelLimitsRequested() const { return m_modelLimitsRequestTime != 0; }
    double getTemperature() const { return m_config.temperature; }
    double getTopP() const { return m_config.topP; }
    LLMProviderType getType() const { return m_config.type; }
@@ -148,11 +186,15 @@ public:
  */
 class NXCORE_EXPORTABLE OllamaProvider : public LLMProvider
 {
+protected:
+   virtual bool fetchModelLimits(int *contextWindow, int *maxOutputTokens) override;
+   virtual int getDefaultContextWindow() const override { return 32768; }
+
 public:
    OllamaProvider(const LLMProviderConfig& config);
    virtual ~OllamaProvider();
 
-   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) override;
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools, LLMTokenUsage *usage) override;
 };
 
 /**
@@ -160,11 +202,14 @@ public:
  */
 class NXCORE_EXPORTABLE OpenAIProvider : public LLMProvider
 {
+protected:
+   virtual bool fetchModelLimits(int *contextWindow, int *maxOutputTokens) override;
+
 public:
    OpenAIProvider(const LLMProviderConfig& config);
    virtual ~OpenAIProvider();
 
-   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) override;
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools, LLMTokenUsage *usage) override;
 };
 
 /**
@@ -172,11 +217,14 @@ public:
  */
 class NXCORE_EXPORTABLE MistralProvider : public LLMProvider
 {
+protected:
+   virtual bool fetchModelLimits(int *contextWindow, int *maxOutputTokens) override;
+
 public:
    MistralProvider(const LLMProviderConfig& config);
    virtual ~MistralProvider();
 
-   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) override;
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools, LLMTokenUsage *usage) override;
 };
 
 /**
@@ -186,12 +234,13 @@ class NXCORE_EXPORTABLE AnthropicProvider : public LLMProvider
 {
 protected:
    virtual struct curl_slist *buildHttpHeaders() override;
+   virtual bool fetchModelLimits(int *contextWindow, int *maxOutputTokens) override;
 
 public:
    AnthropicProvider(const LLMProviderConfig& config);
    virtual ~AnthropicProvider();
 
-   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools) override;
+   virtual json_t *chat(const char *systemPrompt, json_t *messages, json_t *tools, LLMTokenUsage *usage) override;
 };
 
 /**

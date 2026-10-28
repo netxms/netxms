@@ -316,12 +316,17 @@ static json_t *ConvertResponseFromAnthropic(json_t *response)
 /**
  * Send chat request to Anthropic Messages API
  */
-json_t *AnthropicProvider::chat(const char *systemPrompt, json_t *messages, json_t *tools)
+json_t *AnthropicProvider::chat(const char *systemPrompt, json_t *messages, json_t *tools, LLMTokenUsage *callUsage)
 {
+   updateModelLimits();
+
    json_t *request = buildBaseRequest();
 
-   // Anthropic requires max_tokens
-   json_object_set_new(request, "max_tokens", json_integer(m_config.contextSize > 0 ? m_config.contextSize : 8192));
+   // Anthropic requires max_tokens; configured limit is capped by model's output limit if it is known
+   int maxTokens = m_config.maxOutputTokens;
+   if ((m_modelMaxOutputTokens > 0) && (m_modelMaxOutputTokens < maxTokens))
+      maxTokens = m_modelMaxOutputTokens;
+   json_object_set_new(request, "max_tokens", json_integer(maxTokens));
 
    // System prompt is a top-level parameter in Anthropic API (not a message)
    if (systemPrompt != nullptr && systemPrompt[0] != 0)
@@ -344,7 +349,7 @@ json_t *AnthropicProvider::chat(const char *systemPrompt, json_t *messages, json
       json_decref(anthropicTools);
    }
 
-   json_t *response = doHttpRequest(request);
+   json_t *response = doHttpRequest(m_config.url, request);
    json_decref(request);
 
    if (response == nullptr)
@@ -359,15 +364,39 @@ json_t *AnthropicProvider::chat(const char *systemPrompt, json_t *messages, json
    {
       int64_t inputTokens = json_integer_value(json_object_get(usage, "input_tokens"));
       int64_t outputTokens = json_integer_value(json_object_get(usage, "output_tokens"));
-      recordUsage(inputTokens, outputTokens);
+      recordUsage(inputTokens, outputTokens, callUsage);
    }
    else
    {
-      recordUsage(0, 0);
+      recordUsage(0, 0, callUsage);
    }
 
    // Convert Anthropic response to OpenAI-normalized format
    json_t *result = ConvertResponseFromAnthropic(response);
    json_decref(response);
    return result;
+}
+
+/**
+ * Retrieve model limits using Models API (/v1/models/{model})
+ */
+bool AnthropicProvider::fetchModelLimits(int *contextWindow, int *maxOutputTokens)
+{
+   std::string path("/models/");
+   path.append(m_config.model);
+   std::string url = buildEndpointUrl("/messages", path.c_str());
+   if (url.empty())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Cannot derive model information URL from messages URL %hs", m_config.url);
+      return true;
+   }
+
+   json_t *response = doHttpRequest(url.c_str(), nullptr);
+   if (response == nullptr)
+      return false;
+
+   *contextWindow = json_object_get_int32(response, "max_input_tokens", 0);
+   *maxOutputTokens = json_object_get_int32(response, "max_tokens", 0);
+   json_decref(response);
+   return true;
 }

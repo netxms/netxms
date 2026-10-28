@@ -232,6 +232,8 @@ int H_AiChatGetStatus(Context *context)
          break;
    }
 
+   json_object_set_new(response, "contextUsage", chat->getContextUsage().toJson());
+
    context->setResponseData(response);
    json_decref(response);
    return 200;

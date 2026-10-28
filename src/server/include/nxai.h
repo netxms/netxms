@@ -718,6 +718,40 @@ enum class AsyncRequestState
 };
 
 /**
+ * LLM context window usage by chat
+ */
+struct AIContextUsage
+{
+   int64_t tokens;   // tokens occupied in context by last LLM call (input + output of that call), 0 if no calls were made yet
+   int32_t window;   // context window size of provider that served last call (0 if unknown)
+
+   AIContextUsage()
+   {
+      tokens = 0;
+      window = 0;
+   }
+
+   void fillMessage(NXCPMessage *msg) const
+   {
+      if (tokens > 0)
+      {
+         msg->setField(VID_AI_CONTEXT_TOKENS, tokens);
+         msg->setField(VID_AI_CONTEXT_WINDOW, window);
+      }
+   }
+
+   json_t *toJson() const
+   {
+      if (tokens == 0)
+         return json_null();
+      json_t *json = json_object();
+      json_object_set_new(json, "tokens", json_integer(tokens));
+      json_object_set_new(json, "window", (window > 0) ? json_integer(window) : json_null());
+      return json;
+   }
+};
+
+/**
  * Chat with AI assistant
  */
 class NXCORE_EXPORTABLE Chat
@@ -740,6 +774,7 @@ private:
    char *m_asyncResult;
    char *m_asyncErrorMessage;
    const char *m_currentFunction;
+   AIContextUsage m_contextUsage;   // protected by m_asyncMutex
    Mutex m_asyncMutex;
    std::string m_lastError;
    bool m_isInteractive;
@@ -793,6 +828,7 @@ public:
    bool startAsyncRequest(const char *prompt, const char *context = nullptr);
    AsyncRequestState getAsyncState() const { return m_asyncState; }
    const char *getCurrentFunction() const { return m_currentFunction; }
+   AIContextUsage getContextUsage() const { return GetAttributeWithLock(m_contextUsage, m_asyncMutex); }
    char *takeAsyncResult();
    char *takeAsyncErrorMessage();
 

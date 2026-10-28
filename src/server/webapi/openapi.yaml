@@ -923,6 +923,21 @@ paths:
                   errorMessage:
                     type: string
                     description: Error description (present when status is error)
+                  contextUsage:
+                    type: object
+                    nullable: true
+                    description: |
+                      LLM context window usage after the most recent LLM call in this chat
+                      (null if no calls were made since chat creation or last clear)
+                    properties:
+                      tokens:
+                        type: integer
+                        format: int64
+                        description: Number of tokens occupied in context window
+                      window:
+                        type: integer
+                        nullable: true
+                        description: Context window size of the model in tokens (null if unknown)
         '400':
           description: Invalid chat ID
         '401':

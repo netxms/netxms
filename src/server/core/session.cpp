@@ -21080,6 +21080,7 @@ void ClientSession::queryAiAssistant(const NXCPMessage& request)
       {
          response.setField(VID_RCC, RCC_SUCCESS);
          response.setFieldFromUtf8String(VID_MESSAGE, answer);
+         chat->getContextUsage().fillMessage(&response);
          MemFree(answer);
       }
       else

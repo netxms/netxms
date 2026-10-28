@@ -55,6 +55,10 @@ LLMTokenUsage NXCORE_EXPORTABLE *SetLLMTokenUsageCollector(LLMTokenUsage *collec
  */
 LLMProvider::LLMProvider(const LLMProviderConfig& config) : m_config(config), m_totalRequests(0), m_totalInputTokens(0), m_totalOutputTokens(0), m_failedRequests(0)
 {
+   m_modelLimitsRequestTime = 0;
+   m_modelLimitsRetrieved = false;
+   m_modelContextWindow = 0;
+   m_modelMaxOutputTokens = 0;
 }
 
 /**
@@ -67,7 +71,7 @@ LLMProvider::~LLMProvider()
 /**
  * Record token usage from a successful API call
  */
-void LLMProvider::recordUsage(int64_t inputTokens, int64_t outputTokens)
+void LLMProvider::recordUsage(int64_t inputTokens, int64_t outputTokens, LLMTokenUsage *callUsage)
 {
    InterlockedIncrement64(&m_totalRequests);
    InterlockedAdd64(&m_totalInputTokens, inputTokens);
@@ -79,6 +83,11 @@ void LLMProvider::recordUsage(int64_t inputTokens, int64_t outputTokens)
    {
       s_tokenUsageCollector->inputTokens += inputTokens;
       s_tokenUsageCollector->outputTokens += outputTokens;
+   }
+   if (callUsage != nullptr)
+   {
+      callUsage->inputTokens = inputTokens;
+      callUsage->outputTokens = outputTokens;
    }
 }
 
@@ -127,9 +136,9 @@ struct curl_slist *LLMProvider::buildHttpHeaders()
 }
 
 /**
- * Send HTTP request to LLM provider
+ * Send HTTP request to LLM provider. Sends POST request with given JSON document as body, or GET request if document is null.
  */
-json_t *LLMProvider::doHttpRequest(json_t *requestData)
+json_t *LLMProvider::doHttpRequest(const char *url, json_t *requestData)
 {
    if (IsShutdownInProgress())
       return nullptr;
@@ -152,9 +161,12 @@ json_t *LLMProvider::doHttpRequest(json_t *requestData)
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, m_config.verifySSL ? (long)1 : (long)0);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Server/" NETXMS_VERSION_STRING_A);
 
-   char *postData = (requestData != nullptr) ? json_dumps(requestData, 0) : MemCopyStringA("{}");
-   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData);
-   curl_easy_setopt(curl, CURLOPT_POST, (long)1);
+   char *postData = (requestData != nullptr) ? json_dumps(requestData, 0) : nullptr;
+   if (postData != nullptr)
+   {
+      curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postData);
+      curl_easy_setopt(curl, CURLOPT_POST, (long)1);
+   }
 
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -168,7 +180,7 @@ json_t *LLMProvider::doHttpRequest(json_t *requestData)
 
    bool success = true;
 
-   if (curl_easy_setopt(curl, CURLOPT_URL, m_config.url) != CURLE_OK)
+   if (curl_easy_setopt(curl, CURLOPT_URL, url) != CURLE_OK)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
       success = false;
@@ -176,18 +188,18 @@ json_t *LLMProvider::doHttpRequest(json_t *requestData)
 
    if (success)
    {
-      nxlog_debug_tag(DEBUG_TAG, 8, _T("Sending request to %hs: %hs"), m_config.url, postData);
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("Sending request to %hs: %hs"), url, (postData != nullptr) ? postData : "(GET)");
       CURLcode rc = curl_easy_perform(curl);
       if (rc != CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform(%hs) failed (%d: %hs)"), m_config.url, rc, errorBuffer);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform(%hs) failed (%d: %hs)"), url, rc, errorBuffer);
          success = false;
       }
    }
 
    if (success)
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes from %hs"), static_cast<int>(responseData.size()), m_config.url);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes from %hs"), static_cast<int>(responseData.size()), url);
       long httpStatusCode = 0;
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpStatusCode);
       if ((httpStatusCode < 200) || (httpStatusCode > 299))
@@ -256,6 +268,112 @@ json_t *LLMProvider::doHttpRequest(json_t *requestData)
    curl_easy_cleanup(curl);
    MemFree(postData);
    return response;
+}
+
+/**
+ * Build URL of another API endpoint by replacing given suffix of configured chat endpoint URL path with new path.
+ * Query string of configured URL is preserved. Returns empty string if URL path does not end with given suffix.
+ */
+std::string LLMProvider::buildEndpointUrl(const char *chatPathSuffix, const char *path) const
+{
+   const char *query = strchr(m_config.url, '?');
+   size_t pathLen = (query != nullptr) ? static_cast<size_t>(query - m_config.url) : strlen(m_config.url);
+   size_t suffixLen = strlen(chatPathSuffix);
+   if ((pathLen < suffixLen) || strncmp(&m_config.url[pathLen - suffixLen], chatPathSuffix, suffixLen))
+      return std::string();
+
+   std::string url(m_config.url, pathLen - suffixLen);
+   url.append(path);
+   if (query != nullptr)
+      url.append(query);
+   return url;
+}
+
+/**
+ * Get context window size from model description object. Different OpenAI-compatible servers use
+ * different field names: max_input_tokens (Anthropic, LiteLLM), max_context_length (Mistral, LM Studio),
+ * context_length (OpenRouter), max_model_len (vLLM), meta.n_ctx_train (llama.cpp).
+ */
+int LLMProvider::getContextWindowFromModelInfo(json_t *model)
+{
+   static const char *fields[] = { "max_input_tokens", "max_context_length", "context_length", "max_model_len", "context_window", nullptr };
+   for(int i = 0; fields[i] != nullptr; i++)
+   {
+      int32_t value = json_object_get_int32(model, fields[i], 0);
+      if (value > 0)
+         return value;
+   }
+
+   json_t *meta = json_object_get(model, "meta");
+   if (json_is_object(meta))
+   {
+      int32_t value = json_object_get_int32(meta, "n_ctx_train", 0);
+      if (value > 0)
+         return value;
+   }
+   return 0;
+}
+
+/**
+ * Retrieve model limits from provider API (default implementation - provider does not report limits)
+ */
+bool LLMProvider::fetchModelLimits(int *contextWindow, int *maxOutputTokens)
+{
+   return true;
+}
+
+/**
+ * Retrieve model limits from provider API if not retrieved yet. Failed retrieval is retried
+ * not more often than every 10 minutes.
+ */
+void LLMProvider::updateModelLimits()
+{
+   LockGuard lockGuard(m_modelLimitsMutex);
+   time_t now = time(nullptr);
+   if (m_modelLimitsRetrieved || (now - m_modelLimitsRequestTime < 600))
+      return;
+
+   int contextWindow = 0, maxOutputTokens = 0;
+   if (fetchModelLimits(&contextWindow, &maxOutputTokens))
+   {
+      m_modelContextWindow = contextWindow;
+      m_modelMaxOutputTokens = maxOutputTokens;
+      m_modelLimitsRetrieved = true;
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Model limits for provider \"%s\" (model %hs): context window = %d, max output tokens = %d (0 = not reported)",
+         m_config.name.cstr(), m_config.model, contextWindow, maxOutputTokens);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, L"Cannot retrieve model limits for provider \"%s\" (model %hs)", m_config.name.cstr(), m_config.model);
+   }
+   m_modelLimitsRequestTime = now;
+}
+
+/**
+ * Get effective context window size (0 if unknown)
+ */
+int LLMProvider::getContextWindow(LLMContextWindowSource *source) const
+{
+   LLMContextWindowSource s;
+   int size;
+   if (m_config.contextSize > 0)
+   {
+      s = LLMContextWindowSource::CONFIGURATION;
+      size = m_config.contextSize;
+   }
+   else if (m_modelContextWindow > 0)
+   {
+      s = LLMContextWindowSource::PROVIDER_API;
+      size = m_modelContextWindow;
+   }
+   else
+   {
+      size = getDefaultContextWindow();
+      s = (size > 0) ? LLMContextWindowSource::DEFAULT : LLMContextWindowSource::UNKNOWN;
+   }
+   if (source != nullptr)
+      *source = s;
+   return size;
 }
 
 /**
