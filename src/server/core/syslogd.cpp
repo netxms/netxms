@@ -66,7 +66,13 @@ static bool s_parseUnknownSources = false;
 static char s_syslogCodepage[16] = "";
 static int s_resolverCacheTTL = 300;
 static bool s_invalidateResolverCache = false;
-static std::unordered_map<std::string, std::pair<uint32_t, time_t>> s_resolverCache;
+static std::unordered_map<std::string, std::pair<uint32_t, time_t>> s_resolverCache;  // Key is "<zone UIN>/<host name>"
+static time_t s_lastResolverCacheSweep = 0;
+
+/**
+ * Maximum number of entries in resolver cache
+ */
+#define MAX_RESOLVER_CACHE_SIZE  16384
 
 /**
  * Parse timestamp field
@@ -594,21 +600,43 @@ static shared_ptr<Node> FindNodeByHostname(const char *hostName, int32_t zoneUIN
    if (hostName[0] == 0)
       return shared_ptr<Node>();
 
+   // Result of DNS fallback depends on zone (FindNodeByIP checks requesting zone first), so zone is part of the key
+   std::string cacheKey = std::to_string(zoneUIN);
+   cacheKey.append(1, '/');
+   cacheKey.append(hostName);
+
    // Check resolver cache
+   time_t now = time(nullptr);
    if (s_invalidateResolverCache)
    {
       s_resolverCache.clear();
       s_invalidateResolverCache = false;
+      s_lastResolverCacheSweep = now;
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Resolver cache invalidated"));
    }
    else if (s_resolverCacheTTL > 0)
    {
-      auto it = s_resolverCache.find(hostName);
+      if (now - s_lastResolverCacheSweep >= s_resolverCacheTTL)
+      {
+         size_t sizeBefore = s_resolverCache.size();
+         for(auto it = s_resolverCache.begin(); it != s_resolverCache.end();)
+         {
+            if (now - it->second.second >= s_resolverCacheTTL)
+               it = s_resolverCache.erase(it);
+            else
+               ++it;
+         }
+         s_lastResolverCacheSweep = now;
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Resolver cache sweep: %d expired entries removed, %d entries remaining"),
+            static_cast<int>(sizeBefore - s_resolverCache.size()), static_cast<int>(s_resolverCache.size()));
+      }
+
+      auto it = s_resolverCache.find(cacheKey);
       if (it != s_resolverCache.end())
       {
-         if (time(nullptr) - it->second.second < s_resolverCacheTTL)
+         if (now - it->second.second < s_resolverCacheTTL)
          {
-            nxlog_debug_tag(DEBUG_TAG, 8, _T("Resolver cache hit for \"%hs\" → node ID %u"), hostName, it->second.first);
+            nxlog_debug_tag(DEBUG_TAG, 8, _T("Resolver cache hit for \"%hs\" in zone %d → node ID %u"), hostName, zoneUIN, it->second.first);
             if (it->second.first != 0)
                return static_pointer_cast<Node>(FindObjectById(it->second.first, OBJECT_NODE));
             return shared_ptr<Node>();
@@ -637,7 +665,10 @@ static shared_ptr<Node> FindNodeByHostname(const char *hostName, int32_t zoneUIN
    // Cache the result (node ID 0 = negative cache)
    if (s_resolverCacheTTL > 0)
    {
-      s_resolverCache[std::string(hostName)] = std::make_pair((node != nullptr) ? node->getId() : 0, time(nullptr));
+      if (s_resolverCache.size() < MAX_RESOLVER_CACHE_SIZE)
+         s_resolverCache[cacheKey] = std::make_pair((node != nullptr) ? node->getId() : 0, time(nullptr));
+      else
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("Resolver cache is full, result for \"%hs\" in zone %d not cached"), hostName, zoneUIN);
    }
 
    return node;
