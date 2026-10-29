@@ -2949,12 +2949,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *r
          }
          else
          {
-            if (fileResendCallback != nullptr)
-            {
-               _close(m_hCurrFile);
-               m_hCurrFile = -1;
-               _tremove(recvFile);
-            }
+            resetFileDownload();
          }
       }
 
@@ -3039,6 +3034,25 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
 
       return ERR_SUCCESS;
    }
+}
+
+/**
+ * Release download state of file download request rejected by agent, so that connection can be used
+ * for next download. Agent does not send file data after rejecting request, so no file data messages
+ * for this request can be pending.
+ */
+void AgentConnection::resetFileDownload()
+{
+   lock();
+   m_downloadRequestId = 0;
+   if (m_hCurrFile != -1)
+   {
+      _close(m_hCurrFile);
+      m_hCurrFile = -1;
+      onFileDownload(false);
+   }
+   m_sendToClientMessageCallback = nullptr;
+   unlock();
 }
 
 /**

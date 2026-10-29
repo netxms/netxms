@@ -1206,6 +1206,7 @@ private:
    uint32_t authenticate(BOOL bProxyData);
    uint32_t setupProxyConnection();
    uint32_t prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append, std::function<void (size_t)> downloadProgressCallback, std::function<void (NXCPMessage*)> fileResendCallback);
+   void resetFileDownload();
    void processFileData(NXCPMessage *msg);
    void processFileTransferAbort(NXCPMessage *msg);
 
