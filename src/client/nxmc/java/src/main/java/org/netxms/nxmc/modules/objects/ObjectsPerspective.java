@@ -256,7 +256,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new AlarmsView());
       addMainView(new ArpCacheView());
       addMainView(new AssetSummaryView());
-      addMainView(new AssetView());      
+      addMainView(new AssetView());
       addMainView(new BusinessServiceAvailabilityView());
       addMainView(new BusinessServiceChecksView());
       addMainView(new ChassisView());
@@ -292,7 +292,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new SummaryDataCollectionView());
       addMainView(new ConnectionHistoryView());
       addMainView(new SwitchForwardingDatabaseView());
-      addMainView(new TemplateTargets());      
+      addMainView(new TemplateTargets());
       addMainView(new ThresholdSummaryView());
       addMainView(new UserSessionsView());
       addMainView(new VpnView());
@@ -404,6 +404,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       gd = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
       perspectiveToolBar.setLayoutData(gd);
 
+      final Menu closedViewMenu = createClosedViewMenu();
       ToolItem item = new ToolItem(perspectiveToolBar, SWT.DROP_DOWN);
       item.setImage(imageManageViews);
       item.setToolTipText(i18n.tr("Manage views"));
@@ -416,7 +417,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
                ToolItem item = (ToolItem)e.widget;
                Rectangle rect = item.getBounds();
                Point pt = item.getParent().toDisplay(new Point(rect.x, rect.y));
-               final Menu closedViewMenu = createClosedViewMenu();
                closedViewMenu.setLocation(pt.x, pt.y + rect.height);
                closedViewMenu.setVisible(true);
             }
@@ -471,9 +471,11 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          @Override
          public void menuShown(MenuEvent e)
          {
+            for(MenuItem item : menu.getItems())
+               item.dispose();
             createViewMenuItem(menu);
          }
-         
+
          @Override
          public void menuHidden(MenuEvent e)
          {
@@ -494,7 +496,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       List<View> objectViews = new ArrayList<>();
       for(View v : getAllMainViews())
       {
-         if (!v.isCloseable() && (v instanceof ObjectView) && 
+         if (!v.isCloseable() && (v instanceof ObjectView) &&
                ((ObjectView)v).isHidden() && (((ViewWithContext)v).isValidForContext(selection.getFirstElement())))
             objectViews.add(v);
       }
@@ -970,10 +972,10 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    }
 
    /**
-    * Show object object 
-    * 
-    * @param object object to be shown 
-    * @param dciId DCI id or 0 if object only should be showed 
+    * Show object object
+    *
+    * @param object object to be shown
+    * @param dciId DCI id or 0 if object only should be showed
     * @return true if object found in the view
     */
    public boolean showObject(AbstractObject object, long dciId)
