@@ -248,6 +248,10 @@ public class SortableTreeViewer extends TreeViewer
          c.setMoveable(true);
       tree.setData("persistColumnOrder", Boolean.valueOf(persist));
 
+      // Called again after reset() recreates columns - header menu and its listeners already exist
+      if (headerMenu != null)
+         return;
+
       actionResetColumnOrder = new Action(i18n.tr("Restore Default Column Order")) {
          @Override
          public void run()
