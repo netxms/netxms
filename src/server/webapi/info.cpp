@@ -22,6 +22,7 @@
 
 #include "webapi.h"
 #include <netxms-version.h>
+#include <nms_users.h>
 
 /**
  * Handler for /
@@ -101,6 +102,7 @@ int H_Status(Context *context)
    json_t *response = json_object();
    json_object_set_new(response, "userId", json_integer(context->getUserId()));
    json_object_set_new(response, "userName", json_string_t(context->getLoginName()));
+   json_object_set_new(response, "fullName", json_string_w(GetUserFullName(context->getUserId())));
    json_object_set_new(response, "systemAccessRights", json_integer(context->getSystemAccessRights()));
    context->setResponseData(response);
    json_decref(response);

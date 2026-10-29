@@ -18,8 +18,8 @@
 **
 ** File: user_groups.cpp
 **
-** Tests for effective rights calculation over nested group membership, executed inside the
-** test server launcher against the initialized server. Users and groups are created through
+** Tests for effective rights calculation over nested group membership and for user information
+** lookup, executed inside the test server launcher against the initialized server. Users and groups are created through
 ** the regular user database API and left in place; the launcher discards its scratch database.
 **
 ** System rights used here are bits that the built-in "Everyone" group does not have by default,
@@ -299,6 +299,30 @@ static void TestDeepChain()
 }
 
 /**
+ * Full name lookup returns the name set on a user and an empty string for a user without one,
+ * for a group (which has no full name) and for an unknown ID
+ */
+static void TestUserFullName()
+{
+   StartTest(_T("User full name lookup"));
+
+   uint32_t user = CreateObject(_T("ug_fullname_user"), false, 0);
+   AssertEquals(GetUserFullName(user).cstr(), _T(""));
+
+   json_t *json = json_object();
+   json_object_set_new(json, "fullName", json_string("John Smith"));
+   ModifyObject(user, json);
+   AssertEquals(GetUserFullName(user).cstr(), _T("John Smith"));
+
+   uint32_t group = CreateObject(_T("ug_fullname_group"), true, 0);
+   AssertEquals(GetUserFullName(group).cstr(), _T(""));
+
+   AssertEquals(GetUserFullName(0x7FFFFFF0).cstr(), _T(""));
+
+   EndTest();
+}
+
+/**
  * Test entry point
  */
 void TestUserGroups()
@@ -310,4 +334,5 @@ void TestUserGroups()
    TestEveryoneNesting();
    TestUIAccessRules();
    TestDeepChain();
+   TestUserFullName();
 }

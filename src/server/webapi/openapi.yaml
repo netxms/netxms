@@ -509,6 +509,9 @@ paths:
                   userName:
                     type: string
                     description: Current user login name
+                  fullName:
+                    type: string
+                    description: Current user full name (empty string if not set)
                   systemAccessRights:
                     type: integer
                     description: User's system access rights bitmask
@@ -4408,6 +4411,9 @@ paths:
                     description: Authentication token.
                   userId:
                     type: integer
+                  fullName:
+                    type: string
+                    description: User's full name (empty string if not set).
                   systemAccessRights:
                     type: integer
                   changePassword:

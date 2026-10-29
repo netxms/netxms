@@ -824,6 +824,18 @@ uuid NXCORE_EXPORTABLE GetUserGuidById(uint32_t id)
 }
 
 /**
+ * Get user's full name by user ID. Returns empty string if user not found or ID refers to a group.
+ */
+String NXCORE_EXPORTABLE GetUserFullName(uint32_t id)
+{
+   s_userDatabaseLock.readLock();
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   String result(((object != nullptr) && !object->isGroup()) ? static_cast<User*>(object)->getFullName() : L"");
+   s_userDatabaseLock.unlock();
+   return result;
+}
+
+/**
  * Update system-wide access rights in given session
  */
 static void UpdateGlobalAccessRightsCallback(ClientSession *session)
