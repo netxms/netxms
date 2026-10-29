@@ -442,7 +442,9 @@ public class SortableTableViewer extends TableViewer
          }
       };
 
+      // Pop-up menu parent is the shell, so it must be disposed explicitly together with the table
       headerMenu = new Menu(table);
+      table.addDisposeListener(e -> headerMenu.dispose());
       headerMenu.addListener(SWT.Show, e -> {
          for(MenuItem item : headerMenu.getItems())
             item.dispose();

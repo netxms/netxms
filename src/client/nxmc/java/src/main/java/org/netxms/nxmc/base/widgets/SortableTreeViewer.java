@@ -449,7 +449,9 @@ public class SortableTreeViewer extends TreeViewer
          }
       };
 
+      // Pop-up menu parent is the shell, so it must be disposed explicitly together with the tree
       headerMenu = new Menu(tree);
+      tree.addDisposeListener(e -> headerMenu.dispose());
       headerMenu.addListener(SWT.Show, e -> {
          for(MenuItem item : headerMenu.getItems())
             item.dispose();
