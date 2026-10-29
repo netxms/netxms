@@ -1619,7 +1619,7 @@ void Tunnel::createSession(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId(), 4);
 
    // Assume that peer always have minimal access, so don't check return value
-   bool masterServer, controlServer, upgradeServer;
+   bool masterServer = false, controlServer = false, upgradeServer = false;
    IsValidServerAddress(m_address, &masterServer, &controlServer, &upgradeServer, m_forceResolve);
    m_forceResolve = false;
 
