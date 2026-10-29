@@ -122,6 +122,5 @@ public class SyslogMonitorElement extends ElementWidget
       job.setUser(false);
       job.setSystem(true);
       job.start();
-      super.dispose();
    }
 }
