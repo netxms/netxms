@@ -2181,7 +2181,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
             {
                if (tc->m_flags & COLUMN_DEFINITION_MULTIVALUED)
                {
-                  StringList values = String(static_cast<DCItem*>(object)->getLastValue()).split(tc->m_separator);
+                  StringList values = static_cast<DCItem*>(object)->getLastValue().split(tc->m_separator);
                   tableData->setAt(row, i + offset, values.get(0));
                   for(int r = 1; r < values.size(); r++)
                   {

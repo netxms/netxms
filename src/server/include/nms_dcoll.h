@@ -747,7 +747,7 @@ public:
 
    NXSL_Value *getValueForNXSL(NXSL_VM *vm, int function, int sampleCount);
    NXSL_Value *getRawValueForNXSL(NXSL_VM *vm);
-   const TCHAR *getLastValue();
+   String getLastValue();
    ItemValue *getInternalLastValue();
    TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);
 

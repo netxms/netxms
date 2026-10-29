@@ -2737,10 +2737,10 @@ NXSL_Value *DCItem::getValueForNXSL(NXSL_VM *vm, int function, int sampleCount)
 /**
  * Get last value
  */
-const TCHAR *DCItem::getLastValue()
+String DCItem::getLastValue()
 {
    lock();
-   const TCHAR *v = (m_cacheSize > 0) ? (const TCHAR *)m_ppValueCache[0]->getString() : nullptr;
+   String v((m_cacheSize > 0) ? m_ppValueCache[0]->getString() : nullptr);
    unlock();
    return v;
 }
