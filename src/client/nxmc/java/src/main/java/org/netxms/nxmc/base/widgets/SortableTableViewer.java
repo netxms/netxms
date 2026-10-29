@@ -426,6 +426,10 @@ public class SortableTableViewer extends TableViewer
          c.setMoveable(true);
       table.setData("persistColumnOrder", Boolean.valueOf(persist));
 
+      // Called again after reset() recreates columns - header menu and its listeners already exist
+      if (headerMenu != null)
+         return;
+
       actionResetColumnOrder = new Action(i18n.tr("Restore default column order")) {
          @Override
          public void run()
