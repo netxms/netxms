@@ -603,7 +603,11 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 		}
 #else
 		if (EVP_PKEY_id(pKey) == EVP_PKEY_RSA)
-         isValid = (RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, const_cast<unsigned char*>(signature), static_cast<unsigned int>(sigLen), EVP_PKEY_get1_RSA(pKey)) != 0);
+      {
+         RSA *rsa = EVP_PKEY_get1_RSA(pKey);
+         isValid = (RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, const_cast<unsigned char*>(signature), static_cast<unsigned int>(sigLen), rsa) != 0);
+         RSA_free(rsa);
+      }
 		else
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Unsupported key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject.cstr(), login);
 #endif
@@ -804,6 +808,8 @@ static bool LoadCertificate(RSA_KEY *serverKey, const TCHAR *certificatePath, co
          *serverKey = RSAKeyFromData(keyBuffer, keyLen, true);
          MemFree(keyBuffer);
       }
+      RSA_free(privKey);
+      RSA_free(pubKey);
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
       if (certPubKey != nullptr)
          EVP_PKEY_free(certPubKey);
@@ -1247,6 +1253,8 @@ bool GenerateAutoSignedCertificates(RSA_KEY *serverKey)
          *serverKey = RSAKeyFromData(keyBuffer, keyLen, true);
          MemFree(keyBuffer);
       }
+      RSA_free(privKey);
+      RSA_free(pubKey);
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
       if (certPubKey != nullptr)
          EVP_PKEY_free(certPubKey);
