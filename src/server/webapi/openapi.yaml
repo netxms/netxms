@@ -509,12 +509,30 @@ paths:
                   userName:
                     type: string
                     description: Current user login name
+                  guid:
+                    type: string
+                    format: uuid
+                    description: Current user GUID
                   fullName:
                     type: string
                     description: Current user full name (empty string if not set)
+                  description:
+                    type: string
+                    description: Current user description (empty string if not set)
+                  email:
+                    type: string
+                    description: Current user email address (empty string if not set)
+                  phoneNumber:
+                    type: string
+                    description: Current user phone number (empty string if not set)
                   systemAccessRights:
                     type: integer
                     description: User's system access rights bitmask
+                  uiAccessRules:
+                    type: array
+                    items:
+                      type: string
+                    description: Effective UI access rules (user's own rules combined with rules of all groups the user belongs to)
         '401':
           description: Unauthorized
       security:

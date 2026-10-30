@@ -102,8 +102,38 @@ int H_Status(Context *context)
    json_t *response = json_object();
    json_object_set_new(response, "userId", json_integer(context->getUserId()));
    json_object_set_new(response, "userName", json_string_t(context->getLoginName()));
-   json_object_set_new(response, "fullName", json_string_w(GetUserFullName(context->getUserId())));
+
+   IntegerArray<uint32_t> ids(1);
+   ids.add(context->getUserId());
+   unique_ptr<ObjectArray<UserDatabaseObject>> users = FindUserDBObjects(ids);
+   User *user = ((users != nullptr) && !users->isEmpty() && !users->get(0)->isGroup()) ? static_cast<User*>(users->get(0)) : nullptr;
+   if (user != nullptr)
+   {
+      json_object_set_new(response, "guid", user->getGuid().toJson());
+      json_object_set_new(response, "fullName", json_string_t(user->getFullName()));
+      json_object_set_new(response, "description", json_string_t(user->getDescription()));
+      json_object_set_new(response, "email", json_string_t(user->getEmail()));
+      json_object_set_new(response, "phoneNumber", json_string_t(user->getPhoneNumber()));
+   }
+   else
+   {
+      json_object_set_new(response, "fullName", json_string(""));
+      json_object_set_new(response, "description", json_string(""));
+      json_object_set_new(response, "email", json_string(""));
+      json_object_set_new(response, "phoneNumber", json_string(""));
+   }
+
    json_object_set_new(response, "systemAccessRights", json_integer(context->getSystemAccessRights()));
+
+   json_t *uiAccessRules = json_array();
+   GetEffectiveUIAccessRules(context->getUserId()).split(L";", true,
+      [uiAccessRules] (const String& rule)
+      {
+         if (!rule.isEmpty())
+            json_array_append_new(uiAccessRules, json_string_w(rule));
+      });
+   json_object_set_new(response, "uiAccessRules", uiAccessRules);
+
    context->setResponseData(response);
    json_decref(response);
    return 200;
