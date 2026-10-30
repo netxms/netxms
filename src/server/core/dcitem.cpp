@@ -2556,6 +2556,7 @@ json_t *DCItem::lastValueToJSON()
    json_object_set_new(data, "flags", json_integer(m_flags));
    json_object_set_new(data, "description", json_string_t(m_description));
    json_object_set_new(data, "sourceType", json_integer(m_source));
+   json_object_set_new(data, "origin", json_string_w(CodeToText(m_source, g_dciOriginNames, L"unknown")));
 
    if ((m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp().asMilliseconds() > 1))
    {

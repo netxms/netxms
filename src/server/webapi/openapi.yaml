@@ -17698,7 +17698,7 @@ components:
           description: Unit name
         origin:
           type: string
-          description: Data origin name (e.g. snmp, nxagent, push, computed)
+          description: Data origin name (e.g. snmp, agent, push, computed)
         dataType:
           type: string
           description: Transformed data type name
@@ -19767,7 +19767,7 @@ components:
           description: Human-readable DCI description
         origin:
           type: string
-          enum: [internal, nxagent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp, trafficobserver, netconf, computed]
+          enum: [internal, agent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp, trafficobserver, netconf, computed]
           description: Data origin
         status:
           type: string
@@ -19954,7 +19954,11 @@ components:
           description: DCI description
         sourceType:
           type: integer
-          description: Data source type
+          description: Data source type (numeric code)
+        origin:
+          type: string
+          enum: [internal, agent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp, trafficobserver, netconf, computed]
+          description: Data origin name corresponding to sourceType
         dataType:
           type: integer
           description: Data type

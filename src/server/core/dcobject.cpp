@@ -63,11 +63,11 @@ static const wchar_t *NormalizeSystemTag(const wchar_t *tag)
 
 /**
  * Code/name lookup tables for symbolic representation of data collection enumerations in JSON.
- * Origin names are kept in sync with DCObject::getDataProviderName().
+ * g_dciOriginNames is the single source of symbolic origin names (JSON, NXSL, AI tools, exports).
  */
 CodeLookupElement g_dciOriginNames[] =
 {
-   { DS_INTERNAL, L"internal" }, { DS_NATIVE_AGENT, L"nxagent" }, { DS_SNMP_AGENT, L"snmp" },
+   { DS_INTERNAL, L"internal" }, { DS_NATIVE_AGENT, L"agent" }, { DS_SNMP_AGENT, L"snmp" },
    { DS_WEB_SERVICE, L"websvc" }, { DS_PUSH_AGENT, L"push" }, { DS_WINPERF, L"winperf" },
    { DS_SMCLP, L"smclp" }, { DS_SCRIPT, L"script" }, { DS_SSH, L"ssh" }, { DS_MQTT, L"mqtt" },
    { DS_DEVICE_DRIVER, L"driver" }, { DS_MODBUS, L"modbus" }, { DS_ETHERNET_IP, L"ethernetip" },
@@ -2328,8 +2328,7 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
  */
 const wchar_t *DCObject::getDataProviderName(int dataProvider)
 {
-   static const wchar_t *names[] = { L"internal", L"nxagent", L"snmp", L"websvc", L"push", L"winperf", L"smclp", L"script", L"ssh", L"mqtt", L"driver", L"modbus", L"ethernetip", L"cloud", L"otlp", L"trafficobserver", L"netconf", L"computed" };
-   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_COMPUTED)) ? names[dataProvider] : L"unknown";
+   return CodeToText(dataProvider, g_dciOriginNames, L"unknown");
 }
 
 /**

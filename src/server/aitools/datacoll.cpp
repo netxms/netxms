@@ -24,76 +24,6 @@
 #include <nxevent.h>
 
 /**
- * Helper: Parse delta calculation string to constant
- */
-static int ParseDeltaCalculation(const char *str)
-{
-   if (str == nullptr || !stricmp(str, "original"))
-      return DCM_ORIGINAL_VALUE;
-   if (!stricmp(str, "delta"))
-      return DCM_SIMPLE;
-   if (!stricmp(str, "averagePerSecond"))
-      return DCM_AVERAGE_PER_SECOND;
-   if (!stricmp(str, "averagePerMinute"))
-      return DCM_AVERAGE_PER_MINUTE;
-   return -1;
-}
-
-/**
- * Helper: Parse threshold function string to constant
- */
-static int ParseThresholdFunction(const char *str)
-{
-   if (str == nullptr || !stricmp(str, "last"))
-      return F_LAST;
-   if (!stricmp(str, "average"))
-      return F_AVERAGE;
-   if (!stricmp(str, "meanDeviation"))
-      return F_MEAN_DEVIATION;
-   if (!stricmp(str, "diff"))
-      return F_DIFF;
-   if (!stricmp(str, "error"))
-      return F_ERROR;
-   if (!stricmp(str, "sum"))
-      return F_SUM;
-   if (!stricmp(str, "script"))
-      return F_SCRIPT;
-   if (!stricmp(str, "absDeviation"))
-      return F_ABS_DEVIATION;
-   if (!stricmp(str, "anomaly"))
-      return F_ANOMALY;
-   return -1;
-}
-
-/**
- * Helper: Parse threshold operation string to constant
- */
-static int ParseThresholdOperation(const char *str)
-{
-   if (str == nullptr || !stricmp(str, "greaterOrEqual"))
-      return OP_GT_EQ;
-   if (!stricmp(str, "less"))
-      return OP_LE;
-   if (!stricmp(str, "lessOrEqual"))
-      return OP_LE_EQ;
-   if (!stricmp(str, "equal"))
-      return OP_EQ;
-   if (!stricmp(str, "greater"))
-      return OP_GT;
-   if (!stricmp(str, "notEqual"))
-      return OP_NE;
-   if (!stricmp(str, "like"))
-      return OP_LIKE;
-   if (!stricmp(str, "notLike"))
-      return OP_NOTLIKE;
-   if (!stricmp(str, "ilike"))
-      return OP_ILIKE;
-   if (!stricmp(str, "inotLike"))
-      return OP_INOTLIKE;
-   return -1;
-}
-
-/**
  * Helper: Find DCI by name or numeric ID
  */
 static shared_ptr<DCObject> FindDCIByNameOrId(DataCollectionTarget *target, const char *nameOrId, uint32_t userId)
@@ -107,137 +37,6 @@ static shared_ptr<DCObject> FindDCIByNameOrId(DataCollectionTarget *target, cons
    // Try as name
    String name(nameOrId, "utf-8");
    return target->getDCObjectByName(name, userId);
-}
-
-/**
- * Helper: Parse origin string to constant
- */
-static int ParseOrigin(const char *str)
-{
-   if (str == nullptr || !stricmp(str, "agent"))
-      return DS_NATIVE_AGENT;
-   if (!stricmp(str, "snmp"))
-      return DS_SNMP_AGENT;
-   if (!stricmp(str, "script"))
-      return DS_SCRIPT;
-   if (!stricmp(str, "ssh"))
-      return DS_SSH;
-   if (!stricmp(str, "push"))
-      return DS_PUSH_AGENT;
-   if (!stricmp(str, "webService"))
-      return DS_WEB_SERVICE;
-   if (!stricmp(str, "deviceDriver"))
-      return DS_DEVICE_DRIVER;
-   if (!stricmp(str, "mqtt"))
-      return DS_MQTT;
-   if (!stricmp(str, "modbus"))
-      return DS_MODBUS;
-   if (!stricmp(str, "internal"))
-      return DS_INTERNAL;
-   if (!stricmp(str, "windowsPerformance"))
-      return DS_WINPERF;
-   if (!stricmp(str, "smclp"))
-      return DS_SMCLP;
-   if (!stricmp(str, "ethernetIp"))
-      return DS_ETHERNET_IP;
-   if (!stricmp(str, "cloudConnector"))
-      return DS_CLOUD_CONNECTOR;
-   if (!stricmp(str, "otlp"))
-      return DS_OTLP;
-   if (!stricmp(str, "trafficObserver"))
-      return DS_TRAFFIC_OBSERVER;
-   if (!stricmp(str, "netconf"))
-      return DS_NETCONF;
-   if (!stricmp(str, "computed"))
-      return DS_COMPUTED;
-   return -1;
-}
-
-/**
- * Helper: Origin constant to string
- */
-static const char *OriginToString(int origin)
-{
-   switch(origin)
-   {
-      case DS_INTERNAL: return "internal";
-      case DS_NATIVE_AGENT: return "agent";
-      case DS_SNMP_AGENT: return "snmp";
-      case DS_WEB_SERVICE: return "webService";
-      case DS_PUSH_AGENT: return "push";
-      case DS_WINPERF: return "windowsPerformance";
-      case DS_SMCLP: return "smclp";
-      case DS_SCRIPT: return "script";
-      case DS_SSH: return "ssh";
-      case DS_MQTT: return "mqtt";
-      case DS_DEVICE_DRIVER: return "deviceDriver";
-      case DS_MODBUS: return "modbus";
-      case DS_ETHERNET_IP: return "ethernetIp";
-      case DS_CLOUD_CONNECTOR: return "cloudConnector";
-      case DS_OTLP: return "otlp";
-      case DS_TRAFFIC_OBSERVER: return "trafficObserver";
-      case DS_NETCONF: return "netconf";
-      case DS_COMPUTED: return "computed";
-      default: return "unknown";
-   }
-}
-
-/**
- * Helper: Data type constant to string
- */
-static const char *DataTypeToString(int dataType)
-{
-   switch(dataType)
-   {
-      case DCI_DT_INT: return "int";
-      case DCI_DT_UINT: return "unsigned-int";
-      case DCI_DT_INT64: return "int64";
-      case DCI_DT_UINT64: return "unsigned-int64";
-      case DCI_DT_FLOAT: return "float";
-      case DCI_DT_STRING: return "string";
-      case DCI_DT_COUNTER32: return "counter32";
-      case DCI_DT_COUNTER64: return "counter64";
-      default: return "unknown";
-   }
-}
-
-/**
- * Helper: Parse data type string to constant
- */
-static int ParseDataType(const char *str)
-{
-   if (str == nullptr || !stricmp(str, "string"))
-      return DCI_DT_STRING;
-   if (!stricmp(str, "int") || !stricmp(str, "integer"))
-      return DCI_DT_INT;
-   if (!stricmp(str, "unsigned-int") || !stricmp(str, "unsigned-integer"))
-      return DCI_DT_UINT;
-   if (!stricmp(str, "int64") || !stricmp(str, "integer64"))
-      return DCI_DT_INT64;
-   if (!stricmp(str, "uint64") || !stricmp(str, "unsigned-int64") || !stricmp(str, "unsigned-integer64"))
-      return DCI_DT_UINT64;
-   if (!stricmp(str, "counter32"))
-      return DCI_DT_COUNTER32;
-   if (!stricmp(str, "counter64"))
-      return DCI_DT_COUNTER64;
-   if (!stricmp(str, "float"))
-      return DCI_DT_FLOAT;
-   return -1;
-}
-
-/**
- * Helper: Delta calculation constant to string
- */
-static const char *DeltaCalculationToString(int delta)
-{
-   switch(delta)
-   {
-      case DCM_ORIGINAL_VALUE: return "original";
-      case DCM_SIMPLE: return "delta";
-      case DCM_AVERAGE_PER_SECOND: return "averagePerSecond";
-      case DCM_AVERAGE_PER_MINUTE: return "averagePerMinute";
-      default: return "unknown";
-   }
 }
 
 /**
@@ -283,7 +82,7 @@ std::string F_GetMetricDetails(json_t *arguments, uint32_t userId)
    json_object_set_new(output, "name", json_string_t(dco->getName().cstr()));
    json_object_set_new(output, "description", json_string_t(dco->getDescription().cstr()));
    json_object_set_new(output, "type", json_string(dco->getType() == DCO_TYPE_ITEM ? "item" : "table"));
-   json_object_set_new(output, "origin", json_string(OriginToString(dco->getDataSource())));
+   json_object_set_new(output, "origin", json_string_w(CodeToText(dco->getDataSource(), g_dciOriginNames, L"unknown")));
    json_object_set_new(output, "status", json_string(dco->getStatus() == ITEM_STATUS_ACTIVE ? "active" : (dco->getStatus() == ITEM_STATUS_DISABLED ? "disabled" : "notSupported")));
 
    // Polling settings
@@ -368,8 +167,8 @@ std::string F_GetMetricDetails(json_t *arguments, uint32_t userId)
    if (dco->getType() == DCO_TYPE_ITEM)
    {
       DCItem *dci = static_cast<DCItem*>(dco.get());
-      json_object_set_new(output, "dataType", json_string(DataTypeToString(dci->getDataType())));
-      json_object_set_new(output, "deltaCalculation", json_string(DeltaCalculationToString(dci->getDeltaCalculationMethod())));
+      json_object_set_new(output, "dataType", json_string_w(CodeToText(dci->getDataType(), g_dciDataTypeNames, L"unknown")));
+      json_object_set_new(output, "deltaCalculation", json_string_w(CodeToText(dci->getDeltaCalculationMethod(), g_dciDeltaCalculationNames, L"unknown")));
       json_object_set_new(output, "sampleCount", json_integer(dci->getSampleCount()));
 
       if (dci->getMultiplier() != 0)
@@ -601,13 +400,13 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
 
    String metricDescription(json_object_get_string_utf8(arguments, "description", json_object_get_string_utf8(arguments, "metric", nullptr)), "utf-8");
 
-   int origin = ParseOrigin(json_object_get_string_utf8(arguments, "origin", "agent"));
+   int origin = CodeFromText(String(json_object_get_string_utf8(arguments, "origin", "agent"), "utf-8"), g_dciOriginNames, -1);
    if (origin < 0)
-      return std::string("Invalid origin specified. Supported: agent, snmp, script, ssh, push, webService, deviceDriver, mqtt, modbus, internal, netconf, computed");
+      return std::string("Invalid origin specified. Supported: agent, snmp, script, ssh, push, websvc, driver, mqtt, modbus, internal, winperf, smclp, ethernetip, cloud, otlp, trafficobserver, netconf, computed");
 
-   int dataType = ParseDataType(json_object_get_string_utf8(arguments, "dataType", "string"));
+   int dataType = CodeFromText(String(json_object_get_string_utf8(arguments, "dataType", "string"), "utf-8"), g_dciDataTypeNames, -1);
    if (dataType < 0)
-      return std::string("Invalid data type specified");
+      return std::string("Invalid data type specified. Supported: int32, uint32, int64, uint64, counter32, counter64, float, string");
 
    // Parse new optional parameters
    json_t *pollingIntervalJson = json_object_get(arguments, "pollingInterval");
@@ -641,9 +440,9 @@ std::string F_CreateMetric(json_t *arguments, uint32_t userId)
       }
    }
 
-   int deltaCalculation = ParseDeltaCalculation(json_object_get_string_utf8(arguments, "deltaCalculation", nullptr));
+   int deltaCalculation = CodeFromText(String(json_object_get_string_utf8(arguments, "deltaCalculation", "none"), "utf-8"), g_dciDeltaCalculationNames, -1);
    if (deltaCalculation < 0)
-      return std::string("Invalid delta calculation specified");
+      return std::string("Invalid delta calculation specified. Supported: none, simple, averagePerSecond, averagePerMinute");
 
    int sampleCount = json_object_get_int32(arguments, "sampleCount", 1);
    int multiplier = json_object_get_int32(arguments, "multiplier", 0);
@@ -848,9 +647,9 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
    const char *originStr = json_object_get_string_utf8(arguments, "origin", nullptr);
    if (originStr != nullptr)
    {
-      int origin = ParseOrigin(originStr);
+      int origin = CodeFromText(String(originStr, "utf-8"), g_dciOriginNames, -1);
       if (origin < 0)
-         return std::string("Invalid origin specified");
+         return std::string("Invalid origin specified. Supported: agent, snmp, script, ssh, push, websvc, driver, mqtt, modbus, internal, winperf, smclp, ethernetip, cloud, otlp, trafficobserver, netconf, computed");
       dci->setSource(static_cast<BYTE>(origin));
    }
 
@@ -858,9 +657,9 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
    const char *dataTypeStr = json_object_get_string_utf8(arguments, "dataType", nullptr);
    if (dataTypeStr != nullptr)
    {
-      int dataType = ParseDataType(dataTypeStr);
+      int dataType = CodeFromText(String(dataTypeStr, "utf-8"), g_dciDataTypeNames, -1);
       if (dataType < 0)
-         return std::string("Invalid data type specified");
+         return std::string("Invalid data type specified. Supported: int32, uint32, int64, uint64, counter32, counter64, float, string");
       dci->setDataType(static_cast<BYTE>(dataType));
    }
 
@@ -868,9 +667,9 @@ std::string F_EditMetric(json_t *arguments, uint32_t userId)
    const char *deltaStr = json_object_get_string_utf8(arguments, "deltaCalculation", nullptr);
    if (deltaStr != nullptr)
    {
-      int delta = ParseDeltaCalculation(deltaStr);
+      int delta = CodeFromText(String(deltaStr, "utf-8"), g_dciDeltaCalculationNames, -1);
       if (delta < 0)
-         return std::string("Invalid delta calculation specified");
+         return std::string("Invalid delta calculation specified. Supported: none, simple, averagePerSecond, averagePerMinute");
       dci->setDeltaCalculation(static_cast<BYTE>(delta));
    }
 
@@ -1154,13 +953,13 @@ std::string F_AddThreshold(json_t *arguments, uint32_t userId)
    DCItem *dci = static_cast<DCItem*>(dco.get());
 
    // Parse threshold parameters
-   int function = ParseThresholdFunction(json_object_get_string_utf8(arguments, "function", "last"));
+   int function = CodeFromText(String(json_object_get_string_utf8(arguments, "function", "last"), "utf-8"), g_dciThresholdFunctionNames, -1);
    if (function < 0)
-      return std::string("Invalid threshold function specified");
+      return std::string("Invalid threshold function specified. Supported: last, average, sum, meanDeviation, absoluteDeviation, diff, error, script, anomaly");
 
-   int operation = ParseThresholdOperation(json_object_get_string_utf8(arguments, "operation", "greaterOrEqual"));
+   int operation = CodeFromText(String(json_object_get_string_utf8(arguments, "operation", "greaterOrEqual"), "utf-8"), g_dciThresholdOperationNames, -1);
    if (operation < 0)
-      return std::string("Invalid threshold operation specified");
+      return std::string("Invalid threshold operation specified. Supported: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike, iLike, iNotLike");
 
    int sampleCount = json_object_get_int32(arguments, "sampleCount", 1);
    int deactivationSampleCount = json_object_get_int32(arguments, "deactivationSampleCount", 1);
@@ -1255,11 +1054,11 @@ std::string F_EditThreshold(json_t *arguments, uint32_t userId)
    const char *function = json_object_get_string_utf8(arguments, "function", nullptr);
    if (function != nullptr)
    {
-      int code = ParseThresholdFunction(function);
+      int code = CodeFromText(String(function, "utf-8"), g_dciThresholdFunctionNames, -1);
       if (code < 0)
       {
          json_decref(update);
-         return std::string("Invalid threshold function specified");
+         return std::string("Invalid threshold function specified. Supported: last, average, sum, meanDeviation, absoluteDeviation, diff, error, script, anomaly");
       }
       json_object_set_new(update, "function", json_integer(code));
    }
@@ -1267,11 +1066,11 @@ std::string F_EditThreshold(json_t *arguments, uint32_t userId)
    const char *operation = json_object_get_string_utf8(arguments, "operation", nullptr);
    if (operation != nullptr)
    {
-      int code = ParseThresholdOperation(operation);
+      int code = CodeFromText(String(operation, "utf-8"), g_dciThresholdOperationNames, -1);
       if (code < 0)
       {
          json_decref(update);
-         return std::string("Invalid threshold operation specified");
+         return std::string("Invalid threshold operation specified. Supported: less, lessOrEqual, equal, greaterOrEqual, greater, notEqual, like, notLike, iLike, iNotLike");
       }
       json_object_set_new(update, "condition", json_integer(code));
    }

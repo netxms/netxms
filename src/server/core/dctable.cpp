@@ -936,6 +936,7 @@ json_t *DCTable::lastValueToJSON()
    json_object_set_new(data, "flags", json_integer(m_flags));
    json_object_set_new(data, "description", json_string_t(m_description));
    json_object_set_new(data, "sourceType", json_integer(m_source));
+   json_object_set_new(data, "origin", json_string_w(CodeToText(m_source, g_dciOriginNames, L"unknown")));
    json_object_set_new(data, "dataType", json_integer(DCI_DT_NULL));
    json_object_set_new(data, "value", json_string(""));
    json_object_set_new(data, "timestamp", (m_lastValue != nullptr) ? m_lastValueTimestamp.asJson() : json_null());
