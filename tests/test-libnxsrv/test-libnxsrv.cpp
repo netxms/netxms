@@ -825,6 +825,7 @@ static void TestAgentErrorMappings()
    AssertEquals(AgentErrorCodeToText(ERR_ACCESS_DENIED), _T("Access denied"));
    AssertEquals(AgentErrorCodeToText(ERR_REQUEST_TIMEOUT), _T("Request timeout"));
    AssertEquals(AgentErrorCodeToText(ERR_PROXY_CONNECT_FAILED), _T("Cannot connect to proxy agent"));
+   AssertEquals(AgentErrorCodeToText(ERR_FILE_TRANSFER_FAILED), _T("File transfer failed"));
    AssertEquals(AgentErrorCodeToText(0xFFFFFF), _T("Unknown error code"));
    EndTest();
 
@@ -833,7 +834,9 @@ static void TestAgentErrorMappings()
    AssertEquals(AgentErrorToRCC(ERR_ACCESS_DENIED), RCC_AGENT_ACCESS_DENIED);
    AssertEquals(AgentErrorToRCC(ERR_BAD_SIGNATURE), RCC_AGENT_ACCESS_DENIED);
    AssertEquals(AgentErrorToRCC(ERR_IO_FAILURE), RCC_IO_ERROR);
+   AssertEquals(AgentErrorToRCC(ERR_FILE_TRANSFER_FAILED), RCC_IO_ERROR);
    AssertEquals(AgentErrorToRCC(ERR_AUTH_FAILED), RCC_COMM_FAILURE);
+   AssertEquals(AgentErrorToRCC(ERR_CONNECTION_BROKEN), RCC_COMM_FAILURE);
    AssertEquals(AgentErrorToRCC(ERR_NO_SUCH_INSTANCE), RCC_NO_SUCH_INSTANCE);
    AssertEquals(AgentErrorToRCC(ERR_REQUEST_TIMEOUT), RCC_TIMEOUT);
    AssertEquals(AgentErrorToRCC(ERR_UNKNOWN_METRIC), RCC_UNKNOWN_METRIC);

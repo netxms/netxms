@@ -13561,12 +13561,12 @@ public class NXCSession
       }
 
       ReceivedFile remoteFile = waitForFile(msg.getMessageId(), 120000); // 120 seconds timeout for file content
-      if (remoteFile.isFailed())
-         throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
-
       try
       {
-         waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console
+         if (remoteFile.getStatus() != ReceivedFile.TIMEOUT)
+            waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console, or server's reason for abort
+         if (remoteFile.isFailed())
+            throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
       }
       finally
       {

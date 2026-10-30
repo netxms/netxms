@@ -2168,8 +2168,8 @@ uint32_t AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *des
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Download request for file %s timeout"), sourceFile);
-      rcc = ERR_REQUEST_TIMEOUT;
+      rcc = m_isConnected ? ERR_REQUEST_TIMEOUT : ERR_CONNECTION_BROKEN;
+      nxlog_debug_tag(DEBUG_TAG, 5, L"Download request for file %s RCC=%u (%s)", sourceFile, rcc, AgentErrorCodeToText(rcc));
    }
    return rcc;
 }

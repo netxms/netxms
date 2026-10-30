@@ -139,7 +139,8 @@ void FileDownloadTask::run()
 				}
 				else
 				{
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("Download request for file %s@%s timeout"), m_remoteFile, m_node->getName());
+               rcc = agentConnection->isConnected() ? ERR_REQUEST_TIMEOUT : ERR_CONNECTION_BROKEN;
+               nxlog_debug_tag(DEBUG_TAG, 5, L"Download request for file %s@%s RCC=%u (%s)", m_remoteFile, m_node->getName(), rcc, AgentErrorCodeToText(rcc));
 				}
 			}
          delete response;
