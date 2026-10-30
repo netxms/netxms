@@ -7058,7 +7058,7 @@ paths:
         holds only "delegated read" on. When an item selects a cell of a table DCI,
         `dataType` and `value` are the value of that cell and `timestamp` is the time the
         table containing it was collected; if the cell does not exist (or the table was not
-        collected yet) `dataType` is 6 (null), `value` is empty and `timestamp` is null, same
+        collected yet) `dataType` is `null`, `value` is empty and `timestamp` is null, same
         as for a DCI without collected value.
       requestBody:
         required: true
@@ -7155,7 +7155,7 @@ paths:
       summary: Get current DCI values
       description: |
         Retrieve current values for all data collection items (DCIs) of a given object.
-        Table DCIs are listed with `dataType` 6 (null) and an empty `value` - the table content itself is not returned,
+        Table DCIs are listed with `dataType` `null` and an empty `value` - the table content itself is not returned,
         use `/v1/objects/{object-id}/data-collection/{dci-id}/table-value` to retrieve it.
       parameters:
         - name: object-id
@@ -7476,8 +7476,9 @@ paths:
                           type: string
                           description: Instance display name
                         dataType:
-                          type: integer
-                          description: Data type (0=integer, 1=unsigned integer, 2=int64, 3=unsigned int64, 4=string, 5=float, 6=null, 7=counter32, 8=counter64)
+                          type: string
+                          enum: [int32, uint32, int64, uint64, string, float, "null", counter32, counter64]
+                          description: Data type (`null` for table DCIs)
                         templateDciId:
                           type: integer
                           description: Template DCI ID (0 if not from template)
@@ -17102,9 +17103,10 @@ components:
         extendedFormat:
           type: boolean
           description: Whether the table uses extended format (per-cell status and row metadata)
-        source:
-          type: integer
-          description: Data source identifier
+        origin:
+          type: string
+          enum: [internal, agent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp, trafficobserver, netconf, computed]
+          description: Data origin
         title:
           type: string
           description: Table title
@@ -17117,7 +17119,8 @@ components:
               name:
                 type: string
               dataType:
-                type: integer
+                type: string
+                enum: [int32, uint32, int64, uint64, string, float, "null", counter32, counter64]
               displayName:
                 type: string
               instanceColumn:
@@ -17524,8 +17527,9 @@ components:
           properties:
             extendedFormat:
               type: boolean
-            source:
-              type: integer
+            origin:
+              type: string
+              enum: [internal, agent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp, trafficobserver, netconf, computed]
             title:
               type: string
               description: Table title
@@ -17538,8 +17542,9 @@ components:
                     type: string
                     description: Column name
                   dataType:
-                    type: integer
-                    description: Column data type code
+                    type: string
+                    enum: [int32, uint32, int64, uint64, string, float, "null", counter32, counter64]
+                    description: Column data type
                   displayName:
                     type: string
                     description: Column display name
@@ -19952,16 +19957,14 @@ components:
         description:
           type: string
           description: DCI description
-        sourceType:
-          type: integer
-          description: Data source type (numeric code)
         origin:
           type: string
           enum: [internal, agent, snmp, websvc, push, winperf, smclp, script, ssh, mqtt, driver, modbus, ethernetip, cloud, otlp, trafficobserver, netconf, computed]
-          description: Data origin name corresponding to sourceType
+          description: Data origin
         dataType:
-          type: integer
-          description: Data type
+          type: string
+          enum: [int32, uint32, int64, uint64, string, float, "null", counter32, counter64]
+          description: Data type of the current value (`null` if no value was collected and for table DCIs)
         value:
           type: string
           description: Current value as string
@@ -19971,10 +19974,12 @@ components:
           nullable: true
           description: Timestamp of last value collection in ISO 8601 format with milliseconds, or null if no value was collected
         status:
-          type: integer
-          description: Current DCI status
+          type: string
+          enum: [active, disabled, unsupported]
+          description: Current DCI status (DCIs bound to a cluster resource not active on this node are reported as `disabled`)
         type:
-          type: integer
+          type: string
+          enum: [item, table]
           description: DCI type
         errorCount:
           type: integer
@@ -20024,7 +20029,9 @@ components:
           description: True if DCI has active threshold
         threshold:
           type: object
-          description: Active threshold information (present only if hasActiveThreshold is true)
+          description: >-
+            Active threshold information (present only if hasActiveThreshold is true). Includes
+            `currentSeverity` as severity name (normal, warning, minor, major, critical).
     TcpProxyConnectedMessage:
       type: object
       description: WebSocket text message sent when TCP proxy connection is established

@@ -1152,6 +1152,8 @@ shared_ptr<EventTemplate> NXCORE_EXPORTABLE FindEventTemplate(const wchar_t *nam
 
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue);
 
+extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_severityNames[];
+
 const wchar_t NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
 const wchar_t NXCORE_EXPORTABLE *GetAPStateAsText(AccessPointState state);
 

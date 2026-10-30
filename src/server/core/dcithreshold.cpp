@@ -1312,7 +1312,7 @@ json_t *Threshold::toJson() const
    json_object_set_new(root, "function", json_string_w(CodeToText(m_function, g_dciThresholdFunctionNames, L"last")));
    json_object_set_new(root, "condition", json_string_w(CodeToText(m_operation, g_dciThresholdOperationNames, L"equal")));
    json_object_set_new(root, "dataType", json_string_w(CodeToText(m_dataType, g_dciDataTypeNames, L"int32")));
-   json_object_set_new(root, "currentSeverity", json_integer(m_currentSeverity));
+   json_object_set_new(root, "currentSeverity", json_string_w(CodeToText(m_currentSeverity, g_severityNames, L"normal")));
    json_object_set_new(root, "sampleCount", json_integer(m_sampleCount));
    json_object_set_new(root, "deactivationSampleCount", json_integer(m_deactivationSampleCount));
    json_object_set_new(root, "script", json_string_t(CHECK_NULL_EX(m_scriptSource)));

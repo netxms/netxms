@@ -935,15 +935,14 @@ json_t *DCTable::lastValueToJSON()
    json_object_set_new(data, "name", json_string_t(m_name));
    json_object_set_new(data, "flags", json_integer(m_flags));
    json_object_set_new(data, "description", json_string_t(m_description));
-   json_object_set_new(data, "sourceType", json_integer(m_source));
    json_object_set_new(data, "origin", json_string_w(CodeToText(m_source, g_dciOriginNames, L"unknown")));
-   json_object_set_new(data, "dataType", json_integer(DCI_DT_NULL));
+   json_object_set_new(data, "dataType", json_string("null"));
    json_object_set_new(data, "value", json_string(""));
    json_object_set_new(data, "timestamp", (m_lastValue != nullptr) ? m_lastValueTimestamp.asJson() : json_null());
 
    // Show resource-bound DCIs as inactive if cluster resource is not on this node
-   json_object_set_new(data, "status", json_integer(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED));
-   json_object_set_new(data, "type", json_integer(getType()));
+   json_object_set_new(data, "status", json_string_w(CodeToText(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED, g_dciStatusNames, L"active")));
+   json_object_set_new(data, "type", json_string("table"));
    json_object_set_new(data, "errorCount", json_integer(m_errorCount));
    json_object_set_new(data, "lastCollectionError", json_string(DataCollectionErrorName(static_cast<DataCollectionError>(m_lastCollectionError))));
    json_object_set_new(data, "templateItemId", json_integer(m_templateItemId));
@@ -980,7 +979,7 @@ json_t *DCTable::lastValueToJSON()
       json_object_set_new(data, "hasActiveThreshold", json_boolean(true));
       json_t *thresholdData = threshold->toJson();
       json_object_set_new(thresholdData, "condition", json_string_t(threshold->getConditionAsText()));
-      json_object_set_new(thresholdData, "currentSeverity", json_integer(severity));
+      json_object_set_new(thresholdData, "currentSeverity", json_string_w(CodeToText(severity, g_severityNames, L"normal")));
       json_object_set_new(thresholdData, "isReached", json_boolean(true));
       json_object_set_new(data, "threshold", thresholdData);
    }
@@ -1504,6 +1503,25 @@ bool DCTable::isUsingEvent(uint32_t eventCode) const
 DCObject *DCTable::clone() const
 {
    return new DCTable(this, false);
+}
+
+/**
+ * Convert table to JSON for REST API, with data origin and column data types as symbolic names
+ */
+json_t NXCORE_EXPORTABLE *TableToJson(const Table& table)
+{
+   json_t *root = table.toJson();
+   json_object_set_new(root, "origin", json_string_w(CodeToText(table.getSource(), g_dciOriginNames, L"unknown")));
+   json_object_del(root, "source");
+
+   json_t *columns = json_object_get(root, "columns");
+   size_t index;
+   json_t *column;
+   json_array_foreach(columns, index, column)
+   {
+      json_object_set_new(column, "dataType", json_string_w(CodeToText(table.getColumnDataType(static_cast<int>(index)), g_dciDataTypeNames, L"int32")));
+   }
+   return root;
 }
 
 /**

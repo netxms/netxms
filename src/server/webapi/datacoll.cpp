@@ -353,7 +353,7 @@ int H_DataCollectionTableValue(Context *context)
    if (table != nullptr)
    {
       json_object_set_new(response, "timestamp", timestamp.asJson());
-      json_object_set_new(response, "table", table->toJson());
+      json_object_set_new(response, "table", TableToJson(*table));
    }
    else
    {
@@ -440,7 +440,7 @@ static void SetTableCellValue(json_t *value, DCTable *table, const char *column,
       return;
    }
 
-   json_object_set_new(value, "dataType", json_integer(lastValue->getColumnDataType(columnIndex)));
+   json_object_set_new(value, "dataType", json_string_w(CodeToText(lastValue->getColumnDataType(columnIndex), g_dciDataTypeNames, L"int32")));
    json_object_set_new(value, "value", json_string_t(lastValue->getAsString(rowIndex, columnIndex, L"")));
    json_object_set_new(value, "timestamp", timestamp.asJson());
 }

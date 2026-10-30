@@ -49,6 +49,8 @@ extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciThresholdFunctionNames[];
 extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dciThresholdOperationNames[];
 extern NXCORE_EXPORTABLE_VAR(CodeLookupElement) g_dctColumnAggregationNames[];
 
+json_t NXCORE_EXPORTABLE *TableToJson(const Table& table);
+
 /**
  * Apply a JSON string property to a SharedString field using merge semantics (used by updateFromJSON).
  * Field left unchanged when property absent; null or string applied. Returns false on incompatible type.

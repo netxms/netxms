@@ -1157,6 +1157,15 @@ uint32_t NXCORE_EXPORTABLE EventCodeFromName(const wchar_t *name, uint32_t defau
 }
 
 /**
+ * Symbolic event severity names for JSON (REST API)
+ */
+CodeLookupElement g_severityNames[] =
+{
+   { SEVERITY_NORMAL, L"normal" }, { SEVERITY_WARNING, L"warning" }, { SEVERITY_MINOR, L"minor" },
+   { SEVERITY_MAJOR, L"major" }, { SEVERITY_CRITICAL, L"critical" }, { 0, nullptr }
+};
+
+/**
  * Get status as text
  */
 const wchar_t NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps)

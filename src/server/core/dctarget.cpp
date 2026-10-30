@@ -1183,7 +1183,7 @@ uint32_t DataCollectionTarget::getPerfTabDCIList(json_t *output, uint32_t userId
          json_object_set_new(dci, "description", json_string_t(object->getDescription()));
          json_object_set_new(dci, "instance", json_string_t(object->getInstanceDiscoveryData()));
          json_object_set_new(dci, "instanceName", json_string_t(object->getInstanceName()));
-         json_object_set_new(dci, "dataType", json_integer((object->getType() == DCO_TYPE_ITEM) ? static_cast<DCItem*>(object)->getDataType() : 0));
+         json_object_set_new(dci, "dataType", json_string_w(CodeToText((object->getType() == DCO_TYPE_ITEM) ? static_cast<DCItem*>(object)->getDataType() : DCI_DT_NULL, g_dciDataTypeNames, L"int32")));
          json_object_set_new(dci, "templateDciId", json_integer(object->getTemplateItemId()));
 
          shared_ptr<DCObject> src = getDCObjectById(object->getTemplateItemId(), userId, false);

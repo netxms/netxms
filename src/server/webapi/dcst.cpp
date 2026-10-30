@@ -286,7 +286,7 @@ static int ExecuteSummaryTableQuery(Context *context, uint32_t tableId, SummaryT
    }
 
    nxlog_debug_tag(DEBUG_TAG_WEBAPI, 6, _T("ExecuteSummaryTableQuery(ad-hoc=%s, id=%u): %d rows in resulting table"), BooleanToString(tableDefinition != nullptr), tableId, result->getNumRows());
-   json_t *response = result->toJson();
+   json_t *response = TableToJson(*result);
    context->setResponseData(response);
    json_decref(response);
    delete result;

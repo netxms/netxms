@@ -2555,25 +2555,24 @@ json_t *DCItem::lastValueToJSON()
    json_object_set_new(data, "name", json_string_t(m_name));
    json_object_set_new(data, "flags", json_integer(m_flags));
    json_object_set_new(data, "description", json_string_t(m_description));
-   json_object_set_new(data, "sourceType", json_integer(m_source));
    json_object_set_new(data, "origin", json_string_w(CodeToText(m_source, g_dciOriginNames, L"unknown")));
 
    if ((m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp().asMilliseconds() > 1))
    {
-      json_object_set_new(data, "dataType", json_integer(getTransformedDataType()));
+      json_object_set_new(data, "dataType", json_string_w(CodeToText(getTransformedDataType(), g_dciDataTypeNames, L"int32")));
       json_object_set_new(data, "value", json_string_t(m_ppValueCache[0]->getString()));
       json_object_set_new(data, "timestamp", m_ppValueCache[0]->getTimeStamp().asJson());
    }
    else
    {
-      json_object_set_new(data, "dataType", json_integer(DCI_DT_NULL));
+      json_object_set_new(data, "dataType", json_string("null"));
       json_object_set_new(data, "value", json_string(""));
       json_object_set_new(data, "timestamp", json_null());
    }
 
    // Show resource-bound DCIs as inactive if cluster resource is not on this node
-   json_object_set_new(data, "status", json_integer(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED));
-   json_object_set_new(data, "type", json_integer(getType()));
+   json_object_set_new(data, "status", json_string_w(CodeToText(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED, g_dciStatusNames, L"active")));
+   json_object_set_new(data, "type", json_string("item"));
    json_object_set_new(data, "errorCount", json_integer(m_errorCount));
    json_object_set_new(data, "lastCollectionError", json_string(DataCollectionErrorName(static_cast<DataCollectionError>(m_lastCollectionError))));
    json_object_set_new(data, "templateItemId", json_integer(m_templateItemId));

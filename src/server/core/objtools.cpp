@@ -1324,7 +1324,7 @@ uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_
                rcc = ExecuteAgentTableTool(toolData, node, &agentTable, inputFields, maskedInputFields, userName);
                if (rcc == RCC_SUCCESS)
                {
-                  *result = agentTable->toJson();
+                  *result = TableToJson(*agentTable);
                   delete agentTable;
                }
             }
@@ -1336,7 +1336,7 @@ uint32_t NXCORE_EXPORTABLE ExecuteTableToolToJSON(uint32_t toolId, const shared_
                else
                   rcc = ExecuteAgentListTool(toolId, toolData, node, &table, inputFields, maskedInputFields, userName);
                if (rcc == RCC_SUCCESS)
-                  *result = table.toJson();
+                  *result = TableToJson(table);
             }
 
             delete maskedInputFields;
