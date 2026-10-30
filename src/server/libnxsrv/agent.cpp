@@ -480,6 +480,8 @@ void AgentConnectionReceiver::finalize()
    if (connection != nullptr)
    {
       connection->lock();
+      debugPrintf(6, _T("Closing communication channel"));
+      connection->m_isConnected = false;
       if (connection->m_hCurrFile != -1)
       {
          _close(connection->m_hCurrFile);
@@ -491,9 +493,6 @@ void AgentConnectionReceiver::finalize()
          connection->m_sendToClientMessageCallback = nullptr;
          connection->onFileDownload(false);
       }
-
-      debugPrintf(6, _T("Closing communication channel"));
-      connection->m_isConnected = false;
       connection->unlock();
 
       connection->onDisconnect();
@@ -900,6 +899,7 @@ void AgentConnection::disconnect()
 {
    debugPrintf(6, _T("disconnect() called"));
    lock();
+   m_isConnected = false;
 	if (m_hCurrFile != -1)
 	{
 		_close(m_hCurrFile);
@@ -917,7 +917,6 @@ void AgentConnection::disconnect()
       m_channel->shutdown();
       m_channel.reset();
    }
-   m_isConnected = false;
    unlock();
    debugPrintf(6, _T("Disconnect completed"));
 }
@@ -3052,7 +3051,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *r
                {
                   if (!m_fileDownloadSucceeded)
                   {
-                     msg->setField(VID_RCC, ERR_IO_FAILURE);
+                     msg->setField(VID_RCC, m_isConnected ? ERR_FILE_TRANSFER_FAILED : ERR_CONNECTION_BROKEN);
                      if (m_deleteFileOnDownloadFailure)
                         _tremove(recvFile);
                   }

@@ -94,6 +94,7 @@ static struct
    { ERR_PROXY_CONNECT_FAILED, _T("Cannot connect to proxy agent") },
    { ERR_TLS_REQUIRED, _T("TLS connection required") },
    { ERR_EXEC_TIMEOUT, _T("Command execution time limit exceeded") },
+   { ERR_FILE_TRANSFER_FAILED, _T("File transfer failed") },
    { 0xFFFFFFFF, nullptr }
 };
 
@@ -120,11 +121,13 @@ uint32_t LIBNXSRV_EXPORTABLE AgentErrorToRCC(uint32_t err)
       case ERR_ACCESS_DENIED:
       case ERR_BAD_SIGNATURE:
          return RCC_AGENT_ACCESS_DENIED;
+      case ERR_FILE_TRANSFER_FAILED:
       case ERR_IO_FAILURE:
          return RCC_IO_ERROR;
       case ERR_ALREADY_AUTHENTICATED:
       case ERR_AUTH_FAILED:
       case ERR_AUTH_NOT_REQUIRED:
+      case ERR_CONNECTION_BROKEN:
          return RCC_COMM_FAILURE;
       case ERR_NO_SUCH_INSTANCE:
          return RCC_NO_SUCH_INSTANCE;

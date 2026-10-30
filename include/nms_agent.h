@@ -147,6 +147,7 @@
 #define ERR_PROXY_CONNECT_FAILED       ((uint32_t)941)
 #define ERR_TLS_REQUIRED               ((uint32_t)942)
 #define ERR_EXEC_TIMEOUT               ((uint32_t)943)
+#define ERR_FILE_TRANSFER_FAILED       ((uint32_t)944)
 
 /**
  * Bulk data reconciliation DCI processing status codes
