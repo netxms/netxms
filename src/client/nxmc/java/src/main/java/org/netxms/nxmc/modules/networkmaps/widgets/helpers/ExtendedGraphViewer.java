@@ -182,6 +182,7 @@ public class ExtendedGraphViewer extends GraphViewer
       backgroundFigure = new BackgroundFigure();
       backgroundFigure.setSize(-1, -1);
       backgroundLayer.add(backgroundFigure);
+      graph.getViewport().setCursor(graph.getDisplay().getSystemCursor(SWT.CURSOR_ARROW));
       backgroundLayer.addMouseMotionListener(new MouseMotionListener() {
          @Override
          public void mouseMoved(MouseEvent me)
@@ -1605,6 +1606,8 @@ public class ExtendedGraphViewer extends GraphViewer
    {
       graph.setPreferredSize(width, height);
       backgroundFigure.setSize(width, height);
+      // Map without fixed size has no area outside its borders
+      graph.getViewport().setCursor(((width < 0) || (height < 0)) ? graph.getDisplay().getSystemCursor(SWT.CURSOR_ARROW) : null);
       if (showMapSize)
       {
          backgroundFigure.setBorder(new AbstractBorder() {

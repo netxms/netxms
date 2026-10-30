@@ -60,7 +60,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	private volatile boolean syncRunning = true;
 	private MapLabelProvider labelProvider;
    private int parallelLinkMergeThreshold;
-   private List<NetworkMapLink> displayLinks = new ArrayList<NetworkMapLink>();
+   private Map<Long, List<NetworkMapLink>> displayLinksBySource = new HashMap<Long, List<NetworkMapLink>>();
    private Map<Long, ParallelLinkGroup> groupByMemberId = new HashMap<Long, ParallelLinkGroup>();
 
 	/**
@@ -203,12 +203,14 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	@Override
 	public Object[] getRelationships(Object source, Object dest)
 	{
-      long sourceId = ((NetworkMapElement)source).getId();
+      List<NetworkMapLink> links = displayLinksBySource.get(((NetworkMapElement)source).getId());
+      if (links == null)
+         return null;
       long destId = ((NetworkMapElement)dest).getId();
       List<NetworkMapLink> result = new ArrayList<NetworkMapLink>();
-      for(NetworkMapLink l : displayLinks)
+      for(NetworkMapLink l : links)
       {
-         if ((l.getElement1() == sourceId) && (l.getElement2() == destId))
+         if (l.getElement2() == destId)
             result.add(l);
       }
       return result.toArray();
@@ -289,10 +291,17 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 		if (newInput instanceof NetworkMapPage)
 		{
 			page = (NetworkMapPage)newInput;
-         displayLinks = ParallelLinkGroup.merge(page.getLinks(), parallelLinkMergeThreshold);
+         displayLinksBySource.clear();
          groupByMemberId.clear();
-         for(NetworkMapLink l : displayLinks)
+         for(NetworkMapLink l : ParallelLinkGroup.merge(page.getLinks(), parallelLinkMergeThreshold))
          {
+            List<NetworkMapLink> links = displayLinksBySource.get(l.getElement1());
+            if (links == null)
+            {
+               links = new ArrayList<NetworkMapLink>();
+               displayLinksBySource.put(l.getElement1(), links);
+            }
+            links.add(l);
             if (l instanceof ParallelLinkGroup)
             {
                for(NetworkMapLink member : ((ParallelLinkGroup)l).getLinks())
@@ -318,7 +327,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 		else
 		{
 			page = null;
-         displayLinks.clear();
+         displayLinksBySource.clear();
          groupByMemberId.clear();
 		}
 	}

@@ -129,6 +129,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	private Color defaultLinkColor = null;
    private boolean disableGeolocationBackground = false;
    private boolean disableLinkTextAutoUpdate = true;
+   private volatile MapLayoutAlgorithm savedLayoutAlgorithm = null;
    private Map<Long, Boolean> readOnlyFlagsCache = new HashMap<>();
    private Set<NetworkMapElement> movedElementList = new HashSet<>();
    private Set<NetworkMapLink> changedLinkList = new HashSet<>();
@@ -249,6 +250,14 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    {
       // Handle canvas-type changes (contextChanged doesn't fire — same object).
       ensureCorrectCanvas();
+
+      MapLayoutAlgorithm receivedLayout = ((NetworkMap)object).getLayout();
+      if (receivedLayout == savedLayoutAlgorithm)
+      {
+         savedLayoutAlgorithm = null;
+         if (receivedLayout == layoutAlgorithm)
+            return; // own layout change, graph is already built with it
+      }
 
       if (isGeographicalCanvas())
       {
@@ -1172,6 +1181,59 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	 */
 	private void saveMap()
 	{
+      final NXCObjectModificationData md = createMapModificationData();
+      new Job(String.format(i18n.tr("Save network map %s"), getObjectName()), this) {
+			@Override
+         protected void run(IProgressMonitor monitor) throws Exception
+			{
+				session.modifyObject(md);
+            runInUIThread(() -> viewer.setInput(mapPage));
+			}
+
+			@Override
+			protected String getErrorMessage()
+			{
+            return i18n.tr("Cannot save map");
+			}
+		}.start();
+	}
+
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#saveLayoutAlgorithm()
+    */
+   @Override
+   protected void saveLayoutAlgorithm()
+   {
+      savedLayoutAlgorithm = layoutAlgorithm;
+      final NXCObjectModificationData md = createMapModificationData();
+      new Job(String.format(i18n.tr("Save network map %s"), getObjectName()), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyObject(md);
+         }
+
+         @Override
+         protected void jobFailureHandler(Exception e)
+         {
+            savedLayoutAlgorithm = null;
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot save map");
+         }
+      }.start();
+   }
+
+   /**
+    * Create modification data with current map content and settings.
+    *
+    * @return modification data
+    */
+   private NXCObjectModificationData createMapModificationData()
+   {
 		updateObjectPositions();
 
       final NXCObjectModificationData md = new NXCObjectModificationData(getMapObject().getObjectId());
@@ -1203,22 +1265,8 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       else
          flags &= ~NetworkMap.MF_TRANSLUCENT_LABEL_BKGND;
 		md.setObjectFlags(flags);
-
-      new Job(String.format(i18n.tr("Save network map %s"), getObjectName()), this) {
-			@Override
-         protected void run(IProgressMonitor monitor) throws Exception
-			{
-				session.modifyObject(md);
-            runInUIThread(() -> viewer.setInput(mapPage));
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-            return i18n.tr("Cannot save map");
-			}
-		}.start();
-	}
+      return md;
+   }
 
 	/**
 	 * Show properties dialog for map object

@@ -27,9 +27,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.CompositeLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.GridLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -63,6 +60,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.networkmaps.ObjectDoubleClickHandlerRegistry;
+import org.netxms.nxmc.modules.networkmaps.algorithms.LayoutAlgorithmFactory;
 import org.netxms.nxmc.modules.networkmaps.algorithms.ManualLayout;
 import org.netxms.nxmc.modules.networkmaps.algorithms.SparseTree;
 import org.netxms.nxmc.modules.networkmaps.widgets.helpers.ExtendedGraphViewer;
@@ -357,40 +355,21 @@ public class NetworkMapWidget extends Composite
 	 */
 	public void setLayoutAlgorithm(MapLayoutAlgorithm alg)
 	{
-		LayoutAlgorithm algorithm;
-
-		switch(alg)
+		if (alg == MapLayoutAlgorithm.SPARSE_VTREE)
 		{
-			case SPRING:
-				algorithm = new SpringLayoutAlgorithm();
-				break;
-			case RADIAL:
-				algorithm = new RadialLayoutAlgorithm();
-				break;
-			case HTREE:
-				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.LEFT_RIGHT);
-				break;
-			case VTREE:
-				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
-				break;
-			case SPARSE_VTREE:
-				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
-				viewer.setComparator(new ViewerComparator() {
-					@Override
-					public int compare(Viewer viewer, Object e1, Object e2)
-					{
-						return e1.toString().compareToIgnoreCase(e2.toString());
-					}
-				});
-				algorithm = new CompositeLayoutAlgorithm(
-						new LayoutAlgorithm[] { mainLayoutAlgorithm,
-						                        new SparseTree() });
-				break;
-			default:
-				algorithm = new GridLayoutAlgorithm();
-				break;
+			viewer.setComparator(new ViewerComparator() {
+				@Override
+				public int compare(Viewer viewer, Object e1, Object e2)
+				{
+					return e1.toString().compareToIgnoreCase(e2.toString());
+				}
+			});
+			viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN), new SparseTree() }));
 		}
-		viewer.setLayoutAlgorithm(algorithm);
+		else
+		{
+			viewer.setLayoutAlgorithm(LayoutAlgorithmFactory.create(alg));
+		}
 	}
 
 	/**

@@ -34,11 +34,6 @@ import org.eclipse.gef4.zest.core.widgets.Graph;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
 import org.eclipse.gef4.zest.core.widgets.GraphItem;
 import org.eclipse.gef4.zest.core.widgets.GraphNode;
-import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.GridLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
@@ -97,6 +92,7 @@ import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.networkmaps.ObjectDoubleClickHandlerRegistry;
+import org.netxms.nxmc.modules.networkmaps.algorithms.LayoutAlgorithmFactory;
 import org.netxms.nxmc.modules.networkmaps.algorithms.ManualLayout;
 import org.netxms.nxmc.modules.networkmaps.views.helpers.BendpointEditor;
 import org.netxms.nxmc.modules.networkmaps.views.helpers.MapImageManipulationHelper;
@@ -1073,32 +1069,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			automaticLayoutEnabled = true;
 		}
 
-		LayoutAlgorithm algorithm;
-
-		switch(alg)
-		{
-			case SPRING:
-				algorithm = new SpringLayoutAlgorithm();
-				break;
-			case RADIAL:
-				algorithm = new RadialLayoutAlgorithm();
-				break;
-			case HTREE:
-				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.LEFT_RIGHT);
-				break;
-			case VTREE:
-				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
-				break;
-			case SPARSE_VTREE:
-				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
-				((TreeLayoutAlgorithm)algorithm).setNodeSpace(new Dimension(100, 100));
-				break;
-			default:
-				algorithm = new GridLayoutAlgorithm();
-				break;
-		}
-
-		viewer.setLayoutAlgorithm(algorithm);
+		viewer.setLayoutAlgorithm(LayoutAlgorithmFactory.create(alg));
 
 		layoutAlgorithm = alg;
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
@@ -1279,7 +1250,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 				{
 					setLayoutAlgorithm(alg, true);
 					viewer.setInput(mapPage);
-					saveLayout();
+					saveLayoutAlgorithm();
 				}
 			};
 			actionSetAlgorithm[i].setChecked(layoutAlgorithm.getValue() == i);
@@ -2061,6 +2032,14 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	 * does nothing.
 	 */
 	protected void saveLayout()
+	{
+	}
+
+	/**
+	 * Called when layout algorithm has to be saved. Graph is already built with new algorithm when this method is called. Default
+	 * implementation does nothing.
+	 */
+	protected void saveLayoutAlgorithm()
 	{
 	}
 

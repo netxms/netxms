@@ -125,7 +125,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
       statusImages = new Image[9];
       for(int i = 0; i < statusImages.length; i++)
-         statusImages[i] = StatusDisplayInfo.getStatusImageDescriptor(i).createImage();
+         statusImages[i] = ResourceManager.createImageWithCachedData(StatusDisplayInfo.getStatusImageDescriptor(i));
 
       imgNetMap = ResourceManager.getImage("icons/netmap/objects/netmap.png");
       imgNodeGeneric = ResourceManager.getImage("icons/netmap/objects/node.png");

@@ -20,10 +20,13 @@ package org.netxms.nxmc.resources;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.nxmc.Registry;
 import org.netxms.ui.svg.SVGImage;
 import org.netxms.ui.svg.SVGParseException;
 import org.slf4j.Logger;
@@ -45,7 +48,7 @@ public final class ResourceManager
 
    /**
     * Get image descriptor from resources.
-    * 
+    *
     * @param path image path
     * @return image descriptor
     */
@@ -56,19 +59,41 @@ public final class ResourceManager
 
    /**
     * Get image from resources. Image should be disposed by caller.
-    * 
+    *
     * @param path image path
     * @return image object
     */
    public static Image getImage(String path)
    {
-      ImageDescriptor d = getImageDescriptor(path);
-      return (d != null) ? d.createImage() : null;
+      return createImageWithCachedData(getImageDescriptor(path));
+   }
+
+   /**
+    * Create image that keeps decoded data on desktop client. Without it SWT decodes image file again for every draw on scaled
+    * display. Image should be disposed by caller.
+    *
+    * @param descriptor image descriptor
+    * @return image object
+    */
+   public static Image createImageWithCachedData(ImageDescriptor descriptor)
+   {
+      if (Registry.IS_WEB_CLIENT)
+         return descriptor.createImage();
+
+      return new ImageDescriptor() {
+         private final Map<Integer, ImageData> imageData = new HashMap<Integer, ImageData>();
+
+         @Override
+         public ImageData getImageData(int zoom)
+         {
+            return imageData.computeIfAbsent(zoom, descriptor::getImageData);
+         }
+      }.createImage();
    }
 
    /**
     * Get image from resources. Image should be disposed by caller.
-    * 
+    *
     * @param path image path
     * @return image object
     */
@@ -80,7 +105,7 @@ public final class ResourceManager
 
    /**
     * Get image data from resources.
-    * 
+    *
     * @param path image path
     * @return image data
     */
@@ -113,7 +138,7 @@ public final class ResourceManager
 
    /**
     * Get SVG image from resources.
-    * 
+    *
     * @param path image path
     * @return SVG image object
     */
