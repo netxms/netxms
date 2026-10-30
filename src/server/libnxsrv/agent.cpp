@@ -2576,7 +2576,7 @@ shared_ptr<RoutingTable> AgentConnection::getRoutingTable(size_t limit)
          pBuf = pChar + 1;
       }
 
-      // Route type (maybe followed by optional metric)
+      // Route type (maybe followed by optional metric and protocol)
       pChar = _tcschr(pBuf, ' ');
       if (pChar != nullptr)
       {
@@ -2584,8 +2584,21 @@ shared_ptr<RoutingTable> AgentConnection::getRoutingTable(size_t limit)
          route.routeType = _tcstoul(pBuf, nullptr, 10);
          pBuf = pChar + 1;
 
-         // Metric
-         route.routeType = _tcstoul(pBuf, nullptr, 10);
+         // Metric (maybe followed by optional protocol)
+         pChar = _tcschr(pBuf, ' ');
+         if (pChar != nullptr)
+         {
+            *pChar = 0;
+            route.metric = _tcstoul(pBuf, nullptr, 10);
+            pBuf = pChar + 1;
+
+            // Protocol (RFC1213 ipRouteProto value)
+            route.protocol = static_cast<RoutingProtocol>(_tcstoul(pBuf, nullptr, 10));
+         }
+         else
+         {
+            route.metric = _tcstoul(pBuf, nullptr, 10);
+         }
       }
       else
       {
