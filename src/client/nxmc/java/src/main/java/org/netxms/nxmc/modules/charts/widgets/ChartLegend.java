@@ -30,6 +30,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
@@ -52,7 +53,8 @@ import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisp
 import org.netxms.nxmc.tools.ColorConverter;
 
 /**
- * Chart legend
+ * Chart legend. Clicking on a legend entry of line, bar, or pie chart toggles corresponding item on the chart; disabled items are
+ * shown with strikethrough label and hollow color box but keep their values in extended legend.
  */
 public class ChartLegend extends Composite
 {
@@ -64,6 +66,7 @@ public class ChartLegend extends Composite
    private Chart chart;
    private Label[] headerLabels = new Label[5];
    private List<Label[]> dataLabels = new ArrayList<>();
+   private List<LegendLabel> itemLabels = new ArrayList<>();
    private Font headerFont = null;
    private boolean vertical;
    private MouseListener mouseListener;
@@ -109,7 +112,10 @@ public class ChartLegend extends Composite
    {
       Color effectiveColor = (color != null) ? color : defaultForeground;
       super.setForeground(effectiveColor);
-      updateChildren(this, (c) -> c.setForeground(effectiveColor));
+      updateChildren(this, (c) -> {
+         c.setForeground(effectiveColor);
+         c.redraw(); // text and color boxes are painted on canvas and do not repaint on color change by themselves
+      });
    }
 
    /**
@@ -120,7 +126,10 @@ public class ChartLegend extends Composite
    {
       Color effectiveColor = (color != null) ? color : chart.getBackground();
       super.setBackground(effectiveColor);
-      updateChildren(this, (c) -> c.setBackground(effectiveColor));
+      updateChildren(this, (c) -> {
+         c.setBackground(effectiveColor);
+         c.redraw();
+      });
    }
 
    /**
@@ -169,6 +178,17 @@ public class ChartLegend extends Composite
    }
 
    /**
+    * Check if items of this chart can be toggled from legend.
+    *
+    * @return true if items can be toggled from legend
+    */
+   private boolean isItemToggleSupported()
+   {
+      ChartType type = chart.getType();
+      return (type == ChartType.LINE) || (type == ChartType.BAR) || (type == ChartType.PIE);
+   }
+
+   /**
     * Rebuild legend after configuration or metric set change
     */
    public void rebuild()
@@ -182,6 +202,7 @@ public class ChartLegend extends Composite
          return;
 
       dataLabels.clear();
+      itemLabels.clear();
 
       if (configuration.isExtendedLegend() && (chart.getType() == ChartType.LINE))
       {
@@ -193,61 +214,16 @@ public class ChartLegend extends Composite
          setLayout(layout);
 
          // Column headers
-         new Label(this, SWT.NONE); // Empty label
+         new Label(this, SWT.NONE).addMouseListener(mouseListener); // Empty label
+         headerLabels[0] = createHeaderLabel("Curr", true);
+         headerLabels[1] = createHeaderLabel("Min", false);
+         headerLabels[2] = createHeaderLabel("Max", false);
+         headerLabels[3] = createHeaderLabel("Avg", false);
+         headerLabels[4] = createHeaderLabel("95%", false);
 
-         headerLabels[0] = new Label(this, SWT.NONE);
-         headerLabels[0].setText("Curr");
-         headerLabels[0].setFont(headerFont);
-         headerLabels[0].setBackground(getBackground());
-         headerLabels[0].setForeground(getForeground());
-         GridData gd = new GridData();
-         gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
-         headerLabels[0].setLayoutData(gd);
-
-         headerLabels[1] = new Label(this, SWT.NONE);
-         headerLabels[1].setText("Min");
-         headerLabels[1].setFont(headerFont);
-         headerLabels[1].setBackground(getBackground());
-         headerLabels[1].setForeground(getForeground());
-
-         headerLabels[2] = new Label(this, SWT.NONE);
-         headerLabels[2].setText("Max");
-         headerLabels[2].setFont(headerFont);
-         headerLabels[2].setBackground(getBackground());
-         headerLabels[2].setForeground(getForeground());
-
-         headerLabels[3] = new Label(this, SWT.NONE);
-         headerLabels[3].setText("Avg");
-         headerLabels[3].setFont(headerFont);
-         headerLabels[3].setBackground(getBackground());
-         headerLabels[3].setForeground(getForeground());
-
-         headerLabels[4] = new Label(this, SWT.NONE);
-         headerLabels[4].setText("95%");
-         headerLabels[4].setFont(headerFont);
-         headerLabels[4].setBackground(getBackground());
-         headerLabels[4].setForeground(getForeground());
-
-         List<ChartDciConfig> metrics = chart.getItems();
-         for(int i = 0; i < metrics.size(); i++)
-         {
-            int color = metrics.get(i).getColorAsInt();
-            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getLabel());
-            Label[] row = new Label[5];
-            for(int j = 0; j < 5; j++)
-            {
-               row[j] = new Label(this, SWT.NONE);
-               row[j].setBackground(getBackground());
-               row[j].setForeground(getForeground());
-               if (j == 0)
-               {
-                  gd = new GridData();
-                  gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
-                  row[j].setLayoutData(gd);
-               }
-            }
-            dataLabels.add(row);
-         }
+         int count = chart.getItemCount();
+         for(int i = 0; i < count; i++)
+            createItemRow(i, 5);
 
          refresh();
       }
@@ -263,47 +239,14 @@ public class ChartLegend extends Composite
          setLayout(layout);
 
          // Column headers
-         new Label(this, SWT.NONE); // Empty label
-
-         headerLabels[0] = new Label(this, SWT.NONE);
-         headerLabels[0].setText("Value");
-         headerLabels[0].setFont(headerFont);
-         headerLabels[0].setBackground(getBackground());
-         headerLabels[0].setForeground(getForeground());
-         GridData gd = new GridData();
-         gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
-         headerLabels[0].setLayoutData(gd);
-
+         new Label(this, SWT.NONE).addMouseListener(mouseListener); // Empty label
+         headerLabels[0] = createHeaderLabel("Value", true);
          if (showPercent)
-         {
-            headerLabels[1] = new Label(this, SWT.NONE);
-            headerLabels[1].setText("Pct");
-            headerLabels[1].setFont(headerFont);
-            headerLabels[1].setBackground(getBackground());
-            headerLabels[1].setForeground(getForeground());
-         }
+            headerLabels[1] = createHeaderLabel("Pct", false);
 
-         int labelsPerRow = showPercent ? 2 : 1;
-         List<ChartDciConfig> metrics = chart.getItems();
-         for(int i = 0; i < metrics.size(); i++)
-         {
-            int color = metrics.get(i).getColorAsInt();
-            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getLabel());
-            Label[] row = new Label[labelsPerRow];
-            for(int j = 0; j < labelsPerRow; j++)
-            {
-               row[j] = new Label(this, SWT.NONE);
-               row[j].setBackground(getBackground());
-               row[j].setForeground(getForeground());
-               if (j == 0)
-               {
-                  gd = new GridData();
-                  gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
-                  row[j].setLayoutData(gd);
-               }
-            }
-            dataLabels.add(row);
-         }
+         int count = chart.getItemCount();
+         for(int i = 0; i < count; i++)
+            createItemRow(i, showPercent ? 2 : 1);
 
          refresh();
       }
@@ -317,16 +260,118 @@ public class ChartLegend extends Composite
          layout.marginRight = 0;
          setLayout(layout);
 
-         List<ChartDciConfig> metrics = chart.getItems();
-         for(int i = 0; i < metrics.size(); i++)
-         {
-            int color = metrics.get(i).getColorAsInt();
-            new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(i).getRGBObject(), metrics.get(i).getLabel());
-         }
+         int count = chart.getItemCount();
+         for(int i = 0; i < count; i++)
+            createItemRow(i, 0);
       }
+   }
 
-      for(Control c : getChildren())
-         c.addMouseListener(mouseListener);
+   /**
+    * Create column header label for extended legend.
+    *
+    * @param text header text
+    * @param indent true to indent label from previous column
+    * @return created label
+    */
+   private Label createHeaderLabel(String text, boolean indent)
+   {
+      Label label = new Label(this, SWT.NONE);
+      label.setText(text);
+      label.setFont(headerFont);
+      label.setBackground(getBackground());
+      label.setForeground(getForeground());
+      if (indent)
+      {
+         GridData gd = new GridData();
+         gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
+         label.setLayoutData(gd);
+      }
+      label.addMouseListener(mouseListener);
+      return label;
+   }
+
+   /**
+    * Create legend row for chart item: color box with label and, for extended legend, given number of data labels.
+    *
+    * @param index item index
+    * @param dataColumns number of data columns (0 for simple legend)
+    */
+   private void createItemRow(int index, int dataColumns)
+   {
+      ChartDciConfig metric = chart.getItem(index);
+      int color = metric.getColorAsInt();
+      LegendLabel legendLabel = new LegendLabel(this, (color != -1) ? ColorConverter.rgbFromInt(color) : chart.getPaletteEntry(index).getRGBObject(), metric.getLabel());
+      legendLabel.setItemEnabled(chart.isItemEnabled(index));
+      itemLabels.add(legendLabel);
+
+      MouseListener listener = isItemToggleSupported() ? createItemMouseListener(index) : mouseListener;
+      legendLabel.addMouseListener(listener);
+      updateChildren(legendLabel, (c) -> c.addMouseListener(listener));
+
+      if (dataColumns > 0)
+      {
+         Label[] row = new Label[dataColumns];
+         for(int j = 0; j < dataColumns; j++)
+         {
+            row[j] = new Label(this, SWT.NONE);
+            row[j].setBackground(getBackground());
+            row[j].setForeground(getForeground());
+            if (j == 0)
+            {
+               GridData gd = new GridData();
+               gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
+               row[j].setLayoutData(gd);
+            }
+            row[j].addMouseListener(listener);
+         }
+         dataLabels.add(row);
+      }
+   }
+
+   /**
+    * Create mouse listener for legend row of given item. Single click toggles item on the chart, double click is passed to chart's
+    * double click listeners (preceding single clicks toggle item twice, so item state is unchanged).
+    *
+    * @param index item index
+    * @return mouse listener
+    */
+   private MouseListener createItemMouseListener(final int index)
+   {
+      return new MouseAdapter() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+            if (e.button == 1)
+               toggleItem(index);
+         }
+
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            chart.fireDoubleClickListeners();
+         }
+      };
+   }
+
+   /**
+    * Toggle item on the chart.
+    *
+    * @param index item index
+    */
+   private void toggleItem(int index)
+   {
+      chart.setItemEnabled(index, !chart.isItemEnabled(index));
+   }
+
+   /**
+    * Update legend entry after item was enabled or disabled on the chart.
+    *
+    * @param index item index
+    */
+   public void updateItemState(int index)
+   {
+      if (index < itemLabels.size())
+         itemLabels.get(index).setItemEnabled(chart.isItemEnabled(index));
    }
 
    /**
@@ -339,9 +384,13 @@ public class ChartLegend extends Composite
       double total = 0;
       if ((chart.getType() == ChartType.BAR) || (chart.getType() == ChartType.PIE))
       {
+         int index = 0;
          for(DataSeries s : chart.getDataSeries())
-            if (!s.isDataCollectionError())
+         {
+            if (!s.isDataCollectionError() && chart.isItemEnabled(index))
                total += s.getCurrentValue();
+            index++;
+         }
       }
 
       int row = 0;
@@ -369,7 +418,8 @@ public class ChartLegend extends Composite
          }
          else if (labels.length > 1)
          {
-            labels[1].setText(error ? "" : String.format("%.2f%%", (total > 0) ? (s.getCurrentValue() / total * 100) : 0.0));
+            // Disabled items are excluded from total, so their percentage is meaningless
+            labels[1].setText((error || !chart.isItemEnabled(row)) ? "" : String.format("%.2f%%", (total > 0) ? (s.getCurrentValue() / total * 100) : 0.0));
          }
          row++;
       }
@@ -377,17 +427,23 @@ public class ChartLegend extends Composite
    }
 
    /**
-    * Legend label - color indicator + text
+    * Legend label - color indicator + text. Text is drawn on canvas (rather than using Label widget) so that it can be rendered
+    * with strikethrough when item is disabled.
     */
    private class LegendLabel extends Composite
    {
       private Color color;
+      private String text;
+      private boolean itemEnabled = true;
+      private Canvas symbol;
+      private Canvas label;
 
       LegendLabel(Composite parent, RGB color, String text)
       {
          super(parent, SWT.NONE);
 
          this.color = chart.getColorCache().create(color);
+         this.text = text;
 
          setBackground(parent.getBackground());
 
@@ -398,7 +454,7 @@ public class ChartLegend extends Composite
          layout.marginHeight = 0;
          setLayout(layout);
 
-         Canvas symbol = new Canvas(this, SWT.NONE) {
+         symbol = new Canvas(this, SWT.NONE) {
             @Override
             public Point computeSize(int wHint, int hHint, boolean changed)
             {
@@ -410,17 +466,63 @@ public class ChartLegend extends Composite
             @Override
             public void paintControl(PaintEvent e)
             {
-               e.gc.setBackground(LegendLabel.this.color);
-               e.gc.fillRectangle(getClientArea());
+               if (itemEnabled)
+               {
+                  e.gc.setBackground(LegendLabel.this.color);
+                  e.gc.fillRectangle(getClientArea());
+               }
+               else
+               {
+                  e.gc.setForeground(LegendLabel.this.color);
+                  e.gc.setLineWidth(1);
+                  e.gc.drawRectangle(0, 0, SYMBOL_WIDTH - 1, SYMBOL_WIDTH - 1);
+               }
             }
          });
          symbol.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
 
-         Label label = new Label(this, SWT.NONE);
-         label.setText(text);
+         label = new Canvas(this, SWT.NONE) {
+            @Override
+            public Point computeSize(int wHint, int hHint, boolean changed)
+            {
+               GC gc = new GC(this);
+               Point size = gc.textExtent(LegendLabel.this.text);
+               gc.dispose();
+               return size;
+            }
+         };
          label.setBackground(getBackground());
          label.setForeground(parent.getForeground());
+         label.addPaintListener(new PaintListener() {
+            @Override
+            public void paintControl(PaintEvent e)
+            {
+               e.gc.setForeground(label.getForeground());
+               e.gc.drawText(LegendLabel.this.text, 0, 0, SWT.DRAW_TRANSPARENT);
+               if (!itemEnabled)
+               {
+                  Point size = label.getSize();
+                  int y = size.y / 2;
+                  e.gc.setLineWidth(1);
+                  e.gc.drawLine(0, y, size.x, y);
+               }
+            }
+         });
          label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      }
+
+      /**
+       * Set item state shown by this label.
+       *
+       * @param enabled true if item is enabled
+       */
+      void setItemEnabled(boolean enabled)
+      {
+         if (itemEnabled == enabled)
+            return;
+         itemEnabled = enabled;
+         symbol.redraw();
+         label.redraw();
       }
    }
 }

@@ -636,7 +636,13 @@ public class RealTimeGraphView extends ViewWithContext
       MenuManager intervals = new MenuManager(i18n.tr("Polling &interval"));
       for(Action a : intervalActions)
          intervals.add(a);
+
+      // Filled on each show, so it reflects toggles made by clicking on legend entries
+      MenuManager dataSources = new MenuManager(i18n.tr("Data &sources"));
+      dataSources.setRemoveAllWhenShown(true);
+      dataSources.addMenuListener((m) -> chart.fillItemToggleMenu(m));
       manager.add(intervals);
+      manager.add(dataSources);
       manager.add(new Separator());
       manager.add(actionPause);
       manager.add(actionClear);

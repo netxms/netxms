@@ -953,6 +953,23 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    }
 
    /**
+    * Create "Data sources" submenu with check item per chart data source. Submenu is filled on each show, so it reflects
+    * toggles made by clicking on legend entries.
+    *
+    * @return submenu manager
+    */
+   private MenuManager createDataSourcesMenu()
+   {
+      MenuManager menu = new MenuManager(i18n.tr("Data &sources"));
+      menu.setRemoveAllWhenShown(true);
+      menu.addMenuListener((m) -> {
+         if (chart != null)
+            chart.fillItemToggleMenu(m);
+      });
+      return menu;
+   }
+
+   /**
     * Fill context menu
     * 
     * @param manager
@@ -971,6 +988,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       legend.add(actionLegendRight);
       legend.add(actionLegendTop);
       legend.add(actionLegendBottom);
+
+      MenuManager dataSources = createDataSourcesMenu();
 
       MenuManager resolution = session.isDciAggregationEnabled() ? new MenuManager(i18n.tr("Data &resolution")) : null;
       if (resolution != null)
@@ -999,6 +1018,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionShowPercentile);
       manager.add(actionAutoRefresh);
       manager.add(legend);
+      manager.add(dataSources);
       manager.add(new Separator());
       if (resolution != null)
       {
@@ -1105,6 +1125,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       legend.add(actionLegendTop);
       legend.add(actionLegendBottom);
 
+      MenuManager dataSources = createDataSourcesMenu();
+
       MenuManager resolution = session.isDciAggregationEnabled() ? new MenuManager(i18n.tr("Data &resolution")) : null;
       if (resolution != null)
       {
@@ -1130,6 +1152,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionShowPercentile);
       manager.add(actionAutoRefresh);
       manager.add(legend);
+      manager.add(dataSources);
       manager.add(new Separator());
       if (resolution != null)
       {

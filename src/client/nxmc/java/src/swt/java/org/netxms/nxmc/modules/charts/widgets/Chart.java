@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -69,6 +71,7 @@ public class Chart extends Composite
    protected ChartColor[] palette = null;
    private List<ChartDciConfig> items = new ArrayList<ChartDciConfig>();
    private List<DataSeries> dataSeries = new ArrayList<DataSeries>();
+   private Set<Integer> disabledItems = new HashSet<Integer>();
    private long drillDownObjectId = 0;
    private ColorCache colorCache;
    private Label title;
@@ -215,6 +218,58 @@ public class Chart extends Composite
    public int getItemCount()
    {
       return items.size();
+   }
+
+   /**
+    * Check if given item is enabled. Items can be disabled by clicking on legend entries; disabled items are not drawn and do not
+    * affect axis scaling, but keep their legend entry.
+    *
+    * @param index item index
+    * @return true if item is enabled
+    */
+   public boolean isItemEnabled(int index)
+   {
+      return !disabledItems.contains(index);
+   }
+
+   /**
+    * Enable or disable item. Legend entry is updated and chart is refreshed.
+    *
+    * @param index item index
+    * @param enabled true to enable item
+    */
+   public void setItemEnabled(int index, boolean enabled)
+   {
+      if (enabled)
+         disabledItems.remove(index);
+      else
+         disabledItems.add(index);
+      if (legend != null)
+         legend.updateItemState(index);
+      refresh();
+   }
+
+   /**
+    * Fill given menu manager with check box action per chart item for toggling items on and off. Intended for use from menu listener
+    * of a submenu in "remove all when shown" mode, so that current item state is read each time menu is shown.
+    *
+    * @param manager menu manager to fill
+    */
+   public void fillItemToggleMenu(IMenuManager manager)
+   {
+      for(int i = 0; i < items.size(); i++)
+      {
+         final int index = i;
+         Action action = new Action(items.get(i).getLabel().replace("&", "&&"), Action.AS_CHECK_BOX) {
+            @Override
+            public void run()
+            {
+               setItemEnabled(index, isChecked());
+            }
+         };
+         action.setChecked(isItemEnabled(i));
+         manager.add(action);
+      }
    }
 
    /**
@@ -493,6 +548,7 @@ public class Chart extends Composite
    {
       items.clear();
       dataSeries.clear();
+      disabledItems.clear();
    }
 
    /**

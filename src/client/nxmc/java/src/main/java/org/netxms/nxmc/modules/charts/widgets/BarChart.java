@@ -135,11 +135,13 @@ public class BarChart extends GenericComparisonChart
       total = 0;
       if (chart.getConfiguration().isAutoScale())
       {
-         minValue = effectiveValue(series.get(0));
-         maxValue = minValue;
-         for(DataSeries s : series)
+         minValue = 0;
+         maxValue = 0;
+         for(int i = 0; i < series.size(); i++)
          {
-            double v = effectiveValue(s);
+            if (!chart.isItemEnabled(i))
+               continue;
+            double v = effectiveValue(series.get(i));
             if (minValue > v)
                minValue = v;
             if (maxValue < v)
@@ -168,9 +170,10 @@ public class BarChart extends GenericComparisonChart
       {
          minValue = chart.getConfiguration().getMinYScaleValue();
          maxValue = chart.getConfiguration().getMaxYScaleValue();
-         for(DataSeries s : series)
+         for(int i = 0; i < series.size(); i++)
          {
-            total += effectiveValue(s);
+            if (chart.isItemEnabled(i))
+               total += effectiveValue(series.get(i));
          }
       }
 
@@ -271,7 +274,7 @@ public class BarChart extends GenericComparisonChart
          int margin = Math.max(Math.min(10, itemWidth / 10), 1);
          for(int i = 0, x = MARGIN_WIDTH + labelWidth; i < items.size(); i++, x += itemWidth)
          {
-            double value = effectiveValue(series.get(i));
+            double value = chart.isItemEnabled(i) ? effectiveValue(series.get(i)) : 0;
             if (value != 0)
             {
                int color = items.get(i).getColorAsInt();
@@ -376,7 +379,7 @@ public class BarChart extends GenericComparisonChart
          int margin = Math.max(Math.min(10, itemHeight / 10), 1);
          for(int i = 0, y = MARGIN_HEIGHT; i < items.size(); i++, y += itemHeight)
          {
-            double value = effectiveValue(series.get(i));
+            double value = chart.isItemEnabled(i) ? effectiveValue(series.get(i)) : 0;
             if (value != 0)
             {
                int color = items.get(i).getColorAsInt();

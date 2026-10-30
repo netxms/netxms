@@ -513,7 +513,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       for(int i = 0; i < items.size(); i++)
       {
          Threshold[] tr = chart.getThreshold(i);
-         if (items.get(i).showThresholds && !configuration.isStacked() && tr != null)
+         if (items.get(i).showThresholds && !configuration.isStacked() && (tr != null) && chart.isItemEnabled(i))
          {
             boolean inverted = items.get(i).invertValues;
             for (int j = 0; j < tr.length; j++)
@@ -557,7 +557,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       for(int i = 0; i < items.size() && i < dataSeries.size(); i++)
       {
          DataSeries data = dataSeries.get(i);
-         if (data.getValues().length == 0)
+         if ((data.getValues().length == 0) || !chart.isItemEnabled(i))
             continue;
 
          double value = data.getPercentile95();
@@ -828,6 +828,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
          series.setLineColor(ColorConverter.colorFromInt(item.getColorAsInt(), colorCache));
       series.enableArea(item.isArea(configuration.isArea()));
       series.setInverted(item.invertValues);
+      series.setVisible(chart.isItemEnabled(index));
 
       // Gap threshold: 4x the inter-sample interval. For aggregated tiers the spacing is the bucket size,
       // not the polling interval — using pollingInterval here makes every aggregated point look like a gap.
@@ -908,12 +909,13 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 	         ? ColorConverter.colorFromInt(item.getColorAsInt(), colorCache)
 	         : ThemeEngine.getForegroundColor("Chart.Data." + Integer.toString((index % ChartConfiguration.DEFAULT_PALETTE_SIZE) + 1));
 
-	   addBandLine(index + "_min", item.getLabel() + " (min)", xSeries, minSeries, baseColor, gapThreshold);
-	   addBandLine(index + "_max", item.getLabel() + " (max)", xSeries, maxSeries, baseColor, gapThreshold);
+	   boolean visible = chart.isItemEnabled(index);
+	   addBandLine(index + "_min", item.getLabel() + " (min)", xSeries, minSeries, baseColor, gapThreshold).setVisible(visible);
+	   addBandLine(index + "_max", item.getLabel() + " (max)", xSeries, maxSeries, baseColor, gapThreshold).setVisible(visible);
 	}
 
    @SuppressWarnings("deprecation")
-	private void addBandLine(String id, String description, Date[] xSeries, double[] ySeries, Color baseColor, double gapThreshold)
+	private ILineSeries<?> addBandLine(String id, String description, Date[] xSeries, double[] ySeries, Color baseColor, double gapThreshold)
 	{
 	   ISeriesSet seriesSet = getSeriesSet();
 	   ILineSeries<?> series = (ILineSeries<?>)seriesSet.createSeries(SeriesType.LINE, id);
@@ -926,6 +928,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 	   series.setYSeries(ySeries);
 	   if (gapThreshold > 0)
 	      series.setLineGapThreshold(gapThreshold);
+	   return series;
 	}
 
    /**
@@ -1063,7 +1066,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
          for(int i = 0; i < items.size(); i++)
          {
             ChartDciConfig item = items.get(i);
-            if (!item.showThresholds)
+            if (!item.showThresholds || !chart.isItemEnabled(i))
                continue;
             Threshold[] tr = chart.getThreshold(i);
             if (tr == null)
@@ -1170,6 +1173,9 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       ISeries<?>[] series = getSeriesSet().getSeries();
       for(ISeries<?> s : series)
       {
+          if (!s.isVisible())
+             continue;
+
           double[] xS = s.getXSeries();
           double[] yS = s.getYSeries();
 
@@ -1205,6 +1211,9 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
       ISeries<?>[] series = getSeriesSet().getSeries();
       for(ISeries<?> s : series)
       {
+         if (!s.isVisible())
+            continue;
+
          int size = s.getSize();
          for(int i = 1; i < size; i++)
          {
