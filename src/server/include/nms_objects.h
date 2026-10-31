@@ -2409,7 +2409,7 @@ protected:
    SharedObjectArray<GenericAgentPolicy> m_policyList;
    SharedObjectArray<GenericAgentPolicy> m_deletedPolicyList;
    SharedString m_exclusionGroup;
-   std::atomic<short> m_removeDCIOnDelete;
+   std::atomic<int32_t> m_removeDCIOnDelete;  // word-sized: 16-bit CAS not available on all POWER targets
 
    virtual void prepareForDeletion() override;
    virtual void onDataCollectionChange() override;
@@ -2466,7 +2466,7 @@ public:
    void removeAllPolicies(Node *node);
    void setRemoveDCIOnDelete(bool removeDCI)
    {
-      short expected = -1;
+      int32_t expected = -1;
       m_removeDCIOnDelete.compare_exchange_strong(expected, removeDCI ? 1 : 0);
    }
 
@@ -3334,7 +3334,7 @@ protected:
    uint32_t m_dwNumResources;
    CLUSTER_RESOURCE *m_pResourceList;
    int32_t m_zoneUIN;
-   std::atomic<short> m_removeDCIOnDelete;
+   std::atomic<int32_t> m_removeDCIOnDelete;  // word-sized: 16-bit CAS not available on all POWER targets
 
    virtual void fillMessageLocked(NXCPMessage *msg, uint32_t userId) override;
    virtual void fillMessageUnlocked(NXCPMessage *msg, uint32_t userId) override;
@@ -3389,7 +3389,7 @@ public:
 
    void setRemoveDCIOnDelete(bool removeDCI)
    {
-      short expected = -1;
+      int32_t expected = -1;
       m_removeDCIOnDelete.compare_exchange_strong(expected, removeDCI ? 1 : 0);
    }
 };
