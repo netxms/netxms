@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2024 Raden Solutions
+ * Copyright (C) 2003-2026 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.util.LocalSelectionTransfer;
@@ -41,6 +41,7 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerEditor;
@@ -53,9 +54,13 @@ import org.eclipse.swt.dnd.DragSourceAdapter;
 import org.eclipse.swt.dnd.DragSourceEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Item;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.AgentFileFingerprint;
 import org.netxms.client.NXCException;
@@ -108,6 +113,8 @@ public class AgentFileManager extends ObjectView
 
    private AgentFileFilter filter;
    private SortableTreeViewer viewer;
+   private Text pathField;
+   private volatile String customRoot = null; // When not null, tree is rooted at this folder instead of configured root folders
    private Action actionUploadFile;
    private Action actionUploadFolder;
    private Action actionDelete;
@@ -121,6 +128,9 @@ public class AgentFileManager extends ObjectView
    private Action actionCalculateFolderSize;
    private Action actionCopyFilePath;
    private Action actionCopyFileName;
+   private Action actionGoToPath;
+   private Action actionSetAsRoot;
+   private Action actionResetRoot;
 
    /**
     * Constructor
@@ -168,9 +178,18 @@ public class AgentFileManager extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.verticalSpacing = 0;
+      parent.setLayout(layout);
+
+      createPathBar(parent);
+
       final String[] columnNames = { i18n.tr("Name"), i18n.tr("Type"), i18n.tr("Size"), i18n.tr("Date modified"), i18n.tr("Owner"), i18n.tr("Group"), i18n.tr("Access Rights") };
       final int[] columnWidths = { 300, 120, 150, 150, 150, 150, 200 };
       viewer = new SortableTreeViewer(parent, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE, TABLE_CONFIG_PREFIX);
+      viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
       viewer.setContentProvider(new ViewAgentFilesProvider());
       viewer.setLabelProvider(new AgentFileLabelProvider());
@@ -187,6 +206,8 @@ public class AgentFileManager extends ObjectView
             {
                actionDelete.setEnabled(selection.size() > 0);
                actionCalculateFolderSize.setEnabled(selection.size() > 0);
+               if ((selection.size() == 1) && !pathField.isFocusControl())
+                  pathField.setText(((AgentFile)selection.getFirstElement()).getFilePath());
             }
          }
       });
@@ -210,6 +231,220 @@ public class AgentFileManager extends ObjectView
 
       createActions();
       createPopupMenu();
+   }
+
+   /**
+    * Create path bar (path input field) above file tree
+    *
+    * @param parent parent composite
+    */
+   private void createPathBar(Composite parent)
+   {
+      Composite pathBar = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 3;
+      pathBar.setLayout(layout);
+      pathBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      pathField = new Text(pathBar, SWT.BORDER);
+      pathField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      pathField.setToolTipText(i18n.tr("Type or paste folder path and press Enter to open it"));
+      pathField.addListener(SWT.DefaultSelection, (e) -> goToPath(pathField.getText()));
+   }
+
+   /**
+    * Navigate to given path: expand file tree down to given folder and select it.
+    *
+    * @param path path entered by user
+    */
+   private void goToPath(String path)
+   {
+      final String target = trimTrailingSeparators(path.trim());
+      if (target.isEmpty())
+         return;
+
+      final Set<String> expandedPaths = new HashSet<String>();
+      for(Object o : viewer.getExpandedElements())
+         expandedPaths.add(((AgentFile)o).getFullName());
+      final boolean ignoreCase = isWindowsNode(getObject());
+      final String normalizedTarget = normalizePath(target);
+
+      new Job(i18n.tr("Open folder"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AgentFile> roots = listRootFolders();
+            AgentFile root = findRootForPath(roots, normalizedTarget, ignoreCase);
+            if ((root == null) && (customRoot != null))
+            {
+               // Path is outside current custom root - fall back to configured root folders
+               roots = session.listAgentFiles(null, "/", getObjectId());
+               root = findRootForPath(roots, normalizedTarget, ignoreCase);
+               if (root != null)
+                  customRoot = null;
+            }
+            if (root == null)
+               throw new Exception(i18n.tr("Path is outside of root folders accessible via file manager"));
+
+            final List<AgentFile> expandedFiles = new ArrayList<AgentFile>();
+            AgentFile current = root;
+            current.setChildren(session.listAgentFiles(current, current.getFullName(), getObjectId()));
+            expandedFiles.add(current);
+
+            String remainder = normalizedTarget.substring(normalizePath(root.getName()).length());
+            String missingPart = null;
+            for(String name : remainder.split("/"))
+            {
+               if (name.isEmpty())
+                  continue;
+               AgentFile next = findChild(current, name, ignoreCase);
+               if (next == null)
+               {
+                  missingPart = name;
+                  break;
+               }
+               current = next;
+               if (current.isDirectory())
+               {
+                  current.setChildren(session.listAgentFiles(current, current.getFullName(), getObjectId()));
+                  expandedFiles.add(current);
+               }
+               else
+               {
+                  break;
+               }
+            }
+
+            loadExpandedDirectories(roots, expandedPaths, expandedFiles);
+
+            final List<AgentFile> input = roots;
+            final AgentFile selection = current;
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(input);
+                  viewer.setExpandedElements(expandedFiles.toArray());
+                  viewer.setSelection(new StructuredSelection(selection), true);
+               }
+            });
+
+            if (missingPart != null)
+               throw new Exception(String.format(i18n.tr("Folder \"%s\" not found in \"%s\""), missingPart, selection.getFilePath()));
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot open folder");
+         }
+      }.start();
+   }
+
+   /**
+    * List root folders of the file tree: configured root folders, or custom root if set. Should be called from background job.
+    *
+    * @return list of root folders
+    * @throws Exception on communication or access error
+    */
+   private List<AgentFile> listRootFolders() throws Exception
+   {
+      if (customRoot == null)
+         return session.listAgentFiles(null, "/", getObjectId());
+
+      AgentFile root = new AgentFile(customRoot, AgentFile.DIRECTORY, null, getObjectId());
+      root.setChildren(session.listAgentFiles(root, customRoot, getObjectId()));
+      List<AgentFile> roots = new ArrayList<AgentFile>(1);
+      roots.add(root);
+      return roots;
+   }
+
+   /**
+    * Find root folder that contains given path. If several roots match, longest one is selected.
+    *
+    * @param roots root folders
+    * @param normalizedPath path to check, normalized with normalizePath()
+    * @param ignoreCase true to compare path elements ignoring case
+    * @return matching root folder or null
+    */
+   private static AgentFile findRootForPath(List<AgentFile> roots, String normalizedPath, boolean ignoreCase)
+   {
+      AgentFile match = null;
+      int matchLength = -1;
+      for(AgentFile root : roots)
+      {
+         String rootPath = normalizePath(root.getName());
+         if (rootPath.length() <= matchLength)
+            continue;
+         if (ignoreCase)
+         {
+            if (!normalizedPath.toLowerCase().startsWith(rootPath.toLowerCase()))
+               continue;
+         }
+         else if (!normalizedPath.startsWith(rootPath))
+         {
+            continue;
+         }
+         // Match should be at path element boundary
+         if ((normalizedPath.length() == rootPath.length()) || rootPath.endsWith("/") || (normalizedPath.charAt(rootPath.length()) == '/'))
+         {
+            match = root;
+            matchLength = rootPath.length();
+         }
+      }
+      return match;
+   }
+
+   /**
+    * Find child of given folder by name
+    *
+    * @param folder folder with loaded children
+    * @param name child name
+    * @param ignoreCase true to compare names ignoring case
+    * @return child or null if not found
+    */
+   private static AgentFile findChild(AgentFile folder, String name, boolean ignoreCase)
+   {
+      for(AgentFile f : folder.getChildren())
+         if (ignoreCase ? f.getName().equalsIgnoreCase(name) : f.getName().equals(name))
+            return f;
+      return null;
+   }
+
+   /**
+    * Normalize path for comparison: use "/" as separator and remove trailing separator.
+    *
+    * @param path path to normalize
+    * @return normalized path
+    */
+   private static String normalizePath(String path)
+   {
+      return trimTrailingSeparators(path.replace('\\', '/'));
+   }
+
+   /**
+    * Remove trailing path separators. Separator is kept if it is the only character or follows drive letter (as in "C:\").
+    *
+    * @param path path
+    * @return path without trailing separators
+    */
+   private static String trimTrailingSeparators(String path)
+   {
+      int len = path.length();
+      while((len > 1) && ((path.charAt(len - 1) == '/') || (path.charAt(len - 1) == '\\')) && (path.charAt(len - 2) != ':'))
+         len--;
+      return path.substring(0, len);
+   }
+
+   /**
+    * Check if given node is running Windows
+    *
+    * @param object node object
+    * @return true if node is running Windows
+    */
+   private static boolean isWindowsNode(AbstractObject object)
+   {
+      return (object instanceof Node) && ((Node)object).getSystemDescription().contains("Windows");
    }
 
    /**
@@ -462,6 +697,38 @@ public class AgentFileManager extends ObjectView
          }
       };
       addKeyBinding("Ctrl+shift+C", actionCopyFilePath);
+
+      actionGoToPath = new Action(i18n.tr("&Go to path...")) {
+         @Override
+         public void run()
+         {
+            pathField.setFocus();
+            pathField.selectAll();
+         }
+      };
+      addKeyBinding("Ctrl+G", actionGoToPath);
+
+      actionSetAsRoot = new Action(i18n.tr("Set as &root")) {
+         @Override
+         public void run()
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            if ((selection.size() == 1) && ((AgentFile)selection.getFirstElement()).isDirectory())
+            {
+               customRoot = ((AgentFile)selection.getFirstElement()).getFilePath();
+               refresh();
+            }
+         }
+      };
+
+      actionResetRoot = new Action(i18n.tr("&Reset root"), ResourceManager.getImageDescriptor("icons/reset-root.png")) {
+         @Override
+         public void run()
+         {
+            customRoot = null;
+            refresh();
+         }
+      };
    }
 
    /**
@@ -470,6 +737,9 @@ public class AgentFileManager extends ObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionGoToPath);
+      manager.add(actionResetRoot);
+      manager.add(new Separator());
       Action resetAction = viewer.getResetColumnOrderAction();
       if (resetAction != null)
          manager.add(resetAction);
@@ -485,6 +755,16 @@ public class AgentFileManager extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionResetRoot);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
     * Create pop-up menu for user list
     */
    private void createPopupMenu()
@@ -492,12 +772,7 @@ public class AgentFileManager extends ObjectView
       // Create menu manager
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
-         public void menuAboutToShow(IMenuManager mgr)
-         {
-            fillContextMenu(mgr);
-         }
-      });
+      menuMgr.addMenuListener((m) -> fillContextMenu(m));
 
       // Create menu
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
@@ -555,6 +830,12 @@ public class AgentFileManager extends ObjectView
       mgr.add(new Separator());
       if ((selection.size() == 1) && ((AgentFile)selection.getFirstElement()).isDirectory())
       {
+         AgentFile folder = (AgentFile)selection.getFirstElement();
+         if ((folder.getParent() != null) || (customRoot == null))
+         {
+            mgr.add(new Separator());
+            mgr.add(actionSetAsRoot);
+         }
          mgr.add(new Separator());
          mgr.add(actionRefreshDirectory);
       }
@@ -588,8 +869,10 @@ public class AgentFileManager extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<AgentFile> files = session.listAgentFiles(null, "/", getObjectId());
+            final List<AgentFile> files = listRootFolders();
             final List<AgentFile> expandedFiles = new ArrayList<AgentFile>();
+            if (customRoot != null)
+               expandedFiles.add(files.get(0));
             if (!expandedPaths.isEmpty())
                loadExpandedDirectories(files, expandedPaths, expandedFiles);
             runInUIThread(new Runnable() {
@@ -606,7 +889,7 @@ public class AgentFileManager extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot get file store content");
+            return (customRoot != null) ? String.format(i18n.tr("Cannot read folder \"%s\""), customRoot) : i18n.tr("Cannot get file store content");
          }
       }.start();
    }
@@ -625,15 +908,19 @@ public class AgentFileManager extends ObjectView
       {
          if (!f.isDirectory() || !expandedPaths.contains(f.getFullName()))
             continue;
-         try
+         if (f.getChildren() == null)
          {
-            f.setChildren(session.listAgentFiles(f, f.getFullName(), getObjectId()));
+            try
+            {
+               f.setChildren(session.listAgentFiles(f, f.getFullName(), getObjectId()));
+            }
+            catch(Exception e)
+            {
+               continue; // Directory that cannot be read will be left collapsed
+            }
          }
-         catch(Exception e)
-         {
-            continue; // Directory that cannot be read will be left collapsed
-         }
-         expandedFiles.add(f);
+         if (!expandedFiles.contains(f))
+            expandedFiles.add(f);
          loadExpandedDirectories(f.getChildren(), expandedPaths, expandedFiles);
       }
    }
@@ -1214,9 +1501,10 @@ public class AgentFileManager extends ObjectView
          return;
 
       viewer.setInput(new ArrayList<AgentFile>(0)); // Discard content so that expansion state of previous node is not reused
+      customRoot = null;
+      pathField.setText("");
       refresh();
-      String os = ((Node)session.findObjectById(getObjectId())).getSystemDescription(); //$NON-NLS-1$
-      if (os.contains("Windows"))
+      if (isWindowsNode(object))
       {
          viewer.removeColumnById(COLUMN_GROUP);
          viewer.removeColumnById(COLUMN_ACCESS_RIGHTS);
