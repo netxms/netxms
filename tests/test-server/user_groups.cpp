@@ -375,7 +375,7 @@ static void TestCloseOtherSessions()
    StartTest(_T("Close other sessions flag on groups"));
 
    uint32_t user = CreateObject(_T("ug_close_user"), false, 0);
-   uint32_t other = CreateObject(_T("ug_close_other"), false, 0);
+   CreateObject(_T("ug_close_other"), false, 0);
    uint32_t inner = CreateObject(_T("ug_close_inner"), true, 0);
    uint32_t outer = CreateObject(_T("ug_close_outer"), true, 0);
    SetMembers(inner, { user });
