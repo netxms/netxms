@@ -1512,7 +1512,7 @@ static std::string EppToggleRuleDisabled(json_t *arguments, uint32_t userId, boo
 
    const char *opName = disable ? "disable-epp-rule" : "enable-epp-rule";
    return EppReadModifyWrite(userId, opName, nullptr, &ruleGuid,
-      [ruleGuid, disable, opName](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
+      [ruleGuid, disable](json_t *snapshot, json_t *rulesArray, std::string *errorOut,
                                   wchar_t *auditDetail, size_t auditDetailSize) -> uint32_t
       {
          int idx = EppFindRuleIndexByGuid(rulesArray, ruleGuid);

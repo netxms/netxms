@@ -2866,7 +2866,7 @@ std::string F_AnalyzeLogPatterns(json_t *arguments, uint32_t userId)
       static const char *s_intervalNames[] = { "1 minute", "5 minutes", "10 minutes", "15 minutes", "30 minutes",
                                                 "1 hour", "2 hours", "4 hours", "6 hours", "12 hours", "1 day", "1 week" };
 
-      patterns.forEach([&recurring, timeFrom, timeTo](const TCHAR *key, PatternStats *stats) -> EnumerationCallbackResult
+      patterns.forEach([&recurring](const TCHAR *key, PatternStats *stats) -> EnumerationCallbackResult
       {
          if (stats->timestamps.size() < 3)
             return _CONTINUE;
