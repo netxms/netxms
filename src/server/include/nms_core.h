@@ -184,6 +184,7 @@ bool SaveFirstFreeDCIId(DB_HANDLE hdb);
 #define CSF_OBJECT_SYNC_FINISHED ((uint32_t)0x00000800)
 #define CSF_OBJECTS_OUT_OF_SYNC  ((uint32_t)0x00001000)
 #define CSF_TERMINATE_REQUESTED  ((uint32_t)0x00002000)
+#define CSF_KEEP_OTHER_SESSIONS  ((uint32_t)0x00004000)
 
 /**
  * Options for primary IP update on status poll
@@ -1132,6 +1133,7 @@ public:
    bool isTerminated() const { return (m_flags & (CSF_TERMINATED | CSF_TERMINATE_REQUESTED)) != 0; }
    bool isConsoleOpen() const { return (m_flags & CSF_CONSOLE_OPEN) != 0; }
    bool isCompressionEnabled() const { return (m_flags & CSF_COMPRESSION_ENABLED) != 0; }
+   bool keepsOtherSessions() const { return (m_flags & CSF_KEEP_OTHER_SESSIONS) != 0; }
    int getCipher() const { return (m_encryptionContext == nullptr) ? -1 : m_encryptionContext->getCipher(); }
 	int getClientType() const { return m_clientType; }
    time_t getLoginTime() const { return m_loginTime; }

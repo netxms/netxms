@@ -607,6 +607,7 @@ TCHAR NXCORE_EXPORTABLE *ResolveUserId(uint32_t id, TCHAR *buffer, bool noFail =
 uuid NXCORE_EXPORTABLE GetUserGuidById(uint32_t id);
 String NXCORE_EXPORTABLE GetUserFullName(uint32_t id);
 bool NXCORE_EXPORTABLE ValidateUserId(uint32_t id, TCHAR *loginName, uint64_t *systemAccess, uint32_t *rcc);
+bool NXCORE_EXPORTABLE IsCloseOtherSessionsRequested(uint32_t userId);
 void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject);
 void RemoveDeletedLDAPEntries(StringObjectMap<LDAP_Object> *entryListDn, StringObjectMap<LDAP_Object> *entryListId, uint32_t m_action, bool isUser);
 void UpdateLDAPGroup(const TCHAR* dn, const LDAP_Object *ldapObject);

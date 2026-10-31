@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.netxms.client.NXCException;
@@ -32,10 +33,11 @@ import org.netxms.client.constants.RCC;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.AuthenticationToken;
 import org.netxms.client.users.User;
+import org.netxms.client.users.UserGroup;
 import org.netxms.utilities.TestHelper;
 
 /**
- * Tests for single-use authentication tokens.
+ * Tests for single-use authentication tokens and for closing other sessions on login.
  */
 public class SingleUseTokenTest extends AbstractSessionTest
 {
@@ -216,6 +218,172 @@ public class SingleUseTokenTest extends AbstractSessionTest
       {
          if (issuer.isConnected())
             issuer.disconnect();
+      }
+   }
+
+   /**
+    * Persistent tokens do not authenticate a person (public dashboards share one for "anonymous" user), so session
+    * started with such token must not disconnect other sessions, neither at login nor when it logs in again with
+    * token issued for reconnect.
+    */
+   @Test
+   public void testPersistentTokenSessionKeepsOtherSessions() throws Exception
+   {
+      NXCSession admin = connectAndLogin();
+      prepareHandoffUser(admin);
+
+      NXCSession issuer = loginWithPassword(HANDOFF_USER_NAME, HANDOFF_USER_PASSWORD);
+      try
+      {
+         AuthenticationToken token = issuer.requestAuthenticationToken(true, TOKEN_VALIDITY_TIME, "persistent token test", 0);
+         NXCSession session = loginWithToken(token.getValue());
+         try
+         {
+            // Round trip request, because isConnected() alone does not prove the server kept the session
+            assertNotNull(issuer.getAlarms());
+
+            AuthenticationToken reconnectToken = session.requestAuthenticationToken(false, TOKEN_VALIDITY_TIME, "reconnect token test", 0);
+            NXCSession reconnected = loginWithToken(reconnectToken.getValue());
+            try
+            {
+               assertNotNull(issuer.getAlarms());
+               assertNotNull(session.getAlarms());
+            }
+            finally
+            {
+               reconnected.disconnect();
+            }
+         }
+         finally
+         {
+            session.disconnect();
+         }
+      }
+      finally
+      {
+         if (issuer.isConnected())
+            issuer.disconnect();
+      }
+   }
+
+   /**
+    * Console reconnects with ephemeral token, so without closing other sessions at such login a session
+    * which missed being closed by a new login would keep running next to it.
+    */
+   @Test
+   public void testEphemeralTokenLoginClosesOtherSessions() throws Exception
+   {
+      NXCSession admin = connectAndLogin();
+      prepareHandoffUser(admin);
+
+      NXCSession issuer = loginWithPassword(HANDOFF_USER_NAME, HANDOFF_USER_PASSWORD);
+      try
+      {
+         AuthenticationToken token = issuer.requestAuthenticationToken(false, TOKEN_VALIDITY_TIME, "ephemeral token test", 0);
+         NXCSession session = loginWithToken(token.getValue());
+         try
+         {
+            assertTrue(waitForDisconnect(issuer), "Login with ephemeral token did not close other session");
+         }
+         finally
+         {
+            session.disconnect();
+         }
+      }
+      finally
+      {
+         if (issuer.isConnected())
+            issuer.disconnect();
+      }
+   }
+
+   /**
+    * Only spending a single-use token does not close other sessions. Session started with it is an ordinary one.
+    */
+   @Test
+   public void testSingleUseSessionReconnectClosesOtherSessions() throws Exception
+   {
+      NXCSession admin = connectAndLogin();
+      prepareHandoffUser(admin);
+
+      NXCSession issuer = loginWithPassword(HANDOFF_USER_NAME, HANDOFF_USER_PASSWORD);
+      try
+      {
+         AuthenticationToken token = issuer.requestAuthenticationToken(false, TOKEN_VALIDITY_TIME, "handoff test", 0, true);
+         NXCSession session = loginWithToken(token.getValue());
+         try
+         {
+            AuthenticationToken reconnectToken = session.requestAuthenticationToken(false, TOKEN_VALIDITY_TIME, "reconnect token test", 0);
+            NXCSession reconnected = loginWithToken(reconnectToken.getValue());
+            try
+            {
+               assertTrue(waitForDisconnect(issuer), "Reconnect of session started with single-use token did not close other session");
+            }
+            finally
+            {
+               reconnected.disconnect();
+            }
+         }
+         finally
+         {
+            if (session.isConnected())
+               session.disconnect();
+         }
+      }
+      finally
+      {
+         if (issuer.isConnected())
+            issuer.disconnect();
+      }
+   }
+
+   /**
+    * CLOSE_OTHER_SESSIONS flag on a group applies to its members, not only flag on the user itself
+    */
+   @Test
+   public void testGroupFlagClosesOtherSessions() throws Exception
+   {
+      NXCSession admin = connectAndLogin();
+      User user = prepareHandoffUser(admin);
+      user.setFlags(user.getFlags() & ~AbstractUserObject.CLOSE_OTHER_SESSIONS);
+      admin.modifyUserDBObject(user, AbstractUserObject.MODIFY_FLAGS);
+
+      int groupId = admin.createUserGroup("close-sessions-test-" + System.currentTimeMillis());
+      try
+      {
+         NXCSession first = loginWithPassword(HANDOFF_USER_NAME, HANDOFF_USER_PASSWORD);
+         try
+         {
+            // Control check - without group flag new login must keep the existing session
+            NXCSession control = loginWithPassword(HANDOFF_USER_NAME, HANDOFF_USER_PASSWORD);
+            assertNotNull(first.getAlarms());
+            control.disconnect();
+
+            admin.syncMissingUsers(Arrays.asList(new Integer[] { groupId }));
+            UserGroup group = (UserGroup)admin.findUserDBObjectById(groupId, null);
+            group.setMembers(new int[] { user.getId() });
+            group.setFlags(group.getFlags() | AbstractUserObject.CLOSE_OTHER_SESSIONS);
+            admin.modifyUserDBObject(group, AbstractUserObject.MODIFY_FLAGS | AbstractUserObject.MODIFY_MEMBERS);
+
+            NXCSession replacement = loginWithPassword(HANDOFF_USER_NAME, HANDOFF_USER_PASSWORD);
+            try
+            {
+               assertTrue(waitForDisconnect(first), "CLOSE_OTHER_SESSIONS on group is not in effect for its member");
+            }
+            finally
+            {
+               replacement.disconnect();
+            }
+         }
+         finally
+         {
+            if (first.isConnected())
+               first.disconnect();
+         }
+      }
+      finally
+      {
+         admin.deleteUserDBObject(groupId);
       }
    }
 

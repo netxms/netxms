@@ -323,6 +323,94 @@ static void TestUserFullName()
 }
 
 /**
+ * Set or clear "close other sessions" flag on user or group
+ */
+static void SetCloseOtherSessions(uint32_t id, bool enabled)
+{
+   json_t *flags = json_object();
+   json_object_set_new(flags, "closeOtherSessions", json_boolean(enabled));
+   json_t *json = json_object();
+   json_object_set_new(json, "flags", flags);
+   ModifyObject(id, json);
+}
+
+/**
+ * Set or clear "close other sessions" flag on "Everyone" group through NXCP path used by the console
+ */
+static void SetCloseOtherSessionsOnEveryoneFromMessage(bool enabled)
+{
+   NXCPMessage msg(CMD_UPDATE_USER, 0);
+   msg.setField(VID_USER_ID, static_cast<uint32_t>(GROUP_EVERYONE));
+   msg.setField(VID_FIELDS, static_cast<uint32_t>(USER_MODIFY_FLAGS));
+   msg.setField(VID_USER_FLAGS, static_cast<uint16_t>(enabled ? UF_CLOSE_OTHER_SESSIONS : 0));
+
+   json_t *oldData = nullptr;
+   json_t *newData = nullptr;
+   uint32_t rcc = ModifyUserDatabaseObject(msg, &oldData, &newData);
+   json_decref(oldData);
+   json_decref(newData);
+   AssertEquals(rcc, static_cast<uint32_t>(RCC_SUCCESS));
+}
+
+/**
+ * Assert value of "close other sessions" indicator returned by login of given user. Login goes through
+ * SSO path, so test users need no password.
+ */
+static void AssertCloseOtherSessions(const TCHAR *login, bool expected)
+{
+   uint32_t userId, graceLogins;
+   uint64_t systemRights;
+   bool changePassword, intruderLockout, closeOtherSessions;
+   AssertEquals(AuthenticateUser(login, nullptr, 0, nullptr, nullptr, &userId, &systemRights, &changePassword, &intruderLockout,
+         &closeOtherSessions, true, &graceLogins), static_cast<uint32_t>(RCC_SUCCESS));
+   AssertEquals(closeOtherSessions, expected);
+   AssertEquals(IsCloseOtherSessionsRequested(userId), expected);
+}
+
+/**
+ * "Close other sessions" flag applies through user's own flag, any group in the membership chain and "Everyone"
+ */
+static void TestCloseOtherSessions()
+{
+   StartTest(_T("Close other sessions flag on groups"));
+
+   uint32_t user = CreateObject(_T("ug_close_user"), false, 0);
+   uint32_t other = CreateObject(_T("ug_close_other"), false, 0);
+   uint32_t inner = CreateObject(_T("ug_close_inner"), true, 0);
+   uint32_t outer = CreateObject(_T("ug_close_outer"), true, 0);
+   SetMembers(inner, { user });
+   SetMembers(outer, { inner });
+   AssertCloseOtherSessions(_T("ug_close_user"), false);
+
+   SetCloseOtherSessions(user, true);
+   AssertCloseOtherSessions(_T("ug_close_user"), true);
+   SetCloseOtherSessions(user, false);
+   AssertCloseOtherSessions(_T("ug_close_user"), false);
+
+   SetCloseOtherSessions(outer, true);
+   AssertCloseOtherSessions(_T("ug_close_user"), true);
+   AssertCloseOtherSessions(_T("ug_close_other"), false);
+
+   SetDisabled(inner, true);
+   AssertCloseOtherSessions(_T("ug_close_user"), false);
+   SetDisabled(inner, false);
+   SetCloseOtherSessions(outer, false);
+
+   SetCloseOtherSessions(GROUP_EVERYONE, true);
+   AssertCloseOtherSessions(_T("ug_close_user"), true);
+   AssertCloseOtherSessions(_T("ug_close_other"), true);
+   SetCloseOtherSessions(GROUP_EVERYONE, false);
+   AssertCloseOtherSessions(_T("ug_close_other"), false);
+
+   SetCloseOtherSessionsOnEveryoneFromMessage(true);
+   AssertCloseOtherSessions(_T("ug_close_other"), true);
+   SetCloseOtherSessionsOnEveryoneFromMessage(false);
+   AssertCloseOtherSessions(_T("ug_close_other"), false);
+
+   EndTest();
+}
+
+/**
  * Test entry point
  */
 void TestUserGroups()
@@ -335,4 +423,5 @@ void TestUserGroups()
    TestUIAccessRules();
    TestDeepChain();
    TestUserFullName();
+   TestCloseOtherSessions();
 }

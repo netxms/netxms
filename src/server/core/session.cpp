@@ -72,6 +72,7 @@ struct LoginInfo
    uint32_t graceLogins;
    bool changePassword;
    bool closeOtherSessions;
+   bool keepOtherSessions;
    bool intruderLockout;
 
    // RADIUS Access-Challenge state
@@ -85,6 +86,7 @@ struct LoginInfo
       graceLogins = 0;
       changePassword = false;
       closeOtherSessions = false;
+      keepOtherSessions = false;
       intruderLockout = false;
       radiusChallengeActive = false;
    }
@@ -2657,8 +2659,13 @@ uint32_t ClientSession::authenticateUserByToken(const NXCPMessage& request, Logi
             rcc = AuthenticateUser(loginInfo->loginName, nullptr, 0, nullptr, nullptr, &m_userId, &m_systemAccessRights,
                   &loginInfo->changePassword, &loginInfo->intruderLockout, &loginInfo->closeOtherSessions, true, &loginInfo->graceLogins);
 
-            // Cancel "close other session" if authenticated with handoff token
-            if ((tokenType == AuthenticationTokenType::SERVICE) || (tokenType == AuthenticationTokenType::SINGLE_USE))
+            // Persistent and service tokens do not authenticate a person (public dashboards all log in as
+            // "anonymous"), so such session never closes other sessions, including when it reconnects.
+            // Single-use token is a handoff: only spending it does not close other sessions, and the session
+            // is an ordinary one after that. Ephemeral token closes them, otherwise a session which missed
+            // being closed by a new login would keep reconnecting next to it.
+            loginInfo->keepOtherSessions = (tokenType == AuthenticationTokenType::PERSISTENT) || (tokenType == AuthenticationTokenType::SERVICE);
+            if (loginInfo->keepOtherSessions || (tokenType == AuthenticationTokenType::SINGLE_USE))
                loginInfo->closeOtherSessions = false;
          }
          else
@@ -2925,6 +2932,7 @@ void ClientSession::validate2FAResponse(const NXCPMessage& request)
             }
             else
             {
+               m_loginInfo->closeOtherSessions = IsCloseOtherSessionsRequested(m_userId);
                uint32_t rcc = finalizeLogin(request, &response);
                response.setField(VID_RCC, rcc);
                if (rcc != RCC_SUCCESS)
@@ -3095,7 +3103,10 @@ uint32_t ClientSession::finalizeLogin(const NXCPMessage& request, NXCPMessage *r
 
       // Issue authentication token that client can use for re-login without re-authentication.
       // Absence of the token is not fatal for the session - client will have to re-authenticate.
-      shared_ptr<AuthenticationTokenDescriptor> td = IssueAuthenticationToken(m_userId, 300);
+      if (m_loginInfo->keepOtherSessions)
+         InterlockedOr(&m_flags, CSF_KEEP_OTHER_SESSIONS);
+      shared_ptr<AuthenticationTokenDescriptor> td = IssueAuthenticationToken(m_userId, 300,
+            keepsOtherSessions() ? AuthenticationTokenType::SERVICE : AuthenticationTokenType::EPHEMERAL);
       if (td != nullptr)
       {
          response->setField(VID_AUTH_TOKEN, td->token.toString());
@@ -3170,7 +3181,8 @@ void ClientSession::issueAuthToken(const NXCPMessage& request)
       else
       {
          AuthenticationTokenType type = persistent ? AuthenticationTokenType::PERSISTENT :
-            (singleUse ? AuthenticationTokenType::SINGLE_USE : AuthenticationTokenType::EPHEMERAL);
+            (singleUse ? AuthenticationTokenType::SINGLE_USE :
+               (((userId == m_userId) && keepsOtherSessions()) ? AuthenticationTokenType::SERVICE : AuthenticationTokenType::EPHEMERAL));
          shared_ptr<AuthenticationTokenDescriptor> token = IssueAuthenticationToken(userId, validityTime, type, CHECK_NULL_EX(description), 0);
          if (token != nullptr)
          {

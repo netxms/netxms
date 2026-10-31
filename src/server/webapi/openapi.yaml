@@ -16425,7 +16425,7 @@ components:
           description: Excluded from LDAP synchronization
         closeOtherSessions:
           type: boolean
-          description: Close other sessions on login
+          description: Close user's other client sessions on login. Applies to NXCP client logins only, not to WebAPI or mobile logins, and is ignored for logins with persistent, service or single-use tokens. Sessions started with a persistent token do not close other sessions when they reconnect either. When set on a group, applies to all group members; can be set on the "Everyone" group to apply to all users.
         tokenAuthOnly:
           type: boolean
           description: Can only authenticate using API tokens
