@@ -263,6 +263,158 @@ std::string F_EndMaintenance(json_t *arguments, uint32_t userId)
 }
 
 /**
+ * Resolve interface from "interface" and optional "node" arguments. Interface given by name
+ * requires node, because interface names are only unique within a node.
+ */
+static shared_ptr<Interface> ResolveInterface(json_t *arguments, std::string *error)
+{
+   json_t *value = json_object_get(arguments, "interface");
+   uint32_t id = 0;
+   const char *name = nullptr;
+   if (json_is_integer(value))
+   {
+      id = static_cast<uint32_t>(json_integer_value(value));
+   }
+   else if (json_is_string(value) && (*json_string_value(value) != 0))
+   {
+      name = json_string_value(value);
+      char *eptr;
+      uint32_t n = strtoul(name, &eptr, 0);
+      if (*eptr == 0)
+         id = n;
+   }
+   else
+   {
+      *error = "Interface name or ID must be provided";
+      return shared_ptr<Interface>();
+   }
+
+   if (json_object_get(arguments, "node") == nullptr)
+   {
+      if (id == 0)
+      {
+         *error = "Interface names are not unique across nodes - provide node or use interface object ID";
+         return shared_ptr<Interface>();
+      }
+      shared_ptr<Interface> iface = static_pointer_cast<Interface>(FindObjectById(id, OBJECT_INTERFACE));
+      if (iface == nullptr)
+         *error = "Interface not found";
+      return iface;
+   }
+
+   shared_ptr<NetObj> node = FindObjectByNameOrId(arguments, "node", OBJECT_NODE);
+   if ((node == nullptr) || (node->getObjectClass() != OBJECT_NODE))
+   {
+      *error = "Node not found";
+      return shared_ptr<Interface>();
+   }
+
+   if (id != 0)
+   {
+      shared_ptr<NetObj> object = FindObjectById(id, OBJECT_INTERFACE);
+      if ((object != nullptr) && object->isParent(node->getId()))
+         return static_pointer_cast<Interface>(object);
+   }
+
+   shared_ptr<Interface> iface;
+   if (name != nullptr)
+   {
+      wchar_t nameW[MAX_OBJECT_NAME];
+      utf8_to_wchar(name, -1, nameW, MAX_OBJECT_NAME);
+      nameW[MAX_OBJECT_NAME - 1] = 0;
+      iface = static_cast<Node&>(*node).findInterfaceByName(nameW);
+      if (iface == nullptr)
+         iface = static_cast<Node&>(*node).findInterfaceByAlias(nameW);
+   }
+   if (iface == nullptr)
+      *error = "Interface not found on given node";
+   return iface;
+}
+
+/**
+ * Set expected state for interface
+ */
+std::string F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId)
+{
+   static const char *stateNames[] = { "up", "down", "ignore", "auto" };
+   static const wchar_t *stateNamesW[] = { L"UP", L"DOWN", L"IGNORE", L"AUTO" };
+
+   std::string error;
+   shared_ptr<Interface> iface = ResolveInterface(arguments, &error);
+   if (iface == nullptr)
+      return error;
+   if (!iface->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Interface not found");
+   if (!iface->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+      return std::string("Access denied");
+
+   const char *stateName = json_object_get_string_utf8(arguments, "state", "");
+   int state;
+   for(state = 0; state < 4; state++)
+      if (!stricmp(stateName, stateNames[state]))
+         break;
+   if (state == 4)
+      return std::string("Invalid state - expected one of: up, down, ignore, auto");
+
+   int oldState = iface->getExpectedState();
+   if (oldState == state)
+      return std::string("Expected state of interface is already ") + stateNames[state];
+
+   iface->setExpectedState(state);
+   WriteAuditLogWithValues(AUDIT_OBJECTS, true, userId, nullptr, 0, iface->getId(),
+      ((oldState >= 0) && (oldState <= 3)) ? stateNamesW[oldState] : L"UNKNOWN", stateNamesW[state], 'T',
+      L"AI assistant changed expected state of interface %s [%u] on node %s", iface->getName(), iface->getId(), iface->getParentNodeName().cstr());
+
+   char buffer[256];
+   snprintf(buffer, sizeof(buffer), "Expected state of interface [%u] changed from %s to %s; interface status will be recalculated on next status poll",
+      iface->getId(), ((oldState >= 0) && (oldState <= 3)) ? stateNames[oldState] : "unknown", stateNames[state]);
+   return std::string(buffer);
+}
+
+/**
+ * Change management status of an object
+ */
+static std::string SetManagementStatus(json_t *arguments, uint32_t userId, bool managed)
+{
+   shared_ptr<NetObj> object = FindObjectByNameOrId(arguments, "object");
+   if ((object == nullptr) || !object->checkAccessRights(userId, OBJECT_ACCESS_READ))
+      return std::string("Object not found");
+   if (!object->checkAccessRights(userId, OBJECT_ACCESS_MODIFY))
+      return std::string("Access denied");
+
+   int objectClass = object->getObjectClass();
+   if ((objectClass == OBJECT_TEMPLATE) || (objectClass == OBJECT_TEMPLATEGROUP) || (objectClass == OBJECT_TEMPLATEROOT))
+      return std::string("Management status is not applicable to templates");
+
+   if (managed == (object->getStatus() != STATUS_UNMANAGED))
+      return std::string(managed ? "Object is already managed" : "Object is already unmanaged");
+
+   if (!object->isManagementStatusChangeAllowed(managed))
+      return std::string("Management status change is not allowed for this object (decommissioned nodes cannot be set to managed)");
+
+   object->setMgmtStatus(managed);
+   WriteAuditLog(AUDIT_OBJECTS, true, userId, nullptr, 0, object->getId(),
+      L"AI assistant set object %s [%u] to %s state", object->getName(), object->getId(), managed ? L"managed" : L"unmanaged");
+   return std::string(managed ? "Object and its child objects set to managed state" : "Object and its child objects set to unmanaged state");
+}
+
+/**
+ * Set object to managed state
+ */
+std::string F_ManageObject(json_t *arguments, uint32_t userId)
+{
+   return SetManagementStatus(arguments, userId, true);
+}
+
+/**
+ * Set object to unmanaged state
+ */
+std::string F_UnmanageObject(json_t *arguments, uint32_t userId)
+{
+   return SetManagementStatus(arguments, userId, false);
+}
+
+/**
  * Get list of hardware components for given node
  */
 std::string F_GetNodeHardwareComponents(json_t *arguments, uint32_t userId)

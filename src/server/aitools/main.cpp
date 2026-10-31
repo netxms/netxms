@@ -47,6 +47,7 @@ std::string F_EndMaintenance(json_t *arguments, uint32_t userId);
 std::string F_ExplainObjectStatus(json_t *arguments, uint32_t userId);
 std::string F_FindObjects(json_t *arguments, uint32_t userId);
 std::string F_ForcePoll(json_t *arguments, uint32_t userId);
+std::string F_ManageObject(json_t *arguments, uint32_t userId);
 std::string F_CreateEppRule(json_t *arguments, uint32_t userId);
 std::string F_CreateEventTemplate(json_t *arguments, uint32_t userId);
 std::string F_CreateServerAction(json_t *arguments, uint32_t userId);
@@ -88,10 +89,12 @@ std::string F_GetObservationPoints(json_t *arguments, uint32_t userId);
 std::string F_GetTrafficObservers(json_t *arguments, uint32_t userId);
 std::string F_GetObject(json_t *arguments, uint32_t userId);
 std::string F_SendNotification(json_t *arguments, uint32_t userId);
+std::string F_SetInterfaceExpectedState(json_t *arguments, uint32_t userId);
 std::string F_SNMPWalk(json_t *arguments, uint32_t userId);
 std::string F_SNMPRead(json_t *arguments, uint32_t userId);
 std::string F_StartMaintenance(json_t *arguments, uint32_t userId);
 std::string F_SuggestIncidentAssignee(json_t *arguments, uint32_t userId);
+std::string F_UnmanageObject(json_t *arguments, uint32_t userId);
 std::string F_ListLogs(json_t *arguments, uint32_t userId);
 std::string F_GetLogSchema(json_t *arguments, uint32_t userId);
 std::string F_SearchLog(json_t *arguments, uint32_t userId);
@@ -839,6 +842,37 @@ static void CreateAssistantSkillList()
                { "object", "name or ID of an object (mandatory)" }
             },
             F_EndMaintenance)
+      }
+   );
+
+   RegisterAIAssistantSkill(
+      "object-management",
+      "Provides capabilities for changing monitoring configuration of NetXMS objects. Use this skill to set expected state of network interfaces (up, down, ignore, auto) - for example to stop alerts on unused or intentionally disabled ports - and to set objects to managed or unmanaged state.",
+      "@object-management.md",
+      {
+         AssistantFunction(
+            "set-interface-expected-state",
+            "Set expected state of a network interface. Interface status is calculated by comparing actual operational state with expected state: up - interface is expected to be up, down state is critical; down - interface is expected to be down, up state is critical; ignore - interface state does not affect interface or node status; auto - expected state will be set from actual state on next status poll.",
+            {
+               { "interface", "interface object ID, or interface name or alias when node is also provided (mandatory)" },
+               { "node", "name or ID of the node the interface belongs to (mandatory when interface is given by name)" },
+               { "state", "new expected state: up, down, ignore, or auto (mandatory)" }
+            },
+            F_SetInterfaceExpectedState),
+         AssistantFunction(
+            "manage-object",
+            "Set object (node, interface, container, etc.) to managed state. Management status change also applies to all child objects. Status polling and data collection resume for managed objects. Decommissioned nodes cannot be set to managed state.",
+            {
+               { "object", "name or ID of an object (mandatory)" }
+            },
+            F_ManageObject),
+         AssistantFunction(
+            "unmanage-object",
+            "Set object (node, interface, container, etc.) to unmanaged state. Management status change also applies to all child objects. Unmanaged objects are not polled, do not collect data, and do not generate events or alarms until set back to managed state.",
+            {
+               { "object", "name or ID of an object (mandatory)" }
+            },
+            F_UnmanageObject)
       }
    );
 
