@@ -11,6 +11,6 @@ vpath %.cpp $(TOPDIR)/src/server/kpidirect
 TOOL = test-kpidirect
 SOURCES = test-kpidirect.cpp integrate.cpp compose.cpp
 TOOL_CPPFLAGS = -I$(TOPDIR)/tests/include -I$(TOPDIR)/src/server/kpidirect
-TOOL_LIBS = -lnetxms
+TOOL_LIBS = -lnetxms -lnxjansson
 
 include $(TOPDIR)/build/tool-common.mk
