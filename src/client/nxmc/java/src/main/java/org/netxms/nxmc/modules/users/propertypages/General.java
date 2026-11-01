@@ -59,6 +59,7 @@ public class General extends PropertyPage
    private String initialEmail;
    private String initialPhoneNumber;
 	private Button checkEnforce2FA;
+	private Button checkCloseSessions;
 	private AbstractUserObject object;
 	private NXCSession session;
 
@@ -111,12 +112,12 @@ public class General extends PropertyPage
       // Object ID
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Object ID"),
                                      Long.toString(object.getId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
+
 		// Object name
       initialName = new String(object.getName());
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Login name"),
       		                                    initialName, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		
+
       if (object instanceof User)
       {
 	      initialFullName = new String(((User)object).getFullName());
@@ -157,6 +158,10 @@ public class General extends PropertyPage
          checkEnforce2FA = new Button(groupOptions, SWT.CHECK);
          checkEnforce2FA.setText(i18n.tr("Enforce two-factor authentication for group members"));
          checkEnforce2FA.setSelection((object.getFlags() & AbstractUserObject.TWO_FA_ENFORCE) != 0);
+
+         checkCloseSessions = new Button(groupOptions, SWT.CHECK);
+         checkCloseSessions.setText(i18n.tr("Close other sessions after login for group members"));
+         checkCloseSessions.setSelection((object.getFlags() & AbstractUserObject.CLOSE_OTHER_SESSIONS) != 0);
       }
 
 		return dialogArea;
@@ -164,7 +169,7 @@ public class General extends PropertyPage
 
 	/**
 	 * Apply changes
-	 * 
+	 *
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
 	@Override
@@ -177,13 +182,16 @@ public class General extends PropertyPage
       final String newPhoneNumber = (object instanceof User) ? textPhoneNumber.getText() : "";
       final boolean enforce2FA = (checkEnforce2FA != null) && checkEnforce2FA.getSelection();
       final boolean currentEnforce2FA = (object.getFlags() & AbstractUserObject.TWO_FA_ENFORCE) != 0;
+      final boolean currentCloseSessions = (object.getFlags() & AbstractUserObject.CLOSE_OTHER_SESSIONS) != 0;
+      final boolean closeSessions = (checkCloseSessions != null) ? checkCloseSessions.getSelection() : currentCloseSessions;
 
 		if (newName.equals(initialName) &&
 		    newDescription.equals(initialDescription) &&
 		    newFullName.equals(initialFullName) &&
           newEmail.equals(initialEmail) &&
           newPhoneNumber.equals(initialPhoneNumber) &&
-          (enforce2FA == currentEnforce2FA))
+          (enforce2FA == currentEnforce2FA) &&
+          (closeSessions == currentCloseSessions))
 			return true;		// Nothing to apply
 
       if (isApply)
@@ -220,6 +228,10 @@ public class General extends PropertyPage
                   flags |= AbstractUserObject.TWO_FA_ENFORCE;
                else
                   flags &= ~AbstractUserObject.TWO_FA_ENFORCE;
+               if (closeSessions)
+                  flags |= AbstractUserObject.CLOSE_OTHER_SESSIONS;
+               else
+                  flags &= ~AbstractUserObject.CLOSE_OTHER_SESSIONS;
                object.setFlags(flags);
                fields |= AbstractUserObject.MODIFY_FLAGS;
             }

@@ -139,6 +139,41 @@ static uint64_t GetEffectiveSystemRights(User *user)
 }
 
 /**
+ * Check if login of given user should close user's other sessions. It should if requested by user's
+ * own flag or by flag on any group the user belongs to.
+ * Access to user database must be locked.
+ */
+static bool IsCloseOtherSessionsRequested(User *user)
+{
+   if (user->getFlags() & UF_CLOSE_OTHER_SESSIONS)
+      return true;
+
+   GroupSearchPath searchPath;
+   Iterator<UserDatabaseObject> it = s_userDatabase.begin();
+   while(it.hasNext())
+   {
+      UserDatabaseObject *object = it.next();
+      if (object->isDeleted() || object->isDisabled() || !object->isGroup() || !(object->getFlags() & UF_CLOSE_OTHER_SESSIONS))
+         continue;
+
+      searchPath.clear();
+      if (static_cast<Group*>(object)->isMember(user->getId(), &searchPath))
+         return true;
+   }
+   return false;
+}
+
+/**
+ * Check if login of given user should close user's other sessions
+ */
+bool NXCORE_EXPORTABLE IsCloseOtherSessionsRequested(uint32_t userId)
+{
+   ReadLockGuard lockGuard(s_userDatabaseLock);
+   UserDatabaseObject *user = s_userDatabase.get(userId);
+   return (user != nullptr) && !user->isGroup() && IsCloseOtherSessionsRequested(static_cast<User*>(user));
+}
+
+/**
  * Get effective system rights for user
  */
 uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId)
@@ -623,7 +658,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const char *password, size_t sigLe
          if (rcc != RCC_NO_GRACE_LOGINS)
          {
             *pdwSystemRights = GetEffectiveSystemRights(user);
-            *closeOtherSessions = (user->getFlags() & UF_CLOSE_OTHER_SESSIONS) != 0;
+            *closeOtherSessions = IsCloseOtherSessionsRequested(user);
             *graceLogins = user->getGraceLogins();
             user->updateLastLogin();
             rcc = RCC_SUCCESS;
@@ -1184,7 +1219,7 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
          .param(_T("userLdapDn"), object->getDN())
          .param(_T("userName"), object->getName())
          .param(_T("description"), description)
-         .post(); 
+         .post();
       nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): %s"), description);
       conflict = true;
    }
@@ -1213,7 +1248,7 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
                   .param(_T("userLdapDn"), user->getDN())
                   .param(_T("userName"), user->getName())
                   .param(_T("description"), description)
-                  .post(); 
+                  .post();
                nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): %s"), description);
             }
          }
@@ -1282,7 +1317,7 @@ void UpdateLDAPUser(const TCHAR *dn, const LDAP_Object *ldapObject)
             .param(_T("userLdapDn"), user->getDN())
             .param(_T("userName"), user->getName())
             .param(_T("description"), description)
-            .post(); 
+            .post();
       }
       nxlog_debug_tag(DEBUG_TAG, 4, _T("UpdateLDAPUser(): User added: ID: %s DN: %s, login name: %s, full name: %s, description: %s"), CHECK_NULL(ldapObject->m_id), dn, userName, CHECK_NULL(ldapObject->m_fullName), CHECK_NULL(ldapObject->m_description));
    }
@@ -1443,7 +1478,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
          .param(_T("userLdapDn"), object->getDN())
          .param(_T("userName"), object->getName())
          .param(_T("description"), description)
-         .post(); 
+         .post();
       nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"), description);
       conflict = true;
    }
@@ -1472,7 +1507,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
                   .param(_T("userLdapDn"), group->getDN())
                   .param(_T("userName"), group->getName())
                   .param(_T("description"), description)
-                  .post(); 
+                  .post();
                nxlog_debug_tag(DEBUG_TAG, 4,  _T("UpdateLDAPGroup(): %s"),description);
             }
          }
@@ -1526,7 +1561,7 @@ void UpdateLDAPGroup(const TCHAR *dn, const LDAP_Object *ldapObject) //no full n
             .param(_T("userLdapDn"), group->getDN())
             .param(_T("userName"), group->getName())
             .param(_T("description"), description)
-            .post(); 
+            .post();
       }
 
       SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);

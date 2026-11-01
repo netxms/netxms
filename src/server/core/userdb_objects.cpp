@@ -295,12 +295,12 @@ uint32_t UserDatabaseObject::modifyFromMessage(const NXCPMessage& msg)
 	{
 	   uint32_t flags = msg.getFieldAsUInt16(VID_USER_FLAGS);
 		// Modify only specific flags from message
-		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
+		// Ignore all but DISABLED and CHANGE_PASSWORD flags for superuser and all but CHANGE_PASSWORD and CLOSE_OTHER_SESSIONS flags for "everyone" group
 		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
 		if (m_id == 0)
 			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
 		else if (m_id == GROUP_EVERYONE)
-         m_flags |= flags & UF_CHANGE_PASSWORD;
+         m_flags |= flags & (UF_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
 		else
 			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
 	}
@@ -336,12 +336,12 @@ uint32_t UserDatabaseObject::modifyFromJson(const json_t *json)
    if (json_is_object(jsonFlags))
    {
       uint32_t flags = static_cast<uint32_t>(json_object_update_flags(jsonFlags, m_flags, s_userFlagMapping));
-      // Apply only specific flags from JSON; ignore all but CHANGE_PASSWORD for superuser and "everyone" group
+      // Apply only specific flags from JSON; ignore all but DISABLED and CHANGE_PASSWORD for superuser and all but CHANGE_PASSWORD and CLOSE_OTHER_SESSIONS for "everyone" group
       m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
       if (m_id == 0)
          m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD);
       else if (m_id == GROUP_EVERYONE)
-         m_flags |= flags & UF_CHANGE_PASSWORD;
+         m_flags |= flags & (UF_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
       else
          m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS | UF_TOKEN_AUTH_ONLY | UF_2FA_EXEMPT | UF_2FA_ENFORCE | UF_SERVICE_ACCOUNT);
    }

@@ -49,7 +49,7 @@
 enum class AuthenticationTokenType
 {
    EPHEMERAL = 0,    // Not saved to database, usually short-lived
-   PERSISTENT = 1,   // Saved to database, usually with long expiration time
+   PERSISTENT = 1,   // Saved to database, usually with long expiration time, will not trigger existing session disconnect
    SERVICE = 2,      // Similar to ephemeral but will not trigger existing session disconnect
    SINGLE_USE = 3    // Memory-only, destroyed by the login that spends it
 };
