@@ -21,18 +21,12 @@
 **/
 
 #include "nxagentd.h"
+#include <socket_listener.h>
 
 /**
  * Setup inbound tunnel on incoming TLS connection (implemented in tunnel.cpp)
  */
 void SetupInboundTunnel(SOCKET s, const InetAddress& peer);
-
-/**
- * Statistics
- */
-uint32_t g_acceptErrors = 0;
-uint32_t g_acceptedConnections = 0;
-uint32_t g_rejectedConnections = 0;
 
 /**
  * Session list
@@ -350,136 +344,94 @@ static void SetupIncomingConnection(IncomingConnectionRequest *request)
 }
 
 /**
+ * Agent's main TCP listener
+ */
+class AgentListener : public StreamSocketListener
+{
+private:
+   // Access rights of the peer accepted by the last isConnectionAllowed() call; valid for
+   // the processConnection() call that immediately follows it on the listener thread
+   bool m_masterServer;
+   bool m_controlServer;
+   bool m_upgradeServer;
+
+protected:
+   virtual bool isStopConditionReached() override
+   {
+      return (g_dwFlags & AF_SHUTDOWN) != 0;
+   }
+
+   virtual bool isConnectionAllowed(const InetAddress& peer) override
+   {
+      return IsValidServerAddress(peer, &m_masterServer, &m_controlServer, &m_upgradeServer, false);
+   }
+
+   virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer) override
+   {
+      // Hand connection over to processing thread for protocol detection
+      // (it can block waiting for initial data and must not delay listener)
+      auto request = new IncomingConnectionRequest();
+      request->socket = s;
+      request->addr = peer;
+      request->masterServer = m_masterServer;
+      request->controlServer = m_controlServer;
+      request->upgradeServer = m_upgradeServer;
+      ThreadPoolExecute(g_commThreadPool, SetupIncomingConnection, request);
+      return CPR_BACKGROUND;
+   }
+
+public:
+   AgentListener() : StreamSocketListener(g_wListenPort, (g_dwFlags & AF_DISABLE_IPV4) == 0, (g_dwFlags & AF_DISABLE_IPV6) == 0)
+   {
+      m_masterServer = false;
+      m_controlServer = false;
+      m_upgradeServer = false;
+      setName(_T("Agent"));
+   }
+};
+
+/**
+ * Active listener (used for statistics)
+ */
+static AgentListener *s_listener = nullptr;
+static Mutex s_listenerLock(MutexType::FAST);
+
+/**
+ * Handler for listener statistics
+ */
+LONG H_ListenerStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   LockGuard lockGuard(s_listenerLock);
+   if (s_listener == nullptr)
+   {
+      ret_uint(value, 0);
+      return SYSINFO_RC_SUCCESS;
+   }
+   switch(*arg)
+   {
+      case 'A':
+         ret_uint(value, s_listener->getAcceptedConnections());
+         break;
+      case 'E':
+         ret_uint(value, s_listener->getAcceptErrors());
+         break;
+      case 'R':
+         ret_uint(value, s_listener->getRejectedConnections());
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * TCP/IP Listener
  */
 void ListenerThread()
 {
-   // Create socket(s)
-   SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : CreateSocket(AF_INET, SOCK_STREAM, 0);
-#ifdef WITH_IPV6
-   SOCKET hSocket6 = (g_dwFlags & AF_DISABLE_IPV6) ? INVALID_SOCKET : CreateSocket(AF_INET6, SOCK_STREAM, 0);
-#endif
-   if (((hSocket == INVALID_SOCKET) && !(g_dwFlags & AF_DISABLE_IPV4))
-#ifdef WITH_IPV6
-       && ((hSocket6 == INVALID_SOCKET) && !(g_dwFlags & AF_DISABLE_IPV6))
-#endif
-      )
-   {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_COMM, _T("Unable to create socket (%s)"), GetLastSocketErrorText(buffer, 1024));
-      exit(1);
-   }
-
-   if (!(g_dwFlags & AF_DISABLE_IPV4))
-   {
-	   SetSocketExclusiveAddrUse(hSocket);
-	   SetSocketReuseFlag(hSocket);
-#ifndef _WIN32
-      fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
-#endif
-   }
-
-#ifdef WITH_IPV6
-   if (!(g_dwFlags & AF_DISABLE_IPV6))
-   {
-      SetSocketExclusiveAddrUse(hSocket6);
-      SetSocketReuseFlag(hSocket6);
-#ifndef _WIN32
-      fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
-#endif
-#ifdef IPV6_V6ONLY
-      int on = 1;
-      setsockopt(hSocket6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
-#endif
-   }
-#endif
-
-   // Fill in local address structure
-   struct sockaddr_in servAddr;
-   memset(&servAddr, 0, sizeof(struct sockaddr_in));
-   servAddr.sin_family = AF_INET;
-
-#ifdef WITH_IPV6
-   struct sockaddr_in6 servAddr6;
-   memset(&servAddr6, 0, sizeof(struct sockaddr_in6));
-   servAddr6.sin6_family = AF_INET6;
-#endif
-
-   if (!_tcscmp(g_szListenAddress, _T("*")))
-   {
-      servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-#ifdef WITH_IPV6
-      memset(servAddr6.sin6_addr.s6_addr, 0, 16);
-#endif
-   }
-   else
-   {
-      InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
-      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
-      {
-		   servAddr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
-      }
-      else
-      {
-   		servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-      }
-#ifdef WITH_IPV6
-      bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET6);
-      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET6))
-      {
-		   memcpy(servAddr6.sin6_addr.s6_addr, bindAddress.getAddressV6(), 16);
-      }
-      else
-      {
-   		memset(servAddr6.sin6_addr.s6_addr, 0, 15);
-         servAddr6.sin6_addr.s6_addr[15] = 1;
-      }
-#endif
-	}
-   servAddr.sin_port = htons(g_wListenPort);
-#ifdef WITH_IPV6
-   servAddr6.sin6_port = htons(g_wListenPort);
-#endif
-
-   // Bind socket
-   TCHAR buffer[64];
-   int bindFailures = 0;
-   if (!(g_dwFlags & AF_DISABLE_IPV4))
-   {
-	   nxlog_debug_tag(DEBUG_TAG_COMM, 1, _T("Trying to bind on %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
-      if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
-      {
-         TCHAR buffer[1024];
-         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_COMM, _T("Unable to bind IPv4 socket (%s)"), GetLastSocketErrorText(buffer, 1024));
-         bindFailures++;
-      }
-   }
-   else
-   {
-      bindFailures++;
-   }
-
-#ifdef WITH_IPV6
-   if (!(g_dwFlags & AF_DISABLE_IPV6))
-   {
-      DebugPrintf(1, _T("Trying to bind on [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
-      if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
-      {
-         TCHAR buffer[1024];
-         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_COMM, _T("Unable to bind IPv6 socket (%s)"), GetLastSocketErrorText(buffer, 1024));
-         bindFailures++;
-      }
-   }
-   else
-   {
-      bindFailures++;
-   }
-#else
-   bindFailures++;
-#endif
-
-   // Abort if cannot bind to socket
-   if (bindFailures == 2)
+   auto listener = new AgentListener();
+   listener->setListenAddress(g_szListenAddress);
+   if (!listener->initialize())
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_COMM, _T("Cannot bind at least one socket, terminating agent process"));
 #ifdef _WIN32
@@ -489,138 +441,21 @@ void ListenerThread()
 #endif
    }
 
-   // Set up queue
-   if (!(g_dwFlags & AF_DISABLE_IPV4))
-   {
-      if (listen(hSocket, SOMAXCONN) == 0)
-      {
-         TCHAR ipAddrText[64];
-         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_COMM, _T("Listening on socket %s:%u"), InetAddress(ntohl(servAddr.sin_addr.s_addr)).toString(ipAddrText), g_wListenPort);
-      }
-      else
-      {
-         closesocket(hSocket);
-         hSocket = INVALID_SOCKET;
-      }
-   }
-#ifdef WITH_IPV6
-   if (!(g_dwFlags & AF_DISABLE_IPV6))
-   {
-      if (listen(hSocket6, SOMAXCONN) == 0)
-      {
-         TCHAR ipAddrText[64];
-         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_COMM, _T("Listening on socket %s:%u"), InetAddress(servAddr6.sin6_addr.s6_addr).toString(ipAddrText), g_wListenPort);
-      }
-      else
-      {
-         closesocket(hSocket6);
-         hSocket6 = INVALID_SOCKET;
-      }
-   }
-#endif
+   s_listenerLock.lock();
+   s_listener = listener;
+   s_listenerLock.unlock();
 
-   // Wait for connection requests
-   SocketPoller sp;
-   int errorCount = 0;
-   while(!(g_dwFlags & AF_SHUTDOWN))
-   {
-      sp.reset();
-      if (hSocket != INVALID_SOCKET)
-         sp.add(hSocket);
-#ifdef WITH_IPV6
-      if (hSocket6 != INVALID_SOCKET)
-         sp.add(hSocket6);
-#endif
-
-      int nRet = sp.poll(1000);
-      if ((nRet > 0) && (!(g_dwFlags & AF_SHUTDOWN)))
-      {
-         char clientAddr[128];
-         socklen_t size = 128;
-#ifdef WITH_IPV6
-         SOCKET hClientSocket = accept(sp.isSet(hSocket) ? hSocket : hSocket6, (struct sockaddr *)clientAddr, &size);
-#else
-         SOCKET hClientSocket = accept(hSocket, (struct sockaddr *)clientAddr, &size);
-#endif
-         if (hClientSocket == INVALID_SOCKET)
-         {
-            int error = WSAGetLastError();
-
-            if (error != WSAEINTR)
-            {
-               TCHAR buffer[1024];
-               nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_COMM, _T("Unable to accept incoming connection (%s)"), GetLastSocketErrorText(buffer, 1024));
-            }
-            errorCount++;
-            g_acceptErrors++;
-            if (errorCount > 1000)
-            {
-               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_COMM, _T("Too many consecutive errors on accept() call"));
-               errorCount = 0;
-            }
-            ThreadSleepMs(500);
-            continue;
-         }
-
-         // Socket should be closed on successful exec
-#ifndef _WIN32
-         fcntl(hClientSocket, F_SETFD, fcntl(hClientSocket, F_GETFD) | FD_CLOEXEC);
-#endif
-
-         errorCount = 0;     // Reset consecutive errors counter
-         InetAddress addr = InetAddress::createFromSockaddr((struct sockaddr *)clientAddr);
-         nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("Incoming connection from %s"), addr.toString(buffer));
-
-         bool masterServer, controlServer, upgradeServer;
-         if (IsValidServerAddress(addr, &masterServer, &controlServer, &upgradeServer, false))
-         {
-            g_acceptedConnections++;
-            nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("Connection from %s accepted"), buffer);
-
-            // Hand connection over to processing thread for protocol detection
-            // (it can block waiting for initial data and must not delay listener)
-            auto request = new IncomingConnectionRequest();
-            request->socket = hClientSocket;
-            request->addr = addr;
-            request->masterServer = masterServer;
-            request->controlServer = controlServer;
-            request->upgradeServer = upgradeServer;
-            ThreadPoolExecute(g_commThreadPool, SetupIncomingConnection, request);
-         }
-         else     // Unauthorized connection
-         {
-            g_rejectedConnections++;
-            shutdown(hClientSocket, SHUT_RDWR);
-            closesocket(hClientSocket);
-            nxlog_debug_tag(DEBUG_TAG_COMM, 5, _T("Connection from %s rejected"), buffer);
-         }
-      }
-      else if (nRet == -1)
-      {
-         int error = WSAGetLastError();
-
-         // On AIX, select() returns ENOENT after SIGINT for unknown reason
-#ifdef _WIN32
-         if (error != WSAEINTR)
-#else
-         if ((error != EINTR) && (error != ENOENT))
-#endif
-         {
-            TCHAR buffer[1024];
-            nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_COMM, _T("Call to select() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
-            ThreadSleepMs(100);
-         }
-      }
-   }
+   listener->mainLoop();
 
    // Wait for watchdog thread
    s_mutexWatchdogActive.lock();
    s_mutexWatchdogActive.unlock();
 
-   closesocket(hSocket);
-#ifdef WITH_IPV6
-   closesocket(hSocket6);
-#endif
+   s_listenerLock.lock();
+   s_listener = nullptr;
+   s_listenerLock.unlock();
+   delete listener;
+
    nxlog_debug_tag(DEBUG_TAG_COMM, 1, _T("Listener thread terminated"));
 }
 

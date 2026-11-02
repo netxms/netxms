@@ -473,6 +473,11 @@ size_t LIBNXSNMP_EXPORTABLE SnmpParseOIDA(const char *text, uint32_t *buffer, si
 bool LIBNXSNMP_EXPORTABLE SnmpIsCorrectOID(const TCHAR *oid);
 size_t LIBNXSNMP_EXPORTABLE SnmpGetOIDLength(const TCHAR *oid);
 
+/**
+ * Get length of SNMP message from its BER header. Returns 0 if data does not start with valid BER sequence.
+ */
+size_t LIBNXSNMP_EXPORTABLE SnmpGetMessageLength(const BYTE *data, size_t size);
+
 #ifdef UNICODE
 #define SnmpConvertOIDToText SnmpConvertOIDToTextW
 #define SnmpParseOID SnmpParseOIDW
@@ -1162,7 +1167,6 @@ protected:
    BYTE *m_buffer;
    BYTE m_localBuffer[2048];
 
-   size_t preParsePDU();
    int recvData(uint32_t timeout, struct sockaddr *sender, socklen_t *addrSize);
    void clearBuffer()
    {

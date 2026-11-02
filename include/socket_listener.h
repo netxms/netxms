@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2026 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -40,19 +40,20 @@ enum ConnectionProcessingResult
 #define MAX_LISTENER_NAME_LEN    64
 
 /**
- * Generic socket listener
+ * Generic socket listener. Listens on one or more local addresses (one socket per address).
  */
 class LIBNETXMS_EXPORTABLE GenericSocketListener
 {
 private:
    uint16_t m_port;
-   TCHAR *m_listenAddress;
+   StringList m_listenAddresses;
    bool m_allowV4;
    bool m_allowV6;
 
+   void createSocket(const InetAddress& addr);
+
 protected:
-   SOCKET m_socketV4;
-   SOCKET m_socketV6;
+   IntegerArray<SOCKET> m_sockets;
    bool m_stop;
    TCHAR m_name[MAX_LISTENER_NAME_LEN];
    uint32_t m_acceptErrors;
@@ -69,7 +70,7 @@ public:
    void enableIPv4(bool enabled) { m_allowV4 = enabled; }
    void enableIPv6(bool enabled) { m_allowV6 = enabled; }
    void setName(const TCHAR *name) { _tcslcpy(m_name, name, MAX_LISTENER_NAME_LEN); }
-   void setListenAddress(const TCHAR *addr) { MemFree(m_listenAddress); m_listenAddress = MemCopyString(addr); }
+   void setListenAddress(const TCHAR *addrList);
 
    uint32_t getAcceptErrors() const { return m_acceptErrors; }
    uint32_t getAcceptedConnections() const { return m_acceptedConnections; }
@@ -88,6 +89,8 @@ class LIBNETXMS_EXPORTABLE StreamSocketListener : public GenericSocketListener
 protected:
    virtual bool isConnectionAllowed(const InetAddress& peer);
    virtual ConnectionProcessingResult processConnection(SOCKET s, const InetAddress& peer) = 0;
+
+   bool acceptConnection(SOCKET s);
 
 public:
    StreamSocketListener(uint16_t port, bool allowV4 = true, bool allowV6 = true) : GenericSocketListener(SOCK_STREAM, port, allowV4, allowV6) { }

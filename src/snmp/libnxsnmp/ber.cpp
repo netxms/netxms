@@ -472,3 +472,20 @@ size_t BER_Encode(uint32_t type, const BYTE *data, size_t dataLength, BYTE *buff
    SNMP_MemFree(pEncodedData, dataLength + 1);
    return bytes;
 }
+
+/**
+ * Get length of SNMP message from its BER header. Returns 0 if data does not start with valid BER sequence.
+ */
+size_t LIBNXSNMP_EXPORTABLE SnmpGetMessageLength(const BYTE *data, size_t size)
+{
+   uint32_t type;
+   size_t length, idLength;
+   const BYTE *currPos;
+
+   if (!BER_DecodeIdentifier(data, size, &type, &length, &currPos, &idLength))
+      return 0;
+   if (type != ASN_SEQUENCE)
+      return 0;   // Packet should start with SEQUENCE
+
+   return length + idLength;
+}

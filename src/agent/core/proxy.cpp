@@ -466,8 +466,7 @@ void ProxyListenerThread()
 {
    ThreadSetName("ProxyHbLsnr");
    ProxyConnectionListener listener(LISTEN_PORT, (g_dwFlags & AF_DISABLE_IPV4) == 0, (g_dwFlags & AF_DISABLE_IPV6) == 0);
-   if (_tcscmp(g_szListenAddress, _T("*")))
-      listener.setListenAddress(g_szListenAddress);
+   listener.setListenAddress(g_szListenAddress);
    if (!listener.initialize())
       return;
 

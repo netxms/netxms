@@ -88,6 +88,7 @@ LONG H_SNMPAddressRangeScan(const TCHAR *cmd, const TCHAR *arg, StringList *valu
 LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_ListenerStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SyslogStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemDate(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -506,8 +507,8 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("System.IsVirtual"), H_SystemIsVirtual, nullptr, DCI_DT_INT, DCIDESC_SYSTEM_IS_VIRTUAL },
 #endif
 
-   { _T("Agent.AcceptedConnections"), H_UIntPtr, (TCHAR *)&g_acceptedConnections, DCI_DT_COUNTER32, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
-   { _T("Agent.AcceptErrors"), H_UIntPtr, (TCHAR *)&g_acceptErrors, DCI_DT_COUNTER32, DCIDESC_AGENT_ACCEPTERRORS },
+   { _T("Agent.AcceptedConnections"), H_ListenerStats, _T("A"), DCI_DT_COUNTER32, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
+   { _T("Agent.AcceptErrors"), H_ListenerStats, _T("E"), DCI_DT_COUNTER32, DCIDESC_AGENT_ACCEPTERRORS },
    { _T("Agent.AccessLevel"), H_AccessLevel, nullptr, DCI_DT_STRING, DCIDESC_AGENT_ACCESSLEVEL },
    { _T("Agent.ActiveConnections"), H_ActiveConnections, nullptr, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
    { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&g_authenticationFailures, DCI_DT_COUNTER32, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
@@ -546,7 +547,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.Proxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_PROXY_ISENABLED },
    { _T("Agent.PushValue(*)"), H_PushValue, nullptr, DCI_DT_STRING, DCIDESC_AGENT_PUSH_VALUE },
    { _T("Agent.Registrar"), H_StringConstant, g_registrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
-   { _T("Agent.RejectedConnections"), H_UIntPtr, (TCHAR *)&g_rejectedConnections, DCI_DT_COUNTER32, DCIDESC_AGENT_REJECTEDCONNECTIONS },
+   { _T("Agent.RejectedConnections"), H_ListenerStats, _T("R"), DCI_DT_COUNTER32, DCIDESC_AGENT_REJECTEDCONNECTIONS },
    { _T("Agent.SessionAgentCount"), H_SessionAgentCount, _T("*"), DCI_DT_UINT, DCIDESC_AGENT_SESSION_AGENTS_COUNT },
    { _T("Agent.SNMP.IsProxyEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SNMP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SNMP_ISPROXYENABLED },
    { _T("Agent.SNMP.IsTrapProxyEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_SNMP_TRAP_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_SNMP_ISPROXYENABLED },

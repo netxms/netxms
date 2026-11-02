@@ -673,17 +673,6 @@ inline shared_ptr<SessionAgentConnector> CreateSessionAgentConnector(uint32_t id
 }
 
 /**
- * Class to reciever traps
- */
-class SNMP_TrapProxyTransport : public SNMP_UDPTransport
-{
-public:
-   SNMP_TrapProxyTransport(SOCKET hSocket) : SNMP_UDPTransport(hSocket) {}
-
-   int readRawMessage(BYTE **rawData, uint32_t timeout, struct sockaddr *sender, socklen_t *addrSize);
-};
-
-/**
  * SNMP target
  */
 class SNMPTarget
@@ -1091,9 +1080,6 @@ extern StringList g_acceptedEnvVars;
 extern shared_ptr_store<Config> g_config;
 extern bool g_restartPending;
 
-extern uint32_t g_acceptErrors;
-extern uint32_t g_acceptedConnections;
-extern uint32_t g_rejectedConnections;
 
 extern SharedObjectArray<CommSession> g_sessions;
 extern Mutex g_sessionLock;

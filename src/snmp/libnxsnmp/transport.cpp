@@ -482,23 +482,6 @@ retry_wait:
 }
 
 /**
- * Pre-parse PDU
- */
-size_t SNMP_UDPTransport::preParsePDU()
-{
-   uint32_t dwType;
-   size_t dwLength, dwIdLength;
-   const BYTE *pbCurrPos;
-
-   if (!BER_DecodeIdentifier(m_buffer, m_bytesInBuffer, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
-      return 0;
-   if (dwType != ASN_SEQUENCE)
-      return 0;   // Packet should start with SEQUENCE
-
-   return dwLength + dwIdLength;
-}
-
-/**
  * Read PDU from socket
  */
 int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sockaddr *sender,
@@ -517,7 +500,7 @@ int SNMP_UDPTransport::readMessage(SNMP_PDU **pdu, uint32_t timeout, struct sock
       return -1;
    }
 
-   size_t pduLength = preParsePDU();
+   size_t pduLength = SnmpGetMessageLength(m_buffer, m_bytesInBuffer);
    if ((pduLength == 0) || (pduLength > m_bytesInBuffer))
    {
       clearBuffer();
