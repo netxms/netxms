@@ -124,51 +124,36 @@ LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, Ab
 }
 
 /**
- * Searches bus type from it's known variants.
+ * Match bus type name in given lshw string. Returns nullptr if no known bus type found.
  * If new types are discovered they should be added here.
+ */
+static const TCHAR *MatchBusType(const char *text)
+{
+   if (text == nullptr)
+      return nullptr;
+   if (strcasestr(text, "scsi") != nullptr)
+      return _T("SCSI");
+   if (strcasestr(text, "sata") != nullptr)
+      return _T("SATA");
+   if (strcasestr(text, "ata") != nullptr)
+      return _T("ATA");
+   if (strcasestr(text, "sas") != nullptr)
+      return _T("SAS");
+   if (strcasestr(text, "nvme") != nullptr)
+      return _T("NVMe");
+   return nullptr;
+}
+
+/**
+ * Get bus type of disk from lshw bus information or description.
  * Only run this for disks (type == 0)
  */
-static TCHAR *GetBusType(json_t* data, TCHAR* busType)
+static const TCHAR *GetBusType(json_t *data)
 {
-   // check businfo
-   json_t* busInfo = json_object_get(data, "businfo");
-   if (busInfo != nullptr)
-   {
-      if (strcasestr(json_string_value(busInfo), "scsi") != nullptr)
-         _tcscpy(busType, _T("SCSI"));
-      else if (strcasestr(json_string_value(busInfo), "sata") != nullptr)
-         _tcscpy(busType, _T("SATA"));
-      else if (strcasestr(json_string_value(busInfo), "ata") != nullptr)
-         _tcscpy(busType, _T("ATA"));
-      else if (strcasestr(json_string_value(busInfo), "sas") != nullptr)
-         _tcscpy(busType, _T("SAS"));
-      else if (strcasestr(json_string_value(busInfo), "nvme") != nullptr)
-         _tcscpy(busType, _T("NVMe"));
-
-      return busType;
-   }
-
-   // check description
-   json_t* desc = json_object_get(data, "description");
-   if (desc != nullptr)
-   {
-      if (strcasestr(json_string_value(desc), "scsi") != nullptr)
-         _tcscpy(busType, _T("SCSI"));
-      else if (strcasestr(json_string_value(desc), "sata") != nullptr)
-         _tcscpy(busType, _T("SATA"));
-      else if (strcasestr(json_string_value(desc), "ata") != nullptr)
-         _tcscpy(busType, _T("ATA"));
-      else if (strcasestr(json_string_value(desc), "sas") != nullptr)
-         _tcscpy(busType, _T("SAS"));
-      else if (strcasestr(json_string_value(desc), "nvme") != nullptr)
-         _tcscpy(busType, _T("NVMe"));
-
-      return busType;
-   }
-
-   // if nothing found
-   _tcscpy(busType, _T("Unknown"));
-   return busType;
+   const TCHAR *busType = MatchBusType(json_object_get_string_utf8(data, "businfo", nullptr));
+   if (busType == nullptr)
+      busType = MatchBusType(json_object_get_string_utf8(data, "description", nullptr));
+   return (busType != nullptr) ? busType : _T("Unknown");
 }
 
 /**
@@ -185,7 +170,7 @@ static void GetDataForStorageDevices(json_t *root, Table *value, int *curDevice)
 
       value->addRow();
       value->set(0, (*curDevice)++); // NUMBER
-      if (strcmp(json_string_value(json_object_get(data, "class")), "storage") == 0)
+      if (!strcmp(json_object_get_string_utf8(data, "class", ""), "storage"))
       {
          value->set(1, 12);                             // TYPE
          value->set(2, _T("Storage array controller")); // TYPE_DESCRIPTION
@@ -195,24 +180,12 @@ static void GetDataForStorageDevices(json_t *root, Table *value, int *curDevice)
       {
          value->set(1, 0);                   // TYPE
          value->set(2, _T("Direct-access")); // TYPE_DESCRIPTION
-         TCHAR busType[8];
-         value->set(3, GetBusType(data, busType)); // BUS_TYPE
+         value->set(3, GetBusType(data)); // BUS_TYPE
       }
 
       // REMOVABLE
-      json_t* conf = json_object_get(data, "configuration");
-      if (conf != nullptr && json_is_object(conf))
-      {
-         json_t* driver = json_object_get(conf, "driver");
-         if (driver != nullptr && strcasestr(json_string_value(driver), "usb") != nullptr)
-            value->set(4, 1);
-         else
-            value->set(4, 0);
-      }
-      else
-      {
-         value->set(4, 0);
-      }
+      const char *driver = json_object_get_string_utf8(json_object_get(data, "configuration"), "driver", nullptr);
+      value->set(4, ((driver != nullptr) && (strcasestr(driver, "usb") != nullptr)) ? 1 : 0);
 
       value->set(5, json_object_get_int64(data, "size", 0));                   // SIZE
       value->set(6, json_string_value(json_object_get(data, "vendor")));       // MANUFACTURER
