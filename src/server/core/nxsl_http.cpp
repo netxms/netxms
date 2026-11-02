@@ -165,10 +165,12 @@ struct HttpSessionData
 {
    CURL *curl;
    HttpClientSettings settings;
+   bool cookieEngineStarted;
 
    HttpSessionData()
    {
       curl = nullptr;
+      cookieEngineStarted = false;
    }
 
    ~HttpSessionData()
@@ -304,8 +306,12 @@ static struct curl_slist *AppendHeader(struct curl_slist *list, const wchar_t *n
 
 /**
  * Execute HTTP request using given curl handle. Session settings may be null for standalone requests.
+ * Cookie engine is started only once per handle - it survives curl_easy_reset(), while setting
+ * CURLOPT_COOKIEFILE again before each reset leaks the cookie file list in libcurl < 8.5.
+ * The cookieEngineStarted tracking can be dropped (setting CURLOPT_COOKIEFILE after each reset)
+ * once libcurl < 8.5 (Debian 12, RHEL 8/9, Ubuntu 22.04) is no longer supported.
  */
-static void ExecuteHttpRequest(CURL *curl, const HttpRequestData& request, const HttpClientSettings *sessionSettings, HttpResponseData *response)
+static void ExecuteHttpRequest(CURL *curl, const HttpRequestData& request, const HttpClientSettings *sessionSettings, bool *cookieEngineStarted, HttpResponseData *response)
 {
    static const HttpClientSettings defaultSettings;
    if (sessionSettings == nullptr)
@@ -348,7 +354,6 @@ static void ExecuteHttpRequest(CURL *curl, const HttpRequestData& request, const
    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, followRedirects ? static_cast<long>(1) : static_cast<long>(0));
    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, static_cast<long>(HTTP_MAX_REDIRECTS));
    curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
-   curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");   // Enable cookie engine (cookies survive curl_easy_reset)
    EnableLibCURLUnexpectedEOFWorkaround(curl);
 
    const SharedString& userAgent = EffectiveSetting(request.settings.userAgent, sessionSettings->userAgent);
@@ -470,7 +475,10 @@ static void ExecuteHttpRequest(CURL *curl, const HttpRequestData& request, const
    {
       nxlog_debug_tag(DEBUG_TAG, 7, L"Executing %s %s (timeout=%d, verifyPeer=%s, verifyHost=%s, followRedirects=%s)",
          request.method.cstr(), request.url.cstr(), timeout, BooleanToString(verifyPeer), BooleanToString(verifyHost), BooleanToString(followRedirects));
+      if (!(*cookieEngineStarted))
+         curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");   // Enable in-memory cookie engine (started on perform)
       rc = curl_easy_perform(curl);
+      *cookieEngineStarted = true;
 
       double totalTime = 0;
       curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &totalTime);
@@ -848,7 +856,8 @@ NXSL_METHOD_DEFINITION(HttpRequest, execute)
    }
 
    auto response = new HttpResponseData();
-   ExecuteHttpRequest(curl, *static_cast<HttpRequestData*>(object->getData()), nullptr, response);
+   bool cookieEngineStarted = false;
+   ExecuteHttpRequest(curl, *static_cast<HttpRequestData*>(object->getData()), nullptr, &cookieEngineStarted, response);
    curl_easy_cleanup(curl);
    *result = CreateResponseObject(vm, response);
    return NXSL_ERR_SUCCESS;
@@ -1068,7 +1077,7 @@ static int ExecuteSessionRequest(HttpSessionData *session, const HttpRequestData
    }
 
    auto response = new HttpResponseData();
-   ExecuteHttpRequest(session->curl, request, &session->settings, response);
+   ExecuteHttpRequest(session->curl, request, &session->settings, &session->cookieEngineStarted, response);
    *result = CreateResponseObject(vm, response);
    return NXSL_ERR_SUCCESS;
 }
@@ -1173,6 +1182,7 @@ NXSL_METHOD_DEFINITION(HttpSession, close)
    {
       curl_easy_cleanup(session->curl);
       session->curl = nullptr;
+      session->cookieEngineStarted = false;
    }
    *result = vm->createValue();
    return NXSL_ERR_SUCCESS;
