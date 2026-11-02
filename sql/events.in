@@ -1291,7 +1291,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) model - Model' CONCAT CRLF CONCAT
 		'   5) location - Location' CONCAT CRLF CONCAT
 		'   6) partNumber - Part number' CONCAT CRLF CONCAT
-		'   7) serialnumber - Serial number' CONCAT CRLF CONCAT
+		'   7) serialNumber - Serial number' CONCAT CRLF CONCAT
 		'   8) capacity - Capacity' CONCAT CRLF CONCAT
 		'   9) description - Description'
 	);
@@ -1308,7 +1308,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   4) model - Model' CONCAT CRLF CONCAT
 		'   5) location - Location' CONCAT CRLF CONCAT
 		'   6) partNumber - Part number' CONCAT CRLF CONCAT
-		'   7) serialnumber - Serial number' CONCAT CRLF CONCAT
+		'   7) serialNumber - Serial number' CONCAT CRLF CONCAT
 		'   8) capacity - Capacity' CONCAT CRLF CONCAT
 		'   9) description - Description'
 	);

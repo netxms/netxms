@@ -5182,7 +5182,7 @@ bool Node::updateHardwareComponents(PollerInfo *poller, uint32_t requestId)
                   .param(_T("model"), c->getModel())
                   .param(_T("location"), c->getLocation())
                   .param(_T("partNumber"), c->getPartNumber())
-                  .param(_T("serialnumber"), c->getSerialNumber())
+                  .param(_T("serialNumber"), c->getSerialNumber())
                   .param(_T("capacity"), c->getCapacity())
                   .param(_T("description"), c->getDescription())
                   .post();

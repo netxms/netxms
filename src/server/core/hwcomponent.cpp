@@ -82,14 +82,19 @@ ObjectArray<HardwareComponent> *CalculateHardwareChanges(ObjectArray<HardwareCom
 }
 
 /**
- * Copy component serial number limited to 63 characters (width of serial_number column in hardware_inventory table).
- * In-memory inventory must hold the same value as persisted one so that component asset links stay stable.
+ * Copy component serial number with leading and trailing whitespace removed and limited to 63 characters
+ * (width of serial_number column in hardware_inventory table). In-memory inventory must hold the same value
+ * as persisted one so that component asset links stay stable.
  */
 static inline wchar_t *CopySerialNumber(const wchar_t *serialNumber)
 {
    if (serialNumber == nullptr)
       return nullptr;
+   while (iswspace(*serialNumber))
+      serialNumber++;
    size_t len = wcslen(serialNumber);
+   while ((len > 0) && iswspace(serialNumber[len - 1]))
+      len--;
    if (len > 63)
       len = 63;
    wchar_t *copy = MemAllocArrayNoInit<wchar_t>(len + 1);
@@ -176,6 +181,7 @@ HardwareComponent::HardwareComponent(HardwareComponentCategory category, const T
                !_tcsicmp(table.getColumnName(i), _T("SIZE")))
          m_capacity = table.getAsUInt64(row, i);
       else if (!_tcsicmp(table.getColumnName(i), _T("SERIAL_NUMBER")) ||
+               !_tcsicmp(table.getColumnName(i), _T("SERIAL")) ||
                !_tcsicmp(table.getColumnName(i), _T("MAC_ADDRESS")))
          m_serialNumber = CopySerialNumber(table.getAsString(row, i));
       else if ((!_tcsicmp(table.getColumnName(i), _T("TYPE")) && (category != HWC_STORAGE)) ||
