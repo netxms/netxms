@@ -3041,8 +3041,9 @@ void ClientSession::issueAuthToken(const NXCPMessage& request)
 
             const wchar_t *tokenTypeName = AuthenticationTokenTypeName(type);
 
-            // Do not write audit log for ordinary ephemeral tokens for current user,
-            // because management console request them often to implement reconnects.
+            // Do not write audit log for ordinary tokens for current user (ephemeral, or service
+            // if session was started with persistent or service token), because management
+            // console request them often to implement reconnects.
             // Single-use tokens are handoff credentials and are always audited.
             if (userId != m_userId)
             {

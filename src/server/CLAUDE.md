@@ -256,7 +256,6 @@ nxlog_debug_tag(_T("session"), level, ...)    # Client sessions
 
 - SSH Interactive Sessions: `doc/SSH_Interactive_Sessions_Design.md`
 - AI Incident Management: `doc/AI_Incident_Management_Integration_Design.md`
-- Single-Use Authentication Tokens: `doc/Single_Use_Authentication_Tokens.md`
 
 ## Related Components
 

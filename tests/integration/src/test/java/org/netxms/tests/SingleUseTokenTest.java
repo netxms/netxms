@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -117,6 +118,33 @@ public class SingleUseTokenTest extends AbstractSessionTest
       admin.modifyUserDBObject(user, AbstractUserObject.MODIFY_FLAGS);
       admin.setUserPassword(user.getId(), HANDOFF_USER_PASSWORD, null);
       return user;
+   }
+
+   /**
+    * Assert that second login of the test user closes the first one.
+    *
+    * @param message failure message
+    */
+   private void assertNewLoginClosesOtherSession(String message) throws Exception
+   {
+      NXCSession first = loginWithPassword(HANDOFF_USER_NAME, HANDOFF_USER_PASSWORD);
+      try
+      {
+         NXCSession replacement = loginWithPassword(HANDOFF_USER_NAME, HANDOFF_USER_PASSWORD);
+         try
+         {
+            assertTrue(waitForDisconnect(first), message);
+         }
+         finally
+         {
+            replacement.disconnect();
+         }
+      }
+      finally
+      {
+         if (first.isConnected())
+            first.disconnect();
+      }
    }
 
    @Test
@@ -253,6 +281,21 @@ public class SingleUseTokenTest extends AbstractSessionTest
             {
                reconnected.disconnect();
             }
+
+            // Client reconnects with the token received at login until keep-alive timer first replaces it,
+            // and this token is issued by a different code path than one requested above
+            Field loginTokenField = NXCSession.class.getDeclaredField("authenticationToken");
+            loginTokenField.setAccessible(true);
+            NXCSession reconnectedWithLoginToken = loginWithToken((String)loginTokenField.get(session));
+            try
+            {
+               assertNotNull(issuer.getAlarms());
+               assertNotNull(session.getAlarms());
+            }
+            finally
+            {
+               reconnectedWithLoginToken.disconnect();
+            }
          }
          finally
          {
@@ -384,6 +427,69 @@ public class SingleUseTokenTest extends AbstractSessionTest
       finally
       {
          admin.deleteUserDBObject(groupId);
+      }
+   }
+
+   /**
+    * CLOSE_OTHER_SESSIONS flag on a group applies to members of its nested groups
+    */
+   @Test
+   public void testNestedGroupFlagClosesOtherSessions() throws Exception
+   {
+      NXCSession admin = connectAndLogin();
+      User user = prepareHandoffUser(admin);
+      user.setFlags(user.getFlags() & ~AbstractUserObject.CLOSE_OTHER_SESSIONS);
+      admin.modifyUserDBObject(user, AbstractUserObject.MODIFY_FLAGS);
+
+      long suffix = System.currentTimeMillis();
+      int innerGroupId = admin.createUserGroup("close-sessions-test-inner-" + suffix);
+      int outerGroupId = admin.createUserGroup("close-sessions-test-outer-" + suffix);
+      try
+      {
+         admin.syncMissingUsers(Arrays.asList(new Integer[] { innerGroupId, outerGroupId }));
+
+         UserGroup inner = (UserGroup)admin.findUserDBObjectById(innerGroupId, null);
+         inner.setMembers(new int[] { user.getId() });
+         admin.modifyUserDBObject(inner, AbstractUserObject.MODIFY_MEMBERS);
+
+         UserGroup outer = (UserGroup)admin.findUserDBObjectById(outerGroupId, null);
+         outer.setMembers(new int[] { innerGroupId });
+         outer.setFlags(outer.getFlags() | AbstractUserObject.CLOSE_OTHER_SESSIONS);
+         admin.modifyUserDBObject(outer, AbstractUserObject.MODIFY_FLAGS | AbstractUserObject.MODIFY_MEMBERS);
+
+         assertNewLoginClosesOtherSession("CLOSE_OTHER_SESSIONS on group is not in effect for member of nested group");
+      }
+      finally
+      {
+         admin.deleteUserDBObject(outerGroupId);
+         admin.deleteUserDBObject(innerGroupId);
+      }
+   }
+
+   /**
+    * "Everyone" group accepts CLOSE_OTHER_SESSIONS flag, unlike most other flags, and it applies to every user
+    */
+   @Test
+   public void testEveryoneGroupFlagClosesOtherSessions() throws Exception
+   {
+      NXCSession admin = connectAndLogin();
+      User user = prepareHandoffUser(admin);
+      user.setFlags(user.getFlags() & ~AbstractUserObject.CLOSE_OTHER_SESSIONS);
+      admin.modifyUserDBObject(user, AbstractUserObject.MODIFY_FLAGS);
+
+      admin.syncMissingUsers(Arrays.asList(new Integer[] { AbstractUserObject.WELL_KNOWN_ID_EVERYONE }));
+      UserGroup everyone = (UserGroup)admin.findUserDBObjectById(AbstractUserObject.WELL_KNOWN_ID_EVERYONE, null);
+      int originalFlags = everyone.getFlags();
+      everyone.setFlags(originalFlags | AbstractUserObject.CLOSE_OTHER_SESSIONS);
+      admin.modifyUserDBObject(everyone, AbstractUserObject.MODIFY_FLAGS);
+      try
+      {
+         assertNewLoginClosesOtherSession("CLOSE_OTHER_SESSIONS on \"Everyone\" group is not in effect");
+      }
+      finally
+      {
+         everyone.setFlags(originalFlags);
+         admin.modifyUserDBObject(everyone, AbstractUserObject.MODIFY_FLAGS);
       }
    }
 
