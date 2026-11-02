@@ -20,7 +20,6 @@ EXTRA_DIST = \
 	HA_Design.md \
 	NC_Drivers_Server_Subtree.md \
 	netxms-ldap-integration-guide.md \
-	Single_Use_Authentication_Tokens.md \
 	Traffic_Observer_Admin_Guide.md \
 	Traffic_Observer_Example_Template.md \
 	Traffic_Observer_Integration_Design.md \

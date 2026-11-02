@@ -73,7 +73,3 @@ Do **not** override `getHardwareInformation()` in a new driver when the device s
 ## Database Changes
 
 Schema rules are in [sql/CLAUDE.md](../../sql/CLAUDE.md); upgrade procedures and the multi-branch backport procedure are in [tools/nxdbmgr/CLAUDE.md](tools/nxdbmgr/CLAUDE.md).
-
-## Design Documentation
-
-- Single-Use Authentication Tokens: `doc/Single_Use_Authentication_Tokens.md`

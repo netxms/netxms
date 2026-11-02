@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -252,6 +253,21 @@ public class SingleUseTokenTest extends AbstractSessionTest
             finally
             {
                reconnected.disconnect();
+            }
+
+            // Client reconnects with the token received at login until keep-alive timer first replaces it,
+            // and this token is issued by a different code path than one requested above
+            Field loginTokenField = NXCSession.class.getDeclaredField("authenticationToken");
+            loginTokenField.setAccessible(true);
+            NXCSession reconnectedWithLoginToken = loginWithToken((String)loginTokenField.get(session));
+            try
+            {
+               assertNotNull(issuer.getAlarms());
+               assertNotNull(session.getAlarms());
+            }
+            finally
+            {
+               reconnectedWithLoginToken.disconnect();
             }
          }
          finally
