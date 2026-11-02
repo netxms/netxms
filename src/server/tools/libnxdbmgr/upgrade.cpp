@@ -501,7 +501,7 @@ bool LIBNXDBMGR_EXPORTABLE ConvertColumnToInt64(const wchar_t *table, const wcha
 }
 
 /**
- * Check whether an index exists on the given table. Only supports MySQL, PostgreSQL, MSSQL.
+ * Check whether an index exists on the given table.
  */
 bool LIBNXDBMGR_EXPORTABLE IsIndexExists(const wchar_t *tableName, const wchar_t *indexName)
 {
@@ -515,7 +515,17 @@ bool LIBNXDBMGR_EXPORTABLE IsIndexExists(const wchar_t *tableName, const wchar_t
          nx_swprintf(query, 512, L"SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='%s' AND INDEX_NAME='%s'", tableName, indexName);
          break;
       case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_TSDB:
          nx_swprintf(query, 512, L"SELECT 1 FROM pg_indexes WHERE schemaname=current_schema() AND tablename='%s' AND indexname='%s'", tableName, indexName);
+         break;
+      case DB_SYNTAX_ORACLE:
+         nx_swprintf(query, 512, L"SELECT 1 FROM user_indexes WHERE table_name=upper('%s') AND index_name=upper('%s')", tableName, indexName);
+         break;
+      case DB_SYNTAX_SQLITE:
+         nx_swprintf(query, 512, L"SELECT 1 FROM sqlite_master WHERE type='index' AND upper(tbl_name)=upper('%s') AND upper(name)=upper('%s')", tableName, indexName);
+         break;
+      case DB_SYNTAX_DB2:
+         nx_swprintf(query, 512, L"SELECT 1 FROM syscat.indexes WHERE tabschema=CURRENT SCHEMA AND tabname=upper('%s') AND indname=upper('%s')", tableName, indexName);
          break;
       default:
          return false;

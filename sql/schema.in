@@ -3781,7 +3781,7 @@ CREATE TABLE ai_operator_instr_history
    PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 
-CREATE INDEX idx_ai_op_instr_hist_instance_id ON ai_operator_instr_history(instance_id);
+CREATE INDEX idx_ai_op_instr_hist_inst_id ON ai_operator_instr_history(instance_id);
 
 /**
  * AI operator observations

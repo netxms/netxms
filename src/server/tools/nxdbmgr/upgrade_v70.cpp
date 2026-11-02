@@ -165,6 +165,22 @@ static bool MigrateObjectAIData()
 }
 
 /**
+ * Upgrade from 70.57 to 70.58
+ */
+static bool H_UpgradeFromV57()
+{
+   // Index on ai_operator_instr_history was originally created with a name longer than 30 characters
+   // (not accepted by Oracle before 12.2); databases upgraded through the original 70.35 step still have it
+   if (IsIndexExists(L"ai_operator_instr_history", L"idx_ai_op_instr_hist_instance_id"))
+   {
+      CHK_EXEC(DBDropIndex(g_dbHandle, L"ai_operator_instr_history", L"idx_ai_op_instr_hist_instance_id"));
+      CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_instr_hist_inst_id ON ai_operator_instr_history(instance_id)"));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(58));
+   return true;
+}
+
+/**
  * Upgrade from 70.56 to 70.57
  */
 static bool H_UpgradeFromV56()
@@ -846,7 +862,7 @@ static bool H_UpgradeFromV34()
       L"   change_timestamp integer not null,"
       L"   previous_text $SQL:TEXT null,"
       L"   PRIMARY KEY(record_id))"));
-   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_instr_hist_instance_id ON ai_operator_instr_history(instance_id)"));
+   CHK_EXEC(SQLQuery(L"CREATE INDEX idx_ai_op_instr_hist_inst_id ON ai_operator_instr_history(instance_id)"));
 
    CHK_EXEC(CreateConfigParam(L"AIOperator.Checks.ExecutionTimeLimit", L"10",
       L"Maximum execution time for a single run of an AI operator standing check script.",
@@ -1906,6 +1922,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 57, 70, 58, H_UpgradeFromV57 },
    { 56, 70, 57, H_UpgradeFromV56 },
    { 55, 70, 56, H_UpgradeFromV55 },
    { 54, 70, 55, H_UpgradeFromV54 },
