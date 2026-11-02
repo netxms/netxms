@@ -347,15 +347,18 @@ public class AlarmList extends CompositeWithMessageArea
 
             if (blinkEnabled)
             {
-               int count = 0;
-               synchronized(alarmList)
+               // displayList is only accessed on UI thread, so no locking is needed
+               boolean hasOutstanding = false;
+               for(AlarmHandle h : displayList.values())
                {
-                  for(Alarm a : alarmList.values())
-                     if (a.getState() == Alarm.STATE_OUTSTANDING)
-                        count++;
+                  if (h.alarm.getState() == Alarm.STATE_OUTSTANDING)
+                  {
+                     hasOutstanding = true;
+                     break;
+                  }
                }
 
-               if (count > 0)
+               if (hasOutstanding)
                {
                   ((AlarmListLabelProvider)alarmViewer.getLabelProvider()).toggleBlinkState();
                   alarmViewer.refresh();
@@ -1073,19 +1076,25 @@ public class AlarmList extends CompositeWithMessageArea
          }
       });
 
+      final List<Alarm> soundAlarms;
       synchronized(newAlarmList)
       {
-         display.syncExec(() -> {
+         soundAlarms = new ArrayList<Alarm>(newAlarmList);
+         newAlarmList.clear();
+      }
+      if (!soundAlarms.isEmpty())
+      {
+         // Must not wait for UI thread here - caller holds lock on alarmList, which is also taken by UI thread
+         display.asyncExec(() -> {
             if (!isDisposed() && (view != null) && view.isVisible() && isLocalNotificationsEnabled)
             {
-               for(Alarm a : newAlarmList)
+               for(Alarm a : soundAlarms)
                {
                   if (filteredAlarms.containsKey(a.getId()))
                      AlarmNotifier.playSounOnAlarm(a, getDisplay());
                }
             }
          });
-         newAlarmList.clear();
       }
    }
 
