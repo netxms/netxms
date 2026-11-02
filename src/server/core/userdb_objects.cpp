@@ -64,6 +64,16 @@ static int CompareUserId(const void *e1, const void *e2)
 }
 
 /**
+ * Find user ID in sorted group member list. Returns pointer to list element or nullptr if not found.
+ */
+static uint32_t *FindMember(const IntegerArray<uint32_t>& members, uint32_t userId)
+{
+   if (members.isEmpty())
+      return nullptr;   // bsearch() must not be called with null array pointer
+   return static_cast<uint32_t*>(bsearch(&userId, members.getBuffer(), members.size(), sizeof(uint32_t), CompareUserId));
+}
+
+/**
  * Read Argon2id cost parameters from configuration, clamped to sane minimums
  */
 static void ReadArgon2Costs(uint32_t *tCost, uint32_t *mCost, uint32_t *parallelism)
@@ -1585,7 +1595,7 @@ bool Group::isMember(uint32_t userId, GroupSearchPath *searchPath) const
    if ((m_flags & UF_DISABLED))
       return false;
 
-   if (bsearch(&userId, m_members.getBuffer(), m_members.size(), sizeof(uint32_t), CompareUserId) != nullptr)
+   if (FindMember(m_members, userId) != nullptr)
       return true;
 
    if (searchPath != nullptr)
@@ -1616,7 +1626,7 @@ bool Group::isMember(uint32_t userId, GroupSearchPath *searchPath) const
  */
 bool Group::addUser(uint32_t userId)
 {
-   if (bsearch(&userId, m_members.getBuffer(), m_members.size(), sizeof(uint32_t), CompareUserId) != nullptr)
+   if (FindMember(m_members, userId) != nullptr)
       return false;  // already added
 
    // Not in group, add it
@@ -1632,7 +1642,7 @@ bool Group::addUser(uint32_t userId)
  */
 bool Group::deleteUser(uint32_t userId)
 {
-   uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, m_members.getBuffer(), m_members.size(), sizeof(uint32_t), CompareUserId));
+   uint32_t *e = FindMember(m_members, userId);
    if (e == nullptr)
       return false;  // not a member
 
@@ -1678,7 +1688,7 @@ uint32_t Group::modifyFromMessage(const NXCPMessage& msg)
 				m_members.add(userId);
 
             // check if new member
-			   uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, members.getBuffer(), members.size(), sizeof(uint32_t), CompareUserId));
+			   uint32_t *e = FindMember(members, userId);
 			   if (e != nullptr)
 			   {
 			      *e = 0xFFFFFFFF;    // mark as found
@@ -1725,7 +1735,7 @@ uint32_t Group::modifyFromJson(const json_t *json)
             m_members.add(userId);
 
             // check if new member
-            uint32_t *e = static_cast<uint32_t*>(bsearch(&userId, members.getBuffer(), members.size(), sizeof(uint32_t), CompareUserId));
+            uint32_t *e = FindMember(members, userId);
             if (e != nullptr)
             {
                *e = 0xFFFFFFFF;    // mark as found
